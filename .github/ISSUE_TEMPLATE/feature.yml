@@ -1,0 +1,58 @@
+name: Feature request
+description: Propose a concrete improvement to the course, contributor workflow, validation, or release packaging.
+title: "[feature] "
+labels: ["state:needs-triage", "kind:feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas require no patch. Describe the learner or maintainer need first. Keep private platform details, credentials, and confidential review material out of public issues.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is difficult, missing, or inefficient today, and for whom?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Describe observable behavior without prescribing an implementation.
+    validations:
+      required: true
+  - type: dropdown
+    id: audience
+    attributes:
+      label: Primary audience
+      options:
+        - student
+        - instructor
+        - contributor
+        - maintainer or release operator
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Likely surface
+      options:
+        - learner course
+        - localization
+        - validation or CI
+        - release packaging
+        - local authoring support
+        - source or dependency governance
+        - unsure
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence or examples
+      description: Public references, learner observations, or examples that clarify the need.
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+      description: Compatibility, accessibility, source, security, or maintenance limits.

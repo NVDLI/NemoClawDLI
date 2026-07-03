@@ -1,0 +1,48 @@
+name: Course content issue
+description: Report a learner-facing course problem, ambiguity, accessibility issue, or source correction.
+title: "[course] "
+labels: ["state:needs-triage", "kind:course-content"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for actionable learner-facing work in the static `web/nemoclaw/` course. Local authoring services are outside the production course boundary. Do not paste API keys, private URLs, access headers, or tokens.
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: Page, file, section heading, or URL path.
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current behavior
+      description: What does the learner see or do now?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should happen instead?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Source link, screenshot, command output, or exact repro. Keep copyrighted excerpts short.
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options:
+        - web
+        - cpu
+        - deploy
+        - scripts
+        - docs
+        - materials/source governance
+    validations:
+      required: true

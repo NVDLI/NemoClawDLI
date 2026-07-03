@@ -1,0 +1,38 @@
+name: Source or licensing issue
+description: Report source provenance, attribution, vendored material, or licensing concerns.
+title: "[source] "
+labels: ["state:needs-triage", "kind:source-correction", "risk:license-source"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The production release is the static `web/nemoclaw/` course plus its declared browser assets and references. Keep private URLs, internal sources, and unpublished licensing details out of public issues.
+  - type: input
+    id: material
+    attributes:
+      label: Material
+      description: File path or source URL.
+    validations:
+      required: true
+  - type: textarea
+    id: concern
+    attributes:
+      label: Concern
+      description: What attribution, license, source, or usage concern did you find?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Link authoritative source or license text. Keep excerpts short.
+  - type: dropdown
+    id: disposition
+    attributes:
+      label: Suggested disposition
+      options:
+        - keep with attribution
+        - replace
+        - remove
+        - needs source review
+        - unsure

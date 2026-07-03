@@ -1,0 +1,60 @@
+name: Bug report
+description: Report a reproducible defect in the course, validation, packaging, or supported delivery path.
+title: "[bug] "
+labels: ["state:needs-triage", "kind:bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for actionable defects in the static `web/nemoclaw/` course or its release tooling. Use the private route in `SECURITY.md` for vulnerabilities. Never paste credentials, private URLs, access headers, or tokens.
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: Page, file, workflow, command, or URL path.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Release tag, branch, or commit.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Smallest repeatable sequence that demonstrates the defect.
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Safe evidence
+      description: Public screenshot, output, or source link with sensitive values removed.
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options:
+        - learner course
+        - localization
+        - validation or CI
+        - release packaging
+        - local authoring support
+        - source or dependency governance
+    validations:
+      required: true

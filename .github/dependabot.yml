@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels: ["kind:validation", "area:security", "state:needs-triage"]
+    groups:
+      reviewed-actions:
+        patterns: ["*"]
+  - package-ecosystem: pip
+    directory: "/workspace"
+    schedule:
+      interval: weekly
+    labels: ["kind:validation", "area:security", "state:needs-triage"]
+    groups:
+      workspace-python:
+        patterns: ["*"]
+  - package-ecosystem: docker
+    directories:
+      - "/workspace"
+      - "/cpu/services/docker_router"
+      - "/cpu/services/llm_client"
+      - "/cpu/services/sandbox_admin"
+    schedule:
+      interval: weekly
+    labels: ["kind:validation", "area:security", "state:needs-triage"]
+    groups:
+      service-images:
+        patterns: ["*"]
