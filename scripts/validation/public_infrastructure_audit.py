@@ -104,6 +104,44 @@ def scan_text(path: str, value: str) -> list[Finding]:
             value.count("\n", 0, offset) + 1,
             "concrete object-store website hostname",
         ))
+    assignment = re.compile(
+        r'''(?ix)
+        ["']?
+        (?P<key>aws_account_id|bucket|bucket_name|publish_bucket|cloudfront_distribution_id)
+        ["']?
+        \s*(?:=|:)\s*
+        ["'](?P<value>[^"']+)["']
+        '''
+    )
+    for match in assignment.finditer(value):
+        key = match.group("key").lower()
+        assigned = match.group("value").strip()
+        placeholder = (
+            assigned.startswith(("<", "${", "$", "%{", "example-", "sample-", "test-"))
+            or assigned.endswith(".invalid")
+        )
+        if placeholder:
+            continue
+        concrete = (
+            (key == "aws_account_id" and assigned.isdigit() and len(assigned) == 12)
+            or (
+                key in {"bucket", "bucket_name", "publish_bucket"}
+                and 3 <= len(assigned) <= 63
+                and assigned[0].isalnum()
+                and assigned[-1].isalnum()
+                and all(char in "abcdefghijklmnopqrstuvwxyz0123456789.-" for char in assigned.lower())
+            )
+            or (
+                key == "cloudfront_distribution_id"
+                and re.fullmatch(r"E[A-Z0-9]{10,31}", assigned) is not None
+            )
+        )
+        if concrete:
+            findings.append(Finding(
+                path,
+                value.count("\n", 0, match.start()) + 1,
+                f"concrete {key} assignment",
+            ))
     return findings
 
 

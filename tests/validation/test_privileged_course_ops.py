@@ -9,6 +9,7 @@ import hashlib
 import importlib.util
 import re
 import subprocess
+import tarfile
 import tempfile
 import unittest
 import urllib.request
@@ -18,6 +19,7 @@ from unittest.mock import patch
 from scripts.ci import (
     assert_unprivileged_environment,
     devbox_cdn_publisher,
+    extract_trusted_archive,
     fetch_validated_candidate,
     live_interface_review,
     prepare_cdn_publication,
@@ -47,6 +49,11 @@ class PrivilegedCiWiringTests(unittest.TestCase):
         self.assertIn("artifacts: true", live)
         self.assertIn("trusted-runtime/node-modules.tar.gz", live)
         self.assertIn("test -f scripts/runtime/node_modules/playwright-core/package.json", live)
+        self.assertNotIn("python3 - <<", source)
+        self.assertEqual(
+            2,
+            source.count("python3 -m scripts.ci.extract_trusted_archive"),
+        )
 
     def test_privileged_python_entries_are_importable_modules(self) -> None:
         source = (ROOT / ".gitlab/ci/privileged-child.yml").read_text(encoding="utf-8")
@@ -57,6 +64,53 @@ class PrivilegedCiWiringTests(unittest.TestCase):
         for module in modules:
             with self.subTest(module=module):
                 self.assertIsNotNone(importlib.util.find_spec(module), f"missing module {module}")
+
+
+class TrustedArchiveExtractionTests(unittest.TestCase):
+    @staticmethod
+    def _archive(path: Path, members: list[tuple[tarfile.TarInfo, bytes | None]]) -> None:
+        with tarfile.open(path, "w:gz") as bundle:
+            for member, body in members:
+                bundle.addfile(member, io.BytesIO(body) if body is not None else None)
+
+    def test_extracts_regular_runtime_files(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive = root / "runtime.tar.gz"
+            member = tarfile.TarInfo("node_modules/example/package.json")
+            body = b'{"name":"example"}\n'
+            member.size = len(body)
+            self._archive(archive, [(member, body)])
+            destination = root / "runtime"
+
+            extract_trusted_archive.extract(archive, destination)
+
+            self.assertEqual(
+                body,
+                (destination / "node_modules/example/package.json").read_bytes(),
+            )
+
+    def test_rejects_paths_outside_node_modules(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive = root / "runtime.tar.gz"
+            member = tarfile.TarInfo("../outside")
+            body = b"bad"
+            member.size = len(body)
+            self._archive(archive, [(member, body)])
+            with self.assertRaisesRegex(ValueError, "escapes"):
+                extract_trusted_archive.extract(archive, root / "runtime")
+
+    def test_rejects_symlinks_outside_node_modules(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive = root / "runtime.tar.gz"
+            member = tarfile.TarInfo("node_modules/example/link")
+            member.type = tarfile.SYMTYPE
+            member.linkname = "../../../outside"
+            self._archive(archive, [(member, None)])
+            with self.assertRaisesRegex(ValueError, "escapes"):
+                extract_trusted_archive.extract(archive, root / "runtime")
 
 
 class LiveReviewBoundaryTests(unittest.TestCase):

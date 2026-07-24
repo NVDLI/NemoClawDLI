@@ -83,7 +83,7 @@ Source of truth: [`scripts/browser-vendor/package-lock.json`](scripts/browser-ve
 | browser-runtime | eventemitter3 | 4.0.7 | MIT | [`licenses/eventemitter3--4.0.7.txt`](web/nemoclaw/vendor/licenses/eventemitter3--4.0.7.txt) |
 | browser-bundle-input | is-network-error | 1.3.2 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
 | browser-runtime | js-tiktoken | 1.0.21 | MIT | [`licenses/js-tiktoken--1.0.21.txt`](web/nemoclaw/vendor/licenses/js-tiktoken--1.0.21.txt) |
-| browser-runtime | js-yaml | 5.2.1 | MIT | [`licenses/js-yaml--5.2.1.txt`](web/nemoclaw/vendor/licenses/js-yaml--5.2.1.txt) |
+| browser-runtime | js-yaml | 5.2.2 | MIT | [`licenses/js-yaml--5.2.2.txt`](web/nemoclaw/vendor/licenses/js-yaml--5.2.2.txt) |
 | browser-runtime | langsmith | 0.7.14 | MIT | [`licenses/langsmith--0.7.14.txt`](web/nemoclaw/vendor/licenses/langsmith--0.7.14.txt) |
 | browser-runtime | marked | 14.1.4 | MIT | [`licenses/marked--14.1.4.txt`](web/nemoclaw/vendor/licenses/marked--14.1.4.txt) |
 | browser-runtime | mustache | 4.2.0 | MIT | [`licenses/mustache--4.2.0.txt`](web/nemoclaw/vendor/licenses/mustache--4.2.0.txt) |
@@ -119,7 +119,7 @@ from the preserved-comment file.
 
 ### Why a Python license appears in the browser table
 
-`argparse@2.0.1` is a JavaScript npm package used transitively by `js-yaml@5.2.1`.
+`argparse@2.0.1` is a JavaScript npm package used transitively by `js-yaml@5.2.2`.
 `Python-2.0` is the package's declared license identifier; no Python interpreter or Python package
 is included in the browser bundle by that dependency.
 

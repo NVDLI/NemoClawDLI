@@ -94,7 +94,9 @@ live_candidate_interfaces:
     - |
       set -euo pipefail
       python3 -m scripts.ci.assert_unprivileged_environment
-      tar -xzf trusted-runtime/node-modules.tar.gz -C scripts/runtime
+      python3 -m scripts.ci.extract_trusted_archive \
+        --archive trusted-runtime/node-modules.tar.gz \
+        --destination scripts/runtime
       test -f scripts/runtime/node_modules/playwright-core/package.json
       python3 -m scripts.validation.pages_artifact_integrity \
         --archive privileged/validated-candidate.tar.gz --extract-to /tmp/validated-candidate
@@ -133,29 +135,9 @@ live_interface_review:
   script:
     - |
       set -euo pipefail
-      python3 - <<'PY'
-      import pathlib, tarfile
-      archive = pathlib.Path("trusted-runtime/node-modules.tar.gz")
-      def bounded(parts):
-          stack = []
-          for part in parts:
-              if part in {"", "."}: continue
-              if part == "..":
-                  if not stack: return False
-                  stack.pop()
-              else: stack.append(part)
-          return bool(stack) and stack[0] == "node_modules"
-      with tarfile.open(archive, "r:gz") as bundle:
-          for member in bundle.getmembers():
-              path = pathlib.PurePosixPath(member.name)
-              if path.is_absolute() or not bounded(path.parts):
-                  raise SystemExit("trusted runtime archive contains an unsafe path")
-              if member.issym() or member.islnk():
-                  link = pathlib.PurePosixPath(member.linkname)
-                  if link.is_absolute() or not bounded(path.parent.parts + link.parts):
-                      raise SystemExit("trusted runtime archive contains an unsafe link")
-          bundle.extractall("scripts/runtime")
-      PY
+      python3 -m scripts.ci.extract_trusted_archive \
+        --archive trusted-runtime/node-modules.tar.gz \
+        --destination scripts/runtime
       test -f scripts/runtime/node_modules/playwright-core/package.json
       for protected_file in "$LIVE_NVIDIA_API_KEY_FILE" "$LIVE_BUILD_API_KEY_FILE" "$LIVE_CLAW_SESSION_1_FILE"; do
         test -s "$protected_file"

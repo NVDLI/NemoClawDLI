@@ -52,6 +52,8 @@ if (embeddedEvidence.schema !== "nemoclaw-embedded-browser-components/1"
 }
 const codemirrorVersion = direct.codemirror;
 const codemirrorBase = `codemirror-${codemirrorVersion}`;
+const jsYamlVersion = direct["js-yaml"];
+const jsYamlAsset = `js-yaml-${jsYamlVersion}.esm.min.js`;
 fs.mkdirSync(vendor, { recursive: true });
 for (const item of fs.readdirSync(vendor, { withFileTypes: true })) {
   if (item.name === "SKILL.html" || item.name === "licenses") continue;
@@ -85,7 +87,7 @@ const langchain = await buildResult(
 const copies = [
   ["@highlightjs/cdn-assets/highlight.min.js", "highlight-11.10.0.min.js"],
   ["@highlightjs/cdn-assets/styles/github-dark.min.css", "highlight-github-dark-11.10.0.min.css"],
-  ["js-yaml/dist/browser/js-yaml.esm.min.mjs", "js-yaml-5.2.1.esm.min.js"],
+  ["js-yaml/dist/browser/js-yaml.esm.min.mjs", jsYamlAsset],
   ["codemirror/lib/codemirror.js", `${codemirrorBase}.js`],
   ["codemirror/lib/codemirror.css", `${codemirrorBase}.css`],
   ["codemirror/theme/monokai.css", `codemirror-monokai-${codemirrorVersion}.css`],
@@ -241,7 +243,7 @@ const embeddedComponents = embeddedEvidence.components.map(component => {
 const assetPackages = {
   "highlight-11.10.0.min.js": ["@highlightjs/cdn-assets"],
   "highlight-github-dark-11.10.0.min.css": ["@highlightjs/cdn-assets"],
-  "js-yaml-5.2.1.esm.min.js": ["js-yaml"],
+  [jsYamlAsset]: ["js-yaml"],
   [`${codemirrorBase}.js`]: ["codemirror"],
   [`${codemirrorBase}.css`]: ["codemirror"],
   [`codemirror-monokai-${codemirrorVersion}.css`]: ["codemirror"],
@@ -271,7 +273,7 @@ const assetProvenance = {
     source_files: [langchainException.entrypoint],
     embedded_components: embeddedComponents.map(component => component.id),
   },
-  "js-yaml-5.2.1.esm.min.js": {
+  [jsYamlAsset]: {
     distribution_form: "upstream-file-copy",
     modified_from_upstream: false,
     publisher_provided_minified: true,

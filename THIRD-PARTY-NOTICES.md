@@ -36,7 +36,7 @@ Publisher-provided minified files copied byte-for-byte:
 
 - `highlight-11.10.0.min.js`
 - `highlight-github-dark-11.10.0.min.css`
-- `js-yaml-5.2.1.esm.min.js` (publisher `.mjs` bytes, renamed for portable static-host MIME handling)
+- `js-yaml-5.2.2.esm.min.js` (publisher `.mjs` bytes, renamed for portable static-host MIME handling)
 
 Publisher-provided unminified files copied byte-for-byte:
 

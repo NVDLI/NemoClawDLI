@@ -198,7 +198,7 @@ def _nav(hub_dir, up_path=None, up_label=None):
 
 
 def framer_page(meta, title, sections, actions=None, readme=None, summary=None, nav=None,
-                framer_rel="web/_skill_explorer.js", model="nvidia/nemotron-3-nano-30b-a3b"):
+                framer_rel="web/_skill_explorer.js"):
     """Emit a SKILL hub as a framer-driven page: the skill-meta contract plus an explorer-config
     (hub mode) that the ONE renderer (web/_skill_explorer.js) turns into a live README reflection,
     repo linkage, and a build-guided query. The child links are mirrored as plain <a href> in
@@ -213,7 +213,7 @@ def framer_page(meta, title, sections, actions=None, readme=None, summary=None, 
     for (t, _help, items) in sections:
         if items:
             groups.append({"title": t, "items": [{"label": n, "href": h, "desc": d} for (n, h, d) in items]})
-    cfg = {"mode": "hub", "title": title, "summary": summary, "ties": ["build"], "model": model, "links": groups}
+    cfg = {"mode": "hub", "title": title, "summary": summary, "ties": ["build"], "links": groups}
     if readme:
         cfg["readme"] = readme
     if nav:

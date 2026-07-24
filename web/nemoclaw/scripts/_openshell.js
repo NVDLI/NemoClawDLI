@@ -8,7 +8,7 @@
 import { accessProviderForOpenClawUrl, getOpenClawConnection, openclawWebSocketUrl } from "./_connection.js";
 import { filterOpenClawRuntimeNoise } from "./_runtime_text.js";
 
-const POLICY_YAML_MODULE_URL = "../vendor/js-yaml-5.2.1.esm.min.js";
+const POLICY_YAML_MODULE_URL = "../vendor/js-yaml-5.2.2.esm.min.js";
 const POMERIUM_LOOPBACK_PROBES = Object.freeze({
   "/healthz": "http://127.0.0.1/healthz",
   "/api/agent": "http://127.0.0.1/api/agent",

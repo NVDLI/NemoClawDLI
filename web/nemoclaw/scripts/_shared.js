@@ -19,12 +19,10 @@ const EMBEDDING_MODEL_ID_KEY = "nemoclaw_embedding_model_id_v1";
 const EMBEDDING_API_KEY = "nemoclaw_embedding_api_key_v1";
 // Billing attribution is sent on direct and iframe-proxy calls.
 const BILLING_INVOKE_ORIGIN = "dli-nemoclaw-web";
-// Web-cell model contract. DEFAULT_MODEL is chat() fallback; REASONING_MODEL is explicit.
-
-// Keep DEFAULT_MODEL / REASONING_MODEL in sync with the skill-meta models in SKILL.html.
+// Web-cell model contract. All repository explorers delegate to this one default.
 export const DEFAULT_MODEL = "nvidia/nemotron-3-nano-30b-a3b";
 export const DEFAULT_EMBEDDING_MODEL = "nvidia/llama-nemotron-embed-1b-v2";
-export const REASONING_MODEL = "nvidia/nemotron-3-nano-30b-a3b";
+export const REASONING_MODEL = DEFAULT_MODEL;
 
 // ── Lab-only step detection ─────────────────────────────────────────────────
 // Model calls and web search run from any page; the OpenClaw agent steps do not.
@@ -55,7 +53,7 @@ export { mountLearningView };
 import { mountCourseAssistant, mountCourseLicenseNote } from "./_course_assistant.js";
 export { mountCourseAssistant, mountCourseLicenseNote };
 
-const LAB_MODEL     = "nvidia/nemotron-3-nano-30b-a3b"; // legacy helper default; getConfig().model is the active course default
+const LAB_MODEL     = DEFAULT_MODEL; // legacy helper default; getConfig().model is the active course default
 const CONFIG_KEY    = "__nv_slim_cfg_v1";
 
 // The web course runs JavaScript only.

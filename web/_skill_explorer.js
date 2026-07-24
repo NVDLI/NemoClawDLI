@@ -24,7 +24,6 @@
  *     "title":   "Folder title",
  *     "summary": "What this folder is and why it exists.",
  *     "ties":    ["build"],                  // which SESSIONS to latch (default ["build"])
- *     "model":   "nvidia/nemotron-3-nano-30b-a3b",
  *     "files":   [{ "path":"x.js", "role":"...", "desc":"...", "bytes":123 }],   // flat, OR:
  *     "groups":  [{ "title":"Engine", "files":[ ...file entries... ] }],          // sectioned
  *     "tour":    [{ "title":"...", "file":"x.js", "lines":[10,24], "note":"..." }],
@@ -537,7 +536,7 @@
       var user = (hub ? "REPOSITORY README (" : "FILE: ") + self.current + (hub ? ")" : "") + "\n\n" + code + "\n\nQUESTION: " + question;
       return courseRuntime().then(function (shared) {
         return shared.chat({
-          model: self.cfg.model || null,
+          model: null,
           messages: [{ role: "system", content: sys }, { role: "user", content: user }],
           max_tokens: 1024,
           temperature: 0.2

@@ -21,6 +21,10 @@ class PublicInfrastructureAuditTests(unittest.TestCase):
             "arn:aws:iam::" + "123456789012" + ":role/example",
             "Z" + "1234567890ABC",
             "d" + "1234567890.cloudfront" + ".net",
+            '"aws_account_id": "' + "123456789012" + '"',
+            '"bucket_name": "' + "operator-course-assets" + '"',
+            'BUCKET = "' + "operator-course-assets" + '"',
+            '"cloudfront_distribution_id": "' + "E1234567890AB" + '"',
         )
         for value in values:
             with self.subTest(value=value):
@@ -32,6 +36,10 @@ class PublicInfrastructureAuditTests(unittest.TestCase):
             "s3" + "://${var.bucket}/${var.key}",
             "https://openclaw-cors-proxy.example.invalid",
             "https://cdn.example.invalid/course-static/",
+            '"aws_account_id": "<operator-account>"',
+            '"bucket_name": "example-course-bucket"',
+            'BUCKET = "example-course-bucket"',
+            '"cloudfront_distribution_id": "<operator-distribution>"',
         ))
         self.assertEqual([], audit.scan_text("documentation.md", value))
 

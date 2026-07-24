@@ -11,6 +11,7 @@ not infer GPU availability or hard-code one delivery environment.
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from html.parser import HTMLParser
@@ -24,6 +25,10 @@ from _bootstrap import find_repo_root
 
 ROOT = find_repo_root(Path(__file__).resolve())
 WEB = ROOT / "web"
+_BROWSER_DEPENDENCIES = json.loads(
+    (ROOT / "scripts/browser-vendor/package.json").read_text(encoding="utf-8")
+)["dependencies"]
+POLICY_YAML_ASSET = f"../vendor/js-yaml-{_BROWSER_DEPENDENCIES['js-yaml']}.esm.min.js"
 CODE_RE = re.compile(r"code:\s*`((?:\\.|[^`\\])*)`", re.S)
 DOM_CODE_RE = re.compile(r'code:\s*document\.getElementById\(["\']([^"\']+)["\']\)\.textContent\.trim\(\)')
 MOUNT_RE = re.compile(r"mount(?:RunCell|CanvasFlow)\s*\(")
@@ -454,7 +459,7 @@ def audit_runtime_integrations(
     _need(findings, 'class="claw-help-mark"' in openclaw and
           'class="claw-help-hint"' in openclaw,
           "OpenClaw probe field help needs a visible question-mark cue and instruction")
-    _need(findings, 'POLICY_YAML_MODULE_URL = "../vendor/js-yaml-5.2.1.esm.min.js"' in openshell and
+    _need(findings, f'POLICY_YAML_MODULE_URL = "{POLICY_YAML_ASSET}"' in openshell and
           "await import(POLICY_YAML_MODULE_URL)" in openshell,
           "live-policy parsing must use the pinned same-origin YAML module")
     _need(findings, "parseError" in openshell and "JS_YAML_CDN_URL" not in openshell,
@@ -1266,7 +1271,7 @@ def self_test() -> list[str]:
             misses.append(f"detector missed {label}")
     integration_cases = [
         ("hidden probe help", openclaw.replace('class="claw-help-mark"', 'class="hidden-help-mark"', 1), openshell, runtime_chat, runtime_pages, "question-mark cue"),
-        ("remote policy parser", openclaw, openshell.replace('../vendor/js-yaml-5.2.1.esm.min.js', 'https://cdn.invalid/js-yaml.js', 1), runtime_chat, runtime_pages, "same-origin YAML"),
+        ("remote policy parser", openclaw, openshell.replace(POLICY_YAML_ASSET, 'https://cdn.invalid/js-yaml.js', 1), runtime_chat, runtime_pages, "same-origin YAML"),
         ("swallowed policy parser error", openclaw, openshell.replace("parseError", "ignoredParserError"), runtime_chat, runtime_pages, "expose parser errors"),
         ("remote shared LangChain", openclaw, openshell, runtime_chat.replace('../vendor/langchain-1.4.7.esm.js', 'https://cdn.invalid/langchain.js', 1), runtime_pages, "same-origin bundle"),
         ("terminal timeout bypasses settlement", openclaw, openshell.replace('if (candidate >= wsUrls.length) return fail(terminalOpenError());', 'if (candidate >= wsUrls.length) return reject(terminalOpenError());', 1), runtime_chat, runtime_pages, "must fail once"),

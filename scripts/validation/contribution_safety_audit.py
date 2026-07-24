@@ -78,9 +78,9 @@ CONTRACT_FILES = (
     ".github/workflows/codeql.yml",
     ".github/workflows/dependency-review.yml",
     ".gitlab/merge_request_templates/Default.md",
-    ".gitlab/issue_templates/Course content.md",
-    ".gitlab/issue_templates/Runtime or deployment.md",
-    ".gitlab/issue_templates/Source or licensing.md",
+    ".gitlab/issue_templates/COURSE_CONTENT.md",
+    ".gitlab/issue_templates/RUNTIME_OR_DEPLOYMENT.md",
+    ".gitlab/issue_templates/SOURCE_OR_LICENSING.md",
     ".github/workflows/pages.yml",
     ".github/workflows/release.yml",
     ".gitlab-ci.yml",
@@ -411,9 +411,9 @@ def audit_repo(
         ".github/ISSUE_TEMPLATE/runtime-deploy.yml",
         ".github/ISSUE_TEMPLATE/source-licensing.yml",
         ".gitlab/merge_request_templates/Default.md",
-        ".gitlab/issue_templates/Course content.md",
-        ".gitlab/issue_templates/Runtime or deployment.md",
-        ".gitlab/issue_templates/Source or licensing.md",
+        ".gitlab/issue_templates/COURSE_CONTENT.md",
+        ".gitlab/issue_templates/RUNTIME_OR_DEPLOYMENT.md",
+        ".gitlab/issue_templates/SOURCE_OR_LICENSING.md",
     )
     for rel in scope_templates:
         stale = [token for token in retired_scope_tokens if token in docs[rel]]

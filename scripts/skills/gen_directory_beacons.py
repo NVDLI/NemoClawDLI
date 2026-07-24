@@ -19,7 +19,7 @@ SUMMARIES = {
     ".github": "GitHub contribution intake, dependency automation, and protected workflow definitions.",
     ".github/ISSUE_TEMPLATE": "Structured public issue forms for defects, features, course content, runtime behavior, and source licensing.",
     ".github/workflows": "Pinned GitHub Actions workflows for validation, dependency review, Pages, and protected releases. CodeQL applies the repository's source-bound SARIF policy; release readiness separately requires GitHub's host-owned CodeQL check and pull-request alert state.",
-    ".gitlab": "Internal GitLab contribution templates used by the integration and validation repository.",
+    ".gitlab": "Generic GitLab intake and validation source used when reviewed public commits enter the internal integration repository.",
     ".gitlab/issue_templates": "Internal issue templates aligned with the public contribution categories.",
     ".gitlab/merge_request_templates": "Internal merge-request submission contract and review checklist.",
     "docs/assets": "Reviewed visual evidence referenced by repository documentation.",
@@ -53,6 +53,10 @@ SUMMARIES = {
 }
 
 GUIDANCE = {
+    ".gitlab": '''
+  <section aria-labelledby="gitlab-boundary"><h2 id="gitlab-boundary">Why this directory is public</h2>
+    <p>The internal integration repository imports reviewed public commits. This directory keeps the generic validation and intake definitions required for that handoff. Runner addresses, deployment destinations, credentials, account identifiers, and generated artifacts remain outside the public source.</p>
+  </section>''',
     "scripts/ci": '''
   <section aria-labelledby="operator-flow"><h2 id="operator-flow">Operator flow</h2>
     <ol>
@@ -165,7 +169,6 @@ def page(rel: Path, files: list[Path], directories: list[Path]) -> str:
     config: dict[str, object] = {
         "title": title,
         "summary": summary,
-        "model": "nvidia/nemotron-3-nano-30b-a3b",
         "ties": ["build"],
         "nav": {
             "home": home_rel,

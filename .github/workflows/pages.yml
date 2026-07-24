@@ -237,6 +237,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          command -v gh
+          gh auth status
           gh attestation verify reviewed-pages/pages-sha256.txt \
             --bundle "${{ steps.pages-provenance.outputs.bundle-path }}" \
             --repo "$GITHUB_REPOSITORY" \

@@ -502,10 +502,10 @@ def audit_contract(
         ".github/ISSUE_TEMPLATE/feature.yml": (
             "name: Feature request", "Ideas require no patch", "label: Desired outcome",
         ),
-        ".gitlab/issue_templates/Bug report.md": (
+        ".gitlab/issue_templates/BUG_REPORT.md": (
             "## Reproduction", "private route in `SECURITY.md`",
         ),
-        ".gitlab/issue_templates/Feature request.md": (
+        ".gitlab/issue_templates/FEATURE_REQUEST.md": (
             "## Problem", "## Desired outcome",
         ),
     }
@@ -623,7 +623,7 @@ def self_test() -> list[str]:
     replace(".github/ISSUE_TEMPLATE/bug.yml", "name: Bug report", "name: Report", "issue-template-contract", "bug form")
     replace(".github/ISSUE_TEMPLATE/bug.yml", "private route in `SECURITY.md`", "public comments", "issue-template-contract", "security route")
     replace(".github/ISSUE_TEMPLATE/feature.yml", "Ideas require no patch", "A patch is required", "issue-template-contract", "feature form")
-    replace(".gitlab/issue_templates/Feature request.md", "## Desired outcome", "## Implementation", "issue-template-contract", "GitLab parity")
+    replace(".gitlab/issue_templates/FEATURE_REQUEST.md", "## Desired outcome", "## Implementation", "issue-template-contract", "GitLab parity")
     value = mutated(); area = next(row for row in value["evidence_areas"] if row["id"] == "repository-baseline"); area["automated_commands"].remove("python3 scripts/validation/repository_work_products_audit.py")
     add("evidence wiring", value, "work-product-evidence-wiring")
     replace("scripts/validation/SKILL.html", "Repository work products + detector", "Repository policy", "work-product-wiring", "SKILL discovery")

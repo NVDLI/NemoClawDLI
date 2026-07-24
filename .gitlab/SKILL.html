@@ -11,15 +11,14 @@
   "node_type": "directory-explorer",
   "title": ".gitlab",
   "source_dir": ".gitlab/",
-  "summary": "Internal GitLab contribution templates used by the integration and validation repository.",
+  "summary": "Generic GitLab intake and validation source used when reviewed public commits enter the internal integration repository.",
   "explorer": "../web/_skill_explorer.js"
 }
 </script>
 <script type="application/json" id="explorer-config">
 {
   "title": ".gitlab",
-  "summary": "Internal GitLab contribution templates used by the integration and validation repository.",
-  "model": "nvidia/nemotron-3-nano-30b-a3b",
+  "summary": "Generic GitLab intake and validation source used when reviewed public commits enter the internal integration repository.",
   "ties": [
     "build"
   ],
@@ -65,7 +64,11 @@
   <nav aria-label="Skill navigation"><a href="../web/index.html">Course home</a> · <a href="../SKILL.html">Parent contract</a> · <a data-skill-nav="map" href="../SKILL.html">Repository map</a></nav>
   </header>
   <h1 id="skill-title">.gitlab</h1>
-  <p>Internal GitLab contribution templates used by the integration and validation repository.</p>
+  <p>Generic GitLab intake and validation source used when reviewed public commits enter the internal integration repository.</p>
+
+  <section aria-labelledby="gitlab-boundary"><h2 id="gitlab-boundary">Why this directory is public</h2>
+    <p>The internal integration repository imports reviewed public commits. This directory keeps the generic validation and intake definitions required for that handoff. Runner addresses, deployment destinations, credentials, account identifiers, and generated artifacts remain outside the public source.</p>
+  </section>
   <div class="skill-columns">
     <section><h2>Files</h2><ul>
       <li><a href="CODEOWNERS"><code>CODEOWNERS</code></a></li>
