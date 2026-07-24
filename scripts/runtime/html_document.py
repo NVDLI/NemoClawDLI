@@ -6,21 +6,21 @@
 
 The course validators inspect authored HTML but do not sanitize learner input. Even so, their view
 of script boundaries must agree with a browser: a regex that misses a malformed end tag can hide
-code from a gate. BeautifulSoup's pinned lxml backend handles those recovery cases and keeps the
-parsing policy in one place.
+code from a gate. BeautifulSoup's pinned lxml backend handles those recovery cases. The package-free
+strict parser is reserved for deterministic projection after that browser-tolerant validation.
 """
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
+from html.parser import HTMLParser
 from typing import Iterable
-
-from bs4 import BeautifulSoup
 
 
 @dataclass(frozen=True)
 class RawTextBlock:
-    """One browser-parsed raw-text element and its source-relative body position."""
+    """One raw-text element and its source-relative body position."""
 
     attributes: dict[str, str]
     body: str
@@ -71,8 +71,77 @@ def _next_start_tag(raw: str, name: str, start: int) -> int:
     return -1
 
 
+class _StrictRawTextParser(HTMLParser):
+    """Locate verified raw-text elements without optional third-party packages."""
+
+    def __init__(self, raw: str, name: str) -> None:
+        super().__init__(convert_charrefs=False)
+        self.raw = raw
+        self.name = name.casefold()
+        self.line_starts = [0, *(match.end() for match in re.finditer("\n", raw))]
+        self.active: tuple[int, int, dict[str, str]] | None = None
+        self.blocks: list[RawTextBlock] = []
+
+    def absolute_offset(self) -> int:
+        line, column = self.getpos()
+        return self.line_starts[line - 1] + column
+
+    @staticmethod
+    def attributes(attrs: list[tuple[str, str | None]]) -> dict[str, str]:
+        return {str(key).casefold(): str(value or "") for key, value in attrs}
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag.casefold() != self.name:
+            return
+        if self.active is not None:
+            raise ValueError(f"nested {self.name} start tag")
+        element_start = self.absolute_offset()
+        body_start = _tag_end(self.raw, element_start)
+        self.active = (element_start, body_start, self.attributes(attrs))
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag.casefold() == self.name:
+            raise ValueError(f"self-closing {self.name} is not a valid raw-text boundary")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag.casefold() != self.name:
+            return
+        if self.active is None:
+            raise ValueError(f"unmatched {self.name} end tag")
+        element_start, body_start, attributes = self.active
+        close_start = self.absolute_offset()
+        close_end = _tag_end(self.raw, close_start)
+        self.blocks.append(
+            RawTextBlock(
+                attributes,
+                self.raw[body_start:close_start],
+                body_start,
+                element_start,
+                close_end,
+            )
+        )
+        self.active = None
+
+    def finish(self) -> list[RawTextBlock]:
+        self.feed(self.raw)
+        self.close()
+        if self.active is not None:
+            raise ValueError(f"unterminated {self.name} element")
+        return self.blocks
+
+
+def raw_text_blocks_strict(raw: str, name: str) -> list[RawTextBlock]:
+    """Return exact raw-text spans for source that already passed browser validation."""
+
+    if name.casefold() not in {"script", "style"}:
+        raise ValueError(f"unsupported raw-text element: {name}")
+    return _StrictRawTextParser(raw, name).finish()
+
+
 def raw_text_blocks(raw: str, name: str) -> list[RawTextBlock]:
     """Return raw-text element blocks after lxml establishes browser-compatible boundaries."""
+
+    from bs4 import BeautifulSoup
 
     blocks = []
     cursor = 0
@@ -108,6 +177,8 @@ def raw_text_blocks(raw: str, name: str) -> list[RawTextBlock]:
 
 def script_body_by_id(raw: str, element_id: str) -> str | None:
     """Return a script element body selected by its exact id."""
+
+    from bs4 import BeautifulSoup
 
     element = BeautifulSoup(raw, "lxml").find("script", id=element_id)
     if element is None:

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -62,6 +63,36 @@ class BuildPagesDependencyTests(unittest.TestCase):
         result = self.run_preflight(pull_materials=True)
         self.assertEqual(2, result.returncode)
         self.assertIn("missing material tools", result.stderr)
+
+    def test_locale_projection_runs_without_material_parser_packages(self) -> None:
+        source = (
+            '<html lang="en"><body><p>Hello learner</p>'
+            '<script>const ui={label:"Run exercise"};</script></body></html>'
+        )
+        target = source.replace('lang="en"', 'lang="es"').replace(
+            "Hello learner", "Hola, estudiante"
+        ).replace("Run exercise", "Ejecutar ejercicio")
+        program = (
+            "import sys\n"
+            "sys.modules['bs4'] = None\n"
+            "from translate.locale_projection import project_locale_html\n"
+            f"source = {source!r}\n"
+            f"target = {target!r}\n"
+            "result = project_locale_html(source, target, {})\n"
+            "assert 'Hola, estudiante' in result\n"
+            "assert 'Ejecutar ejercicio' in result\n"
+        )
+        env = os.environ.copy()
+        env["PYTHONPATH"] = str(ROOT / "scripts")
+        result = subprocess.run(
+            [sys.executable, "-c", program],
+            cwd=ROOT,
+            env=env,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(0, result.returncode, result.stderr)
 
 
 if __name__ == "__main__":

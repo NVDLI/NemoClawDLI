@@ -16,7 +16,12 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from _bootstrap import add_script_paths  # noqa: E402
 
 add_script_paths(ROOT / "scripts")
-from html_document import raw_text_blocks, script_body_by_id, without_elements  # noqa: E402
+from html_document import (  # noqa: E402
+    raw_text_blocks,
+    raw_text_blocks_strict,
+    script_body_by_id,
+    without_elements,
+)
 
 
 class HtmlDocumentTests(unittest.TestCase):
@@ -36,6 +41,23 @@ class HtmlDocumentTests(unittest.TestCase):
         self.assertEqual(block.attributes, {"type": "module"})
         self.assertEqual(block.body, "\nrun();\n")
         self.assertEqual(raw[block.body_start:block.body_start + len(block.body)], block.body)
+
+    def test_strict_projection_matches_browser_parser_for_served_html(self) -> None:
+        paths = sorted((ROOT / "web").rglob("*.html")) + sorted((ROOT / "i18n").rglob("*.html"))
+        self.assertTrue(paths)
+        for path in paths:
+            raw = path.read_text(encoding="utf-8")
+            for name in ("script", "style"):
+                with self.subTest(path=path.relative_to(ROOT), name=name):
+                    browser = raw_text_blocks(raw, name)
+                    strict = raw_text_blocks_strict(raw, name)
+                    self.assertEqual(browser, strict)
+
+    def test_strict_projection_matches_browser_recovery_syntax(self) -> None:
+        for ending in ("</script foo=\"bar\">", "</script\t\n bar>"):
+            with self.subTest(ending=ending):
+                raw = f"<script>danger(){ending}<p>visible</p>"
+                self.assertEqual(raw_text_blocks(raw, "script"), raw_text_blocks_strict(raw, "script"))
 
     def test_comments_and_longer_element_names_are_not_script_boundaries(self) -> None:
         raw = (
