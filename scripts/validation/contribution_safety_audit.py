@@ -24,6 +24,12 @@ from _bootstrap import find_repo_root
 
 ROOT = find_repo_root(Path(__file__).resolve())
 NVIDIA_APACHE_COPYRIGHT = "Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
+BROWSER_RUNTIME_CONSUMERS = (
+    "release_gate.py --tier ship",
+    "skill_renderer_runtime_audit.py",
+    "runtime_integration_browser_audit.py",
+    "branch_preview_runtime_audit.py",
+)
 DECISION_POLICY = {
     "default": "deny",
     "authorization_record": "external-not-repository",
@@ -253,6 +259,56 @@ def workflow_jobs(workflow: str) -> list[tuple[str, str]]:
         r"(?m)^  ([A-Za-z0-9_-]+):\s*$", body
     )]
     return [(name, workflow_job(workflow, name)) for name in names]
+
+
+def workflow_steps(job: str) -> list[str]:
+    """Discover every top-level step in one GitHub Actions job."""
+    starts = list(re.finditer(r"(?m)^      - (?:name:|uses:|run:)\s*", job))
+    return [
+        job[match.start() : starts[index + 1].start() if index + 1 < len(starts) else len(job)]
+        for index, match in enumerate(starts)
+    ]
+
+
+def audit_browser_runtime_jobs(
+    workflow: str, rel: str, code_prefix: str,
+) -> list[dict[str, str]]:
+    """Require the nested pinned runtime in every job that consumes its browser API."""
+    out: list[dict[str, str]] = []
+    install = "pnpm install --frozen-lockfile --ignore-scripts"
+    for job_name, job in workflow_jobs(workflow):
+        consumer_positions = [
+            job.index(token) for token in BROWSER_RUNTIME_CONSUMERS if token in job
+        ]
+        if not consumer_positions:
+            continue
+        install_steps = [step for step in workflow_steps(job) if install in step]
+        correct_steps = [
+            step for step in install_steps
+            if "working-directory: scripts/runtime" in step
+            and "--dir scripts/runtime" not in step
+        ]
+        if len(correct_steps) != 1:
+            out.append(finding(
+                f"{code_prefix}-browser-runtime-lock", rel,
+                f"browser-backed job {job_name} does not install the nested pinned runtime exactly once",
+                "run pnpm from scripts/runtime with the frozen lockfile in every browser-backed job",
+            ))
+            continue
+        install_position = job.index(correct_steps[0]) + correct_steps[0].index(install)
+        if install_position > min(consumer_positions):
+            out.append(finding(
+                f"{code_prefix}-browser-runtime-order", rel,
+                f"browser-backed job {job_name} installs its runtime after the first consumer",
+                "install the pinned browser API before browser-backed validation",
+            ))
+        if 'node-version: "24"' not in job:
+            out.append(finding(
+                f"{code_prefix}-node-runtime", rel,
+                f"browser-backed job {job_name} does not use the supported Node.js 24 runtime",
+                "run browser-backed validation on Node.js 24",
+            ))
+    return out
 
 
 def workflow_has_trigger(workflow: str, trigger: str) -> bool:
@@ -755,31 +811,9 @@ def audit_repo(
     require(pages, "--timing-report docs/validation/release-gate-timings.json",
             ".github/workflows/pages.yml", "github-gate-timing", out,
             "retain per-command gate timing evidence")
-    test_job = workflow_job(pages, "test")
-    browser_runtime_install = "pnpm install --frozen-lockfile --ignore-scripts"
-    browser_runtime_context = (
-        "working-directory: scripts/runtime",
-        browser_runtime_install,
-    )
-    if any(token not in test_job for token in browser_runtime_context):
-        out.append(finding(
-            "github-browser-runtime-lock", ".github/workflows/pages.yml",
-            "the GitHub test job does not install the nested pinned host-browser API",
-            "run pnpm from scripts/runtime with --frozen-lockfile before the shared ship gate",
-        ))
-    elif test_job.index(browser_runtime_install) > test_job.index("release_gate.py --tier ship"):
-        out.append(finding(
-            "github-browser-runtime-order", ".github/workflows/pages.yml",
-            "the pinned host-browser API is installed after Chromium-backed validation runs",
-            "install the pinned browser API before the shared ship gate",
-        ))
-    for job_name in ("test", "build-and-verify"):
-        if 'node-version: "24"' not in workflow_job(pages, job_name):
-            out.append(finding(
-                "github-node-runtime", ".github/workflows/pages.yml",
-                f"GitHub job {job_name} does not use the supported Node.js 24 runtime",
-                "run GitHub browser validation and assembly on Node.js 24",
-            ))
+    out.extend(audit_browser_runtime_jobs(
+        pages, ".github/workflows/pages.yml", "github",
+    ))
     for job_name in ("build-and-verify", "rebuild-for-comparison"):
         block = workflow_job(pages, job_name)
         require(block, "BUILD_PAGES_REUSE_VALIDATION=1", ".github/workflows/pages.yml",
@@ -966,31 +1000,9 @@ def audit_repo(
                 f"retain independent release assembly and comparison control: {token}")
     require(release, "release_gate.py --tier ship", ".github/workflows/release.yml",
             "release-shared-gate", out, "run the shared deterministic gate before packaging")
-    release_validation_job = workflow_job(release, "validate-and-scan")
-    release_browser_runtime_install = "pnpm install --frozen-lockfile --ignore-scripts"
-    if (
-        "working-directory: scripts/runtime" not in release_validation_job
-        or release_browser_runtime_install not in release_validation_job
-    ):
-        out.append(finding(
-            "release-browser-runtime-lock", ".github/workflows/release.yml",
-            "the protected release job does not install the nested pinned host-browser API",
-            "run pnpm from scripts/runtime with --frozen-lockfile before the shared ship gate",
-        ))
-    elif release_validation_job.index(release_browser_runtime_install) > release_validation_job.index(
-        "release_gate.py --tier ship"
-    ):
-        out.append(finding(
-            "release-browser-runtime-order", ".github/workflows/release.yml",
-            "the pinned host-browser API is installed after protected release validation",
-            "install the pinned browser API before the shared ship gate",
-        ))
-    if 'node-version: "24"' not in release_validation_job:
-        out.append(finding(
-            "release-node-runtime", ".github/workflows/release.yml",
-            "the protected release job does not use the supported Node.js 24 runtime",
-            "run protected release validation on Node.js 24",
-        ))
+    out.extend(audit_browser_runtime_jobs(
+        release, ".github/workflows/release.yml", "release",
+    ))
     require(release, "pull_materials.py --check --fetch-attempts", ".github/workflows/release.yml",
             "release-live-material-check", out,
             "require a retried, strict live material check before release packaging")

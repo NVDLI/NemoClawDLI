@@ -44,7 +44,20 @@ def is_authoring_source(path: Path) -> bool:
     return not any(parts[:len(prefix)] == prefix for prefix in GENERATED_OUTPUT_PREFIXES)
 
 
-def source_files(root: Path) -> list[Path]:
+def _artifact_subtree(root: Path, output: Path) -> Path | None:
+    """Return an in-repository artifact path, rejecting output that contains the source root."""
+    root = root.resolve()
+    output = output.resolve()
+    if root == output or root.is_relative_to(output):
+        raise ValueError(f"artifact root must not contain the source root: {output}")
+    try:
+        return output.relative_to(root)
+    except ValueError:
+        return None
+
+
+def source_files(root: Path, output: Path | None = None) -> list[Path]:
+    artifact_subtree = _artifact_subtree(root, output) if output is not None else None
     raw = subprocess.check_output(
         ["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard", "-z"]
     )
@@ -53,7 +66,14 @@ def source_files(root: Path) -> list[Path]:
         for item in raw.split(b"\0")
         if item
         for path in (Path(item.decode()),)
-        if is_authoring_source(path) and (root / path).is_file()
+        if (
+            is_authoring_source(path)
+            and not (
+                artifact_subtree is not None
+                and (path == artifact_subtree or artifact_subtree in path.parents)
+            )
+            and (root / path).is_file()
+        )
     )
 
 
@@ -155,11 +175,13 @@ def project_json_urls(source_file: Path, artifact_file: Path, output: Path,
 
 
 def project(root: Path, output: Path) -> tuple[int, list[str]]:
+    root = root.resolve()
+    output = output.resolve()
     findings = [
         f"tracked generated output must be rebuilt, not versioned: {path}"
         for path in tracked_generated_files(root)
     ]
-    files = source_files(root)
+    files = source_files(root, output)
     file_set = set(files)
     for relative in files:
         source = root / relative
@@ -254,6 +276,33 @@ class ProjectionTests(unittest.TestCase):
             )
             evidence = json.loads((output / "nested" / "evidence.json").read_text(encoding="utf-8"))
             self.assertEqual("../source/github/SKILL.html", evidence["links"][0]["href"])
+
+    def test_arbitrary_in_tree_artifact_never_becomes_source(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "repo"
+            output = root / "any-future-build-name"
+            root.mkdir()
+            subprocess.run(["git", "init", "-q", str(root)], check=True)
+            (root / "SKILL.html").write_text("<p>source</p>", encoding="utf-8")
+            subprocess.run(["git", "-C", str(root), "add", "SKILL.html"], check=True)
+
+            output.mkdir()
+            (output / "stale.html").write_text("<p>old artifact</p>", encoding="utf-8")
+            first_count, first_findings = project(root, output)
+            second_count, second_findings = project(root, output)
+
+            self.assertEqual((first_count, first_findings), (1, []))
+            self.assertEqual((second_count, second_findings), (1, []))
+            self.assertEqual((output / "SKILL.html").read_text(encoding="utf-8"), "<p>source</p>")
+            self.assertFalse((output / output.name).exists())
+
+    def test_artifact_root_cannot_contain_source_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "repo"
+            root.mkdir()
+            subprocess.run(["git", "init", "-q", str(root)], check=True)
+            with self.assertRaises(ValueError):
+                project(root, root)
 
 
 def main() -> int:
