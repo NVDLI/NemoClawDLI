@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Tools at Scale · Securing Agents</title>
+<link rel="stylesheet" href="styles/_style.css"/>
+<script src="vendor/highlight-11.10.0.min.js"></script>
+<link rel="stylesheet" href="vendor/codemirror-5.65.21.css"/>
+<link rel="stylesheet" href="vendor/codemirror-monokai-5.65.21.css"/>
+<script src="vendor/codemirror-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-xml-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-javascript-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-css-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-htmlmixed-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-python-5.65.21.js"></script>
+<style>
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="logo" href="index.html">NVIDIA · Securing Agents</a>
+  <nav id="nav"></nav>
+  <div class="spacer"></div>
+  <span class="key-pill" id="key-status" onclick="location.href='01a-loop.html?openKeyPanel=1'">…</span>
+</div>
+
+<main>
+  <div id="journey-map"></div>
+
+  <div class="hero">
+    <div class="eyebrow">Module 1 · Part C of 3</div>
+    <h1>Tools <span>at Scale</span></h1>
+    <p class="lead">
+      In Module 1b you wired a single tool into the agent loop: the model requested a named
+      function, your harness ran it, and the result went back into the next model call. That
+      round-trip does not change here. What changes is the tool surface: the model must choose
+      among more descriptions, and each tool may hide a larger capability.
+    </p>
+    <p>
+      The page follows that contract from local functions to a search backend, a sub-agent,
+      and finally a Model Context Protocol (MCP) server. These are different ways to supply
+      capabilities to the same loop. A long flat tool list also consumes context and can make
+      routing less reliable, which motivates the scoped workflows in Module 2.
+    </p>
+  </div>
+
+  <h2>The tool-call contract stays fixed</h2>
+  <p>
+    The figure traces the cycle from 1b. Later sections change where the schema comes from and
+    what the executor does, while the model still requests a named tool and reads its result.
+  </p>
+
+  <figure style="margin:1.4em 0">
+    <div class="fig-embed" data-svg-src="assets/figures/01c-tools-1.svg" style="aspect-ratio:860 / 414"></div>
+    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">The LLM asks, your code answers, and the LLM concludes, but it never runs your function itself.</figcaption>
+  </figure>
+
+  <div class="callout">
+    <strong>The server enforces the schema.</strong> Before structured
+    function calling, applications often parsed custom XML or hand-written JSON from model text.
+    A paraphrase could break that parser. The tools field carries the contract separately, so the
+    serving engine can constrain arguments to the schema and return a consistent
+    <code>tool_calls</code> field. Your dispatch code can then count on <code>tc.function.name</code> and
+    <code>tc.function.arguments</code> being present and parseable.
+  </div>
+
+  <h2>How the model picks between several tools</h2>
+  <p>
+    Agents rarely have a single tool. With more than one, the model decides
+    which to call based on the <code>description</code> field.
+  </p>
+  <p>
+    The cell below gives the model two tools and a question that requires picking,
+    and the visualization shows which way the model went and why.
+  </p>
+
+  <figure style="margin:1.4em 0">
+    <div id="cell-m2b-p3"></div>
+    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">Editing either description shifts how the model routes, since the description field is one of the most consequential prompt-engineering surfaces in any tool-using agent.</figcaption>
+  </figure>
+
+  <h2>Wiring <code>glossary_search</code> to a real tool</h2>
+  <p>
+    The cell wires <code>glossary_search</code> to an in-page catalog of NVIDIA terms.
+    Ranked search runs in the browser without a key and returns short definitions with source
+    links. The course's shared <code>web_search</code> applies the same ranking to the full catalog.
+    Open the <a href="glossary.html">glossary explorer</a> to inspect every term, read the live
+    <code>webSearch</code> and <code>instantAnswer</code> source, or run the query yourself.
+  </p>
+  <p>
+    The next section swaps the executor to an exact term lookup behind the <em>same</em>
+    tool contract, so you can watch the contract stay fixed while the backend changes
+    underneath it.
+  </p>
+
+  <div class="callout">
+    <strong>A tool name should describe a capability.</strong>
+    A tool called <code>nvidia_glossary_api</code> is brittle: changing the backend
+    forces you to update every prompt that references the name. A tool called
+    <code>glossary_search</code> describes what the caller needs. Ranked search, exact lookup,
+    or a richer index can sit behind that contract without changing the agent prompt.
+  </div>
+
+  <div id="cell-m2b-p4"></div>
+
+  <details class="learning-block" open data-learning-id="tool-backend-swap" data-learning-tier="applied" data-learning-artifact="optional" data-localization-scope="en-shell">
+  <summary data-localization-scope="en"><span class="learning-scope">Applied · Backend</span><span class="learning-question">Swap the executor without changing the tool?</span></summary>
+  <div class="learning-block-body">
+  <h2>Swapping the backend while the tool contract holds</h2>
+  <p>
+    The same loop runs here as a flat <code>mountRunCell</code> script, with one change: the executor.
+    The earlier search returned a short blurb for each of several matches. This backend returns the whole
+    article for the single best match, fetched from the term's cached glossary page. The schema and the
+    loop do not move; only the source behind <code>glossary_search</code> got richer.
+  </p>
+
+  <div class="callout">
+    <strong>The model only sees the contract.</strong> It asks for <code>glossary_search</code> with a
+    natural query and reads whatever comes back, unaware which backend answered. You can start with a blurb
+    index and later swap in full articles or a live search without touching the loop. Accuracy may drift
+    when a backend resolves a match differently, but the contract holds.
+  </div>
+
+  <div id="cell-m2b-p4b"></div>
+  </div>
+  </details>
+
+  <details class="learning-block" open data-learning-id="subagent-as-tool" data-learning-tier="deep" data-learning-artifact="optional" data-localization-scope="en-shell">
+  <summary data-localization-scope="en"><span class="learning-scope">Deep · Delegation</span><span class="learning-question">Hide a focused agent behind one tool?</span></summary>
+  <div class="learning-block-body">
+  <h2>Hiding a whole agent behind a single tool</h2>
+  <p>
+    A tool need not be a small function. An entire sub-agent can sit behind a single
+    tool call. To the calling model, the sub-agent remains one contract. Behind that contract, it may query a
+    database, run code, or search a repository without exposing those internal tools to the
+    main loop.
+  </p>
+  <p>
+    The cell below exposes a sub-agent that knows a small customer table
+    as one natural-language tool. Its caller never sees the rows
+    and can only ask questions.
+  </p>
+
+  <div id="cell-m2b-p5"></div>
+
+  <div class="callout">
+    <strong>The cognitive-load lever.</strong>
+    Every additional tool, schema field, and description sentence consumes
+    context the main agent could use for its task. A sprawling flat tool
+    list tends to perform worse than a small set of tools backed by
+    sub-agents, because each loop only sees the tools relevant to its level.
+  </div>
+  </div>
+  </details>
+
+  <h2>Fetching tools from a separate server with MCP</h2>
+  <details class="learning-block" open data-learning-id="mcp-protocol-detail" data-learning-tier="applied" data-learning-artifact="optional" data-localization-scope="en-shell">
+  <summary data-localization-scope="en"><span class="learning-scope">Applied · Build</span><span class="learning-question">Need the MCP discovery and invocation flow?</span></summary>
+  <div class="learning-block-body">
+  <p>
+    Model Context Protocol (MCP) gives tool serving a standard shape. The agent retrieves a server's
+    catalog with <code>tools/list</code> and invokes a selected entry with
+    <code>tools/call</code>. Those tools live in a separate process that the agent
+    connects to and queries when it starts up. Because the protocol is the same
+    everywhere, the agent can connect to additional servers without learning a new
+    interface for each one. Use MCP when tool discovery and transport need a shared
+    protocol. Use a local function, a repo skill, or a direct API call when the harness
+    already knows where the capability lives and how to invoke it.
+  </p>
+
+  <div class="callout">
+    <strong>Discovery is a trust boundary.</strong>
+    Treat a <code>tools/list</code> response as untrusted input. Before connecting the server:
+    <ul>
+      <li>verify its identity,</li>
+      <li>show the requested capabilities to the user,</li>
+      <li>grant the smallest useful scope,</li>
+      <li>and bind each credential to that server's audience.</li>
+    </ul>
+    For remote connection and
+    OAuth discovery, reject private and link-local destinations and validate every redirect. The
+    <a href="https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices" target="_blank" rel="noopener">MCP security guidance</a>
+    assigns consent, token handling, and server-side request forgery (SSRF) controls to the client.
+  </div>
+
+  <div class="fig-embed" data-svg-src="assets/figures/01c-tools-2.svg" style="aspect-ratio:720 / 320"></div>
+  <p>
+    The cell below fakes a tiny MCP server in pure JavaScript with the
+    same <a href="https://www.jsonrpc.org/specification" target="_blank" rel="noopener">JSON-RPC</a> shape MCP defines (no transport). The agent fetches
+    the tool list, hands the schemas to the model, then dispatches
+    <code>tool_calls</code> back through the server's
+    <code>tools/call</code> handler. The agent loop is byte-for-byte
+    identical to a normal tool call while only the source of the tool list changes.
+  </p>
+
+  <div id="cell-m2b-p6"></div>
+
+  <p>
+    Module 2 keeps this tool contract and changes the outer structure. A workflow can route
+    calls through a fixed pipeline, fan work into branches, or delegate a focused task to
+    another loop without exposing every internal tool to the caller.
+  </p>
+  </div>
+  </details>
+
+  <h2>Before you continue</h2>
+  <ol>
+    <li>What happens when the model calls a tool with arguments that fail your validation? The current loop crashes; how would you make it graceful without giving the model false confidence that the call succeeded?</li>
+    <li>The agents-as-tools sub-agent is opaque to the main agent. What information would you want it to surface back (in addition to the answer) so the main agent can decide whether to trust it on the next turn?</li>
+    <li>The <code>tool_choice</code> parameter can be set to <code>"required"</code> or to a specific tool name. When would forcing a tool call be the right move, and what risk does it create?</li>
+    <li>Before you add a remote MCP server to this agent, what identity, capability scope, token audience, and network destinations would you verify? Which one becomes an SSRF path if you accept it without validation?</li>
+  </ol>
+
+  <details class="references learning-block" open data-learning-always-open data-learning-id="tool-use-references" data-learning-tier="deep" data-localization-scope="en-shell">
+    <summary data-localization-scope="en"><span class="learning-scope">Deep · Sources</span><span class="learning-question">Review the tool-use and MCP sources?</span></summary>
+    <div class="learning-block-body">
+    <h3>References</h3>
+    <ul>
+      <li><a href="https://arxiv.org/abs/2302.04761" target="_blank" rel="noopener">Schick et al., <em>Toolformer: Language Models Can Teach Themselves to Use Tools</em> (2023)</a>. The paper that established self-supervised tool use; what every subsequent function-calling spec is variations on.</li>
+      <li><a href="https://platform.openai.com/docs/guides/function-calling" target="_blank" rel="noopener">OpenAI function-calling guide</a>. The spec your <code>tools=[…]</code> payload conforms to; the hosted build endpoint proxies this shape through to any provider.</li>
+      <li><a href="https://modelcontextprotocol.io/specification" target="_blank" rel="noopener">Model Context Protocol (MCP) specification</a>. The cross-vendor tool-discovery and tool-serving layer covered in this module's MCP section (originated by Anthropic, now an open project); complements function calling at the agent-runtime layer.</li>
+      <li><a href="https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices" target="_blank" rel="noopener">MCP security best practices</a>. Consent, audience-bound credentials, SSRF controls, and local-server execution risks for MCP clients and operators.</li>
+      <li><a href="https://docs.anthropic.com/en/docs/agents-and-tools/tool-use" target="_blank" rel="noopener">Anthropic tool-use reference</a>. The parallel implementation for Claude, useful as a cross-vendor comparison.</li>
+    </ul>
+    <p class="references-note">Comprehensive list at <a href="04c-going-further.html#refs">Going Further · References</a>.</p>
+    </div>
+  </details>
+
+  <h2>Try it · an agent with two real tools</h2>
+  <p>
+    This artifact runs a <a href="https://python.langchain.com/" target="_blank" rel="noopener">LangChain</a> <code>createReactAgent</code> wired to the two functions whose
+    contracts you just read: <code>calculate</code> for arithmetic and <code>glossary_search</code>
+    against the in-page NVIDIA glossary that runs in the browser without a key. Ask for a number it cannot work
+    out in its head or a term to define, and watch the tool chip light up before the
+    answer streams.
+  </p>
+  <div id="tools-cell"></div>
+  <div id="tools-artifact"></div>
+  <script type="module">
+    import { mountRunCell } from "./scripts/_shared.js";
+    mountRunCell("#tools-cell", {
+      label: "the agent + your tools, in code",
+      autorun: true,
+      code: `// Two tools: calculate (guarded arithmetic) and glossary_search (in-page server).
+// Edit the system prompt or the tools, then Run to re-render.
+helpers.mountAgentChat("#tools-artifact", {
+  models: [
+    { id: "nvidia/nemotron-3-nano-30b-a3b",    label: "Nemotron Nano 30B · fast" },
+    { id: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron Super 120B · stronger" },
+  ],
+  greeting: "I can do arithmetic and search NVIDIA's glossary. Try 'what is 17.5% of 2,480?', 'what is a vector database?', or 'explain vector databases in depth'.",
+  examples: ["What is 17.5% of 2,480?", "What is a vector database?", "Explain vector databases in depth", "Define agentic AI", "What does GPU stand for, and what is it for?", "What is 2,480 divided by 17, rounded?"],
+  system: "You are a helpful assistant. Use calculate for any arithmetic and glossary_search for definitions of AI and accelerated-computing terms. For a quick definition, call glossary_search normally; when the user wants depth on a single term, call it with full=true to read the whole article. Ground factual claims in the results; if a search returns nothing, say so rather than answering from memory. Keep answers brief unless the user asks for depth.",
+  recursionLimit: 24,   // room for several search-then-read rounds before the safety cap
+  buildTools: ({ tool, z }) => [
+    tool(async ({ expression }) => {
+      const expr = String(expression).replace(/,/g, "");
+      if (!/^[-+*/().\\s^%0-9]+$/.test(expr)) return "calculate only accepts arithmetic.";
+      try { return String(Function('"use strict"; return (' + expr.replace(/\\^/g, "**") + ")")()); }
+      catch (e) { return "error: " + e.message; }
+    }, { name: "calculate", description: "Evaluate an arithmetic expression, e.g. (17/100)*2480 or 2^16 - 1000.",
+         schema: z.object({ expression: z.string().describe("an arithmetic expression, e.g. 0.175*2480") }) }),
+    // One glossary tool, two modes: ranked blurbs from several terms, or the full article for one.
+    tool(async ({ query, full }) => {
+      if (full) {
+        const article = await window.glossaryFull(query);
+        if (article) return article.body;   // the whole NVIDIA glossary article
+      }
+      return window.formatGlossaryResults(window.glossarySearch(query, { limit: 4 }));
+    }, { name: "glossary_search",
+         description: "Search NVIDIA's glossary. Returns short blurbs for several matching terms; set full=true to fetch the complete article for the single best match.",
+         schema: z.object({
+           query: z.string().describe("a term or keywords, e.g. 'vector database'"),
+           full:  z.boolean().optional().describe("true to read the full article for the best match instead of short blurbs"),
+         }) }),
+  ],
+});
+helpers.log("rendered below. Edit the config and Run.");
+
+/* mountAgentChat builds one LangChain agent per model and streams tool calls plus answers. */
+`,
+    });
+  </script>
+
+  <div class="foot-nav">
+    <a href="01b-react.html">← Module 1b: The ReAct Loop</a>
+    <a class="next" href="02a-routing.html">Module 2a: Workflows →</a>
+  </div>
+</main>
+
+<script type="module">
+import { buildNav, chatStream, updateKeyPill, mountJourneyMap, mountRunCell, mountCanvasFlow } from "./scripts/_shared.js";
+document.getElementById("nav").innerHTML = buildNav("01c-tools.html");
+const pill = document.getElementById("key-status");
+updateKeyPill(pill);
+mountJourneyMap("#journey-map", "1c");
+hljs.highlightAll();
+
+// In-page glossary MCP server: static catalog, no key, no backend.
+const GLOSSARY = [
+  ["3d-reconstruction","3D Reconstruction","Learn what 3D reconstruction is and how neural reconstruction works.","3D reconstruction;neural reconstruction;computer vision;3D models"],
+  ["ai-agents","AI Agents","AI agents are advanced AI systems designed to autonomously reason, plan, and execute complex tasks based on high-level goals in a secure environment with controls.","AI Agents;Generative AI;LLMs;RAG"],
+  ["ai-factory","AI Factory","An AI factory is a specialized computing infrastructure designed for the entire AI life cycle.","AI Factory;AI Factories;AI Infrastructure"],
+  ["ai-grid","AI Grid","Learn how an AI grid distributes AI infrastructure across regions to balance performance, cost, and latency while routing workloads securely and efficiently.","ai grid;Distributed AI Infrastructure;Telco Edge;Intelligent edge"],
+  ["ai-inference","AI Inference","AI inference helps solve advanced application deployment challenges by bringing machine learning and artificial intelligence technology to the real world.","AI inference;machine learning;large language models"],
+  ["ai-infrastructure","AI Infrastructure","AI infrastructure is designed to support the development, deployment, and management of AI models and applications.","AI infrastructure"],
+  ["ai-reasoning","AI Reasoning","AI reasoning is how AI systems analyze and solve problems by evaluating various outcomes and selecting the best solution, similar to human decision-making.","AI reasoning;Generative AI"],
+  ["ai-training","AI Training","AI training is the process of teaching models to learn patterns from data, enabling reasoning, problem-solving, and content generation beyond explicit programming.","AI training;AI model training"],
+  ["ai-ran","AI-RAN","Learn all about AI Radio Access Networks (AI-RAN) and how they transform 6g mobile networks with AI.","AI-RAN;6G"],
+  ["alphafold2","AlphaFold2","AlphaFold2 is a machine learning model developed by Google DeepMind in 2020 to accurately predict 3D protein structures from amino acid sequences.","AlphaFold2;Machine learning model;3D protein structures"],
+  ["mxnet","Apache MXNet","Machine learning is a subset of artificial intelligence (AI) that uses algorithms or statistical models to automatically learn experiences without explicit programming or human intervention.","Data Science Glossary"],
+  ["apache-spark","Apache Spark","Apache Spark is an open-source framework for processing big data tasks in parallel across clustered computers.","Data Science Glossary"],
+  ["speech-to-text","Automatic Speech Recognition (ASR)","Automatic speech recognition (ASR) is the combination of processes and software that decode human speech and convert it to digitized text.","Data Science Glossary"],
+  ["autonomous-networks","Autonomous Networks","AI-driven systems that analyze telemetry, predict issues, simulate changes in digital twins, and continuously optimize multi-vendor network operations with minimal human input.","AI-driven systems;autonomous network"],
+  ["autonomous-vehicles","Autonomous Vehicles","A robotaxi is a fully driverless, on-demand ride-hailing autonomous vehicle that operates at SAE Level 4 autonomy, navigating passengers or goods safely without a human driver present.","Robotaxi;autonomous vehicles;self driving cars;nvidia automotive drive"],
+  ["bert","BERT","BERT (Bidirectional Encoder Representations from Transformers) is a deep learning model developed by Google for NLP pre-training and fine-tuning.","Data Science Glossary"],
+  ["cot-prompting","Chain of Thought Prompting","Chain of Thought (CoT) is a prompt engineering technique that helps large language models (LLMs) reason more accurately.","Chain of Thought;CoT Prompting;Generative AI"],
+  ["clustering","Cluster Analysis / Clustering","Cluster analysis is the grouping of objects based on their characteristics such that there is high intra-cluster similarity and low inter-cluster similarity.","Data Science Glossary"],
+  ["computer-vision","Computer Vision","As a sub-group of AI and deep learning, computer vision trains convolutional neural networks to develop human-like vision capabilities for applications.","Data Science Glossary"],
+  ["convolutional-neural-network","Convolutional Neural Network","A convolutional neural network (CNN) is a type of deep learning network used primarily to identify and classify images and to recognize objects within images. This deep learning network delivers the best results for mapping image data and has high computational efficiency.","Data Science Glossary"],
+  ["dask","Dask","Dask is an open source flexible library for parallel and distributed computing in Python.","Data Science Glossary"],
+  ["data-flywheel","Data Flywheel","A data flywheel is a feedback loop where data collected from interactions or processes is used to continuously refine AI models, which in turn generates better outcomes and more valuable data.","data flywheel;ai data flywheel;ai models"],
+  ["deep-agents","Deep Agents","Deep agents are AI agents built for complex, long-running tasks. Learn how explicit planning, persistent memory, and subagent delegation power autonomous workflows.","deep agent;AI agent;agentic AI;autonomous agents"],
+  ["deep-learning","Deep Learning","Deep learning is a machine learning method and subset of artificial intelligence (AI). It uses artificial neural networks to recognize patterns in data, similar to the way the human brain operates.","Data Science Glossary"],
+  ["digital-twin","Digital Twin","Digital twins are virtual representations of products, processes, and facilities that enterprises use to design, simulate, and operate their physical counterparts.","Digital Twins"],
+  ["embodied-ai","Embodied AI","Embodied AI refers to the integration of artificial intelligence into physical systems, enabling them to interact with the physical world.","Embodied AI;Humanoid Robots;Generative AI"],
+  ["energy-efficiency","Energy Efficiency","Energy efficiency refers to a system or device\u2019s ability to use as little energy as possible to perform a particular task or function within acceptable limits.","Energy efficiency;Data Center"],
+  ["frontier-models","Frontier Models","Frontier AI models are the most advanced general-purpose models, enabling reasoning, multimodal generation, and agentic workflows with optimized performance.","frontier AI models;NVIDIA Glossary advanced AI models;general-purpose AI models;NVIDIA Nemotron"],
+  ["generative-ai","Generative AI","Generative AI enables users to quickly generate new content based on a variety of inputs. Learn all about the benefits, applications, challenges & more.","Generative AI;Generative AI Models;Large Language Models;ChatGPT"],
+  ["graph-analytics","Graph Analytics","Graph analytics is a package for the Python programming language that\u2019s used to create, manipulate, and study the structure, dynamics, and functions of complex networks.","Data Science Glossary"],
+  ["high-performance-computing","High-Performance Computing","HPC computer systems are characterized by their high-speed processing power, high-performance networks, and large-memory capacity.","HPC;High-Performance Computing"],
+  ["humanoid-robot","Humanoid Robot","Humanoids are general-purpose, bipedal robots modeled after the human form factor and designed to work alongside humans to augment productivity.","Humanoid Robot;Robot learning;Reinforcement Learning"],
+  ["imitation-learning","Imitation Learning","Imitation learning is a machine learning approach in which an agent learns to perform tasks or acquire new skills by observing and mimicking demonstrations provided by an expert.","Imitation learning"],
+  ["industrial-ai","Industrial AI","Industrial AI is a critical enabler of industrial automation, enhancing the ability of machines, systems, and processes to operate with minimal human intervention.","Industrial AI;physical AI;Generative AI"],
+  ["k-means","K-Means Clustering Algorithm","K-means is a clustering algorithm\u2014one of the simplest and most popular unsupervised machine learning (ML) algorithms for data scientists.","Data Science Glossary"],
+  ["kubernetes","Kubernetes","Kubernetes is an open-source orchestration platform for managing workloads and services encapsulated in software containers.","Data Science Glossary"],
+  ["large-language-models","Large Language Models","Large language models (LLMs) are deep learning algorithms that can recognize, summarize, translate, predict, and generate content using very large datasets.","Large Language Models;NVIDIA NeMo LLM Service;NVIDIA NeMo Megatron"],
+  ["machine-learning","Machine Learning","Machine learning is a subset of artificial intelligence (AI) that uses algorithms or statistical models to automatically learn experiences without explicit programming or human intervention.","Data Science Glossary"],
+  ["mlops","Machine Learning Operations (MLOps)","A set of practices and principles that aims to streamline the development, deployment, and maintenance of machine learning (ML) models in production environments.","Machine learning operations;MLOps;AI"],
+  ["mixed-integer-programming","Mixed Integer Programming","MIP is a powerful tool widely used in operations research and decision science to solve complex optimization problems.","Mixed Integer Programming;MIP"],
+  ["mixture-of-transformers","Mixture-of-Transformers","Discover the Mixture of Transformers (MoT) architecture, a unified system for efficient multimodal AI. Learn how MoT provides conditional computation for scalable foundation models.","Mixture of Transformers;MoT;MoT model multimodal AI;MoT model architecture"],
+  ["multi-agent-systems","Multi-Agent Systems","Multi-agent systems are a collection of specialized AI agents that work together to solve a complex problem. Also known as teams of agents.","Multi-Agent System;AI agents;Natural Language Processing"],
+  ["natural-language-processing","Natural Language Processing","NLP is a technology that leverages computers and software to derive meaning from human language.","Data Science Glossary"],
+  ["networkx","NetworkX","NetworkX is a package for the Python programming language that\u2019s used to create, manipulate, and study the structure, dynamics, and functions of complex networks.","Data Science Glossary"],
+  ["numba","Numba","Numba is an open-source, just-in-time compiler for Python code that developers can use to accelerate numerical functions on both CPUs and GPUs using standard Python functions.","Data Science Glossary"],
+  ["numpy","NumPy","NumPy is a free, open-source Python library for n-dimensional array processing and numerical computing.","Data Science Glossary"],
+  ["omni-model","Omni-Model","Define omni-models (multimodal AI) & how NVIDIA platforms like Cosmos and Nemotron power their use in agentic and physical AI applications.","Omni model;Omni model AI multimodal"],
+  ["pandas-python","pandas","Pandas is an open-source software library built on Python for data analysis and data manipulation.","Python"],
+  ["generative-physical-ai","Physical AI","Physical AI enables autonomous machines to perceive, understand, and perform complex actions in the real (physical) world.","Generative physical AI"],
+  ["polars","Polars","Polars is an open-source DataFrame library for data manipulation and analysis. It is implemented in Rust and uses Apache Arrow\u2019s columnar memory format for efficient data processing.","Polars;DataFrame library"],
+  ["power-efficiency","Power Efficiency","Power efficiency is the maximization of how much computing work and data movement is accomplished per unit of electricity consumed.","Power Efficiency;GPUs;DPUs;AI framework"],
+  ["product-configurator","Product Configurator","A product configurator is a visualization tool that allows users to customize products in real time.","Product Configurator;visualization team"],
+  ["pytorch","PyTorch","PyTorch is a fully featured framework for building deep learning models, which is a type of machine learning.","Data Science Glossary"],
+  ["quantum-computing","Quantum Computing","Quantum computing is a paradigm shifting technology that leverages the laws of quantum physics to solve extremely difficult problems.","Quantum Computing"],
+  ["random-forest","Random Forest","Random forests, or random decision forests, are supervised classification algorithms that use a learning method consisting of a multitude of decision trees. The output is the consensus of the best answer to the problem.","Data Science Glossary"],
+  ["reasoning-vision-language-action","Reasoning Vision Language Action","Reasoning VLA (vision-language-action) is a unified artificial intelligence model that integrates visual perception, language understanding, and action generation with step-by-step reasoning.","Reasoning VLA;physical AI;AI reasoning"],
+  ["recommendation-system","Recommendation System","A recommendation system is an artificial intelligence or AI algorithm, usually associated with machine learning.","Data Science Glossary"],
+  ["linear-regression-logistic-regression","Regression","Linear and logistic regression are techniques for determining how a dependent variable is affected by one or more independent variables.","Data Science Glossary"],
+  ["reinforcement-learning","Reinforcement Learning","Reinforcement learning (RL) is a type of machine learning technique that enables robots to make intelligent decisions by learning from experience.","Reinforcement Learning;Robots;NVIDIA Isaac Lab"],
+  ["retrieval-augmented-generation","Retrieval-Augmented Generation (RAG)","RAG enhances large language model prompts with relevant data for more practical, accurate responses. Learn all about the architecture and more.","RAG;Retrieval-Augmented Generation;Generative AI"],
+  ["robot-learning","Robot Learning","Robot learning is a collection of algorithms and methodologies that help a robot learn new skills such as manipulation, locomotion, and more.","Robot learning;Reinforcement Learning;NVIDIA Isaac Lab"],
+  ["scikit-learn","Scikit-learn","scikit-learn is a widely used open-source library in the Python ecosystem, designed specifically for machine learning-related tasks.","scikit-learn;machine learning;Python library"],
+  ["sensor-simulation","Sensor Simulation","Sensor simulation replicates real-world sensor behavior, enabling safe AI training, testing, and validation for robotics, automotive, and industrial use.","Sensor simulation;Robotics;Automotive;AI Training"],
+  ["sentiment-analysis","Sentiment Analysis","Sentiment analysis is the automated interpretation and classification of emotions from textual data such as written reviews and social media posts.","Data Science Glossary"],
+  ["simready","SimReady","SimReady, or \u201csimulation-ready,\u201d refers to a standard for physically accurate 3D assets that incorporate real-world properties, behaviors, and data bindings (e.g., IoT).","SimReady;Universal Scene Description;physical AI"],
+  ["hit-identification","Small-Molecule Hit Identification","Hit identification, also known as hit finding or hit discovery, is the process of discovering small drug-like molecules that can potentially bind to a specific biological target.","small Molecule Hit Identification(Hit ID);Hit Identification"],
+  ["spatial-computing","Spatial Computing","Spatial computing merges digital data with the physical world in real time, enhancing mixed-reality interactions through devices like AR and VR headsets or smart glasses.","Spatial Computing;Mixed Reality;cloud computing;AR"],
+  ["specialized-ai","Specialized AI","Learn about specialized AI, the industries it serves, the types of models it uses, and how it works.","specialized ai;generalized ai;models;applications"],
+  ["speech-ai","Speech AI","Speech AI is a subset of conversational AI and includes automatic speech recognition (ASR) for converting spoken language into text and text-to-speech (TTS).","speech ai;automatic speech recognition;text-to-speech;conversational ai"],
+  ["stream-processing","Stream Processing","Stream processing is the continuous processing of new data events as they are received.","Data Science Glossary"],
+  ["synthetic-data-generation","Synthetic Data","The process of creating text, 2D or 3D images in the visual and non-visual spectrum from computer simulations, generative AI models, or a combination of the two.","Synthetic data generation;Synthetic data;Generative AI models"],
+  ["tensorflow","TensorFlow","TensorFlow is the world\u2019s most popular open-source library designed for developing and deploying state-of-the-art machine learning algorithms.","Data Science Glossary"],
+  ["text-to-speech","Text-to-Speech","Text-to-speech is a form of speech synthesis that converts any string of text characters into spoken output.","Data Science Glossary"],
+  ["vector-database","Vector Database","A vector database is an organized collection of vector embeddings that can be created, read, updated, and deleted at any point in time.","Vector Database;Embedding Model;NVIDIA NeMo"],
+  ["virtual-screening","Virtual Screening","A computational technique used in drug discovery to evaluate large libraries of small molecules or compounds to identify potential drug candidates.","virtual screening;small molecules;generative virtual screening"],
+  ["vision-language-models","Vision Language Models","Vision Language Models (VLMs) are multimodal generative AI models capable of reasoning over text, image and video prompts.","Vision Language Models;Generative AI models;NVIDIA NIM"],
+  ["world-action-model","World Action Model","A world action model (WAM) is a robotics AI model that jointly predicts future world states and robot actions using video pretraining. Learn how WAMs enable zero-shot generalization, cross-embodiment transfer, and real-time control.","world action model;WAM robotics;zero-shot generalization robotics"],
+  ["world-models","World Foundation Models","World models are neural networks that understand the dynamics of the real world, including physics and spatial properties.","World Models;Physical AI"],
+  ["xgboost","XGBoost","XGBoost is an open-source software library that implements machine learning algorithms under the Gradient Boosting framework. XGBoost is growing in popularity and used by many data scientists globally to solve problems in regression, classification, ranking, and user-defined prediction challenges.","Data Science Glossary"],
+];
+const NV_GLOSSARY = "https://www.nvidia.com/en-us/glossary/";
+const _GSTOP = new Set("a an and are as at be by do does for from how in is it of on or the to vs what when where which who why with work works".split(" "));
+function _glossaryRank(query) {
+  const q = (query || "").toLowerCase().trim();
+  const words = q.split(/\s+/).filter(w => w && !_GSTOP.has(w));
+  const scored = [];
+  for (const [slug, term, blurb, tags] of GLOSSARY) {
+    const t = term.toLowerCase(), b = blurb.toLowerCase(), g = tags.toLowerCase();
+    let s = 0;
+    if (t === q) s += 100;
+    if (q.length > 2 && t.includes(q)) s += 40;
+    for (const w of words) {
+      if (t.includes(w)) s += 12;
+      if (g.split(";").some(tag => tag.includes(w))) s += 6;
+      if (new RegExp("\\b" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i").test(b)) s += 3;
+    }
+    if (s > 0) scored.push({ slug, term, blurb, score: s });
+  }
+  scored.sort((a, b) => b.score - a.score || a.term.localeCompare(b.term));
+  return scored;
+}
+// Same { results, count, unreachable } shape the rest of the course's tools use.
+function glossarySearch(query, { limit = 5, maxResults } = {}) {
+  const n = maxResults || limit;
+  const results = _glossaryRank(query).slice(0, n).map(h => ({
+    title: h.term, body: h.blurb, href: NV_GLOSSARY + h.slug + "/",
+  }));
+  return { results, count: results.length, unreachable: false, source: "nvidia-glossary" };
+}
+function glossaryLookup(slug) {
+  const row = GLOSSARY.find(r => r[0] === String(slug).toLowerCase());
+  const results = row ? [{ title: row[1], body: row[2], href: NV_GLOSSARY + row[0] + "/" }] : [];
+  return { results, count: results.length, unreachable: false, source: "nvidia-glossary" };
+}
+// Deep glossary terms load cached full articles from mats/glossary_raw/.
+async function glossaryFull(query) {
+  const top = _glossaryRank(query)[0];
+  if (!top) return null;
+  try {
+    const r = await fetch("mats/glossary_raw/" + top.slug + ".md");
+    if (r.ok) return { slug: top.slug, term: top.term, body: await r.text() };
+  } catch (_) { /* same-origin file; only the deep terms have one cached */ }
+  return null;   // matched a term, but no full article is cached for it
+}
+function formatGlossaryResults(out) {
+  if (!out.results.length) return "No NVIDIA glossary entries matched. Say so rather than guessing.";
+  return out.results.map((r, i) => "[" + (i + 1) + "] " + r.title + "\n" + r.body + "\nSource: " + r.href).join("\n\n");
+}
+// MCP-style server: the same tools/list + tools/call a real MCP server speaks, in-process.
+const glossaryMCP = {
+  async request(method, params = {}) {
+    if (method === "tools/list") {
+      return { tools: [
+        { name: "glossary_search",
+          description: "Search NVIDIA's glossary of AI and accelerated-computing terms. Returns ranked entries, each with a short definition and a source link.",
+          inputSchema: { type: "object", properties: { query: { type: "string", description: "a few keywords, e.g. 'vector database'" }, limit: { type: "integer" } }, required: ["query"] } },
+        { name: "glossary_lookup",
+          description: "Fetch one glossary term by its slug, e.g. 'retrieval-augmented-generation'.",
+          inputSchema: { type: "object", properties: { slug: { type: "string" } }, required: ["slug"] } },
+      ] };
+    }
+    if (method === "tools/call") {
+      const { name, arguments: args = {} } = params;
+      const out = name === "glossary_search" ? glossarySearch(args.query || "", { limit: args.limit || 5 })
+                : name === "glossary_lookup" ? glossaryLookup(args.slug || "")
+                : null;
+      if (!out) return { content: [{ type: "text", text: "unknown tool: " + name }], isError: true };
+      return { content: [{ type: "text", text: formatGlossaryResults(out) }], structuredContent: out };
+    }
+    return { error: { code: -32601, message: "method not found: " + method } };
+  },
+};
+// Expose to this page's cells and the artifact (no _shared.js dependency for search).
+window.glossaryMCP = glossaryMCP;
+window.glossarySearch = glossarySearch;
+window.glossaryLookup = glossaryLookup;
+window.glossaryFull   = glossaryFull;
+window.formatGlossaryResults = formatGlossaryResults;
+
+// ── multi-tool routing ─────────────────────────────────────
+mountCanvasFlow("#cell-m2b-p3", {
+  label: "two tools, the model routes",
+  intro: "Three roots feed into one LLM, and editing either tool description shifts how the model routes. The description string is one of the most consequential prompt-engineering surfaces in any tool-using agent.",
+  edges: [
+    { from: "question", to: "llm" },
+    { from: "tool_a",   to: "llm" },
+    { from: "tool_b",   to: "llm" },
+  ],
+  nodes: [
+    {
+      id: "question", icon: "👤", title: "User question", x: 1, y: 0,
+      summary: "Try an arithmetic, a definition, or something either tool could handle.",
+      code: `// TODO: Choose an example or write a question that makes the tool choice interesting.
+
+const EXAMPLES = {
+  default: "What is 2 to the power of 10?",
+  arithmetic: "Evaluate (17 * 43) + Math.sqrt(144) / Math.log(2).",
+  concept: "What does raising a number to a real, non-integer power mean?",
+  series: "Approximate pi with 4 * (1 - 1/3 + 1/5 - 1/7 + 1/9 - 1/11).",
+};
+state.question = EXAMPLES.default;
+
+return state.question;
+`,
+    },
+    {
+      id: "tool_a", icon: "🛠", title: "Tool A · calculate", x: 0, y: 1,
+      summary: "Scoped to arithmetic expressions only. Its description explicitly says not to use it for definitions or conceptual questions, which steers the model toward the other tool when the intent is explanatory.",
+      code: `// Describe the calculator tool so the model knows when to route to it.
+state.toolA = {
+  type: "function",
+  function: {
+    name: "calculate",
+    description: "Evaluate an arithmetic expression. Use for any computation. Do NOT use for definitions or conceptual questions.",
+    parameters: { type: "object",
+      properties: { expression: { type: "string" } }, required: ["expression"] },
+  },
+};
+return state.toolA.function.name;
+`,
+    },
+    {
+      id: "tool_b", icon: "🛠", title: "Tool B · explain_concept", x: 2, y: 1,
+      summary: "Scoped to definitions and conceptual questions only. Its description tells the model not to use it for arithmetic, which keeps the two tools from competing on overlapping inputs.",
+      code: `// Describe the explainer tool so conceptual questions route here.
+state.toolB = {
+  type: "function",
+  function: {
+    name: "explain_concept",
+    description: "Explains a technical or scientific concept in plain English. Use for definitions and conceptual questions. Do NOT use for arithmetic.",
+    parameters: { type: "object",
+      properties: { concept: { type: "string" } }, required: ["concept"] },
+  },
+};
+return state.toolB.function.name;
+`,
+    },
+    {
+      id: "llm", icon: "🧠", title: "LLM call · the model routes", x: 1, y: 2,
+      summary: "Streams the model as it reasons over the two tool descriptions, then returns the routing decision. The route turns almost entirely on the description strings, so edit one and rerun to watch the model change its mind.",
+      code: `// Ask the model to choose one of the two tool descriptions above.
+const s = await helpers.chatStream({
+  messages: [{ role: "user", content: state.question }],
+  tools:    [state.toolA, state.toolB],
+  max_tokens: 8196,
+});
+
+// The reasoning streamed above.
+// Return the chosen tool, if any, plus the arguments the model filled in.
+if (!s.tool_calls.length) return { routed_to: "(answered directly)", answer: s.content };
+const tc = s.tool_calls[0];
+return { routed_to: tc.function.name, arguments: JSON.parse(tc.function.arguments || "{}") };
+`,
+    },
+  ],
+});
+
+// ── glossary_search via the in-page NVIDIA glossary server ──
+mountCanvasFlow("#cell-m2b-p4", {
+  label: "glossary_search via the in-page NVIDIA glossary MCP server",
+  intro: "Each node writes into a shared state object that later nodes read. Open any node to edit its JS and rerun it alone, or run the whole graph.",
+  edges: [
+    { from: "input", to: "llm1" },
+    { from: "tool",  to: "llm1" },
+    { from: "llm1",  to: "search" },
+    { from: "search", to: "llm2" },
+  ],
+  nodes: [
+    {
+      id: "input", icon: "👤", title: "User input", x: 0, y: 0,
+      summary: "Holds the question the student asks, which you can edit before rerunning.",
+      code: `// TODO: Try another model-family question, or write your own.
+state.question = "What is the NVIDIA Nemotron model family and what is it good at?";
+// state.question = "Which NVIDIA model family is designed for reasoning?";
+// state.question = "How does NVIDIA NIM differ from a model checkpoint?";
+return state.question;
+`,
+    },
+    {
+      id: "tool", icon: "📄", title: "Tool spec", x: 2, y: 0,
+      summary: "The glossary_search JSON Schema the model reads. It is the same shape any tool takes; only the name and description say what this one does.",
+      code: `// Define the tool schema the model can choose from next.
+state.SEARCH_SCHEMA = [{
+  type: "function",
+  function: {
+    name: "glossary_search",
+    description: "Search NVIDIA's glossary of AI and accelerated-computing terms. Use for definitions and concepts.",
+    parameters: {
+      type: "object",
+      properties: { query: { type: "string", description: "a few keywords, e.g. 'vector database'" } },
+      required: ["query"],
+    },
+  },
+}];
+return { name: state.SEARCH_SCHEMA[0].function.name };
+`,
+    },
+    {
+      id: "llm1", icon: "🧠", title: "LLM call #1", x: 1, y: 1,
+      summary: "Force glossary_search so the complete tool round-trip stays visible. The model supplies the search query; autonomous tool routing is the lesson above and the behavior of the final artifact.",
+      code: `// Send the prepared messages and stream the model response.
+state.messages = [
+  { role: "system", content: "You are a research assistant. Ground answers in glossary_search results; never answer factual questions from memory." },
+  { role: "user",   content: state.question },
+];
+state.s1 = await helpers.chatStream({
+  messages:    state.messages,
+  tools:       state.SEARCH_SCHEMA,
+  tool_choice: { type: "function", function: { name: "glossary_search" } },   // require the search; don't let it answer from (stale) memory
+  max_tokens:  8196,   // a reasoning model thinks before it emits the call; too small a budget and it stops mid-thought
+});
+return {
+  finish_reason: state.s1.finish_reason,
+  tool_calls_count: state.s1.tool_calls.length,
+  direct_answer_preview: state.s1.tool_calls.length ? "(tool requested instead)" : (state.s1.content || "").slice(0, 200),
+};
+`,
+    },
+    {
+      id: "search", icon: "🌐", title: "glossary_search", x: 1, y: 2,
+      summary: "The executor. It calls the in-page glossary MCP server (defined at the top of this page) via tools/call and gets back ranked NVIDIA glossary entries. The catalog and the search both run locally in your browser, with no key and no network call.",
+      code: `// Handle the tool-call result from the previous model turn.
+if (!state.s1.tool_calls.length) {
+  // No tool call here: the model either answered from training (it has content) or ran out of tokens mid-call.
+  // Distinguish the two so we never report a direct answer for a truncated call.
+  state.skipped = true;
+  state.reason = state.s1.content ? "model answered directly; no search needed"
+            : "call #1 stopped before answering (finish_reason: " + state.s1.finish_reason + "); raise max_tokens";
+  helpers.log(state.reason);
+  return { skipped: true, reason: state.reason };
+}
+const tc      = state.s1.tool_calls[0];
+state.query   = JSON.parse(tc.function.arguments).query;
+// Call the in-page MCP server the same way you would a remote one: tools/call.
+state.search  = await glossaryMCP.request("tools/call", { name: "glossary_search", arguments: { query: state.query, limit: 4 } });
+state.toolMsg = state.search.content[0].text;          // the text block the model reads
+const meta    = state.search.structuredContent;        // { results, count, source }
+state.messages.push({
+  role: "assistant",
+  content: state.s1.content || null,
+  tool_calls: state.s1.tool_calls,
+});
+state.messages.push({ role: "tool", tool_call_id: tc.id, content: state.toolMsg });
+// Steer the synthesis call: answer now, from the results, with no more tool calls.
+state.messages.push({ role: "user", content: "Using only the search results above, write the final answer now. Do not request another search or output any tool-call syntax." });
+return { query: state.query, count: meta.count, source: meta.source };
+`,
+    },
+    {
+      id: "llm2", icon: "🧠", title: "LLM call #2", x: 1, y: 3,
+      summary: "Synthesizes the final answer from the search results. Note this call passes NO tools, so it must answer from what call #1 retrieved rather than request another search. That is what turns a tool result into a final reply.",
+      code: `// Handle the tool-call result from the previous model turn.
+if (state.skipped) {
+  return { final_answer: state.s1.content || "(" + (state.reason || "no answer") + ")",
+           note: "no search was run on this turn" };
+}
+// No tools here; the model must answer from the search results it already has.
+state.s2 = await helpers.chatStream({
+  messages:   state.messages,
+  max_tokens: 8196,   // room for the reasoning model to think AND write the answer
+});
+// Strip stray tool-call text from reasoning models that emit it anyway.
+const answer = (state.s2.content || "")
+  .replace(/<tool_call>[\\s\\S]*?<\\/tool_call>/g, "")
+  .replace(/<\\/?function[^>]*>|<\\/?parameter[^>]*>/g, "").trim();
+return answer || "(the model did not produce a final answer; try Run again)";
+`,
+    },
+  ],
+});
+
+// ── the same glossary_search tool, swapped to exact lookup ─
+mountRunCell("#cell-m2b-p4b", {
+  label: "the same glossary_search tool, swapped to a full-article backend",
+  intro: "Keep the glossary_search contract and swap in a richer backend that returns the best term's cached article. Edit the question and rerun; full articles include vector database, RAG, LLMs, AI agents, and deep agents.",
+  code: `// Same glossary_search the model already knows, but a richer backend behind it: instead of a
+// one-line blurb, it returns the term's full NVIDIA glossary article (mats/glossary_raw/<slug>.md).
+const SEARCH_SCHEMA = [{
+  type: "function",
+  function: {
+    name: "glossary_search",
+    description: "Look up an NVIDIA glossary term and return its full article.",
+    parameters: { type: "object", properties: { query: { type: "string", description: "the term, e.g. 'vector database'" } }, required: ["query"] },
+  },
+}];
+
+const messages = [
+  { role: "system", content: "You are a research assistant. Ground answers in glossary_search results; do not answer factual questions from memory." },
+  { role: "user",   content: "What is a vector database, and how does it use embeddings?" },
+];
+
+// Require the call so the swapped backend is always exercised. The model streams its reasoning.
+const s1   = await chatStream({ messages, tools: SEARCH_SCHEMA, tool_choice: { type: "function", function: { name: "glossary_search" } }, max_tokens: 8196 });
+const args = JSON.parse(s1.tool_calls[0].function.arguments || "{}");
+
+// Fetch the full article when cached; shallow glossary terms fall back to their blurb.
+const article = await glossaryFull(args.query || "");
+const toolMsg = article ? article.body : "(no full article cached for that term)";
+
+messages.push({ role: "assistant", content: s1.content || null, tool_calls: s1.tool_calls });
+messages.push({ role: "tool", tool_call_id: s1.tool_calls[0].id, content: toolMsg });
+messages.push({ role: "user", content: "Using only the article above, write the final answer now." });
+
+// Streams the grounded answer; the return surfaces the full article the model actually read.
+await chatStream({ messages, max_tokens: 8196 });
+return article
+  ? { term: article.term, slug: article.slug, chars: article.body.length, full_entry: article.body }
+  : { error: "no full article cached for that term" };
+`,
+});
+
+// ── agents as tools ────────────────────────────────────────
+mountCanvasFlow("#cell-m2b-p5", {
+  label: "agents as tools · hide the database, expose the question",
+  intro: "The top-level agent gets a single query_customer_db tool backed by a sub-agent that knows the schema (a tiny JS array stands in for SQL). Raw rows never reach the caller, which poses a question and receives a natural-language answer in return.",
+  edges: [
+    { from: "sub_data",  to: "sub_agent" },
+    { from: "tool_spec", to: "main_llm" },
+    { from: "user",      to: "main_llm" },
+    { from: "main_llm",  to: "dispatch" },
+    { from: "sub_agent", to: "dispatch" },
+  ],
+  nodes: [
+    {
+      id: "sub_data", icon: "🗃", title: "Hidden data (the sub-agent's world)", x: 0, y: 0,
+      summary: "An in-page customer table that the main agent will never see and that a real version would replace with a SQL connection plus row-level auth.",
+      code: `// Seed the small dataset this retrieval example searches.
+state.customers = [
+  { id: 1001, name: "Aiyana Brooks",  plan: "pro",   region: "us-west", joined: "2024-03-12", tickets_30d: 1 },
+  { id: 1002, name: "Boris Müller",   plan: "free",  region: "eu",      joined: "2025-11-04", tickets_30d: 0 },
+  { id: 1003, name: "Chen Wei",       plan: "pro",   region: "apac",    joined: "2023-08-22", tickets_30d: 4 },
+  { id: 1004, name: "Dara Okafor",    plan: "team",  region: "us-east", joined: "2025-01-09", tickets_30d: 2 },
+  { id: 1005, name: "Ezra Goldstein", plan: "team",  region: "us-east", joined: "2024-07-30", tickets_30d: 0 },
+  { id: 1006, name: "Farida Hassan",  plan: "pro",   region: "eu",      joined: "2025-06-15", tickets_30d: 3 },
+];
+return { rows: state.customers.length, schema_fields: Object.keys(state.customers[0]) };
+`,
+    },
+    {
+      id: "sub_agent", icon: "🤖", title: "Sub-agent · query_customer_db", x: 0, y: 1,
+      summary: "Knows the table schema and answers a natural-language question through one LLM call with the rows embedded in its system prompt.",
+      code: `// Define the mock database tool the agent may call.
+state.queryCustomerDB = async function(question) {
+  // The sub-agent's world: a tight system prompt that hides the table, and the rows as context.
+  const schemaText = "Customer rows have fields: id (int), name (string), plan (free|pro|team), region (us-east|us-west|eu|apac), joined (YYYY-MM-DD), tickets_30d (int).";
+  const rowsText   = state.customers.map(c => JSON.stringify(c)).join("\\n");
+  const sub = await helpers.chatStream({
+    messages: [
+      { role: "system", content:
+        "You are a customer-database analyst. Use ONLY the rows provided. " +
+        "If the rows do not contain the answer, say so. Be concise.\\n\\n" +
+        schemaText + "\\n\\nRows:\\n" + rowsText },
+      { role: "user", content: question },
+    ],
+    max_tokens: 8196,
+  });
+  return (sub.content || sub.reasoning || "(empty)").trim();
+};
+return { sub_agent: "query_customer_db", world_rows: state.customers.length };
+`,
+    },
+    {
+      id: "tool_spec", icon: "📄", title: "Tool spec (to the main agent)", x: 2, y: 0,
+      summary: "The schema the main agent sees, which exposes the capability alone and gives zero details about the underlying table.",
+      code: `// Define the tool schema the model can choose from next.
+state.TOOLS = [{
+  type: "function",
+  function: {
+    name: "query_customer_db",
+    description: [
+      "Ask a natural-language question about customer accounts.",
+      "Use for questions about plans, regions, ticket activity, signup dates, and counts.",
+    ].join(" "),
+    parameters: {
+      type: "object",
+      properties: { question: { type: "string", description: "A specific question in natural English." } },
+      required: ["question"],
+    },
+  },
+}];
+return { tool_name: state.TOOLS[0].function.name };
+`,
+    },
+    {
+      id: "user", icon: "👤", title: "User question (to the main agent)", x: 2, y: 1,
+      summary: "Edit this to try a question like 'How many pro-plan customers do we have?' or 'Who has the most tickets in the last 30 days?'",
+      code: `// TODO: Ask about a different customer segment or activity signal.
+state.userQuestion = "Which EU customers are on the pro plan, and how active are they?";
+// state.userQuestion = "How many pro-plan customers signed up this quarter?";
+// state.userQuestion = "Who opened the most tickets in the last 30 days?";
+return state.userQuestion;
+`,
+    },
+    {
+      id: "main_llm", icon: "🧠", title: "Main agent · plain LLM call", x: 1, y: 2,
+      summary: "Seeing only the one tool, the main agent decides whether to ask the sub-agent or answer directly.",
+      code: `// Send the prepared messages and stream the model response.
+state.mainMessages = [
+  { role: "system", content: "You are a customer-success agent. When the user asks about customer data, call query_customer_db rather than guessing." },
+  { role: "user",   content: state.userQuestion },
+];
+state.s1 = await helpers.chatStream({
+  messages: state.mainMessages,
+  tools:    state.TOOLS,
+  max_tokens: 8196,
+});
+return {
+  finish_reason: state.s1.finish_reason,
+  tool_calls:    state.s1.tool_calls.map(tc => ({ name: tc.function.name, args: tc.function.arguments })),
+};
+`,
+    },
+    {
+      id: "dispatch", icon: "📤", title: "Dispatch to sub-agent · synth final answer", x: 1, y: 3,
+      summary: "Once the top-level agent calls the tool, we hand the natural-language question to the sub-agent, append its answer, and ask for the user-facing reply.",
+      code: `// Handle the tool-call result from the previous model turn.
+if (!state.s1.tool_calls.length) {
+  helpers.log("main agent answered directly without using the sub-agent");
+  return { final: state.s1.content || "(empty)" };
+}
+state.mainMessages.push({
+  role: "assistant",
+  content: state.s1.content || null,
+  tool_calls: state.s1.tool_calls,
+});
+for (const tc of state.s1.tool_calls) {
+  const args   = JSON.parse(tc.function.arguments || "{}");
+  helpers.log("main → sub: " + (args.question || "?"));
+  const answer = await state.queryCustomerDB(args.question || "");
+  helpers.log.details("sub → main", answer);
+  state.mainMessages.push({ role: "tool", tool_call_id: tc.id, content: answer });
+}
+const s2 = await helpers.chatStream({
+  messages: state.mainMessages, tools: state.TOOLS, max_tokens: 8196,
+});
+
+helpers.log("note: the main agent never saw the rows; only the sub-agent's natural-language summary");
+
+return s2.content || s2.reasoning || "(empty)";
+`,
+    },
+  ],
+});
+
+// ── MCP-shaped tool server ─────────────────────────────────
+mountCanvasFlow("#cell-m2b-p6", {
+  label: "MCP-shaped tool server · discovery + dispatch",
+  intro: "A fake in-page MCP server exposes two tools through tools/list and tools/call with no network. The agent discovers the tool list, hands the schemas to the LLM, and dispatches the model's tool_calls back through tools/call. Only the tool source changes; the agent loop stays identical to a normal tool call.",
+  edges: [
+    { from: "server",   to: "discover" },
+    { from: "discover", to: "llm" },
+    { from: "user",     to: "llm" },
+    { from: "llm",      to: "dispatch" },
+  ],
+  nodes: [
+    {
+      id: "server", icon: "🖥", title: "In-page MCP server", x: 0, y: 0,
+      summary: "Define an in-page server with tools/list and tools/call in MCP's JSON-RPC shape. A deployed MCP server carries those calls over stdio or HTTP instead of the same JavaScript process.",
+      code: `// The same in-page glossary server the search cell called directly, now reached through
+// Discover tools through MCP instead of hard-coding direct calls.
+state.mcpServer = window.glossaryMCP;
+const listed = await state.mcpServer.request("tools/list");
+return { exposes: ["tools/list", "tools/call"], tools: listed.tools.map(t => t.name) };
+`,
+    },
+    {
+      id: "discover", icon: "🔎", title: "Client · tools/list", x: 0, y: 1,
+      summary: "The client side of the MCP handshake: it calls tools/list on the server and maps each returned tool's inputSchema to the OpenAI function-calling format so the model can read it as a normal tools array.",
+      code: `// Ask the mock MCP server which tools it exposes.
+const list = await state.mcpServer.request("tools/list");
+helpers.log("discovered " + list.tools.length + " tools");
+state.tools = list.tools.map(t => ({
+  type: "function",
+  function: { name: t.name, description: t.description, parameters: t.inputSchema },
+}));
+return state.tools.map(t => t.function.name);
+`,
+    },
+    {
+      id: "user", icon: "👤", title: "User question", x: 2, y: 1,
+      summary: "The question the model answers using the discovered glossary tools. A definitional ask is served by glossary_search, while a request for a specific term by slug goes to glossary_lookup.",
+      code: `// TODO: Try a broad definition or request a specific glossary term.
+state.question = "What is retrieval-augmented generation, and what does a vector database have to do with it?";
+// state.question = "What is an AI agent?";
+// state.question = "Look up the glossary term with the slug vector-database.";
+return state.question;
+`,
+    },
+    {
+      id: "llm", icon: "🧠", title: "LLM (sees discovered tools)", x: 1, y: 2,
+      summary: "The same single chatStream call runs unchanged because the agent loop cannot tell whether the tools came from a hardcoded array or a remote MCP server. The discovery step above lets you swap that source without touching the loop at all.",
+      code: `// Send the prepared messages and stream the model response.
+state.messages = [{ role: "user", content: state.question }];
+state.s1 = await helpers.chatStream({
+  messages:   state.messages,
+  tools:      state.tools,
+  max_tokens: 8196,
+});
+state.messages.push({
+  role: "assistant",
+  content: state.s1.content || null,
+  tool_calls: state.s1.tool_calls.length ? state.s1.tool_calls : undefined,
+});
+return {
+  finish_reason: state.s1.finish_reason,
+  tool_calls: state.s1.tool_calls.map(tc => ({ name: tc.function.name, args: tc.function.arguments })),
+};
+`,
+    },
+    {
+      id: "dispatch", icon: "📤", title: "Client → tools/call → LLM #2", x: 1, y: 3,
+      summary: "Closes the loop: for each tool_call the model requested, this node forwards the call to the server's tools/call endpoint, appends the result as a tool message, then makes one final model call to produce the user-facing answer from whatever the server returned.",
+      code: `// Handle the tool-call result from the previous model turn.
+if (!state.s1.tool_calls.length) return state.s1.content || "(model answered directly)";
+for (const tc of state.s1.tool_calls) {
+  const args = JSON.parse(tc.function.arguments || "{}");
+  const out  = await state.mcpServer.request("tools/call", { name: tc.function.name, arguments: args });
+  const txt  = out.content?.[0]?.text || "(no text)";
+  helpers.log.details("server → " + tc.function.name, out);
+  state.messages.push({ role: "tool", tool_call_id: tc.id, content: txt });
+}
+const s2 = await helpers.chatStream({
+  messages: state.messages, tools: state.tools, max_tokens: 8196,
+});
+return s2.content || s2.reasoning || "(empty)";
+`,
+    },
+  ],
+});
+</script>
+</body>
+</html>

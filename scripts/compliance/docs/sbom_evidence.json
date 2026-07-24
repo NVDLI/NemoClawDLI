@@ -1,0 +1,49 @@
+{
+  "schema": "nemoclaw-sbom-evidence/1",
+  "records": [
+    {
+      "id": "browser-runtime",
+      "state": "available",
+      "distribution": "distributed",
+      "description": "Browser packages learners receive with the static course",
+      "selectors": [{"category": "vendored"}],
+      "sbom": {
+        "href": "../../../web/nemoclaw/vendor/browser-sbom.cdx.json",
+        "repository_path": "web/nemoclaw/vendor/browser-sbom.cdx.json",
+        "sha256": "08c7146f6da9d5c95f324c006ec4f8aa2025791728102b9c3285dc24f50d1dba",
+        "bytes": 19514,
+        "format": "CycloneDX",
+        "spec_version": "1.6",
+        "component_count": 23,
+        "license_metadata": {"spdx": 23, "named": 0, "missing": 0}
+      },
+      "retention": "Repository history and versioned release archive"
+    },
+    {
+      "id": "python-material-tooling",
+      "state": "ci-generated",
+      "distribution": "not-distributed",
+      "description": "Pinned Python tools used to verify course materials; learners do not receive them",
+      "selectors": [{"category": "validation"}],
+      "ci": {
+        "job": "security_python_sca",
+        "raw_sbom_artifact_path": "scripts/security/reports/python-materials/python-env.raw.cdx.json",
+        "sbom_artifact_path": "scripts/security/reports/python-materials/python-env.cdx.json",
+        "manifest_artifact_path": "scripts/security/reports/python-materials/sbom-evidence.json",
+        "appendix_artifact_path": "scripts/security/reports/python-materials/python-license-appendix.md",
+        "retention_days": 30
+      },
+      "evidence_links": [
+        {"label": "CI job definition", "href": "../../../.gitlab/ci/sca.yml"},
+        {"label": "SBOM generation and retrieval runbook", "href": "sbom_generation.md"},
+        {"label": "Checked Python package inventory", "href": "../../../THIRD_PARTY_LICENSES.md"}
+      ],
+      "release_asset_patterns": [
+        "nemoclaw-vX.Y.Z.python-env.raw.cdx.json",
+        "nemoclaw-vX.Y.Z.python-env.cdx.json",
+        "nemoclaw-vX.Y.Z.python-sbom-evidence.json",
+        "nemoclaw-vX.Y.Z.python-license-appendix.md"
+      ]
+    }
+  ]
+}

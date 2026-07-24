@@ -1,0 +1,83 @@
+{
+  "schema": "pyodide-cookbook-use-cases/1.0",
+  "source_root": "task-supplied local cookbooks tree",
+  "cases": [
+    {
+      "id": "interactive-runner",
+      "label": "Editable Python, inputs, values, output, and errors",
+      "evidence": [
+        "src/components/interactive-code/python-worker.ts",
+        "src/components/interactive-code/client.ts"
+      ],
+      "examples": ["compute", "output-channels", "user-input", "chat-app"],
+      "required_coverage": ["python-runtime", "editable-input", "returned-value", "stdout", "stderr", "worker-message", "reset", "jupyter-display", "pretty-display", "markdown-display", "html-display", "json-display", "code-display", "table-display", "ipython-display-helpers", "persistent-kernel", "execution-count", "syntax-highlighting", "repl"]
+    },
+    {
+      "id": "nim-first-call",
+      "label": "OpenAI-compatible model request",
+      "evidence": ["src/content/docs/genai-foundation/section-3-large-language-models.md"],
+      "examples": ["messages", "portable-request", "chat-app"],
+      "required_coverage": ["chat-completions", "structured-messages", "api-settings", "openai-compatible", "nim-portability", "secret-handling", "build-nvidia", "http-sse", "streaming", "cancel"]
+    },
+    {
+      "id": "nim-tool-call",
+      "label": "Function call, arguments, and tool result",
+      "evidence": ["src/content/docs/genai-foundation/section-4-tool-use-and-function-calling.md"],
+      "examples": ["tool-call"],
+      "required_coverage": ["function-calling", "json-arguments", "tool-execution"]
+    },
+    {
+      "id": "groq-mcp-hf",
+      "label": "MCP server and allowed-tool request",
+      "evidence": ["src/content/docs/genai-foundation/section-5-model-context-protocol.md"],
+      "examples": ["mcp"],
+      "required_coverage": ["mcp", "responses-api", "allowed-tools"]
+    },
+    {
+      "id": "groq-mcp-stripe",
+      "label": "Second MCP source using the same portable descriptor",
+      "evidence": ["src/content/docs/genai-foundation/section-5-model-context-protocol.md"],
+      "examples": ["mcp"],
+      "required_coverage": ["mcp", "responses-api", "allowed-tools"]
+    },
+    {
+      "id": "nim-simple-agent",
+      "label": "Bounded plan, tool, observation, and answer loop",
+      "evidence": ["src/content/docs/genai-foundation/section-7-from-chatbots-to-agents.md"],
+      "examples": ["agent-loop"],
+      "required_coverage": ["agent-loop", "tool-execution", "trace"]
+    },
+    {
+      "id": "background-process-lifecycle",
+      "label": "Named background work that survives later cell executions",
+      "evidence": ["user-requested integration target"],
+      "examples": ["background-job"],
+      "required_coverage": ["asyncio", "background-process", "process-registration", "process-status", "worker-lifecycle"]
+    },
+    {
+      "id": "generated-artifact",
+      "label": "Generated files with safe preview and exact-byte download",
+      "evidence": ["src/components/coding-harness-chat.ts"],
+      "examples": ["artifact-generation"],
+      "required_coverage": ["artifact-generation", "artifact-preview", "artifact-download", "background-result", "json-serialization"]
+    },
+    {
+      "id": "browser-networking",
+      "label": "Endpoint settings and reviewed browser relay boundary",
+      "evidence": [
+        "src/components/interactive-code/proxy-fetch.ts",
+        "src/components/interactive-code/python-worker.ts"
+      ],
+      "examples": ["portable-request", "chat-app"],
+      "implementation": ["examples/network-fetch.js"],
+      "required_coverage": ["api-settings", "nim-portability", "secret-handling", "websocket", "connection-state", "http-sse", "streaming"]
+    },
+    {
+      "id": "python-chat-application",
+      "label": "Repeated user input with conversation history",
+      "evidence": ["user-requested integration target"],
+      "examples": ["local-chat", "chat-app"],
+      "required_coverage": ["chatbot", "local-fallback", "chat-application", "conversation-history", "user-input"]
+    }
+  ]
+}

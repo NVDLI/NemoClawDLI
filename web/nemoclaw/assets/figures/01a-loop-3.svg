@@ -1,0 +1,84 @@
+<svg class="gfx-dark" viewBox="0 70 920 450" xmlns="http://www.w3.org/2000/svg" role="img"
+  aria-label="The agent loop drawn locally as a cycle. Step one, locally-sample: read a slice of the environment. Step two, locally-perceive: render that slice into a full engineered text context. That context holds the system prompt, the message history, prior tool results, and the sampled slice, all of it as plain text. The context is fed as text into one stateless text-to-text mapping, the LLM, which is the only model in the picture; perceive-to-act is collapsed into that single mapping. Its output is an intent signal, a typed tool call, not the action itself. Step three, locally-act: your code translates the intent into one bounded local environment update. Step four, locally-impact: the update changes the world, and the next local sample reads the changed world. Every box except the model is code you wrote; the model never touches the world, it only emits an intent the loop chooses to honor."
+  preserveAspectRatio="xMidYMid meet"
+  style="width:100%;height:auto;display:block;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:12px;padding:14px;">
+<defs>
+  <marker id="ll-g" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto">
+    <path d="M0,1 L9,5 L0,9 Z" fill="var(--gfx-green,#9bd14a)"/>
+  </marker>
+  <marker id="ll-n" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto">
+    <path d="M0,1 L9,5 L0,9 Z" fill="var(--gfx-sub,#9aa0a6)"/>
+  </marker>
+  <filter id="ll-sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.45"/>
+  </filter>
+</defs>
+
+<!-- header -->
+
+<!-- ENVIRONMENT band (top), inset so the left return-lane has room -->
+<rect x="150" y="84" width="710" height="78" rx="12" fill="var(--gfx-tint-blue,#15273d)" stroke="var(--gfx-line,#3a3f45)" stroke-width="1.6"/>
+<text x="170" y="111" font-size="13" font-family="ui-monospace,monospace" fill="var(--gfx-blue,#5aa8ff)" font-weight="800">ENVIRONMENT · the only durable state</text>
+<text x="170" y="131" font-size="12" font-family="system-ui,sans-serif" fill="var(--gfx-sub,#9aa0a6)">A maze cell, a chat transcript, a folder of files, a sandbox. The agent reads a slice and writes a slice.</text>
+<text x="170" y="149" font-size="12" font-family="system-ui,sans-serif" fill="var(--gfx-sub,#9aa0a6)">Nothing persists in the model between turns. Continuity lives here, in the context your code rebuilds.</text>
+
+<!-- ① locally-sample : ENV down into CONTEXT -->
+<path d="M 258 162 L 258 222" stroke="var(--gfx-sub,#9aa0a6)" stroke-width="2.2" fill="none" marker-end="url(#ll-n)"/>
+<rect x="182" y="180" width="152" height="22" rx="11" fill="var(--gfx-panel,#17191c)" stroke="var(--gfx-line,#3a3f45)"/>
+<text x="258" y="195" text-anchor="middle" font-size="11" font-family="ui-monospace,monospace" fill="var(--gfx-ink2,#c6cace)">① locally-sample</text>
+
+<!-- CONTEXT card -->
+<g filter="url(#ll-sh)"><rect x="150" y="228" width="210" height="170" rx="14" fill="var(--gfx-tint-blue,#15273d)" stroke="var(--gfx-blue,#5aa8ff)" stroke-width="2"/></g>
+<text x="255" y="256" text-anchor="middle" font-size="14" font-family="ui-monospace,monospace" fill="var(--gfx-blue,#5aa8ff)" font-weight="800">engineered context</text>
+<text x="255" y="274" text-anchor="middle" font-size="10" font-family="system-ui,sans-serif" fill="var(--gfx-sub,#9aa0a6)">② locally-perceive renders into this</text>
+<text x="255" y="300" text-anchor="middle" font-size="11" font-family="ui-monospace,monospace" fill="var(--gfx-sub,#9aa0a6)">system prompt</text>
+<text x="255" y="319" text-anchor="middle" font-size="11" font-family="ui-monospace,monospace" fill="var(--gfx-sub,#9aa0a6)">history · messages[]</text>
+<text x="255" y="338" text-anchor="middle" font-size="11" font-family="ui-monospace,monospace" fill="var(--gfx-sub,#9aa0a6)">tool results</text>
+<text x="255" y="357" text-anchor="middle" font-size="11" font-family="ui-monospace,monospace" fill="var(--gfx-sub,#9aa0a6)">the sampled slice</text>
+<text x="255" y="382" text-anchor="middle" font-size="10.5" font-family="system-ui,sans-serif" fill="var(--gfx-sub,#9aa0a6)" font-style="italic">all of it as plain text</text>
+
+<!-- text into model -->
+<path d="M 360 313 L 416 313" stroke="var(--gfx-green,#9bd14a)" stroke-width="2.4" fill="none" marker-end="url(#ll-g)"/>
+<text x="388" y="303" text-anchor="middle" font-size="10" font-family="ui-monospace,monospace" fill="var(--gfx-green,#9bd14a)">text →</text>
+
+<!-- MODEL card (center) -->
+<g filter="url(#ll-sh)"><rect x="418" y="228" width="200" height="170" rx="14" fill="var(--gfx-panel,#17191c)" stroke="var(--gfx-green,#9bd14a)" stroke-width="2.4"/></g>
+<text x="518" y="256" text-anchor="middle" font-size="11" font-family="ui-monospace,monospace" fill="var(--gfx-green,#9bd14a)" letter-spacing="1">REASONING SOCKET</text>
+<text x="518" y="298" text-anchor="middle" font-size="22" font-family="ui-monospace,monospace" fill="var(--gfx-ink,#e8eaed)" font-weight="900">LLM</text>
+<text x="518" y="324" text-anchor="middle" font-size="12" font-family="ui-monospace,monospace" fill="var(--gfx-ink2,#c6cace)">stateless · text → text</text>
+<text x="518" y="356" text-anchor="middle" font-size="10.5" font-family="system-ui,sans-serif" fill="var(--gfx-sub,#9aa0a6)" font-style="italic">perceive → act, collapsed</text>
+<text x="518" y="373" text-anchor="middle" font-size="10.5" font-family="system-ui,sans-serif" fill="var(--gfx-sub,#9aa0a6)" font-style="italic">into one mapping</text>
+
+<!-- text out of model -->
+<path d="M 618 313 L 674 313" stroke="var(--gfx-green,#9bd14a)" stroke-width="2.4" fill="none" marker-end="url(#ll-g)"/>
+<text x="646" y="303" text-anchor="middle" font-size="10" font-family="ui-monospace,monospace" fill="var(--gfx-green,#9bd14a)">→ text</text>
+
+<!-- INTENT card (right) -->
+<g filter="url(#ll-sh)"><rect x="676" y="228" width="184" height="170" rx="14" fill="var(--gfx-tint-amber,#33280f)" stroke="var(--gfx-amber,#e3b341)" stroke-width="2"/></g>
+<text x="768" y="256" text-anchor="middle" font-size="14" font-family="ui-monospace,monospace" fill="var(--gfx-amber,#e3b341)" font-weight="800">intent signal</text>
+<text x="768" y="282" text-anchor="middle" font-size="11" font-family="ui-monospace,monospace" fill="var(--gfx-amber,#e3b341)">a typed tool call</text>
+<text x="768" y="306" text-anchor="middle" font-size="12" font-family="ui-monospace,monospace" fill="var(--gfx-amber,#e3b341)">{ "move":"east" }</text>
+<text x="768" y="338" text-anchor="middle" font-size="10.5" font-family="system-ui,sans-serif" fill="var(--gfx-sub,#9aa0a6)">not the action yet.</text>
+<text x="768" y="355" text-anchor="middle" font-size="10.5" font-family="system-ui,sans-serif" fill="var(--gfx-sub,#9aa0a6)">a request to act, that</text>
+<text x="768" y="372" text-anchor="middle" font-size="10.5" font-family="system-ui,sans-serif" fill="var(--gfx-sub,#9aa0a6)">your code reads next</text>
+
+<!-- ③ locally-act : INTENT down, left along bottom lane to UPDATE -->
+<path d="M 768 398 L 768 456 L 552 456" stroke="var(--gfx-sub,#9aa0a6)" stroke-width="2.2" fill="none" marker-end="url(#ll-n)"/>
+<rect x="660" y="434" width="148" height="22" rx="11" fill="var(--gfx-panel,#17191c)" stroke="var(--gfx-line,#3a3f45)"/>
+<text x="734" y="449" text-anchor="middle" font-size="11" font-family="ui-monospace,monospace" fill="var(--gfx-ink2,#c6cace)">③ locally-act</text>
+
+<!-- ENV UPDATE card (bottom center) -->
+<g filter="url(#ll-sh)"><rect x="266" y="424" width="286" height="92" rx="14" fill="var(--gfx-tint-green,#1d2a12)" stroke="var(--gfx-green,#9bd14a)" stroke-width="2"/></g>
+<text x="409" y="453" text-anchor="middle" font-size="14" font-family="ui-monospace,monospace" fill="var(--gfx-green,#9bd14a)" font-weight="800">local environment update</text>
+<text x="409" y="477" text-anchor="middle" font-size="11" font-family="ui-monospace,monospace" fill="var(--gfx-sub,#9aa0a6)">doMove(grid, pos, intent.move)</text>
+<text x="409" y="499" text-anchor="middle" font-size="10.5" font-family="system-ui,sans-serif" fill="var(--gfx-sub,#9aa0a6)" font-style="italic">your code applies the intent, validated and bounded</text>
+
+<!-- ④ locally-impact : UPDATE left, up the dedicated left lane (x=90) to ENV band -->
+<path d="M 266 470 L 90 470 L 90 123 L 148 123" stroke="var(--gfx-green,#9bd14a)" stroke-width="2.4" fill="none" marker-end="url(#ll-g)"/>
+<g transform="rotate(-90 90 300)">
+  <rect x="16" y="289" width="148" height="22" rx="11" fill="var(--gfx-panel,#17191c)" stroke="var(--gfx-line,#3a3f45)"/>
+  <text x="90" y="304" text-anchor="middle" font-size="11" font-family="ui-monospace,monospace" fill="var(--gfx-green,#9bd14a)">④ locally-impact</text>
+</g>
+
+<!-- footer -->
+</svg>

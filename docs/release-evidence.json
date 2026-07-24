@@ -1,0 +1,292 @@
+{
+  "schema": "nemoclaw-release-evidence/1",
+  "documents": {
+    "design": "docs/product-design.md",
+    "test_plan": "docs/release-test-plan.md",
+    "security_design": "docs/security-design.md",
+    "security_control_disposition": "docs/security-control-disposition.md",
+    "security_control_themes": "docs/security-control-themes.json",
+    "security_architecture": "docs/security-architecture.json",
+    "release_artifacts": "docs/release_artifacts.md",
+    "publication_state": "RELEASE_STATUS.json"
+  },
+  "product_scope": {
+    "production_runtime": "static-browser-course",
+    "canonical_source": "web/nemoclaw",
+    "locale_overlays": [
+      "i18n/pt",
+      "i18n/es"
+    ],
+    "hosting_paths": [
+      "public-static-host",
+      "co-located-launchable"
+    ]
+  },
+  "required_repository_files": [
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_LICENSES.md",
+    "SECURITY.md",
+    "CONTRIBUTING.md",
+    "DCO.md",
+    "CODE_OF_CONDUCT.md",
+    "SUPPORT.md",
+    "CHANGELOG.md",
+    "docs/agentic-compliance-suite.md",
+    "docs/release_playbook.md",
+    ".github/ISSUE_TEMPLATE/bug.yml",
+    ".github/ISSUE_TEMPLATE/feature.yml",
+    ".github/PULL_REQUEST_TEMPLATE.md"
+  ],
+  "repository_work_products": [
+    {
+      "id": "maintainer-plan",
+      "requirement": "required",
+      "status": "satisfied",
+      "paths": [
+        "README.md",
+        "docs/release_playbook.md",
+        "docs/dependency_security.md",
+        "docs/issue_standards.md",
+        "docs/release-test-plan.md",
+        "docs/release_artifacts.md"
+      ]
+    },
+    {
+      "id": "readme",
+      "requirement": "show-stopper",
+      "status": "satisfied",
+      "paths": ["README.md"]
+    },
+    {
+      "id": "license",
+      "requirement": "show-stopper",
+      "status": "satisfied",
+      "paths": ["LICENSE"]
+    },
+    {
+      "id": "third-party-inventory",
+      "requirement": "required",
+      "status": "satisfied",
+      "paths": [
+        "THIRD_PARTY_LICENSES.md",
+        "web/nemoclaw/vendor/licenses",
+        "web/nemoclaw/vendor/browser-dependencies.json"
+      ]
+    },
+    {
+      "id": "contributing",
+      "requirement": "required",
+      "status": "satisfied",
+      "paths": ["CONTRIBUTING.md", "DCO.md"]
+    },
+    {
+      "id": "security-policy",
+      "requirement": "show-stopper",
+      "status": "satisfied",
+      "paths": ["SECURITY.md"]
+    },
+    {
+      "id": "coding-guideline",
+      "requirement": "contextual",
+      "status": "satisfied",
+      "paths": ["CONTRIBUTING.md", "AGENTS.md", "SKILL.html"]
+    },
+    {
+      "id": "changelog",
+      "requirement": "required",
+      "status": "satisfied",
+      "paths": ["CHANGELOG.md"]
+    },
+    {
+      "id": "code-of-conduct",
+      "requirement": "required",
+      "status": "satisfied",
+      "paths": ["CODE_OF_CONDUCT.md"]
+    },
+    {
+      "id": "contributor-license-agreement",
+      "requirement": "contextual-show-stopper",
+      "status": "not-applicable",
+      "paths": [],
+      "rationale": "The Apache-2.0 contribution model uses DCO signoff and does not require a separate CLA."
+    },
+    {
+      "id": "citation",
+      "requirement": "optional",
+      "status": "not-selected",
+      "paths": []
+    },
+    {
+      "id": "issue-templates",
+      "requirement": "required",
+      "status": "satisfied",
+      "paths": [
+        ".github/ISSUE_TEMPLATE/bug.yml",
+        ".github/ISSUE_TEMPLATE/feature.yml"
+      ]
+    },
+    {
+      "id": "pull-request-template",
+      "requirement": "required",
+      "status": "satisfied",
+      "paths": [".github/PULL_REQUEST_TEMPLATE.md"]
+    },
+    {
+      "id": "release-roadmap",
+      "requirement": "optional",
+      "status": "not-selected",
+      "paths": []
+    },
+    {
+      "id": "developer-guide",
+      "requirement": "optional",
+      "status": "satisfied",
+      "paths": ["docs/product-design.md", "docs/release-test-plan.md"]
+    },
+    {
+      "id": "user-guide",
+      "requirement": "optional",
+      "status": "satisfied",
+      "paths": ["README.md", "web/nemoclaw/SKILL.html"]
+    }
+  ],
+  "release_artifacts": [
+    "versioned-static-archive",
+    "release-manifest",
+    "cyclonedx-sbom",
+    "sha256-checksums"
+  ],
+  "evidence_areas": [
+    {
+      "id": "registration-context",
+      "owner": "operator",
+      "automated_commands": [
+        "python3 scripts/validation/release_evidence_audit.py"
+      ],
+      "external_evidence": "operator-required"
+    },
+    {
+      "id": "repository-baseline",
+      "owner": "shared",
+      "automated_commands": [
+        "python3 scripts/compliance/source_gate.py",
+        "python3 scripts/validation/contribution_safety_audit.py",
+        "python3 scripts/validation/repository_work_products_audit.py"
+      ],
+      "external_evidence": "operator-required"
+    },
+    {
+      "id": "source-and-licenses",
+      "owner": "shared",
+      "automated_commands": [
+        "python3 scripts/compliance/source_gate.py",
+        "python3 -m unittest -v tests/validation/test_embedded_validator_suites.py tests/validation/test_test_harness_contract.py",
+        "python3 scripts/compliance/third_party_inventory_audit.py",
+        "python3 scripts/validation/local_path_leak_audit.py",
+        "python3 scripts/validation/container_boundary_audit.py",
+        "python3 scripts/security/audit_dependency_locks.py",
+        "python3 scripts/security/audit_sbom_policy.py --self-test"
+      ],
+      "external_evidence": "operator-required"
+    },
+    {
+      "id": "privacy-and-data",
+      "owner": "shared",
+      "automated_commands": [
+        "python3 scripts/validation/security_architecture_audit.py",
+        "python3 scripts/validation/release_evidence_audit.py"
+      ],
+      "external_evidence": "operator-required"
+    },
+    {
+      "id": "cryptography-and-export",
+      "owner": "shared",
+      "automated_commands": [
+        "python3 scripts/validation/release_evidence_audit.py"
+      ],
+      "external_evidence": "operator-required"
+    },
+    {
+      "id": "secret-scanning",
+      "owner": "operator",
+      "automated_commands": [
+        "python3 scripts/compliance/source_gate.py"
+      ],
+      "external_evidence": "operator-required"
+    },
+    {
+      "id": "vulnerability-scanning",
+      "owner": "shared",
+      "automated_commands": [
+        "python3 scripts/security/audit_python_dependencies.py",
+        "python3 scripts/security/audit_vulnerability_waivers.py",
+        "python3 scripts/security/run_full_sca.py --execute --require-tools --python-local --cyclonedx-env --out-dir scripts/security/reports"
+      ],
+      "external_evidence": "operator-required"
+    },
+    {
+      "id": "malware-scanning",
+      "owner": "operator",
+      "automated_commands": [
+        "python3 scripts/build/package_release.py --self-test"
+      ],
+      "external_evidence": "operator-required"
+    },
+    {
+      "id": "architecture-and-deployment",
+      "owner": "shared",
+      "automated_commands": [
+        "python3 -m unittest -v tests/validation/test_embedded_validator_suites.py",
+        "python3 scripts/validation/security_architecture_audit.py",
+        "python3 scripts/validation/contribution_safety_audit.py --self-test"
+      ],
+      "external_evidence": "operator-required"
+    },
+    {
+      "id": "threat-control-disposition",
+      "owner": "shared",
+      "automated_commands": [
+        "python3 -m unittest -v tests/validation/test_embedded_validator_suites.py tests/validation/test_test_harness_contract.py",
+        "python3 scripts/validation/threat_control_audit.py"
+      ],
+      "external_evidence": "operator-required"
+    },
+    {
+      "id": "release-artifacts",
+      "owner": "shared",
+      "automated_commands": [
+        "python3 scripts/build/package_release.py --self-test",
+        "python3 scripts/validation/validate_bundle.py --scope ship --no-write"
+      ],
+      "external_evidence": "operator-required"
+    },
+    {
+      "id": "release-approval",
+      "owner": "operator",
+      "automated_commands": [
+        "python3 -m unittest -v tests/validation/test_embedded_validator_suites.py tests/validation/test_test_harness_contract.py",
+        "python3 scripts/validation/contribution_safety_audit.py --require-publication-approved"
+      ],
+      "external_evidence": "operator-required"
+    }
+  ],
+  "external_evidence_policy": {
+    "retention": "authorized-system-only",
+    "repository_claim": "not-approved-by-repository",
+    "required_categories": [
+      "registration",
+      "public-repository-hosting",
+      "legal-and-license",
+      "export",
+      "privacy",
+      "verified-secret-scan",
+      "final-artifact-vulnerability-scan",
+      "malware-scan",
+      "host-controls",
+      "source-integration",
+      "external-service-controls",
+      "release-decision"
+    ]
+  }
+}

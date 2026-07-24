@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es-ES">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>NVIDIA DLI · Protección de agentes con OpenShell y NemoClaw</title>
+<link rel="stylesheet" href="styles/_style.css"/>
+<style>
+  :root {
+    --g:#76b900; --gd:#4a7a00; --gs:#aee23a;
+    --bg:#0d0d0d; --e1:#161616; --e2:#1e1e1e; --e3:#2a2a2a;
+    --tx:#f2f2f2; --td:#b0b0b0; --tf:#8a8a8a;
+    --mono:ui-monospace,"SF Mono",Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  /* Light theme: <html data-theme="light"> flips the palette (mirrors _lite_overlay.css). The
+     bundler injects the pre-paint init that sets data-theme; _shared.js mounts the toggle. */
+  :root[data-theme="light"] {
+    --g:#3f6900; --gd:#2f5500; --gs:#3f6900;
+    --bg:#ffffff; --e1:#f6f8fa; --e2:#eef1f4; --e3:#e1e6eb;
+    --tx:#1a1a1a; --td:#3b3b3b; --tf:#4b5563;
+  }
+  :root[data-theme="light"] body { background: var(--bg); color: var(--tx); }
+  :root[data-theme="light"] .howto .n,:root[data-theme="light"] .start-row a.primary{color:#fff}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--tx);
+               font-family: var(--sans); font-size: 15px; line-height: 1.55; }
+  a { color: var(--g); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { font-family: var(--mono); font-size: .9em; background: var(--e2);
+         padding: 1px 6px; border-radius: 4px; color: var(--gs); }
+
+  /* Topbar (.topbar / .navpill / .key-pill / theme toggle) and <main> come from _style.css now,
+     matching the course pages exactly; only the landing-specific blocks below stay local. */
+
+  .hero { margin: .8em 0 1.8em; }
+  .hero .eyebrow { font-family: var(--mono); font-size: .72rem; color: var(--gs);
+                   text-transform: uppercase; letter-spacing: .12em; margin-bottom: .6em; }
+  .hero h1 { font-size: 2.5rem; font-weight: 700; line-height: 1.1; margin: 0 0 .4em; letter-spacing: -0.01em; }
+  .hero h1 .accent { color: var(--g); }
+  .hero p.lead { font-size: 1.06rem; color: var(--td); }
+
+  .howto { display:flex; flex-wrap:wrap; gap:10px 26px; margin:0 0 1.8em;
+           padding:14px 18px; background:var(--e1); border:1px solid var(--e3);
+           border-radius:10px; font-size:.9rem; color:var(--td); }
+  .howto .step { display:flex; align-items:baseline; gap:9px; flex:1; min-width:240px; }
+  .howto .n { font-family:var(--mono); color:#000; background:var(--g);
+              border-radius:999px; width:20px; height:20px; display:inline-flex;
+              align-items:center; justify-content:center; font-size:.72rem;
+              font-weight:700; flex:none; transform:translateY(3px); }
+  .howto b { color:var(--tx); font-weight:600; }
+
+  .section { margin: 2.4em 0 1em; }
+  .section > h2 { font-size: 1.2rem; color: var(--tx); border-bottom: 1px solid var(--e3);
+                  padding-bottom: .35em; margin-bottom: .4em; }
+  .section .help { font-size: .92rem; color: var(--td); margin: .5em 0 1.1em; }
+
+  /* Key panel is rendered by mountKeyPanel and styled by _style.css (.key-panel / .btn / .status). */
+
+  /* ── Module map ────────────────────────────────────────────────────── */
+  .module-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 1.2em 0; }
+  @media (max-width: 760px) { .module-grid { grid-template-columns: 1fr; } }
+  /* The card body (.mc-main) is one real link to the module's first page; the
+     per-page links are a SIBLING row below it. There is no nested <a> (which splits
+     in HTML) and no stretched-link guesswork. The whole body click target is a
+     genuine <a>. */
+  .module-card { background: var(--e1); border: 1px solid var(--e3); border-radius: 10px;
+                 overflow: hidden; transition: border-color .15s, transform .15s; }
+  .module-card:hover { border-color: var(--g); transform: translateY(-2px); }
+  .module-card .mc-main { display: block; padding: 18px 20px 12px; text-decoration: none; }
+  .module-card:hover .mc-main { background: rgba(118,185,0,.04); }
+  .module-card .num { font-family: var(--mono); font-size: .72rem; color: var(--tf);
+                      letter-spacing: .06em; text-transform: uppercase; }
+  .module-card h3 { font-size: 1.05rem; color: var(--gs); margin: .25em 0 .35em; }
+  .module-card:hover h3 { text-decoration: underline; }
+  .module-card p { font-size: .88rem; color: var(--td); margin: 0; line-height: 1.55; }
+  .module-card .pages { padding: 0 20px 15px; font-family: var(--mono);
+                        font-size: .72rem; color: var(--tf); }
+  .module-card .pages a { color: var(--td); }
+  .module-card .pages a:hover { color: var(--gs); }
+
+  .start-row { display: flex; gap: 12px; flex-wrap: wrap; margin: .4em 0 0; }
+  .start-row a { display: inline-flex; align-items: center; gap: 7px;
+                 padding: 11px 22px; border-radius: 8px; font-weight: 700; font-size: .92rem; }
+  .start-row a.primary { background: var(--g); color: #000; }
+  .start-row a.primary:hover { background: var(--gs); text-decoration: none; }
+  .start-row a.ghost { background: var(--e2); border: 1px solid var(--e3); color: var(--td); }
+  .start-row a.ghost:hover { border-color: var(--g); color: var(--gs); text-decoration: none; }
+
+  /* ── What this runs on ─────────────────────────────────────────────── */
+  .sys-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 1.1em 0; }
+  @media (max-width: 780px) { .sys-grid { grid-template-columns: 1fr; } }
+  .sys-card { background: var(--e1); border: 1px solid var(--e3); border-radius: 8px;
+              padding: 15px 17px; text-decoration: none; display: block;
+              transition: border-color .12s, background .12s; }
+  .sys-card:hover { border-color: var(--g); background: rgba(118,185,0,.04); text-decoration: none; }
+  .sys-card .sys-label { font-family: var(--mono); font-size: .7rem; text-transform: uppercase;
+                         letter-spacing: .1em; color: var(--tf); margin-bottom: .35em; }
+  .sys-card .sys-name { font-weight: 700; font-size: .95rem; color: var(--gs); margin: 0 0 .35em; }
+  .sys-card .sys-desc { font-size: .85rem; color: var(--td); line-height: 1.5; }
+
+  .callout { border: 1px solid var(--e3); background: rgba(118,185,0,.07);
+             padding: 12px 18px; border-radius: 8px; margin: 1.4em 0;
+             font-size: .92rem; color: var(--td); }
+  .callout strong { color: var(--gs); }
+
+  footer { margin-top: 4em; padding-top: 1.6em; border-top: 1px solid var(--e3);
+           color: var(--tf); font-size: .82rem; }
+  footer a { color: var(--td); }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="logo" href="index.html">NVIDIA · Protección de agentes</a>
+  <nav id="nav"></nav>
+  <div class="spacer"></div>
+  <span class="key-pill" id="key-status" onclick="document.getElementById('setup').scrollIntoView({behavior:'smooth'})">…</span>
+</div>
+
+<main>
+  <div class="hero">
+    <div class="eyebrow">Inicio del curso</div>
+    <h1 id="course-title">Protección de agentes con <span class="accent">OpenShell</span> y <span class="accent">NemoClaw</span></h1>
+    <h2>Resumen</h2>
+    <p class="lead" id="course-abstract">Los agentes modernos están por todas partes y parten de una idea sencilla: un modelo conectado a
+herramientas, memoria y una decisión de enrutamiento que se repite hasta completar la tarea.
+Este curso comienza construyendo ese sistema desde cero y después conecta sus piezas con frameworks actuales,
+utilizados tanto por profesionales del software como por personas sin formación técnica. Avanzarás desde una única
+llamada a una API hasta la coordinación de agentes, la recuperación fundamentada, la planificación profunda y la
+implementación segura con OpenClaw y NemoClaw™ de NVIDIA.</p>
+  </div>
+
+  <div class="howto">
+    <div class="step"><span class="n">1</span> <span><b>Confirma las rutas de modelos</b> a continuación. El chat y los embeddings usan <a href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener"><code>build.nvidia.com</code></a> de forma predeterminada. Durante un evento de capacidad, configura una vez el endpoint de chat de Brev proporcionado por el instructor; la ruta independiente de embeddings permanece sin cambios. Activa el modo iframe solo con el endpoint de chat predeterminado.</span></div>
+    <div class="step"><span class="n">2</span> <span><b>Sigue los módulos en orden</b> para recorrer la ruta predeterminada o abre directamente la tarea que necesites. Cada página termina con un artefacto activo en el navegador y deja disponible su JavaScript para que puedas inspeccionarlo y adaptarlo.</span></div>
+    <div class="step"><span class="n">3</span> <span><b>Para usar el stack de agentes</b> en los Módulos 3 y 4, crea el launchable de NemoClaw cuando el curso lo solicite. El <a href="https://github.com/NVIDIA/NemoClaw" target="_blank" rel="noopener">blueprint de NemoClaw</a> ejecuta <a href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener">OpenClaw</a> dentro de <a href="https://github.com/NVIDIA/OpenShell" target="_blank" rel="noopener">OpenShell</a>. Los servicios del curso usan CPU y modelos alojados, por lo que no es necesario administrar una GPU.</span></div>
+  </div>
+
+  <div class="section" id="learning-objectives">
+    <h2>Objetivos de aprendizaje</h2>
+    <p class="help" id="learning-objectives-intro">Al concluir el curso, sabrás:</p>
+    <ul>
+      <li id="learning-objective-1">Construir un bucle básico de agente e identificar sus componentes centrales.</li>
+      <li id="learning-objective-2">Implementar uso confiable de herramientas y llamadas de función en un sistema de agentes.</li>
+      <li id="learning-objective-3">Diseñar y coordinar sistemas multiagentes con patrones estructurados de enrutamiento.</li>
+      <li id="learning-objective-4">Desarrollar pipelines automatizados de evaluación para medir el rendimiento y la fiabilidad.</li>
+      <li id="learning-objective-5">Usar OpenShell para configurar identidades de agentes y garantizar operaciones seguras en sandbox.</li>
+      <li id="learning-objective-6">Implementar y administrar agentes autónomos mientras creas bibliotecas persistentes de skills.</li>
+    </ul>
+  </div>
+
+  <!-- ── Key setup ─────────────────────────────────────────────────────── -->
+  <div class="section" id="setup">
+    <h2>Cómo introducir tu clave de API</h2>
+    <p class="help">El navegador guarda las rutas de chat y embeddings en <code>localStorage</code>; una sola
+configuración se aplica a todas las lecciones y pestañas. El navegador envía cada clave guardada solo a su
+endpoint seleccionado. Usa un endpoint de chat personalizado únicamente cuando lo proporcione el instructor.
+Las rutas de chat de Brev requieren un túnel HTTPS público al puerto <code>5000</code>; los túneles privados no aceptan solicitudes del curso entre orígenes. Ni la URL <code>/lab</code>
+de Jupyter ni <code>localhost:5000</code> son accesibles desde la página del curso. El proxy CORS alojado se
+limita al modo LMS/iframe estático con el endpoint predeterminado.</p>
+    <div id="key-panel"></div>
+  </div>
+
+  <!-- ── Module map ────────────────────────────────────────────────────── -->
+  <div class="section">
+    <h2>Cómo explorar el material</h2>
+    <p class="help">El orden de los módulos ofrece un camino guiado, pero cada página también funciona de forma
+independiente. En el recorrido completo, cada módulo aprovecha el anterior: el bucle ejecutado en
+navegador se convierte en un flujo de trabajo de alcance controlado; este flujo de trabajo pasa a un runtime de
+agente persistente; y el alcance mayor del runtime justifica el límite impuesto por el sistema
+operativo. Empieza por la tarea que necesites. Cada página termina en un artefacto activo
+y mantiene disponible el código de soporte. Puedes modificar los ejemplos en el navegador, alojarlos por tu cuenta
+o proporcionar este repositorio como contexto a un agente de código para una implementación o aplicación local.</p>
+
+    <div class="module-grid">
+      <div class="module-card">
+        <a class="mc-main" href="./01a-loop.html"><div class="num"> Módulo 1 · aproximadamente 1 hora · 3 páginas </div>
+<h3> Conceptos básicos de agentes · Bucle · ReAct · Herramientas </h3>
+<p> Construye el bucle de agente más pequeño, añade el patrón ReAct y transforma funciones comunes en herramientas que el modelo pueda solicitar. </p></a>
+        <div class="pages">
+          <a href="./01a-loop.html">1a Bucle</a> ·
+          <a href="./01b-react.html">1b ReAct</a> ·
+          <a href="./01c-tools.html">1c Herramientas</a>
+        </div>
+      </div>
+      <div class="module-card">
+        <a class="mc-main" href="./02a-routing.html"><div class="num"> Módulo 2 · aproximadamente 1 hora · 3 páginas </div>
+<h3> Patrones avanzados · Flujos de trabajo · RAG · Agentes profundos </h3>
+<p>Distribuye trabajo entre llamadas, recupera material del curso como herramienta y usa planificadores que creen subagentes.</p></a>
+        <div class="pages">
+          <a href="./02a-routing.html">2a Flujos de trabajo</a> ·
+          <a href="./02b-rag.html">2b RAG</a> ·
+          <a href="./02c-deep.html">2c Agentes profundos</a>
+        </div>
+      </div>
+      <div class="module-card live">
+        <a class="mc-main" href="./03a-kickstart.html"><div class="num"> Módulo 3 · aproximadamente 1 hora · 3 páginas </div>
+<h3> Configuración de NemoClaw · OpenClaw · Operación continua </h3>
+<p>Conecta un launchable de NemoClaw. Explora el gateway, el workspace, las skills y las ejecuciones programadas de OpenClaw dentro de OpenShell.</p></a>
+        <div class="pages">
+          <a href="./03a-kickstart.html">3a Conexión inicial</a> ·
+          <a href="./03b-openclaw.html">3b OpenClaw</a> ·
+          <a href="./03c-always-on.html">3c Operación continua</a>
+        </div>
+      </div>
+      <div class="module-card live">
+        <a class="mc-main" href="./04a-safety.html"><div class="num"> Módulo 4 · aproximadamente 1 hora · 3 páginas </div>
+<h3> Protección con OpenShell · CLI modernos · Próximos pasos </h3>
+<p> Pasa del comportamiento de OpenClaw al límite de políticas que NemoClaw monta con OpenShell; después, compara agentes de CLI modernos y estándares actuales de protección. </p></a>
+        <div class="pages">
+          <a href="./04a-safety.html">4a OpenShell</a> ·
+          <a href="./04b-modern-clis.html">4b CLI modernos</a> ·
+          <a href="./04c-going-further.html">4c Siguientes pasos</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── What this runs on ─────────────────────────────────────────────── -->
+  <div class="section">
+    <h2>Dónde se ejecuta el curso</h2>
+    <p class="help">Desde el navegador, cada ejercicio accede a uno de tres sistemas independientes. Una sola pestaña
+reúne el entorno completo, sin configuración adicional del laboratorio DLI ni toolchain local.</p>
+    <div class="sys-grid">
+      <a class="sys-card models" href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener"><div class="sys-label"> Modelos </div>
+<div class="sys-name"> build.nvidia.com </div>
+<div class="sys-desc"> Modelos Nemotron alojados por NVIDIA y compatibles con la API de OpenAI. Las solicitudes pasan por un proxy de Cloudflare alojado; tu clave <code>nvapi-</code> es la única credencial necesaria y el proxy la mantiene en el servidor. </div></a>
+      <a class="sys-card search" href="./glossary.html"><div class="sys-label"> Búsqueda </div>
+<div class="sys-name"> Catálogo de materiales </div>
+<div class="sys-desc"> webSearch ordena por relevancia el contenido distribuido con el curso,
+incluido el glosario en caché y los artículos consultados bajo demanda. instantAnswer
+devuelve una definición cuando la consulta identifica un término. Abre el explorador para ver
+todos los materiales, el nivel de cada fuente, la API activa y la búsqueda que ejecuta el agente. </div></a>
+      <a class="sys-card runtime" href="https://brev.nvidia.com/launchable/deploy?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990" target="_blank" rel="noopener"><div class="sys-label"> Stack de agentes </div>
+<div class="sys-name"> Launchable de NemoClaw en Brev </div>
+<div class="sys-desc">
+Este es el stack de agentes en sandbox usado en el curso. OpenClaw proporciona el entorno de ejecución del
+agente, OpenShell aplica el sandbox y NemoClaw organiza los componentes en una implementación
+de referencia. De forma predeterminada, el entorno utiliza un launchable de Brev; también puedes implementarlo
+localmente y adaptar el código.
+</div></a>
+    </div>
+  </div>
+
+
+  <div class="callout"><strong>El curso es autocontenido</strong> y funciona en GitHub Pages. Usa una clave <code>nvapi-</code>
+y recorre los cuatro módulos antes de la página final de <a href="./04c-going-further.html">próximos pasos</a>.</div>
+
+  <footer>
+    <p>Consulta todos los paquetes del navegador, las licencias y los hashes de artefactos en el
+<a href="dependencies.html">inventario de dependencias del navegador</a>.</p>
+    <p>Envía preguntas o comentarios a través del
+<a href="https://www.nvidia.com/en-us/learn/training/support/" target="_blank" rel="noopener">portal de entrenamiento NVIDIA DLI</a>.</p>
+  </footer>
+</main>
+
+<script type="module">
+import { buildNav, updateKeyPill, mountKeyPanel } from "./scripts/_shared.js";
+const nav = document.getElementById("nav");
+if (nav) nav.innerHTML = buildNav("index.html");
+const pill = document.getElementById("key-status");
+updateKeyPill(pill);
+// Reuse the course key panel so landing-page state stays consistent.
+mountKeyPanel(document.getElementById("key-panel"), { onSave: () => updateKeyPill(pill), onClear: () => updateKeyPill(pill) });
+</script>
+</body>
+</html>

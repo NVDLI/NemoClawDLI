@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>scripts/translate/ · same-branch localization · explore</title>
+<script type="application/json" id="skill-meta">
+{
+  "schema": "dir-skill/1.0",
+  "node_type": "directory-explorer",
+  "title": "scripts/translate/ same-branch localization",
+  "source_dir": "scripts/translate/",
+  "summary": "Language overlays live beside English on the same branch. Localized HTML and reviewed SVG text are sparse; canonical web/ supplies runtime modules, styles, data, fallback pages, and other assets. Validators hold executable structure and SVG geometry equal while allowing translated learner text. Source hashes expose page and asset drift before publication.",
+  "related": [
+    "scripts/translate/README.md",
+    "scripts/translate/locales/pt-BR/SKILL.html",
+    "scripts/translate/locales/pt-BR/profile.json",
+    "scripts/translate/locales/es-ES/SKILL.html",
+    "scripts/translate/locales/es-ES/profile.json",
+    "scripts/translate/translate_html_segments.py",
+    "scripts/translate/code_localization.py",
+    "scripts/translate/locale_projection.py",
+    "scripts/translate/translate_svg_text.py",
+    "scripts/validation/localization_audit.py",
+    "scripts/build/assemble_locale_overlay.py",
+    "web/nemoclaw/localization.html"
+  ],
+  "explorer": "../../web/_skill_explorer.js"
+}
+</script>
+<script type="application/json" id="explorer-config">
+{
+  "title": "scripts/translate/ · same-branch localization",
+  "summary": "Start with the locale SKILL, review source and target in Studio, render localized SVGs, then accept the exact English hashes inspected. Runtime modules and protocol literals stay canonical; reviewed code-cell guidance remains localized.",
+  "model": "nvidia/nemotron-3-nano-30b-a3b",
+  "ties": ["build"],
+  "nav": {"home": "../../web/index.html", "up": {"label": "the bundle toolchain", "href": "../SKILL.html"}},
+  "groups": [
+    {
+      "title": "Localization workflow",
+      "files": [
+        {"path": "README.md", "role": "same-branch process", "desc": "Sparse overlay boundary, page states, reviewer loop, build path, and historical branch-tool status."},
+        {"path": "locales/pt-BR/SKILL.html", "role": "Portuguese first-touch", "desc": "Portuguese-language guidance for natural Brazilian developer prose and discoverable validation."},
+        {"path": "locales/pt-BR/profile.json", "role": "locale profile", "desc": "NVIDIA terminology sources, preferred terms, accepted developer vocabulary, and static anti-patterns."},
+        {"path": "locales/es-ES/SKILL.html", "role": "Spanish first-touch", "desc": "Spanish-language guidance for neutral technical prose, regional clarity, rhythm, and rendered SVG review."},
+        {"path": "locales/es-ES/profile.json", "role": "locale profile", "desc": "Spanish terminology sources, preferred technical wording, rhythm limits, and known calques."},
+        {"path": "translate_html_segments.py", "role": "draft generator", "desc": "Protected semantic-block translation and polish with cache, retries, and secret-free provider usage telemetry. It never accepts a review hash."},
+        {"path": "code_localization.py", "role": "runnable-code language projector", "desc": "Projects reviewed prompts, logs, errors, and comments while rejecting executable-shape and protocol-literal drift."},
+        {"path": "translate_svg_text.py", "role": "SVG text generator", "desc": "Translates SVG labels and accessible descriptions while preserving authored geometry; supports provider-free reproduction from a reviewed locale map."},
+        {"path": "../validation/localization_audit.py", "role": "required drift gate", "desc": "Missing/current/stale/blocked classification, machine-contract parity, locale checks, manifest generation, and mutation tests."},
+        {"path": "../build/assemble_locale_overlay.py", "role": "build assembler", "desc": "Copies canonical web/ and applies reviewed prose, runnable-code language, and SVG text without forking runtime contracts."},
+        {"path": "localization_scope.py", "role": "translation-body boundary", "desc": "Hashes the stable translatable body independently from presentation-shell wording."},
+        {"path": "locale_projection.py", "role": "structure projection", "desc": "Projects reviewed locale prose and translated shell prompts into the complete current canonical page structure."}
+      ]
+    },
+    {
+      "title": "Historical branch tools",
+      "files": [
+        {"path": "translation_status.py", "role": "legacy translate-* reader", "desc": "Reads the former branch-base marker. Do not use it for new same-branch localization."},
+        {"path": "translation_base.json", "role": "legacy marker", "desc": "Retained so historical translation branches remain understandable."}
+      ]
+    }
+  ]
+}
+</script>
+<style>html,body{margin:0;background:#0d0d0d;color:#f2f2f2;font:15px/1.55 system-ui,sans-serif}.skill-static{padding:24px clamp(18px,4vw,44px);border-bottom:1px solid #2a2a2a}.skill-static a{color:#76b900}.skill-static h1{color:#76b900}.skill-list,.skill-cmds{display:grid;gap:10px;margin:.7rem 0}.skill-list{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}.skill-cmd{border:1px solid #2a2a2a;background:#161616;border-radius:8px;padding:10px 12px}.skill-link{display:grid;grid-template-columns:minmax(180px,280px) 1fr;gap:12px;border-top:1px solid #2a2a2a;padding:9px 4px;text-decoration:none}.skill-link:last-child{border-bottom:1px solid #2a2a2a}.skill-link{color:#f2f2f2!important}.skill-link b,.skill-cmd b{display:block;color:#aee23a}.skill-cmd code{display:block;overflow:auto;white-space:nowrap}#explorer{height:100vh}@media(max-width:700px){.skill-link{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<header data-skill-header="1" style="padding:.65rem 1rem;border-bottom:1px solid ButtonBorder;background:Canvas;color:CanvasText">
+  <nav aria-label="Skill navigation" style="display:flex;gap:.6rem;flex-wrap:wrap"><a data-skill-nav="home" href="../../web/index.html">Home</a> <span aria-hidden="true"> · </span> <a data-skill-nav="up" href="../SKILL.html">Up</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../SKILL.html">Repository map</a></nav>
+</header>
+<section class="skill-static" aria-labelledby="skill-title">
+  <h1 id="skill-title">Same-branch localization</h1>
+  <p>Begin at the target locale node. Review English and localized prose together. Keep runtime and machine contracts canonical, but keep learner-facing prompts, logs, errors, and comments localized. When a locale pins a style-PIC reference, preserve that blob exactly and carry its decisions across the locale. Only a style-PIC-authored follow-up may update the origin commit and pinned digest.</p>
+  <p>Use <code>data-localization-scope="en-shell"</code> only for an English-only presentation wrapper around unchanged translated prose. Mark its inline control <code>data-localization-scope="en"</code>. The digest still invalidates when body prose changes.</p>
+  <h2>Executable checks</h2>
+  <div class="skill-cmds">
+    <div class="skill-cmd"><b>Publish-boundary mutations</b><code>python3 scripts/build/assemble_locale_overlay.py --self-test</code></div>
+    <div class="skill-cmd"><b>Localization mutations</b><code>python3 scripts/validation/localization_audit.py --self-test</code></div>
+    <div class="skill-cmd"><b>Portuguese drift and language</b><code>python3 scripts/validation/localization_audit.py --locale pt-BR</code></div>
+    <div class="skill-cmd"><b>Spanish drift and language</b><code>python3 scripts/validation/localization_audit.py --locale es-ES</code></div>
+    <div class="skill-cmd"><b>Generate a measured draft</b><code>python3 scripts/translate/translate_html_segments.py web/nemoclaw/PAGE.html --usage-report /tmp/pt-usage.json</code></div>
+  </div>
+  <h2>Linkage map</h2>
+  <div class="skill-list">
+    <a class="skill-link" href="README.md"><b>Same-branch process</b>Sparse overlay boundary, page and SVG review states, build assembly, and acceptance workflow.</a>
+    <a class="skill-link" href="locales/pt-BR/SKILL.html"><b>pt-BR language contract</b>Natural Brazilian Portuguese, NVIDIA terminology sources, and literal-translation traps.</a>
+    <a class="skill-link" href="locales/es-ES/SKILL.html"><b>es-ES language contract</b>Neutral technical Spanish, NVIDIA terminology sources, rhythm checks, and literal-translation traps.</a>
+    <a class="skill-link" href="locales/SKILL.html"><b>Locale contracts</b>Directory map for every language-specific translation profile.</a>
+    <a class="skill-link" href="../../web/nemoclaw/localization.html"><b>Localization Studio</b>Same-branch source and locale comparison with drift state.</a>
+    <a class="skill-link" href="../validation/localization_audit.py"><b>Required validator</b>Overlay boundary, accepted source hash, structure, and locale-native checks.</a>
+    <a class="skill-link" href="localization_scope.py"><b>Translation-body boundary</b>Hashes stable lesson prose separately from presentation-shell wording.</a>
+    <a class="skill-link" href="code_localization.py"><b>Runnable-code language</b>Preserves localized learner output while blocking protocol and executable drift.</a>
+    <a class="skill-link" href="locale_projection.py"><b>Structure projection</b>Restores every current learning block and inserts reviewed locale prose plus localized prompts.</a>
+  </div>
+</section>
+<div id="explorer"></div><script src="../../web/_skill_explorer.js"></script></body>
+</html>

@@ -1,0 +1,106 @@
+<svg data-locale="es-ES" class="gfx-dark" viewBox="0 0 1020 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro arquitecturas de agentes de Russell y Norvig: agentes reflejos, orientados a objetivos, basados en utilidad y con aprendizaje. Cada una resume su idea en tres líneas y muestra el flujo interno desde los sensores, pasando por el razonamiento, hasta los actuadores." preserveAspectRatio="xMidYMid meet" style="width:100%; max-width:1400px; height:auto; display:block; margin:1.5rem auto; border-radius:12px">
+    <defs>
+      <marker id="matrix-arr-v" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M0,2 L8,5 L0,8 Z" fill="var(--gfx-faint,#8b949e)"/>
+      </marker>
+      <marker id="matrix-arr-green-v" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M0,2 L8,5 L0,8 Z" fill="var(--gfx-green,#9bd14a)"/>
+      </marker>
+      <marker id="matrix-arr-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M0,2 L8,5 L0,8 Z" fill="var(--gfx-blue,#5aa8ff)"/>
+      </marker>
+    </defs>
+  
+    <rect x="0" y="0" width="1020" height="400" rx="12" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-line,#3a3f45)" stroke-width="1"/>
+  
+    <rect x="30" y="25" width="465" height="145" rx="8" fill="var(--gfx-panel,#17191c)" stroke="var(--gfx-line,#3a3f45)" stroke-width="1.5"/>
+    <text x="50" y="52" font-family="ui-monospace, monospace" font-size="13.5" fill="var(--gfx-green,#9bd14a)" font-weight="700">01 · Agentes reflejos</text>
+  
+    <text x="50" y="78" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-sub,#9aa0a6)">• Asignan acciones directamente a las entradas.</text>
+    <text x="50" y="96" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-sub,#9aa0a6)">• Reglas asocian condiciones y acciones.</text>
+    <text x="50" y="114" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-sub,#9aa0a6)">• Conservan estado para cubrir vacíos de contexto.</text>
+  
+    <g class="reflex-diagram" transform="translate(320, 46) scale(1.2)">
+      <rect x="0" y="0" width="90" height="20" rx="3" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-blue,#5aa8ff)" stroke-width="1"/>
+      <text x="45" y="13" font-family="ui-monospace, monospace" font-size="9" fill="var(--gfx-blue,#5aa8ff)" text-anchor="middle">Sensores</text>
+  
+      <rect x="0" y="32" width="90" height="20" rx="3" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-line,#3a3f45)" stroke-width="1"/>
+      <text x="45" y="45" font-family="Arial, sans-serif" font-size="9" fill="var(--gfx-sub,#9aa0a6)" text-anchor="middle">Estado / Reglas</text>
+  
+      <rect x="0" y="64" width="90" height="20" rx="3" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-green,#9bd14a)" stroke-width="1"/>
+      <text x="45" y="77" font-family="ui-monospace, monospace" font-size="9" fill="var(--gfx-green,#9bd14a)" text-anchor="middle">Actuadores</text>
+  
+      <line x1="45" y1="20" x2="45" y2="32" stroke="var(--gfx-faint,#8b949e)" stroke-width="1.2" marker-end="url(#matrix-arr-v)"/>
+      <line x1="45" y1="52" x2="45" y2="64" stroke="var(--gfx-green,#9bd14a)" stroke-width="1.2" marker-end="url(#matrix-arr-green-v)"/>
+  
+      <path d="M 90 10 C 100 16, 112 48, 92 64" fill="none" stroke="var(--gfx-blue,#5aa8ff)" stroke-width="1" stroke-dasharray="2 2" marker-end="url(#matrix-arr-blue)"/>
+      <text x="124" y="34" font-family="Arial, sans-serif" font-size="10" fill="var(--gfx-blue,#5aa8ff)" text-anchor="middle">sin estado</text>
+      <text x="124" y="45" font-family="Arial, sans-serif" font-size="10" fill="var(--gfx-blue,#5aa8ff)" text-anchor="middle">Acceso rápido</text>
+    </g>
+  
+  
+    <rect x="525" y="25" width="465" height="145" rx="8" fill="var(--gfx-panel,#17191c)" stroke="var(--gfx-line,#3a3f45)" stroke-width="1.5"/>
+    <text x="545" y="52" font-family="ui-monospace, monospace" font-size="13.5" fill="var(--gfx-green,#9bd14a)" font-weight="700">02 · Agentes orientados a objetivos</text>
+  
+    <text x="545" y="78" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-sub,#9aa0a6)">• Combinan estado del mundo y objetivos.</text>
+    <text x="545" y="96" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-sub,#9aa0a6)">• Evaluan caminos antes de actuar.</text>
+    <text x="545" y="114" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-sub,#9aa0a6)">• Intercambian reflejos por planificación.</text>
+  
+    <g class="goal-diagram" transform="translate(845, 46) scale(1.2)">
+      <rect x="0" y="0" width="95" height="20" rx="3" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-blue,#5aa8ff)" stroke-width="1"/>
+      <text x="47.5" y="13" font-family="ui-monospace, monospace" font-size="9" fill="var(--gfx-blue,#5aa8ff)" text-anchor="middle">Sensores / Modelo</text>
+  
+      <rect x="0" y="32" width="95" height="20" rx="3" fill="var(--gfx-tint-sub,#1c1f22)" stroke="var(--gfx-line,#3a3f45)" stroke-width="1"/>
+      <text x="47.5" y="45" font-family="Arial, sans-serif" font-size="9" fill="var(--gfx-ink,#e8eaed)" text-anchor="middle">Objetivos / Plan</text>
+  
+      <rect x="0" y="64" width="95" height="20" rx="3" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-green,#9bd14a)" stroke-width="1"/>
+      <text x="47.5" y="77" font-family="ui-monospace, monospace" font-size="9" fill="var(--gfx-green,#9bd14a)" text-anchor="middle">Actuadores</text>
+  
+      <line x1="47.5" y1="20" x2="47.5" y2="32" stroke="var(--gfx-faint,#8b949e)" stroke-width="1.2" marker-end="url(#matrix-arr-v)"/>
+      <line x1="47.5" y1="52" x2="47.5" y2="64" stroke="var(--gfx-green,#9bd14a)" stroke-width="1.2" marker-end="url(#matrix-arr-green-v)"/>
+    </g>
+  
+  
+    <rect x="30" y="195" width="465" height="145" rx="8" fill="var(--gfx-panel,#17191c)" stroke="var(--gfx-line,#3a3f45)" stroke-width="1.5"/>
+    <text x="50" y="222" font-family="ui-monospace, monospace" font-size="13.5" fill="var(--gfx-green,#9bd14a)" font-weight="700">03 · Agentes basados en utilidad</text>
+  
+    <text x="50" y="248" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-sub,#9aa0a6)">• Puntúan los estados según preferencias.</text>
+    <text x="50" y="266" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-sub,#9aa0a6)">• Equilibran objetivos conflictivos.</text>
+    <text x="50" y="284" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-sub,#9aa0a6)">• Maximizan utilidad bajo incertidumbre.</text>
+  
+    <g class="utility-diagram" transform="translate(320, 216) scale(1.2)">
+      <rect x="0" y="0" width="90" height="20" rx="3" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-blue,#5aa8ff)" stroke-width="1"/>
+      <text x="45" y="13" font-family="ui-monospace, monospace" font-size="9" fill="var(--gfx-blue,#5aa8ff)" text-anchor="middle">Sensores / Modelo</text>
+  
+      <rect x="0" y="32" width="90" height="20" rx="3" fill="var(--gfx-tint-green,#1d2a12)" stroke="var(--gfx-green,#9bd14a)" stroke-width="1"/>
+      <text x="45" y="45" font-family="ui-monospace, monospace" font-size="9" fill="var(--gfx-green,#9bd14a)" font-weight="700" text-anchor="middle">Utilidad U(s)</text>
+  
+      <rect x="0" y="64" width="90" height="20" rx="3" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-green,#9bd14a)" stroke-width="1"/>
+      <text x="45" y="77" font-family="ui-monospace, monospace" font-size="9" fill="var(--gfx-green,#9bd14a)" text-anchor="middle">Actuadores</text>
+  
+      <line x1="45" y1="20" x2="45" y2="32" stroke="var(--gfx-faint,#8b949e)" stroke-width="1.2" marker-end="url(#matrix-arr-v)"/>
+      <line x1="45" y1="52" x2="45" y2="64" stroke="var(--gfx-green,#9bd14a)" stroke-width="1.2" marker-end="url(#matrix-arr-green-v)"/>
+    </g>
+  
+  
+    <rect x="525" y="195" width="465" height="145" rx="8" fill="var(--gfx-panel,#17191c)" stroke="var(--gfx-green,#9bd14a)" stroke-width="1.5"/>
+    <text x="545" y="222" font-family="ui-monospace, monospace" font-size="13.5" fill="var(--gfx-green,#9bd14a)" font-weight="700">04 · Agentes con aprendizaje</text>
+  
+    <text x="545" y="248" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-sub,#9aa0a6)">• Separan ejecución y evaluación.</text>
+    <text x="545" y="266" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-sub,#9aa0a6)">• El crítico evalúa las elecciones.</text>
+    <text x="545" y="284" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-sub,#9aa0a6)">• Modifican su programa para mejorar.</text>
+  
+    <g class="learning-diagram" transform="translate(845, 216) scale(1.2)">
+      <rect x="0" y="0" width="95" height="20" rx="3" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-line,#3a3f45)" stroke-width="1"/>
+      <text x="47.5" y="13" font-family="Arial, sans-serif" font-size="9" fill="var(--gfx-ink,#e8eaed)" text-anchor="middle">Evaluación del crítico</text>
+  
+      <rect x="0" y="32" width="95" height="20" rx="3" fill="var(--gfx-tint-green,#1d2a12)" stroke="var(--gfx-green,#9bd14a)" stroke-width="1"/>
+      <text x="47.5" y="45" font-family="ui-monospace, monospace" font-size="9" fill="var(--gfx-green,#9bd14a)" font-weight="700" text-anchor="middle">Aprendizaje</text>
+  
+      <rect x="0" y="64" width="95" height="20" rx="3" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-line,#3a3f45)" stroke-width="1"/>
+      <text x="47.5" y="77" font-family="Arial, sans-serif" font-size="9" fill="var(--gfx-ink,#e8eaed)" text-anchor="middle">Ejecución</text>
+  
+      <line x1="47.5" y1="20" x2="47.5" y2="32" stroke="var(--gfx-green,#9bd14a)" stroke-width="1.2" marker-end="url(#matrix-arr-green-v)"/>
+      <line x1="47.5" y1="52" x2="47.5" y2="64" stroke="var(--gfx-green,#9bd14a)" stroke-width="1.2" marker-end="url(#matrix-arr-green-v)"/>
+    </g>
+  </svg>

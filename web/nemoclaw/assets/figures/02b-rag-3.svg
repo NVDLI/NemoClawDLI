@@ -1,0 +1,163 @@
+<svg class="gfx-dark" viewBox="0 0 1160 660" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The GraphRAG pipeline. Indexing, shown in blue, runs offline: source documents are split into text chunks, an LLM extracts entities and relationships into a knowledge graph, and community detection partitions it into communities. Query time, shown in green, runs per question: each community is summarized, the summaries produce partial community answers, and those answers are reduced into one global answer." preserveAspectRatio="xMidYMid meet" style="width:100%; height:auto; display:block; background:var(--gfx-bg,#0d0d0d); border:1px solid var(--gfx-line,#2a2a2a); border-radius:8px; padding:16px; max-width:1040px; margin:1.5rem auto">
+  <defs>
+    <marker id="arr-gray" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,1 L8,5 L0,9 Z" fill="var(--gfx-sub,#444444)"/>
+    </marker>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,1 L8,5 L0,9 Z" fill="var(--gfx-green,#76b900)"/>
+    </marker>
+  </defs>
+
+  <line x1="310" y1="40" x2="310" y2="530" stroke="var(--gfx-panel,#141414)" stroke-width="1.5" stroke-dasharray="4 6"/>
+  <line x1="850" y1="40" x2="850" y2="530" stroke="var(--gfx-tint-green,#141c14)" stroke-width="1.5" stroke-dasharray="4 6"/>
+
+  <rect x="170" y="35" width="280" height="54" rx="6" fill="var(--gfx-panel,#141414)" stroke="var(--gfx-line,#2a2a2a)" stroke-width="1.5"/>
+  <text x="310" y="67" font-family="Arial, sans-serif" font-size="14" fill="var(--gfx-ink,#e6e6e6)" text-anchor="middle" font-weight="700">Source Documents</text>
+
+  <rect x="170" y="155" width="280" height="54" rx="6" fill="var(--gfx-panel,#141414)" stroke="var(--gfx-line,#2a2a2a)" stroke-width="1.5"/>
+  <text x="310" y="187" font-family="Arial, sans-serif" font-size="14" fill="var(--gfx-ink,#e6e6e6)" text-anchor="middle" font-weight="700">Text Chunks</text>
+
+  <rect x="170" y="275" width="280" height="54" rx="6" fill="var(--gfx-panel,#141414)" stroke="var(--gfx-line,#2a2a2a)" stroke-width="1.5"/>
+  <text x="310" y="307" font-family="Arial, sans-serif" font-size="14" fill="var(--gfx-ink,#e6e6e6)" text-anchor="middle" font-weight="700">Entities &amp; Relationships</text>
+
+  <rect x="170" y="395" width="280" height="54" rx="6" fill="var(--gfx-panel,#141414)" stroke="var(--gfx-line,#3a3a3a)" stroke-width="1.5"/>
+  <text x="310" y="427" font-family="Arial, sans-serif" font-size="14" fill="var(--gfx-ink,#e6e6e6)" text-anchor="middle" font-weight="700">Knowledge Graph Index</text>
+
+
+  <rect x="710" y="395" width="280" height="54" rx="6" fill="var(--gfx-tint-green,#112211)" stroke="var(--gfx-green,#224422)" stroke-width="1.5"/>
+  <text x="850" y="427" font-family="Arial, sans-serif" font-size="14" fill="var(--gfx-green,#aee23a)" text-anchor="middle" font-weight="700">Graph Communities</text>
+
+
+  <rect x="710" y="275" width="280" height="54" rx="6" fill="var(--gfx-tint-green,#112211)" stroke="var(--gfx-green,#224422)" stroke-width="1.5"/>
+  <text x="850" y="307" font-family="Arial, sans-serif" font-size="14" fill="var(--gfx-green,#aee23a)" text-anchor="middle" font-weight="700">Community Summaries</text>
+
+  <rect x="710" y="155" width="280" height="54" rx="6" fill="var(--gfx-tint-green,#112211)" stroke="var(--gfx-green,#76b900)" stroke-width="1.5"/>
+  <text x="850" y="187" font-family="Arial, sans-serif" font-size="14" fill="var(--gfx-green,#aee23a)" text-anchor="middle" font-weight="700">Intermediate Answers (Map)</text>
+
+  <rect x="710" y="35" width="280" height="54" rx="6" fill="var(--gfx-tint-green,#1c331c)" stroke="var(--gfx-green,#76b900)" stroke-width="2"/>
+  <text x="850" y="67" font-family="Arial, sans-serif" font-size="14" fill="var(--gfx-green,#aee23a)" text-anchor="middle" font-weight="800">Global Aggregation (Reduce)</text>
+
+
+  <rect x="170" y="535" width="280" height="48" rx="4" fill="var(--gfx-panel,#111111)" stroke="var(--gfx-line,#2a2a2a)" stroke-width="1.2"/>
+  <text x="310" y="564" font-family="ui-monospace, monospace" font-size="13" fill="var(--gfx-sub,#888888)" text-anchor="middle" letter-spacing="0.05em">STAGE 01 · OFFLINE INDEXING</text>
+
+  <rect x="710" y="535" width="280" height="48" rx="4" fill="var(--gfx-tint-green,#142214)" stroke="var(--gfx-green,#224422)" stroke-width="1.2"/>
+  <text x="850" y="564" font-family="ui-monospace, monospace" font-size="13" fill="var(--gfx-green,#76b900)" text-anchor="middle" letter-spacing="0.05em">STAGE 02 · ONLINE GENERATION</text>
+
+  <text x="580" y="564" font-family="Arial, sans-serif" font-size="13" fill="var(--gfx-faint,#5e5e5e)" text-anchor="middle" font-weight="700">PIPELINE TRANSITION</text>
+
+
+  <line x1="310" y1="89" x2="310" y2="154" stroke="var(--gfx-sub,#444444)" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+  <rect x="220" y="104" width="180" height="34" rx="4" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-line,#222222)" stroke-width="1"/>
+  <text x="310" y="121" font-family="ui-monospace, monospace" font-size="11" fill="var(--gfx-sub,#aaaaaa)" text-anchor="middle">text slicing &amp; chunking</text>
+
+  <line x1="310" y1="209" x2="310" y2="274" stroke="var(--gfx-sub,#444444)" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+  <rect x="200" y="224" width="220" height="34" rx="4" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-line,#222222)" stroke-width="1"/>
+  <text x="310" y="241" font-family="ui-monospace, monospace" font-size="11" fill="var(--gfx-sub,#aaaaaa)" text-anchor="middle">LLM entity-relation harvest</text>
+
+  <line x1="310" y1="329" x2="310" y2="394" stroke="var(--gfx-sub,#444444)" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+  <rect x="210" y="344" width="200" height="34" rx="4" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-line,#222222)" stroke-width="1"/>
+  <text x="310" y="361" font-family="ui-monospace, monospace" font-size="11" fill="var(--gfx-sub,#aaaaaa)" text-anchor="middle">graph topology layout</text>
+
+  <line x1="450" y1="422" x2="704" y2="422" stroke="var(--gfx-green,#76b900)" stroke-width="1.5" marker-end="url(#arr-green)"/>
+  <rect x="500" y="405" width="160" height="34" rx="4" fill="var(--gfx-tint-green,#0f1a0f)" stroke="var(--gfx-green,#224422)" stroke-width="1"/>
+  <text x="580" y="422" font-family="ui-monospace, monospace" font-size="11" fill="var(--gfx-green,#aee23a)" text-anchor="middle" font-weight="600">Leiden clustering</text>
+
+  <line x1="850" y1="395" x2="850" y2="336" stroke="var(--gfx-green,#76b900)" stroke-width="1.5" marker-end="url(#arr-green)"/>
+  <rect x="740" y="344" width="220" height="34" rx="4" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-green,#223322)" stroke-width="1"/>
+  <text x="850" y="361" font-family="ui-monospace, monospace" font-size="11" fill="var(--gfx-sub,#8a9a8a)" text-anchor="middle">hierarchical synthesis</text>
+
+  <line x1="850" y1="275" x2="850" y2="216" stroke="var(--gfx-green,#76b900)" stroke-width="1.5" marker-end="url(#arr-green)"/>
+  <rect x="730" y="224" width="240" height="34" rx="4" fill="var(--gfx-tint-green,#0f1a0f)" stroke="var(--gfx-green,#224422)" stroke-width="1"/>
+  <text x="850" y="241" font-family="ui-monospace, monospace" font-size="11" fill="var(--gfx-green,#aee23a)" text-anchor="middle" font-weight="600">parallel community maps</text>
+
+  <line x1="850" y1="155" x2="850" y2="96" stroke="var(--gfx-green,#76b900)" stroke-width="1.5" marker-end="url(#arr-green)"/>
+  <rect x="740" y="104" width="220" height="34" rx="4" fill="var(--gfx-tint-green,#0f1a0f)" stroke="var(--gfx-green,#224422)" stroke-width="1"/>
+  <text x="850" y="121" font-family="ui-monospace, monospace" font-size="11" fill="var(--gfx-green,#aee23a)" text-anchor="middle" font-weight="600">global corpus reduce</text>
+
+
+  <g transform="translate(45,25)">
+    <rect x="10" y="10" width="50" height="60" rx="3" fill="var(--gfx-panel,#141414)" stroke="var(--gfx-sub,#444444)" stroke-width="1.2"/>
+    <rect x="16" y="4" width="50" height="60" rx="3" fill="var(--gfx-panel,#1c1c1c)" stroke="var(--gfx-faint,#555555)" stroke-width="1.2"/>
+    <line x1="26" y1="16" x2="52" y2="16" stroke="var(--gfx-faint,#666666)" stroke-width="1.5"/>
+    <line x1="26" y1="28" x2="56" y2="28" stroke="var(--gfx-faint,#666666)" stroke-width="1.5"/>
+    <line x1="26" y1="40" x2="44" y2="40" stroke="var(--gfx-faint,#666666)" stroke-width="1.5"/>
+    <text x="40" y="82" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-faint,#6a6a6a)" text-anchor="middle">source files</text>
+  </g>
+
+  <g transform="translate(45,145)">
+    <rect x="12" y="10" width="55" height="50" rx="4" fill="var(--gfx-panel,#111111)" stroke="var(--gfx-line,#333333)" stroke-width="1"/>
+    <rect x="20" y="18" width="38" height="8" rx="2" fill="var(--gfx-tint-blue,#1c3344)" stroke="var(--gfx-blue,#2d5977)" stroke-width="1"/>
+    <rect x="20" y="32" width="28" height="8" rx="2" fill="var(--gfx-tint-blue,#1c3344)" stroke="var(--gfx-blue,#2d5977)" stroke-width="1"/>
+    <rect x="20" y="46" width="34" height="8" rx="2" fill="var(--gfx-tint-blue,#1c3344)" stroke="var(--gfx-blue,#2d5977)" stroke-width="1"/>
+    <text x="40" y="80" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-faint,#6a6a6a)" text-anchor="middle">text chunks</text>
+  </g>
+
+  <g transform="translate(45,265)">
+    <rect x="12" y="8" width="55" height="55" rx="4" fill="var(--gfx-panel,#111111)" stroke="var(--gfx-line,#333333)" stroke-width="1"/>
+    <line x1="26" y1="24" x2="54" y2="44" stroke="var(--gfx-sub,#444444)" stroke-width="1.2"/>
+    <line x1="54" y1="22" x2="32" y2="48" stroke="var(--gfx-sub,#444444)" stroke-width="1.2"/>
+    <circle cx="26" cy="24" r="5" fill="var(--gfx-tint-blue,#142233)" stroke="var(--gfx-blue,#3b82f6)" stroke-width="1"/>
+    <circle cx="54" cy="22" r="5" fill="var(--gfx-tint-purple,#221433)" stroke="var(--gfx-purple,#8b5cf6)" stroke-width="1"/>
+    <circle cx="32" cy="48" r="5" fill="var(--gfx-panel,#1c1c1c)" stroke="var(--gfx-sub,#888888)" stroke-width="1"/>
+    <circle cx="54" cy="44" r="5" fill="var(--gfx-panel,#1c1c1c)" stroke="var(--gfx-sub,#888888)" stroke-width="1"/>
+    <text x="40" y="82" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-faint,#6a6a6a)" text-anchor="middle">extracted graph</text>
+  </g>
+
+  <g transform="translate(45,385)">
+    <rect x="12" y="8" width="55" height="55" rx="4" fill="var(--gfx-panel,#111111)" stroke="var(--gfx-sub,#444444)" stroke-width="1.2"/>
+    <path d="M 24,24 L 40,16 L 56,28 L 48,48 L 28,44 Z M 40,16 L 48,48 M 56,28 L 28,44" stroke="var(--gfx-sub,#444444)" stroke-width="1" fill="none"/>
+    <circle cx="24" cy="24" r="4.5" fill="var(--gfx-tint-green,#0f1a0f)" stroke="var(--gfx-green,#76b900)" stroke-width="1"/>
+    <circle cx="40" cy="16" r="4.5" fill="var(--gfx-tint-blue,#1c3344)" stroke="var(--gfx-blue,#3b82f6)" stroke-width="1"/>
+    <circle cx="56" cy="28" r="4.5" fill="var(--gfx-tint-green,#0f1a0f)" stroke="var(--gfx-green,#76b900)" stroke-width="1"/>
+    <circle cx="48" cy="48" r="4.5" fill="var(--gfx-panel,#1c1c1c)" stroke="var(--gfx-sub,#888888)" stroke-width="1"/>
+    <circle cx="28" cy="44" r="4.5" fill="var(--gfx-panel,#1c1c1c)" stroke="var(--gfx-sub,#888888)" stroke-width="1"/>
+    <text x="40" y="82" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-faint,#6a6a6a)" text-anchor="middle">graph index</text>
+  </g>
+
+
+  <g transform="translate(1030,385)">
+    <rect x="12" y="8" width="55" height="55" rx="4" fill="var(--gfx-panel,#111111)" stroke="var(--gfx-green,#224422)" stroke-width="1.2"/>
+    <circle cx="32" cy="26" r="13" fill="var(--gfx-tint-green,#142214)" stroke="var(--gfx-green,#76b900)" stroke-width="1" stroke-dasharray="2 2"/>
+    <circle cx="48" cy="42" r="13" fill="var(--gfx-tint-blue,#142233)" stroke="var(--gfx-blue,#3b82f6)" stroke-width="1" stroke-dasharray="2 2"/>
+    <circle cx="30" cy="24" r="3" fill="var(--gfx-green,#76b900)"/>
+    <circle cx="36" cy="30" r="3" fill="var(--gfx-green,#76b900)"/>
+    <circle cx="44" cy="40" r="3" fill="var(--gfx-blue,#3b82f6)"/>
+    <circle cx="52" cy="46" r="3" fill="var(--gfx-blue,#3b82f6)"/>
+    <text x="40" y="82" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-sub,#6a7a6a)" text-anchor="middle">communities</text>
+  </g>
+
+  <g transform="translate(1030,265)">
+    <rect x="12" y="8" width="55" height="55" rx="4" fill="var(--gfx-panel,#111111)" stroke="var(--gfx-green,#224422)" stroke-width="1.2"/>
+    <line x1="22" y1="20" x2="58" y2="20" stroke="var(--gfx-green,#445544)" stroke-width="1.5"/>
+    <line x1="22" y1="30" x2="50" y2="30" stroke="var(--gfx-green,#445544)" stroke-width="1.5"/>
+    <line x1="22" y1="40" x2="54" y2="40" stroke="var(--gfx-green,#445544)" stroke-width="1.5"/>
+    <rect x="22" y="48" width="28" height="6" rx="1.5" fill="var(--gfx-tint-green,#142b14)" stroke="var(--gfx-green,#76b900)" stroke-width="0.8"/>
+    <text x="40" y="82" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-sub,#6a7a6a)" text-anchor="middle">summaries</text>
+  </g>
+
+  <g transform="translate(1030,145)">
+    <rect x="12" y="10" width="55" height="50" rx="4" fill="var(--gfx-panel,#111111)" stroke="var(--gfx-green,#76b900)" stroke-width="1.2"/>
+    <rect x="20" y="18" width="40" height="12" rx="3" fill="var(--gfx-tint-green,#142b14)" stroke="var(--gfx-green,#76b900)" stroke-width="1"/>
+    <rect x="20" y="36" width="40" height="12" rx="3" fill="var(--gfx-tint-green,#142b14)" stroke="var(--gfx-green,#76b900)" stroke-width="1"/>
+    <circle cx="26" cy="24" r="2" fill="var(--gfx-green,#aee23a)"/>
+    <circle cx="26" cy="42" r="2" fill="var(--gfx-green,#aee23a)"/>
+    <text x="40" y="80" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-green,#76b900)" text-anchor="middle">map splits</text>
+  </g>
+
+  <g transform="translate(1030,25)">
+    <rect x="12" y="10" width="55" height="60" rx="4" fill="var(--gfx-tint-green,#142214)" stroke="var(--gfx-green,#76b900)" stroke-width="1.5"/>
+    <path d="M40 22 L44 34 L56 34 L46 42 L50 54 L40 46 L30 54 L34 42 L24 34 L36 34 Z" fill="var(--gfx-green,#1e3a1e)" stroke="var(--gfx-green,#aee23a)" stroke-width="1"/>
+    <text x="40" y="85" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-green,#aee23a)" text-anchor="middle" font-weight="700">reduce text</text>
+  </g>
+
+  <g transform="translate(518,446)">
+    <rect x="0" y="0" width="124" height="42" rx="4" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-green,#223322)" stroke-width="1"/>
+    <circle cx="28" cy="21" r="11" fill="none" stroke="var(--gfx-line,#333333)" stroke-dasharray="2 2"/>
+    <circle cx="96" cy="21" r="11" fill="none" stroke="var(--gfx-green,#76b900)" stroke-dasharray="2 2"/>
+    <line x1="62" y1="8" x2="62" y2="34" stroke="var(--gfx-line,#222222)" stroke-width="1"/>
+    <text x="62" y="54" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-faint,#5e5e5e)" text-anchor="middle" font-style="italic">partition topology</text>
+  </g>
+
+
+  </svg>

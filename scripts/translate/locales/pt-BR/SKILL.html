@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>pt-BR · perfil de localização · explore</title>
+<script type="application/json" id="skill-meta">
+{
+  "schema": "dir-skill/1.0",
+  "node_type": "directory-explorer",
+  "title": "perfil de localização pt-BR",
+  "source_dir": "scripts/translate/locales/pt-BR/",
+  "summary": "Contrato de linguagem para o português do Brasil: fontes públicas da NVIDIA, termos preferidos, sinais de tradução literal, limites da validação estática e comandos de revisão.",
+  "related": [
+    "scripts/translate/locales/pt-BR/profile.json",
+    "scripts/translate/locales/pt-BR/README.md",
+    "scripts/translate/translate_html_segments.py",
+    "scripts/translate/translate_svg_text.py",
+    "scripts/translate/locales/pt-BR/svg_translations.json",
+    "scripts/translate/locales/pt-BR/shell_translations.json",
+    "scripts/validation/localization_audit.py",
+    "web/nemoclaw/localization.html"
+  ],
+  "explorer": "../../../../web/_skill_explorer.js"
+}
+</script>
+<script type="application/json" id="explorer-config">
+{
+  "title": "pt-BR · perfil de localização",
+  "summary": "Use este nó antes de traduzir ou revisar. O objetivo não é converter frases uma a uma, e sim conservar o conteúdo técnico em português natural para estudantes e desenvolvedores no Brasil.",
+  "nav": {
+    "home": "../../../../web/index.html",
+    "up": {"label": "ferramentas de tradução", "href": "../../SKILL.html"}
+  },
+  "groups": [
+    {
+      "title": "Contrato pt-BR",
+      "files": [
+        {"path": "README.md", "role": "guia de revisão", "desc": "Princípios, limites e fluxo de trabalho para uma tradução tecnicamente fiel e natural."},
+        {"path": "profile.json", "role": "perfil analisável", "desc": "Fontes NVIDIA, terminologia preferida, exceções técnicas e sinais que a validação deve bloquear."},
+        {"path": "../../translate_html_segments.py", "role": "gerador de rascunho", "desc": "Tradução por blocos semânticos, refinamento, cache e telemetria de uso; não aceita o hash de revisão."},
+        {"path": "../../translate_svg_text.py", "role": "gerador de SVG localizado", "desc": "Traduz rótulos e descrições no SVG sem alterar sua geometria."},
+        {"path": "svg_translations.json", "role": "texto SVG revisado", "desc": "Mapa reproduzível de textos em inglês para rótulos naturais em português do Brasil."},
+        {"path": "shell_translations.json", "role": "controles de aprendizagem", "desc": "Perguntas e enquadramentos traduzidos projetados sobre a estrutura canônica atual."}
+      ]
+    }
+  ]
+}
+</script>
+<style>html,body{margin:0;background:#0d0d0d;color:#f2f2f2;font:15px/1.55 system-ui,sans-serif}.skill-static{padding:24px clamp(18px,4vw,44px);border-bottom:1px solid #2a2a2a}.skill-static a{color:#76b900}.skill-static h1{color:#76b900}.skill-list,.skill-cmds{display:grid;gap:10px;margin:.7rem 0}.skill-list{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}.skill-cmd{border:1px solid #2a2a2a;background:#161616;border-radius:8px;padding:10px 12px}.skill-link{display:grid;grid-template-columns:minmax(180px,280px) 1fr;gap:12px;border-top:1px solid #2a2a2a;padding:9px 4px;text-decoration:none}.skill-link:last-child{border-bottom:1px solid #2a2a2a}.skill-link{color:#f2f2f2!important}.skill-link b,.skill-cmd b{display:block;color:#aee23a}.skill-cmd code{display:block;overflow:auto;white-space:nowrap}#explorer{height:100vh}@media(max-width:700px){.skill-link{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<header data-skill-header="1" style="padding:.65rem 1rem;border-bottom:1px solid ButtonBorder;background:Canvas;color:CanvasText">
+  <nav aria-label="Skill navigation" style="display:flex;gap:.6rem;flex-wrap:wrap"><a data-skill-nav="home" href="../../../../web/index.html">Home</a> <span aria-hidden="true"> · </span> <a data-skill-nav="up" href="../../SKILL.html">Up</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../../../SKILL.html">Repository map</a></nav>
+</header>
+<section class="skill-static" aria-labelledby="skill-title">
+  <h1 id="skill-title">Contrato de localização pt-BR</h1>
+  <p>Traduza a ideia e preserve o conteúdo técnico. Prefira o português usado por estudantes e desenvolvedores no Brasil; não force equivalentes literais para termos técnicos estabelecidos.</p>
+  <h2>Verificações executáveis / Executable checks</h2>
+  <div class="skill-cmds">
+    <div class="skill-cmd"><b>Deriva e adequação ao pt-BR</b><code>python3 scripts/validation/localization_audit.py --locale pt-BR</code></div>
+    <div class="skill-cmd"><b>Teste de mutações</b><code>python3 scripts/validation/localization_audit.py --self-test</code></div>
+    <div class="skill-cmd"><b>Comparação no navegador</b><code>python3 scripts/validation/localization_runtime_audit.py</code></div>
+    <div class="skill-cmd"><b>Rascunho medido</b><code>python3 scripts/translate/translate_html_segments.py web/nemoclaw/PAGE.html --usage-report /tmp/pt-usage.json</code></div>
+  </div>
+  <h2>Mapa de vínculos / Linkage map</h2>
+  <div class="skill-list">
+    <a class="skill-link" href="README.md"><b>Guia de revisão</b>Fidelidade técnica, naturalidade, voz e limites da automação.</a>
+    <a class="skill-link" href="profile.json"><b>Perfil analisável</b>Fontes NVIDIA, termos preferidos e traduções literais bloqueadas.</a>
+    <a class="skill-link" href="../../../../web/nemoclaw/localization.html"><b>Localization Studio</b>Inglês e português lado a lado, com estado de deriva por página.</a>
+  </div>
+</section>
+<div id="explorer"></div><script src="../../../../web/_skill_explorer.js"></script></body>
+</html>

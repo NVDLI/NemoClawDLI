@@ -9,22 +9,26 @@ updates:
       reviewed-actions:
         patterns: ["*"]
   - package-ecosystem: pip
-    directory: "/workspace"
+    directory: "/scripts/materials"
     schedule:
       interval: weekly
     labels: ["kind:validation", "area:security", "state:needs-triage"]
     groups:
-      workspace-python:
+      material-tools:
         patterns: ["*"]
-  - package-ecosystem: docker
-    directories:
-      - "/workspace"
-      - "/cpu/services/docker_router"
-      - "/cpu/services/llm_client"
-      - "/cpu/services/sandbox_admin"
+  - package-ecosystem: pip
+    directory: "/scripts/security"
     schedule:
       interval: weekly
     labels: ["kind:validation", "area:security", "state:needs-triage"]
     groups:
-      service-images:
+      security-tools:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: "/scripts/runtime"
+    schedule:
+      interval: weekly
+    labels: ["kind:validation", "area:security", "state:needs-triage"]
+    groups:
+      host-browser-api:
         patterns: ["*"]

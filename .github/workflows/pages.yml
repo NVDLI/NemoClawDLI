@@ -1,0 +1,296 @@
+# GitHub Pages for Securing Agents with OpenShell and NemoClaw: validate, then build ./public
+# and deploy to Pages. Browser checks use the runner's host Chromium; the repository owns
+# no image, Compose stack, or container build.
+name: pages
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Reject oversized proposed source before expensive analysis
+        run: python3 scripts/validation/pages_artifact_integrity.py --source-root .
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: "24"
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+      - name: Install the pinned host-browser API
+        working-directory: scripts/runtime
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile --ignore-scripts
+      - name: Verify browser publisher copies and sole LangChain exception
+        run: |
+          npm ci --prefix scripts/browser-vendor --ignore-scripts
+          python3 scripts/compliance/source_license_contract.py --verify-browser-upstream
+          node scripts/build/vendor_browser_dependencies.mjs
+          git diff --exit-code -- web/nemoclaw/vendor
+      - name: Materials vendoring deps (for the live drift check)
+        run: "python3 -m pip install --require-hashes --no-deps --only-binary=:all: --retries 5 --timeout 30 --requirement scripts/materials/requirements.lock"
+      - name: Static gate (layout, skill-meta, link-engine self-test, grounding)
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          GATE_BASE=""
+          if [ "$EVENT_NAME" = "pull_request" ]; then GATE_BASE="$PR_BASE_SHA"; fi
+          if [ "$EVENT_NAME" = "push" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then GATE_BASE="$BEFORE_SHA"; fi
+          GATE_ARGS=()
+          if [ -n "$GATE_BASE" ]; then GATE_ARGS+=(--changed-since "$GATE_BASE"); fi
+          python3 scripts/validation/release_gate.py --tier ship --jobs 4 "${GATE_ARGS[@]}" \
+            --timing-report docs/validation/release-gate-timings.json
+      - name: Pull request submission contract
+        if: github.event_name == 'pull_request'
+        env:
+          CONTRIBUTION_BODY: ${{ github.event.pull_request.body }}
+        run: python3 scripts/validation/contribution_safety_audit.py --submission-env CONTRIBUTION_BODY
+      - name: Pull request commit signoff
+        if: github.event_name == 'pull_request'
+        env:
+          DCO_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/validation/contribution_safety_audit.py --commit-range "$DCO_RANGE"
+      - name: Pull request contributor-local boundary
+        if: github.event_name == 'pull_request'
+        env:
+          PATH_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/validation/local_path_leak_audit.py --commit-range "$PATH_RANGE"
+      - name: Pull request sensitive metadata boundary
+        if: github.event_name == 'pull_request'
+        env:
+          SENSITIVE_TITLE: ${{ github.event.pull_request.title }}
+          SENSITIVE_BODY: ${{ github.event.pull_request.body }}
+          SENSITIVE_REF: ${{ github.event.pull_request.head.ref }}
+        run: python3 scripts/validation/sensitive_content_audit.py --submission-env SENSITIVE_TITLE --submission-env SENSITIVE_BODY --submission-env SENSITIVE_REF
+      - name: Pull request sensitive history boundary
+        if: github.event_name == 'pull_request'
+        env:
+          SENSITIVE_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/validation/sensitive_content_audit.py --commit-range "$SENSITIVE_RANGE"
+      - name: Pull request external release follow-up reminder
+        if: github.event_name == 'pull_request'
+        env:
+          RELEASE_CHANGE_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/validation/release_change_reminder.py --commit-range "$RELEASE_CHANGE_RANGE" --report docs/validation/release-change-reminder.json
+      - name: Materials drift check (advisory; complains on drift, never blocks the deploy)
+        continue-on-error: true
+        run: python3 scripts/materials/pull_materials.py --check --fetch-attempts 4 --retry-backoff 2 --host-delay 3
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: always()
+        with:
+          name: gate-report
+          path: docs/validation/
+          if-no-files-found: ignore
+
+  build-and-verify:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: gate-report
+          path: docs/validation
+      - name: Verify external publication approval
+        run: python3 scripts/validation/contribution_safety_audit.py --require-publication-approved
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: "24"
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+      - name: Fix generated time to the reviewed commit
+        run: echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$GITHUB_SHA")" >> "$GITHUB_ENV"
+      - name: Build the client-side static site
+        run: BUILD_PAGES_PULL_MATERIALS=0 BUILD_PAGES_REUSE_VALIDATION=1 bash scripts/build/build_pages.sh public
+      - name: Install the pinned host-browser API
+        run: |
+          corepack enable
+          pnpm install --dir scripts/runtime --frozen-lockfile --ignore-scripts
+      - name: Verify and exercise the exact Pages artifact
+        run: |
+          python3 scripts/skills/skill_renderer_runtime_audit.py --site-root public --engine current
+          python3 scripts/validation/validation_report_audit.py --report public/gate.json --expect-sha "$GITHUB_SHA"
+          python3 scripts/validation/branch_preview_manifest_audit.py --artifact-root public --manifest public/branches.json
+          python3 scripts/validation/pages_artifact_integrity.py --root public --expect-sha "$GITHUB_SHA" --write-manifest public/pages-sha256.txt
+          python3 scripts/validation/runtime_integration_browser_audit.py --site-root public --timeout-ms 180000
+          python3 scripts/validation/branch_preview_runtime_audit.py --site-root public
+          python3 scripts/validation/pages_artifact_integrity.py --root public --expect-sha "$GITHUB_SHA" --check-manifest public/pages-sha256.txt
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        with:
+          path: public
+
+  rebuild-for-comparison:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: gate-report
+          path: docs/validation
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+      - name: Independently rebuild the static tree
+        run: |
+          set -euo pipefail
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$GITHUB_SHA")"
+          BUILD_PAGES_PULL_MATERIALS=0 BUILD_PAGES_REUSE_VALIDATION=1 \
+            bash scripts/build/build_pages.sh comparison-public
+          python3 scripts/validation/pages_artifact_integrity.py \
+            --root comparison-public --expect-sha "$GITHUB_SHA" \
+            --write-manifest comparison-pages-sha256.txt
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: pages-comparison-${{ github.sha }}
+          path: comparison-pages-sha256.txt
+          if-no-files-found: error
+          retention-days: 3
+
+  compare-builds:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: [build-and-verify, rebuild-for-comparison]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: github-pages
+          path: reviewed-pages-artifact
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: pages-comparison-${{ github.sha }}
+          path: reviewed-pages-comparison
+      - name: Require independent byte-for-byte rebuild agreement
+        run: |
+          set -euo pipefail
+          python3 scripts/validation/pages_artifact_integrity.py \
+            --archive reviewed-pages-artifact/artifact.tar --extract-to reviewed-public
+          python3 scripts/validation/pages_artifact_integrity.py \
+            --root reviewed-public --expect-sha "$GITHUB_SHA" \
+            --check-manifest reviewed-public/pages-sha256.txt
+          cmp reviewed-public/pages-sha256.txt \
+            reviewed-pages-comparison/comparison-pages-sha256.txt
+      - name: Retain only the independently reproduced inventory
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: pages-reviewed-manifest-${{ github.sha }}
+          path: reviewed-public/pages-sha256.txt
+          if-no-files-found: error
+          retention-days: 3
+
+  attest-provenance:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: compare-builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: pages-reviewed-manifest-${{ github.sha }}
+          path: reviewed-pages
+      - name: Attest only the independently reproduced Pages inventory
+        id: pages-provenance
+        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
+        with:
+          subject-path: reviewed-pages/pages-sha256.txt
+      - name: Verify provenance before requesting deployment authority
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh attestation verify reviewed-pages/pages-sha256.txt \
+            --bundle "${{ steps.pages-provenance.outputs.bundle-path }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/pages.yml" \
+            --source-digest "$GITHUB_SHA" --source-ref "$GITHUB_REF" \
+            --deny-self-hosted-runners
+      - name: Retain the Pages provenance bundle
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: pages-provenance-${{ github.sha }}
+          path: ${{ steps.pages-provenance.outputs.bundle-path }}
+          if-no-files-found: error
+          retention-days: 30
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: attest-provenance
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
+
+  verify-deployment:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: github-pages
+          path: reviewed-pages-artifact
+      - name: Compare live Pages with the reviewed artifact
+        run: |
+          python3 scripts/validation/pages_artifact_integrity.py \
+            --archive reviewed-pages-artifact/artifact.tar --extract-to reviewed-public
+          python3 scripts/validation/pages_artifact_integrity.py \
+            --root reviewed-public --expect-sha "$GITHUB_SHA" \
+            --check-manifest reviewed-public/pages-sha256.txt
+          python3 scripts/validation/pages_artifact_integrity.py \
+            --base-url "${{ needs.deploy.outputs.page_url }}" --expect-sha "$GITHUB_SHA" \
+            --root reviewed-public --check-manifest reviewed-public/pages-sha256.txt \
+            --attempts 24 --delay 5

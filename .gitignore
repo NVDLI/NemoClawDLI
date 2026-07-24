@@ -1,0 +1,77 @@
+# Python Exclusions
+.venv
+__pycache__
+
+# Sphinx Exclusions
+_build
+
+# Helm Exclusions
+**/charts/*.tgz
+
+# project temp files
+**/my.*
+**/my-*
+.env-dev
+
+# Next JS Exclusions
+**/.next
+frontend/frontend_js/out
+frontend-sdxl/frontend_js/out
+**/node_modules
+
+**/data
+**/.ipynb_checkpoints
+**/models
+**/results
+__pycache__
+*.tgz
+*.tar
+devonly*
+*.zip
+**/.Trash*
+
+**/demo.gif
+**/dataset.zip
+# Launchable secrets plus the nvapi key. Never commit these.
+CF_ACCESS
+BEARER_TOKEN
+NVIDIA_API_KEY
+
+# Generated from source, never versioned. build_pages.sh bundles each course straight into
+# public/<course> via bundle_standalone.py; web/<course>/standalone only appears if you run
+# the bundler there by hand, so it is ignored too.
+public/
+web/*/standalone/
+!web/*/standalone/
+web/*/standalone/*
+!web/*/standalone/SKILL.html
+!web/*/standalone/assets/
+web/*/standalone/assets/*
+!web/*/standalone/assets/SKILL.html
+
+# Generated authoring artifacts (never commit)
+**/artifacts/
+**/grounding_cache/
+**/_paper_cache/
+**/.exec_stage/
+**/.solution/
+**/.jupyter*
+*.parquet
+# Generated validation reports (written by validate_bundle.py / the DGX watcher)
+docs/validation/
+scripts/security/reports/
+.sca-venv/
+.sca-runtime-venv/
+.sca-tools-venv/
+.release-runtime-venv/
+.release-scan-venv/
+release-security/
+release-assets/
+release-evidence/
+.cache/pip/
+
+# Local env + secrets (never commit)
+.env
+.secret
+scripts/.figtools/
+web/nemoclaw/scripts/.figcheck_shared-*.mjs

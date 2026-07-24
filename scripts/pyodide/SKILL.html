@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Pyodide code cookbook</title>
+<link rel="stylesheet" href="../../web/nemoclaw/styles/_style.css"/>
+<link rel="stylesheet" href="../../web/nemoclaw/vendor/codemirror-5.65.21.css"/>
+<link rel="stylesheet" href="../../web/shared/runtime-workbench.css"/>
+<script src="../../web/nemoclaw/vendor/codemirror-5.65.21.js"></script>
+<script src="../../web/nemoclaw/vendor/codemirror-mode-xml-5.65.21.js"></script>
+<script src="../../web/nemoclaw/vendor/codemirror-mode-javascript-5.65.21.js"></script>
+<script src="../../web/nemoclaw/vendor/codemirror-mode-css-5.65.21.js"></script>
+<script src="../../web/nemoclaw/vendor/codemirror-mode-htmlmixed-5.65.21.js"></script>
+<script src="../../web/nemoclaw/vendor/codemirror-mode-python-5.65.21.js"></script>
+<script src="../../web/nemoclaw/vendor/highlight-11.10.0.min.js"></script>
+<script type="module">import { marked } from "../../web/nemoclaw/vendor/marked-14.1.4.esm.js"; globalThis.marked = marked;</script>
+<script type="application/json" id="skill-meta">
+{
+  "schema": "dir-skill/1.0",
+  "node_type": "leaf",
+  "level": "integration",
+  "surface": "scripts",
+  "title": "Pyodide code cookbook",
+  "source_dir": "scripts/pyodide/",
+  "self_path": "scripts/pyodide/SKILL.html",
+  "summary": "A runnable browser notebook with a persistent Pyodide REPL, editable helpers, background tasks, downloadable artifacts, build.nvidia.com chat streaming, WebSocket transport, and source-mapped errors.",
+  "related": [
+    "scripts/pyodide/examples/SKILL.html",
+    "scripts/pyodide/integration-blueprint.md",
+    "scripts/pyodide/cookbook-use-cases.json",
+    "scripts/pyodide/candidate-components.json",
+    "scripts/pyodide/integration_audit.py",
+    "scripts/pyodide/runtime_smoke.mjs"
+  ],
+  "explorer": "../../web/_skill_explorer.js",
+  "interfaces": [
+    {"name": "Runtime loader", "entry": "scripts/pyodide/examples/runtime-loader.js", "style": "Load the pinned same-origin runtime once per worker."},
+    {"name": "Python worker", "entry": "scripts/pyodide/examples/python-worker.js", "style": "Keep Python off the page thread and return stdout, stderr, and the final expression separately."},
+    {"name": "Page client", "entry": "scripts/pyodide/examples/worker-client.js", "style": "Own request IDs, timeouts, Stop, and Reset in one client."},
+    {"name": "Notebook editor", "entry": "scripts/pyodide/examples/notebook-editor.js", "style": "Add a Python-aware CodeMirror mode, line numbers, source-line error markers, indentation, and Jupyter keyboard controls."},
+    {"name": "Progressive cells", "entry": "scripts/pyodide/examples/cell-examples.js", "style": "Keep every supplied-cookbook use case mapped to an editable Python cell."},
+    {"name": "Runnable notebook", "entry": "scripts/pyodide/examples/live-playground.js", "style": "Mount a shared REPL namespace, highlighted editors, safe Markdown and HTML displays, build.nvidia.com SSE streaming, optional WebSockets, traceback line markers, Stop, Reset, and run-all controls."},
+    {"name": "Course workbench", "entry": "scripts/pyodide/SKILL.html", "style": "Run the canonical Pyodide cells in a code, artifact, activity, and runtime-tool interface shared with browser courses."},
+    {"name": "Network boundary", "entry": "scripts/pyodide/examples/network-fetch.js", "style": "Use a named origin allowlist and an injected course relay only when a lesson needs network access."}
+  ],
+  "tests": [
+    "python3 scripts/pyodide/integration_audit.py --self-test",
+    "python3 scripts/pyodide/integration_audit.py",
+    "node scripts/pyodide/runtime_smoke.mjs --cdn",
+    "python3 scripts/skills/skill_contract.py",
+    "python3 scripts/validation/release_gate.py --tier fast --no-write --changed-since origin/main"
+  ]
+}
+</script>
+<style>
+  html,body{max-width:100%;overflow-x:clip}
+  main{width:min(1080px,calc(100% - 32px));margin:0 auto;padding:1.5rem 0 4rem}
+  header[data-skill-header]{padding:.65rem max(16px,calc((100vw - 1080px)/2));border-bottom:1px solid var(--bd);background:var(--bg);color:var(--tx)}
+  header nav{display:flex;gap:.65rem;flex-wrap:wrap}
+  h1{margin:.25rem 0 .5rem;color:var(--g)}
+  h2{margin:2.2rem 0 .65rem}
+  h3{font-size:1rem;margin:0}
+  p{max-width:76ch;color:var(--td)}
+  a{color:var(--gs)}
+  .note{margin:1rem 0;border-left:3px solid var(--g);background:rgba(118,185,0,.08);padding:.8rem 1rem;color:var(--td)}
+  .cell{margin:1rem 0 1.35rem;border:1px solid var(--bd);border-radius:8px;overflow:hidden;background:var(--e1)}
+  .cell-head{display:flex;gap:1rem;align-items:flex-start;justify-content:space-between;padding:.8rem 1rem;border-bottom:1px solid var(--bd)}
+  .cell-head p{margin:.2rem 0 0;font-size:.9rem}
+  .cell-actions{display:flex;gap:.5rem;flex:none}
+  .cell-actions a,.cell-actions button{border:1px solid var(--bd);border-radius:6px;background:var(--e2);color:var(--td);padding:.35rem .65rem;font:inherit;font-size:.78rem;text-decoration:none;cursor:pointer}
+  .cell-actions a:hover,.cell-actions button:hover{border-color:var(--g);color:var(--gs)}
+  pre{margin:0;padding:1rem;overflow:auto;background:var(--bg);color:var(--tx);font:13px/1.55 var(--mono);tab-size:2}
+  pre code{font:inherit;white-space:pre}
+  .usage{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .usage .cell{min-width:0;margin:0}
+  table{width:100%;border-collapse:collapse;margin:1rem 0;table-layout:fixed}
+  th,td{text-align:left;vertical-align:top;border-bottom:1px solid var(--bd);padding:.55rem .65rem;overflow-wrap:anywhere}
+  th{color:var(--td);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}
+  td:first-child{width:34%;font-family:var(--mono);color:var(--gs)}
+  .steps{padding-left:1.25rem;max-width:78ch}.steps li{margin:.5rem 0;color:var(--td)}
+  .compact{font-size:.9rem;color:var(--td)}
+  .py-playground{margin:1rem 0 2.5rem;border:1px solid var(--bd);border-radius:10px;background:var(--e1);overflow:hidden}
+  .py-runtime-toolbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;padding:.8rem 1rem;background:var(--e1);border-bottom:1px solid var(--bd)}
+  .py-runtime-toolbar button,.py-example-actions button,.py-repl-actions button{border:1px solid var(--bd);border-radius:6px;background:var(--e2);color:var(--tx);padding:.45rem .75rem;font:inherit;font-size:.82rem;cursor:pointer}
+  .py-runtime-toolbar button:first-child,.py-example-actions button:first-child{background:var(--g);border-color:var(--g);color:#0a0a0a;font-weight:700}
+  :root[data-theme="light"] .py-runtime-toolbar button:first-child,:root[data-theme="light"] .py-example-actions button:first-child,:root[data-theme="light"] .py-repl-actions button:first-child{color:#fff}
+  .py-runtime-toolbar button:hover,.py-example-actions button:hover,.py-repl-actions button:hover{border-color:var(--g)}
+  .py-runtime-toolbar button:disabled,.py-example-actions button:disabled,.py-repl-actions button:disabled{opacity:.5;cursor:wait}
+  .py-runtime-status{margin-left:auto;color:var(--td);font-size:.85rem}.py-runtime-status[data-state="ok"],.py-cell-status[data-state="ok"]{color:var(--gs)}.py-runtime-status[data-state="error"],.py-cell-status[data-state="error"]{color:var(--err)}
+  .py-network-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;padding:1rem;border-bottom:1px solid var(--bd);background:var(--bg)}.py-network-settings h3,.py-network-settings p{grid-column:1/-1}.py-network-settings p{margin:0;font-size:.86rem}.py-network-settings label{display:grid;gap:.3rem;color:var(--td);font-size:.76rem;font-weight:700}.py-network-settings input,.py-network-settings select{width:100%;min-width:0;border:1px solid var(--bd);border-radius:6px;background:var(--e1);color:var(--tx);padding:.55rem .65rem;font:13px/1.4 var(--mono)}.py-live-toggle{display:flex!important;grid-column:1/-1;grid-template-columns:none!important;align-items:center;gap:.5rem!important}.py-live-toggle input{width:auto}.py-transport-note{grid-column:1/-1;border-left:3px solid var(--acc);padding:.55rem .75rem;background:var(--e1)}
+  .py-diagnostic{margin:0;border:0;border-bottom:1px solid var(--bd);border-radius:0;max-height:12rem;white-space:pre-wrap}
+  .reference-activity{display:grid;gap:.4rem;padding:0;list-style:none}.reference-activity li{padding:.5rem .6rem;border-left:3px solid var(--bd);background:var(--bg);color:var(--td);font-size:.8rem}.reference-activity li[data-state="running"]{border-left-color:var(--acc)}.reference-activity li[data-state="ok"]{border-left-color:var(--g)}.reference-activity li[data-state="error"]{border-left-color:var(--err)}
+  .reference-facts{display:grid;gap:.5rem}.reference-facts>div{display:grid;grid-template-columns:6rem 1fr;gap:.7rem;padding:.5rem;border:1px solid var(--bd);border-radius:6px}.reference-facts dd{margin:0;color:var(--td)}
+  .py-repl{border-bottom:1px solid var(--bd);background:var(--bg)}.py-repl-head{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;padding:.8rem 1rem;border-bottom:1px solid var(--bd)}.py-repl-head p{margin:0;font-size:.82rem}.py-repl-editor{display:grid;grid-template-columns:4.8rem minmax(0,1fr);align-items:stretch}.py-repl-prompt,.py-cell-prompt{padding:.7rem .65rem;color:var(--acc);font:700 12px/1.55 var(--mono);text-align:right;white-space:nowrap}.py-repl-editor textarea{min-height:7rem;width:100%;border:0;background:var(--code-surface);color:var(--tx);padding:.7rem;font:14px/1.55 var(--mono);resize:vertical}.py-repl-actions{display:flex;align-items:center;gap:.5rem;padding:.65rem 1rem;border-top:1px solid var(--bd)}.py-repl-actions button:first-child{background:var(--g);border-color:var(--g);color:#0a0a0a;font-weight:700}.py-shortcuts{margin-left:auto;color:var(--tf);font:12px/1.4 var(--mono)}.py-repl-transcript{border-top:1px solid var(--bd)}.py-repl-entry{display:grid;grid-template-columns:4.8rem minmax(0,1fr);border-bottom:1px solid var(--bd)}.py-repl-entry:last-child{border-bottom:0}.py-repl-entry pre{padding:.65rem .8rem;white-space:pre-wrap}.py-repl-entry[data-stream="error"] .py-cell-prompt,.py-repl-entry[data-stream="error"] pre{color:var(--err)}
+  .py-playground .CodeMirror{background:var(--code-surface);color:var(--tx)}
+  .py-helpers{border-bottom:1px solid var(--bd);background:var(--e1)}.py-helpers>summary{display:flex;align-items:center;gap:.7rem;padding:.8rem 1rem;cursor:pointer;list-style:none}.py-helpers>summary::-webkit-details-marker,.py-helpers>summary::marker{display:none;content:""}.py-helpers>summary::before{content:"";width:6px;height:6px;border-right:1.5px solid var(--gs);border-bottom:1.5px solid var(--gs);transform:rotate(-45deg);transition:transform .18s}.py-helpers[open]>summary::before{transform:rotate(45deg)}.py-helper-chip{border:1px solid color-mix(in srgb,var(--g) 45%,var(--bd));border-radius:4px;background:color-mix(in srgb,var(--g) 14%,transparent);color:var(--gs);padding:.18rem .5rem;font:700 11px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.08em}.py-helper-summary{color:var(--td);font-size:.82rem}.py-helper-meta{margin-left:auto;color:var(--tf);font-size:.74rem}.py-helper-scroll{overflow-x:auto}.py-helper-table{margin:0;min-width:650px;table-layout:auto;border-top:1px solid var(--bd)}.py-helper-table td{padding:.55rem .8rem}.py-helper-table td:first-child{width:19rem;color:var(--gs);font-family:var(--mono);white-space:nowrap}.py-helper-row{cursor:pointer}.py-helper-row:hover,.py-helper-row.selected{background:color-mix(in srgb,var(--g) 9%,transparent)}.py-helper-row.selected td:first-child{box-shadow:inset 3px 0 var(--g)}.py-helper-source>td{padding:0!important;background:var(--bg)}.py-helper-source-head{display:flex;align-items:center;gap:.45rem;padding:.55rem .8rem;border-bottom:1px solid var(--bd);color:var(--tf);font:11px/1.4 var(--mono);text-transform:uppercase;letter-spacing:.06em}.py-helper-source-head code{color:var(--gs);text-transform:none;letter-spacing:0}.py-helper-source-head button{border:1px solid var(--bd);border-radius:5px;background:var(--e2);color:var(--tx);padding:.25rem .5rem;font:11px/1.3 var(--mono);cursor:pointer}.py-helper-source-head button:first-of-type{margin-left:auto}.py-helper-source-head button:hover{border-color:var(--g)}.py-helper-status{min-width:8rem;color:var(--td);text-transform:none;letter-spacing:0}.py-helper-status[data-state="ok"]{color:var(--gs)}.py-helper-status[data-state="error"]{color:var(--err)}.py-helper-editor{width:100%;min-height:8rem;border:0;background:var(--code-surface);color:var(--tx);padding:.7rem;font:13px/1.55 var(--mono);resize:vertical}.py-helper-source .CodeMirror{height:auto;min-height:8rem;border:0;background:var(--code-surface);color:var(--tx);font:13px/1.55 var(--mono)}.py-helper-source .CodeMirror-scroll{min-height:8rem;max-height:22rem;overflow-y:auto!important}.py-helper-source .CodeMirror-gutters{background:var(--e1);border-right:1px solid var(--bd)}
+  .py-cell-list{display:grid;gap:1rem;padding:1rem}
+  .py-example{border:1px solid var(--bd);border-radius:8px;background:var(--bg);overflow:hidden}
+  .py-example-heading{padding:.9rem 1rem;border-bottom:1px solid var(--bd)}.py-example-heading p{margin:.25rem 0 .5rem;font-size:.9rem}
+  .py-coverage-tags{display:flex;gap:.35rem;flex-wrap:wrap}.py-coverage-tags span{border:1px solid var(--bd);border-radius:999px;padding:.12rem .45rem;color:var(--td);font:11px/1.4 var(--mono)}
+  .py-chat-transcript{display:grid;gap:.55rem;padding:.8rem 1rem;border-bottom:1px solid var(--bd);background:var(--e1)}.py-chat-empty{margin:0;color:var(--td);font-size:.85rem}.py-chat-message{max-width:min(82%,46rem);border:1px solid var(--bd);border-radius:8px;padding:.55rem .7rem}.py-chat-message[data-role="user"]{justify-self:end;background:rgba(118,185,0,.1)}.py-chat-message[data-role="assistant"]{justify-self:start;background:var(--bg)}.py-chat-message strong{display:block;margin-bottom:.2rem;color:var(--gs);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em}.py-chat-message p{margin:0;color:var(--tx);white-space:pre-wrap}
+  .py-input-label,.py-editor-label{display:grid;gap:.35rem;padding:.75rem 1rem;color:var(--td);font-size:.78rem;font-weight:700;letter-spacing:.02em}
+  .py-input-label{border-bottom:1px solid var(--bd)}
+  .py-input-label input,.py-editor-label textarea{width:100%;border:1px solid var(--bd);border-radius:6px;background:var(--e1);color:var(--tx);padding:.65rem .75rem;font:14px/1.5 var(--mono)}
+  .py-editor-label textarea{min-height:13rem;resize:vertical;tab-size:4}
+  .py-editor-shell{display:grid;grid-template-columns:4.8rem minmax(0,1fr);align-items:start}.py-editor-shell .py-editor-label{padding:0}.py-editor-shell .CodeMirror,.py-repl-editor .CodeMirror{height:auto;border:0;border-left:1px solid var(--bd);background:var(--code-surface);color:var(--tx);font:14px/1.55 var(--mono)}.py-editor-shell .CodeMirror{min-height:13rem}.py-repl-editor .CodeMirror{min-height:6.5rem}.py-editor-shell .CodeMirror-scroll{min-height:13rem}.py-repl-editor .CodeMirror-scroll{min-height:6.5rem}.py-editor-shell .CodeMirror-gutters,.py-repl-editor .CodeMirror-gutters{background:var(--e1);border-right:1px solid var(--bd)}.py-editor-shell .CodeMirror-linenumber,.py-repl-editor .CodeMirror-linenumber{color:var(--tf)}.py-editor-shell .CodeMirror-cursor,.py-repl-editor .CodeMirror-cursor{border-left-color:var(--gs)}.py-editor-shell .CodeMirror-selected,.py-repl-editor .CodeMirror-selected{background:var(--e3)}.cm-s-default .cm-keyword{color:var(--reason);font-weight:700}.cm-s-default .cm-def,.cm-s-default .cm-variable-2{color:var(--artifact-text)}.cm-s-default .cm-string{color:var(--gs)}.cm-s-default .cm-number{color:var(--warn)}.cm-s-default .cm-comment{color:var(--tf);font-style:italic}.cm-s-default .cm-builtin{color:var(--acc)}.cm-s-default .cm-operator{color:var(--td)}
+  .CodeMirror .py-code-error-line{background:color-mix(in srgb,var(--err) 18%,transparent)}.CodeMirror .py-code-error-gutter{background:color-mix(in srgb,var(--err) 22%,transparent)}.py-code-error-marker{color:var(--err);font-size:9px}.py-rich-output{max-height:24rem;overflow:auto;padding:.75rem .9rem;background:var(--bg);color:var(--tx)}.py-rich-output :is(p,li,blockquote,em,strong,h1,h2,h3,h4){color:inherit}.py-rich-output :not(pre)>code{border-color:var(--bd);background:var(--e2);color:var(--tx)}.py-rich-output>:first-child{margin-top:0}.py-rich-output>:last-child{margin-bottom:0}.py-rich-output pre{padding:.65rem}.py-rich-output table{margin:.5rem 0;table-layout:auto}.py-rich-output td:first-child{width:auto;font-family:inherit;color:inherit}.py-syntax-output{box-sizing:border-box;width:100%;max-width:100%;overflow:auto;white-space:pre!important;tab-size:4}.py-syntax-output code{display:block;box-sizing:border-box;width:max-content;min-width:100%;white-space:pre;font:inherit}.py-syntax-output .hljs{background:transparent;color:var(--tx)}.py-syntax-output .hljs-attr,.py-syntax-output .hljs-keyword{color:var(--reason)}.py-syntax-output .hljs-string{color:var(--gs)}.py-syntax-output .hljs-number,.py-syntax-output .hljs-literal{color:var(--warn)}.py-syntax-output .hljs-title,.py-syntax-output .hljs-built_in{color:var(--acc)}.py-artifact-output{margin:.65rem .8rem;border:1px solid var(--bd);border-radius:7px;overflow:hidden;background:var(--e1)}.py-artifact-output>header{display:flex;align-items:center;gap:.7rem;padding:.55rem .7rem;border-bottom:1px solid var(--bd)}.py-artifact-output>header code{color:var(--gs);font-weight:700}.py-artifact-output>header span{color:var(--tf);font:11px/1.4 var(--mono)}.py-artifact-output>header a{margin-left:auto;border:1px solid var(--g);border-radius:5px;padding:.28rem .55rem;text-decoration:none;font-size:.78rem}.py-artifact-output>.py-artifact-preview{margin:0;border:0;border-radius:0;max-height:22rem}.py-live-stream[data-live-channel="reasoning"] pre{color:var(--reason)}.py-live-stream[data-live-channel="state"] pre{color:var(--td);font-style:italic}
+  .py-example-actions{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;padding:0 1rem .8rem}.py-cell-status{margin-left:auto;color:var(--td);font-size:.8rem}
+  .py-notebook-output{border-top:1px solid var(--bd)}.py-output-row{display:grid;grid-template-columns:4.8rem minmax(0,1fr);align-items:start}.py-output-row[hidden]{display:none}.py-output-row pre{min-height:0;max-height:20rem;padding:.65rem .8rem;white-space:pre-wrap;background:var(--bg)}.py-output-row[data-stream="stderr"] .py-cell-prompt,.py-output-row[data-stream="stderr"] pre{color:var(--err)}.py-output-row[data-stream="display"] .py-cell-prompt{color:var(--acc)}
+  @media(max-width:760px){main{width:min(100% - 24px,1080px)}.usage,.py-network-settings{grid-template-columns:1fr}.cell-head{display:block}.cell-actions{margin-top:.7rem}.py-runtime-status,.py-cell-status{width:100%;margin-left:0}.py-shortcuts{width:100%;margin-left:0}.py-chat-message{max-width:92%}.py-repl-editor,.py-repl-entry,.py-editor-shell,.py-output-row{grid-template-columns:3.7rem minmax(0,1fr)}.py-repl-prompt,.py-cell-prompt{padding-inline:.35rem;font-size:10px}table{display:block;overflow-x:auto}th,td{min-width:12rem}}
+  .py-editor-shell .CodeMirror-cursor,
+  .py-repl-editor .CodeMirror-cursor { border-left: 2px solid var(--gs); }
+</style>
+</head>
+<body>
+<header data-skill-header="1">
+  <nav aria-label="Skill navigation"><a data-skill-nav="home" href="../../web/index.html">Home</a><a data-skill-nav="up" href="../SKILL.html">Up to scripts</a><a data-skill-nav="map" href="../../SKILL.html">Repository map</a></nav>
+</header>
+<main>
+  <h1>Pyodide code cookbook</h1>
+  <p>This page runs a persistent Python kernel in a Web Worker. One namespace backs the Scratch REPL and twelve syntax-highlighted cells with Jupyter-style execution prompts. The progression includes highlighted data and code, editable display helpers, named background tasks, downloadable artifacts, chat streaming, and source-mapped errors.</p>
+  <p>The runnable reference below uses the same code-and-evidence workspace and floating runtime tools as browser-hosted course work.</p>
+  <div class="note">The first run downloads the pinned Pyodide 0.27.7 core runtime. <strong>Shift+Enter</strong> runs a cell and selects the next one. <strong>Ctrl/Cmd+Enter</strong> runs without changing focus. Use <strong>Run all 12 cells</strong> for the complete progression.</div>
+
+  <h2>Progressive Python cells</h2>
+  <section id="pyodide-playground" class="py-playground" aria-label="Runnable Pyodide examples">
+    <div class="py-runtime-toolbar">
+      <button type="button" data-action="run-all">Run all 12 cells</button>
+      <button type="button" data-action="error">Run intentional error</button>
+      <button type="button" data-action="stop">Stop</button>
+      <button type="button" data-action="reset">Reset runtime</button>
+      <span class="py-runtime-status" data-python-status>Loading controls…</span>
+    </div>
+    <section class="py-network-settings" aria-label="Live network settings">
+      <h3>Optional live transports</h3>
+      <p>Cell 12 can stream from NVIDIA-hosted NIMs. Cell 11 can open a real WebSocket to a secure endpoint you provide. Run all stays local unless you explicitly enable live model calls.</p>
+      <label>Model route
+        <select data-model-base-url><option value="https://integrate.api.nvidia.com/v1">Direct NVIDIA API</option><option value="https://nvidia-api-cors-proxy.experiments.courses.nvidia.com/v1">DLI course relay</option></select>
+      </label>
+      <label>Model ID<input data-model-id value="nvidia/nemotron-3-nano-30b-a3b" autocomplete="off"/></label>
+      <label>NVIDIA API key (passed only to cell 12)<input data-nvidia-api-key type="password" placeholder="nvapi-…" autocomplete="off"/></label>
+      <label>Optional WebSocket URL<input data-websocket-url type="url" placeholder="wss://your-reviewed-endpoint.example/ws" autocomplete="off"/></label>
+      <label class="py-live-toggle"><input data-live-model-enabled type="checkbox"/> Enable credentialed model calls for this page</label>
+      <p class="py-transport-note"><strong>Transport matters:</strong> build.nvidia.com streams model tokens over HTTP Server-Sent Events (SSE). WebSockets serve a separate exercise, with a distinct input path that never receives the NVIDIA API key. <a href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener">Open build.nvidia.com</a>.</p>
+    </section>
+    <section class="py-repl" data-python-repl aria-label="Python scratch REPL">
+      <div class="py-repl-head"><div><h3>Scratch REPL</h3><p>Uses the same Python namespace as every notebook cell below.</p></div><span class="compact">Persistent until Reset runtime</span></div>
+      <div class="py-repl-editor">
+        <span class="py-repl-prompt" data-repl-prompt>In [ ]:</span>
+        <textarea data-repl-source spellcheck="false" aria-label="Scratch Python">course_topic = "browser Python"
+course_topic.upper()</textarea>
+      </div>
+      <div class="py-repl-actions">
+        <button type="button" data-action="run-repl">Run REPL</button>
+        <button type="button" data-action="clear-repl">Clear transcript</button>
+        <span class="py-shortcuts">Shift+Enter run · Ctrl/Cmd+Enter run in place</span>
+      </div>
+      <div class="py-repl-transcript" data-repl-transcript aria-live="polite"></div>
+    </section>
+    <div class="py-cell-list" data-python-cells></div>
+    <aside class="wb-dock" data-reference-workbench aria-label="Pyodide runtime tools">
+      <nav class="wb-tools" aria-label="Runtime views">
+        <button class="wb-tool" type="button" data-workbench-view="activity" aria-controls="reference-panel" aria-pressed="false"><span class="wb-tool-icon" aria-hidden="true">ACT</span><span class="wb-tool-copy"><span>Activity</span><span>live status</span></span></button>
+        <button class="wb-tool" type="button" data-workbench-view="session" aria-controls="reference-panel" aria-pressed="false"><span class="wb-tool-icon" aria-hidden="true">PY</span><span class="wb-tool-copy"><span>Session</span><span>kernel rules</span></span></button>
+        <button class="wb-tool" type="button" data-workbench-view="helpers" aria-controls="reference-panel" aria-pressed="false"><span class="wb-tool-icon" aria-hidden="true">API</span><span class="wb-tool-copy"><span>Helpers</span><span>inspect + edit</span></span></button>
+      </nav>
+      <section id="reference-panel" class="wb-panel" data-workbench-panel hidden tabindex="-1">
+        <header><div><span class="eyebrow">Live Pyodide runtime</span><h2 data-workbench-title>Activity</h2></div><button type="button" data-workbench-close>Close</button></header>
+        <section data-workbench-content="activity" hidden>
+          <p>State changes stay visible here while code runs.</p>
+          <ol id="reference-activity" class="reference-activity"><li>No activity yet.</li></ol>
+          <pre class="py-diagnostic" data-python-diagnostic aria-live="polite">Loading progressive cell definitions…</pre>
+        </section>
+        <section data-workbench-content="session" hidden>
+          <p id="reference-session-status">The first run downloads the pinned runtime.</p>
+          <dl class="reference-facts"><div><dt>Kernel</dt><dd>One Web Worker</dd></div><div><dt>Namespace</dt><dd>Shared by the REPL and cells</dd></div><div><dt>Stop</dt><dd>Replaces the worker and cancels active work</dd></div></dl>
+        </section>
+        <section data-workbench-content="helpers" hidden>
+          <p>Inspect a helper's real Python source, edit it, and apply the override to this kernel.</p>
+          <details class="py-helpers" data-python-helpers open>
+            <summary><span class="py-helper-chip">helpers</span><span class="py-helper-summary">display, artifact, and background-task functions</span><span class="py-helper-meta">select a row to edit its real source</span></summary>
+            <div class="py-helper-scroll"><table class="py-helper-table"><tbody data-helper-rows></tbody></table></div>
+          </details>
+        </section>
+      </section>
+    </aside>
+  </section>
+
+  <h2>Notebook interaction primitives</h2>
+  <table>
+    <thead><tr><th>Primitive</th><th>Behavior demonstrated above</th></tr></thead>
+    <tbody>
+      <tr><td>Kernel</td><td>The REPL and cells share one Python namespace and a monotonic execution counter.</td></tr>
+      <tr><td>Editor</td><td>CodeMirror provides Python tokens, line numbers, wrapping, a visible theme-aware caret, comment and indentation shortcuts, and keyboard execution.</td></tr>
+      <tr><td>Notebook syntax</td><td><code>?</code> and <code>??</code> inspect live values; <code>!</code>, <code>%%bash</code>, and common <code>%</code> commands use bounded browser helpers rather than pretending a host shell exists.</td></tr>
+      <tr><td>Display</td><td><code>display()</code>, <code>display_json()</code>, <code>display_code()</code>, <code>display_table()</code>, <code>display_markdown()</code>, <code>display_html()</code>, <code>display_artifact()</code>, and <code>clear_output()</code> cover the useful notebook display paths. Built-in containers and objects with explicit Pydantic, dataclass, or named-tuple serialization render as recursively formatted, highlighted JSON; ordinary objects retain plain <code>repr</code>. HTML is sanitized, generated files are previewed without execution, and <code>print()</code> remains a separate stream.</td></tr>
+      <tr><td>Background work</td><td><code>register_background()</code>, <code>background_status()</code>, <code>wait_background()</code>, and <code>cancel_background()</code> manage named asyncio tasks across cell executions. Stop and Reset still terminate the worker and every task.</td></tr>
+      <tr><td>Feedback</td><td><code>In [*]</code> marks active work; tracebacks retain their Python frames and mark the failing line.</td></tr>
+      <tr><td>Network</td><td>Python can await NVIDIA SSE model streaming or a user-supplied <code>wss://</code> round trip. Stop terminates either transport with the worker.</td></tr>
+      <tr><td>Recovery</td><td>Stop replaces a busy worker. Reset also restores source, output, history, and counters.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Cookbook coverage</h2>
+  <p>Each row names a runnable group or shared behavior found in the supplied cookbook. The final column identifies the cells or implementation file that exercise it here.</p>
+  <table id="cookbook-coverage">
+    <thead><tr><th>Cookbook case</th><th>Evidence reviewed</th><th>Represented here</th></tr></thead>
+    <tbody>
+      <tr id="interactive-runner"><td>Persistent REPL, syntax-highlighted Python, automatic display values, output, and errors</td><td><code>python-worker.ts</code>, <code>client.ts</code></td><td>Scratch REPL and cells 1–3 and 12</td></tr>
+      <tr id="nim-first-call"><td>OpenAI-compatible model request</td><td><code>section-3-large-language-models.md</code></td><td>Cells 4, 11, and 12</td></tr>
+      <tr id="nim-tool-call"><td>Function call, arguments, and tool result</td><td><code>section-4-tool-use-and-function-calling.md</code></td><td>Cell 6</td></tr>
+      <tr id="groq-mcp-hf"><td>MCP server and allowed-tool request</td><td><code>section-5-model-context-protocol.md</code></td><td>Cell 7</td></tr>
+      <tr id="groq-mcp-stripe"><td>Second MCP source using the same portable descriptor</td><td><code>section-5-model-context-protocol.md</code></td><td>Cell 7</td></tr>
+      <tr id="nim-simple-agent"><td>Bounded plan, tool, observation, and answer loop</td><td><code>section-7-from-chatbots-to-agents.md</code></td><td>Cell 8</td></tr>
+      <tr id="background-process-lifecycle"><td>Named background process registration, status, result, and worker cleanup</td><td>User-requested integration target</td><td>Cell 9 and the background helper menu</td></tr>
+      <tr id="generated-artifact"><td>Generated-file preview and exact-byte download</td><td><code>coding-harness-chat.ts</code></td><td>Cell 10</td></tr>
+      <tr id="browser-networking"><td>Endpoint settings and browser relay boundary</td><td><code>proxy-fetch.ts</code>, <code>python-worker.ts</code></td><td>Cell 11 and <code>network-fetch.js</code></td></tr>
+      <tr id="python-chat-application"><td>Repeated user input with conversation history</td><td>User-requested integration target</td><td>Cells 5 and 12</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Worker implementation: load the versioned runtime</h2>
+
+  <section class="cell" id="runtime-loader">
+    <div class="cell-head"><div><h3>runtime-loader.js</h3><p>Resolve assets relative to the worker and reuse one interpreter promise.</p></div><div class="cell-actions"><button type="button" data-copy="loader-code">Copy</button><a href="examples/runtime-loader.js">Full source</a></div></div>
+    <pre><code id="loader-code" class="language-javascript">const RUNTIME = Object.freeze({
+  pyodide: "0.27.7",
+  python: "3.12.7",
+  assetRoot: "assets/pyodide/0.27.7/",
+});
+
+let runtimePromise;
+
+export function loadRuntime() {
+  if (!runtimePromise) {
+    runtimePromise = (async () =&gt; {
+      const baseUrl = new URL(RUNTIME.assetRoot, self.location.href).href;
+      const module = await import(`${baseUrl}pyodide.mjs`);
+      return module.loadPyodide({ indexURL: baseUrl });
+    })();
+  }
+  return runtimePromise;
+}</code></pre>
+  </section>
+
+  <h2>Worker implementation: preserve all output channels</h2>
+  <section class="cell" id="python-worker">
+    <div class="cell-head"><div><h3>python-worker.js</h3><p>The worker keeps one namespace. It captures streams and returns the final expression with its execution count.</p></div><div class="cell-actions"><button type="button" data-copy="worker-code">Copy</button><a href="examples/python-worker.js">Full source</a></div></div>
+    <pre><code id="worker-code" class="language-javascript">let executionCount = 0;
+
+async function runCell({ source, inputs = {}, profile = "core" }) {
+  const pyodide = await prepareRuntime(profile);
+  executionCount += 1;
+  pyodide.globals.set("__cell_source", source);
+  pyodide.globals.set("__cell_inputs", inputs);
+  pyodide.globals.set("__execution_count", executionCount);
+  return JSON.parse(String(await pyodide.runPythonAsync(EXECUTE_CELL)));
+}
+
+self.addEventListener("message", async ({ data }) =&gt; {
+  const { id, type = "run" } = data;
+  try {
+    const result = type === "preload"
+      ? (await prepareRuntime(data.profile), { ok: true, stdout: "", stderr: "", value: null })
+      : await runCell(data);
+    self.postMessage({ id, ...result });
+  } catch (error) {
+    self.postMessage({ id, ok: false, stdout: "", stderr: String(error), value: null });
+  }
+});</code></pre>
+  </section>
+
+  <div class="usage">
+    <section class="cell" id="page-client">
+      <div class="cell-head"><div><h3>Use it from a page</h3><p>Stop or timeout terminates the current worker; Reset starts a clean interpreter.</p></div><div class="cell-actions"><button type="button" data-copy="client-code">Copy</button><a href="examples/worker-client.js">Client source</a></div></div>
+      <pre><code id="client-code" class="language-javascript">import { PythonRunner } from "./worker-client.js";
+
+const runner = new PythonRunner(
+  new URL("./python-worker.js", import.meta.url),
+  { timeoutMs: 15_000 },
+);
+
+const reply = await runner.run(source, {
+  inputs: { questions },
+  profile: "core",
+});
+
+renderProgress(reply.stdout);
+renderDisplay(reply.execution_count, reply.display);
+renderError(reply.stderr);</code></pre>
+    </section>
+
+    <section class="cell" id="learner-cell">
+      <div class="cell-head"><div><h3>Write the Python cell</h3><p>Prints remain visible as progress. The final expression becomes the displayed value.</p></div><div class="cell-actions"><button type="button" data-copy="python-code">Copy</button><a href="examples/learner-cell.py">Python source</a></div></div>
+      <pre><code id="python-code" class="language-python">questions = inputs.get("questions", [
+    "Why does a worker keep the page responsive?",
+    "What should Reset clear?",
+])
+
+result = {
+    "question_count": len(questions),
+    "longest_question": max(questions, key=len),
+    "words_per_question": [len(q.split()) for q in questions],
+}
+
+# The final expression is displayed as the cell value.
+result</code></pre>
+    </section>
+  </div>
+
+  <h2>Optional network boundary</h2>
+  <section class="cell" id="network-boundary">
+    <div class="cell-head"><div><h3>network-fetch.js</h3><p>Direct browser requests use a named origin allowlist. Everything else fails unless the course injects a reviewed relay.</p></div><div class="cell-actions"><button type="button" data-copy="network-code">Copy</button><a href="examples/network-fetch.js">Full source</a></div></div>
+    <pre><code id="network-code" class="language-javascript">const BLOCKED_HEADERS = new Set([
+  "connection", "content-length", "cookie", "host", "origin", "referer",
+]);
+
+function requestHeaders(headers) {
+  return Object.fromEntries(
+    [...headers.entries()].filter(([name]) =&gt; !BLOCKED_HEADERS.has(name.toLowerCase())),
+  );
+}
+
+export function createCourseFetch({ fetchImpl = fetch, relayUrl, allowedOrigins = [] }) {
+  const allowlist = new Set(allowedOrigins);
+
+  return async function courseFetch(input, init) {
+    const request = new Request(input, init);
+    const target = new URL(request.url, self.location.href);
+
+    if (target.origin === self.location.origin || allowlist.has(target.origin)) {
+      return fetchImpl(request);
+    }
+    if (!relayUrl) throw new Error(`This lesson does not allow ${target.origin}.`);
+
+    const body = ["GET", "HEAD"].includes(request.method)
+      ? null
+      : Array.from(new Uint8Array(await request.arrayBuffer()));
+    return fetchImpl(relayUrl, {
+      method: "POST",
+      credentials: "omit",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url: target.href,
+        method: request.method,
+        headers: requestHeaders(request.headers),
+        body,
+      }),
+      signal: request.signal,
+    });
+  };
+}</code></pre>
+  </section>
+  <p class="compact">The full source includes request serialization and strips browser-controlled headers. It intentionally contains no deployment URL. A lesson must inject both its allowed origins and its course-owned relay.</p>
+
+  <h2>How the pieces fit into a course page</h2>
+  <ol class="steps">
+    <li>Vendor the exact runtime files under a versioned, same-origin asset directory.</li>
+    <li>Create one <code>PythonRunner</code> for the page or interactive-cell group.</li>
+    <li>Send plain source and plain inputs to the worker. Do not expose PyProxy objects to page state.</li>
+    <li>Render <code>stdout</code>, <code>value</code>, and <code>stderr</code> separately.</li>
+    <li>Connect Stop and Reset through the runner controls. Keep <code>core</code> as the default, switching to <code>network</code> only for a named exercise.</li>
+  </ol>
+
+  <h2>Source files</h2>
+  <table>
+    <thead><tr><th>File</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td><a href="examples/runtime-loader.js">examples/runtime-loader.js</a></td><td>Loads the pinned same-origin Pyodide runtime once.</td></tr>
+      <tr><td><a href="examples/python-worker.js">examples/python-worker.js</a></td><td>Owns package profiles, Python execution, output capture, and the worker message protocol.</td></tr>
+      <tr><td><a href="examples/worker-client.js">examples/worker-client.js</a></td><td>Owns page-side requests, timeout, Stop, and Reset.</td></tr>
+      <tr><td><a href="examples/notebook-editor.js">examples/notebook-editor.js</a></td><td>Defines the Python CodeMirror mode, line-numbered editor adapter, indentation, and execution shortcuts.</td></tr>
+      <tr><td><a href="examples/execution-contract.js">examples/execution-contract.js</a></td><td>Defines the shared Jupyter-style execution and MIME display contract used by the live page, worker, and runtime smoke test.</td></tr>
+      <tr><td><a href="examples/notebook-syntax.js">examples/notebook-syntax.js</a></td><td>Normalizes notebook inspection, line and cell magics, timing, and bounded browser-shell syntax before Python execution.</td></tr>
+      <tr><td><a href="examples/network-fetch.js">examples/network-fetch.js</a></td><td>Shows the optional browser-network boundary without embedding a service URL.</td></tr>
+      <tr><td><a href="examples/learner-cell.py">examples/learner-cell.py</a></td><td>Demonstrates separate progress output and a notebook-style final value.</td></tr>
+      <tr><td><a href="examples/cell-examples.js">examples/cell-examples.js</a></td><td>Defines twelve progressively improving Python cells and their cookbook-coverage labels.</td></tr>
+      <tr><td><a href="examples/live-playground.js">examples/live-playground.js</a></td><td>Runs the cells in a worker and renders user input, values, stdout, stderr, Stop, and Reset.</td></tr>
+      <tr><td><a href="../../web/shared/runtime-workbench.js">web/shared/runtime-workbench.js</a></td><td>Owns accessible view selection, focus return, and disclosure for the shared runtime tool palette.</td></tr>
+      <tr><td><a href="runtime_smoke.mjs">runtime_smoke.mjs</a></td><td>Downloads or accepts exact core assets, verifies hashes, runs every cell, and asserts traceback behavior.</td></tr>
+      <tr><td><a href="cookbook-use-cases.json">cookbook-use-cases.json</a></td><td>Maps every reviewed cookbook group and shared runtime behavior to executable cells or implementation code.</td></tr>
+      <tr><td><a href="integration-blueprint.md">integration-blueprint.md</a></td><td>Short implementation notes, acquisition steps, and test checklist.</td></tr>
+      <tr><td><a href="candidate-components.json">candidate-components.json</a></td><td>Exact evaluated dependency versions, artifact hashes, and license evidence.</td></tr>
+      <tr><td><a href="integration_audit.py">integration_audit.py</a></td><td>Rejects undocumented dependency drift or accidental runtime distribution.</td></tr>
+      <tr><td><a href="examples/SKILL.html">examples/SKILL.html</a></td><td>Direct file index for the course-authored examples.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Reference and distribution boundary</h2>
+  <p>The behavior above was synthesized from the task-supplied local reference files <code>vendor-pyodide.mjs</code>, <code>python-worker.ts</code>, <code>client.ts</code>, <code>proxy-fetch.ts</code>, and <code>coding-harness-chat.ts</code>. No reference file, runtime binary, wheel, or deployment URL is copied into this course contribution.</p>
+  <p>This cookbook page fetches its pinned core runtime only after the reader selects Run. The repository does not copy that runtime binary or any Python wheel. Before distributing browser-Python binaries, review every copied component, distribute the applicable notices, generate the SBOM, and run the browser matrix.</p>
+
+  <h2>Checks</h2>
+  <pre><code class="language-bash">python3 scripts/pyodide/integration_audit.py --self-test
+python3 scripts/pyodide/integration_audit.py
+node scripts/pyodide/runtime_smoke.mjs --cdn
+python3 scripts/validation/release_gate.py --tier fast --no-write --changed-since origin/main</code></pre>
+</main>
+<script>
+async function copyText(text) {
+  if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  textarea.remove();
+}
+document.querySelectorAll("[data-copy]").forEach((button) => {
+  button.addEventListener("click", async () => {
+    const code = document.getElementById(button.dataset.copy)?.textContent || "";
+    await copyText(code);
+    const label = button.textContent;
+    button.textContent = "Copied";
+    setTimeout(() => { button.textContent = label; }, 1000);
+  });
+});
+if (window.hljs) window.hljs.highlightAll();
+const requested = new URLSearchParams(location.search).get("file") || "";
+const targetByFile = {
+  "examples/runtime-loader.js": "runtime-loader",
+  "examples/python-worker.js": "python-worker",
+  "examples/worker-client.js": "page-client",
+  "examples/network-fetch.js": "network-boundary",
+  "examples/learner-cell.py": "learner-cell",
+};
+if (targetByFile[requested]) document.getElementById(targetByFile[requested])?.scrollIntoView();
+</script>
+<script src="examples/notebook-editor.js"></script>
+<script src="examples/cell-examples.js"></script>
+<script src="examples/execution-contract.js"></script>
+<script src="examples/notebook-syntax.js"></script>
+<script src="examples/live-playground.js"></script>
+<script type="module">
+import { mountRuntimeWorkbench } from "../../web/shared/runtime-workbench.js";
+
+const root = document.querySelector("[data-reference-workbench]");
+mountRuntimeWorkbench(root, {
+  labels: { activity: "Activity", session: "Session", helpers: "Editable helpers" },
+});
+const activity = document.getElementById("reference-activity");
+const sessionStatus = document.getElementById("reference-session-status");
+document.getElementById("pyodide-playground").addEventListener("pyodide:status", event => {
+  sessionStatus.textContent = event.detail.text;
+  if (activity.firstElementChild?.textContent === "No activity yet.") activity.replaceChildren();
+  const item = document.createElement("li");
+  item.dataset.state = event.detail.state || "info";
+  item.textContent = event.detail.text;
+  activity.prepend(item);
+  while (activity.children.length > 20) activity.lastElementChild.remove();
+});
+</script>
+<script src="../../web/_skill_explorer.js"></script>
+</body>
+</html>

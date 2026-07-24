@@ -1,0 +1,441 @@
+
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CLIs modernos · Proteção de agentes</title>
+<link rel="stylesheet" href="styles/_style.css"/>
+<script src="vendor/highlight-11.10.0.min.js"></script>
+<link rel="stylesheet" href="vendor/codemirror-5.65.21.css"/>
+<link rel="stylesheet" href="vendor/codemirror-monokai-5.65.21.css"/>
+<script src="vendor/codemirror-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-xml-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-javascript-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-css-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-htmlmixed-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-python-5.65.21.js"></script>
+<style>
+</style>
+<style>
+  .cli-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 1em 0; }
+  @media (max-width: 720px) { .cli-grid { grid-template-columns: 1fr; } }
+  .cli-card { background: var(--e1); border: 1px solid var(--bd); border-radius: var(--r); padding: 14px 16px; }
+  .cli-card h3 { font-size: 1rem; color: var(--gs); margin: 0 0 .35em; }
+  .cli-card p  { font-size: .85rem; color: var(--td); margin: .25em 0; line-height: 1.55; }
+  .cli-card code { font-size: .82em; }
+  .dof-table, .map-table { width: 100%; border-collapse: collapse; font-size: .86rem; margin: 1em 0; }
+  .dof-table thead tr, .map-table thead tr { border-bottom: 2px solid var(--bd); }
+  .dof-table th, .map-table th { text-align: left; padding: 8px 12px; color: var(--td); font-size: .76rem; text-transform: uppercase; letter-spacing: .05em; }
+  .dof-table td, .map-table td { padding: 9px 12px; border-bottom: 1px solid var(--e2); vertical-align: top; }
+  .dof-table tr:last-child td, .map-table tr:last-child td { border-bottom: none; }
+  .dof-table td:first-child, .map-table td:first-child { font-family: var(--mono); color: var(--gs); font-weight: 600; }
+  .dof-table code, .map-table code { font-size: .82em; }
+  .da-term { background: var(--code-surface); border: 1px solid var(--bd); border-radius: var(--r); padding: 12px 14px; font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: .84rem; line-height: 1.5; color: var(--tx); margin: 1em 0; }
+  .da-term .da-out { white-space: pre-wrap; word-break: break-word; }
+  .da-term .da-out > div { padding: 1px 0; }
+  .da-term .da-cmd { color: var(--g); }
+  .da-term .da-err { color: #ff6b6b; }
+  .da-term .da-dim { color: #8a8a8a; }
+  .da-term .da-line { display: flex; align-items: flex-start; gap: 8px; margin-top: 2px; }
+  .da-term .da-ps { color: var(--g); flex: none; }
+  .da-term .da-in { flex: 1; background: transparent; border: 0; outline: 0; color: var(--tx); font: inherit; padding: 0; }
+  .da-term .da-in:disabled { opacity: .6; }
+  .da-term .da-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; border-top: 1px solid #1c1c1c; padding-top: 8px; }
+  .da-term .da-chip { background: #161616; border: 1px solid #2a2a2a; color: #b9d76a; font: inherit; font-size: .76rem; padding: 2px 9px; border-radius: 999px; cursor: pointer; }
+  .da-term .da-chip:hover { background: #1f1f1f; border-color: var(--gs, #aee23a); }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="logo" href="index.html">NVIDIA · Proteção de agentes</a>
+  <nav id="nav"></nav>
+  <div class="spacer"></div>
+  <span class="key-pill" id="key-status" onclick="location.href=&#x27;01a-loop.html?openKeyPanel=1&#x27;">…</span>
+  <span class="key-pill" id="claw-status" onclick="location.href=&#x27;03a-kickstart.html#probe-claw&#x27;">…</span>
+</div>
+
+<main>
+  <div id="journey-map"></div>
+
+  <div class="hero">
+    <div class="eyebrow">Módulo 4 · Parte B de 3</div>
+    <h1><span>Agentes de CLI</span> modernos</h1>
+    <p class="lead">Os agentes comparados abaixo reúnem o mesmo conjunto de recursos:</p>
+    <ul class="lead">
+      <li>um diretório de trabalho</li>
+      <li>um conjunto de ferramentas</li>
+      <li>uma memória</li>
+      <li>formas opcionais de execução sem alguém digitando ativamente, como cron, tarefas longas ou trabalhos em fila</li>
+      <li>uma rede</li>
+    </ul>
+    <p class="lead">O perfil de segurança depende dos recursos abertos por padrão e da possibilidade de execução autônoma. O runtime subjacente também precisa conter chamadas indevidas.</p>
+    <p class="lead">O Módulo 4a separou as decisões da aplicação da imposição de regras pelo sistema operacional. Os wrappers da aplicação ficam acima desse limite. Você vai compará-los antes de criar seu próprio agente de CLI no navegador.</p>
+  </div>
+
+  <h2>Mesmo ciclo, diferentes padrões da aplicação</h2>
+  <p>Cada produto executa um modelo em um ciclo com ferramentas. Os padrões e recursos nativos variam, assim como os detalhes de implementação. O custo e a conveniência combinados formam o <em>peso do harness</em> usado abaixo.</p>
+  <ul class="cli-list">
+    <li><a href="https://docs.claude.com/en/docs/claude-code" target="_blank" rel="noopener"><strong>Claude Code</strong></a> (Anthropic). Usa <code>CLAUDE.md</code> na raiz do projeto e <code>~/.claude/CLAUDE.md</code> para regras do usuário. Oferece um conjunto amplo de recursos (edição, bash, web, subagentes e tarefas longas), com hooks que interceptam chamadas de ferramentas, e padrões conservadores: o acesso mais amplo a arquivos e à rede exige sua autorização.</li>
+    <li><a href="https://github.com/openai/codex" target="_blank" rel="noopener"><strong>Codex CLI</strong></a> (OpenAI). Usa <code>AGENTS.md</code>. O sandbox padrão opera com aprovações: cada gravação ou comando de shell aguarda sua confirmação, a menos que você passe <code>--full-auto</code>. O conjunto de ferramentas se concentra no shell; até a edição de arquivos passa por ele.</li>
+    <li><a href="https://docs.cursor.com" target="_blank" rel="noopener"><strong>Cursor</strong></a> (integrado ao IDE). Usa <code>.cursor/rules/*.mdc</code>. O agente funciona por meio do editor; por isso, as ferramentas seguem essa forma ("aplique este diff ao arquivo X"), e o sandbox corresponde às permissões que o editor e o sistema operacional já concedem.</li>
+    <li><a href="https://github.com/NousResearch/hermes-agent" target="_blank" rel="noopener"><strong>Hermes</strong></a> (Nous Research). É um agente de terminal que evolui com o uso: <em>cria skills a partir da experiência</em>, mantém memória entre sessões, executa cron nativo e pode ser acessado por Telegram, Discord e Slack através do gateway. Tem a mesma forma de aplicação do OpenClaw, com automodificação e interface de mensagens ativadas.</li>
+    <li><a href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener"><strong>OpenClaw</strong></a> (no NVIDIA NemoClaw). É o agente usado neste curso. Seus arquivos de orientação ocupam toda a pasta <code>workspace/</code> (SOUL.md, AGENTS.md, IDENTITY.md e os demais). Ele aceita operação autônoma por gatilhos gerenciados pelo gateway. Na stack de referência do NemoClaw, é executado <em>dentro</em> do sandbox OpenShell; assim, uma política do kernel restringe suas ferramentas independentemente do que o modelo decida.</li>
+  </ul>
+
+  <p>O Hermes se diferencia das CLIs de editores porque criação de skills, memória persistente, cron e gateway de mensagens são fluxos normais de operação em sua documentação pública. Outros agentes também podem reescrever seus próprios arquivos de orientação ou skills quando têm permissão para editar arquivos. Portanto, esse risco não é exclusivo do Hermes.</p>
+
+  <div class="callout"><strong>O OpenShell pode hospedar essa classe de aplicação de agente.</strong> O NemoClaw é a stack de referência usada no curso. A NVIDIA documenta integrações do OpenShell com Codex, Cursor e OpenCode. A CLI define os padrões iniciais. O wrapper do OpenShell determina até onde eles podem chegar.</div>
+
+  <h2>Os graus de liberdade formam a superfície de ataque</h2>
+  <p>Todos esses agentes são configurados pelos mesmos eixos, e cada eixo representa um recurso que você concede ou restringe. A coluna do NemoClaw abaixo vem diretamente da política do OpenShell executada no launchable, que você leu e testou no <a href="04a-safety.html">Módulo 4a</a>.</p>
+
+  <table class="dof-table">
+    <thead><tr><th>Grau de liberdade</th><th>Controle</th><th>Padrão do NemoClaw (política ativa)</th></tr></thead>
+    <tbody>
+      <tr><td>Sistema de arquivos</td><td>quais caminhos permitem leitura ou gravação</td>
+        <td>gravação somente em <code>/tmp</code>, <code>/sandbox/.openclaw</code>, <code>/sandbox/.nemoclaw</code> e no diretório de trabalho; caminhos do sistema somente para leitura. O Landlock impõe a regra (<code>best_effort</code>).</td></tr>
+      <tr><td>Saída de rede</td><td>host + porta + método/caminho HTTP, por binário</td>
+        <td>bloqueada por padrão; uma lista curta de permissões (inferência NVIDIA, <code>inference.local</code>, clawhub/npm), cada uma limitada a um formato HTTP e vinculada a um binário específico.</td></tr>
+      <tr><td>Identidade do processo</td><td>com qual usuário o agente é executado</td>
+        <td>usuário <code>sandbox</code> sem privilégios de root; <code>ptrace</code>, <code>mount</code> e <code>setuid</code> bloqueados por seccomp.</td></tr>
+      <tr><td>Identidade do binário</td><td>qual executável pode usar uma permissão</td>
+        <td>resolvida pelo caminho do executável e por uma inspeção dos processos ancestrais, com hash de confiança no primeiro uso; <code>argv[0]</code> não é considerado confiável porque pode ser falsificado.</td></tr>
+      <tr><td>Persistência</td><td>cron, skills e a persona em SOUL.md</td>
+        <td>permite gravação dentro do workspace. O esquema de política não torna um arquivo isolado somente para leitura; por isso, com "shields up", a proteção de SOUL.md usa DAC e <code>chattr +i</code>, não o sandbox.</td></tr>
+      <tr><td>Roteamento de inferência</td><td>por quais endpoints de modelo as chamadas saem</td>
+        <td>roteado pelo gateway gerenciado <code>inference.local</code>; o Privacy Router decide qual contexto pode sair segundo a política do operador, não a do agente.</td></tr>
+    </tbody>
+  </table>
+
+
+  <h2>Experimente · a mesma tarefa, ponderada entre diferentes harnesses</h2>
+  <p>O artefato compara o peso dos harnesses nestes eixos:</p>
+  <ul>
+    <li><strong>Abstrações</strong> ocultadas pelo harness: você escreve menos código, mas também enxerga menos do que é executado.</li>
+    <li><strong>Suposições e padrões</strong> incorporados: eles determinam até onde o agente chega antes de você pedir.</li>
+    <li><strong>Recursos nativos</strong> já incluídos, em contraste com o mesmo recurso que você teria de implementar.</li>
+  </ul>
+  <p>Descreva uma tarefa e compare quanto cada harness fornece. A célula editável expõe o prompt de sistema e a lógica de resposta, além de mostrar exemplos. Execute-a novamente após uma edição para reconstruir o artefato.</p>
+  <div id="clis-cell"></div>
+  <div id="clis-artifact"></div>
+  <script type="module">
+    import { mountRunCell } from "./scripts/_shared.js";
+    mountRunCell("#clis-cell", {
+      label: "o artefato Experimente, em código",
+      autorun: true,
+      code: `// "Weigh the harnesses" artifact. Grounds on the vendored framework READMEs
+// Inline CLI extracts seed the prompt; README toggles add full docs for one turn.
+const META = { frameworks: [
+  { id: "claude-code", name: "Claude Code", note: "Anthropic. Beacon CLAUDE.md.", source: "https://raw.githubusercontent.com/anthropics/claude-code/main/README.md", extract: "Claude Code is an agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster by executing routine tasks, explaining complex code, and handling git workflows -- all through natural language commands. Use it in your terminal, IDE, or tag @claude on Github." },
+  { id: "codex", name: "Codex CLI", note: "OpenAI. Beacon AGENTS.md.", source: "https://raw.githubusercontent.com/openai/codex/main/README.md", extract: "Codex CLI is a coding agent from OpenAI that runs locally on your computer. If you want Codex in your code editor (VS Code, Cursor, Windsurf), install in your IDE. If you want the desktop app experience, run codex app or visit the Codex App page." },
+  { id: "cursor", name: "Cursor", note: "Closed-source editor agent. No public repo; described from the course.", source: "course-authored (no public repo)", extract: "Cursor is a closed-source AI code editor with a built-in agent. It has no public repository, so this description stands in for a README." },
+  { id: "hermes", name: "Hermes", note: "Nous Research. Skills, memory, cron, and a multi-platform gateway.", source: "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/README.md", extract: "Hermes Agent is an open-source agent framework by Nous Research. Its public documentation covers reusable skills, persistent memory, scheduled tasks, and messaging gateways, with provider and tool configuration left to the operator." },
+  { id: "openclaw", name: "OpenClaw", note: "Open-source personal agent harness; this course runs it through NVIDIA NemoClaw.", source: "https://raw.githubusercontent.com/openclaw/openclaw/main/README.md", extract: "OpenClaw is a personal AI assistant that runs on the operator's devices and communicates through configured channels. The NemoClaw reference stack used by this course runs OpenClaw inside OpenShell so filesystem, process, network, and inference access can be governed outside the model." }
+] };
+const FW = META.frameworks;                       // [{ id, name, note, source, extract }]
+const nameOf = (id) => (FW.find((f) => f.id === id) || {}).name || id;
+const _cache = {};
+async function readme(id) {
+  const fallback = () => (FW.find((f) => f.id === id) || {}).extract || "";
+  if (_cache[id] == null) {
+    try { const r = await helpers.fetch("assets/cli_readme_" + id + ".txt"); _cache[id] = r.ok ? await r.text() : fallback(); }
+    catch (e) { _cache[id] = fallback(); }
+  }
+  return _cache[id];
+}
+
+// A grounded system prompt, assembled from the READMEs instead of guessed.
+const SYS =
+  "These agent CLIs share one shape, a model looping over tools. Grounded descriptions from their docs:\\n" +
+  FW.map((f) => "- " + f.name + " (" + f.note + "): " + f.extract).join("\\n") +
+  "\\n\\nThey are interchangeable for almost any task; what differs is harness weight: the abstractions each hides, the defaults it assumes, and the capabilities it makes first-class instead of leaving you to hand-roll. " +
+  "Self-modification is not unique to any one of them: any that can edit files can rewrite its own skills, so treat it as a difference of emphasis, not capability. " +
+  "Ground every claim in the descriptions above and in any READMEs the user attached. If a detail is not supported there, say you are unsure instead of inventing a feature. " +
+  "For the user's task, answer in three parts. (1) In two sentences, the near-identical core loop all of them would run, so it is clear any could do it. (2) One line per CLI: the single thing that is first-class for THIS task versus what you would hand-roll, plus the default that sets its weight, citing the doc detail it rests on. (3) One sentence: none is more capable here, so the choice is how much harness weight the task is worth. Do not crown a single winner.";
+
+// One toggle per framework; selection clears after the next question.
+const selected = new Set();
+const stale = document.querySelector("#clis-readme-bar");
+if (stale) stale.remove();
+
+const bar = document.createElement("div");
+bar.id = "clis-readme-bar"; bar.className = "chatui-mods";
+bar.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 8px";
+bar.innerHTML = "<label>READMEs</label>";
+
+const btnFor = {};
+FW.forEach((f) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chatui-modchip"; b.textContent = "+ " + f.name; b.title = f.source;
+  b.addEventListener("click", () => { b.classList.toggle("on"); selected.has(f.id) ? selected.delete(f.id) : selected.add(f.id); });
+  btnFor[f.id] = b; bar.appendChild(b);
+});
+document.querySelector("#clis-artifact").before(bar);
+const clearSel = () => { selected.clear(); FW.forEach((f) => btnFor[f.id].classList.remove("on")); };
+
+helpers.mountChatUI("#clis-artifact", {
+  growLog: true,   // flow with the page instead of an internal 480px scroll that traps the wheel
+  greeting: "Descreva uma tarefa e onde ela será executada. Vou mostrar o ciclo central que todas essas CLIs usariam e ponderar cada uma com base em sua documentação, sem eleger uma única vencedora. Ative um README acima para fornecer o texto completo na próxima pergunta.",
+  examples: ["Refactor a large repo unattended overnight", "A personal assistant I message from my phone", "Triage prod incidents on a server 24/7"],
+
+  respond: async (text, ctx) => {
+    let primer = "";
+    const sel = [...selected];
+    if (sel.length) {
+      const parts = await Promise.all(sel.map(async (id) => "## " + nameOf(id) + " README\\n\\n" + (await readme(id))));
+      primer = "\\n\\nThe user attached these full READMEs as reference for this decision. Ground your answer in them:\\n\\n" + parts.join("\\n\\n---\\n\\n");
+      ctx.view.tool("injected READMEs: " + sel.map(nameOf).join(", "));
+    }
+    const s = await helpers.chatStream({ messages: [{ role: "system", content: SYS + primer }, { role: "user", content: text }], max_tokens: 8196, signal: ctx.signal },
+      (t) => ctx.view.token(t), { onReasoning: (r) => ctx.view.reasoning(r) });
+    if (s.usage) ctx.view.usage({ input: s.usage.prompt_tokens, output: s.usage.completion_tokens, model: s.model });
+    clearSel();                                   // deselect so the same README never double-injects
+  },
+});
+helpers.log("Artefato exibido abaixo. Selecione um README para adicioná-lo ao contexto e faça uma pergunta.");
+
+/* mountChatUI renders the panel; respond() streams one chat call. */
+`,
+    });
+  </script>
+
+  
+  
+  
+  <h2>Crie um agente de CLI cujo shell é este navegador</h2>
+  <p>As CLIs acima conectam um agente ao terminal de uma máquina real. Você pode criar a mesma estrutura usando o runtime JavaScript do navegador como shell. O agente abaixo tem uma ferramenta, <code>js</code>, que executa JavaScript nesta página e devolve um resultado ao agente antes da próxima decisão. Como o runtime já está carregado, não há harness adicional para configurar. O alcance continua amplo: o agente pode ler o DOM, chamar <code>fetch</code> e usar os helpers do curso, tudo dentro desta aba.</p>
+  <p>O Módulo 4c retoma esse formato no navegador e separa a parte transferível&mdash;uma interface web interativa, com estado e controles visíveis&mdash;dos adaptadores de autenticação, armazenamento, rede e ferramentas fornecidos por cada ambiente.</p>
+  <div id="cell-jsagent"></div>
+  <div id="jsagent-artifact"></div>
+  <script type="module">
+    import { mountRunCell } from "./scripts/_shared.js";
+    mountRunCell("#cell-jsagent", {
+      openCode: false,
+      label: "um agente de CLI ligado ao runtime do navegador, em código",
+      intro: "Dê uma meta ao agente montado e observe primeiro suas chamadas de ferramenta JavaScript. Abra a implementação quando quiser alterar o limite das ferramentas, o número máximo de ciclos ou a regra de resposta final.",
+      autorun: true,
+      code: `// A CLI agent whose shell is THIS browser's JS runtime. Its one tool, js, runs
+// code in the live page and returns a value, so the agent loops: reason, run, read, repeat.
+// The runtime is already loaded, nothing to install.
+const JS_TOOL = {
+  type: "function",
+  function: {
+    name: "js",
+    description: [
+      "Run JavaScript in this browser page and return a value.",
+      "You have the full window: document, fetch, location, and the course helpers object.",
+      "End with a return statement to report the result.",
+    ].join(" "),
+    parameters: {
+      type: "object",
+      properties: { code: { type: "string", description: "JavaScript to run. Use return." } },
+      required: ["code"],
+    },
+  },
+};
+
+// Run agent-written code against the live runtime. helpers is injected; document, window, and fetch are ambient.
+async function runJS(code) {
+  const fn = new Function("helpers", "return (async () => { " + code + " })();");
+  return await fn(helpers);
+}
+
+helpers.mountChatUI("#jsagent-artifact", {
+  growLog: true,   // flow with the page instead of an internal 480px scroll that traps the wheel
+  greeting: "Dê-me uma meta. Meu shell é o runtime JavaScript desta página, então ajo executando JS aqui na sua aba.",
+  examples: [
+    "How many code editors are on this page?",
+    "List the H2 section headings on this page.",
+    "Fetch assets/rag_index.json and report the embed model and how many docs it pins.",
+    "How many links on this page open in a new tab?",
+    "Compute the 12th Fibonacci number and return it.",
+    "Which keys are in localStorage right now?",
+  ],
+  respond: async (goal, ctx) => {
+    const messages = [
+      {
+        role: "system",
+        content: [
+          "You are a CLI agent whose shell is this browser's JavaScript runtime.",
+          "To learn anything, call the js tool with code that runs in the live page.",
+          "End each code snippet with a return statement.",
+          "Never claim a result you did not run.",
+          "Editable code cells render as .CodeMirror elements, not .code-editor.",
+          "If a selector returns nothing, inspect the DOM before concluding.",
+          "When you have enough, reply with a short plain-text answer and no tool call.",
+        ].join(" "),
+      },
+      { role: "user", content: goal },
+    ];
+
+    let answered = false;
+    for (let step = 0; step < 8; step++) {
+      const r = await helpers.chat({ messages, tools: [JS_TOOL], max_tokens: 8196 });
+      const m = r.choices[0].message;
+      messages.push(m);
+
+      const calls = m.tool_calls || [];
+      if (!calls.length) {
+        const txt = (m.content || "").trim();
+        if (txt) { ctx.view.token(txt); answered = true; break; }
+        messages.push({ role: "user", content: "Run js to gather what you need, or give your final plain-text answer." });
+        continue;
+      }
+      for (const tc of calls) {
+        let code = "";
+        try { code = JSON.parse(tc.function.arguments || "{}").code || ""; } catch (_) {}
+        if (!code.trim()) {
+          ctx.view.tool("$ js", "(empty)");
+          ctx.view.tool("returned", "no code submitted");
+          messages.push({ role: "tool", tool_call_id: tc.id, content: "Error: no code submitted. Put JavaScript in the code argument and end with a return statement." });
+          continue;
+        }
+        ctx.view.tool("$ js", code);                       // the JS the agent chose to run
+
+        let out;
+        try { out = await runJS(code); } catch (e) { out = "Error: " + ((e && e.message) || e); }
+        const text = out === undefined ? "undefined (did the snippet end with a return?)" : (typeof out === "object" ? JSON.stringify(out) : String(out));
+        ctx.view.tool("returned", text.slice(0, 700));     // what the runtime handed back
+        messages.push({ role: "tool", tool_call_id: tc.id, content: text.slice(0, 1500) });
+      }
+    }
+    // Always land on a plain-text answer instead of dead-ending at "(no answer)".
+    if (!answered) {
+      const r = await helpers.chat({ messages: messages.concat([{ role: "user", content: "Give your best final answer now in one or two plain-text sentences, using only what the tool returned." }]), max_tokens: 8196 });
+      ctx.view.token((r.choices[0].message.content || "I could not determine that from the page.").trim());
+    }
+  },
+});
+helpers.log("Agente de CLI montado abaixo. Dê uma meta e observe-o controlar o runtime.");
+`,
+    });
+  </script>
+  
+  
+
+  
+  
+  
+  <h2>Abra um shell real no launchable</h2>
+  <p>Seu launchable do NemoClaw fornece um shell real do host pela mesma conexão <code>/ws/terminal</code> usada pelas sondas de política do Módulo 4a. Esse host contém a CLI <strong>openshell</strong>, ferramenta do operador que gerencia o agente em sandbox. Cada linha digitada abaixo é executada no launchable, que devolve sua própria saída.</p>
+  <p>Primeiro, conecte o launchable no <a href="03a-kickstart.html">Módulo 3a</a>. Digite um comando ou use Tab para completar. No host, <code>openshell sandbox list</code> mostra o agente e <code>openshell status</code> informa o estado do gateway. O agente roda dentro do sandbox; prefixe um comando com <code>agent</code> para executá-lo ali: <code>agent ls</code> lista os arquivos por meio de <code>openshell sandbox exec</code>. Cada comando usa um shell breve e independente. Para conversar interativamente com o agente, use o painel abaixo em vez de <code>openclaw tui</code>.</p>
+  <div id="cell-deepagents"></div>
+  <div id="deepagents-artifact"></div>
+  <script type="module">
+    import { mountRunCell } from "./scripts/_shared.js";
+    mountRunCell("#cell-deepagents", {
+      label: "um terminal real no launchable, com atalho para o sandbox do agente",
+      autorun: true,
+      code: `// Este é o terminal real do launchable usado pelo Módulo 4a via helpers.terminal.
+// O host inclui openshell; use o prefixo "agent" para executar um comando no sandbox.
+// Sessões interativas exigem uma conexão persistente, por isso o chat aparece abaixo.
+
+function launchableUrl() {
+  let u = helpers.getOpenClawConnection().rawUrl;
+  while (u.length && u[u.length - 1] === "/") u = u.slice(0, -1);
+  return u;
+}
+
+const SUGGESTIONS = ["help", "openshell sandbox list", "openshell status", "openshell --help", "agent ls", "agent ls -a", "agent pwd"];
+// Interactive sessions a one-shot terminal cannot drive: steer the student to the chat panel or to exec.
+const INTERACTIVE = ["openshell term", "openshell sandbox connect", "nemoclaw", "openclaw chat", "openclaw tui", "openclaw configure"];
+const HELP = 'This is your launchable host shell. The host carries the openshell CLI; your agent runs inside a sandbox. On the host, try: openshell sandbox list, openshell status, openshell --help. To run a command inside your agent, prefix it with "agent", for example: agent ls. To chat with the agent, use the panel below this terminal. Type clear to empty the screen.';
+
+function hintFor(output) {
+  if (/execvp|command not found|No such file or directory/i.test(String(output || ""))) {
+    return "Not a command on the launchable host. The host carries openshell, so try openshell --help or openshell sandbox list, or run it inside your agent with: agent <command>.";
+  }
+  return "";
+}
+
+async function run(cmd, con, ctx) {
+  const t = cmd.trim();
+  if (t === "/help" || t === "help" || t === "?") return con.write(HELP, "da-dim");
+  if (t === "/clear" || t === "clear") return con.clear();
+  if (t.charAt(0) === "/") return con.write("Slash commands belong to the chat panel below or the openclaw tui, not this host shell. Type a command without the slash, or help.", "da-dim");
+  if (t === "agent" || t.indexOf("agent ") === 0) {
+    const inner = t.slice(5).trim();
+    if (!inner) return con.write('usage: agent <command>   runs <command> inside your agent sandbox, for example: agent ls', "da-dim");
+    let r;
+    try { r = await helpers.sandboxExec(inner, { signal: ctx.signal }); } catch (e) {
+      con.write(String((e && e.message) || e), "da-err");
+      return { status: "error", message: "O comando falhou. Leia a mensagem e tente novamente." };
+    }
+    con.write((r.output || "").trimEnd() || "(no output)");
+    const h = hintFor(r.output); if (h) con.write(h, "da-dim");
+    return;
+  }
+  if (INTERACTIVE.some(function (x) { return t.indexOf(x) === 0; })) return con.write('That starts an interactive session this one-shot terminal cannot hold open. To chat with your agent, use the panel below. For a one-shot command inside the agent, use: agent <command>.', "da-dim");
+  let got = false, captured = "";
+  try {
+    await helpers.terminal(t, { totalMs: 120000, idleMs: 8000, signal: ctx.signal, onChunk: function (c) { if (c) { got = true; captured += c; con.raw(c); } } });
+  } catch (e) {
+    con.write(String((e && e.message) || e), "da-err");
+    return { status: "error", message: "A conexão do terminal falhou. Autentique-se novamente e tente de novo." };
+  }
+  if (!got) con.write("(no output)", "da-dim");
+  const h = hintFor(captured); if (h) con.write(h, "da-dim");
+}
+
+const connected = !!launchableUrl();
+helpers.mountConsole("#deepagents-artifact", {
+  prompt: "$",
+  suggestions: SUGGESTIONS,
+  disabled: !connected,
+  disabledMsg: "Nenhum launchable conectado. Conecte-o no Módulo 3a e volte a esta página.",
+  greeting: connected ? "Conectado ao shell do host do launchable. Ele oferece a CLI openshell; o agente é executado em um sandbox. Digite help, escolha uma sugestão ou pressione Tab para completar." : "",
+  onSubmit: run,
+});
+helpers.log("Terminal do launchable montado abaixo. Se indicar que não há launchable, conecte-o no Módulo 3a.");
+`,
+    });
+  </script>
+
+  
+  
+
+  <h2>Converse com seu agente</h2>
+  <p>O <code>openclaw tui</code> é um chat interativo em tela cheia que um terminal de comando único não consegue manter aberto. O painel abaixo conversa com o mesmo agente pelo gateway do OpenClaw, a conexão <code>/cli/gateway</code> usada nos Módulos <a href="03b-openclaw.html">3b</a> e <a href="03c-always-on.html">3c</a>. Assim, você pode conversar sem sair da página. O painel transmite a resposta e mostra cada ferramenta ou comando executado. Primeiro, conecte o launchable no <a href="03a-kickstart.html">Módulo 3a</a> com URL e token. Faça uma pergunta, clique em uma sugestão ou pressione Tab para completar.</p>
+  <div id="cell-agentchat"></div>
+  <div id="agent-chat"></div>
+  <script type="module">
+    import { mountRunCell } from "./scripts/_shared.js";
+    mountRunCell("#cell-agentchat", {
+      label: "chat com seu agente pelo gateway do OpenClaw",
+      autorun: true,
+      code: `// Monte o artefato CLI; o transporte e as sessões ficam em um helper compartilhado.
+const cli = helpers.mountOpenClawCli("#agent-chat");
+if (!cli.connected) {
+  helpers.log("Conecte o ambiente executável no Módulo 3a e execute esta célula novamente.");
+  return { mounted: cli.mounted, connected: false };
+}
+
+// Visibilidade opcional: remova o comentário para inspecionar a sessão atual do artefato.
+// helpers.log.json("estado da CLI", { connected: cli.connected, session: cli.session });
+helpers.log("chat do agente montado abaixo");
+return { mounted: cli.mounted, connected: cli.connected, session: cli.session };
+`,
+    });
+  </script>
+
+  <div class="callout"><p><strong>O terminal acima é o plano do operador.</strong> No shell do host do launchable, o openshell gerencia o agente em sandbox. Portanto, o host é o plano de controle acima da política, o perímetro destacado no <a href="04a-safety.html">Módulo 4a</a>. Comandos enviados ao agente por <code>agent &lt;cmd&gt;</code> são executados sob a política de bloqueio por padrão; o shell do host responde ao operador.</p><ul><li><strong>Custo de configuração.</strong> O launchable foi provisionado e já está em execução. Em sua máquina, uma CLI exige instalação e um runtime configurado antes do primeiro turno.</li><li><strong>Alcance.</strong> Dentro do agente, a política do kernel controla cada chamada segundo as regras de bloqueio por padrão lidas no Módulo 4a. Em sua máquina, a CLI pode ler e gravar seus arquivos e acessar toda a rede.</li><li><strong>Raio de impacto.</strong> Uma injeção de prompt dentro do agente atinge aquele sandbox e sua trilha de auditoria. A mesma injeção em sua máquina alcança arquivos reais: é o argumento dos graus de liberdade apresentado no início da página, agora em suas mãos.</li></ul><p>Um harness mais completo justifica seu peso quando a tarefa exige persistência e trabalho real que uma aba não comporta. A habilidade central é interpretar a tarefa para escolher o peso necessário; essa é a visão em camadas concluída no <a href="04c-going-further.html">Módulo 4c</a>.</p></div>
+
+  <div class="foot-nav">
+    <a href="04a-safety.html">← Módulo 4a: OpenShell</a>
+    <a class="next" href="04c-going-further.html">Módulo 4c: Próximos passos →</a>
+  </div>
+</main>
+
+<script type="module">
+import { buildNav, updateKeyPill, updateClawPill, mountJourneyMap } from "./scripts/_shared.js";
+document.getElementById("nav").innerHTML = buildNav("04b-modern-clis.html");
+updateKeyPill(document.getElementById("key-status"));
+updateClawPill(document.getElementById("claw-status"));
+mountJourneyMap("#journey-map", "4b");
+hljs.highlightAll();
+
+
+
+</script>
+</body>
+</html>

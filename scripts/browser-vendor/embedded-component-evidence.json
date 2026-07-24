@@ -1,0 +1,100 @@
+{
+  "schema": "nemoclaw-embedded-browser-components/1",
+  "parent": {
+    "package": "@langchain/core",
+    "version": "1.1.48",
+    "source_tag": "@langchain/core@1.1.48",
+    "source_commit": "caad0914f068477293009dbf27a220fa96bdc4b8",
+    "source_url": "https://github.com/langchain-ai/langchainjs/tree/caad0914f068477293009dbf27a220fa96bdc4b8/libs/langchain-core/src/utils"
+  },
+  "explanation": "LangChain copied these utility sources into @langchain/core before this project downloaded the npm package. This project does not patch them. esbuild includes the reachable utility code in the course bundle and moves specially marked legal comments into the adjacent .LEGAL.txt file. That comment file is supplemental evidence, not a dependency list or a substitute for the full licenses recorded here.",
+  "components": [
+    {
+      "id": "fast-json-patch-embedded-in-langchain-core",
+      "name": "Fast JSON Patch",
+      "version": "embedded snapshot in @langchain/core 1.1.48",
+      "version_note": "LangChain does not state an upstream Fast JSON Patch release number for this copied snapshot; the exact source is pinned by the LangChain tag, commit, npm integrity, and generated source hashes.",
+      "license": "MIT",
+      "purpose": "JSON Patch comparison and application used by LangChain output parsing and tracing.",
+      "upstream_url": "https://github.com/Starcounter-Jack/JSON-Patch",
+      "langchain_source_url": "https://github.com/langchain-ai/langchainjs/tree/caad0914f068477293009dbf27a220fa96bdc4b8/libs/langchain-core/src/utils/fast-json-patch",
+      "source_files": [
+        "node_modules/@langchain/core/dist/utils/fast-json-patch/index.js",
+        "node_modules/@langchain/core/dist/utils/fast-json-patch/src/core.js",
+        "node_modules/@langchain/core/dist/utils/fast-json-patch/src/duplex.js",
+        "node_modules/@langchain/core/dist/utils/fast-json-patch/src/helpers.js"
+      ],
+      "license_input": "scripts/browser-vendor/license-overrides/langchain-embedded-fast-json-patch.txt",
+      "license_file": "licenses/langchain-embedded-fast-json-patch.txt",
+      "license_source_url": "https://raw.githubusercontent.com/langchain-ai/langchainjs/caad0914f068477293009dbf27a220fa96bdc4b8/libs/langchain-core/src/utils/fast-json-patch/LICENSE",
+      "legal_notice_sources": [
+        "@langchain/core/dist/utils/fast-json-patch/src/helpers.js",
+        "@langchain/core/dist/utils/fast-json-patch/src/duplex.js"
+      ]
+    },
+    {
+      "id": "js-sha256-embedded-in-langchain-core",
+      "name": "js-sha256",
+      "version": "0.11.1",
+      "version_note": "The copied source header identifies version 0.11.1; the exact snapshot is also pinned by the LangChain tag, commit, npm integrity, and generated source hash.",
+      "license": "MIT",
+      "purpose": "SHA-256 hashing used by LangChain caches and indexing helpers.",
+      "upstream_url": "https://github.com/emn178/js-sha256",
+      "langchain_source_url": "https://github.com/langchain-ai/langchainjs/blob/caad0914f068477293009dbf27a220fa96bdc4b8/libs/langchain-core/src/utils/js-sha256/hash.ts",
+      "source_files": [
+        "node_modules/@langchain/core/dist/utils/js-sha256/hash.js"
+      ],
+      "license_input": "scripts/browser-vendor/license-overrides/langchain-embedded-js-sha256.txt",
+      "license_file": "licenses/langchain-embedded-js-sha256.txt",
+      "license_source_url": "https://raw.githubusercontent.com/langchain-ai/langchainjs/caad0914f068477293009dbf27a220fa96bdc4b8/libs/langchain-core/src/utils/js-sha256/LICENSE",
+      "legal_notice_sources": [
+        "@langchain/core/dist/utils/js-sha256/hash.js"
+      ]
+    },
+    {
+      "id": "sax-js-embedded-in-langchain-core",
+      "name": "sax-js",
+      "version": "embedded snapshot in @langchain/core 1.1.48",
+      "version_note": "LangChain does not state an upstream sax-js release number for this copied snapshot; the exact source is pinned by the LangChain tag, commit, npm integrity, and generated source hash.",
+      "license": "ISC",
+      "purpose": "Streaming XML parsing used by LangChain's XML output parser.",
+      "upstream_url": "https://github.com/isaacs/sax-js",
+      "langchain_source_url": "https://github.com/langchain-ai/langchainjs/blob/caad0914f068477293009dbf27a220fa96bdc4b8/libs/langchain-core/src/utils/sax-js/sax.ts",
+      "source_files": [
+        "node_modules/@langchain/core/dist/utils/sax-js/sax.js"
+      ],
+      "license_input": "scripts/browser-vendor/license-overrides/langchain-embedded-sax-js-and-string-from-code-point.txt",
+      "license_file": "licenses/langchain-embedded-sax-js-and-string-from-code-point.txt",
+      "license_source_url": "https://raw.githubusercontent.com/langchain-ai/langchainjs/caad0914f068477293009dbf27a220fa96bdc4b8/libs/langchain-core/src/utils/sax-js/LICENSE",
+      "legal_notice_sources": []
+    },
+    {
+      "id": "string-from-code-point-embedded-in-sax-js",
+      "name": "String.fromCodePoint polyfill",
+      "version": "0.1.0",
+      "version_note": "The copied source comment identifies version 0.1.0; it is nested inside LangChain's sax-js snapshot.",
+      "license": "MIT",
+      "purpose": "Compatibility fallback used by the embedded sax-js parser when String.fromCodePoint is unavailable.",
+      "upstream_url": "https://github.com/mathiasbynens/String.fromCodePoint",
+      "langchain_source_url": "https://github.com/langchain-ai/langchainjs/blob/caad0914f068477293009dbf27a220fa96bdc4b8/libs/langchain-core/src/utils/sax-js/sax.ts#L1574-L1630",
+      "source_files": [
+        "node_modules/@langchain/core/dist/utils/sax-js/sax.js"
+      ],
+      "license_input": "scripts/browser-vendor/license-overrides/langchain-embedded-sax-js-and-string-from-code-point.txt",
+      "license_file": "licenses/langchain-embedded-sax-js-and-string-from-code-point.txt",
+      "license_source_url": "https://raw.githubusercontent.com/langchain-ai/langchainjs/caad0914f068477293009dbf27a220fa96bdc4b8/libs/langchain-core/src/utils/sax-js/LICENSE",
+      "legal_notice_sources": [
+        "@langchain/core/dist/utils/sax-js/sax.js"
+      ]
+    }
+  ],
+  "package_notice_mappings": [
+    {
+      "package": "mustache",
+      "version": "4.2.0",
+      "legal_notice_sources": [
+        "mustache/mustache.mjs"
+      ]
+    }
+  ]
+}

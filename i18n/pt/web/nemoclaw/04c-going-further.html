@@ -1,0 +1,396 @@
+
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Próximos passos · Proteção de agentes</title>
+<link rel="stylesheet" href="styles/_style.css"/>
+<script src="vendor/highlight-11.10.0.min.js"></script>
+<link rel="stylesheet" href="vendor/codemirror-5.65.21.css"/>
+<link rel="stylesheet" href="vendor/codemirror-monokai-5.65.21.css"/>
+<script src="vendor/codemirror-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-xml-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-javascript-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-css-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-htmlmixed-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-python-5.65.21.js"></script>
+<style>
+</style>
+<style>
+  .video-wrap {
+    position: relative; padding-bottom: 56.25%; height: 0;
+    overflow: hidden; border-radius: var(--r);
+    border: 1px solid var(--bd); background: var(--e2); margin: .8em 0 1.4em;
+  }
+  .video-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+  .section { margin: 2.4em 0 1em; padding-top: .5em; border-top: 1px solid var(--bd); }
+  .section-eyebrow { font-family: var(--mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .12em; color: var(--tf); margin-bottom: .3em; }
+  .section h2 { margin: 0 0 .7em; font-size: 1.25rem; }
+
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 1em 0; }
+  @media (max-width: 720px) { .card-grid { grid-template-columns: 1fr; } }
+  .step-card { background: var(--e1); border: 1px solid var(--bd); border-radius: 6px; padding: 14px 16px; }
+  .step-card h3 { margin: 0 0 .35em; font-size: .98rem; color: var(--gs); }
+  .step-card p { margin: .25em 0; font-size: .86rem; color: var(--td); line-height: 1.55; }
+  .step-card a.btn { display: inline-block; margin-top: .6em; padding: 6px 12px; font-size: .8rem;
+                     font-family: var(--mono); background: var(--e2); color: var(--gs); border: 1px solid var(--bd); border-radius: 4px; text-decoration: none; }
+  .step-card a.btn:hover { background: var(--e3); border-color: var(--g); }
+
+  .action-btn {
+    display: inline-block; padding: 9px 20px; border-radius: 6px;
+    font-weight: 700; font-size: .9rem; text-decoration: none;
+    background: var(--g); color: #000; margin: .4em 0 1em;
+  }
+  .action-btn:hover { background: var(--gs); text-decoration: none; }
+  :root[data-theme="light"] .action-btn { color: #fff; }
+  .action-btn.secondary {
+    background: var(--e2); color: var(--td);
+    border: 1px solid var(--bd); margin-left: 8px;
+  }
+  .action-btn.secondary:hover { border-color: var(--g); color: var(--g); }
+  .small-links { margin: .3em 0 1em; font-size: .82rem; }
+  .small-links a { color: var(--td); margin-right: 14px; }
+  .small-links a:hover { color: var(--g); }
+
+  .pattern { margin: 1.2em 0; padding: 14px 18px; background: rgba(118,185,0,.06); border: 1px solid var(--bd); border-radius: var(--r); }
+  .pattern-list { list-style: none; padding-left: 0; margin: 1.2em 0; }
+  .pattern h3 { margin: 0 0 .4em; font-size: 1rem; color: var(--gs); }
+  .pattern p { margin: .4em 0; font-size: .92rem; color: var(--td); line-height: 1.6; }
+  .pattern p:first-child strong { color: var(--gs); }
+
+  figure.video { margin: 0 0 1.8em; }
+  figure.video figcaption { font-size: .88rem; color: var(--td); line-height: 1.6; margin-top: -.4em; }
+  figure.video figcaption b { color: var(--gs); }
+  .mat-pointer { font-size: .88rem; color: var(--td); margin: 1.4em 0 .2em; }
+
+  .lp-grid { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 980px) { .lp-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 720px) { .lp-grid { grid-template-columns: 1fr; } }
+  .lp-helpers { font-size: .88rem; color: var(--td); line-height: 1.7; margin: .4em 0 0; padding-left: 1.2em; }
+  .lp-helpers li { margin: .4em 0; }
+  .lp-helpers a { color: var(--gs); }
+  .lp-helpers a:hover { color: var(--g); }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="logo" href="index.html">NVIDIA · Proteção de agentes</a>
+  <nav id="nav"></nav>
+  <div class="spacer"></div>
+  <span class="key-pill" id="key-status">…</span>
+</div>
+
+<main>
+  <div id="journey-map"></div>
+
+  <div class="hero">
+    <div class="eyebrow">Proteção de agentes · Próximos passos</div>
+    <h1><span>Próximos passos</span></h1>
+    <p class="lead">Até aqui, você construiu o ciclo de um agente, colocou-o atrás de um sandbox no nível do kernel e mediu o raio de impacto permitido pela política.</p>
+    <p class="lead">Uma implantação real acrescenta dados e usuários próprios. Agora você precisa escolher onde executá-la, como incorporar conhecimento e quais problemas merecem atenção depois que a base funciona.</p>
+  </div>
+
+  <!-- ── Deploy what you built ─────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-eyebrow">Implante o que você construiu</div>
+    <h2>Transfira os exercícios para um runtime persistente</h2>
+    <p>Os exercícios no navegador foram dimensionados para aprendizagem, com endpoints acessíveis e sessões que podiam ser reiniciadas. Uma implantação persistente exige a escolha de runtime, provedor de inferência e modelo operacional para sessões longas. Endpoints hospedados não exigem que o estudante administre uma GPU; a inferência local depende do provedor e do modelo escolhidos.</p>
+    <ul style="font-size:.9rem;color:var(--td);line-height:1.7">
+      <li>Os <a href="https://docs.nvidia.com/nemoclaw/latest/get-started/prerequisites" target="_blank" rel="noopener">pré-requisitos atuais do NemoClaw</a> abrangem Linux, macOS, Windows via WSL2 e DGX Spark. A configuração básica começa com 4 vCPUs e 8 GB de RAM; a GPU é opcional. Consulte a documentação atual, pois requisitos e interfaces evoluem.</li>
+      <li><a href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener">build.nvidia.com</a> oferece endpoints compatíveis com OpenAI para modelos hospedados pela NVIDIA. Os exemplos em Python e JavaScript permanecem iguais: troque o <code>baseURL</code> do proxy pelo <code>https://integrate.api.nvidia.com/v1</code> e forneça uma chave da API NVIDIA. A conta e a cota seguem os termos de serviço vigentes.</li>
+      <li><a href="https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986" target="_blank" rel="noopener">NemoClaw Applications</a> reúne playbooks para a mesma forma de launchable usada no curso. Os exemplos da NVIDIA para DGX Spark incluem resumo diário de notícias, agente de desenvolvimento, revisão de apresentações e negociação de calendário. Cada um reutiliza a configuração de políticas estudada aqui. Leia um playbook como implementação completa do agente sempre ativo criado no Módulo 3.</li>
+      <li><a href="https://docs.nvidia.com/nim/" target="_blank" rel="noopener">Hospede com NIM</a> quando o modelo precisar ser executado localmente ou em sua VPC. O NVIDIA Inference Microservices reúne modelo, tokenizer e servidor HTTP compatível com OpenAI em um contêiner. Os agentes dos Módulos 1 e 2 podem usar um endpoint NIM sem alterar sua estrutura.</li>
+      <li>Compare frameworks pelo que tornam explícito. O <a href="https://www.langchain.com/langgraph" target="_blank" rel="noopener">LangGraph</a> oferece máquinas de estado tipadas; <code>deepagents</code> implementa a forma com planejador, sistema de arquivos virtual e subagentes vista em 2c; <a href="https://www.crewai.com/" target="_blank" rel="noopener">CrewAI</a> e <a href="https://microsoft.github.io/autogen/" target="_blank" rel="noopener">AutoGen</a> organizam agentes por papéis. Observe como cada um representa estado, ferramentas, recuperação, delegação, persistência e política do runtime.</li>
+    </ul>
+  </div>
+
+  <!-- ── Transfer the browser form factor ──────────────────────────── -->
+  <div class="section">
+    <div class="section-eyebrow">Reutilize a interface</div>
+    <h2>O artefato do navegador é uma superfície de agente transferível</h2>
+    <p>Cada página do curso é uma lição e uma pequena aplicação. A interface expõe estado, controles, resultados intermediários e pontos de aprovação; JavaScript executa a orquestração local. Essa combinação funciona bem quando o público tem um navegador, mas nenhum ambiente de desenvolvimento preparado. Ele pode explicar um sistema de forma interativa, direcionar um workflow dinâmico ou fornecer uma interface focada para scripts gerais sobre dados carregados e serviços permitidos.</p>
+    <div class="callout"><strong>Transfira o contrato da interface e adapte o ambiente.</strong> HTML, CSS, JavaScript, estado visível e controles de aprovação são portáveis. Autenticação, acesso entre origens, persistência, alcance do sistema de arquivos, ferramentas de infraestrutura e pontes com o host não são. Isole essas dependências em adaptadores pequenos para mover o workflow sem presumir que todos os hosts concedem a mesma autoridade.</div>
+    <p>Alguns produtos já oferecem esse formato diretamente. A Anthropic descreve os <a href="https://support.claude.com/en/articles/14729249-use-live-artifacts-in-claude-cowork" target="_blank" rel="noopener">artefatos ativos do Cowork</a> como páginas HTML interativas e persistentes, atualizadas por aplicativos conectados e arquivos locais. A prévia do <a href="https://help.openai.com/en/articles/12515353-build-with-the-apps-sdk" target="_blank" rel="noopener">OpenAI Apps SDK</a> permite que uma aplicação apoiada por MCP defina em conjunto o comportamento no chat e a interface. Páginas estáticas, artefatos hospedados e aplicações dentro do chat têm contratos de host diferentes, mas podem apresentar o mesmo workflow por meio de estado inspecionável e ações limitadas.</p>
+  </div>
+
+  <!-- ── Add new knowledge ──────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-eyebrow">Adicionar novos conhecimentos</div>
+    <h2>Use seus próprios dados</h2>
+    <p>O agente de índice do Módulo 2b consultou um corpus pequeno na própria página. Uma implantação real exige ingestão, avaliação e operação mais robustas. As referências abaixo mostram caminhos de produção.</p>
+    <ul style="font-size:.9rem;color:var(--td);line-height:1.7">
+      <li><a href="https://developer.nvidia.com/nemo-retriever" target="_blank" rel="noopener">NeMo Retriever</a> leva a recuperação por similaridade do Módulo 2b a uma arquitetura de produção. Busca esparsa por palavras-chave e busca vetorial densa rodam em paralelo; as pontuações são combinadas; um reranker reorganiza os candidatos; e a segmentação configurável controla a divisão dos documentos antes da indexação. Com embeddings servidos por NIM, a stack pode permanecer em sua VPC.</li>
+      <li><a href="https://build.nvidia.com/blueprints?ncid=ref-dli-146986" target="_blank" rel="noopener">NVIDIA AI Blueprints</a> oferece implementações de referência para formas comuns: chatbot RAG, extração multimodal de PDF e assistente de pesquisa. Cada blueprint adapta o agente de pesquisa de 2c a um domínio implantável. Use-os como ponto de partida e como referência para avaliar sua arquitetura.</li>
+      <li><a href="https://github.com/NVIDIA/NeMo-Curator" target="_blank" rel="noopener">NeMo Curator</a> trata a preparação do corpus como uma etapa própria. Ele oferece deduplicação, filtragem por idioma, remoção de dados pessoais e pontuação de qualidade em escala. A qualidade da recuperação depende dos dados; limpar o corpus beneficia todas as consultas posteriores.</li>
+      <li><a href="https://github.com/NVIDIA/NeMo-Guardrails" target="_blank" rel="noopener">NeMo Guardrails</a> acrescenta filtros programáveis de entrada e saída, políticas de tópicos e verificações factuais na camada da aplicação. Ele complementa a contenção do kernel, não a substitui: as duas camadas tratam classes de falha diferentes.</li>
+    </ul>
+  </div>
+
+  <!-- ── Where to push next ──────────────────────────────────────────── -->
+  
+  
+  
+  <div class="section">
+    <div class="section-eyebrow">Onde empurrar a seguir</div>
+    <h2>Onde o trabalho de produção diverge</h2>
+    <p>Os projetos de produção geralmente aprofundam uma dessas áreas:</p>
+    <ul>
+      <li><strong>A camada de conhecimento.</strong> Recuperação de qualidade de produção: blocagem estrutural, recuperação de imagem de página, avaliação de fidelidade em corporas reais heterogêneas. NeMo Retriever e o RAG AI Blueprints são onde isso é construído de verdade.</li>
+      <li><strong>O substrato.</strong> Protocolos como MCP, Responses API, convenções OTel GenAI e A2A mantêm ferramentas e observabilidade portáteis entre provedores e frameworks.</li>
+      <li><strong>Frotas dinâmicas e contenção.</strong> A execução paralela muda o problema: agentes podem redescobrir o mesmo contexto, topologias com muitos saltos perdem coerência e a avaliação entre pares pode sofrer influência social. Cada agente ainda precisa de contenção no kernel, como <a href="https://docs.kernel.org/userspace-api/landlock.html" target="_blank" rel="noopener">Landlock</a>, <a href="https://man7.org/linux/man-pages/man2/seccomp.2.html" target="_blank" rel="noopener">seccomp</a> e namespaces de rede, pois regras de prompt e proteções da aplicação não limitam sozinhas o raio de impacto.</li>
+    </ul>
+    <p>Escolha o eixo correspondente ao obstáculo recorrente em seu projeto. O NVIDIA Developer Blog acompanha trabalhos de referência nessas áreas.</p>
+    <a class="action-btn" href="https://developer.nvidia.com/blog/category/generative-ai/" target="_blank" rel="noopener">NVIDIA Developer Blog →</a>
+  </div>
+  
+  
+
+  <!-- ── Resources by topic ────────────────────────────────────────── -->
+  
+  
+  
+  <div class="section" id="refs">
+    <div class="section-eyebrow">hub de referências</div>
+    <h2>Lista de leitura, organizada pelo módulo</h2>
+    <p>Este hub reúne as fontes citadas nas seções de referências dos módulos. Cada entrada está disponível no arXiv, na documentação da organização ou em um repositório público.</p>
+    <p>Os grupos temáticos seguem este curso primeiro, depois estendem-se para a frota e os trabalhos de avaliação.</p>
+
+    <h3 id="refs-m1" style="font-size:.95rem;color:var(--gs);margin:1.2em 0 .4em">Módulo 1 · Fundações de modelos e agentes</h3>
+    <ul style="font-size:.88rem;color:var(--td);line-height:1.7">
+      <li>Russell. &amp; Norvig (2020). <a href="https://aima.cs.berkeley.edu/" target="_blank" rel="noopener"><em>Artificial Intelligence: A Modern Approach</em></a>, 4th ed. Onde vive o quadro e taxonomia de agentes PEAS.</li>
+      <li>Bratman (1987). <em>Intenção, Planos e Razão Prática</em> (a tupla BDI; <a href="https://en.wikipedia.org/wiki/Belief%E2%80%93desire%E2%80%93intention_software_model" target="_blank" rel="noopener">summary</a>).</li>
+      <li>Vaswani et al. (2017). <a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">Attention Is All You Need.</a> <code>arXiv:1706.03762</code>. O transformer.</li>
+      <li>Sennrich et al. (2015). <a href="https://arxiv.org/abs/1508.07909" target="_blank" rel="noopener">Neural Machine Translation of Rare Words with Subword Units.</a> <code>arXiv:1508.07909</code>. Tokenização BPE.</li>
+      <li>Brown et al. (2020). <a href="https://arxiv.org/abs/2005.14165" target="_blank" rel="noopener">Language Models are Few-Shot Learners.</a> <code>arXiv:2005.14165</code>. Apresenta a aprendizagem em contexto.</li>
+      <li>Wei et al. (2022). <a href="https://arxiv.org/abs/2201.11903" target="_blank" rel="noopener">Chain-of-Thought Prompting Elicits Reasoning in LLMs.</a> <code>arXiv:2201.11903</code>.</li>
+      <li>Park et al. (2023). <a href="https://arxiv.org/abs/2304.03442" target="_blank" rel="noopener">Generative Agents.</a> <code>arXiv:2304.03442</code> (referenciado através de M1c, M4, M6).</li>
+    </ul>
+
+    <h3 id="refs-m2" style="font-size:.95rem;color:var(--gs);margin:1.2em 0 .4em">Módulo 1 · ReAgir, usar ferramentas e saídas estruturadas</h3>
+    <ul style="font-size:.88rem;color:var(--td);line-height:1.7">
+      <li>Willard &amp; Louf (2023). <a href="https://arxiv.org/abs/2307.09702" target="_blank" rel="noopener">Efficient Guided Generation for LLMs.</a> <code>arXiv:2307.09702</code>. A teoria de máquinas de estados finitos que sustenta o Outlines.</li>
+      <li>Schick et al. (2023). <a href="https://arxiv.org/abs/2302.04761" target="_blank" rel="noopener">Toolformer.</a> <code>arXiv:2302.04761</code> (utilização de ferramentas auto-supervisionadas).</li>
+      <li>Yao et al. (2022). <a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct: Synergizing Reasoning and Acting in LLMs.</a> <code>arXiv:2210.03629</code>. A figura do Módulo 1b foi redesenhada com base neste trabalho.</li>
+      <li>OpenAI <a href="https://platform.openai.com/docs/guides/structured-outputs" target="_blank" rel="noopener">Resultados estruturados</a> · <a href="https://platform.openai.com/docs/guides/function-calling" target="_blank" rel="noopener">function calling</a>.</li>
+      <li>Referência antrópica do uso do <a href="https://docs.anthropic.com/en/docs/agents-and-tools/tool-use" target="_blank" rel="noopener">tool</a>.</li>
+      <li><a href="https://modelcontextprotocol.io/specification" target="_blank" rel="noopener">Modelo de Protocolo de Contexto</a> · <a href="https://github.com/dottxt-ai/outlines" target="_blank" rel="noopener">Contornos</a> · <a href="https://github.com/mlc-ai/xgrammar" target="_blank" rel="noopener">XGrammar</a>.</li>
+      <li>JSON Schema <a href="https://json-schema.org/specification" target="_blank" rel="noopener">draft 2020-12 spec</a>.</li>
+    </ul>
+
+    <h3 id="refs-m3" style="font-size:.95rem;color:var(--gs);margin:1.2em 0 .4em">Módulo 2 · Workflow, recuperação e pesquisa profunda</h3>
+    <ul style="font-size:.88rem;color:var(--td);line-height:1.7">
+      <li>Xu et al. (2023). <a href="https://arxiv.org/abs/2305.18323" target="_blank" rel="noopener">ReWOO: Decoupling Reasoning from Observations.</a> <code>arXiv:2305.18323</code>.</li>
+      <li>Wang et al. (2023). <a href="https://arxiv.org/abs/2305.04091" target="_blank" rel="noopener">Plan-and-Solve Prompting.</a> <code>arXiv:2305.04091</code>.</li>
+      <li>Madaan et al. (2023). <a href="https://arxiv.org/abs/2303.17651" target="_blank" rel="noopener">Self-Refine.</a> <code>arXiv:2303.17651</code>.</li>
+      <li>Lewis et al. (2020). <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Retrieval-Augmented Generation.</a> <code>arXiv:2005.11401</code>. A figura do Módulo 2b foi redesenhada com base neste trabalho.</li>
+      <li>Karpukhin et al. (2020). <a href="https://arxiv.org/abs/2004.04906" target="_blank" rel="noopener">Dense Passage Retrieval.</a> <code>arXiv:2004.04906</code>.</li>
+      <li>Johnson, Douze, Jégou (2017). <a href="https://arxiv.org/abs/1702.08734" target="_blank" rel="noopener">Billion-scale similarity search with GPUs</a> <code>arXiv:1702.08734</code> (FAISS).</li>
+      <li>Gao et al. (2022). <a href="https://arxiv.org/abs/2212.10496" target="_blank" rel="noopener">HyDE.</a> <code>arXiv:2212.10496</code>.</li>
+      <li>Hsieh et al. (2024). <a href="https://arxiv.org/abs/2404.06654" target="_blank" rel="noopener">RULER.</a> <code>arXiv:2404.06654</code> (benchmark de longo prazo).</li>
+      <li>Wang et al. (2023). <a href="https://arxiv.org/abs/2305.16291" target="_blank" rel="noopener">Voyager.</a> <code>arXiv:2305.16291</code>.</li>
+      <li><a href="https://blog.langchain.com/deep-agents/" target="_blank" rel="noopener">LangChain Deep Agents</a> · <a href="https://github.com/langchain-ai/deepagents" target="_blank" rel="noopener">deepagents</a> · <a href="https://www.langchain.com/langgraph" target="_blank" rel="noopener">LangGraph</a>.</li>
+    </ul>
+
+    <h3 id="refs-m4" style="font-size:.95rem;color:var(--gs);margin:1.2em 0 .4em">Módulo 3 · Tempos de execução persistentes e agentes CLI</h3>
+    <ul style="font-size:.88rem;color:var(--td);line-height:1.7">
+      <li>Packer et al. (2023). <a href="https://arxiv.org/abs/2310.08560" target="_blank" rel="noopener">MemGPT.</a> <code>arXiv:2310.08560</code>.</li>
+      <li>Karpas et al. (2022). <a href="https://arxiv.org/abs/2205.00445" target="_blank" rel="noopener">MRKL Systems.</a> <code>arXiv:2205.00445</code></li>
+      <li>Liu et al. (2023). <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Lost in the Middle.</a> <code>arXiv:2307.03172</code>. Estuda a degradação em contextos longos e motiva a compactação.</li>
+      <li>Park et al. (2023). <a href="https://arxiv.org/abs/2304.03442" target="_blank" rel="noopener">Generative Agents.</a> <code>arXiv:2304.03442</code>.</li>
+      <li>Wang et al. (2023). <a href="https://arxiv.org/abs/2305.16291" target="_blank" rel="noopener">Voyager.</a> <code>arXiv:2305.16291</code> (sempre agente de biblioteca de competências).</li>
+      <li><a href="https://docs.anthropic.com/en/docs/claude-code/overview" target="_blank" rel="noopener">Claude Code</a> · <a href="https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview" target="_blank" rel="noopener">Agent Skills</a>.</li>
+      <li>OpenAI <a href="https://platform.openai.com/docs/codex" target="_blank" rel="noopener">Codex CLI</a>.</li>
+      <li><a href="https://github.com/NousResearch/hermes-agent" target="_blank" rel="noopener">Hermes Agent (Nous Research)</a> e seu guia de segurança <a href="https://hermes-agent.nousresearch.com/docs/user-guide/security" target="_blank" rel="noopener">ZSecurity</a>. Uma aplicação de agente separada com skills da experiência, memória persistente, cron embutido e um gateway de mensagens; útil ao comparar aplicações de agente com a segurança OpenShell runtime e a referência NemoClaw stack.</li>
+      <li><a href="https://github.com/NVIDIA/NeMo-Curator" target="_blank" rel="noopener">NeMo Curator</a> (pipeline de qualidade de dados).</li>
+    </ul>
+
+    <h3 id="refs-m5" style="font-size:.95rem;color:var(--gs);margin:1.2em 0 .4em">Módulo 4 · Avaliação e contenção</h3>
+    <ul style="font-size:.88rem;color:var(--td);line-height:1.7">
+      <li><a href="https://opentelemetry.io/docs/specs/semconv/gen-ai/" target="_blank" rel="noopener">OpenTelemetria Convenções semânticas da GenAI</a>.</li>
+      <li>Zheng et al. (2023). <a href="https://arxiv.org/abs/2306.05685" target="_blank" rel="noopener">Judging LLM-as-a-Judge with MT-Bench.</a> <code>arXiv:2306.05685</code>.</li>
+      <li>Liu et al. (2023). <a href="https://arxiv.org/abs/2303.16634" target="_blank" rel="noopener">G-Eval.</a> <code>arXiv:2303.16634</code>.</li>
+      <li>Liang et al. (2022). <a href="https://arxiv.org/abs/2211.09110" target="_blank" rel="noopener">Holistic Evaluation of Language Models (HELM).</a> <code>arXiv:2211.09110</code>.</li>
+      <li>Saad-Falcon et al. (2024). <a href="https://arxiv.org/abs/2403.02419" target="_blank" rel="noopener">ARES: Automated Eval for RAG.</a> <code>arXiv:2403.02419</code>.</li>
+      <li>Greshake et al. (2023). <a href="https://arxiv.org/abs/2302.12173" target="_blank" rel="noopener">Not what you've signed up for.</a> <code>arXiv:2302.12173</code> (injeção indireta de prompt).</li>
+      <li>Inan et al. (2023). <a href="https://arxiv.org/abs/2312.06674" target="_blank" rel="noopener">Llama Guard.</a> <code>arXiv:2312.06674</code>.</li>
+      <li>Willison (2025). <a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" target="_blank" rel="noopener">The lethal trifecta</a>.</li>
+      <li><a href="https://genai.owasp.org/" target="_blank" rel="noopener">OWASP GenAI Top 10</a> · <a href="https://docs.kernel.org/userspace-api/landlock.html" target="_blank" rel="noopener">Encaixe de terra</a> · <a href="https://docs.kernel.org/userspace-api/seccomp_filter.html" target="_blank" rel="noopener">seccomp- BPF</a>.</li>
+      <li><a href="https://github.com/NVIDIA/NeMo-Guardrails" target="_blank" rel="noopener">NeMo Guardrails</a> · <a href="https://docs.smith.langchain.com/" target="_blank" rel="noopener">LangSmith</a> · <a href="https://phoenix.arize.com/" target="_blank" rel="noopener">Arize Phoenix</a> · <a href="https://www.jaegertracing.io/" target="_blank" rel="noopener">Jaeger</a>.</li>
+    </ul>
+
+    <p style="font-size:.84rem;color:var(--tf);margin:1.8em 0 .2em;border-top:1px solid var(--bd);padding-top:1em">Além deste curso: o grupo final estende as mesmas questões de design para frotas e adaptação de modelo.</p>
+
+    <h3 id="refs-m6" style="font-size:.95rem;color:var(--gs);margin:1.2em 0 .4em">Indo mais longe · Sistemas multi-agentes e adaptação</h3>
+    <ul style="font-size:.88rem;color:var(--td);line-height:1.7">
+      <li>Cemri et al. (2025). <a href="https://arxiv.org/abs/2503.13657" target="_blank" rel="noopener">Why Do Multi-Agent LLM Systems Fail? (MAST).</a> <code>arXiv:2503.13657</code>.</li>
+      <li>Wu et al. (2023). <a href="https://arxiv.org/abs/2308.08155" target="_blank" rel="noopener">AutoGen.</a> <code>arXiv:2308.08155</code>.</li>
+      <li>Hong et al. (2023). <a href="https://arxiv.org/abs/2308.00352" target="_blank" rel="noopener">MetaGPT.</a> <code>arXiv:2308.00352</code>.</li>
+      <li>Chen et al. (2024). <a href="https://arxiv.org/abs/2403.02419" target="_blank" rel="noopener">Are More LLM Calls All You Need? Towards Scaling Laws of Compound Inference Systems</a> <code>arXiv:2403.02419</code>.</li>
+      <li>Xu et al. (2025). <a href="https://arxiv.org/abs/2502.12110" target="_blank" rel="noopener">A-MEM: Atomic Notes for Agent Memory.</a> <code>arXiv:2502.12110</code>.</li>
+      <li>Christiano et al. (2017). <a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep RL from Human Preferences (RLHF).</a> <code>arXiv:1706.03741</code>.</li>
+      <li>Rafailov et al. (2023). <a href="https://arxiv.org/abs/2305.18290" target="_blank" rel="noopener">Direct Preference Optimization (DPO).</a> <code>arXiv:2305.18290</code>.</li>
+      <li>Bai et al. (2022). <a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI.</a> <code>arXiv:2212.08073</code>.</li>
+      <li><a href="https://build.nvidia.com/nvidia/aiq?ncid=ref-dli-146986" target="_blank" rel="noopener">NVIDIA AI-Q Blueprint</a> · <a href="https://github.com/langchain-ai/deepagents" target="_blank" rel="noopener">deepagents</a>.</li>
+    </ul>
+  </div>
+  
+  
+
+  <!-- ── NVIDIA Agentic AI Learning Path ───────────────────────────── -->
+  <div class="section" id="learning-path">
+    <div class="section-eyebrow">Caminho de aprendizagem</div>
+    <h2>Continue com o caminho de aprendizagem da IA baseada em agentes NVIDIA</h2>
+    <p>Este curso é o companheiro prático da Lição 6 do NVIDIA <a href="https://developer.nvidia.com/topics/ai/agentic-ai-learning-path" target="_blank" rel="noopener">Agentic AI Learning Path</a>, <em>Como construir um agente autônomo mais seguro usando OpenClaw</em>. O caminho completo começa com a construção de um primeiro agente e termina no trabalho de segurança que este curso cobre em profundidade. No meio, move-se através da recuperação, avaliação, personalização do modelo, e agentes profundos que delegam e persistem a memória. Cada lição abaixo emparelha um conceito que você encontrou aqui com o lugar onde o caminho o desenvolve ainda mais.</p>
+    <div class="card-grid lp-grid">
+      <div class="step-card">
+        <h3>Lição 1 · Como construir um agente de IA</h3>
+        <p>O loop plano-ato-observo que você construiu do zero no Módulo 1, aqui montado com modelos NVIDIA Nemotron e LangGraph em um agente de geração de relatórios.</p>
+        <a class="btn" href="https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-an-ai-agent" target="_blank" rel="noopener">Iniciar →</a>
+      </div>
+      <div class="step-card">
+        <h3>Lição 2 · Como construir uma aplicação de RAG agente</h3>
+        <p>Amplia o agente de recuperação do Módulo 2b com busca densa e esparsa, reranking e um banco vetorial conectado a um agente ReAct que planeja as próprias consultas.</p>
+        <a class="btn" href="https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-agentic-ai-rag" target="_blank" rel="noopener">Iniciar →</a>
+      </div>
+      <div class="step-card">
+        <h3>Lição 3 · Como avaliar agentes de IA</h3>
+        <p>A verificação metade do ciclo. Medindo o sucesso da tarefa, qualidade de uso de ferramentas e eficiência de trajetória com métricas RAGAS e pipelines LLM-as-juiz, a disciplina por trás de cada decisão de confiabilidade neste curso.</p>
+        <a class="btn" href="https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-evaluate-ai-agents" target="_blank" rel="noopener">Iniciar →</a>
+      </div>
+      <div class="step-card">
+        <h3>Lição 4 · Como personalizar agentes de IA</h3>
+        <p>Quando a prompting e as skills atingem o limite, esta lição escreve o conhecimento do domínio nos próprios pesos: dados sintéticos com o NeMo Data Designer, então o Nemotron com GRPO e LoRA é afinado.</p>
+        <a class="btn" href="https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-customize-ai-agents" target="_blank" rel="noopener">Iniciar →</a>
+      </div>
+      <div class="step-card">
+        <h3>Lição 5 · Como construir agentes de IA profundos</h3>
+        <p>O planejador, a delegação para subagentes e a memória em sistema de arquivos que você montou no Módulo 2c, agora implementados com a biblioteca Deep Agents do LangChain e o NVIDIA AI-Q Blueprint.</p>
+        <a class="btn" href="https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-deep-ai-agents" target="_blank" rel="noopener">Iniciar →</a>
+      </div>
+      <div class="step-card">
+        <h3>Lição 6 · Como construir um agente autônomo mais seguro usando OpenClaw</h3>
+        <p>É o tema deste curso: rede bloqueada por padrão, sistema de arquivos protegido por Landlock, seccomp, isolamento de credenciais e avaliação contínua de um agente persistente.</p>
+        <a class="btn" href="https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-safer-autonomous-agent-using-openclaw" target="_blank" rel="noopener">Iniciar →</a>
+      </div>
+    </div>
+
+    <h3 style="font-size:.95rem;color:var(--gs);margin:1.4em 0 .4em">Artigos auxiliares que valem a pena ler</h3>
+    <ul class="lp-helpers">
+      <li><a href="https://blogs.nvidia.com/blog/what-is-agentic-ai/" target="_blank" rel="noopener">O que é IA baseada em agentes?</a> Apresenta raciocínio e planejamento iterativo para resolver problemas em várias etapas de forma autônoma.</li>
+      <li><a href="https://www.nvidia.com/en-us/glossary/deep-agents/" target="_blank" rel="noopener">Glossário de agentes profundos</a> Define planejamento, delegação, memória em sistema de arquivos e skills, os quatro elementos combinados no Módulo 2c.</li>
+      <li><a href="https://developer.nvidia.com/blog/traditional-rag-vs-agentic-rag-why-ai-agents-need-dynamic-knowledge-to-get-smarter/" target="_blank" rel="noopener">RAG tradicional e RAG com agentes</a> Explica por que um agente que planeja a recuperação pode superar uma busca fixa, fundamento do agente de índice do Módulo 2b.</li>
+      <li><a href="https://developer.nvidia.com/blog/run-autonomous-self-evolving-agents-more-safely-with-nvidia-openshell/" target="_blank" rel="noopener">Execute agentes autônomos com mais segurança usando NVIDIA OpenShell</a> Aprofunda a contenção no kernel estudada nos Módulos 3 e 4.</li>
+      <li><a href="https://developer.nvidia.com/blog/build-a-secure-always-on-local-ai-agent-with-nvidia-nemoclaw-and-openclaw/" target="_blank" rel="noopener">Crie um agente de IA local e sempre ativo com NemoClaw</a> Mostra a instalação no DGX Spark e como a stack reúne OpenClaw, OpenShell, políticas e inferência local.</li>
+      <li><a href="https://blogs.nvidia.com/blog/what-openclaw-agents-mean-for-every-organization/" target="_blank" rel="noopener">O que os agentes OpenClaw representam para as organizações</a> Discute quando usar um agente persistente em infraestrutura própria, em vez de uma chamada isolada ao modelo.</li>
+    </ul>
+  </div>
+
+  <!-- ── The harness around the model ─────────────────────────────── -->
+  <div class="section">
+    <div class="section-eyebrow">O sistema que você construiu</div>
+    <h2>O curso envolveu um modelo substituível em um harness</h2>
+    <p>
+      O papel do modelo permaneceu o mesmo. O modelo congelado e sem estado usado na função de decisão do Módulo 1 também sustenta o agente profundo e o OpenClaw executado no sandbox.
+    </p>
+    <p>
+      Todo o restante forma o <em>harness</em>: o sistema que envolve o modelo e permite trabalho autônomo e persistente. Cada módulo acrescentou uma camada.
+    </p>
+    <ul style="font-size:.9rem;color:var(--td);line-height:1.7">
+      <li>
+        <strong>O ciclo.</strong> O Módulo 1 transformou uma única
+        <a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">chat chamada para um agente</a>
+        em um agente: envolveu a chamada em um ciclo que aciona uma ferramenta, devolve o resultado e repete até a resposta final. Essa é a camada de execução fornecida por um runtime como OpenClaw ou um framework como LangGraph.
+      </li>
+      <li>
+        <strong>O workflow.</strong> O Módulo 2 delimitou o que cada etapa podia ver e como os resultados circulavam por pipelines fixos, recuperação e ramos de pesquisa. Escolher o que incluir e excluir é
+        <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents" target="_blank" rel="noopener">engenharia de contexto</a>; essa escolha influencia a resposta tanto quanto a formulação do prompt (<a href="https://lilianweng.github.io/posts/2023-06-23-agent/" target="_blank" rel="noopener">Weng, 2023</a>).
+      </li>
+      <li>
+        <strong>O runtime.</strong> O Módulo 3 levou esses workflows ao OpenClaw, onde sessões do gateway, arquivos do workspace, skills e agendamentos persistem além de uma chamada do navegador.
+      </li>
+      <li>
+        <strong>A contenção.</strong> O Módulo 4 acrescentou uma camada que não interpreta o prompt. O OpenShell aplica regras no limite do sistema; mesmo uma injeção bem-sucedida continua sujeita à política.
+      </li>
+    </ul>
+    <p>
+      A engenharia se acumula nessas camadas, não nos pesos do modelo. Um modelo mais forte pode entrar no mesmo harness com pouco retrabalho, preservando o restante do sistema.
+    </p>
+    <p>
+      Quando um agente repete a mesma falha, procure uma camada ausente. Um controle aplicado abaixo do ponto de falha tende a ser mais durável que outra instrução no prompt. Os padrões seguintes mostram como fazer essa análise.
+    </p>
+  </div>
+
+  <!-- ── Patterns worth carrying ─────────────────────────────────── -->
+  <div class="section">
+    <div class="section-eyebrow">Lições de implantação</div>
+    <h2>O que verificar antes de implantar</h2>
+
+    <ul class="pattern-list">
+      <li class="pattern">
+        <p>
+          <strong>Meça a produtividade; não confie apenas na percepção.</strong>
+          Um estudo randomizado da <a href="https://metr.org/" target="_blank" rel="noopener">METR</a> com desenvolvedores experientes de projetos open source encontrou redução de velocidade durante o uso de um agente de programação, embora os participantes esperassem e relatassem ganhos. Ao avaliar um agente, compare a previsão com o resultado medido.
+        </p>
+      </li>
+      <li class="pattern">
+        <p>
+          <strong>Comece com um único agente forte.</strong>
+          Sistemas multiagentes nem sempre vencem quando a tarefa se torna complexa (<a href="https://arxiv.org/abs/2403.02419" target="_blank" rel="noopener">Chen et al., 2024</a>). Mais agentes introduzem coordenação e novos modos de falha. Antes de ampliar a topologia, identifique qual falha o novo agente corrigirá. Sem uma resposta concreta, a complexidade adicional provavelmente não compensa.
+        </p>
+      </li>
+      <li class="pattern">
+        <p>
+          <strong>A contenção do kernel limita o impacto de uma injeção bem-sucedida.</strong>
+          Regras de prompt e proteções da aplicação ajudam, mas dependem do que o modelo e o harness conseguem reconhecer. Uma instrução maliciosa com aparência válida pode atravessá-las.
+        </p>
+        <p>
+          Um agente com acesso a shell, arquivos ou rede precisa de uma camada abaixo do prompt. Essa camada aplica regras no limite das syscalls, fora do alcance das instruções do modelo.
+        </p>
+      </li>
+      <li class="pattern">
+        <p>
+          <strong>O token administrativo fica acima do sandbox.</strong>
+          O sandbox limita o que o agente pode fazer, mas não controla quem possui o token do operador. Seu detentor pode:
+        </p>
+        <ul>
+          <li>ler a persona</li>
+          <li>criar tarefas cron</li>
+          <li>alterar o modelo e as ferramentas</li>
+          <li>injetar um turno na conversa</li>
+        </ul>
+        <p>
+          A robustez do sandbox e o alcance do token são medidas separadas.
+        </p>
+        <p>
+          O Módulo 4b mostrou que esse token alcança controles invisíveis ao sandbox. Trate a credencial <code>operator.admin</code> como uma senha de root: restrinja o armazenamento, use o menor escopo possível e faça rotação periódica. Para esse agente, ela alcança mais que o root dentro do sandbox.
+        </p>
+      </li>
+    </ul>
+  </div>
+
+  <h2>Mantenha o Assistente de Curso com você</h2>
+  <p>
+    O <strong>Assistente do Curso</strong>, aberto pelo botão <strong>□</strong>, está disponível em todas as aulas e já recebe o contexto da página atual. Quando a pergunta atravessa módulos, ele pode consultar o mapa do curso, pesquisar as lições e ler páginas relevantes. As sessões persistem neste navegador: retome uma conversa depois de navegar ou recarregar, ou crie outra para começar sem histórico. Quando a sessão cresce, o assistente resume mensagens antigas em memória durável, mantém as trocas recentes e inicia um novo contexto limitado a partir desse estado.
+  </p>
+  <div class="callout">
+    <strong>A forma estudada aparece em sistemas reais.</strong> O agente OpenClaw dos Módulos 3 e 4 usa o <a href="https://github.com/earendil-works/pi-mono" target="_blank" rel="noopener">runtime de agentes Pi</a> atrás do gateway. Sob as camadas adicionais, continuam presentes o ciclo de percepção, decisão e ação, as chamadas de ferramentas e o histórico crescente introduzidos no Módulo 1.
+  </div>
+  <p><button type="button" class="course-assistant-open" id="open-course-assistant">Abrir o Assistente de Curso</button></p>
+
+  <div class="foot-nav">
+    <a href="04b-modern-clis.html">← Módulo 4b: CLIs modernos</a>
+    <a class="next" href="index.html">□ Voltar para casa</a>
+  </div>
+</main>
+
+<script type="module">
+import { buildNav, updateKeyPill, mountJourneyMap } from "./scripts/_shared.js";
+mountJourneyMap("#journey-map", "4c");
+document.getElementById("nav").innerHTML = buildNav("04c-going-further.html");
+updateKeyPill(document.getElementById("key-status"));
+hljs.highlightAll();
+document.getElementById("open-course-assistant").addEventListener("click", () => document.querySelector(".course-assistant-launcher")?.click());
+</script>
+</body>
+</html>

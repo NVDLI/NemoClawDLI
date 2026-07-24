@@ -1,0 +1,484 @@
+<!-- ─── edX HtmlBlock: s-fx-43-v1 navigator ────────────────────────────────
+     Drop the entire contents of this file into a single HtmlBlock in
+     the edX course for the Securing Agents track. It iframes the
+     published nemoclaw/ pages out of S3 and provides a four-module
+     journey bar for moving between them.
+
+     Pages are served from nemoclaw/ on the DLI S3 bucket.
+     The iframe sizes itself via the postMessage handshake.
+─────────────────────────────────────────────────────────────────────── -->
+
+<style>
+.navigation_arrows_div { visibility: hidden; }
+.bookmark-button-wrapper { visibility: hidden; margin: 0 !important; height: 0px; }
+.content-wrapper.main-container { max-width: 1500px; margin: 0 auto; padding: 0 20px; }
+
+.fx43q-nav {
+  --fx-surface:#ffffff; --fx-panel:#f6f8fa; --fx-text:#1a1a1a; --fx-muted:#57606a;
+  --fx-accent:#3f6900; --fx-accent-soft:#f0f9e0; --fx-line:#e1e6eb; --fx-on-accent:#ffffff;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Arial, sans-serif !important;
+  color: var(--fx-text) !important;
+  position: relative !important;
+  width: 100vw !important;
+  max-width: 1600px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  margin: 0 !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
+}
+.fx43q-nav *, .fx43q-nav *::before, .fx43q-nav *::after { box-sizing: border-box !important; }
+.fx43q-nav p, .fx43q-nav h1, .fx43q-nav h2, .fx43q-nav h3, .fx43q-nav li { line-height: 1.5 !important; }
+
+.fx43q-nav h1.fx43q-title {
+  color: var(--fx-accent) !important; font-size: 1.8em !important;
+  margin: 18px 0 6px !important; text-align: center !important;
+  font-weight: 800 !important; letter-spacing: -0.01em !important;
+}
+.fx43q-nav .fx43q-sub {
+  text-align: center !important; color: var(--fx-muted) !important;
+  font-size: 0.92em !important; margin: 0 0 22px !important;
+}
+
+.fx43q-card {
+  border: 1px solid var(--fx-line) !important; border-radius: 12px !important;
+  padding: 18px !important; margin: 0 0 22px !important;
+  background-color: var(--fx-surface) !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 4px 16px rgba(0,0,0,0.04) !important;
+}
+
+.fx43q-journey {
+  display: flex !important; flex-direction: column !important;
+  gap: 0 !important;
+  margin: 0 0 16px !important;
+}
+
+.fx43q-row-modules {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin-bottom: 10px !important;
+}
+@media (max-width: 720px) {
+  .fx43q-row-modules { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+
+.fx43q-row-parts {
+  display: flex !important; flex-wrap: wrap !important;
+  gap: 6px !important;
+  min-height: 36px !important;
+  align-items: center !important;
+  padding-bottom: 12px !important;
+  border-bottom: 1px solid var(--fx-line) !important;
+  margin-bottom: 12px !important;
+}
+
+.fx43q-row-extras {
+  display: flex !important; flex-wrap: wrap !important;
+  gap: 4px !important;
+  align-items: center !important;
+}
+
+.fx43q-mod {
+  display: inline-flex !important; align-items: baseline !important; gap: 8px !important;
+  padding: 9px 12px !important;
+  border: 1px solid var(--fx-line) !important; border-radius: 8px !important;
+  background: var(--fx-surface) !important; color: var(--fx-text) !important;
+  font-size: 13px !important; font-weight: 600 !important;
+  cursor: pointer !important; user-select: none !important;
+  text-align: left !important; min-width: 0 !important;
+  transition: background .12s, border-color .12s, box-shadow .12s !important;
+  font-family: inherit !important; line-height: 1.3 !important;
+}
+.fx43q-mod:hover { background: var(--fx-panel) !important; border-color: var(--fx-accent) !important; }
+.fx43q-mod.active {
+  background: var(--fx-accent-soft) !important; border-color: var(--fx-accent) !important;
+  box-shadow: inset 0 0 0 1px var(--fx-accent) !important;
+}
+.fx43q-mod-num {
+  font-family: ui-monospace, "SF Mono", Consolas, monospace !important;
+  font-size: 11px !important; font-weight: 700 !important;
+  color: var(--fx-accent) !important;
+  background: rgba(118,185,0,0.10) !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+  flex-shrink: 0 !important;
+}
+.fx43q-mod.active .fx43q-mod-num { background: var(--fx-accent) !important; color: var(--fx-on-accent) !important; }
+.fx43q-mod-label { overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+
+.fx43q-part {
+  display: inline-flex !important; align-items: center !important; gap: 6px !important;
+  padding: 5px 10px !important;
+  border: 1px solid transparent !important; border-radius: 6px !important;
+  background: transparent !important; color: var(--fx-muted) !important;
+  font-size: 12.5px !important; font-weight: 500 !important;
+  cursor: pointer !important; user-select: none !important;
+  transition: background .12s, color .12s, border-color .12s !important;
+  font-family: inherit !important; line-height: 1.3 !important;
+}
+.fx43q-part:hover { background: var(--fx-panel) !important; color: var(--fx-text) !important; }
+.fx43q-part.active {
+  background: rgba(118,185,0,0.10) !important;
+  color: var(--fx-accent) !important;
+  font-weight: 700 !important;
+}
+.fx43q-part-num {
+  font-family: ui-monospace, monospace !important;
+  font-size: 11px !important; color: var(--fx-muted) !important;
+}
+.fx43q-part.active .fx43q-part-num { color: var(--fx-accent) !important; }
+.fx43q-row-parts-empty {
+  color: var(--fx-muted) !important; font-size: 12.5px !important;
+  font-style: italic !important; padding-left: 4px !important;
+}
+
+.fx43q-extra {
+  display: inline-flex !important; align-items: center !important;
+  padding: 4px 10px !important;
+  border: none !important; border-radius: 5px !important;
+  background: transparent !important; color: var(--fx-muted) !important;
+  font-size: 12.5px !important; font-weight: 500 !important;
+  cursor: pointer !important; user-select: none !important;
+  transition: background .1s, color .1s !important;
+  font-family: inherit !important; line-height: 1.4 !important;
+}
+.fx43q-extra:hover { background: var(--fx-panel) !important; color: var(--fx-text) !important; }
+.fx43q-extra.active { color: var(--fx-accent) !important; font-weight: 700 !important; background: rgba(118,185,0,0.08) !important; }
+.fx43q-extra-sep {
+  color: #d0d7de !important; padding: 0 2px !important; user-select: none !important;
+  font-size: 12px !important;
+}
+
+.fx43q-controls {
+  display: flex !important; gap: 8px !important;
+  align-items: center !important; flex-wrap: wrap !important;
+  justify-content: space-between !important;
+  font-size: 11.5px !important;
+  margin: 0 0 8px !important;
+  padding: 0 2px !important;
+}
+.fx43q-currlabel { color: var(--fx-muted) !important; font-size: 11.5px !important; }
+.fx43q-currlabel strong { color: var(--fx-muted) !important; font-weight: 600 !important; }
+
+.fx43q-controls .fx43q-link {
+  display: inline-flex !important; align-items: center !important; gap: 3px !important;
+  padding: 2px 8px !important;
+  border: 1px solid var(--fx-line) !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  color: var(--fx-muted) !important;
+  text-decoration: none !important;
+  font-size: 11.5px !important; font-weight: 500 !important;
+  white-space: nowrap !important;
+  transition: background .1s, border-color .1s, color .1s !important;
+}
+.fx43q-controls .fx43q-link:hover { background: var(--fx-panel) !important; border-color: var(--fx-accent) !important; color: var(--fx-accent) !important; }
+
+.fx43q-frame-wrap {
+  position: relative !important;
+  border: 1px solid var(--fx-line) !important;
+  border-radius: 8px !important;
+  background: var(--fx-surface) !important;
+  overflow: hidden !important;
+}
+.fx43q-frame {
+  width: 100% !important;
+  height: 3000px !important;
+  border: 0 !important;
+  display: block !important;
+  background: transparent !important;
+}
+:root[data-theme="dark"] body { background:#0d0d0d !important; }
+:root[data-theme="dark"] .fx43q-nav {
+  --fx-surface:#161616; --fx-panel:#222222; --fx-text:#f2f2f2; --fx-muted:#c4c4c4;
+  --fx-accent:#aee23a; --fx-accent-soft:#243314; --fx-line:#3a3a3a; --fx-on-accent:#0a0a0a;
+}
+</style>
+<br>
+<div class="fx43q-nav">
+  <h1 class="fx43q-title dynamic-course-title">Securing Agents with OpenShell and NemoClaw</h1>
+  <div class="fx43q-sub">Four modules · pick one and run cells in the iframe.</div>
+
+  <div class="fx43q-card">
+    <div class="fx43q-journey">
+      <div class="fx43q-row-modules" id="fx43q-row-modules"></div>
+      <div class="fx43q-row-parts" id="fx43q-row-parts"></div>
+      <div class="fx43q-row-extras" id="fx43q-row-extras"></div>
+    </div>
+
+    <div class="fx43q-controls">
+      <div class="fx43q-currlabel">
+        Now showing: <strong id="fx43q-curr-title">Start here</strong>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <a id="fx43q-open-link" class="fx43q-link" target="_blank" rel="noopener"
+           href="https://dli-lms.s3.us-east-1.amazonaws.com/assets/s-fx-43-v1/nemoclaw/index.html">
+          Open in new tab ↗
+        </a>
+        <a class="fx43q-link" target="_blank" rel="noopener"
+           href="https://dli-lms.s3.us-east-1.amazonaws.com/assets/s-fx-43-v1/nemoclaw/current-html-pages.zip"
+           download="current-html-pages.zip">
+          Download all pages
+        </a>
+      </div>
+    </div>
+
+    <div class="fx43q-frame-wrap">
+      <iframe id="fx43q-frame" class="fx43q-frame" title="Course module"
+        src="https://dli-lms.s3.us-east-1.amazonaws.com/assets/s-fx-43-v1/nemoclaw/index.html"
+        scrolling="no" frameborder="0"
+        loading="lazy" referrerpolicy="no-referrer"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var BASE = "https://dli-lms.s3.us-east-1.amazonaws.com/assets/s-fx-43-v1/nemoclaw/";
+
+  // Estimated per-page heights captured by scripts/measure_heights.mjs.
+  // PostMessage refines each height on first paint; re-measure after bundle shape changes.
+  var HEIGHTS = {
+    "index.html":             3100,
+    "01a-loop.html":          7800,
+    "01b-react.html":         8100,
+    "01c-tools.html":        15200,
+    "02a-routing.html":      19200,
+    "02b-rag.html":          20500,
+    "02c-deep.html":         14500,
+    "03a-kickstart.html":     6500,
+    "03b-openclaw.html":      6800,
+    "03c-always-on.html":     6300,
+    "04a-safety.html":        7800,
+    "04b-modern-clis.html":   6900,
+    "04c-going-further.html": 6300,
+  };
+  var HEIGHT_FALLBACK = 4000;
+
+  var SECTIONS = [
+    { id: "M1", num: "1", short: "Loop",          parts: [
+      { id: "1a", title: "The Agent",          file: "01a-loop.html"      },
+      { id: "1b", title: "The ReAct Loop",     file: "01b-react.html"     },
+      { id: "1c", title: "Tools at Scale",     file: "01c-tools.html"     } ] },
+    { id: "M2", num: "2", short: "Advanced Patterns", parts: [
+      { id: "2a", title: "Workflows",          file: "02a-routing.html"   },
+      { id: "2b", title: "The Index Agent",    file: "02b-rag.html"       },
+      { id: "2c", title: "Deep Agents",        file: "02c-deep.html"      } ] },
+    { id: "M3", num: "3", short: "NemoClaw Setup", parts: [
+      { id: "3a", title: "Connect NemoClaw",   file: "03a-kickstart.html" },
+      { id: "3b", title: "OpenClaw",           file: "03b-openclaw.html"  },
+      { id: "3c", title: "Always-On",          file: "03c-always-on.html" } ] },
+    { id: "M4", num: "4", short: "Safety + Wild", parts: [
+      { id: "4a", title: "OpenShell",          file: "04a-safety.html"        },
+      { id: "4b", title: "Modern CLIs",        file: "04b-modern-clis.html"   },
+      { id: "4c", title: "Going Further",      file: "04c-going-further.html" } ] },
+  ];
+
+  var EXTRAS = [
+    { id: "start", title: "Start",         file: "index.html"   },
+  ];
+
+  var frame      = document.getElementById("fx43q-frame");
+  var openLink   = document.getElementById("fx43q-open-link");
+  var currTitle  = document.getElementById("fx43q-curr-title");
+  var rowModules = document.getElementById("fx43q-row-modules");
+  var rowParts   = document.getElementById("fx43q-row-parts");
+  var rowExtras  = document.getElementById("fx43q-row-extras");
+
+  var current = null;
+
+  function findByHash(h) {
+    if (!h) return null;
+    h = h.replace(/^#/, "").toLowerCase();
+    for (var i = 0; i < EXTRAS.length; i++) {
+      if (EXTRAS[i].id === h) {
+        var e = EXTRAS[i];
+        return { kind: "extra", id: e.id, file: e.file, title: e.title };
+      }
+    }
+    for (var m = 0; m < SECTIONS.length; m++) {
+      for (var p = 0; p < SECTIONS[m].parts.length; p++) {
+        if (SECTIONS[m].parts[p].id === h) {
+          var pt = SECTIONS[m].parts[p];
+          return { kind: "part", module: SECTIONS[m].id, id: pt.id, file: pt.file, title: pt.title };
+        }
+      }
+    }
+    return null;
+  }
+
+  function findByFile(file) {
+    if (!file) return null;
+    for (var i = 0; i < EXTRAS.length; i++) {
+      if (EXTRAS[i].file === file) {
+        var e = EXTRAS[i];
+        return { kind: "extra", id: e.id, file: e.file, title: e.title };
+      }
+    }
+    for (var m = 0; m < SECTIONS.length; m++) {
+      for (var p = 0; p < SECTIONS[m].parts.length; p++) {
+        if (SECTIONS[m].parts[p].file === file) {
+          var pt = SECTIONS[m].parts[p];
+          return { kind: "part", module: SECTIONS[m].id, id: pt.id, file: pt.file, title: pt.title };
+        }
+      }
+    }
+    return null;
+  }
+
+  function activeModule() {
+    return current && current.kind === "part" ? current.module : null;
+  }
+
+  function setIframeHeight(file) {
+    var h = HEIGHTS[file] || HEIGHT_FALLBACK;
+    frame.style.setProperty("height", h + "px", "important");
+    lastReportedH = h;
+  }
+
+  function scrollToFrameTop() {
+    var card = document.querySelector(".fx43q-card");
+    if (!card) return;
+    var rect = card.getBoundingClientRect();
+    var y = rect.top + window.scrollY - 24;
+    try { window.scrollTo({ top: Math.max(0, y), behavior: "smooth" }); }
+    catch (_) { window.scrollTo(0, Math.max(0, y)); }
+  }
+
+  function setActive(target, opts) {
+    opts = opts || {};
+    var srcChanged = !current || current.file !== target.file;
+    current = target;
+    var url = BASE + target.file;
+    if (frame.src !== url) {
+      setIframeHeight(target.file);
+      frame.src = url;
+    }
+    openLink.href = url;
+    currTitle.textContent = target.title;
+    if (!opts.skipHash) {
+      try { history.replaceState(null, "", "#" + target.id); } catch (_) {
+        location.hash = target.id;
+      }
+    }
+    renderChips();
+    if (srcChanged && !opts.skipScroll) scrollToFrameTop();
+  }
+
+  function makeModuleChip(sec, active) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "fx43q-mod" + (active ? " active" : "");
+    var num = document.createElement("span");
+    num.className = "fx43q-mod-num";
+    num.textContent = "M" + sec.num;
+    var lbl = document.createElement("span");
+    lbl.className = "fx43q-mod-label";
+    lbl.textContent = sec.short;
+    b.appendChild(num);
+    b.appendChild(lbl);
+    b.addEventListener("click", function () {
+      var p0 = sec.parts[0];
+      setActive({ kind: "part", module: sec.id, id: p0.id, file: p0.file, title: p0.title });
+    });
+    return b;
+  }
+
+  function makePartChip(sec, pt, active) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "fx43q-part" + (active ? " active" : "");
+    var num = document.createElement("span");
+    num.className = "fx43q-part-num";
+    num.textContent = pt.id;
+    var lbl = document.createElement("span");
+    lbl.textContent = pt.title;
+    b.appendChild(num);
+    b.appendChild(lbl);
+    b.addEventListener("click", function () {
+      setActive({ kind: "part", module: sec.id, id: pt.id, file: pt.file, title: pt.title });
+    });
+    return b;
+  }
+
+  function makeExtraChip(e, active) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "fx43q-extra" + (active ? " active" : "");
+    b.textContent = e.title;
+    b.addEventListener("click", function () {
+      setActive({ kind: "extra", id: e.id, file: e.file, title: e.title });
+    });
+    return b;
+  }
+
+  function renderChips() {
+    rowModules.innerHTML = "";
+    rowParts.innerHTML = "";
+    rowExtras.innerHTML = "";
+
+    var activeM = activeModule();
+    SECTIONS.forEach(function (sec) {
+      rowModules.appendChild(makeModuleChip(sec, sec.id === activeM));
+    });
+
+    if (activeM) {
+      var sec = SECTIONS.find(function (s) { return s.id === activeM; });
+      sec.parts.forEach(function (pt) {
+        rowParts.appendChild(makePartChip(
+          sec, pt,
+          current && current.kind === "part" && current.id === pt.id
+        ));
+      });
+    } else {
+      var hint = document.createElement("span");
+      hint.className = "fx43q-row-parts-empty";
+      hint.textContent = "Pick a module above to see its parts.";
+      rowParts.appendChild(hint);
+    }
+
+    EXTRAS.forEach(function (e, idx) {
+      if (idx > 0) {
+        var sep = document.createElement("span");
+        sep.className = "fx43q-extra-sep";
+        sep.textContent = "·";
+        rowExtras.appendChild(sep);
+      }
+      rowExtras.appendChild(makeExtraChip(
+        e, current && current.kind === "extra" && current.id === e.id
+      ));
+    });
+  }
+
+  var lastReportedH = 0;
+  window.addEventListener("message", function (ev) {
+    var data = ev.data;
+    if (!data) return;
+
+    if (data.type === "fx43-iframe-size") {
+      var h = Number(data.height) || 0;
+      if (h < 200) return;
+      if (h <= lastReportedH) return;
+      lastReportedH = h;
+      frame.style.setProperty("height", h + "px", "important");
+      return;
+    }
+
+    if (data.type === "fx43-navigate") {
+      var target = findByFile(data.file);
+      if (target) setActive(target);
+      return;
+    }
+  });
+
+  window.addEventListener("hashchange", function () {
+    var t = findByHash(location.hash);
+    if (t) setActive(t, { skipHash: true });
+  });
+
+  var initial = findByHash(location.hash)
+             || { kind: "extra", id: "start", file: "index.html", title: "Start" };
+  setActive(initial, { skipHash: !!location.hash, skipScroll: true });
+})();
+</script>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>scripts/materials reference material tooling</title>
+
+<script type="application/json" id="skill-meta">
+{
+  "schema": "dir-skill/1.0",
+  "node_type": "directory-explorer",
+  "title": "scripts/materials reference material tooling",
+  "source_dir": "scripts/materials/",
+  "summary": "Material vendoring and indexing tools for curated course references, glossary data, RAG indexes, and CLI readmes.",
+  "related": [
+    "scripts/materials/pull_materials.py",
+    "scripts/materials/vendor_glossary.py",
+    "scripts/materials/vendor_navigator.py",
+    "scripts/materials/build_rag_index.py",
+    "scripts/materials/build_cli_readmes.py",
+    "scripts/materials/requirements.lock"
+  ],
+  "explorer": "../../web/_skill_explorer.js"
+}
+</script>
+
+<script type="application/json" id="explorer-config">
+{
+  "title": "scripts/materials reference material tooling",
+  "summary": "Material vendoring and indexing tools for curated course references, glossary data, RAG indexes, and CLI readmes.",
+  "model": "nvidia/nemotron-3-nano-30b-a3b",
+  "ties": [
+    "build"
+  ],
+  "nav": {
+    "home": "../../web/index.html",
+    "up": {
+      "label": "scripts",
+      "href": "../SKILL.html"
+    }
+  },
+  "files": [
+    {
+      "path": "pull_materials.py",
+      "role": "material puller",
+      "desc": "Fetches and records curated web materials with provenance."
+    },
+    {
+      "path": "vendor_glossary.py",
+      "role": "glossary vendor",
+      "desc": "Vendors glossary source material into the course reference layer."
+    },
+    {
+      "path": "vendor_navigator.py",
+      "role": "navigator vendor",
+      "desc": "Vendors navigator material used by course pages."
+    },
+    {
+      "path": "build_rag_index.py",
+      "role": "RAG index builder",
+      "desc": "Builds the local reference index for retrieval examples."
+    },
+    {
+      "path": "build_cli_readmes.py",
+      "role": "CLI readme builder",
+      "desc": "Generates readable CLI reference material from source artifacts."
+    },
+    {
+      "path": "requirements.lock",
+      "role": "material tooling dependency lock",
+      "desc": "Exact Python 3.11 transitive closure for material refresh and drift-check tooling."
+    }
+  ]
+}
+</script>
+
+<style data-skill-static="1">
+.skill-static{padding:24px clamp(18px,4vw,44px);border-bottom:1px solid #2a2a2a;background:#0d0d0d;color:#f2f2f2;font:15px/1.55 system-ui,sans-serif}
+.skill-static a{color:#76b900}.skill-static h1{margin:.1em 0 .25em;color:#76b900;font-size:1.65rem}.skill-static h2{font-size:1.02rem;margin:1.2rem 0 .45rem}.skill-static p{max-width:76rem;color:#b0b0b0}.skill-list{display:grid;grid-template-columns:1fr;max-width:76rem;margin:.7rem 0}.skill-link{display:grid;grid-template-columns:minmax(180px,280px) 1fr;gap:12px;border-top:1px solid #2a2a2a;padding:9px 4px;text-decoration:none}.skill-link:last-child{border-bottom:1px solid #2a2a2a}.skill-link b{display:block;color:#aee23a;margin-bottom:4px}.skill-link code,.skill-cmd code{font-family:ui-monospace,Consolas,monospace}.skill-link span{color:#b0b0b0;font-size:.9rem}.skill-cmds{display:grid;gap:8px;margin:.7rem 0}.skill-cmd{display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:8px;align-items:center;border:1px solid #2a2a2a;border-radius:8px;background:#111;padding:9px 11px}.skill-cmd b{color:#aee23a}.skill-cmd code{display:block;overflow:auto;white-space:nowrap;color:#f2f2f2}.skill-note{border-left:3px solid #76b900;background:rgba(118,185,0,.08);padding:10px 13px;margin:.8rem 0;color:#ddd}.skill-nav{display:flex;gap:12px;flex-wrap:wrap;margin:.8rem 0}.skill-nav a{border:1px solid #2a2a2a;border-radius:999px;padding:5px 10px;text-decoration:none}.skill-nav a:hover{border-color:#76b900}@media(max-width:700px){.skill-cmd{grid-template-columns:1fr}.skill-static{padding:18px}.skill-link{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<section class="skill-static" aria-labelledby="skill-title">
+  <header data-skill-header="1">
+<nav class="skill-nav" aria-label="Skill navigation"><a href="../../web/index.html">Home</a><a href="../SKILL.html">scripts</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../SKILL.html">Repository map</a></nav>
+</header>
+  <h1 id="skill-title">scripts/materials reference material tooling</h1>
+  <p>Material vendoring and indexing tools for curated course references, glossary data, RAG indexes, and CLI readmes.</p>
+  <div class="skill-note">Every shared gate verifies committed snapshots, manifest metadata, character counts, and full SHA-256 values without network access. Live checks add bounded retries; only production-ref pushes may tolerate classified transient reachability.</div>
+  <h2>Executable checks</h2>
+  <div class="skill-cmds">
+    <div class="skill-cmd"><b>Offline provenance</b><code>python3 scripts/materials/pull_materials.py --verify-committed</code></div>
+    <div class="skill-cmd"><b>Strict live drift</b><code>python3 scripts/materials/pull_materials.py --check</code></div>
+    <div class="skill-cmd"><b>Retry and tamper fixtures</b><code>python3 scripts/materials/pull_materials.py --self-test</code></div>
+    <div class="skill-cmd"><b>Dependency lock</b><code>python3 scripts/security/audit_dependency_locks.py</code></div>
+    <div class="skill-cmd"><b>RAG index</b><code>python3 scripts/materials/build_rag_index.py --help</code></div>
+    <div class="skill-cmd"><b>CLI readmes</b><code>python3 scripts/materials/build_cli_readmes.py --help</code></div>
+  </div>
+  <h2>Linkage map</h2>
+  <div class="skill-list">
+    <a class="skill-link" href="pull_materials.py"><b>pull_materials.py</b><span>material puller. Fetches and records curated web materials with provenance.</span></a>
+    <a class="skill-link" href="vendor_glossary.py"><b>vendor_glossary.py</b><span>glossary vendor. Vendors glossary source material into the course reference layer.</span></a>
+    <a class="skill-link" href="vendor_navigator.py"><b>vendor_navigator.py</b><span>navigator vendor. Vendors navigator material used by course pages.</span></a>
+    <a class="skill-link" href="build_rag_index.py"><b>build_rag_index.py</b><span>RAG index builder. Builds the local reference index for retrieval examples.</span></a>
+    <a class="skill-link" href="build_cli_readmes.py"><b>build_cli_readmes.py</b><span>CLI readme builder. Generates readable CLI reference material from source artifacts.</span></a>
+  </div>
+  <h2>Interactive explorer</h2>
+  <p>The explorer below opens source files, tours important sections, and checks documented paths against the repository tree.</p>
+</section>
+<div id="explorer"></div>
+<noscript>
+  <section class="skill-static"><h2>JavaScript disabled</h2><p>The static command list and file links above remain usable. Enable JavaScript for source viewing and guided tours.</p></section>
+</noscript>
+<script src="../../web/_skill_explorer.js"></script>
+</body>
+</html>

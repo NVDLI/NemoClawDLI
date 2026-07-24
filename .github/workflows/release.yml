@@ -1,0 +1,337 @@
+# Validate an existing protected tag, assemble it without validation dependencies,
+# independently reproduce it, attest it, then prepare a protected draft release.
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing protected tag to package (for example v1.2.3)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Reject oversized release source before expensive analysis
+        run: python3 scripts/validation/pages_artifact_integrity.py --source-root .
+      - name: Verify external publication approval
+        run: python3 scripts/validation/contribution_safety_audit.py --require-publication-approved
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: "24"
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+      - name: Install the pinned host-browser API
+        working-directory: scripts/runtime
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile --ignore-scripts
+      - name: Verify browser publisher copies and sole LangChain exception
+        run: |
+          npm ci --prefix scripts/browser-vendor --ignore-scripts
+          python3 scripts/compliance/source_license_contract.py --verify-browser-upstream
+          node scripts/build/vendor_browser_dependencies.mjs
+          git diff --exit-code -- web/nemoclaw/vendor
+      - name: Verify protected release input
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          python3 -c 'import re,sys; tag=sys.argv[1]; ok=re.fullmatch(r"v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:[-+][0-9A-Za-z.-]+)?", tag); sys.exit(0 if ok else 1)' "$RELEASE_TAG" || { echo "refusing release: tag must match semantic vMAJOR.MINOR.PATCH" >&2; exit 1; }
+          git show-ref --verify --quiet "refs/tags/$RELEASE_TAG" || { echo "refusing release: tag does not exist" >&2; exit 1; }
+          test "$(git cat-file -t "refs/tags/$RELEASE_TAG")" = "tag" || { echo "refusing release: release tag must be annotated" >&2; exit 1; }
+          test "$GITHUB_REF" = "refs/tags/$RELEASE_TAG" || { echo "refusing release: dispatch the workflow from the exact release tag" >&2; exit 1; }
+          git fetch origin main --quiet
+          git merge-base --is-ancestor "$RELEASE_TAG^{commit}" origin/main || { echo "refusing release: tag is not contained in origin/main" >&2; exit 1; }
+          test "$(git rev-parse HEAD)" = "$(git rev-parse "$RELEASE_TAG^{commit}")" || { echo "refusing release: checkout SHA differs from tag" >&2; exit 1; }
+          test "$GITHUB_SHA" = "$(git rev-parse "$RELEASE_TAG^{commit}")" || { echo "refusing release: workflow source SHA differs from tag" >&2; exit 1; }
+          echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$RELEASE_TAG^{commit}")" >> "$GITHUB_ENV"
+      - name: Install public validation dependencies
+        run: "python3 -m pip install --require-hashes --no-deps --only-binary=:all: --retries 5 --timeout 30 --requirement scripts/materials/requirements.lock"
+      - name: Required live material provenance check
+        run: python3 scripts/materials/pull_materials.py --check --fetch-attempts 4 --retry-backoff 2 --host-delay 3
+      - name: Required release gate
+        run: |
+          python3 scripts/validation/release_gate.py --tier ship --jobs 4 --timing-report docs/validation/release-gate-timings.json
+          python3 scripts/compliance/sbom_evidence.py --check-external-links
+      - name: Scan pinned Python material tools and emit SBOM
+        run: |
+          set -euo pipefail
+          python3 -m venv .release-scan-venv
+          .release-scan-venv/bin/python -m pip install --require-hashes --no-deps --only-binary=:all: -q -r scripts/security/requirements-sca.lock
+          mkdir -p release-security
+          .release-scan-venv/bin/pip-audit -r scripts/materials/requirements.lock --strict --no-deps --disable-pip \
+            --format cyclonedx-json --output release-security/python-env.raw.cdx.json
+          .release-scan-venv/bin/python scripts/compliance/resolve_sbom_licenses.py \
+            --input release-security/python-env.raw.cdx.json \
+            --output release-security/python-env.cdx.json
+          .release-scan-venv/bin/python scripts/security/audit_sbom_policy.py \
+            --sbom release-security/python-env.cdx.json \
+            --report release-security/sbom-policy.json
+          .release-scan-venv/bin/python scripts/compliance/sbom_evidence.py \
+            --raw-sbom release-security/python-env.raw.cdx.json \
+            --raw-sbom-href "nemoclaw-${{ inputs.tag }}.python-env.raw.cdx.json" \
+            --sbom release-security/python-env.cdx.json \
+            --artifact-name "python-material-tools-$(git rev-parse HEAD)" \
+            --record-id python-material-tooling \
+            --description "Pinned Python tools used to verify course materials; not distributed to learners" \
+            --distribution not-distributed \
+            --category validation \
+            --source-commit "$(git rev-parse HEAD)" \
+            --ci-job validate-and-scan \
+            --pipeline-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --job-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --retention-days 30 \
+            --sbom-href "nemoclaw-${{ inputs.tag }}.python-env.cdx.json" \
+            --appendix-href "nemoclaw-${{ inputs.tag }}.python-license-appendix.md" \
+            --appendix-out release-security/python-license-appendix.md \
+            --manifest-out release-security/python-sbom-evidence.json
+      - name: Stage immutable validation inputs
+        run: |
+          mkdir -p release-inputs/validation
+          cp docs/validation/latest.json release-inputs/validation/latest.json
+          cp docs/validation/latest.md release-inputs/validation/latest.md
+          cp docs/validation/contribution-safety.json release-inputs/validation/contribution-safety.json
+          cp -R release-security release-inputs/release-security
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: release-inputs-${{ inputs.tag }}
+          path: release-inputs/
+          if-no-files-found: error
+          retention-days: 3
+
+  build-and-package:
+    needs: validate-and-scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-inputs-${{ inputs.tag }}
+          path: reviewed-release-inputs
+      - name: Restore immutable validation evidence
+        run: |
+          cp reviewed-release-inputs/validation/latest.json docs/validation/latest.json
+          cp reviewed-release-inputs/validation/latest.md docs/validation/latest.md
+          cp reviewed-release-inputs/validation/contribution-safety.json docs/validation/contribution-safety.json
+      - name: Verify exact tag and fix generated time
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/tags/$RELEASE_TAG"
+          test "$GITHUB_SHA" = "$(git rev-parse "$RELEASE_TAG^{commit}")"
+          echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$RELEASE_TAG^{commit}")" >> "$GITHUB_ENV"
+      - name: Assemble without installed validation dependencies
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          export BUILD_PAGES_LANGS=0
+          export BUILD_PAGES_PULL_MATERIALS=0
+          BUILD_PAGES_REUSE_VALIDATION=1 bash scripts/build/build_pages.sh public
+          mkdir -p release-assets release-evidence
+          python3 scripts/validation/pages_artifact_integrity.py \
+            --root public --expect-sha "$GITHUB_SHA" \
+            --write-manifest release-evidence/pages-sha256.txt
+          cp -R reviewed-release-inputs/release-security release-security
+          cp release-security/python-env.cdx.json "release-security/nemoclaw-$RELEASE_TAG.python-env.cdx.json"
+          cp release-security/python-env.raw.cdx.json "release-security/nemoclaw-$RELEASE_TAG.python-env.raw.cdx.json"
+          cp web/nemoclaw/vendor/browser-sbom.cdx.json "release-security/nemoclaw-$RELEASE_TAG.browser.cdx.json"
+          cp release-security/python-license-appendix.md "release-security/nemoclaw-$RELEASE_TAG.python-license-appendix.md"
+          cp release-security/python-sbom-evidence.json "release-security/nemoclaw-$RELEASE_TAG.python-sbom-evidence.json"
+          python3 scripts/compliance/sbom_evidence.py \
+            --compose-release-catalog \
+            --generated-manifest release-security/python-sbom-evidence.json \
+            --browser-href "nemoclaw-$RELEASE_TAG.browser.cdx.json" \
+            --release-catalog-out "release-security/nemoclaw-$RELEASE_TAG.sbom-evidence-catalog.json"
+          cp docs/validation/latest.json release-evidence/validation.json
+          cp docs/validation/latest.md release-evidence/validation.md
+          cp docs/validation/contribution-safety.json release-evidence/contribution-safety.json
+          cp release-security/pip-audit-local.json release-evidence/pip-audit-local.json
+          cp release-security/sbom-policy.json release-evidence/sbom-policy.json
+          python3 scripts/build/package_release.py \
+            --site-root public \
+            --out-dir release-assets \
+            --tag "$RELEASE_TAG" \
+            --commit "$(git rev-parse "$RELEASE_TAG^{commit}")" \
+            --tag-object "$(git rev-parse "refs/tags/$RELEASE_TAG")" \
+            --source-date-epoch "$SOURCE_DATE_EPOCH" \
+            --asset "release-security/nemoclaw-$RELEASE_TAG.python-env.cdx.json" \
+            --asset "release-security/nemoclaw-$RELEASE_TAG.python-env.raw.cdx.json" \
+            --asset "release-security/nemoclaw-$RELEASE_TAG.browser.cdx.json" \
+            --asset "release-security/nemoclaw-$RELEASE_TAG.python-license-appendix.md" \
+            --asset "release-security/nemoclaw-$RELEASE_TAG.python-sbom-evidence.json" \
+            --asset "release-security/nemoclaw-$RELEASE_TAG.sbom-evidence-catalog.json"
+          test -f release-assets/release-manifest.json
+          test -f release-assets/SHA256SUMS
+          (cd release-assets && sha256sum --check SHA256SUMS)
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: release-${{ inputs.tag }}
+          path: |
+            release-assets/
+            release-evidence/
+          if-no-files-found: error
+          retention-days: 30
+
+  rebuild-for-comparison:
+    needs: validate-and-scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-inputs-${{ inputs.tag }}
+          path: reviewed-release-inputs
+      - name: Independently rebuild the static tree
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/tags/$RELEASE_TAG"
+          test "$GITHUB_SHA" = "$(git rev-parse "$RELEASE_TAG^{commit}")"
+          cp reviewed-release-inputs/validation/latest.json docs/validation/latest.json
+          cp reviewed-release-inputs/validation/latest.md docs/validation/latest.md
+          cp reviewed-release-inputs/validation/contribution-safety.json docs/validation/contribution-safety.json
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$RELEASE_TAG^{commit}")"
+          BUILD_PAGES_LANGS=0 BUILD_PAGES_PULL_MATERIALS=0 BUILD_PAGES_REUSE_VALIDATION=1 \
+            bash scripts/build/build_pages.sh comparison-public
+          python3 scripts/validation/pages_artifact_integrity.py \
+            --root comparison-public --expect-sha "$GITHUB_SHA" \
+            --write-manifest comparison-pages-sha256.txt
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: release-comparison-${{ inputs.tag }}
+          path: comparison-pages-sha256.txt
+          if-no-files-found: error
+          retention-days: 3
+
+  attest-and-verify:
+    needs: [build-and-package, rebuild-for-comparison]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-${{ inputs.tag }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-comparison-${{ inputs.tag }}
+          path: reviewed-release-comparison
+      - name: Require independent byte-for-byte rebuild agreement
+        run: |
+          set -euo pipefail
+          (cd release-assets && sha256sum --check SHA256SUMS)
+          cmp release-evidence/pages-sha256.txt \
+            reviewed-release-comparison/comparison-pages-sha256.txt
+      - name: Attest every independently reproduced release asset
+        id: release-provenance
+        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
+        with:
+          subject-checksums: release-assets/SHA256SUMS
+      - name: Verify and retain release provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          SOURCE_COMMIT="$(python3 -c 'import json; print(json.load(open("release-assets/release-manifest.json"))["commit"])')"
+          while read -r _ FILE; do
+            gh attestation verify "release-assets/$FILE" \
+              --bundle "${{ steps.release-provenance.outputs.bundle-path }}" \
+              --repo "$GITHUB_REPOSITORY" \
+              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml" \
+              --source-digest "$SOURCE_COMMIT" --source-ref "refs/tags/$RELEASE_TAG" \
+              --deny-self-hosted-runners
+          done < release-assets/SHA256SUMS
+          cp "${{ steps.release-provenance.outputs.bundle-path }}" release-provenance.sigstore.json
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: release-provenance-${{ inputs.tag }}
+          path: release-provenance.sigstore.json
+          if-no-files-found: error
+          retention-days: 30
+
+  draft-release:
+    needs: attest-and-verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: github-release
+    permissions:
+      contents: write
+    concurrency:
+      group: github-release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-${{ inputs.tag }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-provenance-${{ inputs.tag }}
+          path: release-evidence
+      - name: Reverify downloaded release assets and provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          (cd release-assets && sha256sum --check SHA256SUMS)
+          SOURCE_COMMIT="$(python3 -c 'import json; print(json.load(open("release-assets/release-manifest.json"))["commit"])')"
+          while read -r _ FILE; do
+            gh attestation verify "release-assets/$FILE" \
+              --bundle release-evidence/release-provenance.sigstore.json \
+              --repo "$GITHUB_REPOSITORY" \
+              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml" \
+              --source-digest "$SOURCE_COMMIT" --source-ref "refs/tags/$RELEASE_TAG" \
+              --deny-self-hosted-runners
+          done < release-assets/SHA256SUMS
+      - name: Create or refresh draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            test "$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)" = "true" || { echo "refusing release: existing release is already published" >&2; exit 1; }
+            gh release upload "$RELEASE_TAG" release-assets/* --clobber
+          else
+            gh release create "$RELEASE_TAG" release-assets/* --draft --verify-tag --generate-notes --title "$RELEASE_TAG"
+          fi
+          echo "Draft prepared. Human release manager must review notes, evidence, manifest, SBOM, and checksums before immutable publication."

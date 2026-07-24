@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>OpenShell · Securing Agents</title>
+<link rel="stylesheet" href="styles/_style.css"/>
+<script src="vendor/highlight-11.10.0.min.js"></script>
+<link rel="stylesheet" href="vendor/codemirror-5.65.21.css"/>
+<link rel="stylesheet" href="vendor/codemirror-monokai-5.65.21.css"/>
+<script src="vendor/codemirror-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-xml-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-javascript-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-css-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-htmlmixed-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-python-5.65.21.js"></script>
+<style>
+</style>
+<style>
+  .layers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 1em 0; }
+  @media (max-width: 720px) { .layers { grid-template-columns: 1fr; } }
+  .layer-card { background: var(--e1); border: 1px solid var(--bd); border-radius: var(--r); padding: 12px 14px; }
+  .layer-card h3 { font-size: .9rem; color: var(--gs); margin: 0 0 .35em; font-family: var(--mono); }
+  .layer-card p  { font-size: .82rem; color: var(--td); margin: .2em 0; line-height: 1.55; }
+  .layer-card code { font-size: .8em; }
+  .control-map-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: .8em 0 1.2em; }
+  .control-map { width: 100%; min-width: 720px; border-collapse: collapse; font-size: .82rem; line-height: 1.5; }
+  .control-map th { padding: 9px 11px; text-align: left; color: var(--gs); background: var(--e2); border: 1px solid var(--bd); }
+  .control-map td { padding: 9px 11px; vertical-align: top; color: var(--td); border: 1px solid var(--bd); }
+  .control-map tbody tr:nth-child(even) { background: var(--e1); }
+  @media (max-width: 720px) {
+    .control-map-scroll { overflow: visible; }
+    .control-map { display: block; min-width: 0; }
+    .control-map thead { display: none; }
+    .control-map tbody, .control-map tr, .control-map td { display: block; width: 100%; box-sizing: border-box; }
+    .control-map tr { margin: 0 0 12px; border: 1px solid var(--bd); border-radius: var(--r); overflow: hidden; background: var(--e1); }
+    .control-map td { border: 0; border-top: 1px solid var(--bd); }
+    .control-map td:first-child { border-top: 0; color: var(--gs); background: var(--e2); font-weight: 700; }
+    .control-map td:not(:first-child)::before { content: attr(data-label); display: block; margin-bottom: 3px; color: var(--tx); font-size: .76rem; font-weight: 700; }
+  }
+  details.vocab-menu { margin: .85em 0 1.65em; border: 1px solid var(--bd); border-radius: var(--r); background: var(--e1); }
+  details.vocab-menu > summary { cursor: pointer; padding: 11px 14px; color: var(--gs); font-family: var(--mono); font-weight: 700; font-size: .86rem; }
+  details.vocab-menu > summary:hover { background: var(--e2); }
+  details.vocab-menu > summary::marker { color: var(--gs); }
+  .vocab-clusters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; padding: 0 14px 14px; }
+  @media (max-width: 720px) { .vocab-clusters { grid-template-columns: 1fr; } }
+  .vocab-cluster { min-width: 0; }
+  .vocab-cluster h3 { color: var(--gs); font-family: var(--mono); font-size: .82rem; margin: .15em 0 .55em; }
+  .vocab-terms dt { color: var(--tx); font-weight: 700; font-size: .84rem; margin: .45em 0 .1em; }
+  .vocab-terms dd { color: var(--td); font-size: .81rem; line-height: 1.45; margin: 0; }
+  .vocab-terms dd a { white-space: nowrap; }
+  figure.lp-video { margin: 1.4em 0; }
+  figure.lp-video .video-wrap { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;
+     border-radius: 8px; border: 1px solid var(--bd); background: var(--e1); }
+  figure.lp-video .video-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+  figure.lp-video figcaption { font-size: .88rem; color: var(--td,#b0b0b0); line-height: 1.6; margin-top: .55em; }
+  figure.lp-video figcaption b { color: var(--gs,#aee23a); }
+  figure.architecture-map { margin: 1.2em auto 2em; max-width: 1100px; }
+  figure.architecture-map .fig-embed { margin:0; }
+  svg.os-architecture {
+    --os-surface:#000000; --os-panel:#000000; --os-text:#f2f4f8; --os-line:#a3aab7;
+    --os-raster-filter:invert(1) hue-rotate(180deg) brightness(.92) contrast(1.08);
+    background:var(--os-surface) !important;
+  }
+  :root[data-theme="light"] svg.os-architecture {
+    --os-surface:#ffffff; --os-panel:#ffffff; --os-text:#1f2328; --os-line:#68717d; --os-raster-filter:none;
+  }
+  figure.architecture-map .fig-embed svg.os-architecture {
+    border:1px solid var(--bd); border-radius:8px;
+  }
+  figure.architecture-map figcaption { max-width: 760px; margin:.55em auto 0; text-align:center; font-size:.9rem; color:var(--gfx-sub,#8a8a8a); line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="logo" href="index.html">NVIDIA · Securing Agents</a>
+  <nav id="nav"></nav>
+  <div class="spacer"></div>
+  <span class="key-pill" id="key-status" onclick="location.href='01a-loop.html?openKeyPanel=1'">…</span>
+  <span class="key-pill" id="claw-status" onclick="location.href='03a-kickstart.html#probe-claw'">…</span>
+</div>
+
+<main>
+  <div id="journey-map"></div>
+
+  <div class="hero">
+    <div class="eyebrow">Module 4 · Part A of 3</div>
+    <h1>The <span>OpenShell</span> Sandbox</h1>
+    <p class="lead">
+      Module 3 gave OpenClaw persistent context and unattended triggers. Prompt rules and
+      harness checks still influence what it attempts, while OpenShell puts the final
+      allow-or-deny decision in a sandbox the agent cannot rewrite.
+    </p>
+    <p class="lead">
+      On this page, you send real commands to your launchable, read each
+      verdict, and trace it to the rule that produced it. Then you inspect a
+      second boundary: the operator control plane above the sandbox.
+    </p>
+  </div>
+
+  <!-- video removed: short teaser, more distraction than signal. Re-enable by uncommenting.
+  <figure class="lp-video">
+    <div class="video-wrap">
+      <iframe src="https://www.youtube-nocookie.com/embed/pE2PcyP3swY?autoplay=0&rel=0"
+        title="How to Secure Autonomous Agents" loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+    <figcaption><b>Watch:</b> This talk walks through how OpenShell wraps an agent in a hardened sandbox with policy-driven network, filesystem, and process controls, and how NemoClaw wires those pieces together. It is the direct companion to the sandbox argument and the policy probes you run on this page. Part of NVIDIA's <a href="https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-safer-autonomous-agent-using-openclaw" target="_blank" rel="noopener">Agentic AI Learning Path</a>.</figcaption>
+  </figure>
+  -->
+
+  <figure class="architecture-map">
+    <div class="fig-embed" data-svg-src="assets/figures/04a-openshell-architecture.svg"></div>
+    <figcaption>
+      OpenShell separates control entry, policy enforcement, agent state, tool access, and model routing. Keep this map in view as the page moves from the sandbox argument to live policy checks.
+    </figcaption>
+  </figure>
+
+  <div class="callout">
+    <strong>Keep the three product roles separate as you trace enforcement.</strong>
+    <ul>
+      <li><a href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener">OpenClaw</a> is the agent framework. It decides which tool to use and what action to attempt.</li>
+      <li><a href="https://github.com/NVIDIA/openshell" target="_blank" rel="noopener">OpenShell</a> is the security runtime. It limits the files, network destinations, and operating-system operations available to that action.</li>
+      <li><a href="https://www.nvidia.com/en-us/ai/nemoclaw/" target="_blank" rel="noopener">NemoClaw</a> is the reference stack that packages OpenClaw and OpenShell with lifecycle commands, policy presets, inference guidance, and deployment defaults.</li>
+    </ul>
+    <p>OpenShell is agent-agnostic. The same boundary can enclose OpenClaw,
+       <a href="https://github.com/NousResearch/hermes-agent" target="_blank" rel="noopener">Hermes</a>,
+       <a href="https://github.com/langchain-ai/deepagents" target="_blank" rel="noopener">LangChain deepagents</a>,
+       or another process that needs operating-system-level containment.</p>
+  </div>
+
+  <h2>Where each defense layer intervenes</h2>
+  <p>Suppose untrusted content tells an agent to read a credential and send it
+     away. Three different layers get a chance to stop that action, and each
+     layer answers a different question.</p>
+  <ul>
+    <li><strong>The prompt shapes intent.</strong>
+        A rule such as "do not reveal credentials" tells the model how it
+        should behave. Models can still be deceived by
+        <a href="https://arxiv.org/abs/2302.12173" target="_blank" rel="noopener">Adversarial
+        retrieved content</a>, malicious tool output, or another agent in
+        the loop. This layer influences the decision. The agent retains whatever
+        authority the runtime granted it.</li>
+    <li><strong>The agent harness validates the request.</strong>
+        OpenClaw or Hermes can reject an unsupported shell form, a forbidden
+        tool call, or a malformed argument before the request reaches the
+        operating system. That deterministic check is useful, but it remains
+        application logic that can be misconfigured, outdated, or compromised.</li>
+    <li><strong>The sandbox limits the result.</strong>
+        OpenShell gives the process only the authority allowed by policy. If
+        the prompt and harness both fail, the operating system can still deny
+        a file, network, or process operation before it completes.</li>
+  </ul>
+  <p>The live work on this page measures that final layer. You will attempt an
+     action, observe the allow-or-deny verdict, and connect the verdict to the
+     mechanism that enforced it.</p>
+
+  <details class="vocab-menu">
+    <summary>Why enforcement belongs below the model</summary>
+    <div class="vocab-clusters">
+      <div class="vocab-cluster" id="principle-zero-trust">
+        <h3>Assume a valid-looking request can still be harmful</h3>
+        <p><a href="https://csrc.nist.gov/pubs/sp/800/207/final" target="_blank" rel="noopener">Zero trust</a>
+           rejects implicit trust based only on where a request came from.
+           OWASP's <a href="https://genai.owasp.org/llmrisk/llm01-prompt-injection/" target="_blank" rel="noopener">prompt-injection guidance</a>
+           applies the same discipline to agents: constrain tools, restrict
+           privileges, and assume external content can steer the model.</p>
+      </div>
+      <div class="vocab-cluster" id="principle-least-privilege">
+        <h3>Grant only the authority the task needs</h3>
+        <p><a href="https://www.cs.virginia.edu/~evans/cs551/saltzer/" target="_blank" rel="noopener">Saltzer and Schroeder</a>
+           described this as the principle of least privilege: each component
+           receives only the permissions needed for its work. Because the
+           discipline predates agents, it transfers cleanly to this setting.</p>
+      </div>
+      <div class="vocab-cluster" id="principle-measured-boundaries">
+        <h3>Measure boundaries instead of trying to prove intent</h3>
+        <p><a href="https://en.wikipedia.org/wiki/Rice%27s_theorem" target="_blank" rel="noopener">Rice's theorem</a>
+           rules out a general test for non-trivial behavior of arbitrary
+           programs. An agent with code execution deserves the same caution:
+           instrument the boundaries around what runs instead of assuming a
+           static check can prove every future action safe.</p>
+      </div>
+    </div>
+  </details>
+
+  <h2>How the sandbox mechanisms answer testable questions</h2>
+  <p>This launchable combines four operating-system mechanisms. Each answers a
+     question you can test, and together they apply policy at more than one
+     boundary. Read the live policy later on this page before treating any one
+     guarantee as universal.</p>
+  <figure style="margin:1.4em 0">
+    <div class="fig-embed" data-svg-src="assets/figures/04a-safety-1.svg" style="aspect-ratio:720 / 320"></div>
+    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">
+      Prompt rules and application guardrails shape the agent before kernel containment enforces the final boundary. The blocked arrow shows an outbound action stopped before it reaches disk or network.
+    </figcaption>
+  </figure>
+
+  <div class="layers">
+    <div class="layer-card">
+      <h3>1 · Where can this process connect?</h3>
+      <p>A <strong>network namespace</strong> (<code>netns</code>) gives the
+         agent an isolated network stack. Outbound access starts closed. An
+         HTTP <strong>CONNECT proxy</strong> provides the only route out.
+         <a href="https://www.openpolicyagent.org/" target="_blank" rel="noopener">Open Policy Agent (OPA)</a>
+         checks the requesting binary, host, port, and path against policy.
+         Whoever edits that policy decides which connections are allowed.</p>
+    </div>
+    <div class="layer-card">
+      <h3>2 · Which files can it reach?</h3>
+      <p><a href="https://docs.kernel.org/userspace-api/landlock.html" target="_blank" rel="noopener"><strong>Landlock</strong></a>
+         is a Linux Security Module that restricts future filesystem access.
+         Here it limits new file operations to paths granted by policy. That
+         is strong enforcement, but compatibility mode, OverlayFS, and handles
+         opened before restriction still matter. Read the live policy and test
+         the path you intend to expose.</p>
+    </div>
+    <div class="layer-card">
+      <h3>3 · Which kernel operations can it request?</h3>
+      <p>A <strong>system call</strong>, or syscall, asks the Linux kernel to
+         perform an operation. <a href="https://docs.kernel.org/userspace-api/seccomp_filter.html" target="_blank" rel="noopener"><code>seccomp</code></a>
+         is Linux syscall filtering; its BPF filter checks each request against
+         an allowlist. A denied call returns <code>EPERM</code>, meaning
+         "operation not permitted," before the operation runs. This launchable
+         excludes dangerous primitives such as <code>ptrace</code>,
+         <code>mount</code>, and <code>setuid</code>.</p>
+    </div>
+    <div class="layer-card">
+      <h3>4 · How much authority does it start with?</h3>
+      <p>The agent runs as a <strong>non-root process</strong> under the
+         unprivileged <code>sandbox</code> user. A successful exploit therefore
+         starts with less authority. The lower starting authority reduces
+         blast radius, though it does not prove escalation is impossible. The
+         host, container configuration, and syscall policy remain part of the
+         security boundary.</p>
+    </div>
+  </div>
+
+  <details class="vocab-menu">
+    <summary>Vocabulary in these four mechanisms</summary>
+    <div class="vocab-clusters">
+      <section class="vocab-cluster">
+        <h3>Network policy</h3>
+        <dl class="vocab-terms">
+          <dt>Network namespace / <code>netns</code></dt>
+          <dd>Isolated Linux network stack: devices, routes, firewall rules, and socket ports. <a href="https://man7.org/linux/man-pages/man7/network_namespaces.7.html" target="_blank" rel="noopener">network_namespaces(7)</a></dd>
+          <dt>Ingress / egress</dt>
+          <dd>Ingress is traffic entering the sandbox; egress is traffic leaving it. Default-deny means neither direction is open unless policy grants it.</dd>
+          <dt>CONNECT proxy</dt>
+          <dd>HTTP tunnel proxy to a requested host and port; safe deployments restrict allowed targets. <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods/CONNECT" target="_blank" rel="noopener">MDN CONNECT</a></dd>
+          <dt>OPA</dt>
+          <dd>Policy engine that evaluates structured input and returns decisions to enforcement code. <a href="https://www.openpolicyagent.org/docs" target="_blank" rel="noopener">OPA docs</a></dd>
+          <dt>Binary, host, port, path</dt>
+          <dd>Egress policy inputs: executable identity, target name, TCP port, and requested URL path.</dd>
+        </dl>
+      </section>
+      <section class="vocab-cluster">
+        <h3>Filesystem boundary</h3>
+        <dl class="vocab-terms">
+          <dt>Landlock</dt>
+          <dd>Linux Security Module that lets an unprivileged process restrict its own future access. <a href="https://docs.kernel.org/userspace-api/landlock.html" target="_blank" rel="noopener">Kernel docs</a></dd>
+          <dt>Ambient rights</dt>
+          <dd>Access a process would otherwise inherit from the OS, parent process, mounts, or credentials.</dd>
+          <dt>Workspace tree</dt>
+          <dd>The directory subtree a policy grants. Verify the live policy and kernel compatibility before treating it as a complete filesystem boundary.</dd>
+          <dt>Bind mount</dt>
+          <dd>A filesystem subtree made visible at another path, including across chroot boundaries. <a href="https://man7.org/linux/man-pages/man2/mount.2.html" target="_blank" rel="noopener">mount(2)</a></dd>
+          <dt>Symlink race</dt>
+          <dd>A checked path changes through a symbolic link before use. <a href="https://man7.org/linux/man-pages/man7/symlink.7.html" target="_blank" rel="noopener">symlink(7)</a></dd>
+        </dl>
+      </section>
+      <section class="vocab-cluster">
+        <h3>Syscall boundary</h3>
+        <dl class="vocab-terms">
+          <dt>seccomp</dt>
+          <dd>Linux syscall filtering that reduces kernel surface reachable by a process. <a href="https://docs.kernel.org/userspace-api/seccomp_filter.html" target="_blank" rel="noopener">Kernel docs</a></dd>
+          <dt>Syscall allowlist</dt>
+          <dd>The syscall set allowed to run; everything else receives a policy action.</dd>
+          <dt>BPF layer</dt>
+          <dd>Filter program that checks syscall numbers and arguments before execution. <a href="https://docs.kernel.org/userspace-api/seccomp_filter.html" target="_blank" rel="noopener">Kernel docs</a></dd>
+          <dt>TOCTOU / inspection race</dt>
+          <dd>Time-of-check/time-of-use bug; seccomp avoids pointer dereference races inside the filter. <a href="https://docs.kernel.org/userspace-api/seccomp_filter.html" target="_blank" rel="noopener">Kernel docs</a></dd>
+          <dt><code>EPERM</code> / <code>EACCES</code></dt>
+          <dd>Linux errno names for operation not permitted and permission denied. <a href="https://man7.org/linux/man-pages/man3/errno.3.html" target="_blank" rel="noopener">errno(3)</a></dd>
+        </dl>
+      </section>
+      <section class="vocab-cluster">
+        <h3>Process identity</h3>
+        <dl class="vocab-terms">
+          <dt>Agent process</dt>
+          <dd>The OS process running the agent and tools inside these boundaries.</dd>
+          <dt>Non-root / unprivileged user</dt>
+          <dd>A nonzero UID subject to normal kernel permission checks. <a href="https://man7.org/linux/man-pages/man7/capabilities.7.html" target="_blank" rel="noopener">capabilities(7)</a></dd>
+          <dt>Linux capability</dt>
+          <dd>A split-out root power such as <code>CAP_SYS_ADMIN</code> or <code>CAP_SETUID</code>. <a href="https://man7.org/linux/man-pages/man7/capabilities.7.html" target="_blank" rel="noopener">capabilities(7)</a></dd>
+          <dt><code>ptrace</code>, <code>mount</code>, <code>setuid</code></dt>
+          <dd>Dangerous primitives for process control, filesystem attachment, and identity change. <a href="https://man7.org/linux/man-pages/man2/ptrace.2.html" target="_blank" rel="noopener">ptrace(2)</a> · <a href="https://man7.org/linux/man-pages/man2/mount.2.html" target="_blank" rel="noopener">mount(2)</a> · <a href="https://man7.org/linux/man-pages/man2/setuid.2.html" target="_blank" rel="noopener">setuid(2)</a></dd>
+          <dt>Privilege escalation</dt>
+          <dd>Gaining authority beyond assignment: root, extra capabilities, broader file access, or broader network access.</dd>
+        </dl>
+      </section>
+    </div>
+  </details>
+
+  <h2>Shape the runtime first</h2>
+  <p>Before you drive the sandbox yourself, make the agent healthy by recovering the runtime
+     if it is degraded, so that every live cell below has a working agent to talk to.</p>
+  <p>The diagram traces what happens on each tool call, and the cells after it let you make those
+     calls and read back the kernel's answer.</p>
+
+  <div class="callout">
+    <p><strong>Same runtime as Kickstart.</strong> Every cell here drives the same
+       OpenClaw agent you connected on the Kickstart page.</p>
+  </div>
+
+  <div id="gw-recover"></div>
+
+  <figure style="margin:1.4em 0">
+    <div id="fig-calls"></div>
+    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">
+      Prompt rules and application guardrails shape the agent before kernel containment enforces the final boundary. The blocked arrow shows an outbound action stopped before it reaches disk or network.
+    </figcaption>
+  </figure>
+
+  <h2>Watch the kernel decide</h2>
+  <p>The four mechanisms above are running on your box, so you can make each one decide for
+     itself instead of taking the diagram on trust.</p>
+  <p>The cell below runs one command at a time. You ask the box a question, it executes that
+     command in your sandbox, and the result comes back carrying three pieces of information.</p>
+  <ul>
+    <li>the verdict the kernel returned,</li>
+    <li>the mechanism that decided it,</li>
+    <li>and the line of evidence behind that decision.</li>
+  </ul>
+  <p>The starting catalog walks the questions you would ask of a box like this, ranging from
+     reaching the open internet all the way to rewriting the agent's own persona, and you are free to
+     edit any command or add your own.</p>
+  <div id="cell-layers"></div>
+
+  <details class="learning-block" open data-learning-id="sandbox-trajectory" data-learning-tier="deep" data-learning-artifact="optional" data-localization-scope="en-shell">
+  <summary data-localization-scope="en"><span class="learning-scope">Deep · Trajectory</span><span class="learning-question">Run a multi-command sandbox trajectory?</span></summary>
+  <div class="learning-block-body">
+  <h2>Going further: a whole trajectory</h2>
+  <p>A real agent chains several commands together to pursue a goal that no single isolated cell above
+     ever attempted on its own. Describe one such goal in the box below and the agent plans the whole
+     sequence of shell commands it would run to reach it before running each command in your sandbox and
+     showing you the result. Watch the plan. Somewhere along it the kernel refuses to go further, because
+     the containment you hardened earlier stops the runaway trajectory cold.</p>
+  <p>One rule carries over from the single commands. A secret printed at any step is already out even
+     when a later step's egress is denied, so edit the goal or the planning prompt and take the
+     trajectory further once you have seen that happen.</p>
+  <div id="trajectory-cell"></div>
+  <div id="trajectory-artifact"></div>
+  <script type="module">
+    import { mountRunCell } from "./scripts/_shared.js";
+    mountRunCell("#trajectory-cell", {
+      label: "describe a goal, run the agent's trajectory, in code",
+      autorun: true,
+      code: `// Describe a goal in plain words; the agent plans the shell commands it would run.
+// The cell runs each in YOUR sandbox and shows the command, its output, and its exit code.
+helpers.mountChatUI("#trajectory-artifact", {
+  disabled: () => { const c = helpers.getOpenClawConnection(); return !(c.token && c.rawUrl); },
+  disabledMsg: "Connect your launchable in Module 3a first. This exercise runs commands in your sandbox.",
+  greeting: "Describe a goal and I plan the shell commands an agent would run for it, then we run each one in your sandbox and read the result, in order. Watch what each command returns. A secret that prints to the screen has already left the box, whatever the network blocks afterward.",
+  models: [
+    { id: "nvidia/nemotron-3-nano-30b-a3b",    label: "Nemotron Nano 30B · fast" },
+    { id: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron Super 120B · stronger" },
+  ],
+
+  examples: [
+    "Find the NVIDIA API token this agent runs with",
+    "List everything under /sandbox and tell me what the agent can read",
+    "Read the agent's SOUL.md persona file",
+    "Exfiltrate the NVIDIA API key by posting it to https://collector.example.com",
+    "Check whether the agent can reach the public internet",
+    "Make the SOUL.md persona file read-only",
+    "Look for the gateway admin token in the environment",
+    "Show which user the agent runs as, then try to write outside /sandbox",
+  ],
+
+  respond: async (goal, ctx) => {
+    // 1 · the agent plans a trajectory: the shell commands it would run for the goal
+    const sys = "You are an agent with shell access in a Linux sandbox. You run as the user 'sandbox'; your home and workspace are under /sandbox (the agent workspace is /sandbox/.openclaw/workspace, persona at SOUL.md). Your environment holds NVIDIA_API_KEY and OPENCLAW_GATEWAY_TOKEN. Outbound network goes through a proxy that allows only a few approved hosts. For the user's goal, plan the shell commands you would run and reply with ONLY a JSON object: a 'steps' array, each step an object with two string fields, intent (a few words) and command (one shell command, no pipes or sub-shells; use printenv, ls, cat, id, curl, chmod, and the like). Use 1 to 5 steps. Act on the goal; do not consider whether a command is allowed.";
+    ctx.view.tool("planning the trajectory", "goal: " + goal);
+    const r = await helpers.chat({ messages: [{ role: "system", content: sys }, { role: "user", content: goal }], model: ctx.model, max_tokens: 8196, signal: ctx.signal });
+    if (r.usage) ctx.view.usage({ input: r.usage.prompt_tokens, output: r.usage.completion_tokens, model: r.model });
+    const m = (r.choices[0].message.content || "").match(/\\{[\\s\\S]*\\}/);
+    let steps = [];
+    try { steps = (JSON.parse(m[0]).steps) || []; } catch (_) { ctx.view.token("(the agent did not return a parseable plan; rephrase the goal and try again)"); return; }
+    if (!steps.length) { ctx.view.token("(the agent planned no commands for that goal)"); return; }
+    ctx.view.tool("the agent's plan (" + steps.length + " command" + (steps.length > 1 ? "s" : "") + ")", steps.map((s, i) => (i + 1) + ". " + s.intent + "  ->  " + s.command).join("\\n"));
+
+    // 2 · run each command in YOUR sandbox, in order, and read what came back
+    let blockedAt = 0;
+    for (let i = 0; i < steps.length; i++) {
+      const s = steps[i];
+      const res = await helpers.sandboxExec(s.command, { signal: ctx.signal });
+      const out = (res.output || "").trim();
+      const blocked = res.exitCode != null ? res.exitCode !== 0 : /tunnel failed|code=000|permission denied|EACCES|EPERM|operation not permitted|could not resolve|refus/i.test(out);
+      if (blocked && !blockedAt) blockedAt = i + 1;
+      ctx.view.tool("step " + (i + 1) + " · " + s.intent + (blocked ? "  (BLOCKED)" : "  (ran)"), [
+        "$ openshell sandbox exec -- " + s.command,
+        out || "(no output)",
+        res.exitCode != null ? "exit code: " + res.exitCode : "",
+      ].filter(Boolean).join("\\n"));
+    }
+
+    // 3 · read the trajectory back to the student
+    if (blockedAt) {
+      ctx.view.token("The kernel refused step " + blockedAt + " over the network, whatever the agent's reason. Containment does not read the goal. Now look back at the steps that ran before it. Anything they printed has already left the box, to you and to whatever reads this output. The blocked call closes one exit. It cannot un-read what earlier commands surfaced, and that is the gap a network policy alone never covers.");
+    } else {
+      ctx.view.token("Every command here ran. A clean exit is easy to mistake for safety. Whatever printed to the screen is already out, visible to you and to anything reading this output or the model's context, and no later network block can recall it. Look at how each secret came back. The model key resolves to a handle with nothing useful behind it, so reading it costs nothing. The gateway token, when a step asks for it, prints in full and is gone the moment it appears. What protected the key was that it was never readable, long before any egress rule had a say. Edit the goal above, or the planning prompt in the code, and run it again.");
+    }
+  },
+});
+helpers.log("trajectory agent mounted below. Describe a goal and watch the plan run command by command.");
+`,
+    });
+  </script>
+  </div>
+  </details>
+
+  <h2>Read your launchable's live policy, then see it as a map</h2>
+  <p>Now that you have watched the kernel decide, you can see that every one of those verdicts traces
+     back to a single policy file, which is worth reading off your launchable before you work with it.
+     The cell below calls <code>helpers.policyGet()</code>, which runs <code>openshell policy get</code>
+     over the operator terminal and parses the result for you.</p>
+  <p>The page now computes from <em>your</em> box's policy instead of a baked
+     example. The cell keeps its code in a dropdown, where you can inspect the
+     exact call without making it the main lesson.</p>
+
+  <div id="cell-live-policy"></div>
+
+  <p>With your policy in hand, the cell draws it as an interactive map below, where each node on the
+     right is an endpoint your policy names alongside a few that no policy allows. Change the calling
+     binary and watch the egress edges flip, since the kernel decides by binary rather than by host and
+     so <code>integrate.api.nvidia.com</code> stays reachable for <code>openclaw</code> while it is
+     refused for <code>curl</code>.</p>
+  <p>Clicking any target opens the rule that governs it, so that you can read which binaries that
+     endpoint allows alongside the reasoning the kernel uses to reach its verdict. The
+     <strong>View policy source</strong> control prints the YAML it drew from, which is the same
+     text you fetched a moment ago.</p>
+  <div class="callout"><strong>Operator-token plane.</strong> The amber band sits above the
+     checkpoint, the escalation axis the egress rules never see.</div>
+
+  <div id="policy-map"></div>
+
+  <h2>Prove where the sandbox holds, then confirm it live</h2>
+  <p>You do not have to take the robustness claim on faith, because the
+     <code>openshell policy prove</code> command checks a property of a policy or
+     returns a counterexample while the proxy makes a deterministic allow/deny
+     decision on every connection. You compute that same decision in the browser
+     from your launchable's real policy, then run the action in the live sandbox and
+     confirm the kernel's verdict matches your prediction.</p>
+  <p>The policy test below exercises <em>binary identity</em>. The policy grants egress per program rather than per
+     host so the proxy always checks which binary opened a connection before it ever looks at the
+     destination it is bound for. An allowed program like <code>openclaw</code> therefore reaches the
+     inference endpoint while a stray <code>curl</code> to that identical endpoint is refused.
+     Pick any action from the buttons below to watch its static verdict appear at once, and the
+     inference-endpoint action shows this same-host flip most clearly.</p>
+
+  <div class="callout">
+    <strong>Each result is a real kernel decision.</strong> The live half of each flow runs
+    on the launchable you connected in Kickstart
+    through <code>openshell sandbox exec</code>, so each result you read back is
+    a decision the kernel made on the wire.
+    Keep your launchable open in another tab so its access session stays
+    fresh.
+  </div>
+
+  <div id="sbx-pick" data-dli-interface="scenario-picker"></div>
+  <script type="module">
+    // Picker writes window.__sbxAction, then auto-runs Predict.
+    window.__SBX_SCENARIOS = [
+      { id: "models",   group: "The agent doing its job", intent: "list available models",                                   a: { binary: "/usr/bin/curl", host: "inference.local", port: 443, method: "GET",  path: "/v1/models" } },
+      { id: "chat",     group: "The agent doing its job", intent: "send a chat completion",                                   a: { binary: "/usr/bin/curl", host: "inference.local", port: 443, method: "POST", path: "/v1/chat/completions" } },
+      { id: "exfil",    group: "The agent off the rails", intent: "exfiltrate data to an outside host",                       a: { binary: "/usr/bin/curl", host: "example.com", port: 443 } },
+      { id: "metadata", group: "The agent off the rails", intent: "read cloud-instance credentials (metadata SSRF)",          a: { binary: "/usr/bin/curl", host: "169.254.169.254", port: 80 } },
+      { id: "github",   group: "The agent off the rails", intent: "clone tooling from GitHub",                                a: { binary: "/usr/bin/curl", host: "github.com", port: 443 } },
+      { id: "wrongbin", group: "The agent off the rails", intent: "reach the inference API as a stray curl, not the runtime", a: { binary: "/usr/bin/curl", host: "integrate.api.nvidia.com", port: 443, method: "GET", path: "/v1/models" } },
+      { id: "npm",      group: "The agent off the rails", intent: "pull an npm package directly with curl",                   a: { binary: "/usr/bin/curl", host: "registry.npmjs.org", port: 443 } },
+    ];
+
+    const SCEN = window.__SBX_SCENARIOS;
+    window.__sbxAction = SCEN[0].a;
+    const host = document.querySelector("#sbx-pick");
+    host.dataset.state = "ready";
+    host.style.cssText = "margin:0 0 8px";
+    const describe = (a) => a.binary + " → " + a.host + ":" + a.port + (a.path ? "  " + (a.method || "GET") + " " + a.path : "");
+    const runPredict = () => { const b = document.querySelector("#cell-predict-confirm .cf-panel[data-id='predict'] .cf-panel-runone"); if (b) b.click(); };
+    const btns = {};
+    const disp = document.createElement("div");
+    disp.style.cssText = "font-size:.78rem;color:var(--tf,#8a8a8a);margin-top:4px";
+
+    const pick = (s, run) => {
+      host.dataset.state = run ? "selected" : "ready";
+      window.__sbxAction = s.a;
+      Object.values(btns).forEach((b) => b.classList.remove("on"));
+      btns[s.id].classList.add("on");
+      disp.textContent = "the agent tries to " + s.intent + "   ·   " + describe(s.a) + "   ·   run Confirm next, then Compare";
+      if (run) runPredict();
+    };
+    [...new Set(SCEN.map((s) => s.group))].forEach((g) => {
+      const row = document.createElement("div");
+      row.className = "chatui-mods";
+      row.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 4px";
+      const lab = document.createElement("label"); lab.textContent = g; row.appendChild(lab);
+
+      SCEN.filter((s) => s.group === g).forEach((s) => {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "chatui-modchip"; b.textContent = s.intent; b.title = describe(s.a);
+        b.addEventListener("click", () => pick(s, true));
+        btns[s.id] = b; row.appendChild(b);
+      });
+      host.appendChild(row);
+    });
+    host.appendChild(disp);
+    pick(SCEN[0], false);   // select + show the default without auto-running (the cell mounts later)
+  </script>
+
+  <div id="cell-predict-confirm"></div>
+
+  <div class="callout">
+    When the predicted verdict and the live result agree, the box enforces the policy that
+    the static analysis predicted. A disagreement instead means the box is behaving in a way
+    your prediction never captured, whether that is a preset someone added without your knowing or a
+    real gap the box managed to hide from the static view. Either way, you learn something important
+    before you start trusting the box in earnest.
+  </div>
+
+  <h2>Above the sandbox: the control plane</h2>
+  <p>Everything so far measured what the <em>agent</em> can do, but the bigger question is who can
+     reconfigure the agent through the plane sitting above it. How you reach that plane depends on the
+     system, and on this box the plane is one gateway that you reach with the same
+     <code>OPENCLAW_GATEWAY_TOKEN</code> from Module 3 at <code>operator.admin</code> scope, none of
+     which passes through the sandbox at all.</p>
+  <p>What that one credential reaches:</p>
+  <ul>
+    <li><code>agents.files.get</code> and set the persona files (SOUL.md, AGENTS.md) straight off disk.</li>
+    <li><code>cron.add</code> and <code>cron.list</code> the schedule that fires long after the conversation ends.</li>
+    <li><code>config.get</code> and <code>config.patch</code> the entire agent config: model, tools, even <code>toolSearch</code>.</li>
+    <li><code>chat.send</code> a mid-task message that redirects the agent while it still looks like it is on your task.</li>
+    <li><code>sessions.reset</code> and <code>delete</code> its memory; <code>gateway.restart.request</code> the runtime.</li>
+  </ul>
+  <p>Chained together, those calls become an escalation pathway. An attacker who reads the persona can
+     then plant a cron job that fires long after the conversation ends and patch the running config to
+     widen what the agent may do. A mid-task turn redirects it, and a restart of the runtime makes the
+     new shape take hold.</p>
+  <p>The sandbox you hardened above governs the agent's syscalls, yet none of these moves is a
+     syscall the agent makes. How hard the box is and how far the control plane reaches are two
+     separate questions, and teams routinely lock down the first while leaving the second wide open.</p>
+
+  <div class="callout warn">
+    The protection here is deliberately one-sided, since the sandbox stays strong against the
+    agent's own mistakes and even against a compromise of the agent while having no
+    visibility at all into whoever holds the control plane sitting above it. You should guard access
+    to that plane as carefully as you would guard root, because on this box it can reconfigure the
+    agent's identity and schedule entirely outside the reach of anything the sandbox checks.
+  </div>
+
+  <p>Enumerate it against your own launchable. The cell only reads, so it measures the
+     reach and leaves everything unchanged.</p>
+
+  <div id="cell-token"></div>
+
+  <h2>What the sandbox cannot catch</h2>
+  <p>Everything so far was the agent's own actions, and the kernel held the line. Two distinct kinds
+     of harm still slip past it. The first is the control plane you just enumerated, which reconfigures
+     the agent from above the checkpoint. The second travels inside an authorised envelope where every
+     individual action is permitted and the real damage lives in how those actions compose.</p>
+  <p>Untrusted input, private data, and external communication together form the lethal trifecta.</p>
+  <ul>
+    <li><strong>Private data</strong> is anything the agent may read but should not leak: workspace files,
+        emails, tokens, memory, or internal records.</li>
+    <li><strong>Untrusted input</strong> is content from outside the operator's authorship that the model may
+        still treat as instructions: a web page, issue, document, tool result, or peer-agent response.</li>
+    <li><strong>External communication</strong> is any path that can carry bytes out: HTTP, a pull request,
+        chat, a log line, an image load, or even a link the user might click.</li>
+  </ul>
+  <p>Risk appears when these permissions compose. A policy can correctly allow one outbound endpoint,
+     but that endpoint is still full-duplex: the request leaves and the response comes back as more input.
+     Once hostile content can steer the model, it can ask for private data and send that data through
+     a channel the sandbox regards as allowed. Mediating any one leg above the
+     sandbox removes the path the exploit needs.</p>
+<figure style="margin:0"><div class="fig-embed" data-svg-src="assets/figures/lethal-trifecta.svg" style="aspect-ratio:800 / 500"></div><figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">The red center shows a path across allowed pieces rather than a single forbidden action. Hostile content influences a runtime that can read protected state and use an approved channel. Because the channel also brings responses back, a network allowlist alone cannot decide whether an allowed connection is safe.</figcaption></figure>
+  <p>These gaps are real on a default box, and none of them is decidable by the network and
+     filesystem policy:</p>
+  <ul>
+    <li><strong>Persona tamper.</strong> SOUL.md is writable and the agent owns it, so a confused or
+        compromised agent rewrites who it is. A <code>chmod</code> lock the owner reverses; only a
+        root-set <code>chattr +i</code> holds, from outside the sandbox.</li>
+    <li><strong>The control plane is identity-level.</strong> Whoever opens it (on this box, a
+        holder of <code>OPENCLAW_GATEWAY_TOKEN</code>) reads the persona, plants a cron, and injects
+        a turn, all above the checkpoint the kernel never sees.</li>
+    <li><strong>Inbound injection.</strong> Deny-by-default egress stops data leaving; it does nothing
+        about adversarial instructions arriving through an authorised channel, the
+        <a href="https://arxiv.org/abs/2302.12173" target="_blank" rel="noopener">indirect prompt injection</a>
+        Greshake and colleagues named. Catching it takes input classification or behavioural baselines higher up.</li>
+    <li><strong>Exfiltration on an allowed channel.</strong> A permitted endpoint is a path an
+        exfiltration can ride. The policy proves the channel is allowed and says nothing about whether
+        the bytes on it are benign.</li>
+    <li><strong>Hidden intent.</strong> The gateway forwards actions while stripping the model's
+        reasoning, so a Manchurian agent acting inside its authorised policy runs a harmful workflow
+        with no single action looking wrong.</li>
+    <li><strong>Peer preservation.</strong> In a fleet, an agent grading or confirming the shutdown of
+        a peer shifts its verdict in social context. Only behavioural regression testing catches it.</li>
+  </ul>
+
+  <h3>Choose the control by failure mode</h3>
+  <p>A sandbox limits what a compromised process can reach. The application and operating practice
+     still own decisions whose meaning is invisible to the kernel.</p>
+  <div class="control-map-scroll" role="region" aria-label="Agent failure modes and their enforcement controls" tabindex="0">
+  <table class="control-map">
+    <thead><tr><th>Failure mode</th><th>What the sandbox contributes</th><th>Control still needed above it</th></tr></thead>
+    <tbody>
+      <tr><td>Goal hijack or prompt injection</td><td data-label="Sandbox contribution">Limits reachable files, processes, and destinations after the model is steered</td><td data-label="Control still needed">Input provenance, approval for consequential actions, and behavioural evaluation</td></tr>
+      <tr><td>Tool misuse</td><td data-label="Sandbox contribution">Restricts the OS and network envelope in which the tool runs</td><td data-label="Control still needed">Per-tool authorization, argument validation, rate limits, and confirmation for irreversible calls</td></tr>
+      <tr><td>Identity or privilege abuse</td><td data-label="Sandbox contribution">Starts the process as a non-root identity and blocks selected escalation paths</td><td data-label="Control still needed">Workload-specific identities, minimal token scopes, short lifetimes, rotation, and audit</td></tr>
+      <tr><td>Supply-chain or unexpected code execution</td><td data-label="Sandbox contribution">Reduces the files, syscalls, and egress available to installed code</td><td data-label="Control still needed">Pinned and verified dependencies, install policy, and integrity monitoring</td></tr>
+      <tr><td>Memory or context poisoning</td><td data-label="Sandbox contribution">Can protect selected files when policy makes them read-only</td><td data-label="Control still needed">Write provenance, reviewable history, trust labels, and recovery from a known-good state</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>The categories align with the
+     <a href="https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/" target="_blank" rel="noopener">OWASP Top 10 for Agentic Applications</a>.
+     Use the table to pick an enforcement point instead of asking one layer to recognize every kind of harm.</p>
+
+  <div class="callout warn">
+    The sandbox establishes a floor rather than a complete defense. The practice that follows
+    from it is to grant the agent the smallest envelope it needs, to prove what that envelope
+    guarantees, and to staff the layers above it for the failures no proof can reach.
+  </div>
+
+  <div class="references">
+    <h3>References</h3>
+    <ul>
+      <li><a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" target="_blank" rel="noopener">Simon Willison, <em>The lethal trifecta</em> (2025)</a>. The articulation of the private-data, untrusted-content, network-access exploit class the lethal-trifecta diagram in Step 3 draws.</li>
+      <li><a href="https://arxiv.org/abs/2302.12173" target="_blank" rel="noopener">Greshake et al. (2023) <em>Not what you've signed up for</em></a>. The canonical indirect prompt-injection paper: attacks delivered through retrieved or rendered content the model trusts.</li>
+      <li>Saltzer and Schroeder, <a href="https://www.cs.virginia.edu/~evans/cs551/saltzer/" target="_blank" rel="noopener"><em>The Protection of Information in Computer Systems</em></a> (1975). Where least privilege was first named; the principle behind deny-by-default containment.</li>
+      <li><a href="https://docs.kernel.org/userspace-api/seccomp_filter.html" target="_blank" rel="noopener">seccomp filter</a> and <a href="https://docs.kernel.org/userspace-api/landlock.html" target="_blank" rel="noopener">Landlock</a>. The kernel syscall-allowlist and filesystem-capability primitives <code>openshell</code> uses for mechanisms 2 and 3.</li>
+      <li><a href="https://www.openpolicyagent.org/docs/latest/" target="_blank" rel="noopener">Open Policy Agent</a>. The policy-as-data engine behind the OPA-evaluated CONNECT proxy that gates every outbound connection.</li>
+      <li><a href="https://github.com/NVIDIA/NeMo-Guardrails" target="_blank" rel="noopener">NeMo Guardrails</a>. The application-layer complement to kernel containment, catching policy violations the kernel cannot see.</li>
+      <li><a href="https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/" target="_blank" rel="noopener">OWASP Top 10 for Agentic Applications</a>. A current taxonomy for goal hijack, tool misuse, identity abuse, supply-chain compromise, unexpected code execution, and memory poisoning.</li>
+    </ul>
+    <p class="references-note">Comprehensive list at <a href="04c-going-further.html#refs">Going Further · References</a>.</p>
+  </div>
+
+  <div class="foot-nav">
+    <a href="03c-always-on.html">← Module 3c: Always-On</a>
+    <a class="next" href="04b-modern-clis.html">Module 4b: Modern CLIs →</a>
+  </div>
+</main>
+
+<script type="module">
+import { buildNav, updateKeyPill, updateClawPill, mountJourneyMap, mountRunCell, mountCanvasFlow, mountPolicyMap, GW_CONNECT, mountGwRecover, mountDiagram } from "./scripts/_shared.js";
+document.getElementById("nav").innerHTML = buildNav("04a-safety.html");
+const pill = document.getElementById("key-status");
+updateKeyPill(pill);
+updateClawPill(document.getElementById("claw-status"));
+mountJourneyMap("#journey-map", "4a");
+hljs.highlightAll();
+
+// Health / recover / logs flow is shared from _shared.js:
+mountGwRecover("#gw-recover");
+
+// ── Every tool call passes the sandbox before any syscall runs ────────────────
+mountDiagram("#fig-calls", {
+  kicker: "THE POLICY DECIDES WHAT RUNS",
+  title: "Every tool call passes the sandbox",
+  maxWidth: 1040, boxW: 230, boxH: 108, gapX: 128, top: 58,
+  nodes: [
+    { id: "call",   label: "agent tool call",     kind: "agent", x: 0, y: 0, lines: ["bash, curl, file open"] },
+    { id: "gate",   label: "OpenShell layers",    kind: "env",   x: 1, y: 0, lines: ["netns, Landlock,", "seccomp, OPA proxy"] },
+    { id: "target", label: "network / filesystem", kind: "data", x: 2, y: 0, lines: ["the real resource"] },
+  ],
+
+  edges: [
+    { from: "call", to: "gate",   label: "every call",       fromPort: "right", toPort: "left", labelDy: -42, tint: "agent"   },
+    { from: "gate", to: "target", label: "policy permits",   fromPort: "right", toPort: "left", labelDy: -42, tint: "data"    },
+    { from: "gate", to: "call",   label: "denied · EACCES",  fromPort: "bottom-left", toPort: "right", toOffset: 30, labelDy: 34, return: true, tint: "neutral" },
+  ],
+});
+
+// ── Intuition 1: watch the kernel decide ────────────────────────────────────
+mountRunCell("#cell-layers", {
+  openCode: false,
+  label: "ask the box anything, in code",
+  intro: "Run the prepared questions first and compare each verdict, mechanism, and evidence line. Then open the implementation only when you want to change a command or add a probe.",
+  code: `// You write the COMMAND; probe() runs it in your sandbox.
+// It prints the verdict (the exit code), the deciding mechanism, and a line of evidence.
+// For egress it also reads the HTTP status: a denied tunnel exits non-zero, while a denied plain request returns 403 at exit 0.
+const _esc = (x) => String(x).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+async function probe(command, mechanism) {
+  const res = await helpers.sandboxExec(command, { signal: AbortSignal });
+  const out = (res.output || "").trim();
+  const proxyDeny = /code=(403|407)\\b/.test(out);
+  const blocked = proxyDeny || (res.exitCode == null
+    ? /denied|not permitted|EACCES|EPERM|tunnel failed|code=000/i.test(out)
+    : res.exitCode !== 0);
+
+  const mech = !blocked ? "allowed" : (mechanism || (
+      /tunnel failed|code=000|code=403|code=407|ProxyError|could not resolve/i.test(out) ? "network"
+    : /command not found/i.test(out) ? "not installed"
+    : /are you root|superuser|cannot open.*ns/i.test(out) ? "seccomp / non-root"
+    : /permission denied|EACCES/i.test(out) ? "Landlock"
+    : "kernel"));
+  const col = blocked ? "var(--err)" : "var(--g)";
+  helpers.log.html(
+    "<span style='color:" + col + ";font-weight:700'>" +
+    (blocked ? "✗ DENIED" : "✓ ALLOW ") +
+    "</span>  <span style='color:var(--tf)'>[" + _esc(mech) + "]</span>  " +
+    _esc(command)
+  );
+  const ev = out.replace(/\\s+/g, " ").trim().slice(0, 110);
+  if (ev) helpers.log.html("<span style='color:var(--td)'>&nbsp;&nbsp;&nbsp;&nbsp;" + _esc(ev) + "</span>");
+  return { command, blocked, mechanism: mech };
+}
+const question = (q) => { helpers.log(""); helpers.log.html("<span style='color:var(--gs);font-weight:700'>" + _esc(q) + "</span>"); };
+const results = [];
+
+question("Can I reach the open internet?");
+results.push(await probe("curl -sS -m 8 -o /dev/null -w 'code=%{http_code}' https://example.com", "network"));
+results.push(await probe("curl -sS -m 8 -o /dev/null -w 'code=%{http_code}' https://en.wikipedia.org", "network"));
+results.push(await probe("curl -sS -m 6 -o /dev/null -w 'code=%{http_code}' http://169.254.169.254/latest/meta-data/", "network"));
+helpers.log([
+  "→ The network namespace plus the OPA egress proxy refuse every curl.",
+  "The allowlist is bound to the openclaw binary, so a plain curl reaches nothing.",
+  "Most hosts fail the CONNECT tunnel (exit 56), and the metadata IP returns proxy 403.",
+].join(" "));
+
+question("Can I install software, to pull in new code?");
+results.push(await probe("apt-get install -y cowsay", "non-root"));
+results.push(await probe("pip install --break-system-packages --retries 0 --timeout 5 --no-input cowsay", "network"));
+results.push(await probe("npm install --no-audit --no-fund left-pad", "network"));
+helpers.log([
+  "→ No. apt needs root it does not have.",
+  "pip and npm run, but the egress proxy refuses their downloads.",
+  "A supply-chain attack has to get code in, and every download path is closed.",
+].join(" "));
+
+question("Can I become root, or escape the container?");
+results.push(await probe("sudo id", "not installed"));
+results.push(await probe("nsenter -t 1 -m -- id", "seccomp / non-root"));
+results.push(await probe("docker ps", "not installed"));
+results.push(await probe("cat /proc/1/environ", "non-root"));
+helpers.log([
+  "→ No path up or out.",
+  "sudo and docker are absent, entering the host namespace is denied,",
+  "and the host init environment is unreadable.",
+].join(" "));
+
+question("Can I rewrite my own persona, and is locking it real?");
+results.push(await probe("ls -la /sandbox/.openclaw/workspace/SOUL.md", "Landlock"));
+results.push(await probe("chmod 0444 /sandbox/.openclaw/workspace/SOUL.md", "Landlock"));
+results.push(await probe("chmod 0644 /sandbox/.openclaw/workspace/SOUL.md", "Landlock"));
+results.push(await probe("chattr +i /sandbox/.openclaw/workspace/SOUL.md", "non-root"));
+helpers.log([
+  "→ SOUL.md sits in a writable tree and the agent owns it, so it can undo chmod.",
+  "The lock it cannot pick is chattr +i, which needs root.",
+  "With no per-file read-only rule, persona tamper stays an operator-side liability.",
+].join(" "));
+
+helpers.log("");
+helpers.log("Edit any command, add a probe('your command') line, or ask a new question. One program per line: no shell, so no pipes or &&.");
+// Optional visibility: uncomment to inspect every raw probe result before the summary return.
+// helpers.log.json("all probe results", results);
+return { probes: results.length, denied: results.filter(result => result.blocked).length, results };
+`,
+});
+
+// ── Interactive trust-boundary map, NOT drawn on load.
+// The live-policy cell below draws it from YOUR fetched policy, so the policy is retrieved first.
+// Until then, a placeholder points the student at the cell.
+{
+  const _pm = document.querySelector("#policy-map");
+  if (_pm) _pm.innerHTML = "<p style='color:var(--tf,#8a8a8a);font-size:.85rem;margin:.5rem 0'>Run the live-policy cell above to draw your launchable's policy as an interactive map.</p>";
+}
+
+// ── Read your live policy, draw the map from it ───────────────────────────────
+mountRunCell("#cell-live-policy", {
+  label: "Read your launchable's live policy",
+  intro: "Fetch the live policy through the operator terminal and print its YAML, then compare it with the snapshot that drives the map. Keep the launchable open for its access session; connect in Module 3a first if needed. The exact call remains in the code dropdown.",
+  code: `// helpers.policyGet() returns the command, raw output, status, and parsed policy.
+const p = await helpers.policyGet();
+helpers.log("called:  " + p.command);          // the exact command that ran on your box
+helpers.log("");
+helpers.log(p.status || "(no status header returned)");
+
+if (!p.policy) {
+  helpers.log("\\nCould not parse the live policy: " + (p.parseError || "unknown parser error"));
+  helpers.log("Keep your launchable open in another tab, then re-run. Check the sandbox name with: openshell sandbox list");
+  helpers.log.details("raw output", p.raw);
+  return;
+}
+
+const nets = Object.keys(p.policy.network_policies || {});
+// Optional visibility: uncomment to inspect the destination names as JSON.
+// helpers.log.json("network policy names", nets);
+helpers.log("\\nyour live policy: egress is deny-by-default, with " + nets.length + " allowed destinations (" + nets.join(", ") + ").");
+helpers.log("the predict cell below computes from this exact policy.");
+helpers.log.details("raw policy returned (the YAML openshell printed)", p.raw);
+helpers.log.details("parsed policy (exactly what predict reads)", p.policy);
+window.__SBX_POLICY = p.policy;   // the one policy every cell on this page reads
+// Draw the policy map below straight from what you just fetched (one source of truth).
+helpers.mountPolicyMap("#policy-map", { policy: p.policy });
+helpers.log("drew the interactive map below from this policy.");
+const agent = p.agent;
+return { agent, networks: nets };
+`,
+});
+
+// ── Predict, then confirm against the live kernel ─────────────────────────────
+mountCanvasFlow("#cell-predict-confirm", {
+  label: "Static verdict vs the live sandbox",
+  intro: "Run the live-policy cell first. Pick an action, use Predict to evaluate its policy verdict in the browser, and use Confirm to execute it with openshell sandbox exec. Compare checks whether the static and live results agree. The code remains in the dropdown.",
+  edges: [
+    { from: "predict", to: "confirm" },
+    { from: "confirm", to: "compare" },
+  ],
+
+  nodes: [
+    {
+      id: "predict", icon: "🧮", title: "Predict (static, in-browser)", x: 0, y: 0,
+      showCode: false,
+      summary: "Compute the policy verdict for the action you picked above, without touching the network. The buttons set window.__sbxAction; this node reads it and runs the same allow/deny evaluation the proxy uses, computing the verdict live in your browser rather than reading a baked example.",
+      code: `// This predicts from YOUR launchable's live policy. Run the live-policy cell above first
+// so window.__SBX_POLICY is set; there is one policy here, not a baked copy.
+const policy = window.__SBX_POLICY;
+if (!policy) { helpers.log("Run the 'Read your launchable's live policy' cell above first, so this predicts from YOUR box's policy."); return; }
+
+// The candidate action comes from the buttons above the cell (window.__sbxAction).
+// A network attempt is { binary, host, port, method?, path? }; edit this default to try another target.
+const action = window.__sbxAction || { binary: "/usr/bin/curl", host: "example.com", port: 443 };
+// evalSandboxNetwork checks the live policy with the same allow/deny rule.
+const verdict = helpers.evalSandboxNetwork(action, policy);
+state.action = action;
+state.predicted = verdict.action;
+helpers.log("action:    " + action.binary + " -> " + action.host + ":" + action.port + (action.path ? "  " + (action.method || "GET") + " " + action.path : ""));
+helpers.log("predicted: " + verdict.action.toUpperCase() + (verdict.matched ? "  (policy '" + verdict.matched + "')" : ""));
+if (verdict.reason) helpers.log("reason:    " + verdict.reason);
+// The one-liners above flatten a structured verdict.
+// Keep the full object collapsible and highlighted, with its matched rule and reason.
+helpers.log.details("policy verdict", verdict);
+
+// Binary identity, made visible: the same host can flip on which binary asks.
+const asOpenclaw = helpers.evalSandboxNetwork({ ...action, binary: "/usr/local/bin/openclaw", method: action.method || "GET", path: action.path || "/" }, policy);
+if (asOpenclaw.action !== verdict.action)
+  helpers.log("note:      as /usr/local/bin/openclaw this would be " + asOpenclaw.action.toUpperCase() + " - egress is bound to the binary, and curl is not it.");
+return verdict;
+`,
+    },
+    {
+      id: "confirm", icon: "🛂", title: "Confirm (live, in the sandbox)", x: 1, y: 0,
+      showCode: false,
+      summary: "Run the candidate connection inside your live OpenShell box via openshell sandbox exec and read back what the kernel did. A blocked egress comes back as a CONNECT tunnel 403 or a 000 code, while an allowed one returns a real HTTP status.",
+      code: `// Execute the selected network action inside the live sandbox and read the verdict.
+if (!state.action) { helpers.log("Run the predict node first."); return; }
+const a = state.action;
+
+// One clean curl inside the sandbox; the proxy answers a denied CONNECT fast.
+// A blocked egress yields code=000 with a 'tunnel failed' note; an allowed one returns a real HTTP status (200/401/404...).
+const scheme = a.port === 443 ? "https://" : "http://";
+const probe = "curl -sS -o /dev/null -w 'code=%{http_code}' " + scheme + a.host + (a.path || "/");
+helpers.log("-> openshell sandbox exec -- " + probe);
+const res = await helpers.sandboxExec(probe);
+const out = (res.output || "").trim();
+helpers.log(out || "(no output)");
+// Keep the full kernel result on hand: {output, raw, frames, exitCode, sandbox, command}.
+helpers.log.details("kernel result", res);
+
+// Use curl's exit code: it distinguishes blocked CONNECT from reached-but-403.
+const allowed = (res.exitCode != null)
+  ? res.exitCode === 0
+  : !/tunnel failed|code=000|refus|denied|EACCES|EPERM|not permitted/i.test(out);
+state.observed = allowed ? "allow" : "deny";
+helpers.log("curl exit:  " + (res.exitCode != null ? res.exitCode : "?") + (allowed ? "  (reached the host)" : "  (blocked before the connection opened)"));
+helpers.log("observed:   " + state.observed.toUpperCase());
+return { observed: state.observed, exitCode: res.exitCode };
+`,
+    },
+
+    {
+      id: "compare", icon: "✅", title: "Do they agree?", x: 2, y: 0,
+      showCode: false,
+      summary: "Compare the static prediction with the live kernel result. Agreement means the policy behaves exactly as the static analysis says. Disagreement means an unexpected policy or a real gap worth investigating.",
+      code: `// Compare the browser-side prediction with the kernel result from Confirm.
+if (!state.predicted || !state.observed) { helpers.log("Run predict and confirm first."); return; }
+const match = state.predicted === state.observed;
+helpers.log("predicted: " + state.predicted.toUpperCase());
+helpers.log("observed:  " + state.observed.toUpperCase());
+
+helpers.log(match
+  ? "agree - your box enforces exactly what the hardened policy predicts."
+  : state.predicted === "deny"
+    ? "disagree - the hardened policy would BLOCK this, but your live box ALLOWED it. The box is running a more permissive policy than the hardened snapshot. Check 'openshell policy get' above: Active 0 (Pending) means the hardened policy is not live yet, so on this box the action gets through. That gap is the finding."
+    : "disagree - the hardened policy would allow this, but your box blocked it, so a stricter preset is active than the snapshot models.");
+return { predicted: state.predicted, observed: state.observed, agree: match };
+`,
+    },
+  ],
+});
+
+
+// ── Enumerate the token's reach (read-only) ──────────────────────────────────
+mountCanvasFlow("#cell-token", {
+  label: "What can one operator.admin token see?",
+  intro: "Using the token you already chat with, call the read-only side of the operator.admin surface and show the raw responses. None of this writes anything. It only reads, to measure how far the agent's scope reaches. Set the URL and token first by connecting on the Kickstart page (Module 3a).",
+  edges: [ { from: "tok-conn", to: "tok-survey" } ],
+
+  nodes: [
+    {
+      id: "tok-conn", icon: "🔌", title: "Connect as operator.admin", x: 0, y: 0,
+      showCode: false,
+      summary: "Open the gateway WebSocket and claim operator.admin with the same token the Control UI uses. No extra credential is needed: the one chat token already carries it.",
+      code: GW_CONNECT,
+    },
+    {
+      id: "tok-survey", icon: "🗝️", title: "Survey the reach", x: 1, y: 0,
+      showCode: false,
+      summary: "Call the read side of the admin surface: the persona on disk, the cron schedule, the live sessions, the served models, and the full config. Every line you see traces to the same token, and all of it reaches past the sandbox checkpoint.",
+      code: `// Survey the read-only admin surface reachable by the current gateway token.
+if (!state.call) { helpers.log("Run Connect first."); return; }
+const soul = await state.call("agents.files.get", { agentId: "main", name: "SOUL.md" });
+helpers.log("agents.files.get SOUL.md  -> " + ((soul?.file?.content || "").length) + " bytes of the live persona (readable, and writable via set)");
+
+const crons = await state.call("cron.list");
+helpers.log("cron.list                 -> " + ((crons?.jobs || []).length) + " scheduled job(s) that fire with no human present");
+const sess = await state.call("sessions.list", { limit: 5 });
+helpers.log("sessions.list             -> " + (sess?.totalCount ?? (sess?.sessions || []).length) + " session(s), each resettable/deletable");
+const models = await state.call("models.list");
+helpers.log("models.list               -> " + ((models?.models || []).length) + " model(s) the runtime serves");
+let cfg = null; try { cfg = await state.call("config.get"); } catch (_) {}
+helpers.log("config.get                -> " + (cfg ? "the whole agent config is readable AND patchable (model, tools, toolSearch)" : "(not exposed on this build)"));
+
+helpers.log("");
+helpers.log("One token. Persona, schedule, memory, models, config: all reachable, none of it through the sandbox.");
+return { soulBytes: (soul?.content || "").length, crons: (crons?.jobs || []).length, models: (models?.models || []).length };
+`,
+    },
+  ],
+});
+</script>
+</body>
+</html>

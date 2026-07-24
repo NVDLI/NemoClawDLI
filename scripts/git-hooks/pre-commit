@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+# Pre-commit hook: refuse to commit markdown files corrupted by the IDE
+# buffer-merge race (duplicated H1 banners, doubled identifiers,
+# nvidia/nemotron name interleaves, duplicate Part headers).
+#
+# Install with:
+#     ln -sf ../../scripts/git-hooks/pre-commit .git/hooks/pre-commit
+# or invoke scripts/build/install-hooks.sh.
+
+set -e
+
+# Resolve the canonical repository content root while retaining compatibility with legacy
+# wrapper checkouts that still place the content under task1/.
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+T1="$REPO_ROOT"; [ -d "$REPO_ROOT/task1/scripts" ] && T1="$REPO_ROOT/task1"
+
+# Protected refs accept reviewed merges and release automation, not workstation
+# commits. Refuse before any expensive check and show the contributor the recovery.
+BRANCH="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+case "$BRANCH" in
+    main|nemoclaw-only|release/*)
+        echo "[pre-commit] REFUSING COMMIT on protected branch '$BRANCH'."
+        echo "Create a focused branch, commit there, then open a reviewed MR/PR:"
+        echo "  git switch -c <issue-or-change-name>"
+        exit 1
+        ;;
+esac
+
+# Workstation paths are cheap to detect and unsafe to record. Run this before
+# broader repository checks so a local runtime/cache path fails at first touch.
+LOCAL_PATH_AUDIT="$T1/scripts/validation/local_path_leak_audit.py"
+if [ -f "$LOCAL_PATH_AUDIT" ] && ! python3 "$LOCAL_PATH_AUDIT" --staged; then
+    echo ""
+    echo "[pre-commit] REFUSING COMMIT: contributor workstation path detected."
+    echo "Use repository-relative paths, environment variables, or a portable runtime helper."
+    exit 1
+fi
+
+# Finding identifiers, exploit notes, private service locations, and concrete credentials
+# stay outside the repository. Run this beside the workstation-path guard at first touch.
+SENSITIVE_AUDIT="$T1/scripts/validation/sensitive_content_audit.py"
+if [ -f "$SENSITIVE_AUDIT" ] && ! python3 "$SENSITIVE_AUDIT" --staged; then
+    echo ""
+    echo "[pre-commit] REFUSING COMMIT: restricted security or private operational content detected."
+    echo "Move the detail to the approved private record; keep only generic controls in the repository."
+    exit 1
+fi
+
+# The contribution boundary is deliberately cheap and first. If a change weakens
+# issue intake, PR evidence, CI permissions, hooks, or release approval, fail before
+# the contributor spends time on deeper content/runtime gates.
+SAFETY="$T1/scripts/validation/contribution_safety_audit.py"
+if [ -f "$SAFETY" ] && ! python3 "$SAFETY"; then
+    echo ""
+    echo "[pre-commit] REFUSING COMMIT: contribution-safety contract failed."
+    echo "Each finding above names the broken boundary and exact repair."
+    exit 1
+fi
+
+WORK_PRODUCTS="$T1/scripts/validation/repository_work_products_audit.py"
+if [ -f "$WORK_PRODUCTS" ] && ! python3 "$WORK_PRODUCTS"; then
+    echo ""
+    echo "[pre-commit] REFUSING COMMIT: public repository work-product contract failed."
+    echo "Repair the named requirement, applicability, evidence path, or validator wiring."
+    exit 1
+fi
+
+RELEASE_EVIDENCE="$T1/scripts/validation/release_evidence_audit.py"
+if [ -f "$RELEASE_EVIDENCE" ] && ! python3 "$RELEASE_EVIDENCE"; then
+    echo ""
+    echo "[pre-commit] REFUSING COMMIT: product design or release test evidence is incomplete."
+    echo "Repair the named public document, ownership map, beacon, or validator wiring."
+    exit 1
+fi
+
+THREAT_CONTROLS="$T1/scripts/validation/threat_control_audit.py"
+if [ -f "$THREAT_CONTROLS" ] && ! python3 "$THREAT_CONTROLS"; then
+    echo ""
+    echo "[pre-commit] REFUSING COMMIT: security control disposition or enforcement drifted."
+    echo "Restore the bounded artifact, deployment verification, repository integration, or external-control boundary."
+    exit 1
+fi
+
+# ── Playwright runtime check for canvas flow HTML pages ─────────────────────
+# Triggered when a web course page or a shared stylesheet is staged. URLs follow the
+# surface-first layout: web/<course>/ is served at /lab/static/<course>/.
+STAGED_HTML=$(git diff --cached --name-only --diff-filter=ACM \
+    | grep -E '(web/[a-z_]+/[^/]+\.html|_style\.css|_shared\.js)$' \
+    || true)
+
+if [ -n "$STAGED_HTML" ]; then
+    HTML_STRUCTURE="$T1/scripts/validation/html_structure_audit.py"
+    if [ -f "$HTML_STRUCTURE" ] && ! python3 "$HTML_STRUCTURE"; then
+        echo ""
+        echo "[pre-commit] REFUSING COMMIT: invalid learner-page HTML structure."
+        echo "Nested anchors trigger browser error recovery that splits cards and leaks content."
+        exit 1
+    fi
+
+    # ── Fast static structural check ─────────────────────────────────────────
+    VALIDATOR="$T1/scripts/validation/validate_canvas_html.py"
+    if [ -f "$VALIDATOR" ]; then
+        STAGED_HTML_FILES=$(git diff --cached --name-only --diff-filter=ACM \
+            | grep -E '(web/[a-z_]+/[^/]+\.html)$' \
+            | sed "s|^|$REPO_ROOT/|" || true)
+        if [ -n "$STAGED_HTML_FILES" ]; then
+            echo "[pre-commit] static canvas-html validation..."
+            if ! python3 "$VALIDATOR" $STAGED_HTML_FILES; then
+                echo ""
+                echo "[pre-commit] REFUSING COMMIT: structural issues in canvas HTML."
+                echo "             Fix the issues above (unescaped backticks, missing comma,"
+                echo "             duplicate Python blocks, TDZ, missing state destructuring)"
+                echo "             then re-stage and commit."
+                exit 1
+            fi
+        fi
+    fi
+
+    BROWSER_HARNESS="$T1/scripts/runtime/browser_runtime_test.sh"
+    if [ ! -x "$BROWSER_HARNESS" ]; then
+        echo "[pre-commit] WARNING: host browser harness not found at $BROWSER_HARNESS."
+    elif ! "$T1/scripts/runtime/browser_env_probe.sh" >/dev/null 2>&1; then
+        echo "[pre-commit] WARNING: install Node.js, pinned playwright-core, and Chromium to enable the runtime check."
+        echo "             See docs/lab_runtime_testing.md."
+    else
+        echo "[pre-commit] running host-native browser smoke..."
+        "$BROWSER_HARNESS" --smoke
+    fi
+fi
+
+exit 0

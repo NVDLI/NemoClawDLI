@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>.gitlab/ci trust-boundary modules</title>
+<script type="application/json" id="skill-meta">
+{
+  "schema": "dir-skill/1.0",
+  "node_type": "directory-explorer",
+  "title": ".gitlab/ci trust-boundary modules",
+  "source_dir": ".gitlab/ci/",
+  "summary": "Owner-gated GitLab modules. core.yml owns validation and Pages; sca.yml owns change-sensitive scans; privileged.yml owns internal-only live review and hash-planned CDN publication.",
+  "related": ["../../.gitlab-ci.yml", "../CODEOWNERS", "../../scripts/validation/gitlab_ci_policy.py"],
+  "explorer": "../../web/_skill_explorer.js"
+}
+</script>
+</head>
+<body>
+<header data-skill-header="1"><nav aria-label="Skill navigation"><a href="../../web/index.html">Home</a> <a href="../SKILL.html">Up</a> <a href="../../SKILL.html">Repository map</a></nav></header>
+<main>
+<h1>GitLab CI trust-boundary modules</h1>
+<p>The root CI file contains only approved module includes. Add Python tests under <code>tests/</code> and register them in the release gate without editing the GitLab workflow.</p>
+<ul>
+  <li><a href="core.yml"><code>core.yml</code></a> owns the required gate, builds its Pages candidate on the same worker, verifies the copied candidate, renders every HTML page, and then exposes human review.</li>
+  <li><a href="sca.yml"><code>sca.yml</code></a> rejects inherited defaults and variables, pins its image, and owns all scanner jobs.</li>
+  <li><a href="privileged.yml"><code>privileged.yml</code></a> runs only trusted default-branch code. Candidate artifacts never receive credentials. CDN preparation has no AWS authority. Publication uses a root-owned program on the protected devbox runner.</li>
+</ul>
+<p>The privileged module is internal GitLab integration. Its source remains reviewable, but GitHub
+receives no workflow edge, protected environment, credential, devbox runner, or AWS authority.</p>
+<pre><code>python3 scripts/validation/gitlab_ci_policy.py --self-test
+python3 scripts/validation/gitlab_ci_policy.py</code></pre>
+</main>
+<noscript>This directory documents GitLab CI trust-boundary modules.</noscript>
+<script src="../../web/_skill_explorer.js"></script>
+</body>
+</html>

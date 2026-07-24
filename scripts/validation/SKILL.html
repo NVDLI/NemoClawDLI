@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>scripts/validation deterministic gates</title>
+
+<script type="application/json" id="skill-meta">
+{
+  "schema": "dir-skill/1.0",
+  "node_type": "directory-explorer",
+  "title": "scripts/validation deterministic gates",
+  "source_dir": "scripts/validation/",
+  "summary": "Static and rendered validators enforce repository work products, links, layout, prose, code hygiene, figures, cells, theme behavior, screenshots, and course contracts.",
+  "related": [
+    "scripts/validation/release_gate.py",
+    "scripts/validation/reacs_registry.py",
+    "scripts/validation/reacs_registry.json",
+    "scripts/validation/validate_bundle.py",
+    "scripts/validation/artifact_link_audit.py",
+    "scripts/validation/validation_report_audit.py",
+    "scripts/validation/validate_layout.py",
+    "scripts/validation/local_path_leak_audit.py",
+    "scripts/validation/external_link_attribution_audit.py",
+    "scripts/validation/sensitive_content_audit.py",
+    "scripts/validation/sensitive-content-policy.json",
+    "scripts/validation/release_change_reminder.py",
+    "scripts/validation/html_structure_audit.py",
+    "scripts/validation/grounding.py",
+    "scripts/validation/prose_variety.py",
+    "scripts/validation/code_hygiene.py",
+    "scripts/validation/color_theme.py",
+    "scripts/validation/cell_ui_runtime_audit.py",
+    "scripts/validation/learner_flow_audit.py",
+    "scripts/validation/learner_flow_runtime_audit.py",
+    "scripts/validation/runtime_integration_browser_audit.py",
+    "scripts/validation/contribution_safety_audit.py",
+    "scripts/validation/gitlab_ci_policy.py",
+    "scripts/validation/gitlab_governance_audit.py",
+    "scripts/validation/studio_interface_audit.py",
+    "scripts/validation/helper_notebook_runtime_audit.py",
+    "scripts/validation/studio_responsive_audit.py",
+    "scripts/validation/openclaw_fallback_audit.py",
+    "scripts/validation/gateway_token_audit.mjs",
+    "scripts/validation/endpoint_registration_audit.py",
+    "scripts/validation/openclaw_connection_audit.mjs",
+    "scripts/validation/openclaw_connection_browser_audit.mjs",
+    "scripts/validation/openclaw_probe_frame_runtime_audit.py",
+    "scripts/validation/branch_preview_manifest_audit.py",
+    "scripts/validation/branch_preview_runtime_audit.py",
+    "scripts/validation/agent_process_audit.py",
+    "scripts/validation/course_contract.py",
+    "scripts/validation/course_content_contract.py",
+    "scripts/validation/course_dependency_integrity.py",
+    "scripts/validation/concept_order_audit.py",
+    "scripts/validation/security_architecture_audit.py",
+    "scripts/validation/threat_control_audit.py",
+    "scripts/validation/repository_sync_audit.py",
+    "scripts/validation/pages_artifact_integrity.py",
+    "scripts/validation/release_evidence_audit.py",
+    "scripts/validation/repository_work_products_audit.py",
+    "scripts/pyodide/integration_audit.py"
+  ],
+  "explorer": "../../web/_skill_explorer.js"
+}
+</script>
+
+<script type="application/json" id="explorer-config">
+{
+  "title": "scripts/validation deterministic gates",
+  "summary": "Static and rendered validators enforce repository work products, links, layout, prose, code hygiene, figures, cells, theme behavior, screenshots, and course contracts.",
+  "model": "nvidia/nemotron-3-nano-30b-a3b",
+  "ties": [
+    "build"
+  ],
+  "nav": {
+    "home": "../../web/index.html",
+    "up": {
+      "label": "scripts",
+      "href": "../SKILL.html"
+    }
+  },
+  "files": [
+    {
+      "path": "release_gate.py",
+      "role": "shared validation ladder",
+      "desc": "Runs the deterministic fast or ship tier used by local contributors, GitLab, GitHub Pages, and the protected release workflow."
+    },
+    {
+      "path": "reacs_registry.json",
+      "role": "suite and impact registry",
+      "desc": "Declares stable suite identities, tiers, order, specialized mutation impacts, parallel safety, and report behavior. Every unclaimed path and every add, delete, rename, or copy selects the full mutation matrix by default."
+    },
+    {
+      "path": "reacs_registry.py",
+      "role": "fail-closed registry loader",
+      "desc": "Validates the discovery-first registry before selection, resolves literal commands without a shell, and preserves Git add, delete, rename, copy, index, worktree, and untracked-file signals."
+    },
+    {
+      "path": "validate_bundle.py",
+      "role": "ship gate",
+      "desc": "Composes every validator into the release gate and durable report."
+    },
+    {
+      "path": "artifact_link_audit.py",
+      "role": "static artifact-root link gate",
+      "desc": "Discovers every emitted HTML file and rejects missing targets, fragments, root-absolute URLs, and deployment-root escapes without allowlists."
+    },
+    {
+      "path": "validation_report_audit.py",
+      "role": "same-commit report reuse gate",
+      "desc": "Requires the full 40-character Git object ID and rejects abbreviated, stale, failed, degraded, dirty-tree, or wrong-scope validation evidence before downstream builds skip regeneration."
+    },
+    {
+      "path": "validate_layout.py",
+      "role": "layout gate",
+      "desc": "Checks static links, the retired-runtime boundary, course assets, release scaffolding, and SKILL beacons."
+    },
+    {
+      "path": "local_path_leak_audit.py",
+      "role": "workstation path boundary",
+      "desc": "Rejects contributor home, mounted-drive, cache, runtime, absolute local file-URI paths, and contributor-local identifiers across tracked and untracked source, symlink targets, and every proposed commit; includes mutation coverage and narrow runtime allowances."
+    },
+    {
+      "path": "sensitive_content_audit.py",
+      "role": "sensitive contribution boundary",
+      "desc": "Rejects restricted finding identifiers and narratives, private service hosts, personal corporate addresses, concrete credentials, and matching commit history or submission metadata without echoing matched values."
+    },
+    {
+      "path": "sensitive-content-policy.json",
+      "role": "public fingerprint policy",
+      "desc": "Stores only SHA-256 fingerprints for restricted prefixes, phrases, and hosts; a private overlay can extend the set without publishing its source values."
+    },
+    {
+      "path": "release_change_reminder.py",
+      "role": "external release follow-up reminder",
+      "desc": "Classifies a proposed diff into operator-owned threat, scan, open-source/license, and final-artifact actions without claiming that repository CI completed them."
+    },
+    {
+      "path": "html_structure_audit.py",
+      "role": "HTML structure gate",
+      "desc": "Rejects nested anchors in canonical and localized learner pages before browser repair can split cards and leak content."
+    },
+    {
+      "path": "grounding.py",
+      "role": "grounding sweep",
+      "desc": "Checks cited material association and source-grounding signals."
+    },
+    {
+      "path": "prose_variety.py",
+      "role": "prose cadence",
+      "desc": "Finds rhythm, buzz, grammar, and structural prose issues."
+    },
+    {
+      "path": "code_hygiene.py",
+      "role": "code bloat and style",
+      "desc": "Scans code comments, walls, duplication, size, constants, and prose tells in code."
+    },
+    {
+      "path": "color_theme.py",
+      "role": "required theme gate",
+      "desc": "Includes Studio and every canonical page automatically; rejects inline literals, undefined variables, and render-time color bakes."
+    },
+    {
+      "path": "figure_audit.py",
+      "role": "required figure rendering gate",
+      "desc": "Classifies every attributed SVG from provenance, rejects filename exemptions and course-toggle drift, and checks legibility, accessibility, injected-SVG style scoping, and mobile zoom."
+    },
+    {
+      "path": "security_architecture_audit.py",
+      "role": "security architecture graph gate",
+      "desc": "Required mutation-tested production scope, source-derived topology drift, local-only classification, evidence, trust-boundary, geometry, and generated-SVG freshness audit."
+    },
+    {
+      "path": "threat_control_audit.py",
+      "role": "security control disposition gate",
+      "desc": "Mutation-tested Target of Evaluation ownership, aggregate mitigation schema, overclaim detection, bounded Pages artifacts, post-deploy verification, immutable workflow pins, and explicit external ownership."
+    },
+    {
+      "path": "repository_sync_audit.py",
+      "role": "public-to-internal source drift classifier",
+      "desc": "Read-only classification of equivalent, external-ahead, internal-ahead, and diverged GitHub/GitLab refs; external changes require a normal integration MR."
+    },
+    {
+      "path": "pages_artifact_integrity.py",
+      "role": "Pages artifact and deployment integrity gate",
+      "desc": "Bounds the static tree and archive, safely extracts regular files, verifies the same-commit SHA-256 inventory, and compares every live Pages object after deployment."
+    },
+    {
+      "path": "release_evidence_audit.py",
+      "role": "product design and release test-plan gate",
+      "desc": "Required mutation-tested audit for public-safe design, executable test coverage, evidence ownership, external-review boundaries, gate wiring, and prose quality."
+    },
+    {
+      "path": "repository_work_products_audit.py",
+      "role": "public repository work-product gate",
+      "desc": "Required mutation-tested audit for work-product requirement levels, applicability, evidence paths, canonical policies, maintainer procedures, issue intake, and gate wiring."
+    },
+    {
+      "path": "cell_ui_runtime_audit.py",
+      "role": "rendered page screenshot audit",
+      "desc": "Discovers every canonical and localized interactive page, renders desktop and narrow viewports across light and dark themes, writes paired initial and expanded screenshots, rejects split or wrapped cell actions and localized overflow, flags wrong-tone surfaces, and exercises mobile figure zoom, pan, and close behavior."
+    },
+    {
+      "path": "cell_audit.py",
+      "role": "cell contract",
+      "desc": "Checks runnable-cell transparency, logging, awaits, keys, bundled editor assets, and UI contract with a focused asset-detector self-test."
+    },
+    {
+      "path": "learner_flow_audit.py",
+      "role": "learner interaction static gate",
+      "desc": "Required Guided first-visit, interactive-code collapse, default-visible paper references, saved-depth, native inline disclosure, text-backed scope cue, prerequisite-readiness, lifecycle, viewport-stability, and CPU-baseline contract with mutation self-tests."
+    },
+    {
+      "path": "learner_flow_runtime_audit.py",
+      "role": "learner interaction browser gate",
+      "desc": "Uses host Chromium to exercise Guided first visit, code collapse and local reveal, authored-default restoration, saved depth, per-section native overrides, reload, print, narrow keyboard behavior, prerequisites, and cell lifecycle transitions."
+    },
+    {
+      "path": "runtime_integration_browser_audit.py",
+      "role": "course runtime integration browser gate",
+      "desc": "Uses one Chromium session to execute the same-origin agent bundle, OpenClaw probe state handoff, structured cron add/remove lifecycle, and live-policy-to-predict state transition."
+    },
+    {
+      "path": "contribution_safety_audit.py",
+      "role": "contribution and release boundary",
+      "desc": "Required audit and mutation suite for release-candidate status, governance state, DCO commit signoff, conduct/support/ownership policy, immutable action pins, locked workflow installs, fork-safe security workflows, private security routing, structured submissions, and gated deploy/release authority."
+    },
+    {
+      "path": "gitlab_ci_policy.py",
+      "role": "GitLab CI structural policy",
+      "desc": "Mutation-tested gate for the inert root manifest, isolated core and SCA modules, narrow scanner triggers, locked scan commands, and named ownership of workflow trust boundaries."
+    },
+    {
+      "path": "gitlab_governance_audit.py",
+      "role": "live GitLab authority audit",
+      "desc": "Read-only project audit for required pipelines, resolved discussions, protected human actions, protected main and release tags, explicit production approvers, one-operator tag/deploy authority consistency, and self-approval deadlocks or widening."
+    },
+    {
+      "path": "localization_audit.py",
+      "role": "same-branch localization gate",
+      "desc": "Required sparse-overlay, reviewed-hash, locale terminology, structure, and Studio audit. Reviewed-target locales also reject learner-facing runnable-code strings that remain identical to ordinary English source copy, including terse labels."
+    },
+    {
+      "path": "localization_runtime_audit.py",
+      "role": "localization browser gate",
+      "desc": "Chromium coverage for same-page language routing, explicit fallback, responsive locale UI, Spanish card-title navigation without nested anchors, shared terminal prerequisites, localized figures, and side-by-side Localization Studio."
+    },
+    {
+      "path": "reference_graph.py",
+      "role": "reference graph",
+      "desc": "Audits cross-course reference coupling."
+    },
+    {
+      "path": "studio_interface_audit.py",
+      "role": "studio interface audit",
+      "desc": "Checks studio controls, local assets, static read-only mode, lab write mode, and documentation."
+    },
+    {
+      "path": "helper_notebook_runtime_audit.py",
+      "role": "helper notebook audit",
+      "desc": "Checks CanvasFlow and RunCell helper API use, then launches host Playwright to click every notebook run control."
+    },
+    {
+      "path": "studio_responsive_audit.py",
+      "role": "studio responsive audit",
+      "desc": "Uses host Playwright to stress narrow and short Studio viewports for scrollable topbar controls and sidebar panel floors."
+    },
+    {
+      "path": "openclaw_fallback_audit.py",
+      "role": "OpenClaw fallback audit",
+      "desc": "Checks that credentialed OpenClaw tests fail fast, fallback guidance remains usable, and the probe statically clears stale HTML frames."
+    },
+    {
+      "path": "gateway_token_audit.mjs",
+      "role": "OpenClaw gateway and chat contract",
+      "desc": "Executes token fixtures, checks EN/PT/ES final-event handling, protects actionable tool errors while filtering known sandbox bootstrap noise, and mutation-tests live harness wiring."
+    },
+    {
+      "path": "endpoint_registration_audit.py",
+      "role": "endpoint registration ownership contract",
+      "desc": "Keeps chat, embedding, and OpenClaw storage keys, query parameters, writers, typed probes, SKILL explorer calls, and EN/PT/ES configuration surfaces separate."
+    },
+    {
+      "path": "openclaw_connection_audit.mjs",
+      "role": "OpenClaw connection routing contract",
+      "desc": "Exercises relay defaults, direct-mode override, same-origin bypass, retired-state migration, terminal routing, and downstream locale reuse."
+    },
+    {
+      "path": "openclaw_connection_browser_audit.mjs",
+      "role": "OpenClaw connection browser contract",
+      "desc": "Mounts real Module 3a controls and uses a synthetic gateway to prove relay routing, final-after-end delivery, final-only answers, actionable tool errors, and runtime-noise filtering."
+    },
+    {
+      "path": "openclaw_probe_frame_runtime_audit.py",
+      "role": "OpenClaw probe frame browser audit",
+      "desc": "Uses host Chromium to prove HTML probe frames disappear after JSON, network-error, Cloudflare-login, remount, and reload transitions."
+    },
+    {
+      "path": "branch_preview_manifest_audit.py",
+      "role": "Pages branch manifest audit",
+      "desc": "Rejects branch selector entries without published artifact paths, self-tests availability and dependency-evidence detection, and probes deployed manifests, course URLs, dependency dashboards, inventories, and browser SBOMs."
+    },
+    {
+      "path": "branch_preview_runtime_audit.py",
+      "role": "Pages branch selector browser audit",
+      "desc": "Injects an unavailable preview, then proves Chromium hides it from both root and branch foyer selectors while retaining published options."
+    },
+    {
+      "path": "agent_process_audit.py",
+      "role": "Agent process audit",
+      "desc": "Checks that issue/MR, taxonomy, validation, and safe-auth process guardrails remain discoverable from repo beacons."
+    },
+    {
+      "path": "course_contract.py",
+      "role": "Course contract audit",
+      "desc": "Required invariant for the English source course title, abstract, and learning objectives."
+    },
+    {
+      "path": "course_content_contract.py",
+      "role": "required content contract",
+      "desc": "Locks retrieval/safety teaching promises plus source-backed product, platform, and automation qualifiers that generic validators cannot infer."
+    },
+    {
+      "path": "course_dependency_integrity.py",
+      "role": "course dependency integrity",
+      "desc": "Validates exact same-origin browser packages, license evidence, artifact hashes, source references, and the absence of runtime package-CDN pulls."
+    },
+    {
+      "path": "concept_order_audit.py",
+      "role": "Concept order audit",
+      "desc": "Required first-use checks for course vocabulary and prerequisite framing."
+    },
+    {
+      "path": "tenets.py",
+      "role": "tenet check",
+      "desc": "Checks platform tenets reflected in course files."
+    },
+    {
+      "path": "fix_comment_hygiene.py",
+      "role": "comment fixer",
+      "desc": "Applies safe comment-formatting fixes reported by code_hygiene.py."
+    }
+  ]
+}
+</script>
+
+<style data-skill-static="1">
+.skill-static{padding:24px clamp(18px,4vw,44px);border-bottom:1px solid #2a2a2a;background:#0d0d0d;color:#f2f2f2;font:15px/1.55 system-ui,sans-serif}
+.skill-static a{color:#76b900}.skill-static h1{margin:.1em 0 .25em;color:#76b900;font-size:1.65rem}.skill-static h2{font-size:1.02rem;margin:1.2rem 0 .45rem}.skill-static p{max-width:76rem;color:#b0b0b0}.skill-list{display:grid;grid-template-columns:1fr;max-width:76rem;margin:.7rem 0}.skill-link{display:grid;grid-template-columns:minmax(180px,280px) 1fr;gap:12px;border-top:1px solid #2a2a2a;padding:9px 4px;text-decoration:none}.skill-link:last-child{border-bottom:1px solid #2a2a2a}.skill-link b{display:block;color:#aee23a;margin-bottom:4px}.skill-link code,.skill-cmd code{font-family:ui-monospace,Consolas,monospace}.skill-link span{color:#b0b0b0;font-size:.9rem}.skill-cmds{display:grid;gap:8px;margin:.7rem 0}.skill-cmd{display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:8px;align-items:center;border:1px solid #2a2a2a;border-radius:8px;background:#111;padding:9px 11px}.skill-cmd b{color:#aee23a}.skill-cmd code{display:block;overflow:auto;white-space:nowrap;color:#f2f2f2}.skill-note{border-left:3px solid #76b900;background:rgba(118,185,0,.08);padding:10px 13px;margin:.8rem 0;color:#ddd}.skill-nav{display:flex;gap:12px;flex-wrap:wrap;margin:.8rem 0}.skill-nav a{border:1px solid #2a2a2a;border-radius:999px;padding:5px 10px;text-decoration:none}.skill-nav a:hover{border-color:#76b900}@media(max-width:700px){.skill-cmd{grid-template-columns:1fr}.skill-static{padding:18px}.skill-link{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<section class="skill-static" aria-labelledby="skill-title">
+  <header data-skill-header="1">
+<nav class="skill-nav" aria-label="Skill navigation"><a href="../../web/index.html">Home</a><a href="../SKILL.html">scripts</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../SKILL.html">Repository map</a></nav>
+</header>
+  <h1 id="skill-title">scripts/validation deterministic gates</h1>
+  <p>Static and rendered validators enforce links, layout, prose, code hygiene, figures, cells, theme behavior, screenshots, and course contracts.</p>
+  <div class="skill-note">Run commands from the repository root. Root-level script paths remain compatibility entrypoints; implementation files live in this directory tree.</div>
+  <div class="skill-note">Use the shared gate for branch evidence. The focused commands below diagnose individual contracts or exercise browser behavior. Visual changes also require a served page, screenshot evidence, and review in the active harness.</div>
+  <h2>Executable checks</h2>
+<div class="skill-cmds">
+  <div class="skill-cmd"><b>Fast shared gate</b><code>python3 scripts/validation/release_gate.py --tier fast --no-write --changed-since origin/main --jobs 4</code></div>
+  <div class="skill-cmd"><b>Complete shared gate</b><code>python3 scripts/validation/release_gate.py --tier ship --no-write --changed-since origin/main --jobs 4</code></div>
+  <div class="skill-cmd"><b>Explain selected signals</b><code>python3 scripts/validation/release_gate.py --tier ship --no-write --changed-since origin/main --list --plan-json /tmp/reacs-plan.json</code></div>
+  <div class="skill-cmd"><b>Contributor-local history</b><code>python3 scripts/validation/local_path_leak_audit.py --commit-range origin/main..HEAD</code></div>
+  <div class="skill-cmd"><b>Sensitive proposed history</b><code>python3 scripts/validation/sensitive_content_audit.py --commit-range origin/main..HEAD</code></div>
+  <div class="skill-cmd"><b>External release follow-up</b><code>python3 scripts/validation/release_change_reminder.py --commit-range origin/main..HEAD</code></div>
+  <div class="skill-cmd"><b>HTML structure + detector</b><code>python3 scripts/validation/html_structure_audit.py &amp;&amp; python3 scripts/validation/html_structure_audit.py --self-test</code></div>
+  <div class="skill-cmd"><b>Cell contract + detector</b><code>python3 -m unittest discover -v -s tests/validation &amp;&amp; python3 scripts/validation/cell_audit.py</code></div>
+  <div class="skill-cmd"><b>Learner-flow static + detector</b><code>python3 scripts/validation/learner_flow_audit.py &amp;&amp; python3 scripts/validation/learner_flow_audit.py --self-test</code></div>
+  <div class="skill-cmd"><b>Learner-flow browser lifecycle</b><code>python3 scripts/validation/learner_flow_runtime_audit.py --site-root web</code></div>
+  <div class="skill-cmd"><b>Runtime integration browser lifecycle</b><code>python3 scripts/validation/runtime_integration_browser_audit.py --site-root web</code></div>
+  <div class="skill-cmd"><b>Contribution safety + detector</b><code>python3 scripts/validation/contribution_safety_audit.py &amp;&amp; python3 scripts/validation/contribution_safety_audit.py --self-test</code></div>
+  <div class="skill-cmd"><b>GitLab CI structure + detector</b><code>python3 scripts/validation/gitlab_ci_policy.py --self-test &amp;&amp; python3 scripts/validation/gitlab_ci_policy.py</code></div>
+  <div class="skill-cmd"><b>Live GitLab authority</b><code>python3 scripts/validation/gitlab_governance_audit.py --self-test &amp;&amp; python3 scripts/validation/gitlab_governance_audit.py --project "$CI_PROJECT_ID"</code></div>
+  <div class="skill-cmd"><b>Code hygiene</b><code>python3 scripts/validation/code_hygiene.py --self-test &amp;&amp; python3 scripts/validation/code_hygiene.py</code></div>
+  <div class="skill-cmd"><b>Figure audit</b><code>python3 scripts/validation/figure_audit.py</code></div>
+  <div class="skill-cmd"><b>security architecture + detector</b><code>python3 scripts/validation/security_architecture_audit.py &amp;&amp; python3 -m unittest -v tests/validation/test_embedded_validator_suites.py</code></div>
+  <div class="skill-cmd"><b>Threat controls + detector</b><code>python3 scripts/validation/threat_control_audit.py &amp;&amp; python3 -m unittest -v tests/validation/test_embedded_validator_suites.py tests/validation/test_test_harness_contract.py</code></div>
+  <div class="skill-cmd"><b>Standard test harness contract</b><code>python3 -m unittest -v tests/validation</code></div>
+  <div class="skill-cmd"><b>Repository integration classifier</b><code>python3 -m unittest discover -v -s tests/validation</code></div>
+  <div class="skill-cmd"><b>Pages artifact integrity</b><code>python3 -m unittest discover -v -s tests/validation</code></div>
+  <div class="skill-cmd"><b>Product design + release test evidence</b><code>python3 -m unittest discover -v -s tests/validation &amp;&amp; python3 scripts/validation/release_evidence_audit.py</code></div>
+  <div class="skill-cmd"><b>Repository work products + detector</b><code>python3 -m unittest discover -v -s tests/validation &amp;&amp; python3 scripts/validation/repository_work_products_audit.py</code></div>
+  <div class="skill-cmd"><b>Rendered page screenshots</b><code>python3 scripts/validation/cell_ui_runtime_audit.py --site-root /tmp/nemoclaw_visual_preview --page /nemoclaw/02b-rag.html --screenshots /tmp/nemoclaw_visual_audit</code></div>
+  <div class="skill-cmd"><b>Studio interface</b><code>python3 scripts/validation/studio_interface_audit.py</code></div>
+  <div class="skill-cmd"><b>OpenClaw fallback + static frame lifecycle</b><code>python3 scripts/validation/openclaw_fallback_audit.py</code></div>
+  <div class="skill-cmd"><b>Gateway/chat contract + detector</b><code>bash scripts/runtime/run_node.sh tests/runtime/test_embedded_validator_suites.mjs &amp;&amp; bash scripts/runtime/run_node.sh scripts/validation/gateway_token_audit.mjs</code></div>
+  <div class="skill-cmd"><b>Endpoint registration ownership</b><code>python3 scripts/validation/endpoint_registration_audit.py &amp;&amp; python3 scripts/validation/endpoint_registration_audit.py --self-test</code></div>
+  <div class="skill-cmd"><b>OpenClaw connection routing</b><code>bash scripts/runtime/run_node.sh scripts/validation/openclaw_connection_audit.mjs</code></div>
+  <div class="skill-cmd"><b>OpenClaw connection browser</b><code>bash scripts/runtime/run_node.sh scripts/validation/openclaw_connection_browser_audit.mjs</code></div>
+  <div class="skill-cmd"><b>OpenClaw frame browser lifecycle</b><code>python3 scripts/validation/openclaw_probe_frame_runtime_audit.py --site-root web</code></div>
+  <div class="skill-cmd"><b>Pages branch availability</b><code>python3 scripts/validation/branch_preview_manifest_audit.py --self-test</code></div>
+  <div class="skill-cmd"><b>Pages branch selector browser</b><code>python3 scripts/validation/branch_preview_runtime_audit.py --site-root public</code></div>
+  <div class="skill-cmd"><b>Agent process</b><code>python3 scripts/validation/agent_process_audit.py</code></div>
+  <div class="skill-cmd"><b>Course contract</b><code>python3 scripts/validation/course_contract.py</code></div>
+  <div class="skill-cmd"><b>Required content contract</b><code>python3 scripts/validation/course_content_contract.py</code></div>
+  <div class="skill-cmd"><b>Dependency integrity</b><code>python3 scripts/validation/course_dependency_integrity.py</code></div>
+  <div class="skill-cmd"><b>Concept order</b><code>python3 scripts/validation/concept_order_audit.py</code></div>
+  <div class="skill-cmd"><b>Helper notebook static</b><code>python3 scripts/validation/helper_notebook_runtime_audit.py --static-only</code></div>
+  <div class="skill-cmd"><b>Helper notebook browser</b><code>python3 scripts/validation/helper_notebook_runtime_audit.py</code></div>
+  <div class="skill-cmd"><b>Studio responsive</b><code>python3 scripts/validation/studio_responsive_audit.py</code></div>
+  <div class="skill-cmd"><b>Localization + mutations</b><code>python3 scripts/validation/localization_audit.py --self-test &amp;&amp; for locale in pt-BR es-ES; do python3 scripts/validation/localization_audit.py --locale "$locale"; done</code></div>
+  <div class="skill-cmd"><b>Localization browser</b><code>python3 scripts/validation/localization_runtime_audit.py --site-root /tmp/pt-localization-pages</code></div>
+</div>
+  <h2>Linkage map</h2>
+  <div class="skill-list">
+    <a class="skill-link" href="release_gate.py"><b>release_gate.py</b><span>shared validation ladder. Keeps deterministic local, GitLab, GitHub Pages, and release checks aligned.</span></a>
+    <a class="skill-link" href="reacs_registry.json"><b>reacs_registry.json</b><span>Canonical suite, impact, ordering, and parallel-safety catalog.</span></a>
+    <a class="skill-link" href="reacs_registry.py"><b>reacs_registry.py</b><span>Strict loader and fail-closed proposal classifier for the suite catalog.</span></a>
+    <a class="skill-link" href="validate_bundle.py"><b>validate_bundle.py</b><span>ship gate. Composes every validator into the release gate and durable report.</span></a>
+    <a class="skill-link" href="artifact_link_audit.py"><b>artifact_link_audit.py</b><span>Static artifact-root gate. Checks every emitted HTML navigation and resource URL without page or path exemptions.</span></a>
+    <a class="skill-link" href="validation_report_audit.py"><b>validation_report_audit.py</b><span>same-commit report reuse gate. Requires the full 40-character Git object ID and rejects abbreviated, stale, failed, degraded, dirty-tree, or wrong-scope evidence before a downstream build skips regeneration.</span></a>
+    <a class="skill-link" href="validate_layout.py"><b>validate_layout.py</b><span>layout gate. Checks static links, the retired-runtime boundary, course assets, release scaffolding, and SKILL beacons.</span></a>
+    <a class="skill-link" href="local_path_leak_audit.py"><b>local_path_leak_audit.py</b><span>contributor-local boundary. Rejects workstation paths and local identifiers in the current tree and every proposed commit.</span></a>
+    <a class="skill-link" href="sensitive_content_audit.py"><b>sensitive_content_audit.py</b><span>sensitive contribution boundary. Scans the tree, complete proposed history, and MR/PR metadata while reporting only category and location.</span></a>
+    <a class="skill-link" href="sensitive-content-policy.json"><b>sensitive-content-policy.json</b><span>public fingerprint policy. Stores hashes only; private CI can add an overlay through an environment-provided file.</span></a>
+    <a class="skill-link" href="release_change_reminder.py"><b>release_change_reminder.py</b><span>external release follow-up reminder. Converts changed paths into an operator checklist for authorized systems.</span></a>
+    <a class="skill-link" href="grounding.py"><b>grounding.py</b><span>grounding sweep. Checks cited material association and source-grounding signals.</span></a>
+    <a class="skill-link" href="prose_variety.py"><b>prose_variety.py</b><span>prose cadence. Finds rhythm, buzz, grammar, and structural prose issues.</span></a>
+    <a class="skill-link" href="code_hygiene.py"><b>code_hygiene.py</b><span>code bloat and style. Scans code comments, walls, duplication, size, constants, and prose tells in code.</span></a>
+    <a class="skill-link" href="color_theme.py"><b>color_theme.py</b><span>Required theme gate. Includes Studio and every canonical page by default; flags inline literals, undefined variables, and render-time color bakes.</span></a>
+    <a class="skill-link" href="figure_audit.py"><b>figure_audit.py</b><span>figure audit. Checks static figure legibility, accessibility, injected-SVG style scoping, and the shared mobile lightbox readability contract.</span></a>
+    <a class="skill-link" href="figure_provenance.py"><b>figure_provenance.py</b><span>image-provenance reader. Derives theme-aware and fixed-white rendering modes from reviewed source records.</span></a>
+    <a class="skill-link" href="security_architecture_audit.py"><b>security_architecture_audit.py</b><span>Required security architecture gate. Derives CI jobs, runtime hosts, remote suffixes, and worker inventory from source; also checks public metadata boundaries, local-only classification, evidence, geometry, and SVG freshness.</span></a>
+    <a class="skill-link" href="threat_control_audit.py"><b>threat_control_audit.py</b><span>Required threat-control gate. Validates Target of Evaluation ownership, aggregate anticipated mitigations, evidence paths, external boundaries, and security overclaims.</span></a>
+    <a class="skill-link" href="repository_sync_audit.py"><b>repository_sync_audit.py</b><span>Read-only public-to-internal source drift classifier. External changes stop for a reviewed integration MR.</span></a>
+    <a class="skill-link" href="pages_artifact_integrity.py"><b>pages_artifact_integrity.py</b><span>Pages bounds, safe archive extraction, manifest continuity, and live byte-for-byte deployment verification.</span></a>
+    <a class="skill-link" href="release_evidence_audit.py"><b>release_evidence_audit.py</b><span>Required product-design and release-test gate. Checks public-safe scope, data and cryptography inventories, evidence ownership, external-review boundaries, gate wiring, and mutation coverage.</span></a>
+    <a class="skill-link" href="repository_work_products_audit.py"><b>repository_work_products_audit.py</b><span>Required repository work-product gate. Checks requirement levels, applicability, evidence paths, policy content, maintainer procedures, issue intake, gate wiring, and mutation coverage.</span></a>
+    <a class="skill-link" href="cell_ui_runtime_audit.py"><b>cell_ui_runtime_audit.py</b><span>rendered page screenshot audit. Discovers every canonical and localized interactive page, renders desktop/narrow light/dark pages, writes paired initial/expanded screenshots, rejects split or wrapped cell actions and localized overflow, flags wrong-tone surfaces, and exercises mobile figure zoom, pan, and close behavior.</span></a>
+    <a class="skill-link" href="cell_audit.py"><b>cell_audit.py</b><span>cell contract. Checks runnable-cell transparency, logging, awaits, keys, bundled editor assets, and UI contract with a focused asset-detector self-test.</span></a>
+    <a class="skill-link" href="learner_flow_audit.py"><b>learner_flow_audit.py</b><span>required learner-flow gate. Enforces Guided first visit, interactive-code collapse, default-visible paper references, saved depth, native inline disclosures, local questions, scope cues, readiness, lifecycle, viewport stability, and mutation coverage.</span></a>
+    <a class="skill-link" href="learner_flow_runtime_audit.py"><b>learner_flow_runtime_audit.py</b><span>learner-flow browser gate. Exercises Guided code collapse/local reveal, authored defaults, saved depth, section overrides, reload/print, narrow keyboard behavior, prerequisites, and cell lifecycle transitions.</span></a>
+    <a class="skill-link" href="runtime_integration_browser_audit.py"><b>runtime_integration_browser_audit.py</b><span>runtime integration browser gate. Executes model-route persistence, SKILL explorer reuse, typed 3a probes, the agent bundle, cron lifecycle, and live-policy state transition in Chromium.</span></a>
+    <a class="skill-link" href="contribution_safety_audit.py"><b>contribution_safety_audit.py</b><span>required contribution-safety gate. Holds governance and DCO, immutable action pins, locked workflow installs, fork-safe security workflows, submission evidence, hooks, PR permissions, and release authority together with mutation coverage.</span></a>
+    <a class="skill-link" href="gitlab_ci_policy.py"><b>gitlab_ci_policy.py</b><span>GitLab CI structural gate. Keeps the root manifest inert, SCA self-contained and change-sensitive, scan commands locked, and workflow paths assigned to named owners.</span></a>
+    <a class="skill-link" href="gitlab_governance_audit.py"><b>gitlab_governance_audit.py</b><span>read-only live-host gate. Reports whether GitLab protects main, release tags, production deploys and approvers, and the explicit human-review action while detecting one-operator deadlocks or authority widening.</span></a>
+    <a class="skill-link" href="localization_audit.py"><b>localization_audit.py</b><span>required locale gate. Rejects stale hashes, machine-contract drift, locale-specific prose artifacts, and untranslated runnable-code UI in reviewed-target locales, including short source-identical labels; mutation-tests the boundary and emits the Localization Studio manifest.</span></a>
+    <a class="skill-link" href="localization_runtime_audit.py"><b>localization_runtime_audit.py</b><span>browser locale gate. Exercises language routing, fallback behavior, responsive controls, Spanish card-title navigation without nested anchors, localized shared-terminal prerequisites, translated SVG geometry, and Localization Studio frames.</span></a>
+    <a class="skill-link" href="reference_graph.py"><b>reference_graph.py</b><span>reference graph. Audits cross-course reference coupling.</span></a>
+    <a class="skill-link" href="studio_interface_audit.py"><b>studio_interface_audit.py</b><span>studio interface audit. Checks studio controls, local assets, static read-only mode, lab write mode, and documentation.</span></a>
+    <a class="skill-link" href="helper_notebook_runtime_audit.py"><b>helper_notebook_runtime_audit.py</b><span>helper notebook audit. Checks CanvasFlow and RunCell helper API use, then launches host Playwright to click every notebook run control.</span></a>
+    <a class="skill-link" href="studio_responsive_audit.py"><b>studio_responsive_audit.py</b><span>studio responsive audit. Uses host Playwright to stress narrow and short Studio viewports for scrollable topbar controls and sidebar panel floors.</span></a>
+    <a class="skill-link" href="openclaw_fallback_audit.py"><b>openclaw_fallback_audit.py</b><span>OpenClaw fallback audit. Checks fail-fast behavior, backup guidance, and static probe-frame cleanup.</span></a>
+    <a class="skill-link" href="gateway_token_audit.mjs"><b>gateway_token_audit.mjs</b><span>Gateway/chat contract. Exercises token formats, final-event ordering, locale wiring, runtime-noise filtering, live harness wiring, and mutation coverage.</span></a>
+    <a class="skill-link" href="endpoint_registration_audit.py"><b>endpoint_registration_audit.py</b><span>Endpoint registration contract. Keeps chat, embedding, and OpenClaw storage, query hints, writers, the SKILL explorer, and typed EN/PT/ES probes on their declared registries.</span></a>
+    <a class="skill-link" href="openclaw_connection_audit.mjs"><b>openclaw_connection_audit.mjs</b><span>OpenClaw connection routing contract. Exercises configurable relay, direct-mode and same-origin bypasses, retired-state migration, terminal routing, and downstream locale reuse.</span></a>
+    <a class="skill-link" href="openclaw_connection_browser_audit.mjs"><b>openclaw_connection_browser_audit.mjs</b><span>OpenClaw browser contract. Proves Module 3a routing, final-after-end delivery, final-only answers, actionable tool errors, and runtime-noise filtering.</span></a>
+    <a class="skill-link" href="openclaw_probe_frame_runtime_audit.py"><b>openclaw_probe_frame_runtime_audit.py</b><span>OpenClaw probe frame browser audit. Exercises HTML-to-JSON/error/access-warning cleanup plus remount and reload.</span></a>
+    <a class="skill-link" href="branch_preview_manifest_audit.py"><b>branch_preview_manifest_audit.py</b><span>Pages branch manifest audit. Rejects selector entries without published paths or browser dependency evidence, self-tests detection, and probes live Pages output.</span></a>
+    <a class="skill-link" href="branch_preview_runtime_audit.py"><b>branch_preview_runtime_audit.py</b><span>Pages branch selector browser audit. Injects a ghost preview and proves root/branch foyers hide it.</span></a>
+    <a class="skill-link" href="agent_process_audit.py"><b>agent_process_audit.py</b><span>Agent process audit. Checks issue/MR, taxonomy, validation, and safe-auth guardrail visibility.</span></a>
+    <a class="skill-link" href="course_contract.py"><b>course_contract.py</b><span>Course contract audit. Holds the English course title, abstract, and objectives verbatim.</span></a>
+    <a class="skill-link" href="course_content_contract.py"><b>course_content_contract.py</b><span>Required content contract. Locks retrieval/safety teaching promises and current product/platform qualifiers.</span></a>
+    <a class="skill-link" href="course_dependency_integrity.py"><b>course_dependency_integrity.py</b><span>Dependency integrity. Validates exact locks, licenses, hashes, source references, and same-origin delivery.</span></a>
+    <a class="skill-link" href="concept_order_audit.py"><b>concept_order_audit.py</b><span>Concept order audit. Keeps course terms defined before learner-facing prose or code depends on them.</span></a>
+    <a class="skill-link" href="tenets.py"><b>tenets.py</b><span>tenet check. Checks platform tenets reflected in course files.</span></a>
+    <a class="skill-link" href="fix_comment_hygiene.py"><b>fix_comment_hygiene.py</b><span>comment fixer. Applies safe comment-formatting fixes reported by code_hygiene.py.</span></a>
+  </div>
+  <h2>Interactive explorer</h2>
+  <p>The explorer below opens source files, tours important sections, and checks documented paths against the repository tree.</p>
+</section>
+<div id="explorer"></div>
+<noscript>
+  <section class="skill-static"><h2>JavaScript disabled</h2><p>The static command list and file links above remain usable. Enable JavaScript for source viewing and guided tours.</p></section>
+</noscript>
+<script src="../../web/_skill_explorer.js"></script>
+</body>
+</html>

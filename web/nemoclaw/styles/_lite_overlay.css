@@ -1,0 +1,800 @@
+/* ─── Lite-mode overlay ────────────────────────────────────────────────────
+   Only inlined by scripts/build/bundle_standalone.py for the iframe-ready single-
+   file exports. The lab view (web/*.html served behind nginx) stays on the
+   dark theme; the bundled view flips the CSS variables to a light theme so
+   the page reads in an iframe / edX / external static host.
+*/
+
+:root {
+  /* Light theme. Overrides the dark-theme vars in styles/_style.css. */
+  --g:   #4f7f00;
+  --gd:  #2f6a00;
+  --gs:  #4a7a00;
+  --bg:  #ffffff;
+  --e1:  #f6f8fa;
+  --e2:  #eef1f4;
+  --e3:  #e1e6eb;
+  --code-surface: #f8fafc;
+  --bd:  #d0d7de;
+  --tx:  #1a1a1a;
+  --td:  #3b3b3b;
+  --tf:  #57606a;
+  --acc: #0969da;
+  --err: #d1242f;
+  --warn: #9a6700;
+  --reason: #8250df;
+  --artifact: #54aeff;
+  --artifact-text: #0969da;
+  /* Diagram arrow + kind hues (mountDiagram / viz.diagram emits var(--dg-*)); light values so a
+     runtime-injected diagram in the baked export renders light, not the dark pastels. */
+  --dg-arrow:#57606a;
+  --dg-env:#0969da; --dg-agent:#4a7a00; --dg-tool:#7c3aed;
+  --dg-data:#9a6700; --dg-model:#0d9488; --dg-neutral:#57606a;
+}
+
+/* GFX graphics: force the light palette in the standalone.
+   styles/_style.css defines --gfx-* only under `.gfx-dark`, and the bundler strips
+   that class from inline figure bodies, so the var() fallbacks (the light
+   values) take over. This block is belt-and-braces. If any gfx node keeps
+   its class (a parent wrapper, a future figure the stripper misses, a
+   runtime-injected diagram), its vars still resolve to these light values
+   instead of the dark pastels (#bd9cf7, #5aa8ff, #ff6b6b) that wash out on a
+   white card. The lab view never loads this overlay, so its dark palette in
+   styles/_style.css stays intact.
+   NOTE: keep the literal token s-v-g out of this comment; the bundler's
+   recolor pass scans for figure open-tags and a stray one here would drag
+   the head style block into the substitution. */
+.gfx-dark {
+  --gfx-ink:#1a1a1a; --gfx-ink2:#3b3b3b; --gfx-sub:#5e5e5e; --gfx-faint:#8b949e;
+  --gfx-line:#d0d7de; --gfx-panel:#f6f8fa; --gfx-bg:#ffffff;
+  --gfx-blue:#0969da; --gfx-green:#4a7a00; --gfx-purple:#6f42c1; --gfx-amber:#9a6700; --gfx-teal:#0d9488; --gfx-red:#d1242f;
+  --gfx-tint-blue:#dfeaf5; --gfx-tint-green:#e6f3d4; --gfx-tint-purple:#eadfff;
+  --gfx-tint-amber:#f7e9cf; --gfx-tint-teal:#d6f1ee; --gfx-tint-red:#fadcdc; --gfx-tint-sub:#eef1f4;
+  --gfx-paper-tint-blue:#dfeaf5; --gfx-paper-tint-green:#e6f3d4;
+  --gfx-paper-tint-purple:#eadfff; --gfx-paper-tint-teal:#d6f1ee;
+  --gfx-paper-surface:#ffffff; --gfx-paper-ink:#595959; --gfx-paper-muted:#7f7f7f; --gfx-paper-line:#e7e6e6; --gfx-paper-faint:#adb9ca;
+  --gfx-paper-blue:#2f528f; --gfx-paper-blue2:#4472c4; --gfx-paper-green:#32ee5a;
+  --gfx-paper-teal:#00d9f0; --gfx-paper-yellow:#ffff00; --gfx-paper-orange:#f08b30; --gfx-paper-red:#fe3222;
+}
+
+/* Body rules that flip the canvas to light. */
+body {
+  background: #ffffff;
+  color: #1a1a1a;
+}
+
+/* Topbar gone in the export. No nav, no JupyterLab link, no python-toggle. */
+.topbar { display: none !important; }
+
+/* Journey map gone. Each export page stands alone with no cross-page nav. */
+#journey-map { display: none !important; }
+
+/* Foot-nav (prev/next) is kept in the bundle, restyled for light mode.
+   The lite link-bridge intercepts clicks on these anchors and routes
+   them through the parent navigator's setActive(), so the journey bar
+   stays in sync. */
+.foot-nav {
+  border-top-color: #d0d7de !important;
+  padding-top: 1.6em !important;
+  margin-top: 3em !important;
+}
+.foot-nav a {
+  border-color: #d0d7de !important;
+  color: #3b3b3b !important;
+  background: #ffffff !important;
+}
+.foot-nav a:hover {
+  border-color: #76b900 !important;
+  color: #2f6a00 !important;
+  background: #f6f8fa !important;
+}
+.foot-nav a.next {
+  background: #76b900 !important;
+  color: #000 !important;
+  border-color: #4a7a00 !important;
+}
+.foot-nav a.next:hover { background: #5a8e00 !important; color: #ffffff !important; }
+
+/* edX LMS chrome is only present when the bundled file is iframed inside the
+   edX course. The selectors are no-ops elsewhere (no matching nodes). */
+.navigation_arrows_div {
+  visibility: hidden;
+}
+.bookmark-button-wrapper {
+  visibility: hidden;
+  margin: 0 !important;
+  height: 0px;
+}
+.content-wrapper.main-container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Re-theme the hero as a left-rule module header. */
+.hero {
+  display: block;
+  border-left: 4px solid #76b900;
+  padding: 20px 0 20px 18px;
+  margin: 28px 0 32px;
+}
+.hero .eyebrow {
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: #76b900;
+  margin-bottom: .5em;
+}
+.hero h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #1a1a1a;
+  margin-bottom: .5em;
+}
+.hero h1 span { color: #76b900; }
+.hero .lead {
+  font-size: 1rem;
+  color: #444;
+  line-height: 1.7;
+}
+
+/* Headings & body text. */
+h2 { color: #1a1a1a; }
+h3 { color: #2f6a00; }
+p, li { color: #3b3b3b; }
+p strong { color: #1a1a1a; }
+a { color: #2e7d32; }
+a:hover { color: #1a4d10; }
+
+/* Callouts. */
+.callout {
+  background: #f0f8e6;
+  color: #3b3b3b;
+}
+.callout.warn { background: #fff8c5; }
+.callout.info { background: #ddf4ff; }
+.callout strong { color: #1a1a1a; }
+
+/* ── Code blocks ──────────────────────────────────────────────────────────
+   When the bundle is loaded standalone, none of these `!important` flags
+   matter. The reason they exist is the edX HtmlBlock context: edX's own
+   CSS bleeds into the rendered block with rules like
+
+     code { color: #000 !important; font-size: 14px !important; }
+     .xmodule_display.xmodule_HtmlBlock pre { color: #313131; white-space: pre-wrap; }
+     .xmodule_display.xmodule_HtmlBlock code { color:#313131; background:none; padding:0; }
+     *, *::before, *::after { margin: 0; padding: 0; }
+
+   That cascade overrides our chip background (chips become naked black
+   text), forces CodeMirror's <pre class="CodeMirror-line"> to dark gray
+   on a near-black panel ("black on black"), and strips code-panel
+   padding. To win we need `!important` *and* high enough specificity. */
+
+code,
+:not(pre) > code {
+  background: #f6f8fa !important;
+  color: #1f2328 !important;
+  padding: .12em .4em !important;
+  border-radius: 3px !important;
+  border: 1px solid #d0d7de !important;
+  font-family: var(--mono) !important;
+  font-size: .9em !important;
+}
+
+pre {
+  background: var(--code-surface) !important;
+  color: #1f2328 !important;
+  border: 1px solid #d0d7de !important;
+  border-radius: 6px !important;
+  padding: 14px 16px !important;
+  margin: 1em 0 !important;
+  font-family: var(--mono) !important;
+  font-size: .85rem !important;
+  line-height: 1.55 !important;
+  /* Wrap long lines instead of per-cell horizontal scroll. Horizontal
+     scrollbars inside <pre> blocks look wrong nested inside an iframe,
+     and they hide content from a non-scrolling reader. */
+  overflow-x: visible !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+}
+
+pre code {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  font-size: inherit !important;
+  color: inherit !important;
+}
+
+/* CodeMirror has to defend against edX forcing `pre { color: #313131 }` on
+   every <pre>, which would include each `<pre class="CodeMirror-line">`
+   and kill the monokai theme. We push the container's dark backdrop,
+   keep line backgrounds transparent (so they inherit it), and force
+   color inheritance so token-color spans still win. Reset padding/margin
+   so edX's universal `* { margin:0; padding:0 }` doesn't squash the
+   editor, and pin line-height against edX's `* { line-height: 1.4em }`. */
+.cm-s-monokai.CodeMirror,
+.CodeMirror.cm-s-monokai {
+  background: #0d0d0d !important;
+  color: #f8f8f2 !important;
+  line-height: 1.55 !important;
+}
+.cm-s-monokai pre.CodeMirror-line,
+.cm-s-monokai pre.CodeMirror-line-like,
+.CodeMirror pre.CodeMirror-line,
+.CodeMirror pre.CodeMirror-line-like {
+  background: transparent !important;
+  color: inherit !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 4px !important;
+  margin: 0 !important;
+  white-space: pre !important;
+  font-size: inherit !important;
+}
+.CodeMirror-gutters { background: #0d0d0d !important; }
+.CodeMirror-linenumber { color: #6a6a6a !important; }
+
+/* Run-output panels. edX's `.xmodule_HtmlBlock pre { color: #313131 }` makes
+   our dark output streams unreadable. Force light text on the dark backdrop. */
+.cf-panel-output-pre,
+.cf-panel-stream,
+.cf-panel-log,
+.cell-output {
+  background: #0d0d0d !important;
+  color: #f2f2f2 !important;
+  white-space: pre-wrap !important;
+  font-family: var(--mono) !important;
+  line-height: 1.55 !important;
+}
+.cell-output.empty   { color: #6a6a6a !important; font-style: italic; }
+.cell-output.error   { color: #ef4444 !important; }
+
+/* (cf-helpers-table styling lives in the lite repaint block below.) */
+
+/* Tables. */
+table { border-color: #d0d7de; }
+table th, table td { border-color: #d0d7de !important; color: #3b3b3b !important; }
+table th { background: #f6f8fa; color: #1a1a1a !important; }
+
+/* Module cards (used on index.html). */
+.module-card {
+  background: #f6f8fa;
+  border: 1px solid #d0d7de;
+  color: #1a1a1a;
+}
+.module-card:hover { background: #eef1f4; border-color: #76b900; }
+.module-card h3 { color: #1a1a1a; }
+.module-card p { color: #3b3b3b; }
+.module-card .num { color: #57606a; }
+
+/* Buttons. */
+.btn, .action-btn {
+  background: #76b900;
+  color: #fff;
+}
+.btn:hover, .action-btn:hover { background: #5a8e00; }
+.action-btn.secondary {
+  background: #f6f8fa;
+  color: #1a1a1a;
+  border: 1px solid #d0d7de;
+}
+
+/* Key panel (lite-mode inline form). Override the dark .key-panel rule
+   from styles/_style.css so the outer container doesn't double up its own
+   dark background around our inner .key-form. */
+.key-panel, #key-panel {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 0 28px !important;
+}
+.key-form {
+  background: #f6f8fa;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  padding: 16px 20px;
+}
+.key-form label {
+  display: block;
+  font-weight: 600;
+  font-size: .9rem;
+  color: #1a1a1a;
+  margin-bottom: 6px;
+}
+.key-form input {
+  width: 100%;
+  padding: 8px 10px;
+  font-family: var(--mono);
+  font-size: .88rem;
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  background: #fff;
+  color: #1a1a1a;
+  margin-bottom: 10px;
+}
+.key-form button {
+  padding: 7px 16px;
+  background: #76b900;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.key-form button:hover { background: #5a8e00; }
+.key-form .key-hint { margin-top: 8px; font-size: .78rem; color: #57606a; }
+.key-form .key-ok { color: #2e7d32; font-size: .82rem; margin-top: 6px; }
+.key-form .key-err { color: #d1242f; font-size: .82rem; margin-top: 6px; }
+.key-form .key-note { font-size: .85rem; color: #57606a; padding: 8px 0; }
+
+/* SVG figures: drop the dark backdrop, use a quiet card. The bundler also
+   substitutes specific dark fills/strokes inside SVG element bodies so
+   diagrams stay legible on a light background. */
+svg[style*="background:#0d0d0d"],
+svg[style*="background: #0d0d0d"] {
+  background: #f6f8fa !important;
+  border: 1px solid #d0d7de !important;
+}
+
+/* OpenClaw workspace file-tree (03b): an HTML block with a hardcoded
+   `background:#0d0d0d`, so the SVG recolor never touches it. In export its
+   text flips to dark-on-light via the :root vars above, leaving dim text on a
+   black box. Flip the backdrop to the same light card; the file names
+   (--gs -> green) and types (--tf -> gray) stay readable from those vars. */
+.file-tree {
+  background: #f6f8fa !important;
+  border-color: #d0d7de !important;
+  color: #1f2328 !important;
+}
+
+/* Pages that style their SVGs via a page-local <style> block don't get the substitution above,
+   because those rules win on specificity. Patch with !important per-page selector. */
+.topo-svg svg {
+  background: #f6f8fa !important;
+  border: 1px solid #d0d7de !important;
+}
+
+/* Cert-page exercise card grid. The `.cert` variant used a light-purple
+   text color authored for a dark backdrop; flip it to a darker purple
+   that reads on a light bg. */
+.nb-card { background: #f6f8fa !important; border-color: #d0d7de !important; color: #3b3b3b !important; }
+.nb-card:hover { border-color: #76b900 !important; color: #1a1a1a !important; }
+.nb-card .mod  { color: #57606a !important; }
+.nb-card .name { color: #4a7a00 !important; }
+.nb-card .svcs { color: #57606a !important; }
+.nb-card.cert .name { color: #6f42c1 !important; }
+
+/* Cert callout. The purple tint stays, but force readable text in light mode. */
+.cert-callout {
+  background: #f3eeff !important;
+  border-color: rgba(111,66,193,0.35) !important;
+}
+.cert-callout .py-label { color: #6f42c1 !important; }
+.cert-callout p         { color: #3b3b3b !important; }
+.cert-callout p strong  { color: #1a1a1a !important; }
+.cert-callout code      { background: #ffffff !important; color: #1f2328 !important; border-color: #d0d7de !important; }
+
+/* Service topology table. The dark `var(--gs)` mono cells in the source CSS
+   become #4a7a00 in lite mode automatically via the var override, but the
+   row borders use `var(--e2)` which lite redefines too; just nudge the
+   monospace first-col color to stay green on white. */
+.svc-table td:first-child { color: #4a7a00 !important; }
+.svc-table td   { color: #3b3b3b !important; }
+.svc-table th   { color: #57606a !important; }
+
+/* Cell containers (code panels). */
+.cf-cell, .cell {
+  background: #ffffff;
+  border: 1px solid #d0d7de;
+  color: #1a1a1a;
+}
+.cf-cell-header, .cell-header {
+  background: #f6f8fa;
+  border-bottom: 1px solid #d0d7de;
+  color: #57606a;
+}
+
+/* ─── mountCanvasFlow light theme repaint ───────────────────────────────
+   The original cf-* surfaces are dark (designed for the lab's dark page).
+   In the export we want a light look matching the page, so every surface
+   gets repainted. The !important flags are not for the standalone case
+   (nothing competes there); they are because the edX HtmlBlock cascade
+   forces black-on-black on prose colors and we need to win for inline
+   text inside these elements too. CodeMirror and output streams stay
+   dark so monokai stays usable and terminal-style output stays legible. */
+
+.cf-wrap {
+  background: #f6f8fa !important;
+  border: 1px solid #d0d7de !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04) !important;
+}
+.cf-label { color: #4a7a00 !important; }
+.cf-intro {
+  color: #3b3b3b !important;
+  border-left-color: #d0d7de !important;
+}
+
+/* Stage: light gray backdrop with darker gray dots, per the user's spec */
+.cf-stage {
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  background-color: #eef1f4 !important;
+  background-image: radial-gradient(circle, #999 1px, transparent 1px) !important;
+  background-size: 22px 22px !important;
+  border: 1px solid #d0d7de !important;
+}
+
+/* Workflow nodes: light gray cards with subtle gradient */
+.cf-node {
+  background: linear-gradient(180deg, rgb(241,241,241) 0%, rgb(228,228,228) 100%) !important;
+  border: 1.5px solid #d0d7de !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06) !important;
+  color: #1a1a1a !important;
+}
+.cf-node:hover {
+  border-color: #4a7a00 !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.10), 0 0 0 1px rgba(118,185,0,0.20) inset !important;
+}
+.cf-node.active   { border-color: #76b900 !important; box-shadow: 0 4px 14px rgba(0,0,0,0.10), 0 0 0 1px rgba(118,185,0,0.40) inset !important; }
+.cf-node.complete { border-color: #76b900 !important; }
+.cf-node.error    { border-color: #d1242f !important; }
+.cf-node-title    { color: #1a1a1a !important; }
+.cf-node-icon     { filter: none !important; }
+.cf-node-status-dot { background: #b0b8c0 !important; box-shadow: 0 0 0 1px rgba(0,0,0,0.05) !important; }
+.cf-node-status-dot.complete { background: #76b900 !important; box-shadow: 0 0 8px rgba(118,185,0,0.5) !important; }
+.cf-node-status-dot.error    { background: #d1242f !important; box-shadow: 0 0 8px rgba(215,78,78,0.5) !important; }
+
+/* Edges between nodes */
+.cf-edge         { stroke: #4a7a00 !important; opacity: 0.55 !important; }
+.cf-edge.flowing { stroke: #76b900 !important; opacity: 1 !important; }
+
+/* Code panels. These are the containers below the canvas, separate from
+   .cf-panel-code-det, which is the inner code editor. */
+.cf-panel {
+  background: #ffffff !important;
+  border: 1px solid #d0d7de !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.03) !important;
+}
+.cf-panel.focus    { border-color: #76b900 !important; box-shadow: 0 0 0 1px rgba(118,185,0,0.30) inset !important; }
+.cf-panel.complete { border-color: rgba(118,185,0,0.50) !important; }
+.cf-panel.error    { border-color: #d1242f !important; }
+.cf-panel-title    { color: #4a7a00 !important; }
+.cf-panel-summary  { color: #3b3b3b !important; }
+.cf-panel-status-dot { background: #b0b8c0 !important; }
+.cf-panel-status-dot.complete { background: #76b900 !important; }
+.cf-panel-status-dot.error    { background: #d1242f !important; }
+
+/* Helpers section */
+.cf-helpers {
+  background: #ffffff !important;
+  border: 1px solid #d0d7de !important;
+}
+.cf-helpers > summary:hover { background: rgba(118,185,0,0.06) !important; }
+.cf-helpers > summary::before {
+  border-right-color: #4a7a00 !important;
+  border-bottom-color: #4a7a00 !important;
+}
+.cf-helpers-chip {
+  background: rgba(118,185,0,0.10) !important;
+  color: #4a7a00 !important;
+  border-color: rgba(118,185,0,0.40) !important;
+}
+.cf-helpers-sig  { color: #3b3b3b !important; }
+.cf-helpers-meta { color: #57606a !important; }
+/* All inline code chips render neutral (dark gray on light gray) for
+   readability. Green is reserved for cell-level affordances (chip
+   badges, row hover/active, selected state) and is never used on running
+   prose text, where it lowers contrast. */
+.cf-helpers-sig code,
+.cf-helpers-meta code,
+.cf-helpers-table code,
+.cf-helpers-src-head code {
+  background: #f6f8fa !important;
+  color: #1f2328 !important;
+  border: 1px solid #d0d7de !important;
+  padding: 1px 5px !important;
+}
+/* First column of the helpers table still reads as "this is a helper
+   name". Convey that via the cell background tint, not the text color. */
+.cf-helpers-table td:first-child {
+  background: #f0f9e0 !important;     /* faint green tint */
+  color: #1f2328 !important;
+  font-weight: 600 !important;
+}
+.cf-helpers-table td:first-child code {
+  background: transparent !important;
+  border: none !important;
+  font-weight: 600 !important;
+  padding: 0 !important;
+}
+.cf-helpers-table       { border-top-color: #d0d7de !important; }
+.cf-helpers-table td    { color: #3b3b3b !important; border-bottom: 1px solid #eef1f4 !important; }
+.cf-helpers-table td:first-child {
+  background: #f6f8fa !important;
+  color: #4a7a00 !important;
+}
+.cf-helpers-table tr[data-helper]:hover            { background: rgba(118,185,0,0.06) !important; }
+.cf-helpers-table tr[data-helper].selected         { background: rgba(118,185,0,0.12) !important; }
+.cf-helpers-table tr[data-helper].selected td:first-child {
+  color: #4a7a00 !important;
+  box-shadow: inset 3px 0 0 #76b900 !important;
+}
+.cf-helpers-section-head td {
+  color: #57606a !important;
+  border-bottom-color: #d0d7de !important;
+}
+.cf-helpers-section-head td code {
+  background: transparent !important;
+  color: #57606a !important;
+  border: none !important;
+}
+
+/* Helpers source editor row */
+.cf-helpers-source-row > td {
+  background: #f6f8fa !important;
+  border-bottom-color: #d0d7de !important;
+}
+.cf-helpers-src-head {
+  background: #eef1f4 !important;
+  border-bottom-color: #d0d7de !important;
+  color: #57606a !important;
+}
+.cf-helpers-src-head code {
+  background: transparent !important;
+  color: #4a7a00 !important;
+  border: none !important;
+}
+.cf-helpers-apply,
+.cf-helpers-revert {
+  background: #ffffff !important;
+  color: #3b3b3b !important;
+  border: 1px solid #d0d7de !important;
+}
+.cf-helpers-apply:hover  { background: rgba(118,185,0,0.10) !important; color: #4a7a00 !important; border-color: #76b900 !important; }
+.cf-helpers-revert:hover { background: #eef1f4 !important; color: #1a1a1a !important; border-color: #57606a !important; }
+.cf-helpers-status       { color: #3b3b3b !important; }
+.cf-helpers-status.ok    { color: #4a7a00 !important; }
+
+/* Panel <details> (code/results inside each cell) */
+.cf-panel-det {
+  background: #ffffff !important;
+  border-color: #d0d7de !important;
+}
+.cf-panel-det[open] {
+  border-color: rgba(118,185,0,0.5) !important;
+  box-shadow: 0 0 0 1px rgba(118,185,0,0.10) inset !important;
+}
+.cf-panel-det > summary {
+  background: linear-gradient(90deg, rgba(118,185,0,0.06) 0%, transparent 60%) !important;
+}
+.cf-det-chip {
+  background: #f6f8fa !important;
+  color: #4a7a00 !important;
+  border: 1px solid #d0d7de !important;
+}
+.cf-det-sig  { color: #3b3b3b !important; }
+/* The "done in 1.23s" / "streaming…" / "error" status chip lives at the
+   right edge of every panel summary. Source CSS gives it `background:
+   #161616` (dark) which leaves the green/red text invisible on light. */
+.cf-det-meta {
+  background: #f6f8fa !important;
+  border-color: #d0d7de !important;
+  color: #57606a !important;
+}
+.cf-det-meta.running { color: #b8730d !important; background: #fff4d6 !important; border-color: rgba(184,115,13,0.4) !important; }
+.cf-det-meta.ok      { color: #2f6a00 !important; background: #e6f3d4 !important; border-color: rgba(118,185,0,0.4) !important; }
+.cf-det-meta.err     { color: #d1242f !important; background: #ffe1e1 !important; border-color: rgba(209,36,47,0.4) !important; }
+
+/* Buttons */
+.cf-btn {
+  background: #ffffff !important;
+  color: #1a1a1a !important;
+  border: 1px solid #d0d7de !important;
+  padding: 7px 14px !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  font-size: .82rem !important;
+  font-family: ui-monospace, monospace !important;
+  cursor: pointer !important;
+  line-height: 1.2 !important;
+}
+.cf-btn:hover:not([disabled]) { border-color: #76b900 !important; background: #f6f8fa !important; }
+.cf-btn-run {
+  background: linear-gradient(180deg, #8fcd00 0%, #76b900 100%) !important;
+  color: #000 !important;
+  border: 1px solid #4a7a00 !important;
+  box-shadow: 0 2px 6px rgba(118,185,0,0.25) !important;
+}
+.cf-btn-run:hover:not([disabled]) {
+  background: linear-gradient(180deg, #a3dd1f 0%, #8fcd00 100%) !important;
+  border-color: #76b900 !important;
+}
+
+.cell-card {
+  background: #ffffff !important;
+  border: 1px solid #d0d7de !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+.cell-head {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  padding: 8px 12px !important;
+  background: #f6f8fa !important;
+  border-bottom: 1px solid #d0d7de !important;
+  font-family: var(--mono) !important;
+  font-size: .78rem !important;
+}
+.cell-spacer { flex: 1 1 auto !important; min-width: 24px !important; }
+.rc-label { color: #4a7a00 !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: .06em !important; }
+.rc-lang-sub { color: #57606a !important; }
+.cell-btn {
+  background: #ffffff !important;
+  color: #1a1a1a !important;
+  border: 1px solid #d0d7de !important;
+  border-radius: 6px !important;
+  padding: 6px 12px !important;
+  font-family: ui-monospace, monospace !important;
+  font-size: .8rem !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+}
+.cell-btn:hover:not([disabled]) { border-color: #76b900 !important; background: #f6f8fa !important; }
+.cell-btn-run {
+  background: #8fcd00 !important;
+  color: #000 !important;
+  border: 1px solid #4a7a00 !important;
+  box-shadow: 0 2px 6px rgba(118,185,0,0.25) !important;
+}
+.cell-btn-reset { color: #57606a !important; }
+.cell-schema-det,
+.rc-code-det { border-top: 1px solid #d0d7de !important; }
+.cell-schema-det > summary,
+.rc-code-det > summary {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 8px 12px !important;
+  cursor: pointer !important;
+  font-family: var(--mono) !important;
+  font-size: .78rem !important;
+  color: #57606a !important;
+}
+.rc-code {
+  width: 100% !important;
+  min-height: 140px !important;
+  background: #f6f8fa !important;
+  color: #1a1a1a !important;
+  border: none !important;
+  outline: none !important;
+  padding: 12px 14px !important;
+  font-family: ui-monospace, monospace !important;
+  font-size: .84rem !important;
+  line-height: 1.55 !important;
+  resize: vertical !important;
+}
+.cell-log-line { padding: 6px 14px !important; color: #1a1a1a !important; font-family: var(--mono) !important; white-space: pre-wrap !important; }
+.cell-log-heading { padding: 10px 14px 2px !important; color: #4a7a00 !important; font-family: var(--mono) !important; font-weight: 700 !important; text-transform: uppercase !important; }
+.cell-log-json { margin: 4px 14px 8px !important; padding: 10px 12px !important; background: #f6f8fa !important; border: 1px solid #d0d7de !important; border-radius: 4px !important; overflow-x: auto !important; }
+.cell-log-kv { padding: 6px 14px !important; display: flex !important; flex-wrap: wrap !important; gap: 14px !important; font-family: var(--mono) !important; }
+.cell-log-kv-key { color: #57606a !important; }
+.cell-log-kv-val { color: #4a7a00 !important; }
+.cell-log-html { padding: 6px 14px !important; }
+.cell-log-details { margin: 4px 14px 6px !important; border: 1px solid #d0d7de !important; border-radius: 4px !important; background: #f6f8fa !important; }
+.cell-log-details > summary { padding: 6px 10px !important; color: #57606a !important; cursor: pointer !important; font-family: var(--mono) !important; }
+.cell-log-details-body { padding: 8px 12px !important; color: #1a1a1a !important; white-space: pre-wrap !important; }
+.cf-panel-runone:not(.cell-btn) {
+  background: #f6f8fa !important;
+  color: #4a7a00 !important;
+  border: 1px solid #76b900 !important;
+  padding: 5px 12px !important;
+}
+.cf-panel-runone:not(.cell-btn):hover {
+  background: rgba(118,185,0,0.10) !important;
+  color: #2f6a00 !important;
+  border-color: #2f6a00 !important;
+}
+
+/* Status / overview */
+.cf-status-bar       { color: #57606a !important; }
+.cf-status-bar.ok    { color: #4a7a00 !important; }
+.cf-status-bar.err   { color: #d1242f !important; }
+.cf-panel-overview   { background: #f6f8fa !important; border-color: #d0d7de !important; }
+.cf-overview-label   { color: #57606a !important; }
+.cf-overview-key     { color: #4a7a00 !important; }
+.cf-overview-val     { color: #1a1a1a !important; }
+
+/* Output panels stay dark on purpose. Terminal-style output reads better
+   on a dark backdrop. Force light text/border to win against edX's
+   `pre { color: #313131 }`. The earlier defenses already set this; the
+   block below is just the canonical place. */
+.cf-panel-stream     { background: #0d0d0d !important; color: #f2f2f2 !important; border-top: 1px solid #2a2a2a !important; }
+.cf-panel-log        { background: #0a0a0a !important; color: #b0b0b0 !important; border-top: 1px solid #2a2a2a !important; }
+.cf-panel-output-pre { background: #0d0d0d !important; color: #f2f2f2 !important; border-left-color: #76b900 !important; border-top-color: #2a2a2a !important; }
+.cf-panel-no-python  { background: #f6f8fa !important; color: #57606a !important; }
+.cf-panel-stream-head { color: #57606a !important; }
+.cf-panel-error       { background: #fff0f0 !important; color: #d1242f !important; border-color: #d1242f !important; }
+
+/* ── Syntax-highlight palette for light mode ──────────────────────────────
+   The lab source ships a dark "one-dark"-ish hljs palette (`.hljs-string`
+   is `#c3e88d` pale green etc.). On a light prose page those colors are
+   nearly invisible. Override with a github-light-ish palette that reads
+   on `#f6f8fa` and below. It is used both for prose <pre><code> blocks AND
+   for the cf-panel-output-pre when it renders a JSON return value. */
+pre code.hljs,
+pre .hljs                { color: #1f2328 !important; background: transparent !important; }
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-tag                { color: #d73a49 !important; font-weight: 600 !important; }
+.hljs-string,
+.hljs-attr,
+.hljs-template-tag       { color: #032f62 !important; }
+.hljs-comment,
+.hljs-quote              { color: #6a737d !important; font-style: italic !important; }
+.hljs-title,
+.hljs-title.function_,
+.hljs-function .hljs-title,
+.hljs-section            { color: #6f42c1 !important; }
+.hljs-number,
+.hljs-literal            { color: #005cc5 !important; }
+.hljs-built_in,
+.hljs-type,
+.hljs-class .hljs-title  { color: #e36209 !important; }
+.hljs-params,
+.hljs-variable,
+.hljs-template-variable  { color: #24292e !important; }
+.hljs-operator,
+.hljs-punctuation        { color: #24292e !important; }
+.hljs-meta               { color: #6a737d !important; }
+.hljs-selector-class,
+.hljs-selector-id        { color: #6f42c1 !important; }
+.hljs-deletion           { color: #b31d28 !important; background: #ffeef0 !important; }
+.hljs-addition           { color: #22863a !important; background: #f0fff4 !important; }
+.hljs-name               { color: #22863a !important; }
+.hljs-symbol,
+.hljs-bullet             { color: #005cc5 !important; }
+
+/* Output pane: when the panel renders a JSON-shaped return value, the
+   bundler-side JS gives it `code.language-json` inside the pre. Light
+   text on the dark output backdrop, light-palette token colors. */
+.cf-panel-output-pre code,
+.cf-panel-output-pre code.hljs,
+.cf-panel-output-pre .hljs       { color: #e6edf3 !important; background: transparent !important; border: 0 !important; }
+/* Belt-and-braces: every span hljs emits gets the same base color,
+   even the hljs-punctuation spans for `{ } [ ] , :`, so we never inherit
+   edX's `code { color: #000 !important }` for tokens we didn't
+   explicitly recolour below. */
+.cf-panel-output-pre code *      { color: inherit !important; }
+.cf-panel-output-pre .hljs-string,
+.cf-panel-output-pre .hljs-attr  { color: #9ecbff !important; }
+.cf-panel-output-pre .hljs-number,
+.cf-panel-output-pre .hljs-literal { color: #f0883e !important; }
+.cf-panel-output-pre .hljs-keyword { color: #ff7b72 !important; }
+.cf-panel-output-pre .hljs-comment { color: #8b949e !important; font-style: italic !important; }
+.cf-panel-output-pre .hljs-title,
+.cf-panel-output-pre .hljs-name    { color: #d2a8ff !important; }
+.cf-panel-output-pre .hljs-punctuation,
+.cf-panel-output-pre .hljs-operator { color: #c9d1d9 !important; }
+
+/* Helpers scroll wrapper (defined in styles/_style.css). edX may apply
+   margin: 0 to the table; keep the wrapper handling overflow. */
+.cf-helpers-scroll { overflow-x: auto !important; }
+.cf-helpers-table  { min-width: 560px !important; }
+
+/* Floating copy button: keep visible on hover of light code panel */
+.cf-code-copy {
+  background: rgba(255,255,255,0.85) !important;
+  color: #57606a !important;
+  border: 1px solid #d0d7de !important;
+}
+.cf-code-copy:hover { background: #ffffff !important; color: #4a7a00 !important; border-color: #76b900 !important; }
+
+@media (max-width: 720px) { .cf-stage { padding: 18px 16px !important; } }

@@ -4,22 +4,19 @@ What changed and why?
 
 ## Issue link
 
-Addresses #
+Closes #
 
 ## Current release target
 
 - Course: static browser course under `web/nemoclaw/` unless this is bundle-wide
 - Production: public static host or co-located NemoClaw launchable
-- Local-only support: `cpu/`, `workspace/`, and `deploy/` unless specifically changed
+- Tooling: host Python, Node.js, and Chromium; any isolation wrapper is operator-owned
 - Bundle scope: course-specific or bundle-wide
 
 ## Surfaces touched
 
 - [ ] `web/`
 - [ ] `i18n/`
-- [ ] `cpu/`
-- [ ] `workspace/`
-- [ ] `deploy/`
 - [ ] `scripts/`
 - [ ] `docs/`
 - [ ] `materials/source governance`
@@ -59,6 +56,8 @@ review records in the authorized release system.
 Who reviewed the complete diff and can explain every surviving line? Who owns merge and release
 approval? Agent output does not satisfy this section.
 
+Unresolved risk must satisfy `RELEASE_STATUS.json`; review text is not a compensating control.
+
 Every commit must include a matching `Signed-off-by` trailer under [`DCO.md`](../DCO.md). CI checks
 the complete pull-request range; a PR-level checkbox does not replace commit-level signoff.
 
@@ -70,7 +69,7 @@ or merge commit for a stacked pull request.
 
 Learner-facing:
 
-Runtime/deploy:
+Browser/runtime integration:
 
 Governance/process:
 
@@ -81,3 +80,9 @@ What could regress? What exact commit, flag, workflow, or artifact restores the 
 ## Out of scope
 
 Name adjacent work deliberately excluded from this change.
+
+If localized learner prose changed, name its language reviewer and Changelog credit. If only canonical
+English changed, confirm localized prose stayed byte-identical or explain the coordinated ownership.
+
+Relationship rule: keep `Closes #N` when this PR satisfies every acceptance criterion. A partial
+PR uses `Addresses #N` and adds `## Remaining issue work` with the unmet criteria.

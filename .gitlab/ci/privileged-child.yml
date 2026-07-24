@@ -1,0 +1,233 @@
+# Static child pipeline. It receives only DLI_REQUEST_* YAML variables from the runnerless bridge.
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "parent_pipeline"'
+    - when: never
+
+stages: [acquire, validate, deploy]
+
+privileged_acquire_candidate:
+  inherit:
+    default: false
+    variables: false
+  image: python:3.11-slim@sha256:842ba355f270883624adb44f8cabb8c55c5505e95db5fe76de413eb655666736
+  tags: [pages]
+  stage: acquire
+  timeout: 15m
+  resource_group: dli-privileged-acquisition
+  environment:
+    name: dli-source-review
+  script:
+    - |
+      set -euo pipefail
+      mkdir -p privileged
+      python3 -m scripts.ci.trusted_gitlab_context --job privileged_acquire_candidate --output privileged/trusted-context.json
+      python3 -m scripts.ci.privileged_request "$DLI_REQUEST_OP" --context privileged/trusted-context.json --output privileged/request.json
+      python3 -m scripts.ci.fetch_validated_candidate \
+        --job "$(python3 -c 'import json; print(json.load(open("privileged/request.json"))["job_id"])')" \
+        --ref "$(python3 -c 'import json; print(json.load(open("privileged/request.json"))["source_ref"])')" \
+        --sha "$(python3 -c 'import json; print(json.load(open("privileged/request.json"))["source_sha"])')" \
+        --context privileged/trusted-context.json \
+        --output privileged/validated-candidate.tar.gz
+      python3 -m scripts.validation.pages_artifact_integrity \
+        --archive privileged/validated-candidate.tar.gz --extract-to /tmp/validated-candidate
+      candidate_prefix=""
+      if [ -d /tmp/validated-candidate/web/nemoclaw ]; then candidate_prefix="web"; fi
+      python3 -m scripts.validation.pages_artifact_integrity \
+        --root /tmp/validated-candidate \
+        --expect-sha "$(python3 -c 'import json; print(json.load(open("privileged/request.json"))["source_sha"])')" \
+        --course-prefix "$candidate_prefix" \
+        --check-manifest /tmp/validated-candidate/pages-sha256.txt
+      rm -rf /tmp/validated-candidate
+  artifacts:
+    name: "privileged-candidate-$CI_COMMIT_SHORT_SHA"
+    paths: [privileged/]
+    expire_in: 1 day
+  rules:
+    - if: '$DLI_REQUEST_OP == "live-interface-review" || $DLI_REQUEST_OP == "cdn-publish"'
+      when: on_success
+      allow_failure: false
+    - when: never
+
+prepare_live_runtime:
+  inherit:
+    default: false
+    variables: false
+  image: mcr.microsoft.com/playwright:v1.61.1-noble@sha256:5b8f294aff9041b7191c34a4bab3ac270157a28774d4b0660e9743297b697e48
+  tags: [pages]
+  stage: acquire
+  timeout: 15m
+  resource_group: dli-live-runtime-preparation
+  script:
+    - |
+      set -euo pipefail
+      python3 -m scripts.ci.assert_unprivileged_environment
+      corepack enable
+      (cd scripts/runtime && pnpm install --frozen-lockfile --ignore-scripts)
+      mkdir -p trusted-runtime
+      tar -czf trusted-runtime/node-modules.tar.gz -C scripts/runtime node_modules
+  artifacts:
+    name: "trusted-live-runtime-$CI_COMMIT_SHORT_SHA"
+    paths: [trusted-runtime/node-modules.tar.gz]
+    expire_in: 1 day
+  rules:
+    - if: '$DLI_REQUEST_OP == "live-interface-review"'
+      when: on_success
+      allow_failure: false
+    - when: never
+
+live_candidate_interfaces:
+  inherit:
+    default: false
+    variables: false
+  image: mcr.microsoft.com/playwright:v1.61.1-noble@sha256:5b8f294aff9041b7191c34a4bab3ac270157a28774d4b0660e9743297b697e48
+  tags: [pages]
+  stage: validate
+  timeout: 30m
+  resource_group: dli-live-interface-review
+  needs:
+    - job: privileged_acquire_candidate
+      artifacts: true
+    - job: prepare_live_runtime
+      artifacts: true
+  script:
+    - |
+      set -euo pipefail
+      python3 -m scripts.ci.assert_unprivileged_environment
+      tar -xzf trusted-runtime/node-modules.tar.gz -C scripts/runtime
+      test -f scripts/runtime/node_modules/playwright-core/package.json
+      python3 -m scripts.validation.pages_artifact_integrity \
+        --archive privileged/validated-candidate.tar.gz --extract-to /tmp/validated-candidate
+      mkdir -p /tmp/candidate-home
+      env -i HOME=/tmp/candidate-home CI=1 \
+        PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+        python3 -m scripts.validation.interface_inventory_browser_audit \
+        --site-root /tmp/validated-candidate --timeout-ms 600000
+      env -i HOME=/tmp/candidate-home CI=1 \
+        PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+        python3 -m scripts.ci.live_interface_review --assert-capabilities /tmp/validated-candidate
+  rules:
+    - if: '$DLI_REQUEST_OP == "live-interface-review"'
+      when: on_success
+      allow_failure: false
+    - when: never
+
+live_interface_review:
+  inherit:
+    default: false
+    variables: false
+  image: mcr.microsoft.com/playwright:v1.61.1-noble@sha256:5b8f294aff9041b7191c34a4bab3ac270157a28774d4b0660e9743297b697e48
+  tags: [pages]
+  stage: validate
+  timeout: 30m
+  needs:
+    - job: privileged_acquire_candidate
+      artifacts: true
+    - job: prepare_live_runtime
+      artifacts: true
+    - job: live_candidate_interfaces
+      artifacts: false
+  resource_group: dli-live-interface-review
+  environment:
+    name: live-interface-review
+  script:
+    - |
+      set -euo pipefail
+      python3 - <<'PY'
+      import pathlib, tarfile
+      archive = pathlib.Path("trusted-runtime/node-modules.tar.gz")
+      def bounded(parts):
+          stack = []
+          for part in parts:
+              if part in {"", "."}: continue
+              if part == "..":
+                  if not stack: return False
+                  stack.pop()
+              else: stack.append(part)
+          return bool(stack) and stack[0] == "node_modules"
+      with tarfile.open(archive, "r:gz") as bundle:
+          for member in bundle.getmembers():
+              path = pathlib.PurePosixPath(member.name)
+              if path.is_absolute() or not bounded(path.parts):
+                  raise SystemExit("trusted runtime archive contains an unsafe path")
+              if member.issym() or member.islnk():
+                  link = pathlib.PurePosixPath(member.linkname)
+                  if link.is_absolute() or not bounded(path.parent.parts + link.parts):
+                      raise SystemExit("trusted runtime archive contains an unsafe link")
+          bundle.extractall("scripts/runtime")
+      PY
+      test -f scripts/runtime/node_modules/playwright-core/package.json
+      for protected_file in "$LIVE_NVIDIA_API_KEY_FILE" "$LIVE_BUILD_API_KEY_FILE" "$LIVE_CLAW_SESSION_1_FILE"; do
+        test -s "$protected_file"
+      done
+      if [ -n "${LIVE_CLAW_SESSION_2_FILE:-}" ]; then test -s "$LIVE_CLAW_SESSION_2_FILE"; fi
+      python3 -m scripts.ci.trusted_gitlab_context --job live_interface_review \
+        --prior privileged/trusted-context.json --output /tmp/trusted-context.json
+      python3 -m scripts.ci.live_interface_review --request privileged/request.json
+  rules:
+    - if: '$DLI_REQUEST_OP == "live-interface-review"'
+      when: on_success
+      allow_failure: false
+    - when: never
+
+cdn_prepare:
+  inherit:
+    default: false
+    variables: false
+  image: python:3.11-slim@sha256:842ba355f270883624adb44f8cabb8c55c5505e95db5fe76de413eb655666736
+  tags: [pages]
+  stage: validate
+  timeout: 15m
+  resource_group: dli-cdn-publication
+  needs:
+    - job: privileged_acquire_candidate
+      artifacts: true
+  script:
+    - |
+      set -euo pipefail
+      python3 -m scripts.ci.assert_unprivileged_environment
+      python3 -m scripts.validation.pages_artifact_integrity \
+        --archive privileged/validated-candidate.tar.gz --extract-to /tmp/validated-candidate
+      mkdir -p cdn
+      cp privileged/request.json cdn/request.json
+      python3 -m scripts.ci.prepare_cdn_publication \
+        --candidate /tmp/validated-candidate --request cdn/request.json \
+        --output cdn/publication --plan cdn/publication-plan.json
+  artifacts:
+    name: "cdn-publication-$CI_COMMIT_SHORT_SHA"
+    paths: [cdn/]
+    expire_in: 1 day
+  rules:
+    - if: '$DLI_REQUEST_OP == "cdn-publish"'
+      when: on_success
+      allow_failure: false
+    - when: never
+
+cdn_publish:
+  inherit:
+    default: false
+    variables: false
+  tags: [dli-cdn-publisher]
+  stage: deploy
+  timeout: 15m
+  variables:
+    GIT_STRATEGY: "none"
+  needs:
+    - job: cdn_prepare
+      artifacts: true
+  resource_group: dli-cdn-production
+  environment:
+    name: dli-cdn-production
+  script:
+    - |
+      set -euo pipefail
+      unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_PROFILE AWS_CONFIG_FILE AWS_SHARED_CREDENTIALS_FILE
+      test -x /opt/dli-course-publisher/publish
+      /opt/dli-course-publisher/publish \
+        --publication "$CI_PROJECT_DIR/cdn/publication" \
+        --plan "$CI_PROJECT_DIR/cdn/publication-plan.json"
+  rules:
+    - if: '$DLI_REQUEST_OP == "cdn-publish"'
+      when: on_success
+      allow_failure: false
+    - when: never

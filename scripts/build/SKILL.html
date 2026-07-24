@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>scripts/build packaging and deploy helpers</title>
+
+<script type="application/json" id="skill-meta">
+{
+  "schema": "dir-skill/1.0",
+  "node_type": "directory-explorer",
+  "title": "scripts/build packaging and deploy helpers",
+  "source_dir": "scripts/build/",
+  "summary": "Build and publishing helpers for the static bundle, branch manifests, language manifests, hooks, edX export, and the composed security review design.",
+  "related": [
+    "scripts/build/build_pages.sh",
+    "scripts/build/project_docs_explorer.py",
+    "scripts/build/project_source_tree.py",
+    "scripts/build/project_artifact_navigation.py",
+    "scripts/build/project_artifact_manifests.py",
+    "scripts/build/vendor_browser_dependencies.mjs",
+    "scripts/build/bundle_standalone.py",
+    "scripts/build/push_pages.sh",
+    "scripts/build/publish_edx.py",
+    "scripts/build/install-hooks.sh",
+    "scripts/build/build_branch_manifest.py",
+    "scripts/build/package_release.py",
+    "scripts/build/build_repository_overview_html.py",
+    "scripts/build/build_security_review_package.py",
+    "scripts/build/build_repository_overview.mjs",
+    "scripts/build/capture_repository_overview.mjs"
+  ],
+  "explorer": "../../web/_skill_explorer.js"
+}
+</script>
+
+<script type="application/json" id="explorer-config">
+{
+  "title": "scripts/build packaging and deploy helpers",
+  "summary": "Build and publishing helpers for the static bundle, branch manifests, language manifests, hooks, and edX export.",
+  "model": "nvidia/nemotron-3-nano-30b-a3b",
+  "ties": [
+    "build"
+  ],
+  "nav": {
+    "home": "../../web/index.html",
+    "up": {
+      "label": "scripts",
+      "href": "../SKILL.html"
+    }
+  },
+  "files": [
+    {
+      "path": "build_pages.sh",
+      "role": "site assembler",
+      "desc": "Builds public/ from the client-side course and validation assets."
+    },
+    {
+      "path": "project_docs_explorer.py",
+      "role": "rendered-document artifact gate",
+      "desc": "Audits the docs catalog, contextual link graph, and canonical/generated declarations, then projects declared files and local Markdown targets into Pages."
+    },
+    {
+      "path": "project_source_tree.py",
+      "role": "source explorer projection",
+      "desc": "Copies the exact tracked and proposed source set into Pages and verifies every projected byte."
+    },
+    {
+      "path": "project_artifact_navigation.py",
+      "role": "artifact navigation projector",
+      "desc": "Rebases every generated explorer and directory entry to the exact static deployment root."
+    },
+    {
+      "path": "project_artifact_manifests.py",
+      "role": "artifact manifest projector",
+      "desc": "Reprojects branch, language, and license data into every discovered source mirror after manifest rewrites."
+    },
+    {
+      "path": "vendor_browser_dependencies.mjs",
+      "role": "browser dependency packager",
+      "desc": "Bundles exact npm inputs, copies license evidence, hashes assets, and derives the public runtime-reference inventory."
+    },
+    {
+      "path": "bundle_standalone.py",
+      "role": "standalone bundler",
+      "desc": "Copies and inlines the course into a self-contained web bundle."
+    },
+    {
+      "path": "push_pages.sh",
+      "role": "Pages pusher",
+      "desc": "Pushes the assembled public/ output to the Pages target."
+    },
+    {
+      "path": "publish_edx.py",
+      "role": "edX export",
+      "desc": "Creates the iframe-friendly edX surface."
+    },
+    {
+      "path": "install-hooks.sh",
+      "role": "hook installer",
+      "desc": "Installs local git hooks that run repo gates."
+    },
+    {
+      "path": "build_branch_manifest.py",
+      "role": "branch manifest",
+      "desc": "Builds availability-aware branch metadata containing only preview paths published in the current Pages artifact."
+    },
+    {
+      "path": "build_language_manifest.py",
+      "role": "language manifest",
+      "desc": "Builds language-branch metadata for translated bundles."
+    },
+    {
+      "path": "package_release.py",
+      "role": "deterministic release packager",
+      "desc": "Builds a normalized versioned archive, release manifest with required external artifact evidence, copied SBOM assets, and SHA256SUMS with a reproducibility self-test."
+    },
+    {
+      "path": "build_security_review_package.py",
+      "role": "security review design composer",
+      "desc": "Builds one compact, self-contained public-safe design from canonical scope, aggregate controls, anticipated mitigations, and verification evidence."
+    }
+  ]
+}
+</script>
+
+<style data-skill-static="1">
+.skill-static{padding:24px clamp(18px,4vw,44px);border-bottom:1px solid #2a2a2a;background:#0d0d0d;color:#f2f2f2;font:15px/1.55 system-ui,sans-serif}
+.skill-static a{color:#76b900}.skill-static h1{margin:.1em 0 .25em;color:#76b900;font-size:1.65rem}.skill-static h2{font-size:1.02rem;margin:1.2rem 0 .45rem}.skill-static p{max-width:76rem;color:#b0b0b0}.skill-list{display:grid;grid-template-columns:1fr;max-width:76rem;margin:.7rem 0}.skill-link{display:grid;grid-template-columns:minmax(180px,280px) 1fr;gap:12px;border-top:1px solid #2a2a2a;padding:9px 4px;text-decoration:none}.skill-link:last-child{border-bottom:1px solid #2a2a2a}.skill-link b{display:block;color:#aee23a;margin-bottom:4px}.skill-link code,.skill-cmd code{font-family:ui-monospace,Consolas,monospace}.skill-link span{color:#b0b0b0;font-size:.9rem}.skill-cmds{display:grid;gap:8px;margin:.7rem 0}.skill-cmd{display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:8px;align-items:center;border:1px solid #2a2a2a;border-radius:8px;background:#111;padding:9px 11px}.skill-cmd b{color:#aee23a}.skill-cmd code{display:block;overflow:auto;white-space:nowrap;color:#f2f2f2}.skill-note{border-left:3px solid #76b900;background:rgba(118,185,0,.08);padding:10px 13px;margin:.8rem 0;color:#ddd}.skill-nav{display:flex;gap:12px;flex-wrap:wrap;margin:.8rem 0}.skill-nav a{border:1px solid #2a2a2a;border-radius:999px;padding:5px 10px;text-decoration:none}.skill-nav a:hover{border-color:#76b900}@media(max-width:700px){.skill-cmd{grid-template-columns:1fr}.skill-static{padding:18px}.skill-link{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<section class="skill-static" aria-labelledby="skill-title">
+  <header data-skill-header="1">
+<nav class="skill-nav" aria-label="Skill navigation"><a href="../../web/index.html">Home</a><a href="../SKILL.html">scripts</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../SKILL.html">Repository map</a></nav>
+</header>
+  <h1 id="skill-title">scripts/build packaging and deploy helpers</h1>
+  <p>Build and publishing helpers for the static bundle, branch manifests, language manifests, hooks, and edX export.</p>
+  <div class="skill-note">Some build commands write generated output. Use temporary output paths for checks unless you intend to update release artifacts.</div>
+  <h2>Executable checks</h2>
+  <div class="skill-cmds">
+    <div class="skill-cmd"><b>Standalone bundle</b><code>python3 scripts/build/bundle_standalone.py --src web/nemoclaw --out /tmp/nemoclaw_bundle_check --clean --full</code></div>
+    <div class="skill-cmd"><b>Pages build</b><code>bash scripts/build/build_pages.sh</code></div>
+    <div class="skill-cmd"><b>Docs catalog + projection</b><code>python3 scripts/build/project_docs_explorer.py --self-test &amp;&amp; python3 scripts/build/project_docs_explorer.py --audit</code></div>
+    <div class="skill-cmd"><b>Source explorer projection</b><code>python3 scripts/build/project_source_tree.py --self-test</code></div>
+    <div class="skill-cmd"><b>Artifact navigation</b><code>python3 scripts/build/project_artifact_navigation.py /tmp/nemoclaw-pages</code></div>
+    <div class="skill-cmd"><b>Artifact manifests</b><code>python3 scripts/build/project_artifact_manifests.py /tmp/nemoclaw-pages</code></div>
+    <div class="skill-cmd"><b>Browser package inventory</b><code>python3 -m unittest -v tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_course_dependency_integrity</code></div>
+    <div class="skill-cmd"><b>Release package determinism</b><code>python3 scripts/build/package_release.py --self-test</code></div>
+    <div class="skill-cmd"><b>Security review package</b><code>python3 scripts/build/build_security_review_package.py --package</code></div>
+    <div class="skill-cmd"><b>edX export</b><code>python3 scripts/build/publish_edx.py --help</code></div>
+  </div>
+  <h2>Linkage map</h2>
+  <div class="skill-list">
+    <a class="skill-link" href="build_pages.sh"><b>build_pages.sh</b><span>site assembler. Builds public/ from the client-side course and validation assets.</span></a>
+    <a class="skill-link" href="project_docs_explorer.py"><b>project_docs_explorer.py</b><span>docs graph and projection gate. Rejects unlisted or orphaned authored docs, ambiguous generated files, and missing artifact targets.</span></a>
+    <a class="skill-link" href="project_source_tree.py"><b>project_source_tree.py</b><span>Authoring-source projection for complete, working SKILL explorers in Pages; maps dot-prefixed host configuration to public-safe routes and rebuilds generated standalone output only at its canonical route.</span></a>
+    <a class="skill-link" href="project_artifact_navigation.py"><b>project_artifact_navigation.py</b><span>Artifact-root projector. Rebases generated navigation and supplies a working directory entry for every shipped SKILL contract.</span></a>
+    <a class="skill-link" href="project_artifact_manifests.py"><b>project_artifact_manifests.py</b><span>Artifact manifest projector. Keeps branch, language, and license evidence aligned across every discovered source mirror.</span></a>
+    <a class="skill-link" href="vendor_browser_dependencies.mjs"><b>vendor_browser_dependencies.mjs</b><span>browser dependency packager. Generates same-origin bundles, licenses, hashes, and source references from the exact lock.</span></a>
+    <a class="skill-link" href="bundle_standalone.py"><b>bundle_standalone.py</b><span>standalone bundler. Copies and inlines the course into a self-contained web bundle.</span></a>
+    <a class="skill-link" href="push_pages.sh"><b>push_pages.sh</b><span>Pages pusher. Pushes the assembled public/ output to the Pages target.</span></a>
+    <a class="skill-link" href="publish_edx.py"><b>publish_edx.py</b><span>edX export. Creates the iframe-friendly edX surface.</span></a>
+    <a class="skill-link" href="install-hooks.sh"><b>install-hooks.sh</b><span>hook installer. Writes shared dispatchers that run the active worktree's repository gates.</span></a>
+    <a class="skill-link" href="build_branch_manifest.py"><b>build_branch_manifest.py</b><span>branch manifest. Lists only production and preview paths published in the current Pages artifact.</span></a>
+    <a class="skill-link" href="build_language_manifest.py"><b>build_language_manifest.py</b><span>language manifest. Builds language-branch metadata for translated bundles.</span></a>
+    <a class="skill-link" href="package_release.py"><b>package_release.py</b><span>deterministic release packager. Builds the versioned archive, manifest, release assets, checksums, and required external-evidence list.</span></a>
+    <a class="skill-link" href="build_security_review_package.py"><b>build_security_review_package.py</b><span>Security review design composer. Produces one compact, self-contained design and deterministic two-file upload archive.</span></a>
+  </div>
+  <h2>Interactive explorer</h2>
+  <p>The explorer below opens source files, tours important sections, and checks documented paths against the repository tree.</p>
+</section>
+<div id="explorer"></div>
+<noscript>
+  <section class="skill-static"><h2>JavaScript disabled</h2><p>The static command list and file links above remain usable. Enable JavaScript for source viewing and guided tours.</p></section>
+</noscript>
+<script src="../../web/_skill_explorer.js"></script>
+</body>
+</html>

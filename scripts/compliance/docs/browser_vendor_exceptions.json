@@ -1,0 +1,34 @@
+{
+  "schema": "nemoclaw-browser-modification-exceptions/1",
+  "exceptions": [
+    {
+      "id": "langchain-browser-esm-commonjs-interop-v1",
+      "asset": "langchain-1.4.7.esm.js",
+      "entrypoint": "scripts/browser-vendor/langchain-entry.js",
+      "distribution_form": "transformed-bundle",
+      "publisher_provided_minified": false,
+      "transformation": "esbuild resolves the selected LangChain dependency graph into one browser ESM file without minification; no manual source patch is permitted.",
+      "required_exports": [
+        "ChatOpenAI",
+        "tool",
+        "createReactAgent",
+        "MemorySaver",
+        "z"
+      ],
+      "necessity": [
+        "The learner exercises import five APIs from separate LangChain and Zod packages through one same-origin browser module.",
+        "The locked graph contains Node-style bare package imports and CommonJS-only dependencies, including base64-js 1.5.1, eventemitter3 4.0.7, p-finally 1.0.0, p-queue 6.6.2, and p-timeout 3.2.0.",
+        "The pinned @langchain/core package also contains Fast JSON Patch, js-sha256, sax-js, and String.fromCodePoint utility source copied by LangChain; embedded-component-evidence.json records those non-npm constituents and their full licenses.",
+        "A static browser cannot resolve those bare package imports or execute CommonJS require/module.exports files directly from the vendored tree.",
+        "Bundling supplies module resolution and CommonJS-to-ESM interoperability. Minification is unnecessary and forbidden."
+      ],
+      "constraints": [
+        "This is the only browser asset that may differ from publisher files.",
+        "The generated file must not be minified.",
+        "No manual edit to the generated file is permitted; CI regenerates it and requires a clean diff.",
+        "esbuild-preserved legal comment sections must map to a recorded npm package or embedded component; the .LEGAL.txt file is supplemental and never substitutes for the full inventory or licenses.",
+        "Every other browser asset must be a byte-for-byte upstream file copy with identical upstream and delivered SHA-256 values."
+      ]
+    }
+  ]
+}

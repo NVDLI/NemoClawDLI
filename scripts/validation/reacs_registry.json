@@ -1,0 +1,2060 @@
+{
+  "schema": "reacs-suite-registry/2",
+  "description": "Discovery-first ReACS suite catalog. Every changed path is monitored by default; declared impacts only permit narrower specialized mutation selection.",
+  "default_impact": "full-matrix",
+  "policy_paths": [
+    "scripts/validation/reacs_registry.json",
+    "scripts/validation/reacs_registry.py",
+    "scripts/validation/release_gate.py",
+    ".gitlab-ci.yml",
+    ".gitlab/ci/*",
+    ".github/workflows/*",
+    "scripts/ci/*",
+    "scripts/validation/interface_inventory_audit.py",
+    "scripts/validation/validator_specialization_audit.py",
+    "scripts/validation/reacs_specialization_exceptions.json"
+  ],
+  "suites": [
+    {
+      "id": "test-reacs-registry",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 1,
+        "ship": 1
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_reacs_registry"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/reacs_registry.json",
+        "scripts/validation/reacs_registry.py",
+        "scripts/validation/release_gate.py",
+        "tests/validation/test_reacs_registry.py",
+        ".gitlab-ci.yml",
+        ".gitlab/ci/*",
+        ".github/workflows/*"
+      ]
+    },
+    {
+      "id": "container-boundary-audit-self-test",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 2,
+        "ship": 2
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/validation/container_boundary_audit.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/container_boundary_audit.py",
+        "scripts/validation/release_gate.py",
+        "**/Dockerfile",
+        "**/Containerfile",
+        "**/docker-compose*.yml"
+      ]
+    },
+    {
+      "id": "container-boundary-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 3,
+        "ship": 3
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/validation/container_boundary_audit.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "bundle-standalone-self-test",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 4,
+        "ship": 4
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/build/bundle_standalone.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/build/bundle_standalone.py",
+        "scripts/build/build_pages.sh",
+        "web/nemoclaw/*.html",
+        "web/nemoclaw/assets/figures/*",
+        "i18n/*/web/nemoclaw/*.html"
+      ]
+    },
+    {
+      "id": "test-artifact-link-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 5,
+        "ship": 5
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_artifact_link_audit"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/artifact_link_audit.py",
+        "scripts/build/bundle_standalone.py",
+        "scripts/build/build_pages.sh",
+        "tests/validation/test_embedded_validator_suites.py",
+        "**/*.html"
+      ]
+    },
+    {
+      "id": "test-artifact-navigation-projection",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 6,
+        "ship": 6
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_artifact_navigation_projection"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/build/bundle_standalone.py",
+        "scripts/build/project_artifact_navigation.py",
+        "scripts/build/project_artifact_manifests.py",
+        "scripts/build/build_branch_manifest.py",
+        "scripts/validation/artifact_link_audit.py",
+        "tests/validation/test_artifact_navigation_projection.py",
+        "**/*.html"
+      ]
+    },
+    {
+      "id": "build-security-review-package-self-test",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 7,
+        "ship": 7
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/build/build_security_review_package.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/build/build_security_review_package.py",
+        "docs/product-design.md",
+        "docs/security-design.md",
+        "docs/security-control-disposition.md",
+        "docs/security-control-themes.json",
+        "docs/release-test-plan.md",
+        "docs/SKILL.html",
+        "scripts/build/SKILL.html"
+      ]
+    },
+    {
+      "id": "pull-materials-verify-committed",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 8,
+        "ship": 9
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/materials/pull_materials.py",
+        "--verify-committed"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "test-local-path-leak-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 9,
+        "ship": 10
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_local_path_leak_audit"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/local_path_leak_audit.py"
+      ]
+    },
+    {
+      "id": "local-path-leak-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 10,
+        "ship": 11
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/validation/local_path_leak_audit.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "test-external-link-attribution-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 11,
+        "ship": 12
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_external_link_attribution_audit"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/external_link_attribution_audit.py",
+        "scripts/build/bundle_standalone.py",
+        "web/*.html",
+        "web/*.js",
+        "web/nemoclaw/*.html",
+        "web/nemoclaw/scripts/*.js",
+        "web/nemoclaw/standalone/*.html",
+        "web/nemoclaw/standalone/scripts/*.js",
+        "i18n/*/web/*.html",
+        "i18n/*/web/nemoclaw/*.html"
+      ]
+    },
+    {
+      "id": "external-link-attribution-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 12,
+        "ship": 13
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/validation/external_link_attribution_audit.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "test-sensitive-content-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 13,
+        "ship": 14
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_sensitive_content_audit"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/sensitive_content_audit.py",
+        "scripts/validation/sensitive-content-policy.json"
+      ]
+    },
+    {
+      "id": "test-release-change-reminder",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 14,
+        "ship": 15
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_release_change_reminder"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/release_change_reminder.py"
+      ]
+    },
+    {
+      "id": "test-validation-report-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 15,
+        "ship": 16
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_validation_report_audit"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/validation_report_audit.py",
+        "scripts/validation/validate_bundle.py",
+        "scripts/build/build_pages.sh",
+        ".gitlab-ci.yml",
+        ".gitlab/ci/*",
+        ".github/workflows/*"
+      ]
+    },
+    {
+      "id": "test-pages-artifact-integrity",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 16,
+        "ship": 17
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_pages_artifact_integrity"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/pages_artifact_integrity.py",
+        "scripts/build/build_pages.sh",
+        ".github/workflows/pages.yml",
+        "docs/pages_deploy.md",
+        "docs/release-test-plan.md"
+      ]
+    },
+    {
+      "id": "test-threat-control-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 17,
+        "ship": 18
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_threat_control_audit"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/threat_control_audit.py",
+        "scripts/validation/pages_artifact_integrity.py",
+        "scripts/validation/repository_sync_audit.py",
+        ".github/workflows/pages.yml",
+        ".github/workflows/release.yml",
+        ".gitlab-ci.yml",
+        ".gitlab/ci/*",
+        "docs/release_playbook.md",
+        "docs/release-test-plan.md",
+        "docs/security-design.md",
+        "docs/security-control-disposition.md",
+        "docs/security-control-themes.json",
+        "RELEASE_STATUS.json",
+        "scripts/build/build_security_review_package.py",
+        "scripts/validation/security_architecture_audit.py"
+      ]
+    },
+    {
+      "id": "test-repository-sync-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 18,
+        "ship": 19
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_repository_sync_audit"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/repository_sync_audit.py",
+        ".gitlab-ci.yml",
+        ".gitlab/ci/*",
+        "docs/release_playbook.md"
+      ]
+    },
+    {
+      "id": "test-gitlab-ci-policy",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 19,
+        "ship": 20
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_gitlab_ci_policy"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        ".gitlab-ci.yml",
+        ".gitlab/ci/*",
+        ".gitlab/CODEOWNERS",
+        "scripts/validation/gitlab_ci_policy.py",
+        "scripts/validation/release_gate.py"
+      ]
+    },
+    {
+      "id": "gitlab-ci-policy",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 20,
+        "ship": 21
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/validation/gitlab_ci_policy.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "skill-consistency",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 21,
+        "ship": 22
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/skills/skill_consistency.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "gen-directory-beacons-check",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 22,
+        "ship": 23
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/skills/gen_directory_beacons.py",
+        "--check"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "normalize-skill-headers-self-test",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 23,
+        "ship": 24
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/skills/normalize_skill_headers.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/skills/normalize_skill_headers.py",
+        "scripts/skills/gen_directory_beacons.py",
+        "SKILL_CONTRACT.md",
+        "**/SKILL.html"
+      ]
+    },
+    {
+      "id": "normalize-skill-headers-check",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 24,
+        "ship": 25
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/skills/normalize_skill_headers.py",
+        "--check"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "test-skill-contract",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 25,
+        "ship": 26
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/skills/test_skill_contract.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "skill-contract",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 26,
+        "ship": 27
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/skills/skill_contract.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "test-project-docs-explorer",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 27,
+        "ship": 35
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_project_docs_explorer"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/build/project_docs_explorer.py",
+        "docs/SKILL.html"
+      ]
+    },
+    {
+      "id": "test-test-harness-contract",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 28,
+        "ship": 36
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_test_harness_contract"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "tests/validation/test_test_harness_contract.py",
+        "scripts/**/*.py",
+        "scripts/**/*.js",
+        "scripts/**/*.mjs",
+        "scripts/**/*.sh"
+      ]
+    },
+    {
+      "id": "project-docs-explorer-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 29,
+        "ship": 37
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/build/project_docs_explorer.py",
+        "--audit"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "project-source-tree-self-test",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 30,
+        "ship": 38
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/build/project_source_tree.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/build/project_source_tree.py",
+        "scripts/build/build_pages.sh",
+        "scripts/build/SKILL.html",
+        "scripts/skills/skill_audit.py"
+      ]
+    },
+    {
+      "id": "project-source-tree-check-generated",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 31,
+        "ship": 39
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/build/project_source_tree.py",
+        "--check-generated"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/build/project_source_tree.py",
+        "web/nemoclaw/standalone/*"
+      ]
+    },
+    {
+      "id": "audit-iframe-proxy-opt-in",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 32,
+        "ship": 50
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/security/audit_iframe_proxy_opt_in.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "endpoint-registration-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 33,
+        "ship": 52
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/validation/endpoint_registration_audit.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "openclaw-connection-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 34,
+        "ship": 53
+      },
+      "mode": "current-tree",
+      "argv": [
+        "bash",
+        "scripts/runtime/run_node.sh",
+        "scripts/validation/openclaw_connection_audit.mjs"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "source-gate",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 35,
+        "ship": 54
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/compliance/source_gate.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "test-source-license-contract",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 36,
+        "ship": 55
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_source_license_contract"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "LICENSE",
+        "DCO.md",
+        "THIRD-PARTY-NOTICES.md",
+        "CONTRIBUTING.md",
+        "scripts/compliance/source_gate.py",
+        "scripts/compliance/source_license_contract.py",
+        "tests/validation/test_source_license_contract.py",
+        "scripts/build/vendor_browser_dependencies.mjs",
+        "web/nemoclaw/vendor/browser-dependencies.json",
+        "scripts/**/*.py",
+        "scripts/**/*.js",
+        "scripts/**/*.mjs",
+        "web/**/*.py",
+        "web/**/*.js",
+        "web/**/*.mjs",
+        "tests/**/*.py",
+        "tests/**/*.js",
+        "tests/**/*.mjs"
+      ]
+    },
+    {
+      "id": "source-document-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 37,
+        "ship": 56
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/compliance/source_document_audit.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "test-source-document-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 38,
+        "ship": 57
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_source_document_audit"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/compliance/source_document_audit.py",
+        "scripts/compliance/docs/document_sources.json",
+        "THIRD_PARTY_LICENSES.md",
+        "web/nemoclaw/*.html",
+        "web/nemoclaw/mats/*",
+        "web/nemoclaw/assets/SKILL.html"
+      ]
+    },
+    {
+      "id": "integration-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 39,
+        "ship": 58
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/pyodide/integration_audit.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "test-pyodide-integration-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 40,
+        "ship": 59
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_pyodide_integration_audit"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/pyodide/*",
+        "tests/validation/test_embedded_validator_suites.py",
+        "scripts/validation/release_gate.py",
+        "scripts/validation/release_change_reminder.py",
+        "web/**/*",
+        "i18n/**/*"
+      ]
+    },
+    {
+      "id": "runtime-smoke-cdn",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 41,
+        "ship": 60
+      },
+      "mode": "mutation",
+      "argv": [
+        "bash",
+        "scripts/runtime/run_node.sh",
+        "scripts/pyodide/runtime_smoke.mjs",
+        "--cdn"
+      ],
+      "parallel_safe": false,
+      "impacts": [
+        "scripts/pyodide/*",
+        "scripts/pyodide/examples/*",
+        "scripts/validation/release_gate.py"
+      ]
+    },
+    {
+      "id": "third-party-inventory-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 42,
+        "ship": 61
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/compliance/third_party_inventory_audit.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "test-third-party-inventory-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 43,
+        "ship": 62
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_third_party_inventory_audit"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "THIRD_PARTY_LICENSES.md",
+        "scripts/compliance/third_party_inventory_audit.py",
+        "scripts/browser-vendor/package-lock.json",
+        "web/nemoclaw/vendor/*",
+        "scripts/materials/requirements*",
+        "scripts/security/requirements*",
+        "scripts/runtime/package.json",
+        "scripts/runtime/pnpm-lock.yaml",
+        "web/nemoclaw/assets/SKILL.html",
+        "web/nemoclaw/mats/SKILL.html",
+        "scripts/build/build_pages.sh"
+      ]
+    },
+    {
+      "id": "test-export-third-party-csv",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 44,
+        "ship": 63
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_export_third_party_csv"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "THIRD_PARTY_LICENSES.md",
+        "scripts/compliance/export_third_party_csv.py",
+        "scripts/compliance/third_party_inventory_audit.py",
+        "scripts/compliance/SKILL.html",
+        "scripts/compliance/third_party_export_ui.js",
+        "web/nemoclaw/vendor/browser-dependencies.json"
+      ]
+    },
+    {
+      "id": "test-export-legal-scope-csv",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 45,
+        "ship": 64
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_export_legal_scope_csv"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "THIRD_PARTY_LICENSES.md",
+        "scripts/compliance/export_legal_scope_csv.py",
+        "scripts/compliance/export_third_party_csv.py",
+        "scripts/compliance/SKILL.html",
+        "scripts/compliance/third_party_export_ui.js",
+        "web/nemoclaw/vendor/browser-dependencies.json"
+      ]
+    },
+    {
+      "id": "test-render-sbom-license-inventory",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 46,
+        "ship": 65
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_render_sbom_license_inventory"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "THIRD_PARTY_LICENSES.md",
+        "scripts/compliance/render_sbom_license_inventory.py",
+        "scripts/compliance/third_party_inventory_audit.py"
+      ]
+    },
+    {
+      "id": "test-resolve-sbom-licenses",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 47,
+        "ship": 66
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_resolve_sbom_licenses"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "THIRD_PARTY_LICENSES.md",
+        "scripts/compliance/resolve_sbom_licenses.py",
+        "scripts/compliance/render_sbom_license_inventory.py",
+        ".gitlab/ci/sca.yml"
+      ]
+    },
+    {
+      "id": "test-sbom-evidence",
+      "tiers": [
+        "fast"
+      ],
+      "order": {
+        "fast": 48
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_sbom_evidence"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "THIRD_PARTY_LICENSES.md",
+        "scripts/compliance/sbom_evidence.py",
+        "scripts/compliance/render_sbom_license_inventory.py",
+        "scripts/compliance/docs/sbom_evidence.json",
+        "web/nemoclaw/vendor/browser-sbom.cdx.json",
+        ".gitlab/ci/sca.yml",
+        ".github/workflows/release.yml"
+      ]
+    },
+    {
+      "id": "sbom-evidence-check",
+      "tiers": [
+        "fast"
+      ],
+      "order": {
+        "fast": 49
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/compliance/sbom_evidence.py",
+        "--check"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "tenets-check",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 50,
+        "ship": 75
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/validation/tenets.py",
+        "--check"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "module-check-discovered-web",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 51,
+        "ship": 76
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/runtime/module_check.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "interface-inventory-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 52,
+        "ship": 77
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/validation/interface_inventory_audit.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "test-color-theme",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 53,
+        "ship": 78
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_color_theme"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/color_theme.py",
+        "tests/validation/test_color_theme.py",
+        "web/**/*.html",
+        "web/**/*.css",
+        "web/**/*.js",
+        "web/**/*.mjs",
+        "web/**/*.svg"
+      ]
+    },
+    {
+      "id": "test-theme-runtime-contract",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 54,
+        "ship": 79
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_theme_runtime_contract"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/skills/skill_renderer_runtime_audit.py",
+        "tests/validation/test_theme_runtime_contract.py",
+        ".gitlab/ci/core.yml",
+        "**/*.html"
+      ]
+    },
+    {
+      "id": "color-theme",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 55,
+        "ship": 80
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/validation/color_theme.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "validation-unittest-discovery",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 56,
+        "ship": 81
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "discover",
+        "-v",
+        "-s",
+        "tests/validation"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "tests/validation/*.py",
+        "tests/validation/**/*.py"
+      ]
+    },
+    {
+      "id": "validator-specialization-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 57,
+        "ship": 83
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/validation/validator_specialization_audit.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "validate-bundle-scope-ship-no-write",
+      "tiers": [
+        "fast"
+      ],
+      "order": {
+        "fast": 59
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/validation/validate_bundle.py",
+        "--scope",
+        "ship",
+        "--no-write"
+      ],
+      "parallel_safe": false,
+      "exclusive_resources": [
+        "validation-report"
+      ]
+    },
+    {
+      "id": "test-materials",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 8
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_materials"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/materials/pull_materials.py",
+        "scripts/materials/requirements*"
+      ]
+    },
+    {
+      "id": "ci-storage-audit",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 28
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/validation/ci_storage_audit.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "branch-preview-manifest-audit-self-test",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 29
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/validation/branch_preview_manifest_audit.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/branch_preview_manifest_audit.py",
+        "scripts/build/build_branch_manifest.py",
+        "web/index.html",
+        ".gitlab-ci.yml",
+        ".gitlab/ci/core.yml"
+      ]
+    },
+    {
+      "id": "learner-flow-audit-self-test",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 30
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/validation/learner_flow_audit.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/learner_flow_audit.py",
+        "web/nemoclaw/scripts/*",
+        "web/nemoclaw/styles/*",
+        "web/nemoclaw/0*.html",
+        "i18n/*/web/nemoclaw/0*.html",
+        "scripts/browser-vendor/*",
+        ".gitlab/ci/core.yml"
+      ]
+    },
+    {
+      "id": "html-structure-audit-self-test",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 31
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/validation/html_structure_audit.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/html_structure_audit.py"
+      ]
+    },
+    {
+      "id": "code-hygiene-self-test",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 32
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/validation/code_hygiene.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/code_hygiene.py"
+      ]
+    },
+    {
+      "id": "render-security-architecture-check",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 33
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/figures/render_security_architecture.py",
+        "--check"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "test-security-architecture-audit",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 34
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_security_architecture_audit"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/security_architecture_audit.py",
+        "scripts/figures/render_security_architecture.py",
+        "docs/security-architecture*",
+        ".gitlab-ci.yml",
+        ".gitlab/ci/*",
+        ".github/workflows/*"
+      ]
+    },
+    {
+      "id": "test-release-evidence-audit",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 40
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_release_evidence_audit"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/release_evidence_audit.py",
+        "docs/product-design.md",
+        "docs/release-test-plan.md",
+        "docs/release-evidence.json",
+        "RELEASE_STATUS*",
+        ".gitlab/ci/core.yml"
+      ]
+    },
+    {
+      "id": "test-repository-work-products-audit",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 41
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_repository_work_products_audit"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/repository_work_products_audit.py",
+        "docs/release-evidence.json",
+        "README.md",
+        "LICENSE",
+        "SECURITY.md",
+        "CHANGELOG.md",
+        "CONTRIBUTING.md",
+        "CODE_OF_CONDUCT.md",
+        "docs/release_playbook.md",
+        "docs/release-test-plan.md",
+        "docs/agent_process.md",
+        ".gitattributes",
+        ".github/ISSUE_TEMPLATE/*",
+        ".github/PULL_REQUEST_TEMPLATE.md",
+        ".gitlab/issue_templates/*",
+        "scripts/validation/SKILL.html",
+        "scripts/validation/release_gate.py",
+        "scripts/validation/validate_bundle.py",
+        "scripts/git-hooks/pre-commit"
+      ]
+    },
+    {
+      "id": "test-embedded-validator-suites",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 42
+      },
+      "mode": "mutation",
+      "argv": [
+        "bash",
+        "scripts/runtime/run_node.sh",
+        "tests/runtime/test_embedded_validator_suites.mjs"
+      ],
+      "parallel_safe": false,
+      "impacts": [
+        "scripts/validation/gateway_token_audit.mjs",
+        "scripts/validation/openclaw_fallback_audit.py",
+        "scripts/validation/openclaw_connection_audit.mjs",
+        "scripts/runtime/test_page_runtime.js",
+        "scripts/runtime/browser_runtime_test.sh",
+        "scripts/runtime/host_browser.py",
+        "web/nemoclaw/scripts/_connection.js",
+        "web/nemoclaw/scripts/_openclaw.js",
+        "web/nemoclaw/scripts/_openshell.js",
+        "web/nemoclaw/scripts/_shared.js",
+        "web/nemoclaw/03a-kickstart.html",
+        "web/nemoclaw/04b-modern-clis.html",
+        "i18n/pt/web/nemoclaw/03a-kickstart.html",
+        "i18n/es/web/nemoclaw/03a-kickstart.html",
+        "i18n/pt/web/nemoclaw/04b-modern-clis.html",
+        "i18n/es/web/nemoclaw/04b-modern-clis.html",
+        "scripts/runtime/engine.js",
+        "scripts/runtime/link_projection.py",
+        "scripts/runtime/run_engine.sh",
+        "scripts/runtime/run_node.sh"
+      ]
+    },
+    {
+      "id": "assemble-locale-overlay-self-test",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 43
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/build/assemble_locale_overlay.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/build/assemble_locale_overlay.py",
+        "scripts/translate/code_localization.py",
+        "scripts/translate/locale_projection.py",
+        "i18n/*/locale.json"
+      ]
+    },
+    {
+      "id": "localization-audit-self-test",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 44
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/validation/localization_audit.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/localization_audit.py",
+        "scripts/translate/locales/*",
+        "scripts/translate/code_localization.py",
+        "scripts/translate/locale_projection.py",
+        "scripts/build/assemble_locale_overlay.py",
+        "i18n/*/locale.json",
+        "web/nemoclaw/scripts/_keypanel.js",
+        "web/nemoclaw/scripts/_locale.js",
+        "web/nemoclaw/scripts/_shared.js"
+      ]
+    },
+    {
+      "id": "test-foyer-branch-paths",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 45
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_foyer_branch_paths"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "tests/validation/test_foyer_branch_paths.py",
+        "web/index.html",
+        "i18n/*/web/index.html"
+      ]
+    },
+    {
+      "id": "test-contribution-language-ownership",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 46
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_contribution_language_ownership"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/contribution_safety_audit.py",
+        "tests/validation/test_contribution_language_ownership.py",
+        "web/nemoclaw/*",
+        "i18n/*/web/nemoclaw/*"
+      ]
+    },
+    {
+      "id": "contribution-safety-audit-self-test",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 47
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/validation/contribution_safety_audit.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        ".github/*",
+        ".github/**/*",
+        ".gitlab-ci.yml",
+        ".gitlab/*",
+        ".gitlab/**/*",
+        "AGENTS.md",
+        "CONTRIBUTING.md",
+        "DCO.md",
+        "LICENSE",
+        "RELEASE_STATUS.json",
+        "CODE_OF_CONDUCT.md",
+        "SUPPORT.md",
+        "RELEASE_STATUS*",
+        "docs/agent_process.md",
+        "docs/release*",
+        "docs/pages_deploy.md",
+        "scripts/git-hooks/*",
+        "scripts/build/install-hooks.sh",
+        "scripts/build/build_pages.sh",
+        "scripts/build/package_release.py",
+        "scripts/validation/release_gate.py",
+        "scripts/validation/contribution_safety_audit.py",
+        "scripts/validation/container_boundary_audit.py",
+        "scripts/validation/reacs_registry.json",
+        "scripts/validation/reacs_registry.py",
+        "scripts/security/*",
+        "scripts/runtime/package.json",
+        "scripts/runtime/pnpm-lock.yaml"
+      ]
+    },
+    {
+      "id": "contribution-safety-audit-report-contribution-safety",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 48
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/validation/contribution_safety_audit.py",
+        "--report",
+        "docs/validation/contribution-safety.json"
+      ],
+      "parallel_safe": false,
+      "write_only": true
+    },
+    {
+      "id": "audit-iframe-proxy-opt-in-self-test",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 49
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/security/audit_iframe_proxy_opt_in.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/security/audit_iframe_proxy_opt_in.py",
+        "scripts/cors-proxy/*",
+        "web/nemoclaw/index.html",
+        "web/nemoclaw/scripts/_keypanel.js",
+        "web/nemoclaw/scripts/_shared.js"
+      ]
+    },
+    {
+      "id": "endpoint-registration-audit-self-test",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 51
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/validation/endpoint_registration_audit.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/endpoint_registration_audit.py",
+        "web/nemoclaw/scripts/_shared.js",
+        "web/nemoclaw/scripts/_keypanel.js",
+        "web/nemoclaw/scripts/_connection.js",
+        "web/nemoclaw/scripts/_openclaw.js",
+        "web/nemoclaw/03a-kickstart.html",
+        "web/_skill_explorer.js",
+        "scripts/cors-proxy/SKILL.html",
+        "scripts/runtime/test_page_runtime.js",
+        "scripts/validation/runtime_integration_browser_audit.py",
+        "i18n/pt/web/nemoclaw/03a-kickstart.html",
+        "i18n/es/web/nemoclaw/03a-kickstart.html"
+      ]
+    },
+    {
+      "id": "test-course-dependency-integrity",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 67
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_course_dependency_integrity"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/course_dependency_integrity.py",
+        "scripts/browser-vendor/*",
+        "scripts/build/vendor_browser_dependencies.mjs",
+        "web/nemoclaw/vendor/*",
+        ".gitlab/ci/sca.yml",
+        ".github/workflows/pages.yml",
+        ".github/workflows/release.yml"
+      ]
+    },
+    {
+      "id": "test-cell-audit",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 68
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_embedded_validator_suites.ValidatorCliTests.test_cell_audit"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/cell_audit.py",
+        "web/nemoclaw/scripts/*",
+        "web/nemoclaw/vendor/*"
+      ]
+    },
+    {
+      "id": "audit-python-dependencies",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 69
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/security/audit_python_dependencies.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "audit-vulnerability-waivers",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 70
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/security/audit_vulnerability_waivers.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "audit-dependency-locks-self-test",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 71
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/security/audit_dependency_locks.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/security/audit_dependency_locks.py",
+        "scripts/materials/requirements*",
+        "scripts/security/requirements-sca*",
+        "scripts/runtime/pnpm-lock.yaml"
+      ]
+    },
+    {
+      "id": "audit-dependency-locks",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 72
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/security/audit_dependency_locks.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "audit-sbom-policy-self-test",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 73
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/security/audit_sbom_policy.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/security/audit_sbom_policy.py"
+      ]
+    },
+    {
+      "id": "package-release-self-test",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 74
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/build/package_release.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/build/package_release.py",
+        "docs/release_artifacts.md",
+        ".github/workflows/release.yml"
+      ]
+    },
+    {
+      "id": "validate-bundle-scope-ship",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 85
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/validation/validate_bundle.py",
+        "--scope",
+        "ship"
+      ],
+      "parallel_safe": false,
+      "no_report_args": [
+        "--no-write"
+      ],
+      "exclusive_resources": [
+        "validation-report"
+      ]
+    },
+    {
+      "id": "interface-inventory-browser-audit",
+      "tiers": [
+        "ship"
+      ],
+      "order": {
+        "ship": 82
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/validation/interface_inventory_browser_audit.py",
+        "--site-root",
+        "."
+      ],
+      "parallel_safe": false,
+      "exclusive_resources": [
+        "browser"
+      ]
+    },
+    {
+      "id": "test-privileged-course-ops",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 58,
+        "ship": 84
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_privileged_course_ops"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/ci/*",
+        "tests/validation/test_privileged_course_ops.py",
+        ".gitlab-ci.yml",
+        ".gitlab/ci/privileged.yml",
+        "docs/pages_deploy.md"
+      ]
+    }
+  ]
+}

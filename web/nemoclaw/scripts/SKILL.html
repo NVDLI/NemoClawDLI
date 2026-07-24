@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Course runtime scripts - Securing Agents</title>
+<link rel="stylesheet" href="../styles/_style.css"/>
+<script src="../vendor/highlight-11.10.0.min.js"></script>
+<link rel="stylesheet" href="../vendor/codemirror-5.65.21.css"/>
+<link rel="stylesheet" href="../vendor/codemirror-monokai-5.65.21.css"/>
+<script src="../vendor/codemirror-5.65.21.js"></script>
+<script src="../vendor/codemirror-mode-xml-5.65.21.js"></script>
+<script src="../vendor/codemirror-mode-javascript-5.65.21.js"></script>
+<script src="../vendor/codemirror-mode-css-5.65.21.js"></script>
+<script src="../vendor/codemirror-mode-htmlmixed-5.65.21.js"></script>
+<script src="../vendor/codemirror-mode-python-5.65.21.js"></script>
+<style>
+  html, body { max-width: 100%; overflow-x: clip; }
+  main { max-width: 1080px; margin: 0 auto; padding: 1.5rem; box-sizing: border-box; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .9rem; table-layout: fixed; }
+  th, td { text-align: left; vertical-align: top; border-bottom: 1px solid var(--bd); padding: .55rem .65rem; overflow-wrap: anywhere; word-break: break-word; }
+  th { color: var(--td); font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
+  td:first-child { font-family: var(--mono); color: var(--gs); white-space: normal; }
+  code { color: var(--gs); overflow-wrap: anywhere; word-break: break-word; }
+  .CodeMirror { height: auto !important; font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: .84rem; line-height: 1.55; border-radius: 0; }
+  .CodeMirror-scroll { min-height: 0; overflow-y: hidden !important; }
+  .CodeMirror-vscrollbar { display: none; }
+  .CodeMirror-gutters { background: #0d0d0d; border-right: 1px solid #2a2a2a; }
+  .CodeMirror-linenumber { color: #6a6a6a; padding: 0 8px 0 6px; font-size: .76rem; }
+  .CodeMirror-lines { padding: 10px 0; }
+  .cm-s-monokai.CodeMirror { background: #0d0d0d; color: #f8f8f2; }
+  .cm-s-monokai .CodeMirror-cursor { border-left: 2px solid #aee23a; }
+  .cm-s-monokai .CodeMirror-selected { background: rgba(174,226,58,.18); }
+  #validation-table { table-layout: fixed; }
+  #validation-table .validation-command-col { width: 38%; }
+  #validation-table .validation-desc-col { width: 62%; }
+  #validation-table td:first-child { white-space: normal; }
+  #validation-table code { display: block; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; font-size: .78rem; line-height: 1.45; }
+  .note { border-left: 3px solid var(--g); background: rgba(118,185,0,.08); padding: .8rem 1rem; color: var(--td); }
+  .helper-notebook { display: grid; gap: 1rem; margin: 1rem 0 1.5rem; min-width: 0; }
+  .helper-cell { min-height: 4rem; min-width: 0; }
+</style>
+<script type="application/json" id="skill-meta">
+{
+  "node_type": "leaf",
+  "level": "implementation",
+  "surface": "web",
+  "course": "nemoclaw",
+  "title": "Course runtime scripts",
+  "source_dir": "web/nemoclaw/scripts/",
+  "self_path": "web/nemoclaw/scripts/SKILL.html",
+  "summary": "Browser modules that power the Securing Agents course: shared page chrome, learner-selected depth, runnable cells, canvas flows, OpenClaw controls, chat widgets, diagrams, retrieval helpers, and the studio testing and authoring interface. These files are source assets, not generated bundle output.",
+  "interfaces": [
+    {
+      "name": "Course pages",
+      "entry": "scripts/_shared.js",
+      "style": "Imported by lesson HTML. Keep page code declarative and route larger behavior through the shared modules."
+    },
+    {
+      "name": "Canvas flows",
+      "entry": "scripts/_canvas.js",
+      "style": "Use mountCanvasFlow or mountRunCell for runnable teaching cells. Keep code visible when it is the lesson, collapsed when it is support infrastructure."
+    },
+    {
+      "name": "Learning views",
+      "entry": "scripts/_learning.js",
+      "style": "Use open details.learning-block only for optional narrative. Give every block a stable id, text-backed scope cue, local inline question, and body wrapper; never tier prerequisites, exercises, warnings, or safety limits. New learners start Guided, which also collapses RunCell and CanvasFlow code without removing local disclosure controls."
+    },
+    {
+      "name": "OpenClaw controls",
+      "entry": "scripts/_connection.js, scripts/_openclaw.js, scripts/_runtime_text.js",
+      "style": "Route every launchable HTTP and WebSocket consumer through _connection.js. Keep Cloudflare Access and Pomerium selectable, bind each session to its approved host family, and preserve same-origin direct mode. Use _openclaw.js for probes, chat, logs, and recovery. Treat chat.final as authoritative after lifecycle end; parse and filter displayed runtime text through _runtime_text.js. Keep actionable tool errors visible."
+    },
+    {
+      "name": "Model route settings",
+      "entry": "scripts/_shared.js, scripts/_keypanel.js",
+      "style": "Keep chat and embedding registrations in their independent storage namespaces. Use mountKeyPanel as the only learner-facing writer and mountModelEndpointProbe as a read-only mirror. Never pass model state through OpenClaw keys or normalization."
+    },
+    {
+      "name": "Chat and retrieval",
+      "entry": "scripts/_chat.js, scripts/_rag.js, scripts/_glossary.js",
+      "style": "Use browser-safe helpers with explicit key/proxy state. Do not add hidden key paths."
+    },
+    {
+      "name": "Studio",
+      "entry": "scripts/studio_main.js",
+      "style": "Use as the operator console for running or copying checks. Static mode is read-only; lab-served mode may write through the Jupyter contents API. Browser tests run with host Chromium."
+    }
+  ],
+  "tests": [
+    "python3 scripts/validation/studio_interface_audit.py",
+    "python3 scripts/validation/helper_notebook_runtime_audit.py --static-only",
+    "python3 scripts/validation/openclaw_fallback_audit.py",
+    "python3 scripts/validation/endpoint_registration_audit.py --self-test",
+    "python3 scripts/validation/endpoint_registration_audit.py",
+    "bash scripts/runtime/run_node.sh scripts/validation/openclaw_connection_audit.mjs",
+    "bash scripts/runtime/run_node.sh scripts/validation/openclaw_connection_browser_audit.mjs",
+    "python3 scripts/validation/learner_flow_audit.py --self-test",
+    "python3 scripts/validation/learner_flow_audit.py",
+    "python3 scripts/validation/learner_flow_runtime_audit.py --site-root web",
+    "python3 scripts/validation/openclaw_probe_frame_runtime_audit.py --site-root web",
+    "python3 scripts/validation/openclaw_probe_frame_runtime_audit.py --site-root public",
+    "python3 scripts/validation/helper_notebook_runtime_audit.py",
+    "python3 scripts/validation/cell_ui_runtime_audit.py --screenshots tmp/cell-ui-audit-source",
+    "python3 scripts/validation/cell_ui_runtime_audit.py --site-root public --screenshots tmp/cell-ui-audit-public",
+    "python3 scripts/validation/studio_responsive_audit.py",
+    "scripts/runtime/browser_env_probe.sh",
+    "scripts/runtime/browser_runtime_test.sh --smoke",
+    "scripts/runtime/browser_runtime_test.sh --render-only",
+    "python3 scripts/validation/validate_layout.py --quiet",
+    "python3 scripts/skills/skill_contract.py",
+    "python3 scripts/skills/skill_consistency.py",
+    "python3 scripts/validation/validate_bundle.py --no-write --scope ship"
+  ]
+}
+</script>
+</head>
+<body>
+<header data-skill-header="1" style="padding:.65rem 1rem;border-bottom:1px solid ButtonBorder;background:Canvas;color:CanvasText">
+  <nav aria-label="Skill navigation" style="display:flex;gap:.6rem;flex-wrap:wrap"><a data-skill-nav="home" href="../../index.html">Home</a> <span aria-hidden="true"> · </span> <a data-skill-nav="up" href="../SKILL.html">Up</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../../SKILL.html">Repository map</a></nav>
+</header>
+
+<main>
+  <p><a href="../SKILL.html">Back to course hub</a></p>
+  <h1>Course runtime scripts</h1>
+  <p>These modules support the browser course pages. Page HTML imports <code>scripts/_shared.js</code>; that module re-exports page-facing APIs and delegates larger subsystems to smaller siblings. <code>studio.html</code> lists checks operators can run or copy. Before browser validation, run <code>scripts/runtime/browser_env_probe.sh</code> to verify host Node.js, the pinned Playwright API, and Chromium.</p>
+
+  <h2>Use style</h2>
+  <table>
+    <thead><tr><th>Interface</th><th>Use style</th><th>Test focus</th></tr></thead>
+    <tbody>
+      <tr><td>Course pages</td><td>Import <code>scripts/_shared.js</code> from lesson HTML. Keep lesson markup readable, with runtime behavior behind named helpers.</td><td>Layout links, bundle gate, page audit.</td></tr>
+      <tr><td>Canvas flows</td><td>Use <code>mountCanvasFlow</code> or <code>mountRunCell</code>. Code starts collapsed unless the code itself is the lesson artifact.</td><td>Cell audit, canvas HTML validation, runtime page harness.</td></tr>
+      <tr><td>Learning views</td><td>Use open <code>details.learning-block</code> only for optional narrative. Supply a stable id, subtle text-backed scope cue, local inline question, and body wrapper. Guided is the first-visit default and collapses interactive code while retaining each cell's local disclosure. Keep prerequisites, exercises, warnings, and safety limits outside every tier.</td><td>Learner-flow static mutation suite plus source and built browser lifecycle.</td></tr>
+      <tr><td>OpenClaw controls</td><td>Use <code>_connection.js</code> for every launchable HTTP or WebSocket route and <code>_openclaw.js</code> for probes, chat, logs, and recovery. Cloudflare uses its tab-scoped relay session. Pomerium never exposes its HttpOnly cookie to course code: use direct WebSockets and <code>openclawLoopbackProbe</code> for the two fixed metadata reads. Do not rebuild routes in lesson cells.</td><td>Connection routing contract plus browser runtime harness.</td></tr>
+      <tr><td>Chat and retrieval</td><td>Use explicit model/key/proxy state through shared helpers. Static pages must not add hidden key paths or private service assumptions.</td><td>Security audit plus ship gate.</td></tr>
+      <tr><td>Studio</td><td>Use <code>studio.html</code> as the authoring and test console. Read-only static preview supports inspection, comments, references, Light export review, and host-native test commands. Lab authoring enables Jupyter contents writes only when the host supplies that API.</td><td><code>python3 scripts/validation/studio_interface_audit.py</code>; browser harness commands below.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Helper notebook</h2>
+  <p>This runnable notebook samples the helper families exposed to course cells. It is deliberately safe in static preview: local helpers run immediately, while model, browser-network, and OpenClaw helpers first check the available key or launchable state and log what would run next.</p>
+  <div class="helper-notebook">
+    <div id="helper-map-cell" class="helper-cell"></div>
+    <div id="helper-retrieval-cell" class="helper-cell"></div>
+    <div id="helper-live-cell" class="helper-cell"></div>
+    <div id="helper-ui-cell" class="helper-cell"></div>
+  </div>
+
+  <h2>Files</h2>
+  <table>
+    <thead><tr><th>File</th><th>Role</th></tr></thead>
+    <tbody>
+      <tr><td>_shared.js</td><td>Page chrome, model gateway helpers, service config, exported API surface for lesson pages.</td></tr>
+      <tr><td>_connection.js</td><td>Persistent non-secret route configuration, tab-scoped gateway and Cloudflare credentials, direct Pomerium routing, presenter URL hints, provider/host validation, and stale saved-route migration.</td></tr>
+      <tr><td>_learning.js</td><td>English-pilot Guided first-visit default, compact header selector, independent native section disclosures, and Guided code collapse with authored defaults restored in Applied and Complete. No modal, telemetry, or generated content.</td></tr>
+      <tr><td>_canvas.js</td><td>Runnable code cells and canvas-flow orchestration, including collapsed-code behavior and per-node reset.</td></tr>
+      <tr><td>_openclaw.js</td><td>OpenClaw chat, probe, recovery, logs, and sandbox-policy controls.</td></tr>
+      <tr><td>_openshell.js</td><td>OpenShell command and file-system helpers plus the fixed Pomerium loopback bootstrap used by the lab-facing OpenClaw harness.</td></tr>
+      <tr><td>_chat.js</td><td>Chat widgets and artifact panels used by interactive lesson sections.</td></tr>
+      <tr><td>_diagram.js, _viz.js, _figures.js</td><td>Diagram grammar, visualization helpers, and page-specific figure builders.</td></tr>
+      <tr><td>_rag.js, _glossary.js</td><td>Retrieval and glossary helpers for local materials and live web-search flows.</td></tr>
+      <tr><td>_keypanel.js</td><td>API-key panel and explicit iframe-proxy opt-in controls.</td></tr>
+      <tr><td>_langchain.js</td><td>Lightweight LangChain-style teaching helpers for comparison cells.</td></tr>
+      <tr><td>studio_main.js</td><td>Authoring and inspection studio runtime.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Validation</h2>
+  <p class="note">Run commands from the repository root. Use the studio audit before changing <code>studio.html</code> or <code>scripts/studio_main.js</code>; use the full ship gate before opening an MR.</p>
+  <table id="validation-table">
+    <colgroup><col class="validation-command-col"/><col class="validation-desc-col"/></colgroup>
+    <thead><tr><th>Command</th><th>What it catches</th></tr></thead>
+    <tbody>
+      <tr><td><code>python3 scripts/validation/studio_interface_audit.py</code></td><td>Studio controls, local assets, lesson coverage, lab-write versus static-read-only behavior, references panel, testing sidebar commands, this SKILL documentation, and helper-notebook API surface checks.</td></tr>
+      <tr><td><code>python3 scripts/validation/helper_notebook_runtime_audit.py --static-only</code></td><td>Static helper-notebook contract. Verifies the runnable notebook does not mix <code>mountCanvasFlow</code> and <code>mountRunCell</code> helper APIs.</td></tr>
+      <tr><td><code>python3 scripts/validation/helper_notebook_runtime_audit.py</code></td><td>Host Playwright check. Serves the source page, clicks every helper notebook run button, and fails on runtime errors.</td></tr>
+      <tr><td><code>python3 scripts/validation/cell_ui_runtime_audit.py --screenshots tmp/cell-ui-audit-source</code></td><td>Source-page cell UI suite. Checks CanvasFlow and RunCell across desktop/mobile and dark/light themes, verifies CodeMirror tokens, hidden-code heuristics, shared JS chips, unified buttons, and helper-notebook output. Writes screenshots for review.</td></tr>
+      <tr><td><code>python3 scripts/validation/cell_ui_runtime_audit.py --site-root public --screenshots tmp/cell-ui-audit-public</code></td><td>Built-page cell UI suite. Run after <code>BUILD_PAGES_LANGS=0 scripts/build/build_pages.sh</code> to prove the production bundle preserves the same cell contract and screenshot evidence.</td></tr>
+      <tr><td><code>python3 scripts/validation/studio_responsive_audit.py</code></td><td>Host Playwright check for Studio layout extremes: topbar scrolling, minimum control sizes, sidebar list floors, and internal list scrolling.</td></tr>
+      <tr><td><code>python3 scripts/validation/openclaw_fallback_audit.py</code></td><td>Required static OpenClaw fallback and probe lifecycle contract, including explicit hidden-frame CSS and <code>srcdoc</code> cleanup.</td></tr>
+      <tr><td><code>python3 scripts/validation/endpoint_registration_audit.py --self-test</code></td><td>Mutation tests for endpoint ownership, typed probes, the SKILL explorer model handoff, and EN/PT/ES registration surfaces.</td></tr>
+      <tr><td><code>python3 scripts/validation/endpoint_registration_audit.py</code></td><td>Current-tree endpoint ownership contract. Keeps chat, embedding, and OpenClaw registration paths distinct and visible.</td></tr>
+      <tr><td><code>bash scripts/runtime/run_node.sh scripts/validation/openclaw_connection_audit.mjs</code></td><td>Relay default and toggle, same-origin bypass, retired saved-route migration, terminal routing, and EN/PT/ES Module 4b reuse.</td></tr>
+      <tr><td><code>bash scripts/runtime/run_node.sh scripts/validation/openclaw_connection_browser_audit.mjs</code></td><td>Chromium proof that the visible Module 3a controls heal retired browser state and persist relay off/on routing.</td></tr>
+      <tr><td><code>python3 scripts/validation/learner_flow_audit.py --self-test</code></td><td>Mutation tests for learning-view, progressive-disclosure, prerequisite, exercise, and interaction-state regressions.</td></tr>
+      <tr><td><code>python3 scripts/validation/learner_flow_audit.py</code></td><td>Required static learning-view, progressive-disclosure, prerequisite, exercise, and interaction-state contract.</td></tr>
+      <tr><td><code>python3 scripts/validation/learner_flow_runtime_audit.py --site-root web</code></td><td>Browser lifecycle for Guided first visit, code collapse and local reveal, saved depth, inline section overrides, and shared Run, Stop, Reset, error, disclosure, and prerequisite behavior.</td></tr>
+      <tr><td><code>python3 scripts/validation/openclaw_probe_frame_runtime_audit.py --site-root web</code></td><td>Source-page Chromium regression for HTML probe cleanup after JSON, network error, Cloudflare warning, remount, and reload transitions.</td></tr>
+      <tr><td><code>python3 scripts/validation/openclaw_probe_frame_runtime_audit.py --site-root public</code></td><td>Runs the same state-transition matrix against built Pages output after <code>BUILD_PAGES_LANGS=0 scripts/build/build_pages.sh public</code>.</td></tr>
+      <tr><td><code>scripts/runtime/browser_env_probe.sh</code></td><td>Verifies host Node.js, the pinned Playwright API, and Chromium before browser checks run.</td></tr>
+      <tr><td><code>scripts/runtime/browser_runtime_test.sh --smoke</code></td><td>Direct host Node.js, Playwright, and Chromium smoke.</td></tr>
+      <tr><td><code>scripts/runtime/browser_runtime_test.sh --render-only</code></td><td>Renders a static course page in host Chromium.</td></tr>
+      <tr><td><code>python3 scripts/validation/validate_layout.py --quiet</code></td><td>Page wiring, links, and misplaced runtime files.</td></tr>
+      <tr><td><code>python3 scripts/skills/skill_contract.py</code></td><td>Well-formed <code>skill-meta</code> JSON and directory drift.</td></tr>
+      <tr><td><code>python3 scripts/skills/skill_consistency.py</code></td><td>Cross-file SKILL and runtime invariants.</td></tr>
+      <tr><td><code>python3 scripts/validation/validate_bundle.py --no-write --scope ship</code></td><td>Ship-level static course gate.</td></tr>
+    </tbody>
+  </table>
+</main>
+
+<script type="module">
+import { mountCanvasFlow, mountRunCell } from "./_shared.js";
+
+mountCanvasFlow("#helper-map-cell", {
+  label: "Helper map",
+  intro: "Run this as a compact tour of state, log, trace, and visualization helpers. It is local-only.",
+  nodes: [
+    { id: "state-log", icon: "S", title: "State + log", x: 1, y: 1, summary: "Write state, emit traces, and use every log surface.", code: `
+state.question = "Which helpers are local, live, or lab-only?";
+helpers.trace("helper-notebook.start", { page: "web/nemoclaw/scripts/SKILL.html" });
+helpers.log.h("shared log surfaces");
+helpers.log("plain text", 2, "extra values");
+helpers.log.json("state snapshot", state);
+helpers.log.kv({ mode: "local", runnable: true, sharedState: !!state });
+helpers.log.details("trace store", state.__trace || []);
+helpers.log.html("<strong>HTML log</strong> stays inside this cell.");
+helpers.log.svg('<svg viewBox="0 0 240 54" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px"><text x="16" y="32" fill="#76b900" font-family="ui-monospace,monospace" font-size="14">log.svg shared surface</text></svg>');
+helpers.log.draw(260, 100, '<circle cx="70" cy="55" r="26" fill="#76b900"/><text x="135" y="60" fill="#f2f2f2" font-family="ui-monospace,monospace" font-size="13">log.draw</text>', { title: "inline marks" });
+return { wrote: Object.keys(state), traceEvents: state.__trace.length, logApi: ["log", "h", "json", "kv", "details", "html", "svg", "draw", "clear"] };
+`},
+    { id: "viz", icon: "V", title: "Visualization helpers", x: 2, y: 1, summary: "Render diagrams, numeric traces, messages, bars, diffs, and retrieval scores.", code: `
+helpers.viz.diagram({
+  title: "helper families",
+  nodes: [
+    { id: "local", label: "local", kind: "tool", x: 1, y: 1, lines: ["state", "log", "viz"] },
+    { id: "live", label: "live", kind: "model", x: 2, y: 1, lines: ["chat", "embed", "search"] },
+    { id: "lab", label: "lab", kind: "agent", x: 3, y: 1, lines: ["terminal", "OpenClaw"] },
+  ],
+  edges: [{ from: "local", to: "live", label: "optional key" }, { from: "live", to: "lab", label: "launchable" }],
+});
+helpers.viz.lineChart([3, 4, 5, 6, 7, 8, 9, 8, 7], {
+  title: "position by tick", xLabel: "tick", yLabel: "position", min: 0, max: 9,
+});
+helpers.viz.messageList([
+  { role: "system", content: "Classify helper surface." },
+  { role: "user", content: state.question },
+  { role: "assistant", content: "Start local, then add live services." },
+]);
+helpers.viz.retrievalBars([
+  { text: "mountCanvasFlow exposes helpers.viz", score: 0.91 },
+  { text: "mountRunCell exposes helpers.log", score: 0.82 },
+  { text: "OpenClaw helpers need launchable", score: 0.58 },
+], 2, "local retrieval-style ranking");
+helpers.viz.scoreBarChart([
+  { label: "local", score: 5 },
+  { label: "live", score: helpers.getKey() ? 4 : 2 },
+  { label: "lab", score: 1 },
+], { title: "available now", threshold: 3 });
+helpers.viz.ganttBars([{ name: "static audit", start: 0, end: 1.2 }, { name: "render-only", start: 0, end: 3.9 }], 4, "test timing sketch");
+helpers.viz.diffTable({
+  left: "before", right: "after",
+  rows: [
+    { kind: "check", label: "run cells included", left: false, right: true },
+    { kind: "num", label: "button selectors", left: 2, right: 3, betterWhen: "up" },
+  ],
+  verdict: ({ rows }) => ({ ok: true, text: "Studio now queues all runnable controls." }),
+});
+`},
+  ],
+  edges: [{ from: "state-log", to: "viz" }],
+});
+
+mountCanvasFlow("#helper-retrieval-cell", {
+  label: "Retrieval and context helpers",
+  intro: "This cell uses local course context first. Model-backed helpers are guarded by key checks.",
+  nodes: [
+    { id: "local-context", icon: "C", title: "Course context", x: 1, y: 1, summary: "Inspect course pages and estimate context size.", code: `
+const pages = helpers.coursePages();
+state.pages = pages.slice(0, 5);
+const overview = await helpers.coursePage("overview");
+const snippet = String(overview).slice(0, 1200);
+const modelWindow = helpers.contextWindow("nvidia/nemotron-3-nano-30b-a3b");
+helpers.log("first pages", state.pages);
+helpers.log({ estimatedTokens: helpers.estimateTokens(snippet), contextWindow: modelWindow, chars: snippet.length });
+helpers.log.details("coursePage usage", 'Use helpers.coursePage("01a-loop") from lesson pages; this scripts page uses "overview" because it is nested one directory deeper.');
+return { pages: pages.length, sample: snippet.slice(0, 120) };
+`},
+    { id: "search-embed", icon: "R", title: "Search + embeddings", x: 2, y: 1, summary: "Use search formatting locally; call embeddings only when a key is present.", code: `
+const sampleResults = { results: [
+  { title: "Agent loop", href: "01a-loop.html", body: "Perceive, reason, act." },
+  { title: "Tools", href: "01c-tools.html", body: "The model asks; code executes." },
+] };
+helpers.log.details("formatted search", helpers.formatSearchResults(sampleResults));
+const a = [1, 0, 1], b = [0.5, 0.5, 1];
+helpers.log({ cosine: helpers.cosineSim(a, b).toFixed(3) });
+if (!helpers.getKey()) {
+  helpers.log("No nvapi key saved, so helpers.embed, helpers.webSearch, and helpers.instantAnswer are skipped here.");
+  return { liveSkipped: true };
+}
+const vectors = await helpers.embed(["agent loop", "tool call"], { inputType: "passage", signal: helpers.signal });
+const search = await helpers.webSearch("NVIDIA AI agents", { signal: helpers.signal });
+const answer = await helpers.instantAnswer("What is an AI agent?", { signal: helpers.signal });
+helpers.log("live helper summary", { vectors: vectors.length, search, answer });
+`},
+  ],
+  edges: [{ from: "local-context", to: "search-embed" }],
+});
+
+mountCanvasFlow("#helper-live-cell", {
+  label: "Live model, network, and lab helpers",
+  intro: "The node is runnable without a key: it logs availability, then skips calls that need credentials or a launchable.",
+  nodes: [
+    { id: "model-network", icon: "M", title: "Model + fetch", x: 1, y: 1, summary: "Inspect config, key, retry fetch, and optional chat/chatStream.", code: `
+const cfg = await helpers.getConfig();
+helpers.log("config", cfg);
+helpers.log({ hasKey: !!helpers.getKey(), hasBrowserFetch: typeof helpers.browserChatFetch() === "function" });
+try {
+  const data = await helpers.fetch("data:application/json,{%22ok%22:true}", { signal: helpers.signal }).then(r => r.json());
+  helpers.log("native fetch", data);
+} catch (e) { helpers.log("fetch skipped", e.message); }
+try {
+  const r = await helpers.fetchRetry("data:text/plain,fetchRetry-ok", {}, { retries: 0, timeoutMs: 1000 });
+  helpers.log("fetchRetry", await r.text());
+} catch (e) { helpers.log("fetchRetry skipped", e.message); }
+if (!helpers.getKey()) {
+  helpers.log("No key, so helpers.chat and helpers.chatStream are not called.");
+  return { modelSkipped: true };
+}
+const msg = [{ role: "user", content: "Reply with one sentence about helper design." }];
+const res = await helpers.chat({ messages: msg, max_tokens: 80, signal: helpers.signal });
+helpers.log("chat usage", res.usage || {});
+await helpers.chatStream({ messages: msg, max_tokens: 80, signal: helpers.signal });
+`},
+    { id: "lab-only", icon: "L", title: "Lab-only helpers", x: 2, y: 1, summary: "Show the launchable boundary for terminal, OpenClaw, policy, and sandbox checks.", code: `
+helpers.log("Lab-only helpers");
+helpers.log("These helpers require the NemoClaw launchable or OpenClaw gateway:");
+helpers.log({ terminal: "helpers.terminal", openclawChat: "helpers.openclawChat", sandboxExec: "helpers.sandboxExec", policyGet: "helpers.policyGet", sandboxNetwork: "helpers.evalSandboxNetwork", sandboxFs: "helpers.evalSandboxFs", policyMap: "helpers.mountPolicyMap" });
+if (!location.pathname.includes("/lab/")) return { labSkipped: true };
+// Run one helper at a time from a page that owns its inputs and expected result.
+`},
+  ],
+  edges: [{ from: "model-network", to: "lab-only" }],
+});
+
+mountRunCell("#helper-ui-cell", {
+  label: "flat helper cell",
+  openCode: false,
+  helpers: ["mountChatUI", "mountAgentChat", "mountConsole", "mountKeyPanel", "diagramSVG", "ganttBarsSVG", "mountFigures", "log", "state", "signal"],
+  code: `
+helpers.log.h("UI helper dry run");
+helpers.log.json("run cell parity", { surfaces: ["log", "h", "json", "kv", "details", "html", "svg", "draw", "clear"] });
+helpers.log.kv({ runtime: "RunCell", sameLogApi: true });
+const scratch = document.createElement("div");
+helpers.log.html("<span data-scratch>scratch before clear</span>");
+helpers.log.clear();
+helpers.log.h("UI helper dry run");
+const host = document.createElement("div");
+const consoleHost = document.createElement("div");
+helpers.mountConsole(consoleHost, { prompt: ">", greeting: "console helper mounted", suggestions: ["status"], onSubmit: async (line, api) => api.write("echo " + line) });
+host.appendChild(consoleHost);
+const chatHost = document.createElement("div");
+helpers.mountChatUI(chatHost, { title: "chat helper shell", placeholder: "message" });
+host.appendChild(chatHost);
+helpers.log.html(host.innerHTML);
+helpers.log.svg('<svg viewBox="0 0 220 54" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px"><text x="16" y="32" fill="#76b900" font-family="ui-monospace,monospace" font-size="14">RunCell log.svg</text></svg>');
+helpers.log.draw(220, 72, '<rect x="24" y="30" width="50" height="20" fill="#76b900"/><text x="92" y="45" fill="#f2f2f2" font-family="ui-monospace,monospace" font-size="13">RunCell log.draw</text>', { title: "shared log" });
+helpers.log.details("diagramSVG", helpers.diagramSVG({ nodes: [{ id: "ui", label: "UI", kind: "tool", x: 1, y: 1 }], edges: [] }).slice(0, 400));
+helpers.log.details("ganttBarsSVG", helpers.ganttBarsSVG([{ name: "mount", start: 0, end: 1 }], 1, "UI helper").slice(0, 400));
+helpers.log("mountAgentChat, mountKeyPanel, and mountFigures are page-level mount helpers; use them with a real DOM target on course pages.");
+return { signalReady: !!helpers.signal, mounted: ["mountConsole", "mountChatUI"] };
+`,
+});
+if (window.hljs) window.hljs.highlightAll();
+</script>
+
+<script src="../../_skill_explorer.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es-ES">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>es-ES · perfil de localización · explore</title>
+<script type="application/json" id="skill-meta">
+{
+  "schema": "dir-skill/1.0",
+  "node_type": "directory-explorer",
+  "title": "perfil de localización es-ES",
+  "source_dir": "scripts/translate/locales/es-ES/",
+  "summary": "Contrato para un español técnico neutro: fuentes públicas de NVIDIA, triage de correcciones humanas, vocabulario de desarrolladores, calcos rechazados, límites de la validación estática y revisión renderizada.",
+  "related": [
+    "scripts/translate/locales/es-ES/profile.json",
+    "scripts/translate/locales/es-ES/README.md",
+    "scripts/translate/translate_html_segments.py",
+    "scripts/translate/translate_svg_text.py",
+    "scripts/translate/locales/es-ES/svg_translations.json",
+    "scripts/translate/locales/es-ES/shell_translations.json",
+    "scripts/validation/localization_audit.py",
+    "web/nemoclaw/localization.html"
+  ],
+  "explorer": "../../../../web/_skill_explorer.js"
+}
+</script>
+<script type="application/json" id="explorer-config">
+{
+  "title": "es-ES · perfil de localización",
+  "summary": "Use este nodo antes de traducir o revisar. Las decisiones del responsable de estilo del idioma gobiernan la voz, el ritmo y el vocabulario; conserve además el contenido técnico y la secuencia pedagógica para desarrolladores de distintas regiones.",
+  "nav": {"home": "../../../../web/index.html", "up": {"label": "herramientas de traducción", "href": "../../SKILL.html"}},
+  "groups": [{
+    "title": "Contrato es-ES",
+    "files": [
+      {"path": "README.md", "role": "guía editorial", "desc": "Matriz keep/revise/reject, naturalidad, voz, precisión técnica y aceptación después de revisar el render exacto."},
+      {"path": "profile.json", "role": "perfil analizable", "desc": "Protocolo de revisión, fuentes, términos, ritmo, marcadores de inglés y calcos rechazados."},
+      {"path": "../../translate_html_segments.py", "role": "generador de borradores", "desc": "Traducción de bloques protegidos y telemetría; no acepta hashes de revisión."},
+      {"path": "../../translate_svg_text.py", "role": "generador de SVG", "desc": "Traduce etiquetas y descripciones sin alterar la geometría."},
+      {"path": "svg_translations.json", "role": "texto SVG revisado", "desc": "Mapa reproducible entre el texto canónico y las etiquetas en español."},
+      {"path": "shell_translations.json", "role": "controles de aprendizaje", "desc": "Preguntas y encuadres traducidos que se proyectan sobre la estructura canónica actual."}
+    ]
+  }]
+}
+</script>
+<style>html,body{margin:0;background:#0d0d0d;color:#f2f2f2;font:15px/1.55 system-ui,sans-serif}.skill-static{padding:24px clamp(18px,4vw,44px);border-bottom:1px solid #2a2a2a}.skill-static a{color:#76b900}.skill-static h1{color:#76b900}.skill-list,.skill-cmds{display:grid;gap:10px;margin:.7rem 0}.skill-list{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}.skill-cmd{border:1px solid #2a2a2a;background:#161616;border-radius:8px;padding:10px 12px}.skill-link{display:grid;grid-template-columns:minmax(180px,280px) 1fr;gap:12px;border-top:1px solid #2a2a2a;padding:9px 4px;text-decoration:none}.skill-link:last-child{border-bottom:1px solid #2a2a2a}.skill-link{color:#f2f2f2!important}.skill-link b,.skill-cmd b{display:block;color:#aee23a}.skill-cmd code{display:block;overflow:auto;white-space:nowrap}#explorer{height:100vh}@media(max-width:700px){.skill-link{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<header data-skill-header="1" style="padding:.65rem 1rem;border-bottom:1px solid ButtonBorder;background:Canvas;color:CanvasText">
+  <nav aria-label="Skill navigation" style="display:flex;gap:.6rem;flex-wrap:wrap"><a data-skill-nav="home" href="../../../../web/index.html">Home</a> <span aria-hidden="true"> · </span> <a data-skill-nav="up" href="../../SKILL.html">Up</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../../../SKILL.html">Repository map</a></nav>
+</header>
+<section class="skill-static" aria-labelledby="skill-title">
+  <h1 id="skill-title">Contrato de localización es-ES</h1>
+  <p>Exprese el concepto con el registro que usaría un desarrollador hispanohablante. Mantenga el código y los nombres propios canónicos. Prefiera un español técnico claro entre regiones y revise cada figura renderizada.</p>
+  <p>Las correcciones del responsable de estilo del idioma son la referencia para voz, ritmo y vocabulario. Conserve exactamente el blob fijado en <code>profile.json</code>. Una corrección requiere un seguimiento firmado por el responsable de estilo y una actualización deliberada del commit de origen y del SHA-256; un agente no modifica la referencia.</p>
+  <ul>
+    <li>Use <code>i18n/es/web/nemoclaw/01a-loop.html</code> como referencia editorial.</li>
+    <li>Mantenga su elección local entre tratamiento directo e impersonal. Distinga con claridad una llamada al modelo, un turno del agente y una iteración del bucle.</li>
+    <li>Acepte hashes solo después de revisar el destino exacto en Localization Studio.</li>
+  </ul>
+  <h2>Verificaciones ejecutables / Executable checks</h2>
+  <div class="skill-cmds">
+    <div class="skill-cmd"><b>Deriva y calidad es-ES</b><code>python3 scripts/validation/localization_audit.py --locale es-ES</code></div>
+    <div class="skill-cmd"><b>Pruebas de mutación</b><code>python3 scripts/validation/localization_audit.py --self-test</code></div>
+    <div class="skill-cmd"><b>Comparación en navegador</b><code>python3 scripts/validation/localization_runtime_audit.py</code></div>
+    <div class="skill-cmd"><b>Borrador medido</b><code>python3 scripts/translate/translate_html_segments.py --locale es-ES web/nemoclaw/PAGE.html --usage-report /tmp/es-usage.json</code></div>
+    <div class="skill-cmd"><b>Revisión con origen</b><code>python3 scripts/translate/translate_html_segments.py --locale es-ES --revise-against-source web/nemoclaw/PAGE.html --usage-report /tmp/es-revision.json</code></div>
+  </div>
+  <h2>Mapa de vínculos / Linkage map</h2>
+  <div class="skill-list">
+    <a class="skill-link" href="README.md"><b>Guía editorial</b>Fidelidad, ritmo, voz, alcance regional y límites de la automatización.</a>
+    <a class="skill-link" href="profile.json"><b>Perfil analizable</b>Fuentes NVIDIA, términos preferidos, ritmo y calcos bloqueados.</a>
+    <a class="skill-link" href="../../../../web/nemoclaw/localization.html?locale=es"><b>Localization Studio</b>Inglés y español lado a lado, con deriva por página y SVG.</a>
+  </div>
+</section>
+<div id="explorer"></div><script src="../../../../web/_skill_explorer.js"></script></body>
+</html>

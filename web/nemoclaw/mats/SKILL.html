@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Companion-material provenance - Securing Agents</title>
+<link rel="stylesheet" href="../styles/_style.css"/>
+<style>
+  :root[data-theme="light"] {
+    --bg:#ffffff; --e1:#f6f8fa; --e2:#eef1f4; --e3:#e5e8ec; --bd:#d0d7de;
+    --tx:#1a1f24; --td:#4b5563; --tf:#4b5563; --g:#3f6900; --gd:#2f5500; --gs:#3f6900;
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  body { background: var(--bg); }
+  main { max-width: 1180px; margin: 0 auto; padding: 1.5rem; }
+  .skill-head { display:flex; gap:1rem; align-items:flex-start; justify-content:space-between; margin-bottom:1rem; }
+  .skill-head h1 { margin:.1rem 0 .25rem; font-size:1.65rem; }
+  .skill-head p { max-width: 880px; }
+  .theme-toggle { display:inline-flex; gap:4px; padding:4px; border:1px solid var(--bd); border-radius:8px; background:var(--e1); }
+  .theme-toggle button { border:0; border-radius:6px; padding:7px 10px; cursor:pointer; font:700 .76rem var(--mono); color:var(--td); background:transparent; }
+  .theme-toggle button[aria-pressed="true"] { background:var(--g); color:#0a0a0a; }
+  :root[data-theme="light"] .theme-toggle button[aria-pressed="true"] { color:#fff; }
+  .note { border:1px solid var(--bd); border-radius:8px; padding:10px 12px; background:var(--e1); color:var(--td); }
+  .pv-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:14px; margin:1em 0; }
+  .pv-card { border:1px solid var(--bd); border-radius:8px; padding:11px 12px; background:var(--e1); font-size:.8rem; }
+  .pv-prev { margin:0 0 9px; min-height:120px; max-height:210px; overflow:hidden; display:flex; align-items:center; justify-content:center; background:var(--bg); border:1px solid var(--bd); border-radius:6px; padding:8px; }
+  .pv-prev img, .pv-prev svg { width:100%; max-height:190px; height:auto; display:block; }
+  .paper-preview { background:#fff; }
+  .paper-preview img { background:#fff; color-scheme:light; }
+  .pv-file { font-family:var(--mono); color:var(--gs); font-size:.76rem; word-break:break-all; }
+  .pv-dep { color:var(--tx); margin:3px 0 6px; line-height:1.4; }
+  .pv-use { color:var(--warn,#e3b341); font-size:.74rem; margin:0 0 6px; }
+  .pv-meta { color:var(--td); font-size:.74rem; margin:2px 0; }
+  .pv-meta span:first-child { display:inline-block; min-width:82px; color:var(--tf); text-transform:uppercase; font-size:.64rem; letter-spacing:.04em; }
+  .pv-meta a, .pv-use a { color:var(--g); }
+  .file-index { columns:2 260px; padding-left:1.1rem; font-size:.78rem; line-height:1.55; }
+  .file-index li { break-inside:avoid; margin:.08rem 0; }
+  .file-index a { color:var(--g); font-family:var(--mono); word-break:break-all; }
+  .file-index .kind { color:var(--td); font-size:.68rem; margin-left:.35rem; }
+  .md-wrap { margin-top:9px; border-top:1px solid var(--bd); padding-top:7px; }
+  .md-wrap summary { cursor:pointer; color:var(--g); font-size:.74rem; }
+  .md-body { max-height:280px; overflow:auto; background:var(--bg); border-radius:6px; padding:8px 10px; margin:7px 0 0; font-size:.72rem; line-height:1.45; white-space:pre-wrap; word-break:break-word; color:var(--tx); }
+  :root[data-theme="light"] .pv-prev svg.gfx-dark {
+    --gfx-ink:#1a1a1a; --gfx-ink2:#3b3b3b; --gfx-sub:#5e5e5e; --gfx-faint:#8b949e;
+    --gfx-line:#d0d7de; --gfx-panel:#f6f8fa; --gfx-bg:#ffffff;
+    --gfx-blue:#0969da; --gfx-green:#4a7a00; --gfx-purple:#6f42c1; --gfx-amber:#9a6700; --gfx-teal:#0d9488; --gfx-red:#d1242f;
+    --gfx-tint-blue:#dfeaf5; --gfx-tint-green:#e6f3d4; --gfx-tint-purple:#eadfff;
+    --gfx-tint-amber:#f7e9cf; --gfx-tint-teal:#d6f1ee; --gfx-tint-red:#fadcdc; --gfx-tint-sub:#eef1f4;
+  }
+  :root[data-theme="dark"] .pv-prev svg.gfx-dark { background:var(--gfx-bg,#0d0d0d); }
+</style>
+<script type="application/json" id="skill-meta">{
+  "node_type": "leaf",
+  "level": "asset",
+  "surface": "web",
+  "course": "nemoclaw",
+  "title": "Companion-material provenance",
+  "source_dir": "web/nemoclaw/mats/",
+  "self_path": "web/nemoclaw/mats/SKILL.html",
+  "summary": "Every material under mats has a direct local link, source/license metadata, and preview where practical."
+}</script>
+<script type="application/json" id="provenance">{
+  "repo_license": "Apache-2.0 for course-authored material. Cached or indexed public NVIDIA references keep their original external terms and are marked as such.",
+  "connection_levels": {
+    "original": "course-authored essay, guide, or note",
+    "summary": "course-authored card citing a source without reproducing source text",
+    "compilation": "course-authored index or collection of source links",
+    "conversion": "cached or format-shifted public reference retained for course context"
+  },
+  "mats": [
+    {
+      "file": "_materials.json",
+      "type": "generated index",
+      "source": "course build pipeline",
+      "source_url": "",
+      "license": "generated-from-authored-source",
+      "license_url": "",
+      "connection": "compilation",
+      "kind": "json"
+    },
+    {
+      "file": "agent_field_guide.md",
+      "type": "annotated reading map",
+      "source": "course-authored synthesis",
+      "source_url": "",
+      "license": "Apache-2.0",
+      "license_url": "",
+      "connection": "original",
+      "kind": "md"
+    },
+    {
+      "file": "agentic_ai_learning_path_links.md",
+      "type": "link index",
+      "source": "NVIDIA Agentic AI Learning Path",
+      "source_url": "https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/",
+      "connection": "compilation",
+      "kind": "md"
+    },
+    {
+      "file": "agentic_equilibrium.md",
+      "type": "essay",
+      "source": "original thesis",
+      "source_url": "",
+      "license": "Apache-2.0",
+      "license_url": "",
+      "connection": "original",
+      "kind": "md",
+      "contributed_by": "Vadim Kudlay"
+    },
+    {
+      "file": "agentic_safety_in_production.md",
+      "type": "essay",
+      "source": "original thesis",
+      "source_url": "",
+      "license": "Apache-2.0",
+      "license_url": "",
+      "connection": "original",
+      "kind": "md",
+      "contributed_by": "Zenodia Charpy"
+    },
+    {
+      "file": "arxiv-2005.11401-rag.md",
+      "type": "paper summary card",
+      "source": "Lewis et al. 2020 (RAG)",
+      "source_url": "https://arxiv.org/abs/2005.11401",
+      "license": "arXiv perpetual, non-exclusive distribution license 1.0",
+      "license_url": "https://arxiv.org/licenses/nonexclusive-distrib/1.0/",
+      "artifact_license": "Apache-2.0 course summary",
+      "connection": "summary",
+      "kind": "md"
+    },
+    {
+      "file": "arxiv-2210.03629-react.md",
+      "type": "paper summary card",
+      "source": "Yao et al. 2022 (ReAct)",
+      "source_url": "https://arxiv.org/abs/2210.03629",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "artifact_license": "Apache-2.0 course summary",
+      "connection": "summary",
+      "kind": "md"
+    },
+    {
+      "file": "arxiv-2305.18323-rewoo.md",
+      "type": "paper summary card",
+      "source": "Xu et al. 2023 (ReWOO)",
+      "source_url": "https://arxiv.org/abs/2305.18323",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "artifact_license": "Apache-2.0 course summary",
+      "connection": "summary",
+      "kind": "md"
+    },
+    {
+      "file": "arxiv-2404.16130-graphrag.md",
+      "type": "paper summary card",
+      "source": "Edge et al. 2024 (GraphRAG)",
+      "source_url": "https://arxiv.org/abs/2404.16130",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "artifact_license": "Apache-2.0 course summary",
+      "connection": "summary",
+      "kind": "md"
+    },
+    {
+      "file": "build-nvidia-com-spark-hermes-agent-overview.md",
+      "type": "cached public reference",
+      "source": "NVIDIA DGX Spark playbook",
+      "source_url": "https://build.nvidia.com/spark/hermes-agent/overview",
+      "source_author_status": "not listed on source page",
+      "license": "(c) NVIDIA; no reuse license stated on source page",
+      "license_url": "https://build.nvidia.com/spark/hermes-agent/overview",
+      "connection": "conversion",
+      "kind": "md"
+    },
+    {
+      "file": "build-nvidia-com-spark-nemoclaw-applications.md",
+      "type": "cached public reference",
+      "source": "NVIDIA DGX Spark playbook",
+      "source_url": "https://build.nvidia.com/spark/nemoclaw-applications",
+      "source_author_status": "not listed on source page",
+      "license": "(c) NVIDIA; no reuse license stated on source page",
+      "license_url": "https://build.nvidia.com/spark/nemoclaw-applications",
+      "connection": "conversion",
+      "kind": "md"
+    },
+    {
+      "file": "build-nvidia-com-spark-nemoclaw-instructions.md",
+      "type": "cached public reference",
+      "source": "NVIDIA DGX Spark playbook",
+      "source_url": "https://build.nvidia.com/spark/nemoclaw/instructions",
+      "source_author_status": "not listed on source page",
+      "license": "(c) NVIDIA; no reuse license stated on source page",
+      "license_url": "https://build.nvidia.com/spark/nemoclaw/instructions",
+      "connection": "conversion",
+      "kind": "md"
+    },
+    {
+      "file": "deep_research_refs.md",
+      "type": "reference list",
+      "source": "course-authored link collection",
+      "source_url": "",
+      "license": "Apache-2.0",
+      "license_url": "",
+      "connection": "compilation",
+      "kind": "md"
+    },
+    {
+      "file": "developer-nvidia-com-blog-deploy-self-evolving-agents-for-fa.md",
+      "type": "cached public reference",
+      "source": "NVIDIA Technical Blog",
+      "source_url": "https://developer.nvidia.com/blog/deploy-self-evolving-agents-for-faster-more-secure-research-with-a-hermes-agent-and-nvidia-nemoclaw/",
+      "source_authors": ["Sam Pastoriza"],
+      "source_author_url": "https://developer.nvidia.com/blog/author/spastoriza/",
+      "license": "(c) NVIDIA; no reuse license stated on source page",
+      "license_url": "https://developer.nvidia.com/blog/deploy-self-evolving-agents-for-faster-more-secure-research-with-a-hermes-agent-and-nvidia-nemoclaw/",
+      "connection": "conversion",
+      "kind": "md"
+    },
+    {
+      "file": "glossary_index.json",
+      "type": "generated index",
+      "source": "course build pipeline",
+      "source_url": "",
+      "license": "generated-from-authored-source",
+      "license_url": "",
+      "connection": "compilation",
+      "kind": "json"
+    },
+    {
+      "file": "glossary_raw/README.md",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "md"
+    },
+    {
+      "file": "glossary_raw/_versions.json",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "json"
+    },
+    {
+      "file": "glossary_raw/ai-agents.md",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "md"
+    },
+    {
+      "file": "glossary_raw/ai-inference.md",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "md"
+    },
+    {
+      "file": "glossary_raw/ai-reasoning.md",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "md"
+    },
+    {
+      "file": "glossary_raw/deep-agents.md",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "md"
+    },
+    {
+      "file": "glossary_raw/images/ai-agents-1.jpeg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "jpeg"
+    },
+    {
+      "file": "glossary_raw/images/ai-agents-2.svg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "svg"
+    },
+    {
+      "file": "glossary_raw/images/ai-agents-3.svg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "svg"
+    },
+    {
+      "file": "glossary_raw/images/ai-agents-4.svg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "svg"
+    },
+    {
+      "file": "glossary_raw/images/ai-inference-1.jpeg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "jpeg"
+    },
+    {
+      "file": "glossary_raw/images/ai-inference-2.svg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "svg"
+    },
+    {
+      "file": "glossary_raw/images/ai-inference-3.jpeg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "jpeg"
+    },
+    {
+      "file": "glossary_raw/images/ai-reasoning-1.jpeg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "jpeg"
+    },
+    {
+      "file": "glossary_raw/images/ai-reasoning-2.jpeg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "jpeg"
+    },
+    {
+      "file": "glossary_raw/images/ai-reasoning-3.jpeg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "jpeg"
+    },
+    {
+      "file": "glossary_raw/images/deep-agents-1.png",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "png"
+    },
+    {
+      "file": "glossary_raw/images/deep-agents-2.png",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "png"
+    },
+    {
+      "file": "glossary_raw/images/large-language-models-1.svg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "svg"
+    },
+    {
+      "file": "glossary_raw/images/large-language-models-2.svg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "svg"
+    },
+    {
+      "file": "glossary_raw/images/large-language-models-3.svg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "svg"
+    },
+    {
+      "file": "glossary_raw/images/retrieval-augmented-generation-1.jpeg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "jpeg"
+    },
+    {
+      "file": "glossary_raw/images/retrieval-augmented-generation-2.jpeg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "jpeg"
+    },
+    {
+      "file": "glossary_raw/images/retrieval-augmented-generation-3.jpeg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "jpeg"
+    },
+    {
+      "file": "glossary_raw/images/retrieval-augmented-generation-4.jpeg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "jpeg"
+    },
+    {
+      "file": "glossary_raw/images/vector-database-1.jpeg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "jpeg"
+    },
+    {
+      "file": "glossary_raw/images/vector-database-2.jpeg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "jpeg"
+    },
+    {
+      "file": "glossary_raw/images/vector-database-3.jpeg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "jpeg"
+    },
+    {
+      "file": "glossary_raw/images/vector-database-4.jpeg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "jpeg"
+    },
+    {
+      "file": "glossary_raw/images/vector-database-5.jpeg",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "jpeg"
+    },
+    {
+      "file": "glossary_raw/large-language-models.md",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "md"
+    },
+    {
+      "file": "glossary_raw/retrieval-augmented-generation.md",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "md"
+    },
+    {
+      "file": "glossary_raw/vector-database.md",
+      "type": "cached public reference",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "conversion",
+      "kind": "md"
+    },
+    {
+      "file": "materials_index.json",
+      "type": "generated index",
+      "source": "course build pipeline",
+      "source_url": "",
+      "license": "generated-from-authored-source",
+      "license_url": "",
+      "connection": "compilation",
+      "kind": "json"
+    },
+    {
+      "file": "nvidia_agent_glossary.md",
+      "type": "glossary terms",
+      "source": "NVIDIA AI glossary",
+      "source_url": "https://www.nvidia.com/en-us/glossary/",
+      "license": "(c) NVIDIA; external terms",
+      "license_url": "https://www.nvidia.com/en-us/glossary/",
+      "connection": "compilation",
+      "kind": "md"
+    },
+    {
+      "file": "nvidia_openshell_nemoclaw.md",
+      "type": "OpenShell / NemoClaw notes",
+      "source": "course-authored notes",
+      "source_url": "",
+      "license": "Apache-2.0",
+      "license_url": "",
+      "connection": "original",
+      "kind": "md"
+    }
+  ]
+}</script>
+</head>
+<body>
+<header data-skill-header="1" style="padding:.65rem 1rem;border-bottom:1px solid ButtonBorder;background:Canvas;color:CanvasText">
+  <nav aria-label="Skill navigation" style="display:flex;gap:.6rem;flex-wrap:wrap"><a data-skill-nav="home" href="../../index.html">Home</a> <span aria-hidden="true"> · </span> <a data-skill-nav="up" href="../SKILL.html">Up</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../../SKILL.html">Repository map</a></nav>
+</header>
+
+<main>
+<div class="skill-head">
+  <div><h1>Companion-material provenance</h1><p>Use this page as the review surface for companion essays, source cards, generated indexes, and cached public references.</p></div>
+  <div class="theme-toggle" role="group" aria-label="Color mode">
+    <button type="button" data-theme-choice="dark" aria-pressed="true">Dark</button>
+    <button type="button" data-theme-choice="light" aria-pressed="false">Light</button>
+  </div>
+</div><section class="note"><strong>Vendoring rule.</strong> New net-imported course material needs source, license, connection level, and a direct file link here before it ships.</section>
+<p><a href="glossary_raw/SKILL.html">Open the raw-glossary source contract.</a></p>
+<h2>Files</h2><ul class="file-index"><li><a href="_materials.json">_materials.json</a><span class="kind">json</span></li>
+<li><a href="agent_field_guide.md">agent_field_guide.md</a><span class="kind">md</span></li>
+<li><a href="agentic_ai_learning_path_links.md">agentic_ai_learning_path_links.md</a><span class="kind">md</span></li>
+<li><a href="agentic_equilibrium.md">agentic_equilibrium.md</a><span class="kind">md</span></li>
+<li><a href="agentic_safety_in_production.md">agentic_safety_in_production.md</a><span class="kind">md</span></li>
+<li><a href="arxiv-2005.11401-rag.md">arxiv-2005.11401-rag.md</a><span class="kind">md</span></li>
+<li><a href="arxiv-2210.03629-react.md">arxiv-2210.03629-react.md</a><span class="kind">md</span></li>
+<li><a href="arxiv-2305.18323-rewoo.md">arxiv-2305.18323-rewoo.md</a><span class="kind">md</span></li>
+<li><a href="arxiv-2404.16130-graphrag.md">arxiv-2404.16130-graphrag.md</a><span class="kind">md</span></li>
+<li><a href="build-nvidia-com-spark-hermes-agent-overview.md">build-nvidia-com-spark-hermes-agent-overview.md</a><span class="kind">md</span></li>
+<li><a href="build-nvidia-com-spark-nemoclaw-applications.md">build-nvidia-com-spark-nemoclaw-applications.md</a><span class="kind">md</span></li>
+<li><a href="build-nvidia-com-spark-nemoclaw-instructions.md">build-nvidia-com-spark-nemoclaw-instructions.md</a><span class="kind">md</span></li>
+<li><a href="deep_research_refs.md">deep_research_refs.md</a><span class="kind">md</span></li>
+<li><a href="developer-nvidia-com-blog-deploy-self-evolving-agents-for-fa.md">developer-nvidia-com-blog-deploy-self-evolving-agents-for-fa.md</a><span class="kind">md</span></li>
+<li><a href="glossary_index.json">glossary_index.json</a><span class="kind">json</span></li>
+<li><a href="glossary_raw/README.md">glossary_raw/README.md</a><span class="kind">md</span></li>
+<li><a href="glossary_raw/_versions.json">glossary_raw/_versions.json</a><span class="kind">json</span></li>
+<li><a href="glossary_raw/ai-agents.md">glossary_raw/ai-agents.md</a><span class="kind">md</span></li>
+<li><a href="glossary_raw/ai-inference.md">glossary_raw/ai-inference.md</a><span class="kind">md</span></li>
+<li><a href="glossary_raw/ai-reasoning.md">glossary_raw/ai-reasoning.md</a><span class="kind">md</span></li>
+<li><a href="glossary_raw/deep-agents.md">glossary_raw/deep-agents.md</a><span class="kind">md</span></li>
+<li><a href="glossary_raw/images/ai-agents-1.jpeg">glossary_raw/images/ai-agents-1.jpeg</a><span class="kind">jpeg</span></li>
+<li><a href="glossary_raw/images/ai-agents-2.svg">glossary_raw/images/ai-agents-2.svg</a><span class="kind">svg</span></li>
+<li><a href="glossary_raw/images/ai-agents-3.svg">glossary_raw/images/ai-agents-3.svg</a><span class="kind">svg</span></li>
+<li><a href="glossary_raw/images/ai-agents-4.svg">glossary_raw/images/ai-agents-4.svg</a><span class="kind">svg</span></li>
+<li><a href="glossary_raw/images/ai-inference-1.jpeg">glossary_raw/images/ai-inference-1.jpeg</a><span class="kind">jpeg</span></li>
+<li><a href="glossary_raw/images/ai-inference-2.svg">glossary_raw/images/ai-inference-2.svg</a><span class="kind">svg</span></li>
+<li><a href="glossary_raw/images/ai-inference-3.jpeg">glossary_raw/images/ai-inference-3.jpeg</a><span class="kind">jpeg</span></li>
+<li><a href="glossary_raw/images/ai-reasoning-1.jpeg">glossary_raw/images/ai-reasoning-1.jpeg</a><span class="kind">jpeg</span></li>
+<li><a href="glossary_raw/images/ai-reasoning-2.jpeg">glossary_raw/images/ai-reasoning-2.jpeg</a><span class="kind">jpeg</span></li>
+<li><a href="glossary_raw/images/ai-reasoning-3.jpeg">glossary_raw/images/ai-reasoning-3.jpeg</a><span class="kind">jpeg</span></li>
+<li><a href="glossary_raw/images/deep-agents-1.png">glossary_raw/images/deep-agents-1.png</a><span class="kind">png</span></li>
+<li><a href="glossary_raw/images/deep-agents-2.png">glossary_raw/images/deep-agents-2.png</a><span class="kind">png</span></li>
+<li><a href="glossary_raw/images/large-language-models-1.svg">glossary_raw/images/large-language-models-1.svg</a><span class="kind">svg</span></li>
+<li><a href="glossary_raw/images/large-language-models-2.svg">glossary_raw/images/large-language-models-2.svg</a><span class="kind">svg</span></li>
+<li><a href="glossary_raw/images/large-language-models-3.svg">glossary_raw/images/large-language-models-3.svg</a><span class="kind">svg</span></li>
+<li><a href="glossary_raw/images/retrieval-augmented-generation-1.jpeg">glossary_raw/images/retrieval-augmented-generation-1.jpeg</a><span class="kind">jpeg</span></li>
+<li><a href="glossary_raw/images/retrieval-augmented-generation-2.jpeg">glossary_raw/images/retrieval-augmented-generation-2.jpeg</a><span class="kind">jpeg</span></li>
+<li><a href="glossary_raw/images/retrieval-augmented-generation-3.jpeg">glossary_raw/images/retrieval-augmented-generation-3.jpeg</a><span class="kind">jpeg</span></li>
+<li><a href="glossary_raw/images/retrieval-augmented-generation-4.jpeg">glossary_raw/images/retrieval-augmented-generation-4.jpeg</a><span class="kind">jpeg</span></li>
+<li><a href="glossary_raw/images/vector-database-1.jpeg">glossary_raw/images/vector-database-1.jpeg</a><span class="kind">jpeg</span></li>
+<li><a href="glossary_raw/images/vector-database-2.jpeg">glossary_raw/images/vector-database-2.jpeg</a><span class="kind">jpeg</span></li>
+<li><a href="glossary_raw/images/vector-database-3.jpeg">glossary_raw/images/vector-database-3.jpeg</a><span class="kind">jpeg</span></li>
+<li><a href="glossary_raw/images/vector-database-4.jpeg">glossary_raw/images/vector-database-4.jpeg</a><span class="kind">jpeg</span></li>
+<li><a href="glossary_raw/images/vector-database-5.jpeg">glossary_raw/images/vector-database-5.jpeg</a><span class="kind">jpeg</span></li>
+<li><a href="glossary_raw/large-language-models.md">glossary_raw/large-language-models.md</a><span class="kind">md</span></li>
+<li><a href="glossary_raw/retrieval-augmented-generation.md">glossary_raw/retrieval-augmented-generation.md</a><span class="kind">md</span></li>
+<li><a href="glossary_raw/vector-database.md">glossary_raw/vector-database.md</a><span class="kind">md</span></li>
+<li><a href="materials_index.json">materials_index.json</a><span class="kind">json</span></li>
+<li><a href="nvidia_agent_glossary.md">nvidia_agent_glossary.md</a><span class="kind">md</span></li>
+<li><a href="nvidia_openshell_nemoclaw.md">nvidia_openshell_nemoclaw.md</a><span class="kind">md</span></li></ul>
+<h2>Material cards</h2><div class="pv-grid"><article class="pv-card" data-mat="_materials.json">
+  <div class="pv-file"><a href="_materials.json">_materials.json</a></div>
+  <div class="pv-dep">generated index</div>
+
+  <div class="pv-meta"><span>Connection</span>compilation</div>
+  <div class="pv-meta"><span>Source</span>course build pipeline</div>
+  <div class="pv-meta"><span>License</span>generated-from-authored-source</div>
+  <details class="md-wrap" data-md-src="_materials.json"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="agent_field_guide.md">
+  <div class="pv-file"><a href="agent_field_guide.md">agent_field_guide.md</a></div>
+  <div class="pv-dep">annotated reading map</div>
+
+  <div class="pv-meta"><span>Connection</span>original</div>
+  <div class="pv-meta"><span>Source</span>course-authored synthesis</div>
+  <div class="pv-meta"><span>License</span>Apache-2.0</div>
+  <details class="md-wrap" data-md-src="agent_field_guide.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="agentic_ai_learning_path_links.md">
+  <div class="pv-file"><a href="agentic_ai_learning_path_links.md">agentic_ai_learning_path_links.md</a></div>
+  <div class="pv-dep">link index</div>
+
+  <div class="pv-meta"><span>Connection</span>compilation</div>
+  <div class="pv-meta"><span>Source</span><a href="https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/" target="_blank" rel="noopener">NVIDIA Agentic AI Learning Path</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <details class="md-wrap" data-md-src="agentic_ai_learning_path_links.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="agentic_equilibrium.md">
+  <div class="pv-file"><a href="agentic_equilibrium.md">agentic_equilibrium.md</a></div>
+  <div class="pv-dep">essay</div>
+  <div class="pv-meta"><span>Contributed By</span>Vadim Kudlay</div>
+  <div class="pv-meta"><span>Connection</span>original</div>
+  <div class="pv-meta"><span>Source</span>original thesis</div>
+  <div class="pv-meta"><span>License</span>Apache-2.0</div>
+  <details class="md-wrap" data-md-src="agentic_equilibrium.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="agentic_safety_in_production.md">
+  <div class="pv-file"><a href="agentic_safety_in_production.md">agentic_safety_in_production.md</a></div>
+  <div class="pv-dep">essay</div>
+  <div class="pv-meta"><span>Contributed By</span>Zenodia Charpy</div>
+  <div class="pv-meta"><span>Connection</span>original</div>
+  <div class="pv-meta"><span>Source</span>original thesis</div>
+  <div class="pv-meta"><span>License</span>Apache-2.0</div>
+  <details class="md-wrap" data-md-src="agentic_safety_in_production.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="arxiv-2005.11401-rag.md">
+  <div class="pv-file"><a href="arxiv-2005.11401-rag.md">arxiv-2005.11401-rag.md</a></div>
+  <div class="pv-dep">paper summary card</div>
+
+  <div class="pv-meta"><span>Connection</span>summary</div>
+  <div class="pv-meta"><span>Source</span><a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Lewis et al. 2020 (RAG)</a></div>
+  <div class="pv-meta"><span>Paper license</span><a href="https://arxiv.org/licenses/nonexclusive-distrib/1.0/" target="_blank" rel="noopener">arXiv perpetual, non-exclusive distribution license 1.0</a></div>
+  <div class="pv-meta"><span>Summary license</span>Apache-2.0</div>
+  <details class="md-wrap" data-md-src="arxiv-2005.11401-rag.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="arxiv-2210.03629-react.md">
+  <div class="pv-file"><a href="arxiv-2210.03629-react.md">arxiv-2210.03629-react.md</a></div>
+  <div class="pv-dep">paper summary card</div>
+
+  <div class="pv-meta"><span>Connection</span>summary</div>
+  <div class="pv-meta"><span>Source</span><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">Yao et al. 2022 (ReAct)</a></div>
+  <div class="pv-meta"><span>Paper license</span><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC-BY-4.0</a></div>
+  <div class="pv-meta"><span>Summary license</span>Apache-2.0</div>
+  <details class="md-wrap" data-md-src="arxiv-2210.03629-react.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="arxiv-2305.18323-rewoo.md">
+  <div class="pv-file"><a href="arxiv-2305.18323-rewoo.md">arxiv-2305.18323-rewoo.md</a></div>
+  <div class="pv-dep">paper summary card</div>
+
+  <div class="pv-meta"><span>Connection</span>summary</div>
+  <div class="pv-meta"><span>Source</span><a href="https://arxiv.org/abs/2305.18323" target="_blank" rel="noopener">Xu et al. 2023 (ReWOO)</a></div>
+  <div class="pv-meta"><span>Paper license</span><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC-BY-4.0</a></div>
+  <div class="pv-meta"><span>Summary license</span>Apache-2.0</div>
+  <details class="md-wrap" data-md-src="arxiv-2305.18323-rewoo.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="arxiv-2404.16130-graphrag.md">
+  <div class="pv-file"><a href="arxiv-2404.16130-graphrag.md">arxiv-2404.16130-graphrag.md</a></div>
+  <div class="pv-dep">paper summary card</div>
+
+  <div class="pv-meta"><span>Connection</span>summary</div>
+  <div class="pv-meta"><span>Source</span><a href="https://arxiv.org/abs/2404.16130" target="_blank" rel="noopener">Edge et al. 2024 (GraphRAG)</a></div>
+  <div class="pv-meta"><span>Paper license</span><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC-BY-4.0</a></div>
+  <div class="pv-meta"><span>Summary license</span>Apache-2.0</div>
+  <details class="md-wrap" data-md-src="arxiv-2404.16130-graphrag.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="build-nvidia-com-spark-hermes-agent-overview.md">
+  <div class="pv-file"><a href="build-nvidia-com-spark-hermes-agent-overview.md">build-nvidia-com-spark-hermes-agent-overview.md</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://build.nvidia.com/spark/hermes-agent/overview" target="_blank" rel="noopener">NVIDIA DGX Spark playbook</a></div>
+  <div class="pv-meta"><span>Author</span>Not listed on source page</div>
+  <div class="pv-meta"><span>Terms</span>(c) NVIDIA; no reuse license stated on source page</div>
+  <details class="md-wrap" data-md-src="build-nvidia-com-spark-hermes-agent-overview.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="build-nvidia-com-spark-nemoclaw-applications.md">
+  <div class="pv-file"><a href="build-nvidia-com-spark-nemoclaw-applications.md">build-nvidia-com-spark-nemoclaw-applications.md</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://build.nvidia.com/spark/nemoclaw-applications" target="_blank" rel="noopener">NVIDIA DGX Spark playbook</a></div>
+  <div class="pv-meta"><span>Author</span>Not listed on source page</div>
+  <div class="pv-meta"><span>Terms</span>(c) NVIDIA; no reuse license stated on source page</div>
+  <details class="md-wrap" data-md-src="build-nvidia-com-spark-nemoclaw-applications.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="build-nvidia-com-spark-nemoclaw-instructions.md">
+  <div class="pv-file"><a href="build-nvidia-com-spark-nemoclaw-instructions.md">build-nvidia-com-spark-nemoclaw-instructions.md</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://build.nvidia.com/spark/nemoclaw/instructions" target="_blank" rel="noopener">NVIDIA DGX Spark playbook</a></div>
+  <div class="pv-meta"><span>Author</span>Not listed on source page</div>
+  <div class="pv-meta"><span>Terms</span>(c) NVIDIA; no reuse license stated on source page</div>
+  <details class="md-wrap" data-md-src="build-nvidia-com-spark-nemoclaw-instructions.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="deep_research_refs.md">
+  <div class="pv-file"><a href="deep_research_refs.md">deep_research_refs.md</a></div>
+  <div class="pv-dep">reference list</div>
+
+  <div class="pv-meta"><span>Connection</span>compilation</div>
+  <div class="pv-meta"><span>Source</span>course-authored link collection</div>
+  <div class="pv-meta"><span>License</span>Apache-2.0</div>
+  <details class="md-wrap" data-md-src="deep_research_refs.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="developer-nvidia-com-blog-deploy-self-evolving-agents-for-fa.md">
+  <div class="pv-file"><a href="developer-nvidia-com-blog-deploy-self-evolving-agents-for-fa.md">developer-nvidia-com-blog-deploy-self-evolving-agents-for-fa.md</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://developer.nvidia.com/blog/deploy-self-evolving-agents-for-faster-more-secure-research-with-a-hermes-agent-and-nvidia-nemoclaw/" target="_blank" rel="noopener">NVIDIA Technical Blog</a></div>
+  <div class="pv-meta"><span>Author</span><a href="https://developer.nvidia.com/blog/author/spastoriza/" target="_blank" rel="noopener">Sam Pastoriza</a></div>
+  <div class="pv-meta"><span>Terms</span>(c) NVIDIA; no reuse license stated on source page</div>
+  <details class="md-wrap" data-md-src="developer-nvidia-com-blog-deploy-self-evolving-agents-for-fa.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="glossary_index.json">
+  <div class="pv-file"><a href="glossary_index.json">glossary_index.json</a></div>
+  <div class="pv-dep">generated index</div>
+
+  <div class="pv-meta"><span>Connection</span>compilation</div>
+  <div class="pv-meta"><span>Source</span>course build pipeline</div>
+  <div class="pv-meta"><span>License</span>generated-from-authored-source</div>
+  <details class="md-wrap" data-md-src="glossary_index.json"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="glossary_raw/README.md">
+  <div class="pv-file"><a href="glossary_raw/README.md">glossary_raw/README.md</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <details class="md-wrap" data-md-src="glossary_raw/README.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="glossary_raw/_versions.json">
+  <div class="pv-file"><a href="glossary_raw/_versions.json">glossary_raw/_versions.json</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <details class="md-wrap" data-md-src="glossary_raw/_versions.json"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="glossary_raw/ai-agents.md">
+  <div class="pv-file"><a href="glossary_raw/ai-agents.md">glossary_raw/ai-agents.md</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <details class="md-wrap" data-md-src="glossary_raw/ai-agents.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="glossary_raw/ai-inference.md">
+  <div class="pv-file"><a href="glossary_raw/ai-inference.md">glossary_raw/ai-inference.md</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <details class="md-wrap" data-md-src="glossary_raw/ai-inference.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="glossary_raw/ai-reasoning.md">
+  <div class="pv-file"><a href="glossary_raw/ai-reasoning.md">glossary_raw/ai-reasoning.md</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <details class="md-wrap" data-md-src="glossary_raw/ai-reasoning.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="glossary_raw/deep-agents.md">
+  <div class="pv-file"><a href="glossary_raw/deep-agents.md">glossary_raw/deep-agents.md</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <details class="md-wrap" data-md-src="glossary_raw/deep-agents.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/ai-agents-1.jpeg">
+  <div class="pv-file"><a href="glossary_raw/images/ai-agents-1.jpeg">glossary_raw/images/ai-agents-1.jpeg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/ai-agents-1.jpeg" alt="glossary_raw/images/ai-agents-1.jpeg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/ai-agents-2.svg">
+  <div class="pv-file"><a href="glossary_raw/images/ai-agents-2.svg">glossary_raw/images/ai-agents-2.svg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/ai-agents-2.svg" alt="glossary_raw/images/ai-agents-2.svg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/ai-agents-3.svg">
+  <div class="pv-file"><a href="glossary_raw/images/ai-agents-3.svg">glossary_raw/images/ai-agents-3.svg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/ai-agents-3.svg" alt="glossary_raw/images/ai-agents-3.svg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/ai-agents-4.svg">
+  <div class="pv-file"><a href="glossary_raw/images/ai-agents-4.svg">glossary_raw/images/ai-agents-4.svg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/ai-agents-4.svg" alt="glossary_raw/images/ai-agents-4.svg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/ai-inference-1.jpeg">
+  <div class="pv-file"><a href="glossary_raw/images/ai-inference-1.jpeg">glossary_raw/images/ai-inference-1.jpeg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/ai-inference-1.jpeg" alt="glossary_raw/images/ai-inference-1.jpeg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/ai-inference-2.svg">
+  <div class="pv-file"><a href="glossary_raw/images/ai-inference-2.svg">glossary_raw/images/ai-inference-2.svg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/ai-inference-2.svg" alt="glossary_raw/images/ai-inference-2.svg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/ai-inference-3.jpeg">
+  <div class="pv-file"><a href="glossary_raw/images/ai-inference-3.jpeg">glossary_raw/images/ai-inference-3.jpeg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/ai-inference-3.jpeg" alt="glossary_raw/images/ai-inference-3.jpeg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/ai-reasoning-1.jpeg">
+  <div class="pv-file"><a href="glossary_raw/images/ai-reasoning-1.jpeg">glossary_raw/images/ai-reasoning-1.jpeg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/ai-reasoning-1.jpeg" alt="glossary_raw/images/ai-reasoning-1.jpeg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/ai-reasoning-2.jpeg">
+  <div class="pv-file"><a href="glossary_raw/images/ai-reasoning-2.jpeg">glossary_raw/images/ai-reasoning-2.jpeg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/ai-reasoning-2.jpeg" alt="glossary_raw/images/ai-reasoning-2.jpeg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/ai-reasoning-3.jpeg">
+  <div class="pv-file"><a href="glossary_raw/images/ai-reasoning-3.jpeg">glossary_raw/images/ai-reasoning-3.jpeg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/ai-reasoning-3.jpeg" alt="glossary_raw/images/ai-reasoning-3.jpeg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/deep-agents-1.png">
+  <div class="pv-file"><a href="glossary_raw/images/deep-agents-1.png">glossary_raw/images/deep-agents-1.png</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/deep-agents-1.png" alt="glossary_raw/images/deep-agents-1.png"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/deep-agents-2.png">
+  <div class="pv-file"><a href="glossary_raw/images/deep-agents-2.png">glossary_raw/images/deep-agents-2.png</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/deep-agents-2.png" alt="glossary_raw/images/deep-agents-2.png"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/large-language-models-1.svg">
+  <div class="pv-file"><a href="glossary_raw/images/large-language-models-1.svg">glossary_raw/images/large-language-models-1.svg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/large-language-models-1.svg" alt="glossary_raw/images/large-language-models-1.svg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/large-language-models-2.svg">
+  <div class="pv-file"><a href="glossary_raw/images/large-language-models-2.svg">glossary_raw/images/large-language-models-2.svg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/large-language-models-2.svg" alt="glossary_raw/images/large-language-models-2.svg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/large-language-models-3.svg">
+  <div class="pv-file"><a href="glossary_raw/images/large-language-models-3.svg">glossary_raw/images/large-language-models-3.svg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/large-language-models-3.svg" alt="glossary_raw/images/large-language-models-3.svg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/retrieval-augmented-generation-1.jpeg">
+  <div class="pv-file"><a href="glossary_raw/images/retrieval-augmented-generation-1.jpeg">glossary_raw/images/retrieval-augmented-generation-1.jpeg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/retrieval-augmented-generation-1.jpeg" alt="glossary_raw/images/retrieval-augmented-generation-1.jpeg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/retrieval-augmented-generation-2.jpeg">
+  <div class="pv-file"><a href="glossary_raw/images/retrieval-augmented-generation-2.jpeg">glossary_raw/images/retrieval-augmented-generation-2.jpeg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/retrieval-augmented-generation-2.jpeg" alt="glossary_raw/images/retrieval-augmented-generation-2.jpeg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/retrieval-augmented-generation-3.jpeg">
+  <div class="pv-file"><a href="glossary_raw/images/retrieval-augmented-generation-3.jpeg">glossary_raw/images/retrieval-augmented-generation-3.jpeg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/retrieval-augmented-generation-3.jpeg" alt="glossary_raw/images/retrieval-augmented-generation-3.jpeg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/retrieval-augmented-generation-4.jpeg">
+  <div class="pv-file"><a href="glossary_raw/images/retrieval-augmented-generation-4.jpeg">glossary_raw/images/retrieval-augmented-generation-4.jpeg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/retrieval-augmented-generation-4.jpeg" alt="glossary_raw/images/retrieval-augmented-generation-4.jpeg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/vector-database-1.jpeg">
+  <div class="pv-file"><a href="glossary_raw/images/vector-database-1.jpeg">glossary_raw/images/vector-database-1.jpeg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/vector-database-1.jpeg" alt="glossary_raw/images/vector-database-1.jpeg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/vector-database-2.jpeg">
+  <div class="pv-file"><a href="glossary_raw/images/vector-database-2.jpeg">glossary_raw/images/vector-database-2.jpeg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/vector-database-2.jpeg" alt="glossary_raw/images/vector-database-2.jpeg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/vector-database-3.jpeg">
+  <div class="pv-file"><a href="glossary_raw/images/vector-database-3.jpeg">glossary_raw/images/vector-database-3.jpeg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/vector-database-3.jpeg" alt="glossary_raw/images/vector-database-3.jpeg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/vector-database-4.jpeg">
+  <div class="pv-file"><a href="glossary_raw/images/vector-database-4.jpeg">glossary_raw/images/vector-database-4.jpeg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/vector-database-4.jpeg" alt="glossary_raw/images/vector-database-4.jpeg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/images/vector-database-5.jpeg">
+  <div class="pv-file"><a href="glossary_raw/images/vector-database-5.jpeg">glossary_raw/images/vector-database-5.jpeg</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <div class="pv-prev"><img src="glossary_raw/images/vector-database-5.jpeg" alt="glossary_raw/images/vector-database-5.jpeg"/></div>
+</article>
+<article class="pv-card" data-mat="glossary_raw/large-language-models.md">
+  <div class="pv-file"><a href="glossary_raw/large-language-models.md">glossary_raw/large-language-models.md</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <details class="md-wrap" data-md-src="glossary_raw/large-language-models.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="glossary_raw/retrieval-augmented-generation.md">
+  <div class="pv-file"><a href="glossary_raw/retrieval-augmented-generation.md">glossary_raw/retrieval-augmented-generation.md</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <details class="md-wrap" data-md-src="glossary_raw/retrieval-augmented-generation.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="glossary_raw/vector-database.md">
+  <div class="pv-file"><a href="glossary_raw/vector-database.md">glossary_raw/vector-database.md</a></div>
+  <div class="pv-dep">cached public reference</div>
+
+  <div class="pv-meta"><span>Connection</span>conversion</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <details class="md-wrap" data-md-src="glossary_raw/vector-database.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="materials_index.json">
+  <div class="pv-file"><a href="materials_index.json">materials_index.json</a></div>
+  <div class="pv-dep">generated index</div>
+
+  <div class="pv-meta"><span>Connection</span>compilation</div>
+  <div class="pv-meta"><span>Source</span>course build pipeline</div>
+  <div class="pv-meta"><span>License</span>generated-from-authored-source</div>
+  <details class="md-wrap" data-md-src="materials_index.json"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="nvidia_agent_glossary.md">
+  <div class="pv-file"><a href="nvidia_agent_glossary.md">nvidia_agent_glossary.md</a></div>
+  <div class="pv-dep">glossary terms</div>
+
+  <div class="pv-meta"><span>Connection</span>compilation</div>
+  <div class="pv-meta"><span>Source</span><a href="https://www.nvidia.com/en-us/glossary/" target="_blank" rel="noopener">NVIDIA AI glossary</a></div>
+  <div class="pv-meta"><span>License</span>(c) NVIDIA; external terms</div>
+  <details class="md-wrap" data-md-src="nvidia_agent_glossary.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article>
+<article class="pv-card" data-mat="nvidia_openshell_nemoclaw.md">
+  <div class="pv-file"><a href="nvidia_openshell_nemoclaw.md">nvidia_openshell_nemoclaw.md</a></div>
+  <div class="pv-dep">OpenShell / NemoClaw notes</div>
+
+  <div class="pv-meta"><span>Connection</span>original</div>
+  <div class="pv-meta"><span>Source</span>course-authored notes</div>
+  <div class="pv-meta"><span>License</span>Apache-2.0</div>
+  <details class="md-wrap" data-md-src="nvidia_openshell_nemoclaw.md"><summary>preview</summary><pre class="md-body"></pre></details>
+</article></div>
+
+<script>
+(function(){
+  const key = 'nemoclaw-skill-theme';
+  const root = document.documentElement;
+  function setTheme(mode){
+    root.dataset.theme = mode;
+    localStorage.setItem(key, mode);
+    document.querySelectorAll('[data-theme-choice]').forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.themeChoice === mode)));
+  }
+  document.querySelectorAll('[data-theme-choice]').forEach(btn => btn.addEventListener('click', () => setTheme(btn.dataset.themeChoice)));
+  setTheme(localStorage.getItem(key) || 'dark');
+  document.querySelectorAll('[data-svg-src]').forEach(async host => {
+    try {
+      const r = await fetch(host.dataset.svgSrc);
+      if (!r.ok) throw new Error(String(r.status));
+      host.innerHTML = await r.text();
+    } catch (err) {
+      host.innerHTML = '<a href="' + host.dataset.svgSrc + '">Open SVG</a>';
+    }
+  });
+  document.querySelectorAll('[data-md-src]').forEach(details => {
+    details.addEventListener('toggle', async () => {
+      if (!details.open || details.dataset.loaded) return;
+      details.dataset.loaded = '1';
+      const body = details.querySelector('.md-body');
+      try {
+        const r = await fetch(details.dataset.mdSrc);
+        if (!r.ok) throw new Error(String(r.status));
+        body.textContent = (await r.text()).slice(0, 12000);
+      } catch (err) {
+        body.innerHTML = '<a href="' + details.dataset.mdSrc + '">Open file</a>';
+      }
+    });
+  });
+})();
+</script>
+</main>
+<script src="../../_skill_explorer.js"></script>
+</body>
+</html>

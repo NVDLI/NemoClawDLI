@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>scripts/runtime link and browser runtime</title>
+
+<script type="application/json" id="skill-meta">
+{
+  "schema": "dir-skill/1.0",
+  "node_type": "directory-explorer",
+  "title": "scripts/runtime link and browser runtime",
+  "source_dir": "scripts/runtime/",
+  "summary": "Runtime-facing tooling: the single JavaScript link engine, the browser topology viewer, and the thin Python and shell shims that run the same engine in CI.",
+  "related": [
+    "scripts/runtime/engine.js",
+    "scripts/runtime/html_document.py",
+    "scripts/runtime/link_projection.py",
+    "scripts/runtime/link_graph.html",
+    "scripts/runtime/run_engine.sh",
+    "scripts/runtime/run_node.sh",
+    "scripts/runtime/browser_env_probe.sh",
+    "scripts/runtime/python_env_probe.py",
+    "scripts/runtime/test_page_runtime.js",
+    "scripts/runtime/browser_runtime_test.sh",
+    "scripts/runtime/host_browser.py",
+    "scripts/runtime/package.json",
+    "scripts/runtime/pnpm-lock.yaml"
+  ],
+  "explorer": "../../web/_skill_explorer.js"
+}
+</script>
+
+<script type="application/json" id="explorer-config">
+{
+  "title": "scripts/runtime link and browser runtime",
+  "summary": "Runtime-facing tooling: the single JavaScript link engine, the browser topology viewer, and the thin Python and shell shims that run the same engine in CI.",
+  "model": "nvidia/nemotron-3-nano-30b-a3b",
+  "ties": [
+    "build"
+  ],
+  "nav": {
+    "home": "../../web/index.html",
+    "up": {
+      "label": "scripts",
+      "href": "../SKILL.html"
+    }
+  },
+  "files": [
+    {
+      "path": "engine.js",
+      "role": "single link engine",
+      "desc": "Resolves links, builds the page graph, checks reachability, and enforces the release foyer contract."
+    },
+    {
+      "path": "html_document.py",
+      "role": "browser-tolerant HTML projection",
+      "desc": "Parses script and style boundaries once so source validators inspect the same document structure a browser accepts."
+    },
+    {
+      "path": "link_projection.py",
+      "role": "Python interface",
+      "desc": "Classification helpers plus thin subprocess shims over engine.js."
+    },
+    {
+      "path": "link_graph.html",
+      "role": "topology viewer",
+      "desc": "Browser view of the same graph, with an embedded offline snapshot."
+    },
+    {
+      "path": "run_engine.sh",
+      "role": "engine runner",
+      "desc": "Finds Node and runs engine.js with CI arguments."
+    },
+    {
+      "path": "run_node.sh",
+      "role": "Node resolver",
+      "desc": "Shared runner for Node-based scripts. NODE_BIN can select an explicit runtime, including a WSL-accessible Windows node.exe."
+    },
+    {
+      "path": "browser_env_probe.sh",
+      "role": "browser runtime discovery probe",
+      "desc": "Verifies host Node.js, the pinned playwright-core API, and Chromium before browser checks run."
+    },
+    {
+      "path": "python_env_probe.py",
+      "role": "Python compatibility probe",
+      "desc": "Requires Python 3.11+, identifies Python 3.12 as the tested default, and verifies pinned material-tool imports before builds."
+    },
+    {
+      "path": "browser_runtime_test.sh",
+      "role": "host browser runtime entrypoint",
+      "desc": "Runs the pinned Playwright API against an installed Chromium or compatible Chrome without building a repository image."
+    },
+    {
+      "path": "host_browser.py",
+      "role": "shared host tool resolver",
+      "desc": "Finds Node.js, Chromium, and the pinned browser API for Python-launched browser audits."
+    },
+    {
+      "path": "test_page_runtime.js",
+      "role": "page runtime smoke test",
+      "desc": "Exercises browser runtime behavior outside a full lab session, with smoke and render-only modes available through the shell wrapper."
+    },
+    {
+      "path": "module_check.py",
+      "role": "module check",
+      "desc": "Checks module wiring and importability for page scripts."
+    }
+  ],
+  "tour": [
+    {
+      "title": "Single engine boundary",
+      "file": "engine.js",
+      "lines": [
+        1,
+        40
+      ],
+      "note": "Link behavior belongs here. Python callers should delegate instead of reimplementing graph rules."
+    }
+  ]
+}
+</script>
+
+<style data-skill-static="1">
+.skill-static{padding:24px clamp(18px,4vw,44px);border-bottom:1px solid #2a2a2a;background:#0d0d0d;color:#f2f2f2;font:15px/1.55 system-ui,sans-serif}
+.skill-static a{color:#76b900}.skill-static h1{margin:.1em 0 .25em;color:#76b900;font-size:1.65rem}.skill-static h2{font-size:1.02rem;margin:1.2rem 0 .45rem}.skill-static p{max-width:76rem;color:#b0b0b0}.skill-list{display:grid;grid-template-columns:1fr;max-width:76rem;margin:.7rem 0}.skill-link{display:grid;grid-template-columns:minmax(180px,280px) 1fr;gap:12px;border-top:1px solid #2a2a2a;padding:9px 4px;text-decoration:none}.skill-link:last-child{border-bottom:1px solid #2a2a2a}.skill-link b{display:block;color:#aee23a;margin-bottom:4px}.skill-link code,.skill-cmd code{font-family:ui-monospace,Consolas,monospace}.skill-link span{color:#b0b0b0;font-size:.9rem}.skill-cmds{display:grid;gap:8px;margin:.7rem 0}.skill-cmd{display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:8px;align-items:center;border:1px solid #2a2a2a;border-radius:8px;background:#111;padding:9px 11px}.skill-cmd b{color:#aee23a}.skill-cmd code{display:block;overflow:auto;white-space:nowrap;color:#f2f2f2}.skill-note{border-left:3px solid #76b900;background:rgba(118,185,0,.08);padding:10px 13px;margin:.8rem 0;color:#ddd}.skill-nav{display:flex;gap:12px;flex-wrap:wrap;margin:.8rem 0}.skill-nav a{border:1px solid #2a2a2a;border-radius:999px;padding:5px 10px;text-decoration:none}.skill-nav a:hover{border-color:#76b900}@media(max-width:700px){.skill-cmd{grid-template-columns:1fr}.skill-static{padding:18px}.skill-link{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<section class="skill-static" aria-labelledby="skill-title">
+  <header data-skill-header="1">
+<nav class="skill-nav" aria-label="Skill navigation"><a href="../../web/index.html">Home</a><a href="../SKILL.html">scripts</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../SKILL.html">Repository map</a></nav>
+</header>
+  <h1 id="skill-title">scripts/runtime link and browser runtime</h1>
+  <p>Runtime-facing tooling: the single JavaScript link engine, the browser topology viewer, and the thin Python and shell shims that run the same engine in CI.</p>
+  <div class="skill-note">Browser checks run with host Node.js, the pinned <code>playwright-core</code> API, and an installed Chromium or compatible Chrome. Start with <code>scripts/runtime/browser_env_probe.sh</code>. Python tooling requires 3.11 or newer; 3.12 is the tested default. Use a virtual environment and pinned locks. External isolation is operator-owned.</div>
+  <h2>OpenClaw fallback</h2>
+  <div class="skill-note">Pass these values from the host when a live check requires them:
+    <ul><li><code>CLAW_ACCESS_PROVIDER</code></li><li><code>CLAW_ACCESS_SESSION</code></li><li><code>OPENCLAW_CORS_PROXY_BASE</code></li></ul>
+    Keep Cloudflare Access and Pomerium values in the process environment only.
+  </div>
+  <h2>Executable checks</h2>
+  <div class="skill-cmds">
+    <div class="skill-cmd"><b>Browser env probe</b><code>scripts/runtime/browser_env_probe.sh</code></div>
+    <div class="skill-cmd"><b>Python env probe</b><code>python3 scripts/runtime/python_env_probe.py --require-material-tools</code></div>
+    <div class="skill-cmd"><b>Browser smoke</b><code>scripts/runtime/browser_runtime_test.sh --smoke</code></div>
+    <div class="skill-cmd"><b>Engine self-test</b><code>bash scripts/runtime/run_engine.sh --self-test</code></div>
+    <div class="skill-cmd"><b>Offline projection</b><code>python3 scripts/runtime/link_projection.py --check</code></div>
+    <div class="skill-cmd"><b>Module graph</b><code>python3 scripts/runtime/module_check.py --dir web</code></div>
+    <div class="skill-cmd"><b>No-lab browser</b><code>scripts/runtime/browser_runtime_test.sh --render-only</code></div>
+    <div class="skill-cmd"><b>Live Course Assistant artifacts</b><code>NVIDIA_API_KEY=$NVIDIA_API_KEY scripts/runtime/browser_runtime_test.sh --assistant-artifacts</code></div>
+    <div class="skill-cmd"><b>Hosted operator terminal</b><code>CLAW_URL=$NEMOCLAW_URL CLAW_ACCESS_PROVIDER=$ACCESS_PROVIDER CLAW_ACCESS_SESSION=$ACCESS_SESSION scripts/runtime/browser_runtime_test.sh --gateway-only --terminal-contract</code></div>
+  </div>
+  <h2>Linkage map</h2>
+  <div class="skill-list">
+    <a class="skill-link" href="engine.js"><b>engine.js</b><span>single link engine. Resolves links, builds the page graph, checks reachability, and enforces the release foyer contract.</span></a>
+    <a class="skill-link" href="html_document.py"><b>html_document.py</b><span>browser-tolerant HTML projection. Gives validators one parser-backed view of script and style boundaries.</span></a>
+    <a class="skill-link" href="link_projection.py"><b>link_projection.py</b><span>Python interface. Classification helpers plus thin subprocess shims over engine.js.</span></a>
+    <a class="skill-link" href="link_graph.html"><b>link_graph.html</b><span>topology viewer. Browser view of the same graph, with an embedded offline snapshot.</span></a>
+    <a class="skill-link" href="run_engine.sh"><b>run_engine.sh</b><span>engine runner. Finds Node and runs engine.js with CI arguments.</span></a>
+    <a class="skill-link" href="run_node.sh"><b>run_node.sh</b><span>Node resolver. Uses NODE_BIN or host Node and reports an actionable prerequisite error otherwise.</span></a>
+    <a class="skill-link" href="browser_env_probe.sh"><b>browser_env_probe.sh</b><span>Verifies host Node.js, the pinned Playwright API, and Chromium before browser checks run.</span></a>
+    <a class="skill-link" href="python_env_probe.py"><b>python_env_probe.py</b><span>Fails early on incompatible Python and missing pinned material-tool imports.</span></a>
+    <a class="skill-link" href="test_page_runtime.js"><b>test_page_runtime.js</b><span>page runtime smoke test. Exercises static pages, hosted gateway RPCs, live chat/tool completion, and opt-in Course Assistant artifact generation outside a full lab session.</span></a>
+    <a class="skill-link" href="module_check.py"><b>module_check.py</b><span>module check. Checks module wiring and importability for page scripts.</span></a>
+  </div>
+  <h2>Interactive explorer</h2>
+  <p>The explorer below opens source files, tours important sections, and checks documented paths against the repository tree.</p>
+</section>
+<div id="explorer"></div>
+<noscript>
+  <section class="skill-static"><h2>JavaScript disabled</h2><p>The static command list and file links above remain usable. Enable JavaScript for source viewing and guided tours.</p></section>
+</noscript>
+<script src="../../web/_skill_explorer.js"></script>
+</body>
+</html>
