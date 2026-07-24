@@ -12,6 +12,7 @@ from pathlib import Path
 from scripts.skills import skill_renderer_runtime_audit as theme_runtime
 from scripts.validation import (
     cell_ui_runtime_audit as cell_runtime,
+    contribution_safety_audit as contribution_safety,
     helper_notebook_runtime_audit as helper_notebook,
     learner_flow_audit as learner_flow,
 )
@@ -109,21 +110,64 @@ class ThemeRuntimeContractTests(unittest.TestCase):
         self.assertIn('cd scripts/runtime && pnpm install --frozen-lockfile --ignore-scripts', core)
 
     def test_github_validation_jobs_install_the_pinned_browser_runtime(self) -> None:
-        install = (
-            "working-directory: scripts/runtime\n"
-            "        run: |\n"
-            "          corepack enable\n"
-            "          pnpm install --frozen-lockfile --ignore-scripts"
-        )
         for workflow in ("pages.yml", "release.yml"):
             with self.subTest(workflow=workflow):
                 source = (ROOT / ".github/workflows" / workflow).read_text(encoding="utf-8")
-                self.assertIn('node-version: "24"', source)
-                self.assertIn(install, source)
-                self.assertLess(
-                    source.index("pnpm install --frozen-lockfile --ignore-scripts"),
-                    source.index("release_gate.py --tier ship"),
-                )
+                browser_jobs = [
+                    (name, job)
+                    for name, job in contribution_safety.workflow_jobs(source)
+                    if any(
+                        consumer in job
+                        for consumer in contribution_safety.BROWSER_RUNTIME_CONSUMERS
+                    )
+                ]
+                self.assertTrue(browser_jobs)
+                for job_name, job in browser_jobs:
+                    with self.subTest(workflow=workflow, job=job_name):
+                        install_steps = [
+                            step for step in contribution_safety.workflow_steps(job)
+                            if "pnpm install --frozen-lockfile --ignore-scripts" in step
+                        ]
+                        self.assertEqual(len(install_steps), 1)
+                        self.assertIn("working-directory: scripts/runtime", install_steps[0])
+                        self.assertNotIn("--dir scripts/runtime", install_steps[0])
+                        self.assertIn('node-version: "24"', job)
+                        first_consumer = min(
+                            job.index(token)
+                            for token in contribution_safety.BROWSER_RUNTIME_CONSUMERS
+                            if token in job
+                        )
+                        install_position = (
+                            job.index(install_steps[0])
+                            + install_steps[0].index("pnpm install --frozen-lockfile --ignore-scripts")
+                        )
+                        self.assertLess(install_position, first_consumer)
+
+    def test_each_browser_backed_job_rejects_an_unscoped_runtime_install(self) -> None:
+        for workflow, prefix in (("pages.yml", "github"), ("release.yml", "release")):
+            source = (ROOT / ".github/workflows" / workflow).read_text(encoding="utf-8")
+            rel = f".github/workflows/{workflow}"
+            for job_name, job in contribution_safety.workflow_jobs(source):
+                if not any(
+                    consumer in job
+                    for consumer in contribution_safety.BROWSER_RUNTIME_CONSUMERS
+                ):
+                    continue
+                with self.subTest(workflow=workflow, job=job_name):
+                    mutated_job = job.replace(
+                        "working-directory: scripts/runtime",
+                        "working-directory: .",
+                        1,
+                    )
+                    self.assertNotEqual(mutated_job, job)
+                    mutated = source.replace(job, mutated_job, 1)
+                    codes = {
+                        item["code"]
+                        for item in contribution_safety.audit_browser_runtime_jobs(
+                            mutated, rel, prefix,
+                        )
+                    }
+                    self.assertIn(f"{prefix}-browser-runtime-lock", codes)
 
     def test_codeql_job_has_minimal_workflow_metadata_access(self) -> None:
         source = (ROOT / ".github/workflows/codeql.yml").read_text(encoding="utf-8")

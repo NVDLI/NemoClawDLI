@@ -130,9 +130,10 @@ jobs:
       - name: Build the client-side static site
         run: BUILD_PAGES_PULL_MATERIALS=0 BUILD_PAGES_REUSE_VALIDATION=1 bash scripts/build/build_pages.sh public
       - name: Install the pinned host-browser API
+        working-directory: scripts/runtime
         run: |
           corepack enable
-          pnpm install --dir scripts/runtime --frozen-lockfile --ignore-scripts
+          pnpm install --frozen-lockfile --ignore-scripts
       - name: Verify and exercise the exact Pages artifact
         run: |
           python3 scripts/skills/skill_renderer_runtime_audit.py --site-root public --engine current
