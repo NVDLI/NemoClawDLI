@@ -70,6 +70,16 @@
         "04933b4cd5704d82b7d36eff8cbf294bbf4be31c9233df0e466c381c6a10bcbf",
         "9ff174a9c00fa9764170fec2d0bb51ec42727534460312a30c835df986827ecd"
       ],
+      "source_findings": [
+        {
+          "rule": "js/clear-text-storage-of-sensitive-data",
+          "source_line": "if (key) sessionStorage.setItem(\"nvapi\", key);"
+        },
+        {
+          "rule": "js/clear-text-storage-of-sensitive-data",
+          "source_line": "if (key) sessionStorage.setItem(EMBEDDING_API_KEY, key);"
+        }
+      ],
       "artifact": "web/nemoclaw/scripts/_shared.js",
       "artifact_sha256": "21ab49bddded27855875e3669e5154839c422ce6631c38135a2da91155a6250e",
       "decision": "explicit-user-tab-credential-boundary",

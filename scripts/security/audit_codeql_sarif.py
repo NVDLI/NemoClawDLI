@@ -45,6 +45,8 @@ AUTHORED_REQUIRED_FIELDS = {
     "controls",
     "scope",
 }
+AUTHORED_ALLOWED_FIELDS = AUTHORED_REQUIRED_FIELDS | {"source_findings"}
+AUTHORED_SOURCE_FINDING_FIELDS = {"rule", "source_line"}
 AUTHORED_DECISIONS = {
     "explicit-user-tab-credential-boundary",
     "inert-parse-allowlist-reconstruction",
@@ -109,13 +111,18 @@ def _validate_policy(
     policy: dict[str, Any],
     *,
     today: dt.date,
-) -> tuple[dict[str, dict[str, Any]], list[str]]:
+) -> tuple[
+    dict[str, dict[str, Any]],
+    dict[tuple[str, str, str], dict[str, Any]],
+    list[str],
+]:
     findings: list[str] = []
+    authored_source_index: dict[tuple[str, str, str], dict[str, Any]] = {}
     if policy.get("schema") != POLICY_SCHEMA:
         findings.append(f"policy schema must be {POLICY_SCHEMA}")
     dispositions = policy.get("artifacts")
     if not isinstance(dispositions, list):
-        return {}, findings + ["policy artifacts must be a list"]
+        return {}, authored_source_index, findings + ["policy artifacts must be a list"]
 
     indexed: dict[str, dict[str, Any]] = {}
     for index, item in enumerate(dispositions):
@@ -176,14 +183,14 @@ def _validate_policy(
                 findings.append(f"{label} disposition expired on {expires.isoformat()}")
     authored = policy.get("authored_controls", [])
     if not isinstance(authored, list):
-        return indexed, findings + ["policy authored_controls must be a list"]
+        return indexed, authored_source_index, findings + ["policy authored_controls must be a list"]
     for index, item in enumerate(authored):
         label = f"authored_controls[{index}]"
         if not isinstance(item, dict):
             findings.append(f"{label} must be an object")
             continue
         missing = sorted(AUTHORED_REQUIRED_FIELDS - set(item))
-        unknown = sorted(set(item) - AUTHORED_REQUIRED_FIELDS)
+        unknown = sorted(set(item) - AUTHORED_ALLOWED_FIELDS)
         if missing:
             findings.append(f"{label} missing fields: {', '.join(missing)}")
         if unknown:
@@ -211,6 +218,46 @@ def _validate_policy(
             digest = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
             if digest != item.get("artifact_sha256"):
                 findings.append(f"{label} artifact digest differs from reviewed bytes")
+            source_findings = item.get("source_findings", [])
+            if not isinstance(source_findings, list):
+                findings.append(f"{label} source_findings must be a list")
+            else:
+                artifact_lines = artifact_path.read_text(encoding="utf-8").splitlines()
+                for source_index, source_finding in enumerate(source_findings):
+                    source_label = f"{label} source_findings[{source_index}]"
+                    if (
+                        not isinstance(source_finding, dict)
+                        or set(source_finding) != AUTHORED_SOURCE_FINDING_FIELDS
+                    ):
+                        findings.append(
+                            f"{source_label} requires exact rule and source_line fields",
+                        )
+                        continue
+                    rule = source_finding.get("rule")
+                    source_line = source_finding.get("source_line")
+                    if not isinstance(rule, str) or not rule.strip():
+                        findings.append(f"{source_label} rule must be a non-empty string")
+                        continue
+                    if (
+                        not isinstance(source_line, str)
+                        or not source_line.strip()
+                        or source_line != source_line.strip()
+                    ):
+                        findings.append(
+                            f"{source_label} source_line must be a non-empty trimmed string",
+                        )
+                        continue
+                    occurrences = sum(line.strip() == source_line for line in artifact_lines)
+                    if occurrences != 1:
+                        findings.append(
+                            f"{source_label} source_line must occur exactly once in the reviewed artifact",
+                        )
+                        continue
+                    source_key = (rule, artifact, source_line)
+                    if source_key in authored_source_index:
+                        findings.append(f"{source_label} duplicates a reviewed source finding")
+                    else:
+                        authored_source_index[source_key] = item
 
         if item.get("decision") not in AUTHORED_DECISIONS:
             findings.append(f"{label} decision is not an approved reviewed-boundary class")
@@ -242,7 +289,7 @@ def _validate_policy(
         else:
             if expires < today:
                 findings.append(f"{label} disposition expired on {expires.isoformat()}")
-    return indexed, findings
+    return indexed, authored_source_index, findings
 
 
 def _sarif_results(document: dict[str, Any], label: str) -> tuple[list[dict[str, Any]], list[str]]:
@@ -284,7 +331,8 @@ def audit(
     *,
     today: dt.date,
 ) -> list[str]:
-    indexed, findings = _validate_policy(root, policy, today=today)
+    indexed, authored_source_index, findings = _validate_policy(root, policy, today=today)
+    artifact_lines: dict[str, list[str]] = {}
     for document_index, document in enumerate(sarif_documents):
         results, sarif_findings = _sarif_results(document, f"SARIF document {document_index}")
         findings.extend(sarif_findings)
@@ -294,6 +342,24 @@ def audit(
             fingerprint = result_fingerprint(result)
             disposition = indexed.get(fingerprint)
             is_vendor = artifact.startswith(VENDOR_PREFIXES)
+            if disposition is None and not is_vendor:
+                line_number = location.get("startLine")
+                if isinstance(line_number, int) and line_number > 0:
+                    if artifact not in artifact_lines:
+                        artifact_path = root / artifact
+                        artifact_lines[artifact] = (
+                            artifact_path.read_text(encoding="utf-8").splitlines()
+                            if artifact_path.is_file()
+                            else []
+                        )
+                    lines = artifact_lines[artifact]
+                    if line_number <= len(lines):
+                        source_key = (
+                            str(result.get("ruleId", "")),
+                            artifact,
+                            lines[line_number - 1].strip(),
+                        )
+                        disposition = authored_source_index.get(source_key)
             if disposition is None:
                 category = "unreviewed vendor finding" if is_vendor else "authored finding must be fixed"
                 findings.append(

@@ -98,7 +98,7 @@
     {
       "path": "codeql-vendor-dispositions.json",
       "role": "exact CodeQL result dispositions",
-      "desc": "Stores public-safe component and construction decisions bound to CodeQL rule, path, start location, primary line hash, and artifact SHA-256. Upload-only SARIF metadata cannot change a decision, and new results or changed bytes still fail."
+      "desc": "Stores public-safe component and construction decisions bound to CodeQL rule, path, exact reviewed source, and artifact SHA-256. Unrelated line movement cannot invalidate a reviewed boundary; new findings or changed bytes still fail."
     },
     {
       "path": "run_full_sca.py",
@@ -174,9 +174,9 @@
     <a class="skill-link" href="audit_vulnerability_waivers.py"><b>audit_vulnerability_waivers.py</b><span>security exception audit. Validates opaque fingerprints, ownership, executable controls, scope, and expiry.</span></a>
     <a class="skill-link" href="audit_dependency_locks.py"><b>audit_dependency_locks.py</b><span>dependency lock audit. Enforces exact Python 3.11 closures, direct-manifest parity, and absence of retired runtime components.</span></a>
     <a class="skill-link" href="audit_sbom_policy.py"><b>audit_sbom_policy.py</b><span>runtime SBOM policy audit. Proves lock coverage, rejects retired components, and reports whether license metadata is SPDX, named, or absent.</span></a>
-    <a class="skill-link" href="audit_codeql_sarif.py"><b>audit_codeql_sarif.py</b><span>Fails on new authored CodeQL findings and on any disposition whose stable line identity, artifact bytes, evidence, controls, or expiry drifted.</span></a>
+    <a class="skill-link" href="audit_codeql_sarif.py"><b>audit_codeql_sarif.py</b><span>Fails on new authored CodeQL findings and on any disposition whose exact source identity, artifact bytes, evidence, controls, or expiry drifted.</span></a>
     <a class="skill-link" href="audit_github_code_scanning.py"><b>audit_github_code_scanning.py</b><span>Fails when the exact commit's host-owned CodeQL check is absent, pending, or red, or when the pull-request merge ref retains an open alert.</span></a>
-    <a class="skill-link" href="codeql-vendor-dispositions.json"><b>codeql-vendor-dispositions.json</b><span>Time-boxed public policy bound to CodeQL rule, path, start location, primary line hash, and exact reviewed bytes. It is not a pattern waiver.</span></a>
+    <a class="skill-link" href="codeql-vendor-dispositions.json"><b>codeql-vendor-dispositions.json</b><span>Time-boxed public policy bound to CodeQL rule, path, exact reviewed source, and exact reviewed bytes. It is not a pattern waiver.</span></a>
     <a class="skill-link" href="../compliance/sbom_evidence.py"><b>sbom_evidence.py</b><span>Verifies the committed catalog and emits commit-bound manifests plus reconciled license appendices from CI SBOMs.</span></a>
     <a class="skill-link" href="run_full_sca.py"><b>run_full_sca.py</b><span>SCA and SBOM runner for the installed Python validation environment and repository source.</span></a>
     <a class="skill-link" href="vulnerability-waivers.json"><b>vulnerability-waivers.json</b><span>fingerprinted exception registry. Public metadata never republishes private finding details.</span></a>

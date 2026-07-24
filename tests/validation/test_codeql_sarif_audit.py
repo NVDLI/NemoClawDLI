@@ -103,6 +103,32 @@ class CodeqlSarifAuditTests(unittest.TestCase):
         findings = self.findings(sarif, policy)
         self.assertTrue(any(fragment in item for item in findings), findings)
 
+    def authored_policy(
+        self,
+        reviewed_result: dict,
+        *,
+        scope: str,
+        source_findings: list[dict[str, str]] | None = None,
+    ) -> dict:
+        policy = json.loads(json.dumps(self.policy))
+        control = {
+            "fingerprints": [audit.result_fingerprint(reviewed_result)],
+            "artifact": "web/nemoclaw/scripts/runtime.js",
+            "artifact_sha256": hashlib.sha256(self.authored.read_bytes()).hexdigest(),
+            "decision": "explicit-user-tab-credential-boundary",
+            "owner": "course-maintainers",
+            "expires": "2026-10-24",
+            "controls": [{
+                "path": "tests/validation/test_runtime_security.py",
+                "contains": "test_safe_reconstruction",
+            }],
+            "scope": scope,
+        }
+        if source_findings is not None:
+            control["source_findings"] = source_findings
+        policy["authored_controls"] = [control]
+        return policy
+
     def test_reviewed_vendor_result_passes(self) -> None:
         self.assertEqual([], self.findings(self.sarif(self.vendor_result)))
 
@@ -193,6 +219,94 @@ class CodeqlSarifAuditTests(unittest.TestCase):
             "scope": "Learner-entered bearer value is tab-scoped and cleared when the tab closes.",
         }]
         self.assertEqual([], self.findings(self.sarif(authored), policy))
+
+    def test_reviewed_authored_source_survives_unrelated_line_movement(self) -> None:
+        storage_line = 'sessionStorage.setItem("nvapi", learnerKey);'
+        self.authored.write_text(
+            f"export const unrelated = true;\n{storage_line}\n",
+            encoding="utf-8",
+        )
+        current = self.result(
+            "js/clear-text-storage-of-sensitive-data",
+            "web/nemoclaw/scripts/runtime.js",
+            line=2,
+            column=1,
+            end_column=45,
+            line_hash="tab-credential-line:1",
+        )
+        before_move = json.loads(json.dumps(current))
+        before_move["locations"][0]["physicalLocation"]["region"]["startLine"] = 1
+        before_move["locations"][0]["physicalLocation"]["region"]["endLine"] = 1
+        policy = self.authored_policy(
+            before_move,
+            source_findings=[{
+                "rule": "js/clear-text-storage-of-sensitive-data",
+                "source_line": storage_line,
+            }],
+            scope="Learner-entered bearer value is tab-scoped and cleared when the tab closes.",
+        )
+        self.assertNotEqual(
+            audit.result_fingerprint(before_move),
+            audit.result_fingerprint(current),
+        )
+        self.assertEqual([], self.findings(self.sarif(current), policy))
+
+    def test_reviewed_authored_source_does_not_cover_another_finding(self) -> None:
+        reviewed_line = 'sessionStorage.setItem("nvapi", learnerKey);'
+        self.authored.write_text(
+            f"{reviewed_line}\nsessionStorage.setItem(\"other\", learnerKey);\n",
+            encoding="utf-8",
+        )
+        reviewed = self.result(
+            "js/clear-text-storage-of-sensitive-data",
+            "web/nemoclaw/scripts/runtime.js",
+            line=1,
+            column=1,
+            end_column=45,
+            line_hash="reviewed-line:1",
+        )
+        unreviewed = self.result(
+            "js/clear-text-storage-of-sensitive-data",
+            "web/nemoclaw/scripts/runtime.js",
+            line=2,
+            column=1,
+            end_column=45,
+            line_hash="new-line:1",
+        )
+        policy = self.authored_policy(
+            reviewed,
+            source_findings=[{
+                "rule": "js/clear-text-storage-of-sensitive-data",
+                "source_line": reviewed_line,
+            }],
+            scope="Only the exact reviewed storage statement is covered.",
+        )
+        self.assert_rejected(
+            "authored finding must be fixed",
+            sarif=self.sarif(unreviewed),
+            policy=policy,
+        )
+
+    def test_reviewed_authored_source_must_be_unique(self) -> None:
+        storage_line = 'sessionStorage.setItem("nvapi", learnerKey);'
+        self.authored.write_text(f"{storage_line}\n{storage_line}\n", encoding="utf-8")
+        authored = self.result(
+            "js/clear-text-storage-of-sensitive-data",
+            "web/nemoclaw/scripts/runtime.js",
+            line=1,
+            column=1,
+            end_column=45,
+            line_hash="tab-credential-line:1",
+        )
+        policy = self.authored_policy(
+            authored,
+            source_findings=[{
+                "rule": "js/clear-text-storage-of-sensitive-data",
+                "source_line": storage_line,
+            }],
+            scope="Fixture",
+        )
+        self.assert_rejected("must occur exactly once", sarif=self.sarif(authored), policy=policy)
 
     def test_authored_control_requires_an_approved_safe_construction_class(self) -> None:
         authored = self.result(
