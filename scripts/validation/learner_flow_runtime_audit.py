@@ -467,7 +467,15 @@ async function waitText(locator, pattern) {
   });
   if (!await assistantPanel.locator('.course-artifact-editors label').nth(0).locator('.cm-tag').count() || !await assistantPanel.locator('.course-artifact-editors label').nth(1).locator('.cm-variable').count()) throw new Error('Course Assistant artifact editors lost HTML or JavaScript syntax highlighting');
   await assistantPanel.locator('[data-course-artifact-run]').click();
-  if (!String(await assistantPanel.locator('.course-assistant-artifact iframe').getAttribute('src')).startsWith('blob:')) throw new Error('Course Assistant artifact still relies on fragile srcdoc execution');
+  const artifactFramePolicy = await assistantPanel.locator('.course-assistant-artifact iframe').evaluate(frame => ({
+    src: frame.getAttribute('src'),
+    sandbox: frame.getAttribute('sandbox'),
+    referrerPolicy: frame.getAttribute('referrerpolicy'),
+  }));
+  if (!String(artifactFramePolicy.src).startsWith('blob:')) throw new Error('Course Assistant artifact still relies on fragile srcdoc execution');
+  if (artifactFramePolicy.sandbox !== 'allow-scripts' || artifactFramePolicy.referrerPolicy !== 'no-referrer') {
+    throw new Error(`Course Assistant artifact lost its opaque-origin or referrer boundary: ${JSON.stringify(artifactFramePolicy)}`);
+  }
   let artifactFrame = assistantPanel.frameLocator('.course-assistant-artifact iframe');
   await artifactFrame.locator('#artifact-run').click();
   if (await artifactFrame.locator('#artifact-output').innerText() !== 'artifact ran') throw new Error('Course Assistant artifact did not run its queued browser JavaScript');
@@ -503,6 +511,37 @@ async function waitText(locator, pattern) {
   artifactFrame = crossPanel.frameLocator('.course-assistant-artifact iframe');
   await artifactFrame.locator('#bridge-result').waitFor({ state:'visible' });
   if (!/^1\.0\|.*accepts 1-16 non-empty strings/.test(await artifactFrame.locator('#bridge-result').innerText())) throw new Error('Course Assistant artifact helper facade did not expose cosineSim/embed or enforce its request bound');
+  await crossPage.evaluate(() => { window.__courseArtifactParentBoundary = 'unchanged'; });
+  await crossPanel.evaluate(panel => {
+    panel.querySelector('[data-course-artifact-html]').__courseAssistantEditor.setValue('<output id="origin-boundary"></output>');
+    panel.querySelector('[data-course-artifact-js]').__courseAssistantEditor.setValue('let result = "blocked"; try { parent.__courseArtifactParentBoundary = "changed"; result = "escaped"; } catch (_) {} document.querySelector("#origin-boundary").textContent = result;');
+  });
+  await crossPanel.locator('[data-course-artifact-run]').click();
+  artifactFrame = crossPanel.frameLocator('.course-assistant-artifact iframe');
+  await artifactFrame.locator('#origin-boundary').waitFor({ state:'visible' });
+  const originBoundary = await crossPage.evaluate(() => ({
+    parent: window.__courseArtifactParentBoundary,
+    sandbox: document.querySelector('.course-assistant-artifact iframe')?.getAttribute('sandbox'),
+  }));
+  if (originBoundary.parent !== 'unchanged' || originBoundary.sandbox !== 'allow-scripts'
+      || await artifactFrame.locator('#origin-boundary').innerText() !== 'blocked') {
+    throw new Error(`Course Assistant artifact escaped its opaque-origin boundary: ${JSON.stringify(originBoundary)}`);
+  }
+  for (const candidate of [
+    { html:'<meta http-equiv="refresh" content="0;url=https://example.invalid">', javascript:'' },
+    { html:'<div>navigation probe</div>', javascript:'window.open("https://example.invalid")' },
+    { html:'<div>location probe</div>', javascript:'window.location = "https://example.invalid"' },
+  ]) {
+    await crossPanel.evaluate((panel, value) => {
+      panel.querySelector('[data-course-artifact-html]').__courseAssistantEditor.setValue(value.html);
+      panel.querySelector('[data-course-artifact-js]').__courseAssistantEditor.setValue(value.javascript);
+    }, candidate);
+    await crossPanel.locator('[data-course-artifact-run]').click();
+    const rejection = await crossPanel.locator('.course-artifact-actions [role="status"]').innerText();
+    if (!/Navigation|Network and browser storage APIs/.test(rejection)) {
+      throw new Error(`Course Assistant artifact admitted a navigation primitive: ${JSON.stringify({candidate,rejection})}`);
+    }
+  }
   await crossPanel.evaluate(panel => {
     panel.querySelector('[data-course-artifact-html]').__courseAssistantEditor.setValue('<script>localStorage.setItem("blocked", "yes")</script>');
     panel.querySelector('[data-course-artifact-js]').__courseAssistantEditor.setValue('');

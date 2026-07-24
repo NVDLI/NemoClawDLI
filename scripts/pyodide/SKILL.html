@@ -40,7 +40,7 @@
     {"name": "Page client", "entry": "scripts/pyodide/examples/worker-client.js", "style": "Own request IDs, timeouts, Stop, and Reset in one client."},
     {"name": "Notebook editor", "entry": "scripts/pyodide/examples/notebook-editor.js", "style": "Add a Python-aware CodeMirror mode, line numbers, source-line error markers, indentation, and Jupyter keyboard controls."},
     {"name": "Progressive cells", "entry": "scripts/pyodide/examples/cell-examples.js", "style": "Keep every supplied-cookbook use case mapped to an editable Python cell."},
-    {"name": "Runnable notebook", "entry": "scripts/pyodide/examples/live-playground.js", "style": "Mount a shared REPL namespace, highlighted editors, safe Markdown and HTML displays, build.nvidia.com SSE streaming, optional WebSockets, traceback line markers, Stop, Reset, and run-all controls."},
+    {"name": "Runnable notebook", "entry": "scripts/pyodide/examples/live-playground.js", "style": "Mount a shared REPL namespace, highlighted editors, inertly parsed and allowlist-reconstructed Markdown and HTML displays, build.nvidia.com SSE streaming, optional WebSockets, traceback line markers, Stop, Reset, and run-all controls."},
     {"name": "Course workbench", "entry": "scripts/pyodide/SKILL.html", "style": "Run the canonical Pyodide cells in a code, artifact, activity, and runtime-tool interface shared with browser courses."},
     {"name": "Network boundary", "entry": "scripts/pyodide/examples/network-fetch.js", "style": "Use a named origin allowlist and an injected course relay only when a lesson needs network access."}
   ],
@@ -48,6 +48,7 @@
     "python3 scripts/pyodide/integration_audit.py --self-test",
     "python3 scripts/pyodide/integration_audit.py",
     "node scripts/pyodide/runtime_smoke.mjs --cdn",
+    "python3 scripts/validation/browser_security_boundary_audit.py --self-test",
     "python3 scripts/skills/skill_contract.py",
     "python3 scripts/validation/release_gate.py --tier fast --no-write --changed-since origin/main"
   ]
@@ -395,6 +396,7 @@ export function createCourseFetch({ fetchImpl = fetch, relayUrl, allowedOrigins 
   <pre><code class="language-bash">python3 scripts/pyodide/integration_audit.py --self-test
 python3 scripts/pyodide/integration_audit.py
 node scripts/pyodide/runtime_smoke.mjs --cdn
+python3 scripts/validation/browser_security_boundary_audit.py --self-test
 python3 scripts/validation/release_gate.py --tier fast --no-write --changed-since origin/main</code></pre>
 </main>
 <script>

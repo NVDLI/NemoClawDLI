@@ -140,24 +140,36 @@ li { margin: .25em 0; }
   function store(k,v){try{sessionStorage.setItem(k,v);}catch(e){}try{localStorage.setItem(k,v);}catch(e){}}
   function retrieve(k){try{var v=sessionStorage.getItem(k);if(v)return v;}catch(e){}try{var v2=localStorage.getItem(k);if(v2)return v2;}catch(e){}return '';}
 
-  function isLabUrl(u){
+  function labBaseUrl(u){
     if(!u||typeof u!=='string') return false;
     try {
       var parsed=new URL(u);
       if(parsed.protocol!=='https:') return false;
+      if(parsed.username||parsed.password||parsed.port) return false;
       var host=parsed.hostname.toLowerCase();
-      return /(?:^|\.)cloudapp\.azure\.com$/.test(host) ||
-             /(?:^|\.)azurecontainerapps\.io$/.test(host) ||
-             /(?:^|\.)azurewebsites\.net$/.test(host) ||
-             /(?:^|\.)(?:eastus|westus|northeurope|southeastasia)\.azure\.[a-z.]+$/.test(host);
+      var allowed=/(?:^|\.)cloudapp\.azure\.com$/.test(host) ||
+                  /(?:^|\.)azurecontainerapps\.io$/.test(host) ||
+                  /(?:^|\.)azurewebsites\.net$/.test(host) ||
+                  /(?:^|\.)(?:eastus|westus|northeurope|southeastasia)\.azure\.[a-z.]+$/.test(host);
+      return allowed?'https://'+host+'/':false;
     } catch(e) { return false; }
+  }
+  function isLabUrl(u){return !!labBaseUrl(u);}
+
+  function trustedMessage(e){
+    if(e.source!==window&&e.source!==window.parent&&e.source!==window.top) return false;
+    if(e.origin===location.origin) return true;
+    if(e.origin==='null'&&location.protocol==='file:') return true;
+    try{
+      var sender=new URL(e.origin);
+      return sender.protocol==='https:'&&/(?:^|\.)nvidia\.com$/.test(sender.hostname.toLowerCase());
+    }catch(err){return false;}
   }
 
   function saveBase(url){
-    if(!isLabUrl(url)) return;
+    url=labBaseUrl(url);
+    if(!url) return;
     try{sessionStorage.removeItem(LAB_KEY+'_x');}catch(e){}
-    if(retrieve(LAB_KEY)===url) return;
-    try{url=new URL(url).origin+'/';}catch(e){}
     if(retrieve(LAB_KEY)===url) return;
     store(LAB_KEY,url);
     try{window.parent._dliLabUrl=url;}catch(e){}
@@ -169,7 +181,7 @@ li { margin: .25em 0; }
   function getBase(){
     try{if(sessionStorage.getItem(LAB_KEY+'_x')) return '';}catch(e){}
     var saved=retrieve(LAB_KEY);
-    return isLabUrl(saved)?saved:'';
+    return labBaseUrl(saved)||'';
   }
 
   function clearLabUrl(){
@@ -232,6 +244,7 @@ li { margin: .25em 0; }
   }
 
   window.addEventListener('message',function(e){
+    if(!trustedMessage(e)) return;
     if(!e.data||typeof e.data!=='object') return;
     if(e.data.type==='dli_env_status'){
       pmState=e.data.status||'';
@@ -320,7 +333,7 @@ li { margin: .25em 0; }
   var lbAction = 'launch';
   if (lbBtn){
     lbBtn.addEventListener('click', function(){
-      if (lbAction === 'open')    { var u = getBase(); if (isLabUrl(u)){ window.open(u, '_blank', 'noopener'); } return; }
+      if (lbAction === 'open')    { var u = labBaseUrl(getBase()); if(u){ window.open(u, '_blank', 'noopener'); } return; }
       if (lbAction === 'launch')  { beginUrlWatch(); clickReal(pickLaunchBtn); return; }
       if (lbAction === 'restart') { beginUrlWatch(); clickReal(function(){ return bestXBtn('restart'); }); return; }
       if (lbAction === 'assess')  { clickReal(function(){ return bestXBtn('assess'); }); return; }
@@ -438,9 +451,9 @@ li { margin: .25em 0; }
       ob.textContent='↗ Open Lab';
       ob.addEventListener('click',function(e){e.stopPropagation();beginUrlWatch();clickReal(pickLaunchBtn);});
       bodyEl.appendChild(ob);}
-    if((st==='running'||st==='assess')&&isLabUrl(base)){
+    if((st==='running'||st==='assess')&&labBaseUrl(base)){
       var oa=document.createElement('a');oa.className='_eab _eg';
-      oa.href=base;oa.target='_blank';oa.rel='noopener';
+      oa.href=labBaseUrl(base);oa.target='_blank';oa.rel='noopener';
       oa.textContent='↗ Open Lab';
       bodyEl.appendChild(oa);}
     function btn(txt,cls,act){

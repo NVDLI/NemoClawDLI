@@ -40,6 +40,7 @@
     "scripts/validation/studio_interface_audit.py",
     "scripts/validation/helper_notebook_runtime_audit.py",
     "scripts/validation/studio_responsive_audit.py",
+    "scripts/validation/browser_security_boundary_audit.py",
     "scripts/validation/openclaw_fallback_audit.py",
     "scripts/validation/gateway_token_audit.mjs",
     "scripts/validation/endpoint_registration_audit.py",
@@ -267,6 +268,11 @@
       "desc": "Uses host Playwright to stress narrow and short Studio viewports for scrollable topbar controls and sidebar panel floors."
     },
     {
+      "path": "browser_security_boundary_audit.py",
+      "role": "authored browser security boundary",
+      "desc": "Discovers authored browser sources by default, rejects origin-isolation and persistent-secret regressions globally, and mutation-tests the specific inert parsing, canonical navigation, preview sandbox, credential, and HTML scanning controls exercised by browser gates."
+    },
+    {
       "path": "openclaw_fallback_audit.py",
       "role": "OpenClaw fallback audit",
       "desc": "Checks that credentialed OpenClaw tests fail fast, fallback guidance remains usable, and the probe statically clears stale HTML frames."
@@ -402,6 +408,7 @@
   <div class="skill-cmd"><b>Helper notebook static</b><code>python3 scripts/validation/helper_notebook_runtime_audit.py --static-only</code></div>
   <div class="skill-cmd"><b>Helper notebook browser</b><code>python3 scripts/validation/helper_notebook_runtime_audit.py</code></div>
   <div class="skill-cmd"><b>Studio responsive</b><code>python3 scripts/validation/studio_responsive_audit.py</code></div>
+  <div class="skill-cmd"><b>Authored browser boundaries</b><code>python3 scripts/validation/browser_security_boundary_audit.py --self-test &amp;&amp; python3 scripts/validation/browser_security_boundary_audit.py</code></div>
   <div class="skill-cmd"><b>Localization + mutations</b><code>python3 scripts/validation/localization_audit.py --self-test &amp;&amp; for locale in pt-BR es-ES; do python3 scripts/validation/localization_audit.py --locale "$locale"; done</code></div>
   <div class="skill-cmd"><b>Localization browser</b><code>python3 scripts/validation/localization_runtime_audit.py --site-root /tmp/pt-localization-pages</code></div>
 </div>
@@ -422,6 +429,7 @@
     <a class="skill-link" href="prose_variety.py"><b>prose_variety.py</b><span>prose cadence. Finds rhythm, buzz, grammar, and structural prose issues.</span></a>
     <a class="skill-link" href="code_hygiene.py"><b>code_hygiene.py</b><span>code bloat and style. Scans code comments, walls, duplication, size, constants, and prose tells in code.</span></a>
     <a class="skill-link" href="color_theme.py"><b>color_theme.py</b><span>Required theme gate. Includes Studio and every canonical page by default; flags inline literals, undefined variables, and render-time color bakes.</span></a>
+    <a class="skill-link" href="browser_security_boundary_audit.py"><b>browser_security_boundary_audit.py</b><span>Discovery-first authored-browser gate. Protects opaque preview origins, inert allowlist reconstruction, canonical URLs, safe SVG insertion, tab-scoped credentials, and their executable browser evidence.</span></a>
     <a class="skill-link" href="figure_audit.py"><b>figure_audit.py</b><span>figure audit. Checks static figure legibility, accessibility, injected-SVG style scoping, and the shared mobile lightbox readability contract.</span></a>
     <a class="skill-link" href="figure_provenance.py"><b>figure_provenance.py</b><span>image-provenance reader. Derives theme-aware and fixed-white rendering modes from reviewed source records.</span></a>
     <a class="skill-link" href="security_architecture_audit.py"><b>security_architecture_audit.py</b><span>Required security architecture gate. Derives CI jobs, runtime hosts, remote suffixes, and worker inventory from source; also checks public metadata boundaries, local-only classification, evidence, geometry, and SVG freshness.</span></a>

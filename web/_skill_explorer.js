@@ -81,6 +81,14 @@
         c === '"' ? "&quot;" : "&#39;";
     });
   }
+  function safeNavigationHref(value) {
+    try {
+      var url = new URL(String(value == null ? "" : value), document.baseURI);
+      if (url.protocol === "http:" || url.protocol === "https:") return url.href;
+      if (url.protocol === "file:" && location.protocol === "file:") return url.href;
+    } catch (e) {}
+    return "#";
+  }
   function langOf(path) {
     var ext = (path.split(".").pop() || "").toLowerCase();
     return { js: "javascript", mjs: "javascript", ts: "typescript", py: "python", sh: "bash",
@@ -585,7 +593,7 @@
       s.appendChild(heading);
       var g = el("div", "sx-hubgrid");
       (sec.items || []).forEach(function (it) {
-        var a = el("a", "sx-card"); a.href = it.href;
+        var a = el("a", "sx-card"); a.href = safeNavigationHref(it.href);
         var name = el("span", "nm");
         name.textContent = it.label || "";
         a.appendChild(name);
@@ -609,7 +617,7 @@
         heading.textContent = sec.title || "";
         r.appendChild(heading);
         (sec.items || []).forEach(function (it) {
-          var a = el("a", "sx-file"); a.href = it.href;
+          var a = el("a", "sx-file"); a.href = safeNavigationHref(it.href);
           var name = el("span", "nm");
           var label = el("span");
           label.textContent = it.label || "";
@@ -651,7 +659,7 @@
       cfg.related.forEach(function (x) {
         var link = el("a");
         link.textContent = x.label || "";
-        link.href = x.href;
+        link.href = safeNavigationHref(x.href);
         rel.appendChild(link);
       });
       r.appendChild(rel);
@@ -725,18 +733,18 @@
     }
     var bar = el("div", "sx-topbar");
     var logo = el("a", "sx-logo");
-    logo.href = home;
+    logo.href = safeNavigationHref(home);
     logo.textContent = "NVIDIA DLI";
     bar.appendChild(logo);
     if (nav.up) {
       var up = el("a", "sx-up");
-      up.href = nav.up.href;
+      up.href = safeNavigationHref(nav.up.href);
       up.textContent = "↑ " + (nav.up.label || "");
       bar.appendChild(up);
     }
     if (nav.map) {
       var map = el("a", "sx-map");
-      map.href = nav.map.href;
+      map.href = safeNavigationHref(nav.map.href);
       map.textContent = nav.map.label || "Map";
       bar.appendChild(map);
     }

@@ -156,11 +156,91 @@
   function reMd() { return /!?\[[^\]]*\]\(\s*<?([^)\s>]+)/g; }
   function reUrl() { return /(https?:\/\/[^\s)"'<>\]\[(]+)/g; }
 
+  function htmlTagEnd(text, start) {
+    var quote = "";
+    for (var i = start; i < text.length; i++) {
+      var ch = text.charAt(i);
+      if (quote) {
+        if (ch === quote) quote = "";
+      } else if (ch === '"' || ch === "'") {
+        quote = ch;
+      } else if (ch === ">") {
+        return i;
+      }
+    }
+    return text.length - 1;
+  }
+
+  function htmlRawTagAt(text, start, closing, names) {
+    if (text.charAt(start) !== "<") return "";
+    var offset = start + 1;
+    if (closing) {
+      if (text.charAt(offset) !== "/") return "";
+      offset++;
+    } else if (text.charAt(offset) === "/") {
+      return "";
+    }
+    while (/\s/.test(text.charAt(offset))) offset++;
+    var lower = text.slice(offset).toLowerCase();
+    for (var i = 0; i < names.length; i++) {
+      var name = names[i];
+      var boundary = text.charAt(offset + name.length);
+      if (lower.slice(0, name.length) === name && (!boundary || /[\s/>]/.test(boundary))) return name;
+    }
+    return "";
+  }
+
+  function htmlCommentEnd(text, start) {
+    var standard = text.indexOf("-->", start);
+    var permissive = text.indexOf("--!>", start);
+    if (standard < 0) return permissive;
+    if (permissive < 0) return standard;
+    return Math.min(standard, permissive);
+  }
+
+  // This scanner removes raw-text element bodies for indexing. It is deliberately
+  // not a sanitizer and its output is never rendered as HTML.
+  function stripHtmlRawText(text, names, stripComments) {
+    var out = "", cursor = 0;
+    while (cursor < text.length) {
+      if (stripComments && text.slice(cursor, cursor + 4) === "<!--") {
+        var commentEnd = htmlCommentEnd(text, cursor + 4);
+        cursor = commentEnd < 0 ? text.length : commentEnd + (text.slice(commentEnd, commentEnd + 4) === "--!>" ? 4 : 3);
+        out += " ";
+        continue;
+      }
+      var name = htmlRawTagAt(text, cursor, false, names);
+      if (!name) {
+        out += text.charAt(cursor++);
+        continue;
+      }
+      var openEnd = htmlTagEnd(text, cursor + 1);
+      out += text.slice(cursor, openEnd + 1);
+      if (/\/\s*>$/.test(text.slice(cursor, openEnd + 1))) {
+        cursor = openEnd + 1;
+        continue;
+      }
+      var search = openEnd + 1, closeStart = -1;
+      while (search < text.length) {
+        var candidate = text.toLowerCase().indexOf("</" + name, search);
+        if (candidate < 0) break;
+        if (htmlRawTagAt(text, candidate, true, [name])) {
+          closeStart = candidate;
+          break;
+        }
+        search = candidate + name.length + 2;
+      }
+      if (closeStart < 0) return out;
+      var closeEnd = htmlTagEnd(text, closeStart + 2);
+      out += text.slice(closeStart, closeEnd + 1);
+      cursor = closeEnd + 1;
+    }
+    return out;
+  }
+
   function stripNoncontent(text, suffix) {
     if (suffix === ".html" || suffix === ".htm") {
-      text = text.replace(/(<script\b[^>]*>)[\s\S]*?(<\/script\s*>)/ig, "$1$2");
-      text = text.replace(/(<style\b[^>]*>)[\s\S]*?(<\/style\s*>)/ig, "$1$2");
-      text = text.replace(/<!--[\s\S]*?-->/g, " ");
+      text = stripHtmlRawText(text, ["script", "style"], true);
     } else {
       text = text.replace(/```[\s\S]*?```/g, " ");
       text = text.replace(/`[^`\n]*`/g, " ");
@@ -494,7 +574,7 @@
       var findings = [];
       // 1) stale tokens (skip mats: vendored reference snapshots are not ours to rewrite)
       if (!isMatPath(rel)) {
-        var noScript = raw.replace(/<script[\s\S]*?<\/script\s*>/ig, " ");   // tokens in real content, not JS rules
+        var noScript = stripHtmlRawText(raw, ["script"], false);   // tokens in real content, not JS rules
         for (var s = 0; s < STALE_TOKENS.length; s++) {
           if (STALE_TOKENS[s].exceptFile && STALE_TOKENS[s].exceptFile.test(rel)) continue;
           if (STALE_TOKENS[s].re.test(noScript)) findings.push({ kind: "stale", token: String(STALE_TOKENS[s].re), detail: STALE_TOKENS[s].why });
@@ -576,6 +656,18 @@
     var embedded = replaceEmbeddedSnapshot("  let DATA = {};\n", { schema: "fixture/1" });
     expect("indented graph snapshot marker is replaceable",
       embedded === '  let DATA = {"schema":"fixture/1"};\n', embedded);
+    var hostileMarkup = [
+      '<script src="keep.js">hidden-token</script \t\n bogus>',
+      '<style>hidden-style</style data-extra>',
+      '<!-- hidden-comment --!><a href="keep.html">visible</a>',
+      '<scripture>not-a-script</scripture>'
+    ].join("");
+    var stripped = stripNoncontent(hostileMarkup, ".html");
+    expect("raw-text scanner removes malformed script bodies", stripped.indexOf("hidden-token") < 0, stripped);
+    expect("raw-text scanner removes malformed style bodies", stripped.indexOf("hidden-style") < 0, stripped);
+    expect("raw-text scanner recognizes permissive comment endings", stripped.indexOf("hidden-comment") < 0, stripped);
+    expect("raw-text scanner retains authored asset tags", stripped.indexOf('src="keep.js"') >= 0 && stripped.indexOf('href="keep.html"') >= 0, stripped);
+    expect("raw-text scanner does not consume similarly named elements", stripped.indexOf("<scripture>not-a-script</scripture>") >= 0, stripped);
     return checks;
   }
 

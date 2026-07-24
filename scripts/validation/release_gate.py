@@ -138,6 +138,10 @@ FAST_COMMANDS: tuple[tuple[str, ...], ...] = (
     STANDARD_TEST_DISCOVERY,
     py("scripts/validation/validator_specialization_audit.py"),
     PRIVILEGED_COURSE_OPS_TESTS,
+    py("-m", "unittest", "-v", "tests.validation.test_codeql_sarif_audit"),
+    py("scripts/security/audit_codeql_sarif.py"),
+    py("scripts/validation/browser_security_boundary_audit.py", "--self-test"),
+    py("scripts/validation/browser_security_boundary_audit.py"),
     py("scripts/validation/validate_bundle.py", "--scope", "ship", "--no-write"),
 )
 
@@ -234,6 +238,10 @@ SHIP_COMMANDS: tuple[tuple[str, ...], ...] = (
     py("scripts/validation/interface_inventory_browser_audit.py", "--site-root", "."),
     py("scripts/validation/validator_specialization_audit.py"),
     PRIVILEGED_COURSE_OPS_TESTS,
+    py("-m", "unittest", "-v", "tests.validation.test_codeql_sarif_audit"),
+    py("scripts/security/audit_codeql_sarif.py"),
+    py("scripts/validation/browser_security_boundary_audit.py", "--self-test"),
+    py("scripts/validation/browser_security_boundary_audit.py"),
     py("scripts/validation/validate_bundle.py", "--scope", "ship"),
 )
 
@@ -499,6 +507,22 @@ MUTATION_IMPACTS: dict[tuple[str, ...], tuple[str, ...]] = {
     ),
     py("scripts/build/package_release.py", "--self-test"): (
         "scripts/build/package_release.py", "docs/release_artifacts.md", ".github/workflows/release.yml",
+    ),
+    py("scripts/validation/browser_security_boundary_audit.py", "--self-test"): (
+        "scripts/validation/browser_security_boundary_audit.py",
+        "scripts/validation/learner_flow_runtime_audit.py",
+        "scripts/validation/studio_responsive_audit.py",
+        "scripts/skills/skill_renderer_runtime_audit.py",
+        "scripts/edx/*", "scripts/pyodide/*", "scripts/runtime/*",
+        "web/**/*", "i18n/**/*", "docs/security-design.md", "docs/product-design.md",
+    ),
+    py("-m", "unittest", "-v", "tests.validation.test_codeql_sarif_audit"): (
+        ".github/workflows/codeql.yml",
+        "scripts/security/audit_codeql_sarif.py",
+        "scripts/security/codeql-vendor-dispositions.json",
+        "tests/validation/test_codeql_sarif_audit.py",
+        "web/nemoclaw/vendor/*",
+        "web/shared/vendor/*",
     ),
     HARNESS_CONTRACT: (
         "tests/validation/test_test_harness_contract.py", "scripts/**/*.py",

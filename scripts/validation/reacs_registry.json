@@ -1333,7 +1333,7 @@
         "fast"
       ],
       "order": {
-        "fast": 59
+        "fast": 63
       },
       "mode": "current-tree",
       "argv": [
@@ -1992,7 +1992,7 @@
         "ship"
       ],
       "order": {
-        "ship": 85
+        "ship": 89
       },
       "mode": "current-tree",
       "argv": [
@@ -2055,6 +2055,99 @@
         ".gitlab/ci/privileged.yml",
         "docs/pages_deploy.md"
       ]
+    },
+    {
+      "id": "test-codeql-sarif-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 59,
+        "ship": 85
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_codeql_sarif_audit"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        ".github/workflows/codeql.yml",
+        "scripts/security/audit_codeql_sarif.py",
+        "scripts/security/codeql-vendor-dispositions.json",
+        "tests/validation/test_codeql_sarif_audit.py",
+        "web/nemoclaw/vendor/*",
+        "web/shared/vendor/*"
+      ]
+    },
+    {
+      "id": "audit-codeql-sarif-policy",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 60,
+        "ship": 86
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/security/audit_codeql_sarif.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "browser-security-boundary-audit-self-test",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 61,
+        "ship": 87
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "scripts/validation/browser_security_boundary_audit.py",
+        "--self-test"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/validation/browser_security_boundary_audit.py",
+        "scripts/validation/learner_flow_runtime_audit.py",
+        "scripts/validation/studio_responsive_audit.py",
+        "scripts/skills/skill_renderer_runtime_audit.py",
+        "scripts/edx/*",
+        "scripts/pyodide/*",
+        "scripts/runtime/*",
+        "web/**/*",
+        "i18n/**/*",
+        "docs/security-design.md",
+        "docs/product-design.md"
+      ]
+    },
+    {
+      "id": "browser-security-boundary-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 62,
+        "ship": 88
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/validation/browser_security_boundary_audit.py"
+      ],
+      "parallel_safe": false
     }
   ]
 }

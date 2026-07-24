@@ -75,6 +75,18 @@ async function checkViewport(page, width, height) {
       return { sel, overflowY: cs.overflowY, h: el.getBoundingClientRect().height, clientHeight: el.clientHeight, scrollHeight: el.scrollHeight, canScroll: el.scrollHeight > el.clientHeight + 4 };
     });
     const badLists = lists.filter(x => x.overflowY !== 'auto' || x.h < 96 || !x.canScroll);
+    const sanitized = sanitizeStudioPreview(
+      '<section id="safe"><script>window.__studioUnsafe=true</script>'
+      + '<meta http-equiv="refresh" content="0;url=https://invalid.example">'
+      + '<iframe src="https://invalid.example"></iframe>'
+      + '<a href="javascript:window.__studioUnsafe=true" onclick="window.__studioUnsafe=true">link</a>'
+      + '<strong>safe</strong></section>'
+    );
+    const sanitizedHtml = sanitized?.outerHTML || '';
+    const unsafePreview = /<(?:script|meta|iframe)\b/i.test(sanitizedHtml)
+      || /\bonclick\s*=/i.test(sanitizedHtml)
+      || /href\s*=\s*["']javascript:/i.test(sanitizedHtml)
+      || sanitized?.querySelector('script,meta,iframe,[onclick],a[href^="javascript:" i]');
     return {
       topOverflowX: topStyle.overflowX,
       topCanScroll: top.scrollWidth > top.clientWidth + 4 && top.scrollLeft > 0,
@@ -85,6 +97,8 @@ async function checkViewport(page, width, height) {
       badLists,
       bodyOverflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       sidebarWidth: document.querySelector('#sidebar')?.getBoundingClientRect().width || 0,
+      sanitizedHtml,
+      unsafePreview: !!unsafePreview,
     };
   });
   const errors = [];
@@ -94,6 +108,9 @@ async function checkViewport(page, width, height) {
   if (result.badLists.length) errors.push(`sidebar lists lack scroll floor: ${JSON.stringify(result.badLists)}`);
   if (result.sidebarWidth < 220) errors.push(`sidebar width collapsed: ${result.sidebarWidth}`);
   if (result.bodyOverflowX > 2) errors.push(`body-level horizontal overflow: ${result.bodyOverflowX}px`);
+  if (result.unsafePreview || !result.sanitizedHtml.includes('<strong>safe</strong>')) {
+    errors.push(`Studio preview sanitizer admitted active content or removed inert content: ${result.sanitizedHtml}`);
+  }
   if (errors.length) throw new Error(`${width}x${height}: ${errors.join('; ')}`);
   return { width, height, ...result };
 }

@@ -84,7 +84,7 @@
     {
       "name": "Studio",
       "entry": "scripts/studio_main.js",
-      "style": "Use as the operator console for running or copying checks. Static mode is read-only; lab-served mode may write through the Jupyter contents API. Browser tests run with host Chromium."
+      "style": "Use as the operator console for running or copying checks. Static mode is read-only; lab-served mode may write through the Jupyter contents API. Edited preview HTML is inertly parsed, stripped of active elements and handlers, and rebuilt with canonical URL attributes before it reaches the live frame."
     }
   ],
   "tests": [
@@ -104,6 +104,8 @@
     "python3 scripts/validation/cell_ui_runtime_audit.py --screenshots tmp/cell-ui-audit-source",
     "python3 scripts/validation/cell_ui_runtime_audit.py --site-root public --screenshots tmp/cell-ui-audit-public",
     "python3 scripts/validation/studio_responsive_audit.py",
+    "python3 scripts/validation/browser_security_boundary_audit.py --self-test",
+    "python3 scripts/validation/browser_security_boundary_audit.py",
     "scripts/runtime/browser_env_probe.sh",
     "scripts/runtime/browser_runtime_test.sh --smoke",
     "scripts/runtime/browser_runtime_test.sh --render-only",
@@ -178,6 +180,8 @@
       <tr><td><code>python3 scripts/validation/cell_ui_runtime_audit.py --screenshots tmp/cell-ui-audit-source</code></td><td>Source-page cell UI suite. Checks CanvasFlow and RunCell across desktop/mobile and dark/light themes, verifies CodeMirror tokens, hidden-code heuristics, shared JS chips, unified buttons, and helper-notebook output. Writes screenshots for review.</td></tr>
       <tr><td><code>python3 scripts/validation/cell_ui_runtime_audit.py --site-root public --screenshots tmp/cell-ui-audit-public</code></td><td>Built-page cell UI suite. Run after <code>BUILD_PAGES_LANGS=0 scripts/build/build_pages.sh</code> to prove the production bundle preserves the same cell contract and screenshot evidence.</td></tr>
       <tr><td><code>python3 scripts/validation/studio_responsive_audit.py</code></td><td>Host Playwright check for Studio layout extremes: topbar scrolling, minimum control sizes, sidebar list floors, and internal list scrolling.</td></tr>
+      <tr><td><code>python3 scripts/validation/browser_security_boundary_audit.py --self-test</code></td><td>Mutates every discovered browser-security construction so a weakened sandbox, sanitizer, URL boundary, HTML scanner, or credential scope must be detected.</td></tr>
+      <tr><td><code>python3 scripts/validation/browser_security_boundary_audit.py</code></td><td>Checks the current Course Assistant, Studio, Pyodide, dynamic-link, SVG, HTML-scanner, and tab-scoped credential boundaries.</td></tr>
       <tr><td><code>python3 scripts/validation/openclaw_fallback_audit.py</code></td><td>Required static OpenClaw fallback and probe lifecycle contract, including explicit hidden-frame CSS and <code>srcdoc</code> cleanup.</td></tr>
       <tr><td><code>python3 scripts/validation/endpoint_registration_audit.py --self-test</code></td><td>Mutation tests for endpoint ownership, typed probes, the SKILL explorer model handoff, and EN/PT/ES registration surfaces.</td></tr>
       <tr><td><code>python3 scripts/validation/endpoint_registration_audit.py</code></td><td>Current-tree endpoint ownership contract. Keeps chat, embedding, and OpenClaw registration paths distinct and visible.</td></tr>

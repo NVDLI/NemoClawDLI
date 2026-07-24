@@ -46,6 +46,17 @@ export function ganttBarsSVG(workers, wallSeconds, title = "Concurrency vs seria
 
 // Inject SVG figures inline and wire the fit-to-screen lightbox.
 const _figCache = {};
+function _safeFigureUrl(src) {
+  try {
+    const url = new URL(String(src || ""), location.href);
+    if (!["http:", "https:", "file:"].includes(url.protocol)) return null;
+    if (url.origin !== location.origin) return null;
+    if (!/\.svg$/i.test(url.pathname)) return null;
+    return url.href;
+  } catch (_) {
+    return null;
+  }
+}
 function _fetchSvg(src) {
   if (!_figCache[src]) {
     _figCache[src] = fetch(src).then(r => { if (!r.ok) throw new Error(r.status + " " + src); return r.text(); });
@@ -169,19 +180,18 @@ export function mountFigures(rootSel) {
   const scope = (rootSel && document.querySelector(rootSel)) || document;
   scope.querySelectorAll("[data-svg-src]:not([data-fig-done])").forEach(host => {
     host.dataset.figDone = "1";
-    const src = host.getAttribute("data-svg-src");
+    const src = _safeFigureUrl(host.getAttribute("data-svg-src"));
+    if (!src) {
+      host.textContent = "Figure path is invalid.";
+      return;
+    }
     _fetchSvg(src).then(txt => {
       const svg = _safeSvgDocument(txt);
       host.replaceChildren(svg);
       host.style.aspectRatio = "";   // the injected SVG now sets its own height
       wireFigureZoom(host, svg);
     }).catch(() => {
-      const link = document.createElement("a");
-      link.href = src;
-      link.target = "_blank";
-      link.rel = "noopener";
-      link.textContent = "Open figure in a new tab";
-      host.replaceChildren(link);
+      host.textContent = "Figure could not be loaded.";
     });
   });
 }

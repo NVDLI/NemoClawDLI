@@ -95,6 +95,8 @@ CONTRACT_FILES = (
     "scripts/materials/pull_materials.py",
     "scripts/materials/requirements.lock",
     "scripts/security/audit_dependency_locks.py",
+    "scripts/security/audit_codeql_sarif.py",
+    "scripts/security/codeql-vendor-dispositions.json",
     "scripts/security/audit_sbom_policy.py",
     "scripts/compliance/sbom_evidence.py",
     "scripts/compliance/docs/sbom_evidence.json",
@@ -127,6 +129,7 @@ CONTRACT_FILES = (
     "scripts/validation/reacs_specialization_exceptions.json",
     "scripts/validation/validator_specialization_audit.py",
     "scripts/validation/container_boundary_audit.py",
+    "scripts/validation/browser_security_boundary_audit.py",
     "web/nemoclaw/mats/_materials.json",
 )
 
@@ -849,13 +852,43 @@ def audit_repo(
                            "use pull_request with contents: read and no secrets"))
 
     codeql = docs[".github/workflows/codeql.yml"]
-    for token in ("javascript-typescript", "python", "actions: read", "security-events: write", "schedule:"):
+    for token in (
+        "javascript-typescript",
+        "python",
+        "actions: read",
+        "security-events: write",
+        "schedule:",
+        "id: analyze",
+        "output: \"codeql-results/${{ matrix.language }}\"",
+        "scripts/security/audit_codeql_sarif.py",
+        "--sarif \"${{ steps.analyze.outputs.sarif-output }}\"",
+    ):
         require(codeql, token, ".github/workflows/codeql.yml", "codeql-baseline", out,
                 f"retain public CodeQL baseline token: {token}")
     if "pull_request_target:" in codeql or "secrets." in codeql:
         out.append(finding("codeql-fork-safety", ".github/workflows/codeql.yml",
                            "CodeQL can acquire base-repository or secret authority",
                            "use pull_request with scoped security-events upload and no secrets"))
+    browser_boundary = docs["scripts/validation/browser_security_boundary_audit.py"]
+    for token in (
+        "def authored_sources",
+        "sandbox combines scripts and same-origin",
+        "must not enter persistent localStorage",
+        "def self_test",
+    ):
+        require(browser_boundary, token, "scripts/validation/browser_security_boundary_audit.py",
+                "browser-security-boundary", out,
+                f"retain discovery-first browser boundary control: {token}")
+    for token in (
+        "browser-security-boundary-audit-self-test",
+        "browser-security-boundary-audit",
+    ):
+        require(docs["scripts/validation/reacs_registry.json"], token,
+                "scripts/validation/reacs_registry.json", "browser-security-reacs", out,
+                f"retain the browser boundary ReACS suite: {token}")
+    require(docs["scripts/validation/SKILL.html"], "Authored browser boundaries",
+            "scripts/validation/SKILL.html", "browser-security-beacon", out,
+            "advertise the browser boundary mutation and current-tree commands")
 
     dependabot = docs[".github/dependabot.yml"]
     for ecosystem in ("github-actions", "pip", "npm"):
@@ -1506,6 +1539,11 @@ def self_test() -> list[str]:
             ("dependency-review-floor", ".github/workflows/dependency-review.yml", "fail-on-severity: moderate", "fail-on-severity: critical"),
             ("codeql-baseline", ".github/workflows/codeql.yml", "javascript-typescript", "javascript-disabled"),
             ("codeql-baseline", ".github/workflows/codeql.yml", "      actions: read\n", "      actions: none\n"),
+            ("codeql-baseline", ".github/workflows/codeql.yml", "scripts/security/audit_codeql_sarif.py", "scripts/security/audit_vulnerability_waivers.py"),
+            ("codeql-baseline", ".github/workflows/codeql.yml", '${{ steps.analyze.outputs.sarif-output }}', "codeql-results"),
+            ("browser-security-boundary", "scripts/validation/browser_security_boundary_audit.py", "def authored_sources", "def listed_sources"),
+            ("browser-security-reacs", "scripts/validation/reacs_registry.json", "browser-security-boundary-audit-self-test", "browser-security-disabled"),
+            ("browser-security-beacon", "scripts/validation/SKILL.html", "Authored browser boundaries", "Browser checks"),
             ("dependency-update-coverage", ".github/dependabot.yml", "package-ecosystem: npm", "package-ecosystem: unsupported"),
             ("release-draft", ".github/workflows/release.yml", "--draft --verify-tag", "--verify-tag"),
             ("release-annotated-tag", ".github/workflows/release.yml", 'git cat-file -t "refs/tags/$RELEASE_TAG"', 'git cat-file -t "$RELEASE_TAG^{commit}"'),

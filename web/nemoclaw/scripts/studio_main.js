@@ -514,22 +514,47 @@ function closeBlockEditor() {
   _beEl = null; _beOrigHTML = null; _beFileLoc = null;
 }
 
+function safeStudioUrl(raw, attribute) {
+  const value = String(raw || "").trim();
+  if (!value) return null;
+  try {
+    const url = new URL(value, location.href);
+    if (url.protocol === "http:" || url.protocol === "https:") return url.href;
+    if (attribute === "href" && url.protocol === "mailto:") return url.href;
+  } catch (_) {}
+  return value.startsWith("#") ? value : null;
+}
+
+function sanitizeStudioPreview(source) {
+  const parsed = new DOMParser().parseFromString(String(source), "text/html");
+  parsed.querySelectorAll("script,iframe,object,embed,base,link,style,meta[http-equiv]").forEach(node => node.remove());
+  const urlAttributes = new Set(["href", "src", "xlink:href", "action", "formaction", "poster", "background", "cite", "data"]);
+  parsed.querySelectorAll("*").forEach(node => {
+    [...node.attributes].forEach(attribute => {
+      const name = attribute.name.toLowerCase();
+      if (name.startsWith("on") || name === "srcdoc") {
+        node.removeAttribute(attribute.name);
+        return;
+      }
+      if (urlAttributes.has(name)) {
+        const safe = safeStudioUrl(attribute.value, name);
+        if (safe) node.setAttribute(attribute.name, safe);
+        else node.removeAttribute(attribute.name);
+      }
+    });
+    if (node.tagName === "A" && node.getAttribute("target") === "_blank") {
+      node.setAttribute("rel", "noopener noreferrer");
+    }
+  });
+  return parsed.body.firstElementChild;
+}
+
 // Apply edited HTML back into the live iframe DOM
 document.getElementById('be-apply').addEventListener('click', () => {
   if (!_beEl) return;
   const newHTML = (_beCm ? _beCm.getValue() : beTa.value).trim();
   try {
-    const parsed = new DOMParser().parseFromString(newHTML, 'text/html');
-    parsed.querySelectorAll('script,iframe,object,embed,meta[http-equiv]').forEach(node => node.remove());
-    parsed.querySelectorAll('*').forEach(node => [...node.attributes].forEach(attribute => {
-      const value = attribute.value.trim();
-      if (/^on/i.test(attribute.name) ||
-          (['href', 'src', 'action', 'formaction'].includes(attribute.name.toLowerCase()) &&
-           /^(?:javascript|vbscript|data):/i.test(value))) {
-        node.removeAttribute(attribute.name);
-      }
-    }));
-    const newEl = parsed.body.firstElementChild;
+    const newEl = sanitizeStudioPreview(newHTML);
     if (!newEl) throw new Error('parsed HTML produced no element');
     _beEl.replaceWith(newEl);
     _beEl = newEl;

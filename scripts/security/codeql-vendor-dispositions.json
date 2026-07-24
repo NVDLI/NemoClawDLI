@@ -1,0 +1,93 @@
+{
+  "schema": "codeql-vendor-dispositions/1",
+  "authored_controls": [],
+  "artifacts": [
+    {
+      "fingerprints": [
+        "50886cb35c57e409156c5a1a3fb1c7bba3b9e5b38f51aa11e5f2a67c6720edcc",
+        "07dd0e16c80d3ffa5c3ea2c19260a191434c809e50e9b5d738934f3975e292e7",
+        "0effb6b938fbf60237670f4679acb1bc2593c6ffd362cce3af6f5274b2fc42bc",
+        "68d0772bcb08c9aa29fdef0d04203f844da97cd2f4b816bb04acf99476c2462b",
+        "7177e2c2078e917e2b876f4702644ec909ceb120c66b0a389c65bfb064c748c3",
+        "9d27bf0ddf08fd153b9013e6dc3dfa5e99c84c8f9b023fe545766259e7ca4eba",
+        "231396083954dadae47fa7e82be15b930b261acf05ecbbaa2560961f7ec41b4a",
+        "e0ddbc0160b04d637b288c34b7ff0575ba876c7d861c87b50b8fc58951608c97"
+      ],
+      "artifact": "web/nemoclaw/vendor/langchain-1.4.7.esm.js",
+      "artifact_sha256": "e2a3458789b501bd86acb4ade45bb4e14ee6b903c4a39e030a611e03d451b18f",
+      "component": "@langchain/openai and reviewed transitive bundle",
+      "version": "1.4.7",
+      "decision": "not-exploitable-in-delivered-use",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "evidence": [
+        "web/nemoclaw/vendor/browser-dependencies.json",
+        "scripts/compliance/docs/browser_vendor_exceptions.json",
+        "scripts/browser-vendor/package-lock.json",
+        "tests/validation/test_codeql_sarif_audit.py"
+      ],
+      "scope": "The generated, unmodified-source bundle uses reviewed UUID formatting and an upstream schema validator only with repository-authored tool schemas."
+    },
+    {
+      "fingerprints": [
+        "ea2376d527552ef299148b3ae06036f017fd94fd573efa74d514357c48724a38"
+      ],
+      "artifact": "web/nemoclaw/vendor/codemirror-mode-xml-5.65.21.js",
+      "artifact_sha256": "dc7e44d410399326f802e2924573cbf6f942a79f647fd0b97f0b607973bc9a09",
+      "component": "codemirror",
+      "version": "5.65.21",
+      "decision": "not-exploitable-in-delivered-use",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "evidence": [
+        "web/nemoclaw/vendor/browser-dependencies.json",
+        "scripts/compliance/docs/vendor_policy.md",
+        "tests/validation/test_codeql_sarif_audit.py"
+      ],
+      "scope": "The upstream tokenizer recognizes markup for syntax display. It is not an HTML sanitizer or an execution boundary."
+    },
+    {
+      "fingerprints": [
+        "de37cb47871deeb232274d9687674cd30ab6513f8eda751e0525384b71e99446",
+        "4abfd3c803be2fc2f46ba48323afe000bf04a6e9562eee25b1b9ea5f3b73f5e8",
+        "974cc21e78d46bd7d46799e62b1ccec39e19cd43c9c2bb718e7e3fbd0c8ebe53",
+        "b6911be2735b6535dca04e39fed21d55a6f5dc1461ac42cdb81e97e43437c7f4"
+      ],
+      "artifact": "web/nemoclaw/vendor/marked-14.1.4.esm.js",
+      "artifact_sha256": "7d0eba3a3b1ba7b53ed4a92f39b7ab4c2412f6d4d22b435ff29b55048e926e06",
+      "component": "marked",
+      "version": "14.1.4",
+      "decision": "not-exploitable-in-delivered-use",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "evidence": [
+        "web/nemoclaw/vendor/browser-dependencies.json",
+        "web/_skill_explorer.js",
+        "web/nemoclaw/scripts/_chat.js",
+        "tests/validation/test_codeql_sarif_audit.py"
+      ],
+      "scope": "The upstream parser is not trusted as a sanitizer. Repository code sanitizes parsed output before DOM insertion."
+    },
+    {
+      "fingerprints": [
+        "6ec9d7a987ae1e3f4bf3d51ada939b151a86d6262412ff1b5bd4059be0d94959",
+        "4a7963bdb1978753680b3feb14eaa178670bf72c3b8e12972e7696ab9a75f8a6",
+        "ad20c7d3cc9922e586b200947836deb64d67d48a7f82baa3abae5187bd491a97",
+        "db1d125c5efe3c9f637b95453a1621eee17766d267fbc4362dd76aee4fb32f02"
+      ],
+      "artifact": "web/shared/vendor/marked-14.1.4.esm.js",
+      "artifact_sha256": "7d0eba3a3b1ba7b53ed4a92f39b7ab4c2412f6d4d22b435ff29b55048e926e06",
+      "component": "marked",
+      "version": "14.1.4",
+      "decision": "not-exploitable-in-delivered-use",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "evidence": [
+        "web/shared/vendor/browser-dependencies.json",
+        "web/_skill_explorer.js",
+        "tests/validation/test_codeql_sarif_audit.py"
+      ],
+      "scope": "The upstream parser is not trusted as a sanitizer. Repository code sanitizes parsed output before DOM insertion."
+    }
+  ]
+}

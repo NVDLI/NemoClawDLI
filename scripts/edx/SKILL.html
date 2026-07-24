@@ -11,7 +11,7 @@
   "node_type": "directory-explorer",
   "title": "scripts/edx quick reference pages",
   "source_dir": "scripts/edx/",
-  "summary": "Small HTML content artifacts provide edX navigation and getting-started surfaces without joining the course runtime.",
+  "summary": "Small HTML content artifacts provide edX navigation and getting-started surfaces. Lab URLs are rebuilt from approved HTTPS hosts, and cross-frame environment messages require the expected source and origin.",
   "related": [
     "scripts/edx/edx_getting_started.html",
     "scripts/edx/edx_navigator_quick.html"
@@ -23,7 +23,7 @@
 <script type="application/json" id="explorer-config">
 {
   "title": "scripts/edx quick reference pages",
-  "summary": "Small HTML content artifacts provide edX navigation and getting-started surfaces without joining the course runtime.",
+  "summary": "Small HTML content artifacts provide edX navigation and getting-started surfaces. Lab URLs are rebuilt from approved HTTPS hosts, and cross-frame environment messages require the expected source and origin.",
   "model": "nvidia/nemotron-3-nano-30b-a3b",
   "ties": [
     "build"
@@ -67,6 +67,7 @@
   <div class="skill-cmds">
     <div class="skill-cmd"><b>edX export</b><code>python3 scripts/build/publish_edx.py --help</code></div>
     <div class="skill-cmd"><b>Bundle check</b><code>python3 scripts/build/bundle_standalone.py --src web/nemoclaw --out /tmp/nemoclaw_bundle_check --clean</code></div>
+    <div class="skill-cmd"><b>Browser security boundary</b><code>python3 scripts/validation/browser_security_boundary_audit.py --self-test &amp;&amp; python3 scripts/validation/browser_security_boundary_audit.py</code></div>
   </div>
   <h2>Linkage map</h2>
   <div class="skill-list">

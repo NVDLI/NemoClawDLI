@@ -228,7 +228,7 @@ async function inspect(browser, file) {
           const replSecond = await playground.runRepl();
           playground.replEditor.setValue('display_markdown("**REPL rich output** with `visible code`")');
           const replRich = await playground.runRepl();
-          playground.replEditor.setValue(`display_html('<img src="https://invalid.example/pixel"><script>globalThis.__pyodideUnsafe = true</script><strong>safe HTML</strong>')`);
+          playground.replEditor.setValue(`display_html('<img src="https://invalid.example/pixel"><script>globalThis.__pyodideUnsafe = true</script><meta http-equiv="refresh" content="0;url=https://invalid.example"><iframe src="https://invalid.example"></iframe><svg onload="globalThis.__pyodideUnsafe = true"><circle></circle></svg><a href="javascript:globalThis.__pyodideUnsafe=true" onclick="globalThis.__pyodideUnsafe=true">unsafe link</a><strong>safe HTML</strong>')`);
           await playground.runRepl();
           document.querySelector('[data-python-helpers]').open = true;
           document.querySelector('[data-helper-row="display_json"]').click();
@@ -268,8 +268,16 @@ async function inspect(browser, file) {
           const richContrastLight = richContrast('light');
           if (originalTheme === null) document.documentElement.removeAttribute('data-theme');
           else document.documentElement.setAttribute('data-theme', originalTheme);
-          const unsafeRichOutput = !!document.querySelector('[data-repl-transcript] .py-rich-output script, [data-repl-transcript] .py-rich-output img')
-            || !!globalThis.__pyodideUnsafe;
+          const unsafeRichOutput = !!document.querySelector(
+            '[data-repl-transcript] .py-rich-output script,'
+            + '[data-repl-transcript] .py-rich-output img,'
+            + '[data-repl-transcript] .py-rich-output meta,'
+            + '[data-repl-transcript] .py-rich-output iframe,'
+            + '[data-repl-transcript] .py-rich-output svg,'
+            + '[data-repl-transcript] .py-rich-output [onload],'
+            + '[data-repl-transcript] .py-rich-output [onclick],'
+            + '[data-repl-transcript] .py-rich-output a[href^="javascript:" i]'
+          ) || !!globalThis.__pyodideUnsafe;
           const passed = workerSyntax === 'ok' ? await Promise.race([
             playground.runAll(),
             new Promise(resolve => setTimeout(() => resolve(-1), 90000)),
@@ -608,6 +616,14 @@ async function inspect(browser, file) {
         const raw = anchor.getAttribute('href') || '';
         return !raw || raw === '#' || /^javascript:/i.test(raw);
       }).map(anchor => anchor.textContent.trim());
+      const unsafeNavigationLinks = Array.from(document.querySelectorAll('a[href]')).filter(anchor => {
+        try {
+          const url = new URL(anchor.getAttribute('href') || '', location.href);
+          return !['http:', 'https:', 'file:'].includes(url.protocol);
+        } catch (_) {
+          return true;
+        }
+      }).map(anchor => anchor.getAttribute('href') || '').slice(0,20);
       const urlAttributes = ['href', 'src', 'poster', 'action', 'data-svg-src'];
       const localUrls = new Set();
       document.querySelectorAll('*').forEach(node => {
@@ -658,6 +674,7 @@ async function inspect(browser, file) {
         exports,
         deadInternalUrls:internalUrlChecks.filter(Boolean),
         interactiveNesting,
+        unsafeNavigationLinks,
         sbomEvidence: sbomEvidence ? {
           ready:sbomEvidence.dataset.sbomEvidenceReady === '1',
           error:sbomEvidence.dataset.sbomEvidenceError || '',
@@ -724,6 +741,7 @@ async function inspect(browser, file) {
     if (!state.visibleText) errors.push('renderer produced no visible text');
     if (state.deadInternalUrls.length) errors.push(`internal URLs failed: ${state.deadInternalUrls.join('; ')}`);
     if (state.interactiveNesting.length) errors.push(`nested interactive controls: ${JSON.stringify(state.interactiveNesting)}`);
+    if (state.unsafeNavigationLinks.length) errors.push(`unsafe navigation URLs: ${state.unsafeNavigationLinks.join('; ')}`);
     if (state.isSkill && state.explorer && !state.mounted) errors.push('shared explorer did not mount');
     if (state.isSkill && state.gone) errors.push(`${state.gone} configured file(s) did not load`);
     if (state.isSkill) state.exports.forEach(item => {
