@@ -23,7 +23,6 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 T1="$(cd "$HERE/../.." && pwd)"  # repo root (implementation lives under scripts/build)
-python3 "$T1/scripts/runtime/python_env_probe.py" --require-material-tools
 OUT="${1:-$T1/public}"
 # Build the source language at $OUT root, then each sparse same-branch overlay under i18n/<lang>/
 # over canonical web/ and into $OUT/<lang>/. BUILD_PAGES_LANGS=0 disables that loop.
@@ -67,6 +66,23 @@ case "$OUT" in
         exit 1
         ;;
 esac
+
+# Material scrapers are not part of a deterministic no-fetch build. Keep their
+# dependency boundary aligned with the work requested so the independently
+# reproduced Pages build does not inherit packages from an earlier CI job.
+if [ "$PULL_MATERIALS" = "0" ]; then
+    python3 "$T1/scripts/runtime/python_env_probe.py"
+else
+    python3 "$T1/scripts/runtime/python_env_probe.py" --require-material-tools
+fi
+
+# CI exercises this preflight before installing material tooling. That catches an
+# accidental dependency expansion without assembling the course twice.
+if [ "${BUILD_PAGES_PREFLIGHT_ONLY:-0}" = "1" ]; then
+    echo "[build_pages] environment preflight complete"
+    exit 0
+fi
+
 rm -rf "$OUT"; mkdir -p "$OUT"
 
 # ── 0. Rebase materials to the web's ground truth (best-effort), then refresh the gate ──
