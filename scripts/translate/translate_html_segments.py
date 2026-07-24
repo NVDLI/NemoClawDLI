@@ -30,7 +30,7 @@ for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
         sys.path.insert(0, str(_p / "scripts"))
         break
 from _bootstrap import find_repo_root
-from runtime.html_document import raw_text_blocks
+from runtime.html_document import raw_text_blocks_strict
 
 ROOT = find_repo_root(Path(__file__).resolve())
 TRANSLATION_REVISION = "locale-editorial-v5-source-draft"
@@ -195,7 +195,7 @@ def useful(text: str) -> bool:
 
 def script_segments(raw: str) -> list[Segment]:
     out: list[Segment] = []
-    for script in raw_text_blocks(raw, "script"):
+    for script in raw_text_blocks_strict(raw, "script"):
         body = script.body
         if "src" in script.attributes or "application/json" in script.attributes.get("type", "").casefold():
             continue
