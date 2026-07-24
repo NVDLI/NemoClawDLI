@@ -1,6 +1,114 @@
 {
   "schema": "codeql-vendor-dispositions/1",
-  "authored_controls": [],
+  "authored_controls": [
+    {
+      "fingerprints": [
+        "688618c8339b38423524be9cae7d481c5193d566ba96fcc17c95f20d5e62e93a",
+        "cdc3dbda9d5d68f52df5bb25b1902dfd42e61ec41a29c630d464ee3907198328"
+      ],
+      "artifact": "web/nemoclaw/scripts/_course_assistant.js",
+      "artifact_sha256": "6b857ce45a665d5057e224581bd71388ad762848bcd9191516cb57ce613e560d",
+      "decision": "opaque-origin-sandbox-execution",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "controls": [
+        {
+          "path": "scripts/validation/browser_security_boundary_audit.py",
+          "contains": "Course Assistant preview must retain an opaque origin"
+        },
+        {
+          "path": "scripts/validation/learner_flow_runtime_audit.py",
+          "contains": "Course Assistant artifact escaped its opaque-origin boundary"
+        }
+      ],
+      "scope": "Learner-authored artifact code is intentionally executable only in a no-same-origin iframe with deny-by-default CSP, bounded helper messaging, and hostile runtime probes."
+    },
+    {
+      "fingerprints": [
+        "07c7f4f899a900c8fd34d079a0a0fe8c71ebc6c8f00987b1abb20667f11121ab"
+      ],
+      "artifact": "scripts/pyodide/examples/live-playground.js",
+      "artifact_sha256": "830dc68c65f5bcc835c53eeb27d1ce1856af90460db4f6932f42ec26519a8b0f",
+      "decision": "inert-parse-allowlist-reconstruction",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "controls": [
+        {
+          "path": "scripts/validation/browser_security_boundary_audit.py",
+          "contains": "Pyodide rich output must reconstruct only allowlisted elements"
+        },
+        {
+          "path": "scripts/skills/skill_renderer_runtime_audit.py",
+          "contains": "Pyodide rich output sanitizer admitted executable or network-active HTML"
+        }
+      ],
+      "scope": "Rich output is parsed in an inert template and copied into a new fragment through fixed tag, attribute, and URL allowlists exercised with active-content mutations."
+    },
+    {
+      "fingerprints": [
+        "44cf7e67168c01732d07248e0d0c03b4a62d2782a9181de17ca3dd883f679ab0"
+      ],
+      "artifact": "web/nemoclaw/scripts/studio_main.js",
+      "artifact_sha256": "905f56bb4784354f39d576e6a64e12adaed8391dead9e5c394ae4be9315b89db",
+      "decision": "inert-parse-allowlist-reconstruction",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "controls": [
+        {
+          "path": "scripts/validation/browser_security_boundary_audit.py",
+          "contains": "Studio preview must parse edited HTML in an inert document"
+        },
+        {
+          "path": "scripts/validation/studio_responsive_audit.py",
+          "contains": "Studio preview sanitizer admitted active content"
+        }
+      ],
+      "scope": "The authoring preview parses inertly, removes active elements and event attributes, canonicalizes URL attributes, and is exercised with hostile content before DOM insertion."
+    },
+    {
+      "fingerprints": [
+        "8e5dbdbf8aa5642e187284e6e076bde33ccdf3a8572337630fa5596e5ea548d6",
+        "7b0c43d116c57ddee5d3085bd4284b25ccd04618e1b925946218fe273814066a"
+      ],
+      "artifact": "web/nemoclaw/scripts/_shared.js",
+      "artifact_sha256": "8125da9e0630141952c3a6fb02ec681fdc8e28f73326a0b0c6c590e222acc8a8",
+      "decision": "explicit-user-tab-credential-boundary",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "controls": [
+        {
+          "path": "scripts/validation/browser_security_boundary_audit.py",
+          "contains": "sensitive browser value"
+        },
+        {
+          "path": "docs/product-design.md",
+          "contains": "Tab-scoped browser `sessionStorage`"
+        }
+      ],
+      "scope": "The learner explicitly supplies model credentials, which remain tab-scoped, are never persisted in localStorage, and are discarded on tab close or explicit clear."
+    },
+    {
+      "fingerprints": [
+        "7a5a03214c51207800bee49fc6b26547e6907f170c08ed2ac81b9f788944a420"
+      ],
+      "artifact": "scripts/runtime/test_page_runtime.js",
+      "artifact_sha256": "829abf7b95bae1deee5d365daebc93a7c0f0abe126cfa256a0f66f4975514ae2",
+      "decision": "explicit-user-tab-credential-boundary",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "controls": [
+        {
+          "path": "scripts/validation/browser_security_boundary_audit.py",
+          "contains": "sensitive browser value"
+        },
+        {
+          "path": "docs/security-design.md",
+          "contains": "browser storage is not a vault"
+        }
+      ],
+      "scope": "The optional live browser harness projects an operator-provided model credential into tab-scoped sessionStorage only for the isolated test page and never writes it to repository artifacts or persistent browser storage."
+    }
+  ],
   "artifacts": [
     {
       "fingerprints": [

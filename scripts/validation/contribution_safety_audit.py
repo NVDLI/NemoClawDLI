@@ -860,8 +860,9 @@ def audit_repo(
         "schedule:",
         "id: analyze",
         "output: \"codeql-results/${{ matrix.language }}\"",
+        "post-processed-sarif-path: \"codeql-results/processed/${{ matrix.language }}\"",
         "scripts/security/audit_codeql_sarif.py",
-        "--sarif \"${{ steps.analyze.outputs.sarif-output }}\"",
+        "--sarif \"codeql-results/processed/${{ matrix.language }}\"",
     ):
         require(codeql, token, ".github/workflows/codeql.yml", "codeql-baseline", out,
                 f"retain public CodeQL baseline token: {token}")
@@ -1540,7 +1541,7 @@ def self_test() -> list[str]:
             ("codeql-baseline", ".github/workflows/codeql.yml", "javascript-typescript", "javascript-disabled"),
             ("codeql-baseline", ".github/workflows/codeql.yml", "      actions: read\n", "      actions: none\n"),
             ("codeql-baseline", ".github/workflows/codeql.yml", "scripts/security/audit_codeql_sarif.py", "scripts/security/audit_vulnerability_waivers.py"),
-            ("codeql-baseline", ".github/workflows/codeql.yml", '${{ steps.analyze.outputs.sarif-output }}', "codeql-results"),
+            ("codeql-baseline", ".github/workflows/codeql.yml", 'post-processed-sarif-path: "codeql-results/processed/${{ matrix.language }}"', 'post-processed-sarif-path: ""'),
             ("browser-security-boundary", "scripts/validation/browser_security_boundary_audit.py", "def authored_sources", "def listed_sources"),
             ("browser-security-reacs", "scripts/validation/reacs_registry.json", "browser-security-boundary-audit-self-test", "browser-security-disabled"),
             ("browser-security-beacon", "scripts/validation/SKILL.html", "Authored browser boundaries", "Browser checks"),

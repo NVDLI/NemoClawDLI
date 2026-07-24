@@ -35,7 +35,8 @@ jobs:
         with:
           category: "/language:${{ matrix.language }}"
           output: "codeql-results/${{ matrix.language }}"
+          post-processed-sarif-path: "codeql-results/processed/${{ matrix.language }}"
       - name: Enforce repository SARIF policy
         run: >-
           python3 scripts/security/audit_codeql_sarif.py
-          --sarif "${{ steps.analyze.outputs.sarif-output }}"
+          --sarif "codeql-results/processed/${{ matrix.language }}"

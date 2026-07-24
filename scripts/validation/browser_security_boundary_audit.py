@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
+import tempfile
 from pathlib import Path
 
 
@@ -91,19 +93,54 @@ BOUNDARIES: tuple[tuple[str, str, str], ...] = (
 )
 
 
-def authored_sources(root: Path) -> list[Path]:
-    """Discover every authored browser source without a file opt-in list."""
+def repository_candidates(root: Path) -> list[Path]:
+    """Return every tracked or proposed non-ignored repository file.
+
+    CI may install ignored dependency trees before this audit runs. Git's candidate set keeps those
+    transient publisher files outside the authored boundary while still discovering every added,
+    renamed, copied, or untracked proposal without a file allowlist.
+    """
+    if (root / ".git").exists():
+        result = subprocess.run(
+            [
+                "git", "-C", str(root), "ls-files", "-z",
+                "--cached", "--others", "--exclude-standard", "--",
+                *AUTHORED_ROOTS,
+            ],
+            capture_output=True,
+            check=False,
+        )
+        if result.returncode == 0:
+            return sorted(
+                root / rel.decode("utf-8", errors="surrogateescape")
+                for rel in result.stdout.split(b"\0")
+                if rel and (root / rel.decode("utf-8", errors="surrogateescape")).is_file()
+            )
+    return sorted(
+        path
+        for source_root in AUTHORED_ROOTS
+        for path in (root / source_root).rglob("*")
+        if (root / source_root).is_dir() and path.is_file()
+    )
+
+
+def authored_sources(root: Path, overrides: dict[str, str] | None = None) -> list[Path]:
+    """Discover every repository-owned browser source without a file opt-in list."""
+    overrides = overrides or {}
     paths: list[Path] = []
-    for source_root in AUTHORED_ROOTS:
-        base = root / source_root
-        if not base.is_dir():
+    candidates = set(repository_candidates(root))
+    for rel in overrides:
+        path = root / rel
+        if rel.split("/", 1)[0] in AUTHORED_ROOTS:
+            candidates.add(path)
+    for path in candidates:
+        rel = "/" + path.relative_to(root).as_posix()
+        if path.suffix.lower() not in TEXT_SUFFIXES or any(
+            marker in rel for marker in PUBLISHER_TREES
+        ):
             continue
-        for path in base.rglob("*"):
-            rel = "/" + path.relative_to(root).as_posix()
-            if path.is_file() and path.suffix.lower() in TEXT_SUFFIXES and not any(
-                marker in rel for marker in PUBLISHER_TREES
-            ):
-                paths.append(path)
+        if path.is_file() or path.relative_to(root).as_posix() in overrides:
+            paths.append(path)
     return sorted(paths)
 
 
@@ -124,9 +161,13 @@ def audit(root: Path = ROOT, overrides: dict[str, str] | None = None) -> list[st
         if token not in text(rel):
             findings.append(f"{rel}: {message}")
 
-    for path in authored_sources(root):
+    for path in authored_sources(root, overrides):
         rel = path.relative_to(root).as_posix()
-        source = overrides.get(rel, path.read_text(encoding="utf-8", errors="replace"))
+        source = (
+            overrides[rel]
+            if rel in overrides
+            else path.read_text(encoding="utf-8", errors="replace")
+        )
         for match in re.finditer(r"""sandbox\s*=\s*["']([^"']*)["']""", source, re.I):
             capabilities = set(match.group(1).lower().split())
             if {"allow-scripts", "allow-same-origin"} <= capabilities:
@@ -157,8 +198,9 @@ def audit(root: Path = ROOT, overrides: dict[str, str] | None = None) -> list[st
 
 def self_test(root: Path = ROOT) -> list[str]:
     failures: list[str] = []
-    if audit(root):
-        failures.append("baseline browser security boundaries do not pass")
+    baseline = audit(root)
+    if baseline:
+        failures.extend(f"baseline browser security boundary: {finding}" for finding in baseline)
         return failures
 
     cases = (
@@ -210,6 +252,36 @@ def self_test(root: Path = ROOT) -> list[str]:
         root, {fixture.relative_to(root).as_posix(): persistent}
     )):
         failures.append("mutation was not detected: persistent browser credential")
+
+    proposed = "web/proposed-browser-boundary.js"
+    findings = audit(root, {
+        proposed: '<iframe sandbox="allow-scripts allow-same-origin"></iframe>',
+    })
+    if not any(proposed in finding and "removing origin isolation" in finding for finding in findings):
+        failures.append("mutation was not detected: newly proposed browser source")
+
+    with tempfile.TemporaryDirectory(prefix="reacs-browser-discovery-") as temp:
+        candidate_root = Path(temp)
+        subprocess.run(
+            ["git", "init", "-q", str(candidate_root)],
+            capture_output=True,
+            check=True,
+        )
+        (candidate_root / ".gitignore").write_text("node_modules/\n", encoding="utf-8")
+        proposed_path = candidate_root / "web/proposed.js"
+        proposed_path.parent.mkdir(parents=True)
+        proposed_path.write_text("export const proposed = true;\n", encoding="utf-8")
+        installed_path = candidate_root / "scripts/tool/node_modules/publisher.js"
+        installed_path.parent.mkdir(parents=True)
+        installed_path.write_text("export const installed = true;\n", encoding="utf-8")
+        discovered = {
+            path.relative_to(candidate_root).as_posix()
+            for path in authored_sources(candidate_root)
+        }
+        if "web/proposed.js" not in discovered:
+            failures.append("repository discovery missed a non-ignored proposed browser source")
+        if "scripts/tool/node_modules/publisher.js" in discovered:
+            failures.append("repository discovery classified ignored installed dependencies as authored")
     return failures
 
 
