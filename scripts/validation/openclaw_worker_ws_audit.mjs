@@ -56,7 +56,8 @@ try {
   if (calls.length !== 1) fail(`expected one Pomerium upstream fetch, saw ${calls.length}`);
   const pomeriumCall = calls[0];
   if (pomeriumCall.target !== 'https://nemoclaw-demo.apps.run.brev.nvidia.com/ws/terminal?cmd=openshell+sandbox+list&keep=1') fail(`bad Pomerium upstream target: ${pomeriumCall.target}`);
-  if (pomeriumCall.headers.cookie !== '_pomerium=opaque.session') fail(`missing _pomerium cookie: ${JSON.stringify(pomeriumCall.headers)}`);
+  if (pomeriumCall.headers['x-pomerium-authorization'] !== 'opaque.session') fail(`missing upstream Pomerium session header: ${JSON.stringify(pomeriumCall.headers)}`);
+  if (pomeriumCall.headers.cookie) fail('Pomerium request synthesized a Cookie header');
   if (pomeriumCall.headers['cf-access-client-id'] || pomeriumCall.headers['cf-access-client-secret']) fail('Cloudflare service-token headers reached a Pomerium host');
 
   const mismatch = await worker.fetch(new Request('https://openclaw-cors-proxy.test/https/nemoclaw-demo.apps.run.brev.nvidia.com/cli/gateway?access_provider=cloudflare&access_session=must-not-forward', {
@@ -64,6 +65,12 @@ try {
     headers: { Upgrade: 'websocket', Origin: 'https://course.example.test' },
   }), {});
   if (mismatch.status !== 400) fail(`provider mismatch returned ${mismatch.status}, expected 400`);
+
+  const undeclaredProvider = await worker.fetch(new Request('https://openclaw-cors-proxy.test/https/nemoclaw-demo.apps.run.brev.nvidia.com/cli/gateway?access_session=must-not-forward', {
+    method: 'GET',
+    headers: { Upgrade: 'websocket', Origin: 'https://course.example.test' },
+  }), {});
+  if (undeclaredProvider.status !== 400) fail(`neutral session without a provider returned ${undeclaredProvider.status}, expected 400`);
 
   const conflict = await worker.fetch(new Request('https://openclaw-cors-proxy.test/https/nemoclaw-demo.brevlab.com/cli/gateway?access_provider=cloudflare&access_session=query-value', {
     method: 'GET',
@@ -88,19 +95,18 @@ try {
     calls.push({ target: String(target), method: init.method, headers, redirect: init.redirect });
     return new Response(null, { status: 302, headers: { location: 'https://credential-sink.example/collect' } });
   };
-  const blockedRedirect = await worker.fetch(new Request('https://openclaw-cors-proxy.test/https/nemoclaw-demo.brevlab.com/api/agent', {
+  const blockedRedirect = await worker.fetch(new Request('https://openclaw-cors-proxy.test/https/nemoclaw-demo.brevlab.com/api/agent?access_provider=cloudflare&access_session=opaque.session', {
     method: 'GET',
     headers: {
       Origin: 'https://course.example.test',
       'CF-Access-Client-Id': 'caller-id',
       'CF-Access-Client-Secret': 'caller-secret',
     },
-  }), { CF_ACCESS_CLIENT_ID: 'trusted-id', CF_ACCESS_CLIENT_SECRET: 'trusted-secret' });
+  }), { CF_ACCESS_CLIENT_ID: 'must-not-forward', CF_ACCESS_CLIENT_SECRET: 'must-not-forward' });
   if (blockedRedirect.status !== 502) fail(`cross-origin redirect returned ${blockedRedirect.status}, expected 502`);
   if (calls.length !== 1) fail(`cross-origin redirect made ${calls.length} upstream calls, expected one`);
-  if (calls[0].headers['cf-access-client-id'] !== 'trusted-id' || calls[0].headers['cf-access-client-secret'] !== 'trusted-secret') {
-    fail('trusted Cloudflare headers did not replace caller-supplied values on the initial request');
-  }
+  if (calls[0].headers['cf-access-client-id'] || calls[0].headers['cf-access-client-secret']) fail('Cloudflare service-token headers reached the upstream');
+  if (calls[0].headers.cookie !== 'CF_Authorization=opaque.session') fail('Cloudflare session was not bound to its upstream cookie');
 
   calls.length = 0;
   globalThis.fetch = async (target, init = {}) => {

@@ -18,6 +18,14 @@ from scripts.validation.artifact_link_audit import audit
 
 
 class ArtifactNavigationProjectionTests(unittest.TestCase):
+    def test_parameterized_navigator_keeps_static_links_auditable(self) -> None:
+        root = Path(__file__).resolve().parents[2]
+        source = (root / "scripts/edx/edx_navigator_quick.html").read_text(encoding="utf-8")
+        self.assertNotIn('href="{{COURSE_ASSET_BASE_URL}}', source)
+        self.assertNotIn('src="{{COURSE_ASSET_BASE_URL}}', source)
+        self.assertIn('var BASE = hasConfiguredBase ? configuredBase : "../../web/nemoclaw/";', source)
+        self.assertIn("downloadLink.hidden = true;", source)
+
     def test_source_projection_runs_after_docs_projection(self):
         """A docs link must not restore repository-only routes after public projection."""
         root = Path(__file__).resolve().parents[2]

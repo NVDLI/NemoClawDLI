@@ -240,8 +240,8 @@ glab ci run -b main \
 `cdn_publish` has no checkout, runs on the protected project-locked `dli-cdn-publisher` runner on
 `vk-devbox-cpu-1`, and invokes only the root-owned
 `/opt/dli-course-publisher/publish`. That program verifies every planned file, the configured AWS
-account, the fixed `cdn.dli.learn.nvidia.com/course-static` destination, and the allowed channel.
-It exposes no free-form shell, bucket, prefix, sync, or deletion input.
+account, root-owned destination bucket, key prefix, public base URL, and allowed channel.
+Candidate CI receives no free-form shell, bucket, prefix, sync, or deletion input.
 
 The publisher uses a root-owned AWS executable, configuration, credentials, exact IAM user or
 delimiter-bound assumed-role rule, and fixed CloudFront distribution. It inventories every S3 page;
@@ -252,9 +252,13 @@ to match. It waits for a CloudFront
 invalidation before comparing every served byte. The language list is the complete stable language
 set for NemoClaw, not an additive hint.
 
-Provision that runner once, outside CI, after reviewing the exact source commit:
+Provision that runner once, outside CI, after reviewing the exact source commit. Supply destination
+identifiers in the operator environment; do not add them to source or workflow YAML:
 
 ```bash
+DLI_PUBLISH_BUCKET=<operator-bucket> \
+DLI_CDN_KEY_PREFIX=<operator-prefix> \
+DLI_PUBLIC_BASE_URL=https://<public-host> \
 bash scripts/ci/install_devbox_publisher.sh \
   <expected-12-digit-aws-account-id> \
   <exact-user-arn-or-assumed-role-prefix-ending-in-slash> \

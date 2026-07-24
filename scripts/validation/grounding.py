@@ -58,7 +58,23 @@ _URL_RE = re.compile(r'https?://[^\s)"\'<>\]\[(]+')
 # asset CDNs + infra hosts are not CITATIONS (they are <script>/<link> loads).
 _NOISE_HOST = {"localhost", "127.0.0.1", "0.0.0.0", "example.com", "bring-up.sh", "skill.md",
                "cdnjs.cloudflare.com", "cdn.jsdelivr.net", "unpkg.com",
-               "fonts.googleapis.com", "fonts.gstatic.com", "dli-lms.s3.amazonaws.com"}
+               "fonts.googleapis.com", "fonts.gstatic.com"}
+
+
+def _is_object_store_host(host: str) -> bool:
+    suffix = ".amazonaws.com"
+    if not host.endswith(suffix):
+        return False
+    bucket, marker, service = host[:-len(suffix)].rpartition(".s3")
+    if not marker or not bucket:
+        return False
+    if not service:
+        return True
+    return (
+        service[0] in ".-"
+        and len(service) > 1
+        and all(char.isascii() and (char.isalnum() or char in ".-") for char in service[1:])
+    )
 
 
 def _norm_url(u: str) -> str:
@@ -73,6 +89,7 @@ def _is_citation(u: str) -> bool:
         return False
     host = m.group(1).lower()
     if (host in _NOISE_HOST or host == "w3.org" or host.endswith(".w3.org")
+            or _is_object_store_host(host)
             or re.fullmatch(r'\d+\.\d+\.\d+\.\d+', host)):
         return False
     return "." in host

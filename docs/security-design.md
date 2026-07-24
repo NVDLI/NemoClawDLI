@@ -153,6 +153,12 @@ save; a query parameter can only prefill it. Prompts, responses, agent commands,
 the selected service boundaries. The repository adds no production application database or
 server-side learner-data store.
 
+Any service URL embedded in browser code is observable in the published artifact and network
+traffic. It is not a secret or an authorization boundary. Operator account, state, bucket, DNS,
+generated distribution, and credential values remain outside public source; the public middleware
+projection uses only operator-supplied deployment parameters. An operated relay must remain safe
+when its URL and protocol are known.
+
 Startup-provided material in the co-located path populates the same storage entry consumed by the
 course helpers. The course separately caches only a non-authoritative verification result for the
 browser session.
@@ -175,14 +181,17 @@ replace, and clear actions.
 - GitHub Pages builds in a read-only job, rejects unexpected executable references and artifact
   substitution, records every generated file by SHA-256, and exercises the exact tree in Chromium.
 - Browser dependencies require exact versions, a generated integrity inventory, and same-origin delivery.
-- Course code selects reviewed relay routes and authentication behavior; live relay enforcement is Unknown until the operator supplies evidence.
+- Course code selects reviewed relay routes and authentication behavior. The optional deployable
+  source is hash-bound, parameterized, and tested; live relay enforcement is Unknown until
+  the operator supplies evidence for the deployed instance.
 - Course code expects launch authentication, gateway checks, and sandbox policy; their deployed state is Unknown until launchable and runtime owners supply evidence.
 - Secrets, live credentials, internal deployment identifiers, scan output, and approval records do
   not belong in this document or graph.
 
 Operational relay deployment, launchable configuration, identity policy, protected environments,
-and provider controls live outside this repository. Operators compare live configuration with this
-design before release.
+and provider controls live outside this repository. Optional source under
+`scripts/cors-proxy/deployable/` carries no environment identifiers or deployment authority.
+Operators compare live configuration with this design before release.
 
 ## Release controls
 
@@ -192,8 +201,9 @@ deployment; live source-host enforcement remains operator evidence. A separate t
 deterministic archives, a release manifest, an SBOM, and checksums.
 
 Internal GitLab may prepare a language-selected CDN plan from an exact successful artifact without
-AWS authority. The isolated publisher accepts neither destination nor command input, uses root-owned
-AWS configuration, paginates fixed course roots, invalidates caches, and compares served bytes.
+AWS authority. The isolated publisher accepts neither destination nor command input from candidate
+CI, uses a root-owned parameterized destination and AWS configuration, paginates fixed course roots,
+invalidates caches, and compares served bytes.
 Protected environments, runner state, AWS identity, and installation still require live evidence.
 
 Host Python, Node.js, and Chromium support local authoring and tests; they are not production nodes.

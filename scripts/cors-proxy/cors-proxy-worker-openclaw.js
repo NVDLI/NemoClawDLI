@@ -77,6 +77,9 @@ export default {
     }
     const neutralSession = headerSession || querySession;
     const legacySession = legacyHeaderSession || legacyQuerySession;
+    if (neutralSession && !requestedProvider) {
+      return new Response("Neutral access sessions require an explicit access provider.", { status: 400, headers: { "Content-Type": "text/plain", ...cors } });
+    }
     if (requestedProvider && requestedProvider !== expectedProvider) {
       return new Response("Access provider does not match the upstream host.", { status: 400, headers: { "Content-Type": "text/plain", ...cors } });
     }
@@ -102,15 +105,14 @@ export default {
     fwdHeaders.delete("X-OpenClaw-Access-Session");
     fwdHeaders.delete("CF-Access-Client-Id");
     fwdHeaders.delete("CF-Access-Client-Secret");
+    fwdHeaders.delete("X-Pomerium-Authorization");
     fwdHeaders.delete("Cookie");
-    if (accessSession) {
-      fwdHeaders.set("Cookie", expectedProvider === "pomerium"
-        ? "_pomerium=" + accessSession
-        : "CF_Authorization=" + accessSession);
-    }
-    if (cloudflareHost && env.CF_ACCESS_CLIENT_ID && env.CF_ACCESS_CLIENT_SECRET) {
-      fwdHeaders.set("CF-Access-Client-Id",     env.CF_ACCESS_CLIENT_ID);
-      fwdHeaders.set("CF-Access-Client-Secret", env.CF_ACCESS_CLIENT_SECRET);
+    if (accessSession && expectedProvider === "cloudflare") {
+      fwdHeaders.set("Cookie", "CF_Authorization=" + accessSession);
+    } else if (accessSession && expectedProvider === "pomerium") {
+      // Pomerium consumes this upstream-only header before the request reaches
+      // the launchable. Authorization remains available for the gateway token.
+      fwdHeaders.set("X-Pomerium-Authorization", accessSession);
     }
 
     const isWebSocket = (request.headers.get("Upgrade") || "").toLowerCase() === "websocket";

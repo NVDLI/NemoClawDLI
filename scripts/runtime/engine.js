@@ -41,7 +41,7 @@
 
   var NOISE_HOST = setOf(["localhost", "127.0.0.1", "0.0.0.0", "example.com", "bring-up.sh", "skill.md",
     "cdnjs.cloudflare.com", "cdn.jsdelivr.net", "unpkg.com",
-    "fonts.googleapis.com", "fonts.gstatic.com", "dli-lms.s3.amazonaws.com"]);
+    "fonts.googleapis.com", "fonts.gstatic.com"]);
 
   function setOf(a) { var s = {}; for (var i = 0; i < a.length; i++) s[a[i]] = 1; return s; }
   function has(s, k) { return Object.prototype.hasOwnProperty.call(s, k); }
@@ -121,11 +121,30 @@
     if (m) return m[1].toLowerCase() + m[2].toLowerCase() + m[3].replace(/\/+$/, "");
     return u.toLowerCase();
   }
+  function isObjectStoreHost(host) {
+    var suffix = ".amazonaws.com";
+    if (host.slice(-suffix.length) !== suffix) return false;
+    var stem = host.slice(0, -suffix.length);
+    var marker = stem.lastIndexOf(".s3");
+    if (marker <= 0) return false;
+    var service = stem.slice(marker + 3);
+    if (!service) return true;
+    if ((service.charAt(0) !== "." && service.charAt(0) !== "-") || service.length === 1) return false;
+    for (var i = 1; i < service.length; i++) {
+      var code = service.charCodeAt(i);
+      var allowed = (code >= 97 && code <= 122) || (code >= 48 && code <= 57) ||
+        code === 45 || code === 46;
+      if (!allowed) return false;
+    }
+    return true;
+  }
   function isCitation(u) {
     var m = /^https?:\/\/([^/:]+)/.exec(u);
     if (!m) return false;
     var host = m[1].toLowerCase();
-    if (has(NOISE_HOST, host) || host === "w3.org" || /\.w3\.org$/.test(host) || /^\d+\.\d+\.\d+\.\d+$/.test(host)) return false;
+    if (has(NOISE_HOST, host) || host === "w3.org" || /\.w3\.org$/.test(host) ||
+        isObjectStoreHost(host) ||
+        /^\d+\.\d+\.\d+\.\d+$/.test(host)) return false;
     return host.indexOf(".") >= 0;
   }
 

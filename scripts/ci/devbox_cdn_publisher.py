@@ -23,11 +23,8 @@ from pathlib import Path, PurePosixPath
 
 
 SCHEMA = "dli-cdn-publication/2"
-BUCKET = "cdn.dli.learn.nvidia.com"
-PREFIX = "course-static"
 SHA = re.compile(r"^[0-9a-f]{40}$")
 CONFIG = Path("/etc/dli-course-publisher.json")
-CDN = "https://cdn.dli.learn.nvidia.com"
 COURSE_PREFIXES = {
     "nemoclaw": ("nemoclaw/", "shared/", "es/nemoclaw/", "pt/nemoclaw/"),
 }
@@ -113,6 +110,19 @@ def validate(publication: Path, plan_path: Path, config_path: Path = CONFIG) -> 
     user = re.fullmatch(rf"arn:aws:iam::{account}:user/[A-Za-z0-9+=,.@_/-]+", principal)
     if not (assumed or user):
         raise ValueError("publisher principal configuration is invalid")
+    bucket = str(config.get("bucket_name", ""))
+    prefix = str(config.get("key_prefix", "")).strip("/")
+    cdn = str(config.get("public_base_url", "")).rstrip("/")
+    parsed_cdn = urllib.parse.urlsplit(cdn)
+    if (
+        not re.fullmatch(r"(?=.{3,63}$)[a-z0-9](?:[a-z0-9.-]*[a-z0-9])", bucket)
+        or ".." in bucket
+        or not re.fullmatch(r"[a-z0-9](?:[a-z0-9/_-]{0,126}[a-z0-9])?", prefix)
+        or ".." in PurePosixPath(prefix).parts
+        or parsed_cdn.scheme != "https" or not parsed_cdn.hostname
+        or parsed_cdn.username or parsed_cdn.password or parsed_cdn.query or parsed_cdn.fragment
+    ):
+        raise ValueError("publisher destination configuration is invalid")
     aws = Path(str(config.get("aws_executable", "")))
     aws_sha = str(config.get("aws_executable_sha256", ""))
     aws_config = Path(str(config.get("aws_config_file", "")))
@@ -138,6 +148,7 @@ def validate(publication: Path, plan_path: Path, config_path: Path = CONFIG) -> 
     return plan, {
         "account": account, "destination": destination, "principal": principal,
         "aws": str(aws), "aws_config": str(aws_config), "aws_credentials": str(aws_credentials),
+        "bucket": bucket, "prefix": prefix, "cdn": cdn,
         "cloudfront_distribution": str(config.get("cloudfront_distribution_id", "")),
     }
 
@@ -150,11 +161,11 @@ def _aws_json(aws: str, env: dict[str, str], *args: str) -> dict[str, object]:
     return value
 
 
-def _list_prefix(aws: str, env: dict[str, str], prefix: str) -> dict[str, int]:
+def _list_prefix(aws: str, env: dict[str, str], bucket: str, prefix: str) -> dict[str, int]:
     out: dict[str, int] = {}
     token = ""
     for _page in range(10_000):
-        args = ["s3api", "list-objects-v2", "--bucket", BUCKET, "--prefix", prefix]
+        args = ["s3api", "list-objects-v2", "--bucket", bucket, "--prefix", prefix]
         if token:
             args.extend(["--continuation-token", token])
         value = _aws_json(aws, env, *args)
@@ -180,24 +191,26 @@ def _list_prefix(aws: str, env: dict[str, str], prefix: str) -> dict[str, int]:
     raise ValueError("S3 inventory exceeds the fixed page bound")
 
 
-def _remote_owned(plan: dict[str, object], aws: str, env: dict[str, str]) -> dict[str, int]:
+def _remote_owned(
+    plan: dict[str, object], aws: str, env: dict[str, str], bucket: str, prefix: str,
+) -> dict[str, int]:
     if plan["channel"] == "immutable":
-        return _list_prefix(aws, env, f"{PREFIX}/{plan['destination']}/")
+        return _list_prefix(aws, env, bucket, f"{prefix}/{plan['destination']}/")
     out: dict[str, int] = {}
     for relative in _stable_prefixes(plan):
-        out.update(_list_prefix(aws, env, f"{PREFIX}/{relative}"))
+        out.update(_list_prefix(aws, env, bucket, f"{prefix}/{relative}"))
     for relative in STABLE_ROOT_FILES:
-        exact = f"{PREFIX}/{relative}"
-        out.update({key: size for key, size in _list_prefix(aws, env, exact).items() if key == exact})
+        exact = f"{prefix}/{relative}"
+        out.update({key: size for key, size in _list_prefix(aws, env, bucket, exact).items() if key == exact})
     return out
 
 
-def _expected_remote(plan: dict[str, object]) -> dict[str, int]:
-    base = f"{PREFIX}/" if plan["channel"] == "stable" else f"{PREFIX}/{plan['destination']}/"
+def _expected_remote(plan: dict[str, object], prefix: str) -> dict[str, int]:
+    base = f"{prefix}/" if plan["channel"] == "stable" else f"{prefix}/{plan['destination']}/"
     return {base + str(row["path"]): int(row["bytes"]) for row in plan["files"]}
 
 
-def _verify_cdn(plan: dict[str, object]) -> None:
+def _verify_cdn(plan: dict[str, object], cdn: str, prefix: str) -> None:
     destination = str(plan["destination"])
     source_sha = str(plan["source_sha"])
     rows = list(plan["files"])
@@ -205,7 +218,7 @@ def _verify_cdn(plan: dict[str, object]) -> None:
     def check(row: dict[str, object]) -> None:
         rel = str(row["path"])
         encoded = urllib.parse.quote(rel, safe="/")
-        base = f"{CDN}/{PREFIX}" if plan["channel"] == "stable" else f"{CDN}/{PREFIX}/{destination}"
+        base = f"{cdn}/{prefix}" if plan["channel"] == "stable" else f"{cdn}/{prefix}/{destination}"
         url = f"{base}/{encoded}?version={source_sha[:16]}"
         request = urllib.request.Request(url, headers={"Accept-Encoding": "identity", "User-Agent": "dli-course-publisher/1"})
         with urllib.request.urlopen(request, timeout=60) as response:
@@ -243,14 +256,14 @@ def publish(publication: Path, plan_path: Path, config_path: Path = CONFIG) -> N
         or not _principal_matches(str(identity_record.get("Arn", "")), bounded["principal"])
     ):
         raise ValueError("ambient AWS identity is not the configured publisher principal")
-    expected_remote = _expected_remote(plan)
-    before = _remote_owned(plan, bounded["aws"], env)
+    expected_remote = _expected_remote(plan, bounded["prefix"])
+    before = _remote_owned(plan, bounded["aws"], env, bounded["bucket"], bounded["prefix"])
     if plan["channel"] == "immutable" and set(before) - set(expected_remote):
         raise ValueError("immutable CDN prefix already contains unreviewed objects")
     target = (
-        f"s3://{BUCKET}/{PREFIX}/"
+        f"s3://{bounded['bucket']}/{bounded['prefix']}/"
         if plan["channel"] == "stable"
-        else f"s3://{BUCKET}/{PREFIX}/{bounded['destination']}/"
+        else f"s3://{bounded['bucket']}/{bounded['prefix']}/{bounded['destination']}/"
     )
     cache_control = "public,max-age=31536000,immutable" if plan["channel"] == "immutable" else "public,max-age=300"
     subprocess.run(
@@ -263,14 +276,14 @@ def publish(publication: Path, plan_path: Path, config_path: Path = CONFIG) -> N
     if plan["channel"] == "stable":
         for key in sorted(set(before) - set(expected_remote)):
             subprocess.run(
-                [bounded["aws"], "s3api", "delete-object", "--bucket", BUCKET, "--key", key],
+                [bounded["aws"], "s3api", "delete-object", "--bucket", bounded["bucket"], "--key", key],
                 env=env, check=True, capture_output=True,
             )
         distribution = bounded["cloudfront_distribution"]
         if not re.fullmatch(r"E[A-Z0-9]{8,20}", distribution):
             raise ValueError("stable publication requires the fixed CloudFront distribution")
-        paths = [f"/{PREFIX}/{prefix}*" for prefix in _stable_prefixes(plan)]
-        paths.extend(f"/{PREFIX}/{path}" for path in sorted(STABLE_ROOT_FILES))
+        paths = [f"/{bounded['prefix']}/{prefix}*" for prefix in _stable_prefixes(plan)]
+        paths.extend(f"/{bounded['prefix']}/{path}" for path in sorted(STABLE_ROOT_FILES))
         invalidation = _aws_json(
             bounded["aws"], env, "cloudfront", "create-invalidation",
             "--distribution-id", distribution, "--paths", *paths,
@@ -283,10 +296,10 @@ def publish(publication: Path, plan_path: Path, config_path: Path = CONFIG) -> N
              "--distribution-id", distribution, "--id", invalidation_id],
             env=env, check=True, capture_output=True,
         )
-    after = _remote_owned(plan, bounded["aws"], env)
+    after = _remote_owned(plan, bounded["aws"], env, bounded["bucket"], bounded["prefix"])
     if after != expected_remote:
         raise ValueError("remote course-owned S3 tree differs from the reviewed manifest")
-    _verify_cdn(plan)
+    _verify_cdn(plan, bounded["cdn"], bounded["prefix"])
 
 
 def _principal_matches(actual: str, configured: str) -> bool:

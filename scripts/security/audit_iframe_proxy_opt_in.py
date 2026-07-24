@@ -61,15 +61,15 @@ CHECKS = [
         [],
     ),
     (
-        "hosted endpoints are explicit in the relay explorer",
+        "relay explorer describes the contract without advertising operated endpoints",
         "scripts/cors-proxy/SKILL.html",
-        [BUILD_PROXY, OPENCLAW_PROXY, "reference implementations"],
-        [],
+        ["compact teaching references", "deployable"],
+        [re.escape(BUILD_PROXY), re.escape(OPENCLAW_PROXY)],
     ),
     (
         "reference implementation findings are documented",
         "scripts/security/iframe_proxy_worker_findings.md",
-        ["reference implementations", "X-BILLING-INVOKE-ORIGIN", "ALLOWED_ORIGINS", "deployment repository", "exact `https://cdn.dli.learn.nvidia.com` origin", "explicit direct override"],
+        ["compact teaching references", "X-BILLING-INVOKE-ORIGIN", "ALLOWED_ORIGINS", "deployment-owner review", "exact `https://cdn.dli.learn.nvidia.com` origin", "explicit direct override"],
         [],
     ),
     (
@@ -77,6 +77,12 @@ CHECKS = [
         "scripts/cors-proxy/cors-proxy-worker-openclaw.js",
         ["x-openclaw-session-key", "CF-Access-Jwt-Assertion"],
         [r"X-BILLING-INVOKE-ORIGIN"],
+    ),
+    (
+        "OpenClaw relay binds provider sessions without forwarding service tokens",
+        "scripts/cors-proxy/cors-proxy-worker-openclaw.js",
+        ["Neutral access sessions require an explicit access provider.", 'fwdHeaders.set("X-Pomerium-Authorization", accessSession)', 'fwdHeaders.delete("CF-Access-Client-Id")', 'fwdHeaders.delete("CF-Access-Client-Secret")'],
+        [r"_pomerium=", r"env\.CF_ACCESS_CLIENT"],
     ),
     (
         "OpenClaw relay is centralized, persistent, and optional",
@@ -241,6 +247,8 @@ def self_test() -> list[str]:
         ("custom endpoint omits NVIDIA attribution", "web/nemoclaw/scripts/_shared.js", "if (billingAttributionEnabled(cfg.url))", "if (true)"),
         ("credential destination warning", "web/nemoclaw/index.html", "selected endpoint", "configured service"),
         ("OpenClaw excludes model billing attribution", "scripts/cors-proxy/cors-proxy-worker-openclaw.js", "x-openclaw-session-key, Accept", "x-openclaw-session-key, X-BILLING-INVOKE-ORIGIN, Accept"),
+        ("OpenClaw Pomerium header", "scripts/cors-proxy/cors-proxy-worker-openclaw.js", 'fwdHeaders.set("X-Pomerium-Authorization", accessSession)', 'fwdHeaders.set("Cookie", "_pomerium=" + accessSession)'),
+        ("OpenClaw provider declaration", "scripts/cors-proxy/cors-proxy-worker-openclaw.js", "Neutral access sessions require an explicit access provider.", "Neutral access sessions may omit a provider."),
         ("OpenClaw relay toggle", "web/nemoclaw/scripts/_connection.js", 'params.get("openclaw_proxy")', 'params.get("removed_openclaw_proxy")'),
         ("OpenClaw same-origin bypass", "web/nemoclaw/scripts/_connection.js", "upstream.origin !== loc.origin", "true"),
         ("OpenClaw probe controls", "web/nemoclaw/03a-kickstart.html", "proxyControls: true", "proxyControls: false"),

@@ -1,6 +1,8 @@
 # SBOM generation and attachment runbook
 
 The repository does not define or distribute a container image. Its generated SBOMs cover the browser code shipped to learners and the small Python tool set used to verify course materials.
+The optional middleware projection uses a generic infrastructure template and carries no
+provisioning package dependency or provider lock.
 
 This runbook generates the SBOM evidence used for source and open-source review without adding
 generated SBOM bodies to the repository. Run every command from the repository root at the exact

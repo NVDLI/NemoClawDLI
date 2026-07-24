@@ -25,9 +25,22 @@ aws_sha=$(shasum -a 256 "$aws_bin" | awk '{print $1}')
 aws_config_source=${DLI_AWS_CONFIG_SOURCE:-$HOME/.aws/config}
 aws_credentials_source=${DLI_AWS_CREDENTIALS_SOURCE:-$HOME/.aws/credentials}
 stable_refs=${DLI_STABLE_REFS:-main,nemoclaw-only}
+publish_bucket=${DLI_PUBLISH_BUCKET:-}
+publish_prefix=${DLI_CDN_KEY_PREFIX:-}
+public_base=${DLI_PUBLIC_BASE_URL:-}
 [[ "$stable_refs" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]{0,126}(,[A-Za-z0-9][A-Za-z0-9._/-]{0,126})*$ && "$stable_refs" != *..* && "$stable_refs" != *//* ]] || {
   echo "DLI_STABLE_REFS must be a comma-separated root-owned branch allowlist" >&2; exit 2;
 }
+[[ "$publish_bucket" =~ ^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$ && "$publish_bucket" != *..* ]] || {
+  echo "DLI_PUBLISH_BUCKET must name the operator-owned destination bucket" >&2; exit 2;
+}
+[[ "$publish_prefix" =~ ^[a-z0-9][a-z0-9/_-]{0,126}[a-z0-9]$ && "$publish_prefix" != *..* && "$publish_prefix" != *//* ]] || {
+  echo "DLI_CDN_KEY_PREFIX must name the operator-owned key prefix" >&2; exit 2;
+}
+[[ "$public_base" =~ ^https://[A-Za-z0-9.-]+(:[0-9]+)?(/[A-Za-z0-9._~/-]*)?$ && "$public_base" != *..* ]] || {
+  echo "DLI_PUBLIC_BASE_URL must be an HTTPS URL without credentials, query, or fragment" >&2; exit 2;
+}
+public_base=${public_base%/}
 for source in "$aws_config_source" "$aws_credentials_source"; do
   [[ -f "$source" && ! -L "$source" ]] || { echo "AWS config sources must be regular files" >&2; exit 2; }
   if grep -Eiq '(^|[_.-])(endpoint_url|credential_process|web_identity_token_file|ca_bundle)[[:space:]]*=' "$source"; then
@@ -45,6 +58,8 @@ trap 'rm -f "$config" "$wrapper"' EXIT
 printf '#!/bin/sh\nexec /usr/bin/env -i HOME=/var/empty PATH=/usr/bin:/bin %s -I /opt/dli-course-publisher/publisher.py "$@"\n' "$python_bin" > "$wrapper"
 sudo install -o root -g root -m 0555 "$wrapper" /opt/dli-course-publisher/publish
 stable_refs_json=$(printf '%s' "$stable_refs" | awk -F, '{printf "["; for (i=1;i<=NF;i++) printf "%s\"%s\"", (i>1?",":""), $i; printf "]"}')
-printf '{"aws_account_id":"%s","principal_arn":"%s","stable_refs":%s,"aws_executable":"%s","aws_executable_sha256":"%s","aws_config_file":"/etc/dli-course-publisher/aws-config","aws_credentials_file":"/etc/dli-course-publisher/aws-credentials","cloudfront_distribution_id":"%s"}\n' "$1" "$2" "$stable_refs_json" "$aws_bin" "$aws_sha" "$3" > "$config"
+printf '{"aws_account_id":"%s","principal_arn":"%s","stable_refs":%s,"aws_executable":"%s","aws_executable_sha256":"%s","aws_config_file":"/etc/dli-course-publisher/aws-config","aws_credentials_file":"/etc/dli-course-publisher/aws-credentials","bucket_name":"%s","key_prefix":"%s","public_base_url":"%s","cloudfront_distribution_id":"%s"}\n' \
+  "$1" "$2" "$stable_refs_json" "$aws_bin" "$aws_sha" \
+  "$publish_bucket" "$publish_prefix" "$public_base" "$3" > "$config"
 sudo install -o root -g root -m 0444 "$config" /etc/dli-course-publisher.json
 echo "Installed the fixed DLI publisher. Configure a protected, project-locked runner tagged dli-cdn-publisher on this host."

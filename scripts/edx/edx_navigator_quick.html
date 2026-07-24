@@ -213,11 +213,11 @@
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <a id="fx43q-open-link" class="fx43q-link" target="_blank" rel="noopener"
-           href="https://dli-lms.s3.us-east-1.amazonaws.com/assets/s-fx-43-v1/nemoclaw/index.html">
+           href="#">
           Open in new tab ↗
         </a>
-        <a class="fx43q-link" target="_blank" rel="noopener"
-           href="https://dli-lms.s3.us-east-1.amazonaws.com/assets/s-fx-43-v1/nemoclaw/current-html-pages.zip"
+        <a id="fx43q-download-link" class="fx43q-link" target="_blank" rel="noopener"
+           href="#"
            download="current-html-pages.zip">
           Download all pages
         </a>
@@ -226,7 +226,6 @@
 
     <div class="fx43q-frame-wrap">
       <iframe id="fx43q-frame" class="fx43q-frame" title="Course module"
-        src="https://dli-lms.s3.us-east-1.amazonaws.com/assets/s-fx-43-v1/nemoclaw/index.html"
         scrolling="no" frameborder="0"
         loading="lazy" referrerpolicy="no-referrer"></iframe>
     </div>
@@ -235,7 +234,9 @@
 
 <script>
 (function () {
-  var BASE = "https://dli-lms.s3.us-east-1.amazonaws.com/assets/s-fx-43-v1/nemoclaw/";
+  var configuredBase = "{{COURSE_ASSET_BASE_URL}}";
+  var hasConfiguredBase = configuredBase.indexOf("{{") !== 0;
+  var BASE = hasConfiguredBase ? configuredBase : "../../web/nemoclaw/";
 
   // Estimated per-page heights captured by scripts/measure_heights.mjs.
   // PostMessage refines each height on first paint; re-measure after bundle shape changes.
@@ -281,12 +282,19 @@
 
   var frame      = document.getElementById("fx43q-frame");
   var openLink   = document.getElementById("fx43q-open-link");
+  var downloadLink = document.getElementById("fx43q-download-link");
   var currTitle  = document.getElementById("fx43q-curr-title");
   var rowModules = document.getElementById("fx43q-row-modules");
   var rowParts   = document.getElementById("fx43q-row-parts");
   var rowExtras  = document.getElementById("fx43q-row-extras");
 
   var current = null;
+
+  if (hasConfiguredBase) {
+    downloadLink.href = BASE + "current-html-pages.zip";
+  } else {
+    downloadLink.hidden = true;
+  }
 
   function findByHash(h) {
     if (!h) return null;

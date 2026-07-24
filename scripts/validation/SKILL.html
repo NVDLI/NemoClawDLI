@@ -21,6 +21,7 @@
     "scripts/validation/validation_report_audit.py",
     "scripts/validation/validate_layout.py",
     "scripts/validation/local_path_leak_audit.py",
+    "scripts/validation/public_infrastructure_audit.py",
     "scripts/validation/external_link_attribution_audit.py",
     "scripts/validation/sensitive_content_audit.py",
     "scripts/validation/sensitive-content-policy.json",
@@ -121,6 +122,11 @@
       "path": "local_path_leak_audit.py",
       "role": "workstation path boundary",
       "desc": "Rejects contributor home, mounted-drive, cache, runtime, absolute local file-URI paths, and contributor-local identifiers across tracked and untracked source, symlink targets, and every proposed commit; includes mutation coverage and narrow runtime allowances."
+    },
+    {
+      "path": "public_infrastructure_audit.py",
+      "role": "public infrastructure identifier boundary",
+      "desc": "Discovers every tracked and proposed text file and rejects concrete object-store buckets, AWS account identifiers, hosted-zone IDs, and generated distribution hosts without a file exemption list."
     },
     {
       "path": "sensitive_content_audit.py",
@@ -371,6 +377,7 @@
   <div class="skill-cmd"><b>Complete shared gate</b><code>python3 scripts/validation/release_gate.py --tier ship --no-write --changed-since origin/main --jobs 4</code></div>
   <div class="skill-cmd"><b>Explain selected signals</b><code>python3 scripts/validation/release_gate.py --tier ship --no-write --changed-since origin/main --list --plan-json /tmp/reacs-plan.json</code></div>
   <div class="skill-cmd"><b>Contributor-local history</b><code>python3 scripts/validation/local_path_leak_audit.py --commit-range origin/main..HEAD</code></div>
+  <div class="skill-cmd"><b>Public infrastructure identifiers</b><code>python3 scripts/validation/public_infrastructure_audit.py</code></div>
   <div class="skill-cmd"><b>Sensitive proposed history</b><code>python3 scripts/validation/sensitive_content_audit.py --commit-range origin/main..HEAD</code></div>
   <div class="skill-cmd"><b>External release follow-up</b><code>python3 scripts/validation/release_change_reminder.py --commit-range origin/main..HEAD</code></div>
   <div class="skill-cmd"><b>HTML structure + detector</b><code>python3 scripts/validation/html_structure_audit.py &amp;&amp; python3 scripts/validation/html_structure_audit.py --self-test</code></div>
@@ -422,6 +429,7 @@
     <a class="skill-link" href="validation_report_audit.py"><b>validation_report_audit.py</b><span>same-commit report reuse gate. Requires the full 40-character Git object ID and rejects abbreviated, stale, failed, degraded, dirty-tree, or wrong-scope evidence before a downstream build skips regeneration.</span></a>
     <a class="skill-link" href="validate_layout.py"><b>validate_layout.py</b><span>layout gate. Checks static links, the retired-runtime boundary, course assets, release scaffolding, and SKILL beacons.</span></a>
     <a class="skill-link" href="local_path_leak_audit.py"><b>local_path_leak_audit.py</b><span>contributor-local boundary. Rejects workstation paths and local identifiers in the current tree and every proposed commit.</span></a>
+    <a class="skill-link" href="public_infrastructure_audit.py"><b>public_infrastructure_audit.py</b><span>Public infrastructure boundary. Exhaustively discovers source files and rejects concrete storage, account, hosted-zone, and generated distribution identifiers with no path exemptions.</span></a>
     <a class="skill-link" href="sensitive_content_audit.py"><b>sensitive_content_audit.py</b><span>sensitive contribution boundary. Scans the tree, complete proposed history, and MR/PR metadata while reporting only category and location.</span></a>
     <a class="skill-link" href="sensitive-content-policy.json"><b>sensitive-content-policy.json</b><span>public fingerprint policy. Stores hashes only; private CI can add an overlay through an environment-provided file.</span></a>
     <a class="skill-link" href="release_change_reminder.py"><b>release_change_reminder.py</b><span>external release follow-up reminder. Converts changed paths into an operator checklist for authorized systems.</span></a>

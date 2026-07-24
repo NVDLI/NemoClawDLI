@@ -1,0 +1,344 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Optional browser relays for the NemoClaw DLI course.",
+  "Metadata": {
+    "License": "Apache-2.0",
+    "Copyright": "Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
+  },
+  "Parameters": {
+    "ProjectPrefix": {
+      "Type": "String",
+      "AllowedPattern": "^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$",
+      "Description": "Operator-chosen resource prefix."
+    },
+    "LambdaArtifactBucket": {
+      "Type": "String",
+      "Description": "Operator-owned bucket containing the packaged Lambda artifact."
+    },
+    "LambdaArtifactKey": {
+      "Type": "String",
+      "Description": "Object key for the packaged Lambda artifact."
+    },
+    "ModelRelaySharedSecret": {
+      "Type": "String",
+      "NoEcho": true,
+      "MinLength": 32,
+      "Description": "Random value sent only from the model CloudFront distribution to Lambda."
+    },
+    "RuntimeRelaySharedSecret": {
+      "Type": "String",
+      "NoEcho": true,
+      "MinLength": 32,
+      "Description": "Random value sent only from the runtime CloudFront distribution to Lambda."
+    },
+    "ModelUpstreamOrigin": {
+      "Type": "String",
+      "Default": "https://integrate.api.nvidia.com",
+      "AllowedValues": [
+        "https://integrate.api.nvidia.com",
+        "https://build.nvidia.com"
+      ]
+    },
+    "RuntimeHostAllowlist": {
+      "Type": "String",
+      "Default": ".brevlab.com,.apps.run.brev.nvidia.com",
+      "AllowedValues": [
+        ".brevlab.com,.apps.run.brev.nvidia.com"
+      ]
+    },
+    "CachePolicyId": {
+      "Type": "String",
+      "Description": "ID of an operator-reviewed no-cache CloudFront policy."
+    },
+    "OriginRequestPolicyId": {
+      "Type": "String",
+      "Description": "ID of an operator-reviewed all-viewer-except-host CloudFront request policy."
+    },
+    "LogRetentionDays": {
+      "Type": "Number",
+      "Default": 14,
+      "AllowedValues": [1, 3, 5, 7, 14, 30, 60, 90]
+    }
+  },
+  "Resources": {
+    "RelayRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": {"Service": ["lambda.amazonaws.com"]},
+            "Action": ["sts:AssumeRole"]
+          }]
+        },
+        "Policies": [{
+          "PolicyName": "write-bounded-relay-logs",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+              "Resource": [
+                {"Fn::Sub": "${ModelLogGroup.Arn}:*"},
+                {"Fn::Sub": "${RuntimeLogGroup.Arn}:*"}
+              ]
+            }]
+          }
+        }]
+      }
+    },
+    "ModelLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {"Fn::Sub": "/aws/lambda/${ProjectPrefix}-model"},
+        "RetentionInDays": {"Ref": "LogRetentionDays"}
+      }
+    },
+    "RuntimeLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {"Fn::Sub": "/aws/lambda/${ProjectPrefix}-runtime"},
+        "RetentionInDays": {"Ref": "LogRetentionDays"}
+      }
+    },
+    "ModelFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": ["ModelLogGroup"],
+      "Properties": {
+        "FunctionName": {"Fn::Sub": "${ProjectPrefix}-model"},
+        "Description": "Streaming browser relay pinned to one approved model origin.",
+        "Runtime": "nodejs20.x",
+        "Handler": "handler.handler",
+        "MemorySize": 512,
+        "Timeout": 300,
+        "Role": {"Fn::GetAtt": ["RelayRole", "Arn"]},
+        "Code": {
+          "S3Bucket": {"Ref": "LambdaArtifactBucket"},
+          "S3Key": {"Ref": "LambdaArtifactKey"}
+        },
+        "Environment": {
+          "Variables": {
+            "PROXY_MODE": "single-host",
+            "UPSTREAM_ORIGIN": {"Ref": "ModelUpstreamOrigin"},
+            "UPSTREAM_HOST_ALLOWLIST": "",
+            "CORS_ALLOWED_HEADERS": "Authorization, Content-Type, Accept, X-BILLING-INVOKE-ORIGIN",
+            "CLOUDFRONT_SHARED_SECRET": {"Ref": "ModelRelaySharedSecret"}
+          }
+        },
+        "LoggingConfig": {"LogFormat": "JSON"}
+      }
+    },
+    "RuntimeFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": ["RuntimeLogGroup"],
+      "Properties": {
+        "FunctionName": {"Fn::Sub": "${ProjectPrefix}-runtime"},
+        "Description": "Streaming browser relay constrained to approved launchable hosts.",
+        "Runtime": "nodejs20.x",
+        "Handler": "handler.handler",
+        "MemorySize": 512,
+        "Timeout": 300,
+        "Role": {"Fn::GetAtt": ["RelayRole", "Arn"]},
+        "Code": {
+          "S3Bucket": {"Ref": "LambdaArtifactBucket"},
+          "S3Key": {"Ref": "LambdaArtifactKey"}
+        },
+        "Environment": {
+          "Variables": {
+            "PROXY_MODE": "multihost-allowlist",
+            "UPSTREAM_ORIGIN": "",
+            "UPSTREAM_HOST_ALLOWLIST": {"Ref": "RuntimeHostAllowlist"},
+            "CORS_ALLOWED_HEADERS": "Authorization, Content-Type, x-openclaw-session-key, Accept, CF-Access-Jwt-Assertion, X-OpenClaw-Access-Provider, X-OpenClaw-Access-Session",
+            "CLOUDFRONT_SHARED_SECRET": {"Ref": "RuntimeRelaySharedSecret"}
+          }
+        },
+        "LoggingConfig": {"LogFormat": "JSON"}
+      }
+    },
+    "ModelFunctionUrl": {
+      "Type": "AWS::Lambda::Url",
+      "Properties": {
+        "TargetFunctionArn": {"Ref": "ModelFunction"},
+        "AuthType": "NONE",
+        "InvokeMode": "RESPONSE_STREAM"
+      }
+    },
+    "RuntimeFunctionUrl": {
+      "Type": "AWS::Lambda::Url",
+      "Properties": {
+        "TargetFunctionArn": {"Ref": "RuntimeFunction"},
+        "AuthType": "NONE",
+        "InvokeMode": "RESPONSE_STREAM"
+      }
+    },
+    "ModelFunctionUrlPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {"Ref": "ModelFunction"},
+        "Action": "lambda:InvokeFunctionUrl",
+        "Principal": "*",
+        "FunctionUrlAuthType": "NONE"
+      }
+    },
+    "RuntimeFunctionUrlPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {"Ref": "RuntimeFunction"},
+        "Action": "lambda:InvokeFunctionUrl",
+        "Principal": "*",
+        "FunctionUrlAuthType": "NONE"
+      }
+    },
+    "ModelFunctionInvokePermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {"Ref": "ModelFunction"},
+        "Action": "lambda:InvokeFunction",
+        "Principal": "*",
+        "InvokedViaFunctionUrl": true
+      }
+    },
+    "RuntimeFunctionInvokePermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {"Ref": "RuntimeFunction"},
+        "Action": "lambda:InvokeFunction",
+        "Principal": "*",
+        "InvokedViaFunctionUrl": true
+      }
+    },
+    "RuntimeWebSocketRequest": {
+      "Type": "AWS::CloudFront::Function",
+      "Properties": {
+        "Name": {"Fn::Sub": "${ProjectPrefix}-runtime-websocket"},
+        "AutoPublish": true,
+        "FunctionConfig": {
+          "Comment": "Validate and route launchable WebSocket upgrades.",
+          "Runtime": "cloudfront-js-2.0"
+        },
+        "FunctionCode": "__OPENCLAW_WEBSOCKET_FUNCTION_CODE__"
+      }
+    },
+    "ModelDistribution": {
+      "Type": "AWS::CloudFront::Distribution",
+      "Properties": {
+        "DistributionConfig": {
+          "Enabled": true,
+          "HttpVersion": "http2and3",
+          "IPV6Enabled": true,
+          "PriceClass": "PriceClass_100",
+          "Origins": [{
+            "Id": "model-lambda-url",
+            "DomainName": {
+              "Fn::Select": [0, {"Fn::Split": ["/", {"Fn::Select": [1, {"Fn::Split": ["//", {"Fn::GetAtt": ["ModelFunctionUrl", "FunctionUrl"]}]}]}]}]
+            },
+            "CustomOriginConfig": {
+              "OriginProtocolPolicy": "https-only",
+              "OriginSSLProtocols": ["TLSv1.2"]
+            },
+            "OriginCustomHeaders": [{
+              "HeaderName": "x-dli-cors-proxy-secret",
+              "HeaderValue": {"Ref": "ModelRelaySharedSecret"}
+            }]
+          }],
+          "DefaultCacheBehavior": {
+            "TargetOriginId": "model-lambda-url",
+            "ViewerProtocolPolicy": "redirect-to-https",
+            "AllowedMethods": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
+            "CachedMethods": ["GET", "HEAD", "OPTIONS"],
+            "Compress": false,
+            "CachePolicyId": {"Ref": "CachePolicyId"},
+            "OriginRequestPolicyId": {"Ref": "OriginRequestPolicyId"}
+          },
+          "Restrictions": {"GeoRestriction": {"RestrictionType": "none"}},
+          "ViewerCertificate": {"CloudFrontDefaultCertificate": true}
+        }
+      }
+    },
+    "RuntimeDistribution": {
+      "Type": "AWS::CloudFront::Distribution",
+      "Properties": {
+        "DistributionConfig": {
+          "Enabled": true,
+          "HttpVersion": "http2and3",
+          "IPV6Enabled": true,
+          "PriceClass": "PriceClass_100",
+          "Origins": [
+            {
+              "Id": "runtime-lambda-url",
+              "DomainName": {
+                "Fn::Select": [0, {"Fn::Split": ["/", {"Fn::Select": [1, {"Fn::Split": ["//", {"Fn::GetAtt": ["RuntimeFunctionUrl", "FunctionUrl"]}]}]}]}]
+              },
+              "CustomOriginConfig": {
+                "OriginProtocolPolicy": "https-only",
+                "OriginSSLProtocols": ["TLSv1.2"]
+              },
+              "OriginCustomHeaders": [{
+                "HeaderName": "x-dli-cors-proxy-secret",
+                "HeaderValue": {"Ref": "RuntimeRelaySharedSecret"}
+              }]
+            },
+            {
+              "Id": "runtime-websocket-origin",
+              "DomainName": "brevlab.com",
+              "CustomOriginConfig": {
+                "OriginProtocolPolicy": "https-only",
+                "OriginSSLProtocols": ["TLSv1.2"]
+              }
+            }
+          ],
+          "DefaultCacheBehavior": {
+            "TargetOriginId": "runtime-lambda-url",
+            "ViewerProtocolPolicy": "redirect-to-https",
+            "AllowedMethods": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
+            "CachedMethods": ["GET", "HEAD", "OPTIONS"],
+            "Compress": false,
+            "CachePolicyId": {"Ref": "CachePolicyId"},
+            "OriginRequestPolicyId": {"Ref": "OriginRequestPolicyId"}
+          },
+          "CacheBehaviors": [
+            {
+              "PathPattern": "/https/*/cli/gateway",
+              "TargetOriginId": "runtime-websocket-origin",
+              "ViewerProtocolPolicy": "https-only",
+              "AllowedMethods": ["GET", "HEAD", "OPTIONS"],
+              "CachedMethods": ["GET", "HEAD", "OPTIONS"],
+              "Compress": false,
+              "CachePolicyId": {"Ref": "CachePolicyId"},
+              "OriginRequestPolicyId": {"Ref": "OriginRequestPolicyId"},
+              "FunctionAssociations": [{
+                "EventType": "viewer-request",
+                "FunctionARN": {"Fn::GetAtt": ["RuntimeWebSocketRequest", "FunctionARN"]}
+              }]
+            },
+            {
+              "PathPattern": "/https/*/ws/terminal",
+              "TargetOriginId": "runtime-websocket-origin",
+              "ViewerProtocolPolicy": "https-only",
+              "AllowedMethods": ["GET", "HEAD", "OPTIONS"],
+              "CachedMethods": ["GET", "HEAD", "OPTIONS"],
+              "Compress": false,
+              "CachePolicyId": {"Ref": "CachePolicyId"},
+              "OriginRequestPolicyId": {"Ref": "OriginRequestPolicyId"},
+              "FunctionAssociations": [{
+                "EventType": "viewer-request",
+                "FunctionARN": {"Fn::GetAtt": ["RuntimeWebSocketRequest", "FunctionARN"]}
+              }]
+            }
+          ],
+          "Restrictions": {"GeoRestriction": {"RestrictionType": "none"}},
+          "ViewerCertificate": {"CloudFrontDefaultCertificate": true}
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ModelRelayUrl": {
+      "Value": {"Fn::Sub": "https://${ModelDistribution.DomainName}"}
+    },
+    "RuntimeRelayUrl": {
+      "Value": {"Fn::Sub": "https://${RuntimeDistribution.DomainName}"}
+    }
+  }
+}

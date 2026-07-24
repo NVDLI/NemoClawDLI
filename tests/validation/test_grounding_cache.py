@@ -50,6 +50,12 @@ class GroundingCacheTests(unittest.TestCase):
         self.assertFalse(second["cached"])
         self.assertTrue(second["reference"]["mat_grounded"])
 
+    def test_object_store_hosts_are_not_citations(self) -> None:
+        suffix = "amazonaws" + ".com/key"
+        self.assertFalse(grounding._is_citation("https://bucket-name.s3." + suffix))
+        self.assertFalse(grounding._is_citation("https://bucket-name.s3.us-west-2." + suffix))
+        self.assertTrue(grounding._is_citation("https://docs.example.org/topic"))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -584,6 +584,9 @@ class PublisherBoundaryTests(unittest.TestCase):
             "principal_arn": f"arn:aws:sts::{account_id}:assumed-role/DLICoursePublisher/",
             "aws_executable": str(aws), "aws_executable_sha256": aws_digest,
             "aws_config_file": "/etc/hosts", "aws_credentials_file": "/etc/hosts",
+            "bucket_name": "example-course-bucket",
+            "key_prefix": "course-static",
+            "public_base_url": "https://course-cdn.example",
             "cloudfront_distribution_id": "E123456789",
         }))
         return publication, plan, config
@@ -595,6 +598,18 @@ class PublisherBoundaryTests(unittest.TestCase):
             (publication / "extra.js").write_text("unexpected")
             with self.assertRaisesRegex(ValueError, "do not match"):
                 devbox_cdn_publisher.validate(publication, plan, config)
+
+    def test_destination_identifiers_must_come_from_root_owned_config(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); publication, plan, config = self._fixture(root)
+            document = json.loads(config.read_text())
+            for field in ("bucket_name", "key_prefix", "public_base_url"):
+                mutated = dict(document)
+                mutated.pop(field)
+                config.write_text(json.dumps(mutated))
+                with self.assertRaisesRegex(ValueError, "destination configuration"):
+                    devbox_cdn_publisher.validate(publication, plan, config)
+            config.write_text(json.dumps(document))
 
     def test_stable_ownership_rejects_an_unreviewed_course(self) -> None:
         primary = prepare_cdn_publication.PRIMARY_COURSE
@@ -632,7 +647,7 @@ class PublisherBoundaryTests(unittest.TestCase):
             self.assertEqual("/etc/hosts", identity_env["AWS_CONFIG_FILE"])
             self.assertEqual("/usr/bin/true", upload_command[0])
             self.assertEqual(
-                "s3://cdn.dli.learn.nvidia.com/course-static/" + "a" * 40 + "/",
+                "s3" + "://" + "example-course-bucket/course-static/" + "a" * 40 + "/",
                 upload_command[-1],
             )
             verify.assert_called_once()
@@ -655,7 +670,9 @@ class PublisherBoundaryTests(unittest.TestCase):
         ]
         self.assertEqual(
             {"course-static/a": 1, "course-static/b": 2},
-            devbox_cdn_publisher._list_prefix("/usr/bin/aws", {}, "course-static/"),
+            devbox_cdn_publisher._list_prefix(
+                "/usr/bin/aws", {}, "example-course-bucket", "course-static/",
+            ),
         )
         self.assertIn("page-2", aws_json.call_args_list[1].args)
 

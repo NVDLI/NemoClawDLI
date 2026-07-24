@@ -8,10 +8,10 @@ The student-facing edX page is a single HtmlBlock that iframes module
 pages out of S3. This script keeps the S3 prefix in sync with whatever
 the latest `scripts/build/bundle_standalone.py` run produced.
 
-Pass the local source directory with --src; the S3 sub-prefix is derived
+Pass the local source directory with --src; the object-store sub-prefix is derived
 from the directory name by stripping `_standalone`:
 
-  --src web/nemoclaw_standalone  → s3://dli-lms/assets/<course>/nemoclaw/
+  --src web/nemoclaw_standalone  → s3://<bucket>/assets/<course>/nemoclaw/
 
 Override with --prefix when needed.
 
@@ -30,9 +30,8 @@ Usage:
   # Skip the zip:
   python3 scripts/build/publish_edx.py --no-zip
 
-Credentials come from the standard AWS chain (env, ~/.aws/credentials,
-instance profile). The dev box this script runs from has a
-`content-dev` IAM user with write access to s3://dli-lms/assets/.
+Credentials come from the standard AWS chain. Supply the destination through
+`DLI_PUBLISH_BUCKET`, `DLI_PUBLIC_ASSET_BASE_URL`, and `DLI_COURSE_CODE`.
 """
 from __future__ import annotations
 
@@ -49,13 +48,11 @@ for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
         sys.path.insert(0, str(_p / "scripts")); break
 from _bootstrap import add_script_paths, find_repo_root
 
-BUCKET           = "dli-lms"
+BUCKET           = os.environ.get("DLI_PUBLISH_BUCKET", "").strip()
 # The course code comes from the environment; never hardcode one here.
-COURSE_CODE      = os.environ.get("DLI_COURSE_CODE")
-if not COURSE_CODE:
-    sys.exit("set DLI_COURSE_CODE before publishing")
-KEY_PREFIX_ROOT  = f"assets/{COURSE_CODE}/"
-PUBLIC_URL       = f"https://{BUCKET}.s3.us-east-1.amazonaws.com/"
+COURSE_CODE      = os.environ.get("DLI_COURSE_CODE", "").strip()
+KEY_PREFIX_ROOT  = f"assets/{COURSE_CODE}/" if COURSE_CODE else ""
+PUBLIC_URL       = os.environ.get("DLI_PUBLIC_ASSET_BASE_URL", "").strip().rstrip("/") + "/"
 
 DEFAULT_SRC = Path(__file__).resolve().parent.parent / "web" / "nemoclaw_standalone"
 ZIP_NAME    = "current-html-pages.zip"
@@ -137,6 +134,9 @@ def main() -> int:
     ap.add_argument("--no-zip", action="store_true",
                     help="Skip building & uploading current-html-pages.zip")
     args = ap.parse_args()
+    if not BUCKET or not COURSE_CODE or not PUBLIC_URL.strip("/"):
+        sys.stderr.write("set DLI_PUBLISH_BUCKET, DLI_PUBLIC_ASSET_BASE_URL, and DLI_COURSE_CODE before publishing\n")
+        return 1
 
     src = args.src
     if not src.is_absolute():

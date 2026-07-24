@@ -7,8 +7,10 @@ reviewed public changes for additional validation and internal deployment. This 
 NemoClaw product, its launchable, and the product runtime.
 
 The release tree packages authored browser content with build and validation tools. Browser work
-belongs in `web/`; repository tooling belongs in `scripts/`. The repository does not own a service
-stack, lab image, or container topology.
+belongs in `web/`; repository tooling belongs in `scripts/`. Optional relay source under
+`scripts/cors-proxy/deployable/` must stay parameterized and pass its projection, infrastructure,
+and Node checks. The repository does not own an operated relay, lab image, or container
+topology.
 
 ## Two Contribution Paths
 

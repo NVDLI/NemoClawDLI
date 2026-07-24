@@ -13,6 +13,7 @@
   "product_scope": {
     "production_runtime": "static-browser-course",
     "canonical_source": "web/nemoclaw",
+    "optional_middleware_source": "scripts/cors-proxy/deployable",
     "locale_overlays": [
       "i18n/pt",
       "i18n/es"
@@ -185,6 +186,8 @@
         "python3 scripts/compliance/third_party_inventory_audit.py",
         "python3 scripts/validation/local_path_leak_audit.py",
         "python3 scripts/validation/container_boundary_audit.py",
+        "python3 scripts/security/audit_cors_proxy_projection.py",
+        "python3 scripts/validation/public_infrastructure_audit.py",
         "python3 scripts/security/audit_dependency_locks.py",
         "python3 scripts/security/audit_sbom_policy.py --self-test"
       ],

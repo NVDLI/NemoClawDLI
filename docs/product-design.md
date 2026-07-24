@@ -41,15 +41,17 @@ The supported release contains:
 - a static Pages tree containing HTML, JavaScript, CSS, images, and course data.
 - a deterministic tagged archive with a release manifest and checksums.
 - material-tool Python and learner-delivered browser-package SBOMs.
+- optional, history-free relay source whose deployment values and authority remain external.
 - versioned design, architecture, source-governance, and test evidence.
 
 The production course is a static browser application. It does not deploy a repository-operated API,
 database, identity service, or learner-data store.
 
-Contributors run integration checks with host Python, Node.js, and Chromium. The repository does
-not distribute a service stack, workspace image, or container topology. The source-backed graph in
-[`security-architecture.json`](security-architecture.json) covers only the static course and its
-release supply chain.
+Contributors run integration checks with host Python, Node.js, and Chromium. The repository
+distributes optional relay source but no configured or running service, workspace image, or
+container topology. The source-backed graph in
+[`security-architecture.json`](security-architecture.json) covers the static course and release
+supply chain; operated relay instances remain external runtime context.
 
 ## Deployment model
 
@@ -82,6 +84,7 @@ mode applies only to the default endpoint.
 | Model service | Process model requests for exercises | External service with its own processing controls |
 | NemoClaw runtime | Hold agent sessions, workspace state, tools, and scheduled work | External or co-located runtime |
 | Cross-origin relays | Adapt approved browser requests where direct headers or iframe policy require it | Separately operated deployment dependency |
+| Optional relay source | Provide a parameterized reference deployment with request filtering and transport tests | Repository source; excluded from the static learner artifact and from live-control claims |
 | Vendored browser packages | Provide syntax, editing, Markdown, model-client, tool, schema, and agent-graph code from the static course origin | Versioned release artifact |
 | Validation system | Reject stale, unsafe, ungrounded, or unreproducible release states | Required CI and local feedback |
 

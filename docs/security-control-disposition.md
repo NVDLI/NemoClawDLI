@@ -72,7 +72,7 @@ Public evidence stays aggregated by control theme. Do not version private review
 | Artifact integrity | Partially verified | Byte continuity is verified; workflow-defined provenance has no live evidence, and the ordinary builder is not a trusted builder. |
 | Static host and browser | Shared verification required | Static code checks are verified; response headers, WAF, cache policy, and availability are host controls. |
 | Browser-held credentials | Architecture decision required | JavaScript-readable credentials are inherent to direct browser calls; a broker or proof-of-possession changes other systems. |
-| Relay, model, launchable, and runtime | External evidence required | The repository tests client contracts but cannot attest deployed service authorization, isolation, quotas, or retention. |
+| Relay, model, launchable, and runtime | External evidence required | Relay source controls are tested, but the repository cannot attest deployed authorization, isolation, quotas, monitoring, or retention. |
 | Assessment fidelity | Not verified and release-blocking | Generated scope, ownership, and statuses require evidence reconciliation; review alone cannot close them. |
 
 ## Source and contribution controls
@@ -89,6 +89,9 @@ Public evidence stays aggregated by control theme. Do not version private review
 
 - Verified: exact dependency locks, dependency inventories, bounded artifacts, safe extraction,
   complete SHA-256 inventory, single-artifact promotion, and post-deploy byte comparison.
+- Verified for source only: the optional relay projection is history-free, hash-bound, and
+  Apache-2.0 marked. It has no package dependencies. Node and mutation tests cover
+  its parameterized source. These checks do not attest a deployment.
 - Workflow-defined, not live-verified: dependency-executing validation has no signing authority.
   Two clean jobs assemble and compare without package installation. The no-checkout signer receives
   only their manifest; the deploy job runs only a pinned action. Their identities remain separate.

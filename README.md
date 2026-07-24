@@ -99,8 +99,11 @@ engineering approach, not a certification, product, or substitute for approval.
 | [`docs/`](docs/SKILL.html) | Design, test, deployment, security, and release contracts |
 | [`SKILL.html`](SKILL.html) | Repository map for people and agents |
 
-The repository ships the static course and its validation tools. It does not ship a lab operating
-system, service stack, or base container. The
+The repository ships the static course and its validation tools. It also publishes optional,
+parameterized relay source under [`scripts/cors-proxy/deployable/`](scripts/cors-proxy/deployable/SKILL.html);
+that source is not part of the learner artifact and carries no account, state, DNS, credential, or
+deployed-endpoint values. The repository does not ship a lab operating system, running service, or
+base container. The
 [`browser dependency inventory`](web/nemoclaw/dependencies.html) identifies code learners receive.
 [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) and
 [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) cover software and material relationships.

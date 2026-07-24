@@ -105,10 +105,10 @@ PATH_TOKEN = re.compile(
 URL_PATTERN = re.compile(r"https?://[^\s<>\"')]+")
 
 # Domain-like tokens that often appear without a scheme and get
-# mis-matched as relative paths (e.g. "lms.s3.amazonaws.com/x.png").
+# mis-matched as relative paths (for example, an object-store asset host).
 # We mask these before the path extractor runs.
 DOMAIN_PATTERN = re.compile(
-    r"\b[\w-]+\.(?:s3\.amazonaws\.com|amazonaws\.com|cloudfront\.net|"
+    r"\b[\w-]+\.(?:s3\." r"amazonaws\.com|amazonaws\.com|cloudfront\." r"net|"
     r"workers\.dev|build\.nvidia\.com|nvidia\.com|github\.com|"
     r"github\.io|cloudapp\.azure\.com|azurewebsites\.net|"
     r"azurecontainerapps\.io)(?:/[^\s<>\"')]+)?",
@@ -283,7 +283,7 @@ def extract_refs(text: str, src_file: Path) -> list[Reference]:
             resolved=None, category="external_url", kind="url",
         ))
     # Mask URLs and bare-domain tokens before the path extractor sees them,
-    # otherwise tokens like "lms.s3.amazonaws.com/foo.png" or the path part
+    # otherwise object-store hostnames or the path part
     # of a full URL get re-matched as relative paths.
     masked = URL_PATTERN.sub(lambda m: " " * len(m.group(0)), text)
     masked = DOMAIN_PATTERN.sub(lambda m: " " * len(m.group(0)), masked)

@@ -42,6 +42,11 @@ SUMMARIES = {
     "web/nemoclaw/vendor": "Pinned same-origin browser dependencies, generated metadata, and license evidence.",
     "web/nemoclaw/vendor/licenses": "Exact license texts shipped for pinned browser dependencies.",
     "scripts/ci": "Fixed-vocabulary internal GitLab operations for exact artifact retrieval, secret-isolated live review, language-selective publication planning, and the root-installed devbox publisher.",
+    "scripts/cors-proxy/deployable": "History-free, parameterized source for the optional Lambda and CloudFront browser relays. The course does not deploy or operate this stack.",
+    "scripts/cors-proxy/deployable/scripts": "Packaging and operator-run smoke checks for the optional relay stack.",
+    "scripts/cors-proxy/deployable/src": "Dependency-free Lambda and CloudFront request-routing implementation.",
+    "scripts/cors-proxy/deployable/infrastructure": "Generic operator-parameterized infrastructure template for both relay endpoints.",
+    "scripts/cors-proxy/deployable/test": "Node unit tests for request filtering, provider binding, redirects, CORS, streaming, and WebSocket routing.",
     "web/shared": "Pinned browser libraries and course-authored interface primitives shared without creating sibling-course dependencies.",
     "web/shared/vendor": "Byte-identical publisher browser assets with version, license, digest, and reviewed-copy evidence.",
     "web/shared/vendor/licenses": "Complete upstream license texts for the shared browser assets.",
@@ -57,6 +62,16 @@ GUIDANCE = {
     </ol>
     <p><a href="../../docs/pages_deploy.md">Open the exact <code>glab</code> branch/language commands and runner provisioning steps.</a></p>
     <p>These operations are internal GitLab capabilities. Public GitHub receives the source and ordinary validation, but no trigger, secret, protected environment, devbox runner, or AWS authority.</p>
+  </section>''',
+    "scripts/cors-proxy/deployable": '''
+  <section aria-labelledby="projection-flow"><h2 id="projection-flow">Verify before use</h2>
+    <ol>
+      <li><strong>Review provenance:</strong> <a href="PROJECTION.json">PROJECTION.json</a> binds every projected file to its source revision and SHA-256.</li>
+      <li><strong>Run source checks:</strong> <code>python3 scripts/security/audit_cors_proxy_projection.py</code> and <code>node --test scripts/cors-proxy/deployable/test/*.test.mjs</code>.</li>
+      <li><strong>Supply your environment:</strong> copy the backend and variable examples locally. Never commit state, account, DNS, certificate, credential, or deployed endpoint values.</li>
+      <li><strong>Test an approved deployment:</strong> use the smoke scripts with URLs produced by that deployment. The repository does not carry deployment authority.</li>
+    </ol>
+    <p><a href="README.md">Open the deployment, test, and security-boundary instructions.</a></p>
   </section>''',
 }
 

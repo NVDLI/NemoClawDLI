@@ -14,6 +14,7 @@
   "summary": "Security checks for the course browser runtime, Python dependency declarations, fingerprinted exception registry, and full SCA/SBOM workflow. Agents start here for iframe relay checks, dependency vulnerability floors, exception validation, and installed-environment scans.",
   "related": [
     "scripts/security/audit_iframe_proxy_opt_in.py",
+    "scripts/security/audit_cors_proxy_projection.py",
     "scripts/security/iframe_proxy_worker_findings.md",
     "scripts/security/audit_python_dependencies.py",
     "scripts/security/audit_dependency_locks.py",
@@ -54,6 +55,11 @@
       "path": "audit_iframe_proxy_opt_in.py",
       "role": "iframe relay contract audit",
       "desc": "Checks one-time model endpoint selection, explicit iframe mode, safe credential routing, billing headers, and hosted relay contracts."
+    },
+    {
+      "path": "audit_cors_proxy_projection.py",
+      "role": "relay source projection audit",
+      "desc": "Exhaustively binds the optional deployment source to its manifest and rejects history, local state, operator infrastructure values, missing licenses, and undeclared dependencies."
     },
     {
       "path": "iframe_proxy_worker_findings.md",
@@ -144,6 +150,7 @@
   <h2>Executable checks</h2>
   <div class="skill-cmds">
     <div class="skill-cmd"><b>Endpoint + hosted relay contract</b><code>python3 scripts/security/audit_iframe_proxy_opt_in.py --self-test &amp;&amp; python3 scripts/security/audit_iframe_proxy_opt_in.py</code></div>
+    <div class="skill-cmd"><b>Relay source projection</b><code>python3 scripts/security/audit_cors_proxy_projection.py</code></div>
     <div class="skill-cmd"><b>Live hosted relays</b><code>python3 scripts/security/audit_iframe_proxy_opt_in.py --live</code></div>
     <div class="skill-cmd"><b>Dependency vulnerability audit</b><code>python3 scripts/security/audit_python_dependencies.py</code></div>
     <div class="skill-cmd"><b>Security exception audit</b><code>python3 scripts/security/audit_vulnerability_waivers.py</code></div>
@@ -162,6 +169,7 @@
   <h2>Linkage map</h2>
   <div class="skill-list">
     <a class="skill-link" href="audit_iframe_proxy_opt_in.py"><b>audit_iframe_proxy_opt_in.py</b><span>Model endpoint and iframe relay audit. Checks explicit persistence, credential destination warnings, default-only iframe proxying, billing headers, and hosted endpoint contracts.</span></a>
+    <a class="skill-link" href="audit_cors_proxy_projection.py"><b>audit_cors_proxy_projection.py</b><span>Relay source projection audit. Verifies manifest membership and hashes, Apache-2.0 headers, dependency-free runtime source, parameterized infrastructure, and the absence of operator environment identifiers.</span></a>
     <a class="skill-link" href="iframe_proxy_worker_findings.md"><b>iframe_proxy_worker_findings.md</b><span>hosted relay reference findings. Separates repository client-contract fixtures from the externally maintained deployment.</span></a>
     <a class="skill-link" href="audit_python_dependencies.py"><b>audit_python_dependencies.py</b><span>dependency vulnerability floor audit. Checks tracked Python declarations against PyPI/OSV metadata, exact workspace pins, and retired direct dependencies.</span></a>
     <a class="skill-link" href="audit_vulnerability_waivers.py"><b>audit_vulnerability_waivers.py</b><span>security exception audit. Validates opaque fingerprints, ownership, executable controls, scope, and expiry.</span></a>

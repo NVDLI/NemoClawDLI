@@ -175,11 +175,12 @@
       ],
       "state": "external-evidence-required",
       "owner": "relay operators",
-      "current_control": "The course selects reviewed routes and sends only route-specific authentication, but repository fixtures do not attest the hosted relay.",
+      "current_control": "The course selects reviewed routes and sends only route-specific authentication. The optional source projection is hash-bound, parameterized, and mutation-tested; those source checks do not attest an operated relay.",
       "evidence": [
         "scripts/security/audit_iframe_proxy_opt_in.py",
+        "scripts/security/audit_cors_proxy_projection.py",
         "scripts/validation/openclaw_connection_audit.mjs",
-        "scripts/cors-proxy"
+        "scripts/cors-proxy/deployable/PROJECTION.json"
       ],
       "future_candidate": "NO LIVE EVIDENCE. The relay operator would need to demonstrate destination and method allowlists, schema and safe-deserialization rules, body and WebSocket-frame limits, object authorization, identity quotas, timeouts, rate limits, and its mTLS decision.",
       "trigger": "Before a relay is approved for production and after any route or authentication change.",

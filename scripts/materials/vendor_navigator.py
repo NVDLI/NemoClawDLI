@@ -9,13 +9,8 @@ The navigator was originally an edX HtmlBlock fragment (no <html>/<body>
 wrapper). This script wraps it with a minimal page shell so it works as
 a direct URL anyone can open in a browser, no LMS required.
 
-After running:
-
-  https://dli-lms.s3.us-east-1.amazonaws.com/assets/<course>/navigator.html
-  https://dli-lms.s3.us-east-1.amazonaws.com/assets/<course>/index.html
-
-both serve the navigator standalone (index.html so the natural bucket
-prefix URL resolves; navigator.html for an explicit name).
+After running, the configured public asset base serves `navigator.html`
+and `index.html` for the selected course prefix.
 
 Usage:
 
@@ -35,11 +30,10 @@ for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
         sys.path.insert(0, str(_p / "scripts")); break
 from _bootstrap import add_script_paths, find_repo_root
 
-BUCKET = "dli-lms"
-COURSE_CODE = os.environ.get("DLI_COURSE_CODE")
-if not COURSE_CODE:
-    sys.exit("set DLI_COURSE_CODE before vendoring")
-PREFIX = f"assets/{COURSE_CODE}/"   # course code is wrapper-injected, never hardcoded
+BUCKET = os.environ.get("DLI_PUBLISH_BUCKET", "").strip()
+COURSE_CODE = os.environ.get("DLI_COURSE_CODE", "").strip()
+PUBLIC_BASE = os.environ.get("DLI_PUBLIC_ASSET_BASE_URL", "").strip().rstrip("/")
+PREFIX = f"assets/{COURSE_CODE}/" if COURSE_CODE else ""
 
 HERE = Path(__file__).resolve()
 ROOT = find_repo_root(HERE)
@@ -82,7 +76,7 @@ HTML_SHELL_TAIL = """
 FRAGMENT_MARKER = "<!-- ─── edX HtmlBlock"
 
 
-def build() -> str:
+def build(asset_base: str) -> str:
     if not SRC.is_file():
         sys.stderr.write(f"missing source: {SRC}\n")
         sys.exit(1)
@@ -97,7 +91,8 @@ def build() -> str:
     elif idx < 0:
         sys.stderr.write(f"ERROR: marker not found in {SRC.name}\n")
         sys.exit(1)
-    return HTML_SHELL_HEAD + fragment + HTML_SHELL_TAIL
+    normalized = asset_base.rstrip("/") + "/"
+    return HTML_SHELL_HEAD + fragment.replace("{{COURSE_ASSET_BASE_URL}}", normalized) + HTML_SHELL_TAIL
 
 
 def upload(local: Path, key: str, *, dry_run: bool) -> None:
@@ -123,8 +118,15 @@ def main() -> int:
     ap.add_argument("--local", action="store_true",
                     help="Build the local file only; skip S3 entirely")
     args = ap.parse_args()
+    if not PUBLIC_BASE:
+        sys.stderr.write("set DLI_PUBLIC_ASSET_BASE_URL before building the navigator\n")
+        return 1
+    if not args.local and (not BUCKET or not COURSE_CODE):
+        sys.stderr.write("set DLI_PUBLISH_BUCKET and DLI_COURSE_CODE before uploading\n")
+        return 1
 
-    html = build()
+    asset_base = f"{PUBLIC_BASE}/assets/{COURSE_CODE}/nemoclaw" if COURSE_CODE else PUBLIC_BASE
+    html = build(asset_base)
     OUT.write_text(html, encoding="utf-8")
     size_kb = len(html.encode("utf-8")) / 1024
     print(f"built {OUT.relative_to(HERE.parent)} ({size_kb:.1f} KB)")
@@ -135,7 +137,7 @@ def main() -> int:
     upload(OUT, PREFIX + "navigator.html", dry_run=args.dry_run)
     upload(OUT, PREFIX + "index.html",     dry_run=args.dry_run)
 
-    base = S3_STATIC_BASE.format(BUCKET=BUCKET, PREFIX=PREFIX)
+    base = f"{PUBLIC_BASE}/{PREFIX}"
     print()
     print(f"Live:")
     print(f"  {base}navigator.html")
