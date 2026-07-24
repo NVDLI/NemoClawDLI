@@ -106,6 +106,34 @@ class CodeqlSarifAuditTests(unittest.TestCase):
     def test_reviewed_vendor_result_passes(self) -> None:
         self.assertEqual([], self.findings(self.sarif(self.vendor_result)))
 
+    def test_upload_only_fingerprint_metadata_does_not_change_identity(self) -> None:
+        post_processed = json.loads(json.dumps(self.vendor_result))
+        post_processed["partialFingerprints"]["githubUploadFingerprint"] = "runner-only"
+        self.assertEqual(
+            audit.result_fingerprint(self.vendor_result),
+            audit.result_fingerprint(post_processed),
+        )
+        self.assertEqual([], self.findings(self.sarif(post_processed)))
+
+    def test_end_range_normalization_does_not_change_identity(self) -> None:
+        normalized = json.loads(json.dumps(self.vendor_result))
+        normalized["locations"][0]["physicalLocation"]["region"]["endColumn"] = 99
+        self.assertEqual(
+            audit.result_fingerprint(self.vendor_result),
+            audit.result_fingerprint(normalized),
+        )
+        self.assertEqual([], self.findings(self.sarif(normalized)))
+
+    def test_changed_codeql_line_hash_is_rejected(self) -> None:
+        changed = json.loads(json.dumps(self.vendor_result))
+        changed["partialFingerprints"]["primaryLocationLineHash"] = "changed-line:1"
+        self.assert_rejected("unreviewed vendor finding", sarif=self.sarif(changed))
+
+    def test_missing_codeql_line_hash_is_rejected(self) -> None:
+        changed = json.loads(json.dumps(self.vendor_result))
+        changed["partialFingerprints"].clear()
+        self.assert_rejected("primaryLocationLineHash", sarif=self.sarif(changed))
+
     def test_zero_results_passes_without_weakening_policy_validation(self) -> None:
         self.assertEqual([], self.findings(self.sarif()))
 

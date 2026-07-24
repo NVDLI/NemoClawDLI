@@ -76,14 +76,17 @@ def _canonical_location(result: dict[str, Any]) -> dict[str, Any]:
 
 
 def result_fingerprint(result: dict[str, Any]) -> str:
-    """Return an opaque identity bound to the rule, location, and tool fingerprint."""
+    """Return an identity stable across CodeQL upload and download processing."""
     partial = result.get("partialFingerprints")
     if not isinstance(partial, dict):
         partial = {}
+    location = _canonical_location(result)
     identity = {
         "rule": result.get("ruleId"),
-        "location": _canonical_location(result),
-        "partialFingerprints": {key: partial[key] for key in sorted(partial)},
+        "artifact": location.get("uri"),
+        "startLine": location.get("startLine"),
+        "startColumn": location.get("startColumn"),
+        "primaryLocationLineHash": partial.get("primaryLocationLineHash"),
     }
     payload = json.dumps(identity, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
@@ -259,6 +262,16 @@ def _sarif_results(document: dict[str, Any], label: str) -> tuple[list[dict[str,
         for result in run_results:
             if not isinstance(result, dict) or not result.get("ruleId") or not _canonical_location(result):
                 findings.append(f"{label} contains a result without a rule or physical location")
+                continue
+            partial = result.get("partialFingerprints")
+            if (
+                not isinstance(partial, dict)
+                or not isinstance(partial.get("primaryLocationLineHash"), str)
+                or not partial["primaryLocationLineHash"].strip()
+            ):
+                findings.append(
+                    f"{label} contains a result without CodeQL primaryLocationLineHash",
+                )
                 continue
             results.append(result)
     return results, findings
