@@ -22,6 +22,8 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 - Applied initial public-review feedback: centralized the explorer model default, moved trusted
   archive extraction into tested source, normalized internal template names, made CLI
   authentication checks explicit, and upgraded the shipped YAML parser to `js-yaml` 5.2.2.
+- Made fork and token checks apply to every discovered GitHub Actions workflow, including newly
+  added `.yml` and `.yaml` files.
 
 At release time, move accepted entries under the immutable version tag and keep the remaining work
 under `Unreleased`.

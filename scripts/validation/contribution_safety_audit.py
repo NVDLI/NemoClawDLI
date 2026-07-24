@@ -179,7 +179,11 @@ def audit_workflow_pins(
 ) -> list[dict[str, str]]:
     out: list[dict[str, str]] = []
     overrides = text_overrides or {}
-    for path in sorted((root / ".github/workflows").glob("*.yml")):
+    paths = {
+        *sorted((root / ".github/workflows").glob("*.yml")),
+        *sorted((root / ".github/workflows").glob("*.yaml")),
+    }
+    for path in sorted(paths):
         rel = path.relative_to(root).as_posix()
         raw = overrides[rel] if rel in overrides else path.read_text(encoding="utf-8")
         for line_no, line in enumerate(raw.splitlines(), 1):
@@ -199,6 +203,200 @@ def audit_workflow_pins(
                     out.append(finding("unpinned-workflow-install", rel,
                                        f"line {line_no} installs Python packages without a reviewed lock",
                                        "install a scope-specific requirements.lock file instead of ad hoc package arguments"))
+    return out
+
+
+def workflow_permission_entries(block: str, indent: int) -> dict[str, str] | None:
+    """Read one permissions mapping at an exact YAML indentation level."""
+    lines = block.splitlines()
+    marker = " " * indent + "permissions:"
+    for index, line in enumerate(lines):
+        if not line.startswith(marker) or line[:indent] != " " * indent:
+            continue
+        remainder = line[len(marker):].strip()
+        if remainder == "{}":
+            return {}
+        if remainder == "read-all":
+            return {"*": "read"}
+        if remainder:
+            return None
+        entries: dict[str, str] = {}
+        prefix = " " * (indent + 2)
+        for child in lines[index + 1:]:
+            child_indent = len(child) - len(child.lstrip(" "))
+            if child.strip() and child_indent <= indent:
+                break
+            if not child.strip() or child.lstrip().startswith("#"):
+                continue
+            match = re.fullmatch(
+                rf"{re.escape(prefix)}([A-Za-z0-9_-]+):\s*([A-Za-z]+)\s*(?:#.*)?",
+                child,
+            )
+            if not match:
+                return None
+            if match.group(2) not in {"read", "write", "none"}:
+                return None
+            if match.group(1) in entries:
+                return None
+            entries[match.group(1)] = match.group(2)
+        return entries
+    return None
+
+
+def workflow_jobs(workflow: str) -> list[tuple[str, str]]:
+    """Discover every top-level job in a workflow."""
+    marker = re.search(r"(?m)^jobs:\s*$", workflow)
+    if not marker:
+        return []
+    body = workflow[marker.end():]
+    names = [match.group(1) for match in re.finditer(
+        r"(?m)^  ([A-Za-z0-9_-]+):\s*$", body
+    )]
+    return [(name, workflow_job(workflow, name)) for name in names]
+
+
+def workflow_has_trigger(workflow: str, trigger: str) -> bool:
+    """Recognize block, scalar, and inline-list forms of an Actions trigger."""
+    escaped = re.escape(trigger)
+    return bool(
+        re.search(rf"(?m)^  {escaped}:\s*", workflow)
+        or re.search(rf"(?m)^on:\s*{escaped}\s*(?:#.*)?$", workflow)
+        or re.search(rf"(?m)^on:\s*\[[^\]]*\b{escaped}\b[^\]]*\]\s*(?:#.*)?$", workflow)
+    )
+
+
+def job_excludes_pull_requests(job: str) -> bool:
+    """Return true only for an explicit condition that cannot match a PR run."""
+    match = re.search(r"(?m)^    if:\s*(.+?)\s*$", job)
+    if not match:
+        return False
+    condition = match.group(1)
+    return any(token in condition for token in (
+        "github.event_name != 'pull_request'",
+        'github.event_name != "pull_request"',
+        "github.event_name == 'push'",
+        'github.event_name == "push"',
+        "github.ref == 'refs/heads/main'",
+        'github.ref == "refs/heads/main"',
+    ))
+
+
+def unhardened_checkout_lines(workflow: str) -> list[int]:
+    """Return checkout step lines whose own mapping persists the token."""
+    lines = workflow.splitlines()
+    failures: list[int] = []
+    for index, line in enumerate(lines):
+        if not re.search(r"\buses:\s*actions/checkout@", line):
+            continue
+        step_indent = len(line) - len(line.lstrip(" "))
+        hardened = False
+        with_indent: int | None = None
+        for child in lines[index + 1:]:
+            child_indent = len(child) - len(child.lstrip(" "))
+            if (
+                child.strip().startswith("- ")
+                and child_indent <= step_indent
+            ):
+                break
+            if re.fullmatch(r"\s*with:\s*(?:#.*)?", child):
+                with_indent = child_indent
+            if (
+                with_indent is not None
+                and child_indent > with_indent
+                and re.fullmatch(r"\s*persist-credentials:\s*false\s*(?:#.*)?", child)
+            ):
+                hardened = True
+        if not hardened:
+            failures.append(index + 1)
+    return failures
+
+
+def audit_workflow_trust_boundaries(
+    root: Path, text_overrides: dict[str, str] | None = None,
+) -> list[dict[str, str]]:
+    """Apply fork and token boundaries to every discovered workflow."""
+    out: list[dict[str, str]] = []
+    overrides = text_overrides or {}
+    paths = {
+        *sorted((root / ".github/workflows").glob("*.yml")),
+        *sorted((root / ".github/workflows").glob("*.yaml")),
+    }
+    for path in sorted(paths):
+        rel = path.relative_to(root).as_posix()
+        raw = overrides.get(rel, path.read_text(encoding="utf-8"))
+        top = workflow_permission_entries(raw, 0)
+        if top is None:
+            out.append(finding(
+                "workflow-default-authority", rel,
+                "workflow does not declare an explicit top-level permission boundary",
+                "declare read-only or empty top-level permissions so host defaults cannot grant authority",
+            ))
+        elif any(value == "write" for value in top.values()):
+            out.append(finding(
+                "workflow-default-authority", rel,
+                "workflow grants write authority at the workflow level",
+                "keep workflow-level permissions read-only and grant narrow authority to excluded jobs",
+            ))
+
+        if workflow_has_trigger(raw, "pull_request_target"):
+            out.append(finding(
+                "unsafe-pr-trigger", rel,
+                "pull_request_target can combine untrusted proposals with base-repository authority",
+                "use pull_request with a read-only token",
+            ))
+        if workflow_has_trigger(raw, "workflow_run"):
+            out.append(finding(
+                "unsafe-workflow-chain", rel,
+                "workflow_run can consume untrusted artifacts with a fresh privileged token",
+                "keep privileged work on protected refs and pass only independently verified artifacts",
+            ))
+
+        pull_request = workflow_has_trigger(raw, "pull_request")
+        unhardened = unhardened_checkout_lines(raw)
+        if unhardened:
+            out.append(finding(
+                "checkout-credential", rel,
+                "checkout step(s) persist a workflow credential on line(s): "
+                + ", ".join(str(line) for line in unhardened),
+                "set persist-credentials: false on every checkout step",
+            ))
+        if not pull_request:
+            continue
+        for name, job in workflow_jobs(raw):
+            if job_excludes_pull_requests(job):
+                continue
+            permissions = workflow_permission_entries(job, 4) or {}
+            unsafe_writes = sorted(
+                key for key, value in permissions.items()
+                if value == "write" and key != "security-events"
+            )
+            if unsafe_writes:
+                out.append(finding(
+                    "fork-job-authority", rel,
+                    f"pull-request job {name} has write authority: {', '.join(unsafe_writes)}",
+                    "remove write scopes or bind the job to a protected non-PR ref",
+                ))
+            if (
+                re.search(r"\$\{\{\s*secrets(?:\.|\[)", job)
+                or re.search(r"(?m)^    secrets:\s*inherit\s*(?:#.*)?$", job)
+            ):
+                out.append(finding(
+                    "fork-job-secret", rel,
+                    f"pull-request job {name} reads a repository secret",
+                    "keep fork-runnable jobs secret-free and move privileged work to a protected ref",
+                ))
+            if re.search(r"(?m)^    environment:\s*", job):
+                out.append(finding(
+                    "fork-job-environment", rel,
+                    f"pull-request job {name} can request a protected environment",
+                    "request deployment environments only from protected non-PR jobs",
+                ))
+            if re.search(r"(?i)\btoJSON\s*\(\s*secrets\s*\)", job):
+                out.append(finding(
+                    "workflow-secret-context-dump", rel,
+                    f"pull-request job {name} renders the secrets context",
+                    "never serialize secret contexts into a command or runner log",
+                ))
     return out
 
 
@@ -270,6 +468,7 @@ def audit_repo(
     docs = {rel: overrides[rel] if rel in overrides else read(root, rel, out)
             for rel in CONTRACT_FILES}
     out.extend(audit_workflow_pins(root, overrides))
+    out.extend(audit_workflow_trust_boundaries(root, overrides))
     for rel in RETIRED_GUIDANCE:
         if (root / rel).exists():
             out.append(finding("retired-guidance", rel,
@@ -700,15 +899,6 @@ def audit_repo(
             "Pages validation may resolve undeclared dependencies or execute a source build",
             "install the complete material lock with --no-deps --only-binary=:all:",
         ))
-    for rel in (".github/workflows/pages.yml", ".github/workflows/release.yml",
-                ".github/workflows/codeql.yml", ".github/workflows/dependency-review.yml"):
-        checkout_count = docs[rel].count("uses: actions/checkout@")
-        hardened_count = docs[rel].count("persist-credentials: false")
-        if hardened_count < checkout_count:
-            out.append(finding("checkout-credential", rel,
-                               f"{checkout_count - hardened_count} checkout step(s) persist credentials",
-                               "set persist-credentials: false on every checkout step"))
-
     release = docs[".github/workflows/release.yml"]
     require(release, "pages_artifact_integrity.py --source-root .", ".github/workflows/release.yml",
             "release-source-resource-preflight", out,
@@ -1693,6 +1883,77 @@ def self_test() -> list[str]:
             codes = {item["code"] for item in audit_repo(fixture, text_overrides=mutated)}
             if expected not in codes:
                 failures.append(f"mutation escaped detector: {expected}")
+
+        def added_workflow_source(
+            on_lines: tuple[str, ...] = ("on:", "  pull_request:"),
+            *,
+            top_permissions: tuple[str, ...] | None = ("contents: read",),
+            job_lines: tuple[str, ...] = (),
+            step_lines: tuple[str, ...] = ("- run: echo unsafe",),
+        ) -> str:
+            lines = ["name: unsafe", *on_lines]
+            if top_permissions is not None:
+                lines.extend(("permissions:", *(f"  {line}" for line in top_permissions)))
+            lines.extend((
+                "jobs:",
+                "  test:",
+                *(f"    {line}" for line in job_lines),
+                "    runs-on: ubuntu-latest",
+                "    steps:",
+                *(f"      {line}" for line in step_lines),
+            ))
+            return "\n".join(lines) + "\n"
+
+        checkout = (
+            "- uses: actions/checkout@"
+            "d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0"
+        )
+        added_workflow = fixture / ".github/workflows/untrusted-added.yaml"
+        workflow_mutations = (
+            ("workflow-default-authority", added_workflow_source(top_permissions=None)),
+            ("workflow-default-authority",
+             added_workflow_source(top_permissions=("contents: write",))),
+            ("unsafe-pr-trigger",
+             added_workflow_source(("on: pull_request_target",))),
+            ("unsafe-workflow-chain", added_workflow_source((
+                "on:", "  workflow_run:", "    workflows: [test]", "    types: [completed]",
+            ))),
+            ("fork-job-authority", added_workflow_source(
+                job_lines=("permissions:", "  contents: write"),
+            )),
+            ("fork-job-authority", added_workflow_source(
+                job_lines=("permissions:", "  contents: write"),
+                step_lines=("- run: echo \"github.ref == 'refs/heads/main'\"",),
+            )),
+            ("fork-job-secret", added_workflow_source(
+                ("on: [push, pull_request]",),
+                step_lines=(
+                    "- env:",
+                    "    DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}",
+                    "  run: echo unsafe",
+                ),
+            )),
+            ("fork-job-environment",
+             added_workflow_source(job_lines=("environment: production",))),
+            ("workflow-secret-context-dump", added_workflow_source(
+                step_lines=("- run: echo '${{ toJSON(secrets) }}'",),
+            )),
+            ("checkout-credential", added_workflow_source(step_lines=(checkout,))),
+            ("checkout-credential", added_workflow_source(
+                step_lines=(checkout, "  env:", "    persist-credentials: false"),
+            )),
+            ("mutable-action-ref", added_workflow_source(step_lines=(
+                "- uses: actions/checkout@v6",
+                "  with:",
+                "    persist-credentials: false",
+            ))),
+        )
+        for expected, source in workflow_mutations:
+            added_workflow.write_text(source, encoding="utf-8")
+            codes = {item["code"] for item in audit_repo(fixture)}
+            if expected not in codes:
+                failures.append(f"added workflow mutation escaped detector: {expected}")
+        added_workflow.unlink()
 
         retired = fixture / "QUALITY_DIRECTIVES.md"
         retired.write_text("stale duplicate guidance\n", encoding="utf-8")

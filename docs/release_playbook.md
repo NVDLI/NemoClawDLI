@@ -191,7 +191,9 @@ community intake:
 - Configure both `github-pages` and `github-release` with required reviewers, prevent self-review,
   disallow administrator bypass, and restrict deployment branches or tags. Review environment and
   ruleset bypass events in Rule Insights after each release.
-- Keep fork PR jobs on read-only tokens. Do not expose model, DLI, Cloudflare, or deployment secrets to forked pull requests.
+- Set the default workflow token to read-only and prevent workflows from approving pull requests.
+- Require approval before a fork pull request runs. Never send fork workflows write tokens,
+  repository secrets, or environment authority.
 
 ## Public GitHub security baseline
 
@@ -360,7 +362,7 @@ Before public mirror:
 - [ ] Immutable releases are enabled before the first public version is published.
 - [ ] External repository has required checks mapped to the static gate.
 - [ ] Dependency graph, Dependabot alerts, dependency review, code scanning, and secret scanning are enabled or explicitly deferred with a reason.
-- [x] Repo-owned Dependabot, dependency-review, and CodeQL workflows exist with immutable action pins and fork-safe permissions.
+- [x] Repo-owned Dependabot, dependency-review, and CodeQL workflows exist with immutable action pins; discovery-first validation rejects unsafe permissions or triggers in any added workflow.
 - [ ] Host dependency graph, alerts, code-scanning upload, secret scanning, and push protection are enabled and smoke-tested.
 - [ ] The exact pull-request head passes `audit_github_code_scanning.py`; the host-owned CodeQL check is green and the merge ref has zero open alerts.
 - [ ] Release workflow is dispatched from the exact protected annotated tag; its draft contains the deterministic archive, manifest, resolved-environment SBOM, `SHA256SUMS`, and Sigstore bundle.
