@@ -270,6 +270,12 @@ def workflow_steps(job: str) -> list[str]:
     ]
 
 
+def action_steps(job: str, action: str) -> list[str]:
+    """Return every discovered step that invokes one named external action."""
+    marker = f"uses: {action}@"
+    return [step for step in workflow_steps(job) if marker in step]
+
+
 def audit_browser_runtime_jobs(
     workflow: str, rel: str, code_prefix: str,
 ) -> list[dict[str, str]]:
@@ -829,7 +835,7 @@ def audit_repo(
             "github-reviewed-artifact-handoff", out,
             "make provenance consume canonical and independently rebuilt artifacts")
     for token in (
-        "actions/attest@a1948c3f048ba23858d222213b7c278aabede763",
+        "uses: actions/attest@",
         "subject-path: reviewed-pages/pages-sha256.txt",
         "compare-builds:",
         "attest-provenance:",
@@ -844,6 +850,69 @@ def audit_repo(
     ):
         require(pages, token, ".github/workflows/pages.yml", "github-pages-provenance", out,
                 f"retain pre-authority Pages provenance control: {token}")
+    build_block = workflow_job(pages, "build-and-verify")
+    pages_uploads = [
+        step for step in action_steps(build_block, "actions/upload-artifact")
+        if "name: github-pages" in step
+    ]
+    pages_archives = [
+        step for step in workflow_steps(build_block)
+        if '-cf "$RUNNER_TEMP/artifact.tar"' in step
+    ]
+    archive_tokens = (
+        "tar --dereference --hard-dereference",
+        "--directory public",
+        '-cf "$RUNNER_TEMP/artifact.tar"',
+        "--exclude=.git",
+    )
+    if (
+        len(pages_uploads) != 1
+        or len(pages_archives) != 1
+        or "path: ${{ runner.temp }}/artifact.tar" not in pages_uploads[0]
+        or any(token not in pages_archives[0] for token in archive_tokens)
+        or pages_archives[0].count("--exclude") != 1
+        or action_steps(build_block, "actions/upload-pages-artifact")
+    ):
+        out.append(finding(
+            "github-pages-hidden-files", ".github/workflows/pages.yml",
+            "the reviewed Pages upload can omit repository dotfiles",
+            "archive the complete reviewed tree and upload its artifact.tar without dotfile exclusions",
+        ))
+    test_block = workflow_job(pages, "test")
+    canary_uploads = [
+        step for step in action_steps(test_block, "actions/upload-artifact")
+        if "pages-action-canary-${{ github.sha }}-${{ github.run_attempt }}" in step
+    ]
+    canary_downloads = [
+        step for step in action_steps(test_block, "actions/download-artifact")
+        if "pages-action-canary-${{ github.sha }}-${{ github.run_attempt }}" in step
+    ]
+    canary_archives = [
+        step for step in workflow_steps(test_block)
+        if '-cf "$RUNNER_TEMP/pages-action-canary-artifact.tar"' in step
+    ]
+    canary_tokens = (
+        "pages-action-canary-${{ github.sha }}-${{ github.run_attempt }}",
+        "github.event_name == 'pull_request'",
+    )
+    if (
+        len(canary_uploads) != 1
+        or len(canary_downloads) != 1
+        or len(canary_archives) != 1
+        or any(token not in canary_uploads[0] for token in canary_tokens)
+        or "pages-action-canary-${{ github.sha }}-${{ github.run_attempt }}" not in canary_downloads[0]
+        or ".course-review-marker" not in test_block
+        or ".github/course-review-marker" not in test_block
+        or "--directory \"$RUNNER_TEMP/pages-action-canary\"" not in canary_archives[0]
+        or "--exclude=.git" not in canary_archives[0]
+        or canary_archives[0].count("--exclude") != 1
+        or "--archive \"$RUNNER_TEMP/pages-action-canary-download/pages-action-canary-artifact.tar\"" not in test_block
+    ):
+        out.append(finding(
+            "github-pages-action-canary", ".github/workflows/pages.yml",
+            "pull requests do not exercise the reviewed Pages upload/download path with a dotfile",
+            "retain the privilege-free Pages action canary in the existing test job",
+        ))
     signing_tokens = ("id-token: write", "attestations: write", "artifact-metadata: write")
     for job_name in ("build-and-verify", "rebuild-for-comparison", "compare-builds"):
         block = workflow_job(pages, job_name)
@@ -1711,7 +1780,6 @@ def self_test() -> list[str]:
             ("pages-source-mirror-prunes-generated", "scripts/build/build_pages.sh", "-path 'web/nemoclaw/standalone' -prune", "-path 'web/nemoclaw/standalone' -print"),
             ("pages-validation-fail-open", "scripts/build/build_pages.sh", 'python3 "$T1/scripts/validation/validate_bundle.py" --scope ship', 'python3 "$T1/scripts/validation/validate_bundle.py" --scope ship || true'),
             ("pages-report-reuse-fail-open", "scripts/build/build_pages.sh", 'validation_report_audit.py" \\', 'validation_report_audit.py" || true #'),
-            ("mutable-action-ref", ".github/workflows/pages.yml", "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803", "actions/checkout@v6"),
             ("unpinned-workflow-install", ".github/workflows/pages.yml", "--requirement scripts/materials/requirements.lock", "requests beautifulsoup4 markdownify lxml"),
             ("github-material-lock", ".github/workflows/pages.yml", "scripts/materials/requirements.lock", "scripts/materials/requirements.txt"),
             ("github-binary-lock-install", ".github/workflows/pages.yml", "python3 -m pip install --require-hashes --no-deps --only-binary=:all:", "python3 -m pip install --require-hashes"),
@@ -1760,10 +1828,23 @@ def self_test() -> list[str]:
             ("github-reviewed-artifact-handoff", ".github/workflows/pages.yml", "needs: [build-and-verify, rebuild-for-comparison]", "needs: build-and-verify"),
             ("github-pages-browser-review", ".github/workflows/pages.yml", "runtime_integration_browser_audit.py --site-root public --timeout-ms 180000", "runtime_integration_browser_audit.py --site-root web --timeout-ms 180000"),
             ("github-pages-artifact-integrity", ".github/workflows/pages.yml", "--write-manifest public/pages-sha256.txt", "--write-manifest web/pages-sha256.txt"),
+            (
+                "github-pages-hidden-files",
+                ".github/workflows/pages.yml",
+                "--directory public \\\n            -cf \"$RUNNER_TEMP/artifact.tar\" \\\n            --exclude=.git \\\n            .",
+                "--directory public \\\n            -cf \"$RUNNER_TEMP/artifact.tar\" \\\n            --exclude=.git \\\n            --exclude=.github \\\n            .",
+            ),
+            (
+                "github-pages-action-canary",
+                ".github/workflows/pages.yml",
+                "--directory \"$RUNNER_TEMP/pages-action-canary\" \\\n            -cf \"$RUNNER_TEMP/pages-action-canary-artifact.tar\" \\\n            --exclude=.git \\\n            .",
+                "--directory \"$RUNNER_TEMP/pages-action-canary\" \\\n            -cf \"$RUNNER_TEMP/pages-action-canary-artifact.tar\" \\\n            --exclude=.git \\\n            --exclude=.course-review-marker \\\n            .",
+            ),
             ("artifact-full-commit-binding", ".github/workflows/pages.yml", '--expect-sha "$GITHUB_SHA"', '--expect-sha "${GITHUB_SHA::7}"'),
             ("github-pages-artifact-reverification", ".github/workflows/pages.yml", "--check-manifest reviewed-public/pages-sha256.txt", "--write-manifest reviewed-public/pages-sha256.txt"),
             ("release-material-sbom", ".github/workflows/release.yml", "pip-audit -r scripts/materials/requirements.lock", "pip-audit -r scripts/materials/requirements.txt"),
             ("github-pages-provenance", ".github/workflows/pages.yml", "subject-path: reviewed-pages/pages-sha256.txt", "subject-path: reviewed-pages/unreviewed.txt"),
+            ("github-pages-provenance", ".github/workflows/pages.yml", "uses: actions/attest@", "uses: actions/upload-artifact@"),
             ("github-pages-provenance", ".github/workflows/pages.yml", "needs: attest-provenance", "needs: build-and-verify"),
             ("github-pages-provenance", ".github/workflows/pages.yml", "cmp reviewed-public/pages-sha256.txt", "echo comparison-skipped"),
             ("github-pages-provenance-authority", ".github/workflows/pages.yml", "      attestations: write\n      artifact-metadata: write", "      attestations: read\n      artifact-metadata: read"),
@@ -1895,6 +1976,20 @@ def self_test() -> list[str]:
             rel: (fixture / rel).read_text(encoding="utf-8")
             for rel in CONTRACT_FILES
         }
+        pages_action = re.search(
+            r"uses:\s*[^@\s]+@[0-9a-f]{40}", originals[".github/workflows/pages.yml"]
+        )
+        if not pages_action:
+            failures.append("no immutable external action found for mutation coverage")
+        else:
+            raw = originals[".github/workflows/pages.yml"]
+            mutated = dict(originals)
+            mutated[".github/workflows/pages.yml"] = raw.replace(
+                pages_action.group(0), pages_action.group(0).rsplit("@", 1)[0] + "@mutable", 1
+            )
+            codes = {item["code"] for item in audit_repo(fixture, text_overrides=mutated)}
+            if "mutable-action-ref" not in codes:
+                failures.append("dynamic mutable action mutation escaped detector")
         for expected, rel, old, new in cases:
             raw = originals[rel]
             if old not in raw:
@@ -1928,7 +2023,7 @@ def self_test() -> list[str]:
 
         checkout = (
             "- uses: actions/checkout@"
-            "d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0"
+            "3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1"
         )
         added_workflow = fixture / ".github/workflows/untrusted-added.yaml"
         workflow_mutations = (
