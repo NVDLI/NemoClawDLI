@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Optional
 
 ROOT = Path(__file__).resolve().parents[2]
+MINIMUM_FULL_ARTIFACT_TIMEOUT_SECONDS = 600
 sys.path.insert(0, str(ROOT / "scripts" / "skills"))
 import skill_audit
 
@@ -813,11 +814,28 @@ async function inspect(browser, file) {
   });
   const findings = [];
   let cursor = 0;
+  let completed = 0;
+  let nextProgressPercent = 10;
   async function worker() {
     while (cursor < htmlFiles.length) {
       const file = htmlFiles[cursor++];
+      const started = Date.now();
       const result = await inspect(browser, file);
       if (result.errors.length) findings.push(result);
+      completed += 1;
+      const durationMs = Date.now() - started;
+      const percent = Math.floor(completed * 100 / htmlFiles.length);
+      if (durationMs >= 10000 || percent >= nextProgressPercent || completed === htmlFiles.length) {
+        console.error(JSON.stringify({
+          event:'renderer-progress',
+          completed,
+          total:htmlFiles.length,
+          percent,
+          file,
+          durationMs,
+        }));
+        while (nextProgressPercent <= percent) nextProgressPercent += 10;
+      }
     }
   }
   await Promise.all(Array.from({ length: 4 }, worker));
@@ -873,14 +891,16 @@ def run(args: argparse.Namespace) -> int:
                 cwd=ROOT,
                 env=environment,
                 text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
                 timeout=args.timeout_seconds,
             )
         except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
-            print(f"skill_renderer_runtime_audit: FAIL\n  - {exc}")
+            print(
+                "skill_renderer_runtime_audit: FAIL\n"
+                f"  - {exc}\n"
+                f"  - attempted {len(files)} exhaustive HTML render(s) with a "
+                f"{args.timeout_seconds}-second process budget"
+            )
             return 1
-    print(result.stdout.rstrip())
     print("skill_renderer_runtime_audit: " + ("OK" if result.returncode == 0 else "FAIL"))
     return result.returncode
 
@@ -891,7 +911,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--scan-root", help="artifact subtree to discover exhaustively; must be inside --site-root")
     parser.add_argument("--node-path", default=os.environ.get("NODE_PATH") or str(ROOT / "scripts/runtime/node_modules"))
     parser.add_argument("--chrome-bin", default=os.environ.get("CHROME_BIN") or "auto")
-    parser.add_argument("--timeout-seconds", type=int, default=240)
+    parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=MINIMUM_FULL_ARTIFACT_TIMEOUT_SECONDS,
+        help="whole-audit process budget; CI must not set less than the full-artifact minimum",
+    )
     return parser
 
 

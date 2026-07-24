@@ -4,10 +4,14 @@
 """Standard-library contracts for browser-theme coverage and its CI triggers."""
 from __future__ import annotations
 
+import contextlib
+import io
 import shlex
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
 from scripts.skills import skill_renderer_runtime_audit as theme_runtime
 from scripts.validation import (
@@ -109,9 +113,51 @@ class ThemeRuntimeContractTests(unittest.TestCase):
                 commands.append((path, line_number, tokens[script + 1 :]))
 
         self.assertTrue(commands)
+        self.assertGreaterEqual(
+            theme_runtime.MINIMUM_FULL_ARTIFACT_TIMEOUT_SECONDS,
+            600,
+        )
         for path, line_number, arguments in commands:
             with self.subTest(path=path.relative_to(ROOT), line=line_number):
-                theme_runtime.build_parser().parse_args(arguments)
+                parsed = theme_runtime.build_parser().parse_args(arguments)
+                self.assertGreaterEqual(
+                    parsed.timeout_seconds,
+                    theme_runtime.MINIMUM_FULL_ARTIFACT_TIMEOUT_SECONDS,
+                )
+
+    def test_runtime_streams_bounded_progress_and_slow_page_evidence(self) -> None:
+        source = theme_runtime.RUNTIME_JS
+        for token in (
+            "event:'renderer-progress'",
+            "completed",
+            "total:htmlFiles.length",
+            "percent",
+            "file",
+            "durationMs",
+        ):
+            with self.subTest(token=token):
+                self.assertIn(token, source)
+
+        with tempfile.TemporaryDirectory() as directory:
+            site = Path(directory)
+            (site / "index.html").write_text("<!doctype html><title>fixture</title>", encoding="utf-8")
+            args = theme_runtime.build_parser().parse_args(["--site-root", str(site)])
+            with (
+                mock.patch.object(
+                    theme_runtime.subprocess,
+                    "run",
+                    return_value=SimpleNamespace(returncode=0),
+                ) as run_process,
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                self.assertEqual(theme_runtime.run(args), 0)
+            call = run_process.call_args
+            self.assertNotIn("stdout", call.kwargs)
+            self.assertNotIn("stderr", call.kwargs)
+            self.assertEqual(
+                call.kwargs["timeout"],
+                theme_runtime.MINIMUM_FULL_ARTIFACT_TIMEOUT_SECONDS,
+            )
 
     def test_report_producer_has_the_pinned_browser_runtime(self) -> None:
         core = (ROOT / ".gitlab/ci/core.yml").read_text(encoding="utf-8")
