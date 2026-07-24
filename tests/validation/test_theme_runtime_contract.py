@@ -91,12 +91,27 @@ class ThemeRuntimeContractTests(unittest.TestCase):
         self.assertIn('--site-root "$THEME_SITE_ROOT" --scan-root "$THEME_SCAN_ROOT"', job)
         self.assertNotIn('THEME_SITE_ROOT="public/$CI_COMMIT_REF_SLUG"', job)
 
-    def test_theme_job_arguments_match_the_runtime_cli(self) -> None:
-        job = core_job("theme_runtime", "human_review")
-        command = next(line.strip() for line in job.splitlines() if "skill_renderer_runtime_audit.py" in line)
-        tokens = shlex.split(command)
-        script = tokens.index("scripts/skills/skill_renderer_runtime_audit.py")
-        theme_runtime.build_parser().parse_args(tokens[script + 1 :])
+    def test_every_ci_renderer_command_matches_the_runtime_cli(self) -> None:
+        workflow_paths = {
+            *ROOT.glob(".github/workflows/*.yml"),
+            *ROOT.glob(".github/workflows/*.yaml"),
+            *ROOT.glob(".gitlab/**/*.yml"),
+            *ROOT.glob(".gitlab/**/*.yaml"),
+        }
+        commands: list[tuple[Path, int, list[str]]] = []
+        script_name = "scripts/skills/skill_renderer_runtime_audit.py"
+        for path in sorted(workflow_paths):
+            for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if script_name not in line or line.lstrip().startswith("#"):
+                    continue
+                tokens = shlex.split(line.strip())
+                script = tokens.index(script_name)
+                commands.append((path, line_number, tokens[script + 1 :]))
+
+        self.assertTrue(commands)
+        for path, line_number, arguments in commands:
+            with self.subTest(path=path.relative_to(ROOT), line=line_number):
+                theme_runtime.build_parser().parse_args(arguments)
 
     def test_report_producer_has_the_pinned_browser_runtime(self) -> None:
         core = (ROOT / ".gitlab/ci/core.yml").read_text(encoding="utf-8")

@@ -54,10 +54,11 @@ class HtmlDocumentTests(unittest.TestCase):
                     self.assertEqual(browser, strict)
 
     def test_strict_projection_matches_browser_recovery_syntax(self) -> None:
-        for ending in ("</script foo=\"bar\">", "</script\t\n bar>"):
-            with self.subTest(ending=ending):
-                raw = f"<script>danger(){ending}<p>visible</p>"
-                self.assertEqual(raw_text_blocks(raw, "script"), raw_text_blocks_strict(raw, "script"))
+        for name in ("script", "style"):
+            for suffix in (' foo="bar">', "\t\n bar>"):
+                with self.subTest(name=name, suffix=suffix):
+                    raw = f"<{name}>danger()</{name}{suffix}<p>visible</p>"
+                    self.assertEqual(raw_text_blocks(raw, name), raw_text_blocks_strict(raw, name))
 
     def test_comments_and_longer_element_names_are_not_script_boundaries(self) -> None:
         raw = (
