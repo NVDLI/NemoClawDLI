@@ -754,6 +754,12 @@ def self_test() -> list[str]:
     cases.append(("evidence token", mutation, expected_svg, "evidence-token"))
 
     mutation = copy.deepcopy(base)
+    pages_edge = next(edge for edge in mutation["edges"] if edge["id"] == "artifact_to_pages")
+    pages_workflow = next(row for row in pages_edge["evidence"] if row["path"] == ".github/workflows/pages.yml")
+    pages_workflow["contains"] = ["actions/upload-pages-artifact", "actions/deploy-pages"]
+    cases.append(("obsolete Pages upload evidence", mutation, expected_svg, "evidence-token"))
+
+    mutation = copy.deepcopy(base)
     overlap = next(node for node in mutation["nodes"] if node["id"] == "model_api")
     target = next(node for node in mutation["nodes"] if node["id"] == "nemoclaw")
     overlap["x"], overlap["y"] = target["x"], target["y"]
