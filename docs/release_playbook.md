@@ -201,6 +201,14 @@ deployment environments before public intake. Fork jobs remain read-only and rec
 secrets. Keep private runtime names, credentials, internal topology, confidential findings,
 and restricted scanner output in approved internal systems.
 
+Before calling a pull request security-green, inspect the complete check-run set on its exact head.
+The repository-owned `analyze` jobs and SARIF policy do not replace GitHub's separate
+`github-advanced-security/CodeQL` result. Run
+`scripts/security/audit_github_code_scanning.py` and require both a successful host check and zero
+open alerts on `refs/pull/<number>/merge`. Fix actionable findings. Dismiss only an exact,
+source-bound reviewed result, using the accurate GitHub reason and a public-safe comment; the
+repository disposition remains time-boxed and mutation-tested.
+
 Repository dependency floors, exact locks, SCA layers, waiver handling, SBOM boundaries,
 and the hardening backlog live in [`dependency_security.md`](dependency_security.md).
 Publication assets and retention live in [`release_artifacts.md`](release_artifacts.md).
@@ -354,6 +362,7 @@ Before public mirror:
 - [ ] Dependency graph, Dependabot alerts, dependency review, code scanning, and secret scanning are enabled or explicitly deferred with a reason.
 - [x] Repo-owned Dependabot, dependency-review, and CodeQL workflows exist with immutable action pins and fork-safe permissions.
 - [ ] Host dependency graph, alerts, code-scanning upload, secret scanning, and push protection are enabled and smoke-tested.
+- [ ] The exact pull-request head passes `audit_github_code_scanning.py`; the host-owned CodeQL check is green and the merge ref has zero open alerts.
 - [ ] Release workflow is dispatched from the exact protected annotated tag; its draft contains the deterministic archive, manifest, resolved-environment SBOM, `SHA256SUMS`, and Sigstore bundle.
 - [ ] External repository has Discussions enabled, with pinned welcome guidance.
 - [ ] CODEOWNERS is added after org/team handles are real.

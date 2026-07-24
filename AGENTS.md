@@ -98,3 +98,7 @@ whoever ships the change.
   wrong in stays narrow.
 - Validate before you claim. "Done" means the gate ran and passed, reported with its
   result, not asserted from memory.
+- For GitHub security work, an Actions workflow result is only one check producer. Inspect every
+  check run on the exact head, including the host-owned
+  `github-advanced-security/CodeQL` check, and require zero open alerts on the pull request merge
+  ref. A repository SARIF policy pass does not make a red host security check green.

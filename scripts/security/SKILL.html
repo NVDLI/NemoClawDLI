@@ -19,6 +19,7 @@
     "scripts/security/audit_dependency_locks.py",
     "scripts/security/audit_sbom_policy.py",
     "scripts/security/audit_codeql_sarif.py",
+    "scripts/security/audit_github_code_scanning.py",
     "scripts/security/codeql-vendor-dispositions.json",
     "scripts/materials/requirements.lock",
     "scripts/security/requirements-sca.lock",
@@ -85,6 +86,11 @@
       "desc": "Rejects every unreviewed authored finding and accepts vendor or intentional reviewed-boundary results only when the stable CodeQL line identity, exact source bytes, controls, owner, scope, and expiry still match."
     },
     {
+      "path": "audit_github_code_scanning.py",
+      "role": "GitHub CodeQL host-state gate",
+      "desc": "Requires the exact head's host-owned Advanced Security check to pass and the pull-request merge ref to have zero open alerts; an Actions workflow success cannot substitute for this result."
+    },
+    {
       "path": "codeql-vendor-dispositions.json",
       "role": "exact CodeQL result dispositions",
       "desc": "Stores public-safe component and construction decisions bound to CodeQL rule, path, start location, primary line hash, and artifact SHA-256. Upload-only SARIF metadata cannot change a decision, and new results or changed bytes still fail."
@@ -145,6 +151,7 @@
     <div class="skill-cmd"><b>Dependency locks</b><code>python3 scripts/security/audit_dependency_locks.py --self-test &amp;&amp; python3 scripts/security/audit_dependency_locks.py</code></div>
     <div class="skill-cmd"><b>SBOM policy detector</b><code>python3 scripts/security/audit_sbom_policy.py --self-test</code></div>
     <div class="skill-cmd"><b>CodeQL result policy</b><code>python3 -m unittest -v tests.validation.test_codeql_sarif_audit &amp;&amp; python3 scripts/security/audit_codeql_sarif.py --sarif &lt;results.sarif&gt;</code></div>
+    <div class="skill-cmd"><b>GitHub CodeQL host state</b><code>python3 -m unittest -v tests.validation.test_github_code_scanning_audit &amp;&amp; GITHUB_TOKEN=&lt;read-token&gt; python3 scripts/security/audit_github_code_scanning.py --repository &lt;owner/repo&gt; --pull-request &lt;number&gt; --head-sha &lt;full-head-sha&gt;</code></div>
     <div class="skill-cmd"><b>SBOM evidence links</b><code>python3 scripts/compliance/sbom_evidence.py --self-test &amp;&amp; python3 scripts/compliance/sbom_evidence.py --check</code></div>
     <div class="skill-cmd"><b>Browser SCA</b><code>security_browser_sca</code></div>
     <div class="skill-cmd"><b>Full SCA plan</b><code>python3 scripts/security/run_full_sca.py</code></div>
@@ -161,6 +168,7 @@
     <a class="skill-link" href="audit_dependency_locks.py"><b>audit_dependency_locks.py</b><span>dependency lock audit. Enforces exact Python 3.11 closures, direct-manifest parity, and absence of retired runtime components.</span></a>
     <a class="skill-link" href="audit_sbom_policy.py"><b>audit_sbom_policy.py</b><span>runtime SBOM policy audit. Proves lock coverage, rejects retired components, and reports whether license metadata is SPDX, named, or absent.</span></a>
     <a class="skill-link" href="audit_codeql_sarif.py"><b>audit_codeql_sarif.py</b><span>Fails on new authored CodeQL findings and on any disposition whose stable line identity, artifact bytes, evidence, controls, or expiry drifted.</span></a>
+    <a class="skill-link" href="audit_github_code_scanning.py"><b>audit_github_code_scanning.py</b><span>Fails when the exact commit's host-owned CodeQL check is absent, pending, or red, or when the pull-request merge ref retains an open alert.</span></a>
     <a class="skill-link" href="codeql-vendor-dispositions.json"><b>codeql-vendor-dispositions.json</b><span>Time-boxed public policy bound to CodeQL rule, path, start location, primary line hash, and exact reviewed bytes. It is not a pattern waiver.</span></a>
     <a class="skill-link" href="../compliance/sbom_evidence.py"><b>sbom_evidence.py</b><span>Verifies the committed catalog and emits commit-bound manifests plus reconciled license appendices from CI SBOMs.</span></a>
     <a class="skill-link" href="run_full_sca.py"><b>run_full_sca.py</b><span>SCA and SBOM runner for the installed Python validation environment and repository source.</span></a>
