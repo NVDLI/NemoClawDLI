@@ -86,6 +86,32 @@ class _StrictRawTextParser(HTMLParser):
         line, column = self.getpos()
         return self.line_starts[line - 1] + column
 
+    def set_cdata_mode(self, elem: str, *, escapable: bool = False) -> None:
+        """Use the browser end-tag boundary on every supported Python release."""
+
+        del escapable
+        self.cdata_elem = elem.casefold()
+        self.interesting = re.compile(
+            rf"</{re.escape(self.cdata_elem)}(?=[\t\n\r\f />])",
+            re.IGNORECASE | re.ASCII,
+        )
+
+    def parse_endtag(self, index: int) -> int:
+        """Accept browser-recovered raw-text end tags consistently across Python versions."""
+
+        if self.cdata_elem == self.name:
+            close_end = _tag_end(self.rawdata, index)
+            tag = re.match(
+                r"</\s*([a-z][-.a-z0-9:_]*)(?=[\t\n\r\f />])",
+                self.rawdata[index:close_end],
+                re.IGNORECASE | re.ASCII,
+            )
+            if tag is not None and tag.group(1).casefold() == self.name:
+                self.handle_endtag(self.name)
+                self.clear_cdata_mode()
+                return close_end
+        return super().parse_endtag(index)
+
     @staticmethod
     def attributes(attrs: list[tuple[str, str | None]]) -> dict[str, str]:
         return {str(key).casefold(): str(value or "") for key, value in attrs}
