@@ -1,0 +1,38 @@
+# Normalize line endings: store text as LF, check out as LF on every platform.
+# Shell scripts and git hooks MUST be LF or they break when run.
+* text=auto eol=lf
+*.sh   text eol=lf
+*.py   text eol=lf
+
+# The official NVIDIA SECURITY.md template is retained byte-for-byte. Its list indentation includes
+# space-before-tab sequences, so exempt only this immutable, hash-validated path from that diff rule.
+SECURITY.md text eol=lf whitespace=-space-before-tab
+
+# These two reviewed trees preserve upstream/source whitespace byte-for-byte. The notebook importer
+# binds every cell digest, and the shared-vendor manifest binds every publisher asset digest.
+web/shared/vendor/** text eol=lf whitespace=-trailing-space,-blank-at-eof
+
+# SVG is XML/text and worth diffing; keep it as text.
+*.svg  text
+
+# Binary assets: no diff, no merge, no end-of-line rewriting.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.mp4  binary
+*.mp3  binary
+*.wav  binary
+*.parquet binary
+*.tgz  binary
+*.tar  binary
+*.zip  binary
+*.db   binary
+
+# Generated and vendored trees: collapse in diffs and drop from language stats so the
+# repo's reported language reflects authored content, not snapshots or vendored code.
+scripts/runtime/link_graph.html linguist-generated=true
+repos/**                linguist-vendored=true
+mats/**                 linguist-documentation=true

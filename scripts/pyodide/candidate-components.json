@@ -1,0 +1,287 @@
+{
+  "schema": "pyodide-candidate-components/1.0",
+  "status": "runtime-fetch-only",
+  "review_state": "human-approval-required",
+  "reviewed_snapshot_sha256": "4b773c45ba7680a99a6ef06dec4fa68ad6ffe34944950f9fa24f4a7a3e681fe4",
+  "purpose": "Exact inventory for the browser-Python demonstrations. The cookbook fetches its pinned runtime only after a reader starts it; no Pyodide runtime or Python wheel is copied into the repository.",
+  "source_pattern": {
+    "kind": "task-supplied-local-reference",
+    "license": "MIT",
+    "license_evidence": "LICENSE file in the task-supplied local reference tree",
+    "files_reviewed": [
+      "scripts/vendor-pyodide.mjs",
+      "src/components/interactive-code/python-worker.ts",
+      "src/components/interactive-code/client.ts",
+      "src/components/interactive-code/proxy-fetch.ts",
+      "public/assets/pyodide/0.27.7/pyodide-lock.json"
+    ],
+    "relationship": "behavior synthesized into course-authored examples; no reference file or binary copied"
+  },
+  "runtime": {
+    "pyodide": "0.27.7",
+    "python": "3.12.7",
+    "abi": "2024_0",
+    "architecture": "wasm32",
+    "platform": "emscripten_3_1_58"
+  },
+  "live_demo": {
+    "trigger": "reader selects Run on scripts/pyodide/SKILL.html",
+    "base_url": "https://cdn.jsdelivr.net/pyodide/v0.27.7/full/",
+    "distribution": "fetched by the browser at runtime; not copied into this repository",
+    "profile": "core"
+  },
+  "profiles": {
+    "acquisition": {
+      "description": "Download helper considered for a future asset-preparation tool. It would run only while preparing browser files and would not be included in the learner course.",
+      "components": ["ws"]
+    },
+    "core": {
+      "description": "Python runtime and standard library used by the separate repository demonstration. The browser fetches them from a pinned CDN only after a reader selects Run; they are not included in the learner course.",
+      "components": ["pyodide", "cpython-standard-library"]
+    },
+    "network": {
+      "description": "Exact packages reviewed for the standalone cookbook's possible browser-Python HTTPS and OpenAI-compatible API activities.",
+      "root_packages": ["requests", "pyodide-http", "openai"],
+      "components": [
+        "annotated-types", "anyio", "certifi", "charset-normalizer", "distro", "httpx", "idna",
+        "jiter", "openai", "openssl", "pydantic", "pydantic-core", "pyodide-http", "requests",
+        "sniffio", "ssl", "typing-extensions", "urllib3"
+      ]
+    }
+  },
+  "core_assets": [
+    {"file": "pyodide.mjs", "sha256": "0fa23651a5b10f3df1afe43fefba3c4edcfd21128ad69bd29fd3702a9a8f441a"},
+    {"file": "pyodide.asm.js", "sha256": "6b4c90de5b7172873f04f21884d0e9d2274e305fe32116558fe3e4fbe3618d51"},
+    {"file": "pyodide.asm.wasm", "sha256": "a50dd1843f805a0b7c45b61037ee0d7b26dfe85efe0e18ef95a34ad24e401f5f"},
+    {"file": "python_stdlib.zip", "sha256": "16611534726e5d8ac2bd8f926410b2dcb8d6f49aa24913463533b457a2115c16"},
+    {"file": "pyodide-lock.json", "sha256": "9c45b916001a750f4102fc287494f3eab215909c7535c626a20db80fd6333e2c"}
+  ],
+  "live_core_assets": [
+    {"file": "pyodide.js", "sha256": "b4cb23a53aba19c221659b9fb40a2f18281d685691dc06647fb0afd0681baf98"},
+    {"file": "pyodide.mjs", "sha256": "04c052c815abb0bf2981fa38c2dfa58e3120ee5288c956df2b2a15e301782c5f"},
+    {"file": "pyodide.asm.js", "sha256": "6b4c90de5b7172873f04f21884d0e9d2274e305fe32116558fe3e4fbe3618d51"},
+    {"file": "pyodide.asm.wasm", "sha256": "a50dd1843f805a0b7c45b61037ee0d7b26dfe85efe0e18ef95a34ad24e401f5f"},
+    {"file": "python_stdlib.zip", "sha256": "16611534726e5d8ac2bd8f926410b2dcb8d6f49aa24913463533b457a2115c16"},
+    {"file": "pyodide-lock.json", "sha256": "9c45b916001a750f4102fc287494f3eab215909c7535c626a20db80fd6333e2c"}
+  ],
+  "components": [
+    {
+      "name": "ws",
+      "version": "8.20.0",
+      "profile": "acquisition",
+      "relationship": "build-input",
+      "artifact": "npm dependency; not copied by the evaluated browser-asset recipe",
+      "integrity": "sha512-sAt8BhgNbzCtgGbt2OxmpuryO63ZoDk/sqaB/znQm94T4fCEsy/yV+7CdC1kJhOU9lboAEU7R3kquuycDoibVA==",
+      "license_expression": "MIT",
+      "license_evidence_url": "https://www.npmjs.com/package/ws/v/8.20.0"
+    },
+    {
+      "name": "pyodide",
+      "version": "0.27.7",
+      "profile": "core",
+      "relationship": "runtime-core",
+      "artifact": "npm package plus same-origin JavaScript and WebAssembly assets",
+      "license_expression": "MPL-2.0",
+      "license_evidence_url": "https://github.com/pyodide/pyodide/blob/0.27.7/LICENSE"
+    },
+    {
+      "name": "cpython-standard-library",
+      "version": "3.12.7",
+      "profile": "core",
+      "relationship": "runtime-core",
+      "artifact": "python_stdlib.zip",
+      "license_expression": "PSF-2.0",
+      "license_evidence_url": "https://github.com/python/cpython/blob/v3.12.7/LICENSE"
+    },
+    {
+      "name": "annotated-types",
+      "version": "0.6.0",
+      "profile": "network",
+      "relationship": "transitive",
+      "artifact": "annotated_types-0.6.0-py3-none-any.whl",
+      "sha256": "9733de5d59580defb40ad7bd8a5d53a0fac03de7a13028d95cacc4e81945c97c",
+      "license_expression": "MIT",
+      "license_evidence_url": "https://pypi.org/project/annotated-types/0.6.0/"
+    },
+    {
+      "name": "anyio",
+      "version": "4.9.0",
+      "profile": "network",
+      "relationship": "transitive",
+      "artifact": "anyio-4.9.0-py3-none-any.whl",
+      "sha256": "e1d9180d4361fd71d1bc4a7007fea6cae1d18792dba9d07eaad89f2a8562f71c",
+      "license_expression": "MIT",
+      "license_evidence_url": "https://pypi.org/project/anyio/4.9.0/"
+    },
+    {
+      "name": "certifi",
+      "version": "2024.12.14",
+      "profile": "network",
+      "relationship": "transitive",
+      "artifact": "certifi-2024.12.14-py3-none-any.whl",
+      "sha256": "a5f31d8fbcd66632ba9fe6face6471c4d4df2e85cd6c46bd0c5ff58eb903a4ad",
+      "license_expression": "MPL-2.0",
+      "license_evidence_url": "https://pypi.org/project/certifi/2024.12.14/"
+    },
+    {
+      "name": "charset-normalizer",
+      "version": "3.3.2",
+      "profile": "network",
+      "relationship": "transitive",
+      "artifact": "charset_normalizer-3.3.2-py3-none-any.whl",
+      "sha256": "b83440eee4a1398f9a71186169cdc17b84cdb93a63e61f3c6347dd1463a11fca",
+      "license_expression": "MIT",
+      "license_evidence_url": "https://pypi.org/project/charset-normalizer/3.3.2/"
+    },
+    {
+      "name": "distro",
+      "version": "1.9.0",
+      "profile": "network",
+      "relationship": "transitive",
+      "artifact": "distro-1.9.0-py3-none-any.whl",
+      "sha256": "697c8eca85a124c7448336dcfdcf6862c846a181e1c6430bc35120efffd24878",
+      "license_expression": "Apache-2.0",
+      "license_evidence_url": "https://pypi.org/project/distro/1.9.0/"
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1",
+      "profile": "network",
+      "relationship": "transitive",
+      "artifact": "httpx-0.28.1-py3-none-any.whl",
+      "sha256": "4ca06d11b8dc47f96ec55f5ad601ea95a22d34cde012af826d2ba7640f051a7c",
+      "license_expression": "BSD-3-Clause",
+      "license_evidence_url": "https://pypi.org/project/httpx/0.28.1/"
+    },
+    {
+      "name": "idna",
+      "version": "3.7",
+      "profile": "network",
+      "relationship": "transitive",
+      "artifact": "idna-3.7-py3-none-any.whl",
+      "sha256": "9d4685891e3e37434e09b1becda7e96a284e660c7aea9222564d88b6c3527c09",
+      "license_expression": "BSD-3-Clause",
+      "license_evidence_url": "https://pypi.org/project/idna/3.7/"
+    },
+    {
+      "name": "jiter",
+      "version": "0.8.2",
+      "profile": "network",
+      "relationship": "transitive",
+      "artifact": "jiter-0.8.2-cp312-cp312-pyodide_2024_0_wasm32.whl",
+      "sha256": "ff0beeb857eedae373da0be5798f86ee34699ce6136afa439d0355f19ebdacd0",
+      "license_expression": "MIT",
+      "license_evidence_url": "https://pypi.org/project/jiter/0.8.2/"
+    },
+    {
+      "name": "openai",
+      "version": "1.68.2",
+      "profile": "network",
+      "relationship": "direct",
+      "artifact": "openai-1.68.2-py3-none-any.whl",
+      "sha256": "508d5d5ee0a39d1ef108e09888af784c54a639f48ebb354517e3d52d40900f22",
+      "license_expression": "Apache-2.0",
+      "license_evidence_url": "https://pypi.org/project/openai/1.68.2/"
+    },
+    {
+      "name": "openssl",
+      "version": "1.1.1w",
+      "profile": "network",
+      "relationship": "transitive",
+      "artifact": "openssl-1.1.1w.zip",
+      "sha256": "20b92cd9b9adb1a739af9f93772b60c084203aacf63ae1b2353951bd80c97f08",
+      "license_expression": "OpenSSL",
+      "license_evidence_url": "https://github.com/openssl/openssl/blob/OpenSSL_1_1_1w/LICENSE",
+      "review_note": "The Pyodide 0.27.7 recipe labels this Apache-2.0, but the exact OpenSSL 1.1.1w upstream license applies the legacy OpenSSL and SSLeay terms. Resolve that metadata conflict with the reviewer before distribution."
+    },
+    {
+      "name": "pydantic",
+      "version": "2.10.5",
+      "profile": "network",
+      "relationship": "transitive",
+      "artifact": "pydantic-2.10.5-py3-none-any.whl",
+      "sha256": "dd344e353e3c3a2d972c1198744a4f4ba1e2ce586e903187cca9fdaafb46c63d",
+      "license_expression": "MIT",
+      "license_evidence_url": "https://pypi.org/project/pydantic/2.10.5/"
+    },
+    {
+      "name": "pydantic-core",
+      "version": "2.27.2",
+      "profile": "network",
+      "relationship": "transitive",
+      "artifact": "pydantic_core-2.27.2-cp312-cp312-pyodide_2024_0_wasm32.whl",
+      "sha256": "eefd735db79e36e3425e4a821fc9df6cb172d2845f0d4a2a1038eb5f4d5c1d0c",
+      "license_expression": "MIT",
+      "license_evidence_url": "https://pypi.org/project/pydantic-core/2.27.2/"
+    },
+    {
+      "name": "pyodide-http",
+      "version": "0.2.1",
+      "profile": "network",
+      "relationship": "direct",
+      "artifact": "pyodide_http-0.2.1-py3-none-any.whl",
+      "sha256": "eba0df0bfddb0481625725cdf679af16cd6825ba686167a7b52719469a29267b",
+      "license_expression": "MIT",
+      "license_evidence_url": "https://pypi.org/project/pyodide-http/0.2.1/"
+    },
+    {
+      "name": "requests",
+      "version": "2.31.0",
+      "profile": "network",
+      "relationship": "direct",
+      "artifact": "requests-2.31.0-py3-none-any.whl",
+      "sha256": "aa9e565a1522a7b700e0801c429f7139c5e5c56d22c1b20e2987351a5e0cc48b",
+      "license_expression": "Apache-2.0",
+      "license_evidence_url": "https://pypi.org/project/requests/2.31.0/"
+    },
+    {
+      "name": "sniffio",
+      "version": "1.3.1",
+      "profile": "network",
+      "relationship": "transitive",
+      "artifact": "sniffio-1.3.1-py3-none-any.whl",
+      "sha256": "9215f9917b34fc73152b134a3fc0a2eb0e4a49b0b956100cad75e84943412bb9",
+      "license_expression": "MIT OR Apache-2.0",
+      "license_evidence_url": "https://pypi.org/project/sniffio/1.3.1/"
+    },
+    {
+      "name": "ssl",
+      "version": "1.0.0",
+      "profile": "network",
+      "relationship": "transitive",
+      "artifact": "ssl-1.0.0-cp312-cp312-pyodide_2024_0_wasm32.whl",
+      "sha256": "1af0b011a3043331a8a2a358832dcee736deff73a55ad0393222ea533942094a",
+      "license_expression": "PSF-2.0 AND OpenSSL",
+      "license_evidence_url": "https://github.com/pyodide/pyodide/blob/0.27.7/packages/ssl/meta.yaml",
+      "additional_license_evidence_urls": [
+        "https://github.com/python/cpython/blob/v3.12.7/LICENSE",
+        "https://github.com/openssl/openssl/blob/OpenSSL_1_1_1w/LICENSE"
+      ]
+    },
+    {
+      "name": "typing-extensions",
+      "version": "4.11.0",
+      "profile": "network",
+      "relationship": "transitive",
+      "artifact": "typing_extensions-4.11.0-py3-none-any.whl",
+      "sha256": "c3f00b6653202513b1f7813ad3c466510ceecc599a37d665a31dcfb5ac7049b9",
+      "license_expression": "PSF-2.0",
+      "license_evidence_url": "https://pypi.org/project/typing-extensions/4.11.0/"
+    },
+    {
+      "name": "urllib3",
+      "version": "2.2.3",
+      "profile": "network",
+      "relationship": "transitive",
+      "artifact": "urllib3-2.2.3-py3-none-any.whl",
+      "sha256": "902ea205c74f46402ea539ac68a7095117d20734c7ee6b7a6de1ca88224604f9",
+      "license_expression": "MIT",
+      "license_evidence_url": "https://pypi.org/project/urllib3/2.2.3/"
+    }
+  ],
+  "review_boundary": {
+    "documentation_effect": "This inventory makes the candidate dependency and license scope reviewable now.",
+    "approval_effect": "None. Repository documentation and CI cannot grant open-source approval.",
+    "change_rule": "Adding, removing, upgrading, patching, or redistributing a component requires refreshed evidence and the authorized reviewer decision applicable at that time."
+  }
+}

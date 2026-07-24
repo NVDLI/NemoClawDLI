@@ -1,0 +1,34 @@
+# Runnerless bridge for internal privileged operations. Pipeline variables can select only
+# closed request data; they are never forwarded as a process environment to a runner.
+privileged_course_operation:
+  inherit:
+    default: false
+    variables: false
+  stage: test
+  variables:
+    DLI_REQUEST_OP: "$COURSE_OP"
+    DLI_REQUEST_CANDIDATE_REF: "$CANDIDATE_REF"
+    DLI_REQUEST_CANDIDATE_SHA: "$CANDIDATE_SHA"
+    DLI_REQUEST_CANDIDATE_TEST_JOB_ID: "$CANDIDATE_TEST_JOB_ID"
+    DLI_REQUEST_CLAW_URL_1: "$CLAW_URL_1"
+    DLI_REQUEST_CLAW_ACCESS_PROVIDER_1: "$CLAW_ACCESS_PROVIDER_1"
+    DLI_REQUEST_CLAW_URL_2: "$CLAW_URL_2"
+    DLI_REQUEST_CLAW_ACCESS_PROVIDER_2: "$CLAW_ACCESS_PROVIDER_2"
+    DLI_REQUEST_PUBLISH_SOURCE_REF: "$PUBLISH_SOURCE_REF"
+    DLI_REQUEST_PUBLISH_SOURCE_SHA: "$PUBLISH_SOURCE_SHA"
+    DLI_REQUEST_PUBLISH_SOURCE_TEST_JOB_ID: "$PUBLISH_SOURCE_TEST_JOB_ID"
+    DLI_REQUEST_PUBLISH_COURSES: "$PUBLISH_COURSES"
+    DLI_REQUEST_PUBLISH_LANGUAGES: "$PUBLISH_LANGUAGES"
+    DLI_REQUEST_PUBLISH_CHANNEL: "$PUBLISH_CHANNEL"
+  trigger:
+    include:
+      - local: "/.gitlab/ci/privileged-child.yml"
+    strategy: depend
+    forward:
+      yaml_variables: true
+      pipeline_variables: false
+  rules:
+    - if: '$COURSE_PRIVILEGED_PIPELINE == "1" && ($COURSE_OP == "live-interface-review" || $COURSE_OP == "cdn-publish")'
+      when: on_success
+      allow_failure: false
+    - when: never

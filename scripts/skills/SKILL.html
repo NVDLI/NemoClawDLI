@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>scripts/skills SKILL contract tooling</title>
+
+<script type="application/json" id="skill-meta">
+{
+  "schema": "dir-skill/1.0",
+  "node_type": "directory-explorer",
+  "title": "scripts/skills SKILL contract tooling",
+  "source_dir": "scripts/skills/",
+  "summary": "Fail-closed tooling that discovers every source directory, requires its SKILL.html, validates metadata and renderers, generates directory and hub contracts, and checks cross-file consistency.",
+  "related": [
+    "scripts/skills/skill_contract.py",
+    "scripts/skills/skill_consistency.py",
+    "scripts/skills/skill_audit.py",
+    "scripts/skills/gen_directory_beacons.py",
+    "scripts/skills/normalize_skill_headers.py",
+    "scripts/skills/gen_skill_hierarchy.py",
+    "scripts/skills/skill_renderer_runtime_audit.py",
+    "scripts/skills/test_skill_contract.py",
+    "scripts/skills/scripts_hierarchy.py"
+  ],
+  "explorer": "../../web/_skill_explorer.js"
+}
+</script>
+
+<script type="application/json" id="explorer-config">
+{
+  "title": "scripts/skills SKILL contract tooling",
+  "summary": "Fail-closed tooling that discovers every source directory, requires its SKILL.html, validates metadata and renderers, generates directory and hub contracts, and checks cross-file consistency.",
+  "ties": [
+    "build"
+  ],
+  "nav": {
+    "home": "../../web/index.html",
+    "up": {
+      "label": "scripts",
+      "href": "../SKILL.html"
+    }
+  },
+  "files": [
+    {
+      "path": "skill_contract.py",
+      "role": "required contract gate",
+      "desc": "Validates skill-meta, exhaustive directory coverage, drift, local renderer assets, configured files, and meaningful human output."
+    },
+    {
+      "path": "skill_consistency.py",
+      "role": "cross-file invariant gate",
+      "desc": "Checks duplicated facts, dangling references, and harness wiring."
+    },
+    {
+      "path": "skill_audit.py",
+      "role": "coverage audit",
+      "desc": "Derives every source directory from tracked and proposed files, then rejects any missing or stale beacon without exemptions."
+    },
+    {
+      "path": "gen_directory_beacons.py",
+      "role": "directory contract generator",
+      "desc": "Creates and refreshes the standard dual-reader contract for every exhaustively discovered source directory."
+    },
+    {
+      "path": "normalize_skill_headers.py",
+      "role": "navigation header normalizer",
+      "desc": "Adds and verifies the semantic home, parent, and repository-map header on every SKILL page."
+    },
+    {
+      "path": "gen_skill_hierarchy.py",
+      "role": "hub generator",
+      "desc": "Generates hub SKILL pages from the live tree."
+    },
+    {
+      "path": "skill_renderer_runtime_audit.py",
+      "role": "Playwright renderer gate",
+      "desc": "Loads every discovered HTML file in the standard Chromium runtime, rejects theme-dependent contrast, and applies navigation/export checks to every beacon."
+    },
+    {
+      "path": "test_skill_contract.py",
+      "role": "standard framework tests",
+      "desc": "Uses unittest to mutation-test exhaustive discovery and renderer failure modes."
+    },
+    {
+      "path": "scripts_hierarchy.py",
+      "role": "script layout guardrail",
+      "desc": "Ensures implementation files stay in subdirectories and root files remain compatibility entrypoints."
+    }
+  ]
+}
+</script>
+
+<style data-skill-static="1">
+.skill-static{padding:24px clamp(18px,4vw,44px);border-bottom:1px solid #2a2a2a;background:#0d0d0d;color:#f2f2f2;font:15px/1.55 system-ui,sans-serif}
+.skill-static a{color:#76b900}.skill-static h1{margin:.1em 0 .25em;color:#76b900;font-size:1.65rem}.skill-static h2{font-size:1.02rem;margin:1.2rem 0 .45rem}.skill-static p{max-width:76rem;color:#b0b0b0}.skill-list{display:grid;grid-template-columns:1fr;max-width:76rem;margin:.7rem 0}.skill-link{display:grid;grid-template-columns:minmax(180px,280px) 1fr;gap:12px;border-top:1px solid #2a2a2a;padding:9px 4px;text-decoration:none}.skill-link:last-child{border-bottom:1px solid #2a2a2a}.skill-link b{display:block;color:#aee23a;margin-bottom:4px}.skill-link code,.skill-cmd code{font-family:ui-monospace,Consolas,monospace}.skill-link span{color:#b0b0b0;font-size:.9rem}.skill-cmds{display:grid;gap:8px;margin:.7rem 0}.skill-cmd{display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:8px;align-items:center;border:1px solid #2a2a2a;border-radius:8px;background:#111;padding:9px 11px}.skill-cmd b{color:#aee23a}.skill-cmd code{display:block;overflow:auto;white-space:nowrap;color:#f2f2f2}.skill-note{border-left:3px solid #76b900;background:rgba(118,185,0,.08);padding:10px 13px;margin:.8rem 0;color:#ddd}.skill-nav{display:flex;gap:12px;flex-wrap:wrap;margin:.8rem 0}.skill-nav a{border:1px solid #2a2a2a;border-radius:999px;padding:5px 10px;text-decoration:none}.skill-nav a:hover{border-color:#76b900}@media(max-width:700px){.skill-cmd{grid-template-columns:1fr}.skill-static{padding:18px}.skill-link{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<section class="skill-static" aria-labelledby="skill-title">
+  <header data-skill-header="1">
+<nav class="skill-nav" aria-label="Skill navigation"><a href="../../web/index.html">Home</a><a href="../SKILL.html">scripts</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../SKILL.html">Repository map</a></nav>
+</header>
+  <h1 id="skill-title">scripts/skills SKILL contract tooling</h1>
+  <p>Fail-closed tooling that discovers every source directory, requires its <code>SKILL.html</code>, validates metadata and renderers, generates directory and hub contracts, and checks cross-file consistency.</p>
+  <div class="skill-note">Run commands from the repository root. Root-level script paths remain compatibility entrypoints; implementation files live in this directory tree.</div>
+  <h2>Executable checks</h2>
+  <div class="skill-cmds">
+    <div class="skill-cmd"><b>Hierarchy guard</b><code>python3 scripts/skills/scripts_hierarchy.py</code></div>
+    <div class="skill-cmd"><b>SKILL schema</b><code>python3 scripts/skills/skill_contract.py</code></div>
+    <div class="skill-cmd"><b>Generate directory beacons</b><code>python3 scripts/skills/gen_directory_beacons.py</code></div>
+    <div class="skill-cmd"><b>Generator drift</b><code>python3 scripts/skills/gen_directory_beacons.py --check</code></div>
+    <div class="skill-cmd"><b>Normalize navigation</b><code>python3 scripts/skills/normalize_skill_headers.py --apply</code></div>
+    <div class="skill-cmd"><b>Navigation header drift</b><code>python3 scripts/skills/normalize_skill_headers.py --check</code></div>
+    <div class="skill-cmd"><b>Contract tests</b><code>python3 scripts/skills/test_skill_contract.py</code></div>
+    <div class="skill-cmd"><b>Rendered browser audit</b><code>python3 scripts/skills/skill_renderer_runtime_audit.py --site-root .</code></div>
+    <div class="skill-cmd"><b>Cross-file consistency</b><code>python3 scripts/skills/skill_consistency.py</code></div>
+    <div class="skill-cmd"><b>Skill audit</b><code>python3 scripts/skills/skill_audit.py</code></div>
+  </div>
+  <h2>Linkage map</h2>
+  <div class="skill-list">
+    <a class="skill-link" href="skill_contract.py"><b>skill_contract.py</b><span>required contract gate. Validates metadata, exhaustive coverage, drift, renderer assets, configured files, and human output.</span></a>
+    <a class="skill-link" href="skill_consistency.py"><b>skill_consistency.py</b><span>cross-file invariant gate. Checks duplicated facts, dangling references, and harness wiring.</span></a>
+    <a class="skill-link" href="skill_audit.py"><b>skill_audit.py</b><span>coverage audit. Derives every source directory from Git and rejects any missing or stale beacon.</span></a>
+    <a class="skill-link" href="gen_directory_beacons.py"><b>gen_directory_beacons.py</b><span>directory contract generator. Creates the standard dual-reader beacon for every discovered source directory.</span></a>
+    <a class="skill-link" href="normalize_skill_headers.py"><b>normalize_skill_headers.py</b><span>navigation normalizer. Gives every beacon a semantic header with home, parent, and repository-map routes.</span></a>
+    <a class="skill-link" href="gen_skill_hierarchy.py"><b>gen_skill_hierarchy.py</b><span>hub generator. Generates hub SKILL pages from the live tree.</span></a>
+    <a class="skill-link" href="skill_renderer_runtime_audit.py"><b>skill_renderer_runtime_audit.py</b><span>Required Playwright renderer gate. Discovers every HTML file without an allowlist, checks desktop/narrow layout and dark/light color dependencies, and applies the additional navigation/export contract to every beacon.</span></a>
+    <a class="skill-link" href="test_skill_contract.py"><b>test_skill_contract.py</b><span>standard framework tests. Mutation coverage for directory discovery and renderer failures.</span></a>
+    <a class="skill-link" href="scripts_hierarchy.py"><b>scripts_hierarchy.py</b><span>script layout guardrail. Ensures implementation files stay in subdirectories and root files remain compatibility entrypoints.</span></a>
+  </div>
+  <h2>Interactive explorer</h2>
+  <p>The explorer below opens source files, tours important sections, and checks documented paths against the repository tree.</p>
+</section>
+<div id="explorer"></div>
+<noscript>
+  <section class="skill-static"><h2>JavaScript disabled</h2><p>The static command list and file links above remain usable. Enable JavaScript for source viewing and guided tours.</p></section>
+</noscript>
+<script src="../../web/_skill_explorer.js"></script>
+</body>
+</html>

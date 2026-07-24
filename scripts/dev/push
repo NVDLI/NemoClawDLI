@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# scripts/dev/push — safe push for the devbox.
+# Absorbs CI-report commits from the DGX Spark before pushing so you never
+# see a "non-fast-forward" rejection.  Run instead of `git push`.
+set -euo pipefail
+
+REPO_ROOT="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+# If .claude/settings.json is the only modified tracked file, stash it so
+# the rebase can proceed, then restore it after.
+DIRTY_TRACKED=$(git diff --name-only)
+STASHED=false
+if [ -n "$DIRTY_TRACKED" ]; then
+    echo "Stashing modified tracked files: $DIRTY_TRACKED"
+    git stash push --message "pre-push stash" -- $DIRTY_TRACKED
+    STASHED=true
+fi
+
+cleanup() {
+    if [ "$STASHED" = true ]; then
+        git stash pop 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT
+
+git pull --rebase
+git push "$@"

@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>O Agente de Índice · Segurança de Agentes</title>
+<link rel="stylesheet" href="styles/_style.css"/>
+<script src="vendor/highlight-11.10.0.min.js"></script>
+<link rel="stylesheet" href="vendor/codemirror-5.65.21.css"/>
+<link rel="stylesheet" href="vendor/codemirror-monokai-5.65.21.css"/>
+<script src="vendor/codemirror-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-xml-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-javascript-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-css-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-htmlmixed-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-python-5.65.21.js"></script>
+<style>
+  figure.lp-video { margin: 1.4em 0; }
+  figure.lp-video .video-wrap { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;
+     border-radius: 8px; border: 1px solid var(--bd); background: var(--e1); }
+  figure.lp-video .video-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+  figure.lp-video figcaption { font-size: .88rem; color: var(--td,#b0b0b0); line-height: 1.6; margin-top: .55em; }
+  figure.lp-video figcaption b { color: var(--gs,#aee23a); }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="logo" href="index.html">NVIDIA · Segurança de Agentes</a>
+  <nav id="nav"></nav>
+  <div class="spacer"></div>
+  <span class="key-pill" id="key-status" onclick="location.href='01a-loop.html?openKeyPanel=1'">…</span>
+</div>
+
+<main>
+  <div id="journey-map"></div>
+
+  <div class="hero">
+    <div class="eyebrow">Módulo 2 · Parte B de 3</div>
+    <h1>O <span>Agente de Índice</span></h1>
+    <p class="lead">
+ Os dados assumem várias formas, e cada uma exige uma estratégia de recuperação diferente. Escolher uma estratégia incompatível com os dados é a causa mais comum de falhas silenciosas de um agente de índice em produção.
+ </p>
+    <p class="lead">
+ O Agente de Índice aplica essa ideia de workflow ao conhecimento externo com um pipeline definido pelo desenvolvedor. Ele incorpora e indexa um corpus antecipadamente, então recupera passagens correspondentes e gera uma resposta a partir de um pacote de contexto limitado.
+ O exemplo percorre esse caminho para prosa não estruturada e depois encapsula a recuperação como uma ferramenta que um ciclo ReAct externo pode chamar. Para as outras formas de dados, a página indica os caminhos de aprofundamento.
+ </p>
+  </div>
+
+  <!-- video removed: short teaser, more distraction than signal. Re-enable by uncommenting.
+  <figure class="lp-video">
+    <div class="video-wrap">
+      <iframe src="https://www.youtube-nocookie.com/embed/e7Io9dr_WhI?autoplay=0&rel=0"
+        title="Introduction: Agentic RAG" loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+    <figcaption><b>Watch:</b> A walkthrough of agentic RAG, where the model reasons over a query and decides when to retrieve rather than running a fixed lookup on every turn. The narrated version fills in the moving parts that a static page leaves implicit. Part of NVIDIA's <a href="https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-agentic-ai-rag" target="_blank" rel="noopener">Agentic AI Learning Path</a>.</figcaption>
+  </figure>
+  -->
+
+  <!-- ── Foundations: RAG began as one jointly-trained system ── -->
+  <h2>De onde veio o RAG: um sistema, treinado de ponta a ponta</h2>
+  <p>
+ A versão de RAG mais comum hoje descarta boa parte do design original. Entender essa diferença muda a forma de pensar sobre o recuperador que você está prestes a conectar.
+ </p>
+  <p>
+ Quando
+ <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Lewis e colegas</a> nomearam
+ a geração aumentada por recuperação em 2020, não era um modelo com uma caixa de pesquisa acoplada. O <strong>recuperador e o gerador foram treinados juntos</strong> na tarefa que tinham que realizar. Leia a figura da esquerda para a direita antes de olhar para a seta no topo.
+ </p>
+  <div style="display:flex;justify-content:center;margin:1.4em 0">
+    <figure style="margin:0;max-width:940px;width:100%">
+      <div class="fig-embed" data-figure-mode="fixed-white" data-svg-src="assets/figures/rag_arch_2021.svg"
+           style="margin:0;background:var(--gfx-paper-surface,#fff);border:1px solid var(--gfx-line,#2a2a2a);border-radius:8px;padding:16px"></div>
+      <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.5em">
+ A arquitetura original, de <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Lewis et al. 2020</a>,
+ com o rótulo de retropropagação na linha superior que a maioria dos sistemas construídos hoje deixa de fora.
+ </figcaption>
+    </figure>
+  </div>
+  <p>
+ O design vive na seta rotulada como "Retropropagação de Ponta a Ponta por q e p<sub>&theta;</sub>". Uma perda atualizou ambas as metades de uma vez. O codificador de consulta aprendeu quais passagens o gerador poderia usar, e o gerador aprendeu a se apoiar em evidências recuperadas em vez da sua própria memória.
+ </p>
+  <p>
+ O recuperador começou como parte do modelo,
+ moldado pela tarefa que precisava realizar, muito antes de ser descrito como uma ferramenta de busca posicionada à frente de um modelo.
+ </p>
+
+  <!-- ── Why production simplified it ── -->
+  <h2>Por que o RAG de hoje descarta o treinamento conjunto</h2>
+  <p>
+ Hoje, quase ninguém treina RAG dessa forma por duas razões práticas. Não é possível
+ retropropagar por um modelo de fronteira acessado por API; mesmo quando auto-hospedado, o treinamento conjunto de recuperação e geração é caro e instável.
+ </p>
+  <p>
+ A prática convergiu para uma montagem mais simples: usar um modelo existente e congelado, colocar um recuperador à sua frente e enviar ao prompt as evidências recuperadas, sem novo treinamento. As partes são construídas separadamente e depois acopladas. Com o tempo, "RAG" passou a significar esse acoplamento, não o sistema otimizado em conjunto descrito no artigo.
+ </p>
+  <div class="callout">
+ <strong>O custo do acoplamento.</strong> Um recuperador que nunca recebe o sinal de perda do gerador precisa inferir o que ele necessita. Por isso, a qualidade da recuperação depende de quanto o modelo de incorporação se ajusta aos dados. Reclassificação, reescrita de consultas e um modelo de incorporação ajustado recuperam parte do benefício antes obtido pelo treinamento de ponta a ponta. Uma pilha de recuperação robusta adiciona estágios para reduzir o restante da diferença. Encare o acoplamento como um substituto pragmático para um sistema antes unificado: isso revela seu limite e os controles capazes de elevá-lo.
+ </div>
+
+  <!-- ── The practical pipeline you build ── -->
+  <h2>O pipeline recuperar-e-gerar que você constrói</h2>
+  <p>
+ Com esse limite em mente, observe a montagem completa. Um recuperador opera à frente do modelo congelado em duas linhas do tempo. Uma constrói o índice antecipadamente; a outra atende às solicitações em tempo de execução usando esse índice.
+ A figura abaixo mostra as duas.</p>
+  <figure style="margin:1.4em 0 1.8em">
+    <div class="fig-embed" data-svg-src="assets/figures/02b-rag-1.svg" style="aspect-ratio:1220 / 480"></div>
+    <figcaption>
+ Recriação para o curso do pipeline de duas etapas mostrado em <a href="https://developer.nvidia.com/blog/rag-101-demystifying-retrieval-augmented-generation-pipelines/" target="_blank" rel="noopener">Hayden Wolff, <em>RAG 101</em></a> (NVIDIA, 2023)
+ e <a href="https://developer.nvidia.com/blog/tips-for-building-a-rag-pipeline-with-nvidia-ai-langchain-ai-endpoints/" target="_blank" rel="noopener">Amit Bleiweiss, <em>tips for building a RAG pipeline</em></a> (NVIDIA, 2024).</figcaption>
+  </figure>
+  <div class="callout">
+    <p class="pipeline-stage"><strong>Offline:</strong> construa o índice uma vez, incorporando cada passagem e armazenando-a para busca rápida.</p>
+    <p class="pipeline-stage"><strong>Ao vivo:</strong> incorpore a pergunta, recupere as passagens top-K e entregue-as ao modelo junto com a pergunta.</p>
+  </div>
+  <p>
+ O restante desta página constrói o caminho ao vivo uma etapa de cada vez.</p>
+
+  <!-- ── Part 1: The bundle principle ──────────────────────────────────────── -->
+  <h2>Definir o pacote de contexto antes de escolher o armazenamento</h2>
+  <p>
+ Antes de escolher um primitivo de recuperação, defina um <strong>pacote</strong>: o conjunto completo e limitado de contexto que deve atravessar o pipeline.</p>
+  <ul>
+    <li><strong>Para um sistema de resposta a perguntas de um único turno simples</strong>, o pacote pode permanecer pequeno: a pergunta do usuário, os poucos pedaços recuperados para respondê-la e a resposta em si.</li>
+    <li><strong>Para um agente autônomo</strong>, o pacote é a memória de trabalho que ele carrega em muitos turnos. Essa memória armazena as restrições do agente, decisões anteriores, resultados parciais, superfícies de ferramentas e regras de operação.</li>
+    <li><strong>Para um agente de índice arbitrário</strong>, o pacote retornado pode conter apenas os trechos recuperados, suas fontes, pontuações de relevância e talvez um resumo. Um pacote interno separado pode representar o pipeline linear de processamento em tempo de execução mostrado acima ou um ciclo no estilo ReAct, que avalia a relevância e tenta novamente até acumular contexto suficiente.</li>
+  </ul>
+  <p>
+ O princípio do pacote é uma disciplina de planejamento: <em>defina o pacote antes de escolher o banco de dados</em>. Escolher primeiro um armazenamento de vetores e esperar que ele cubra tudo costuma produzir o resultado "funcionou na demonstração, mas falhou em produção". A taxonomia de quatro formas abaixo ajuda a verificar se o primitivo candidato consegue entregar o pacote exigido pela tarefa.</p>
+
+  <h2>Onde o MCP se encaixa nos sistemas de recuperação</h2>
+  <p>
+ O MCP fornece a um sistema de recuperação uma fronteira para descobrir e chamar fontes de contexto externas. O agente ainda precisa de um runtime que decide quando recuperar, valida o resultado e compõe com o restante do estado da tarefa ativa. Outras fronteiras podem transportar outras partes do mesmo sistema: pacotes de habilidades, instruções de capacidade reutilizável, A2A pode encaminhar trabalho para especialistas remotos e protocolos de UI podem transmitir o estado gerado de volta para um aplicativo.</p>
+  <p>
+ A figura abaixo separa essas fronteiras. Leia da esquerda para a direita para acompanhar a entrada de contexto pelo MCP e a entrega de tarefas pelo A2A; leia de baixo para cima para acompanhar a oferta de capacidades por habilidades, a execução no runtime e a UX gerada.</p>
+  <figure style="margin:1.4em 0 1.8em">
+    <div class="fig-embed" data-svg-src="assets/figures/02b-retrieval-boundaries.svg" style="aspect-ratio:1100 / 460"></div>
+    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.5em">
+ Quatro limites do sistema em torno de um runtime de recuperação: MCP para entrada de contexto, A2A para entrega de tarefas e habilidades/runtime/UX para fluxo de capacidade.
+ </figcaption>
+  </figure>
+
+  <!-- ── Part 2: Four data shapes ──────────────────────────────────────────── -->
+  <h2>Associando um primitivo de recuperação à forma dos seus dados</h2>
+  <p>
+ Cada forma de dados exige um primitivo de recuperação adequado. Escolha a linha errada, e o sistema continuará retornando resultados plausíveis enquanto deixa de encontrar o que a consulta realmente pede, sem emitir erro. A tabela abaixo relaciona cada forma ao primitivo correspondente.
+ </p>
+
+  <table style="width:100%;border-collapse:collapse;font-size:.9rem;margin:.8em 0">
+    <thead><tr style="border-bottom:2px solid var(--bd)">
+      <th style="text-align:left;padding:8px 12px;color:var(--td);font-size:.78rem;text-transform:uppercase">Forma</th>
+      <th style="text-align:left;padding:8px 12px;color:var(--td);font-size:.78rem;text-transform:uppercase">Exemplos</th>
+      <th style="text-align:left;padding:8px 12px;color:var(--td);font-size:.78rem;text-transform:uppercase">Primitivo correto</th>
+    </tr></thead>
+    <tbody>
+      <tr><td style="padding:8px 12px"><strong>Prosa não estruturada</strong></td><td style="padding:8px 12px">Documentos, artigos, comentários de código, transcrições</td><td style="padding:8px 12px">Vetor denso + reclassificação com cross-encoder</td></tr>
+      <tr><td style="padding:8px 12px"><strong>Documentos hierárquicos</strong></td><td style="padding:8px 12px">Contratos legais, manuais técnicos, especificações aninhadas</td><td style="padding:8px 12px">Índice de árvore com ponteiros de pai</td></tr>
+      <tr><td style="padding:8px 12px"><strong>Tabelas estruturadas / governadas</strong></td><td style="padding:8px 12px">Registros de clientes, livros-razão financeiros, tabelas de RH</td><td style="padding:8px 12px">Camada semântica sobre a fonte de verdade</td></tr>
+      <tr><td style="padding:8px 12px"><strong>Relacional / grafo</strong></td><td style="padding:8px 12px">Quadros organizacionais, dependências de código, grafos de conhecimento</td><td style="padding:8px 12px">Travessia de grafos (<a href="https://opencypher.org/" target="_blank" rel="noopener">Cypher</a>, GraphQL, personalizado)</td></tr>
+    </tbody>
+  </table>
+
+  <p>
+ Este módulo segue a forma <strong>de prosa não estruturada</strong> do corpus para a resposta e executa o fluxo básico de recuperação e geração para nossos propósitos de exemplo.
+ </p>
+  <figure style="margin:1.4em 0">
+    <div class="fig-embed" data-svg-src="assets/figures/02b-rag-2.svg" style="aspect-ratio:900 / 420"></div>
+  </figure>
+  <p>Cada solicitação percorre os mesmos quatro passos:</p>
+  <ul>
+    <li><strong>Incorporar</strong> a consulta em um vetor.</li>
+    <li><strong>Pesquisar</strong> o índice de passagens para as K passagens mais próximas.</li>
+    <li><strong>Concatenar</strong> essas passagens ao prompt.</li>
+    <li><strong>Gerar</strong> uma resposta fundamentada nelas.</li>
+  </ul>
+  <p>
+ Agentes de índice que coordenam esses primitivos geralmente seguem a mesma estrutura e variam apenas a lógica de busca, incorporação e verificação. Experimente a forma que melhor corresponde aos seus dados.
+ </p>
+
+  <!-- ── Part 3: Embeddings ────────────────────────────────────────────────── -->
+  <h2>A incorporação, o primitivo sobre o qual tudo o mais é construído</h2>
+  <p>
+ Cada agente de índice de prosa não estruturada começa do mesmo
+ primitivo. Uma incorporação é uma representação numérica aprendida para um trecho de texto:
+ um vetor de comprimento fixo, posicionado de modo que textos semanticamente semelhantes
+ fiquem próximos no espaço vetorial. Disso decorrem duas consequências práticas:
+ </p>
+  <div class="callout">
+    <p class="embedding-consequence"><strong>Comparar:</strong> a <a href="https://en.wikipedia.org/wiki/Cosine_similarity" target="_blank" rel="noopener">similaridade cosseno</a> entre dois vetores usa um produto escalar e duas magnitudes.</p>
+    <p class="embedding-consequence"><strong>Armazenar:</strong> um índice vetorial organiza textos pela posição nesse espaço para buscar os vizinhos mais próximos com eficiência.</p>
+  </div>
+  <p>
+ Ambos se baseiam em um único primitivo: o modelo de incorporação. Este curso encaminha as chamadas por <code>helpers.embed</code> ao endpoint de incorporação hospedado da NVIDIA,
+ permitindo executar tudo no navegador sem depender de um ambiente de laboratório ou servidor local.
+ </p>
+
+  <div id="cell-m3b-p1"></div>
+
+  <div class="callout">
+ <strong>Contrato da API de Incorporações.</strong>
+ <p>O endpoint de incorporações aceita uma solicitação JSON com três campos e retorna um array de vetores:</p>
+ <ul>
+ <li><code>input</code> é o lote de textos para incorporar, tipado <code>string[]</code>.</li>
+ <li><code>model</code> nomeia o modelo de incorporação, tipado <code>string</code>.</li>
+ <li><code>input_type</code> é <code>"query"</code> ou <code>"passage"</code>.</li>
+ <li>A resposta carrega um array <code>data</code> cujas entradas cada uma contém uma <code>embedding</code> de <code>number[]</code>.</li>
+ </ul>
+ <p>Os modelos de incorporação da NVIDIA atribuem vetores diferentes ao mesmo texto conforme o
+ <code>input_type</code> informado. O objetivo de treinamento aproxima uma pergunta
+ em direção às passagens que a respondem em vez de em direção a textos que apenas
+ repetem suas palavras. Assim, a pontuação cosseno entre entradas tipadas corretamente
+ acompanha bem a relevância. Incorporar uma consulta como <code>"passage"</code>, ou uma passagem como "query", prejudica silenciosamente a pontuação
+ e reduz a revocação sem emitir erro.
+ </p>
+ </div>
+
+  <!-- ── Part 4: Vector index ──────────────────────────────────────────────── -->
+  <h2>Um recuperador completo em trinta linhas de cosseno de top-K</h2>
+  <p>
+ Um "banco de dados vetorial" dá uma interface mais completa a uma tarefa simples. Ele armazena cada passagem ao lado de sua incorporação e retorna, por similaridade cosseno, as passagens mais próximas da incorporação da consulta. No navegador, o núcleo dessa operação cabe em trinta linhas de JavaScript.
+ </p>
+  <p>
+ A célula abaixo constrói um agente de índice sobre um punhado de documentos e o consulta. Edite o corpus e a consulta, então observe quais passagens surgem no topo e por quê.
+ </p>
+
+  <div id="cell-m3b-p2"></div>
+
+  <div class="callout warn">
+ <strong>Modo de falha: embeddings desatualizados.</strong>
+ <p>Um índice vetorial armazena em cache as saídas de um modelo de incorporação. Sistemas de produção precisam se proteger contra falhas específicas:</p>
+ <ul style="margin:8px 0 0 22px">
+ <li>Ao trocar o modelo de incorporação, cada vetor em cache perde o significado até que todas as passagens sejam incorporadas novamente.</li>
+ <li>Se o provedor atualizar o modelo silenciosamente, as pontuações podem mudar sem erro.</li>
+ <li>Se dois serviços compartilharem um índice, mas fixarem IDs de modelo diferentes, o índice produzirá resultados inválidos para um deles.</li>
+ </ul>
+ <p>Um índice confiável registra o ID do modelo de incorporação ao lado de cada vetor em cache e se recusa a misturar versões. O modelo fixado neste curso é
+ <code>nvidia/llama-nemotron-embed-1b-v2</code>, servido por meio do proxy hospedado do curso em build.nvidia.com.</p>
+ </div>
+
+  <!-- ── Part 5: Hierarchies ──────────────────────────────────────────────── -->
+  <h2>Pesquisando pequenos pedaços, mas retornando o documento pai</h2>
+  <p>
+ Um agente de índice top-K simples enfrenta uma troca entre revocação e precisão que nenhum modelo de incorporação elimina. Você deve escolher entre trechos curtos e documentos longos:
+ </p>
+  <ul>
+    <li>Trechos curtos produzem incorporações precisas — o vetor representa uma ideia focada —, mas carecem de contexto; uma frase raramente basta para responder.</li>
+    <li>Documentos longos preservam o contexto, mas produzem incorporações difusas; o vetor representa a média de muitas ideias.</li>
+  </ul>
+  <p>
+ O padrão de produção indexa em dois níveis. Você incorpora os trechos pequenos para manter a recuperação precisa e, quando um deles corresponde à consulta, retorna o documento pai para que o modelo veja o contexto completo.
+ </p>
+  <p>
+ O exercício abaixo usa três documentos pai, cada um dividido em trechos curtos, e uma consulta que retorna o <em>documento pai</em> correspondente.
+ </p>
+
+  <figure style="margin:1.4em 0">
+    <div id="cell-m3b-p3"></div>
+    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">Incorporamos e pesquisamos os trechos filhos; cada correspondência entrega ao LLM o documento pai completo.</figcaption>
+  </figure>
+
+  <!-- ── Part 6: Retrieval as a tool ──────────────────────────────────────── -->
+  <h2>Envolvendo o índice como uma ferramenta que o modelo decide chamar</h2>
+  <p>
+ Um índice de recuperação, isoladamente, só responde quando algo o consulta.
+ Ele se torna um <strong>agente de índice</strong> quando é encapsulado como uma ferramenta que o modelo pode escolher chamar. Assim, o modelo decide quando vale a pena recuperar dados. A célula abaixo faz isso em cinco etapas:
+ </p>
+  <ol>
+    <li>Um corpus é embedado uma vez e mantido em um índice na memória.</li>
+    <li>Uma ferramenta <code>retrieve(question, k)</code> é declarada com um esquema JSON.</li>
+    <li>O agente recebe a pergunta do usuário. Ele escolhe se chamar a ferramenta.</li>
+    <li>Se sim, a recuperação cosseno é executada sobre o índice; as principais passagens são anexadas como uma mensagem de ferramenta.</li>
+    <li>Uma segunda chamada de grande modelo de linguagem (LLM) escreve a resposta final fundamentada nas passagens recuperadas.</li>
+  </ol>
+  <p>
+ O padrão "recuperador como ferramenta" que você acabou de conectar escala diretamente para produção.
+ Substituir a função de cosseno na memória por um pipeline de servidor FAISS+<a href="https://en.wikipedia.org/wiki/Okapi_BM25" target="_blank" rel="noopener">BM25</a>+rerank
+ altera apenas o executor; o esquema da ferramenta, o ciclo do agente e a etapa da resposta final permanecem idênticos.
+ </p>
+
+  <div id="cell-m3b-p4"></div>
+
+  <h2>Como as outras três formas são construídas</h2>
+  <p>
+ Você acabou de construir o caminho da prosa não estruturada, do corpus à resposta. As outras três formas aparecem
+ aqui para que você as reconheça em sistemas reais e escolha o primitivo correto.
+ Cada uma delas tem um padrão de produção bem estabelecido, esboçado abaixo.
+ </p>
+  <ul>
+    <li><strong>Documentos hierárquicos.</strong> Um segmentador preserva a hierarquia de títulos e combina extração de tabelas atômicas, ponteiros para o pai e um índice duplo para busca estrutural e semântica. Você indexa trechos filhos pequenos para obter boa revocação e recupera o pai correspondente, permitindo que o modelo leia a cláusula junto com sua seção.</li>
+    <li><strong>Recuperação de imagens de página para figuras e gráficos.</strong> Uma configuração com dois espaços vetoriais incorpora a página renderizada e seu texto. Assim, a consulta também pode recuperar uma figura ou um slide quando a resposta estiver nesse conteúdo visual.</li>
+    <li><strong>Tabelas estruturadas e governadas.</strong> Não são construídas neste curso. O padrão de produção usa uma camada semântica entre o agente e os dados no nível de linha, expondo apenas as métricas selecionadas exigidas pelo pacote.</li>
+    <li><strong>Dados relacionais ou em grafo.</strong> O agente chama uma ferramenta de travessia de grafo — Cypher, GraphQL ou personalizada — em vez de um armazenamento vetorial. O pacote recebido é um subgrafo cujas arestas explícitas seguem para o prompt, preservando as relações entre entidades.</li>
+  </ul>
+
+  <!-- ── Frontier: GraphRAG for global questions ───────────────────────────── -->
+  <h2>Quando o top-K é a ferramenta errada: GraphRAG e perguntas globais</h2>
+  <p>
+ Cada recuperador nesta página responde a uma <em>pergunta local</em>, cuja resposta está em poucas passagens que a similaridade top-K
+ consegue encontrar — por exemplo, o que um contrato diz sobre rescisão ou qual artigo
+ introduziu o <a href="https://arxiv.org/abs/2212.10496" target="_blank" rel="noopener">HyDE</a>. Outra classe de pergunta não possui resposta em uma passagem isolada. Ao perguntar pelos principais temas de mil documentos,
+ você descobre que a resposta é difusa demais para existir em um único trecho; ela emerge do corpus inteiro.
+ </p>
+  <p>
+ O top-K devolve apenas as três melhores correspondências. O modelo resume esses três trechos enquanto permanece
+ cego às outras novecentas e noventa e sete passagens no corpus. O GraphRAG
+ (<a href="https://arxiv.org/abs/2404.16130" target="_blank" rel="noopener">Edge et al. 2024</a>)
+ altera a estrutura do problema, em vez de apenas aumentar K. Durante a indexação, ele usa um LLM para:
+ </p>
+  <ul>
+    <li>ler o corpus e extrair entidades e as relações entre elas em um grafo de conhecimento;</li>
+    <li>detectar as <a href="https://en.wikipedia.org/wiki/Community_structure" target="_blank" rel="noopener">comunidades</a> nesse grafo, os clusters de entidades densamente conectadas;</li>
+    <li>resumir cada comunidade por si só.</li>
+  </ul>
+  <p>
+ No momento da consulta, o sistema responde à pergunta global resumindo as comunidades relevantes e
+ reduzindo as respostas parciais a uma só. O trabalho é um map-reduce sobre estrutura, não uma busca por similaridade.
+ </p>
+
+  <div style="display:flex;justify-content:center;margin:1.4em 0">
+    <figure style="margin:0;max-width:1200px;width:100%">
+      <div class="fig-embed" data-svg-src="assets/figures/02b-rag-3.svg" style="aspect-ratio:1160 / 660"></div>
+
+      <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.5em">
+ O pipeline GraphRAG, redesenhado a partir da figura de <a href="https://arxiv.org/abs/2404.16130" target="_blank" rel="noopener">Edge et al. 2024</a>. As etapas azuis são construídas uma vez, offline, e as etapas verdes são executadas em cada pergunta.
+ </figcaption>
+    </figure>
+  </div>
+
+  <p>
+ A célula abaixo torna a diferença concreta em um pequeno corpus e executa o pipeline real. Ela responde a uma pergunta global de duas maneiras: recuperação top-K simples e map-reduce do GraphRAG sobre comunidades nomeadas. Observe como o top-K usa apenas os trechos cujas palavras coincidem com a pergunta, enquanto o caminho por comunidades recupera o tema do corpus inteiro. Edite o corpus, as comunidades ou a pergunta e execute novamente.
+ </p>
+  <div id="cell-graphrag"></div>
+  <script type="module">
+    import { mountRunCell } from "./scripts/_shared.js";
+    mountRunCell("#cell-graphrag", {
+      label: "top-K versus GraphRAG, em código",
+      autorun: true,
+      code: `// Two retrieval strategies, same corpus, same global question.
+// BASIC top-K embeds and cosine-ranks, then answers from the K best chunks.
+// GRAPHRAG summarizes each community (map), then answers from those
+// summaries (reduce). Edit anything below and Run to re-render.
+
+// Six algorithm docs in three "community" families.
+// Top-K never sees the labels; GraphRAG retrieves by them.
+// TOP_K below is 2, so top-K reaches two families at most, never all three.
+const CORPUS = [
+  { text: "Dijkstra grows shortest paths from a source by greedily picking the nearest unvisited vertex.", community: "Greedy methods" },
+  { text: "Kruskal builds a minimum spanning tree by adding the cheapest safe edge while avoiding cycles.", community: "Greedy methods" },
+  { text: "Bellman-Ford finds shortest paths by relaxing every edge V-1 times, which also detects negative cycles.", community: "Dynamic programming" },
+  { text: "Floyd-Warshall computes all-pairs shortest paths by considering each vertex as an intermediate step.", community: "Dynamic programming" },
+  { text: "Merge sort splits the array in half, sorts each half, then merges the two sorted halves in linear time.", community: "Divide and conquer" },
+  { text: "Quicksort partitions around a pivot, then recursively sorts the elements below and above it.", community: "Divide and conquer" },
+];
+
+// A GLOBAL question: no single chunk states the answer, so top-K is at a
+// disadvantage and the community pass should win.
+const QUESTION = "What are the main families of algorithms in this corpus, and how do they differ?";
+
+const TOP_K = 2;
+
+
+// Basic top-K: embed, rank by cosine similarity, answer from the top chunks.
+const chunkVecs = await helpers.embed(CORPUS.map(d => d.text), { model: "nvidia/llama-nemotron-embed-1b-v2", inputType: "passage" });
+const [qVec]    = await helpers.embed(QUESTION, { model: "nvidia/llama-nemotron-embed-1b-v2", inputType: "query" });
+
+const ranked = CORPUS
+  .map((d, i) => ({ ...d, score: helpers.cosineSim(qVec, chunkVecs[i]) }))
+  .sort((a, b) => b.score - a.score);
+
+const topK = ranked.slice(0, TOP_K);
+helpers.log("recuperação top-K:", topK.map(d => d.text.slice(0, 40) + "…"));
+
+const basicResp = await helpers.chat({
+  messages: [
+    { role: "system", content: "Answer the question using ONLY the passages below. Be concise.\\n\\n" + topK.map((d, i) => "[" + (i + 1) + "] " + d.text).join("\\n") },
+    { role: "user", content: QUESTION },
+  ],
+  max_tokens: 8196,
+});
+const basicAnswer = basicResp.choices[0].message.content;
+
+
+// ── 2 · GRAPHRAG map-reduce ────────────────────────────────────────────────────
+// MAP: summarize each community's chunks into one community summary.
+const communities = [...new Set(CORPUS.map(d => d.community))];
+
+const summaries = [];
+for (const name of communities) {
+  const members = CORPUS.filter(d => d.community === name);
+  const resp = await helpers.chat({
+    messages: [
+      { role: "system", content: "Summarize this group of related documents in one sentence, naming what they have in common." },
+      { role: "user", content: "Community \\"" + name + "\\":\\n" + members.map(d => "- " + d.text).join("\\n") },
+    ],
+    max_tokens: 8196,
+  });
+  summaries.push({ name, summary: resp.choices[0].message.content });
+}
+helpers.log("resumos de comunidades:", summaries.map(s => s.name));
+
+// REDUCE: answer from the community summaries only, never the raw chunks.
+// Every family rides in through its summary, so the answer covers all of them.
+const graphResp = await helpers.chat({
+  messages: [
+    { role: "system", content: "Answer the question using ONLY these community summaries. Be concise.\\n\\n" + summaries.map(s => s.name + ": " + s.summary).join("\\n") },
+    { role: "user", content: QUESTION },
+  ],
+  max_tokens: 8196,
+});
+const graphAnswer = graphResp.choices[0].message.content;
+
+
+// ── 3 · render both answers side by side ────────────────────────────────────────
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const panel = (title, sub, body) =>
+  '<div style="flex:1 1 320px;border:1px solid var(--bd,#2a2a2a);border-radius:8px;background:var(--e2,#1c1f24);padding:12px;max-height:340px;overflow:auto">' +
+    '<div style="font-weight:700;color:var(--td,#c9c9c9);font-size:.9rem">' + title + '</div>' +
+    '<div style="font-size:.74rem;color:var(--tf,#8a8a8a);margin:.1em 0 .7em">' + sub + '</div>' +
+    '<div style="font-size:.84rem;color:var(--td,#c9c9c9);line-height:1.55;white-space:pre-wrap">' + esc(body) + '</div>' +
+  '</div>';
+
+helpers.log.html(
+  '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">' +
+    panel("Basic RAG · top-" + TOP_K, "answer from the " + TOP_K + " chunks nearest the question", basicAnswer) +
+    panel("GraphRAG · map-reduce", "summarize each community, then answer from the summaries", graphAnswer) +
+  '</div>'
+);
+
+helpers.log("Observe o tema global que o top-K perde, mas a passagem da comunidade recupera.");
+`,
+    });
+  </script>
+
+  <p>
+ Um modelo congelado com um recuperador top-K à frente responde bem a perguntas locais, mas não a perguntas globais. Reestruturar o corpus em comunidades resumidas viabiliza a resposta global ao custo de uma etapa de indexação mais cara, executada uma única vez.
+ </p>
+
+  <h2>Antes de continuar</h2>
+  <ol>
+    <li>Na Parte 4, o cosseno pontua dois vetores da mesma maneira, independentemente de qual representa a consulta. Já o modelo de incorporação da NVIDIA usa <code>input_type</code> para distinguir consulta e passagem. O que essa assimetria oferece que o cosseno, sozinho, não poderia oferecer?</li>
+    <li>A construção do índice incorpora cada passagem do corpus uma vez, enquanto o caminho ao vivo incorpora cada nova pergunta. Quais mudanças exigem reindexar todo o corpus e quais exigem apenas uma nova incorporação da consulta?</li>
+    <li>Top-K sempre retorna K passagens, mesmo quando todas as pontuações são fracas. Qual sinal o agente deve verificar antes de incluir essas passagens no prompt?</li>
+  </ol>
+
+  <div class="references">
+    <h3>Referências</h3>
+    <ul>
+      <li><a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Lewis et al., <em>Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</em> (NeurIPS 2020)</a>. O artigo canônico sobre recuperação seguida de geração; a figura acima foi redesenhada a partir dele.</li>
+      <li><a href="https://arxiv.org/abs/2004.04906" target="_blank" rel="noopener">Karpukhin et al., <em>Dense Passage Retrieval</em> (EMNLP 2020)</a>. A formulação de codificador duplo por trás da assimetria entre incorporações de consulta e passagem exigida pelo modelo da NVIDIA.</li>
+      <li><a href="https://arxiv.org/abs/1702.08734" target="_blank" rel="noopener">Johnson, Douze &amp; Jégou, <em>Billion-scale similarity search with GPUs</em> (FAISS, 2017)</a>. A estrutura de índice vetorial usada pelos bancos de dados vetoriais.</li>
+      <li><a href="https://arxiv.org/abs/2212.10496" target="_blank" rel="noopener">Gao et al., <em>HyDE: Precise Zero-Shot Dense Retrieval without Relevance Labels</em> (2022)</a>. Gera uma resposta hipotética e incorpora esse texto, em vez da pergunta; uma melhoria rápida para consultas curtas ou ambíguas.</li>
+      <li><a href="https://arxiv.org/abs/2010.06467" target="_blank" rel="noopener">Lin et al., <em>Pretrained Transformers for Text Ranking</em> (2020)</a>. O padrão de reclassificação usado como segunda etapa em uma pilha de recuperação de produção.</li>
+      <li><a href="https://arxiv.org/abs/2404.16130" target="_blank" rel="noopener">Edge et al., <em>From Local to Global: A Graph RAG Approach to Query-Focused Summarization</em> (2024)</a>. Constrói um grafo de conhecimento derivado de LLM e pré-resume suas comunidades para responder a perguntas globais sobre todo o corpus; a figura do pipeline acima foi redesenhada a partir dele.</li>
+    </ul>
+    <p class="references-note">Lista abrangente em <a href="04c-going-further.html#refs">Ir Além · Referências</a>.</p>
+  </div>
+
+  <h2>Tente · recuperação, ao vivo</h2>
+  <p>Faça uma pergunta. O artefato usa o mesmo endpoint desta página para incorporar a consulta e classificar, por similaridade cosseno, um pequeno corpus já incorporado. As barras mostram todas as pontuações. Em seguida, o modelo responde a partir das passagens mais relevantes e as cita. Altere a pergunta e observe a classificação mudar.</p>
+  <p>O corpus é incorporado offline e distribuído com a página como um índice pré-construído; apenas sua pergunta é incorporada em tempo de execução. Isso torna concreta a divisão entre indexação e serviço mostrada no diagrama. As perguntas de exemplo carregam vetores prontos e recuperam resultados antes mesmo de você adicionar uma chave. Ao editar uma passagem, somente ela é incorporada novamente.</p>
+  <div id="rag-cell"></div>
+  <div id="rag-artifact"></div>
+  <script type="module">
+    import { mountRunCell } from "./scripts/_shared.js";
+    mountRunCell("#rag-cell", {
+      label: "o artefato de experimentação, em código",
+      autorun: true,
+      code: `// Try-it artifact: loads a PREBUILT vector index (corpus embedded offline by
+// Use the prebuilt corpus index, then embed only the live question each turn.
+const MODEL_PIN = "nvidia/llama-nemotron-embed-1b-v2";   // the prebuilt index is valid only for this model
+const CORPUS = [
+  "An agent loop wraps a stateless model in a cycle: read the messages, decide, call a tool, append the result, repeat until finish_reason is stop.",
+  "ReAct interleaves reasoning and acting: the model thinks, optionally calls a tool, reads the observation, and re-plans before answering.",
+  "A tool is structured output plus an executor: the model emits a tool_calls request, your code runs the function, and the result returns as a tool message.",
+  "Retrieval-augmented generation embeds a query and the documents into the same vector space, retrieves the nearest chunks, and feeds them to the model as grounding.",
+  "Cosine similarity scores two embedding vectors by the angle between them; closer to 1 means more semantically related.",
+  "A deep or research agent plans a task, spawns sub-agents in fresh contexts, and shares work through a virtual filesystem to avoid context overflow.",
+  "OpenClaw is an agent harness whose configuration is a folder of markdown files the harness folds into the system prompt every turn.",
+  "OpenShell is the kernel-level sandbox around the agent: netns, Landlock, seccomp, and an OPA-evaluated proxy decide what each tool call may touch.",
+];
+
+// Load the index once; recompute vectors if the embedding model changed.
+let _index = null;
+async function loadIndex() {
+  if (_index) return _index;
+  try {
+    const m = await (await helpers.fetch("assets/rag_index.json")).json();
+    const ok = m.model === MODEL_PIN;
+    if (!ok) helpers.log("O índice pré-construído foi criado para" + m.model + ", not " + MODEL_PIN + "; embedding live instead.");
+    _index = ok
+      ? { byDoc: new Map(m.docs.map(d => [d.text, d.vec])), byQuery: new Map(m.queries.map(q => [q.text, q.vec])) }
+      : { byDoc: new Map(), byQuery: new Map() };
+  } catch (e) {
+    _index = { byDoc: new Map(), byQuery: new Map() };
+  }
+  return _index;
+}
+
+helpers.mountChatUI("#rag-artifact", {
+  memory: true,
+  greeting: "Pergunte sobre qualquer coisa deste curso. Eu incorporo sua pergunta, classifico um pequeno corpus por similaridade cosseno e respondo a partir das melhores correspondências. Continuações mantêm a conversa (cada uma ainda recupera dados frescos); o toggle 🧠 limpa e ✎ edita desfaz.",
+  models: [
+    { id: "nvidia/nemotron-3-nano-30b-a3b",    label: "Nemotron Nano 30B · rápido" },
+    { id: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron Super 120B · mais forte" },
+  ],
+  examples: ["What is retrieval-augmented generation?", "Why use cosine similarity?", "How does the ReAct loop work?", "What is a tool, mechanically?", "What does the OpenShell sandbox do?", "What is a deep research agent?"],
+  respond: async (text, ctx) => {
+    const idx = await loadIndex();
+    // corpus vectors come from the prebuilt index; only passages it does not cover (edits) embed live
+    const miss = CORPUS.filter(t => !idx.byDoc.has(t));
+    if (miss.length) { ctx.view.tool("embedding " + miss.length + " edited passage(s); the rest load from the prebuilt index"); (await helpers.embed(miss, { inputType: "passage" })).forEach((v, i) => idx.byDoc.set(miss[i], v)); }
+    const docVecs = CORPUS.map(t => idx.byDoc.get(t));
+    // the example questions are prebuilt too, so they retrieve with no embed call; anything you type embeds live
+    let qv = idx.byQuery.get(text);
+    if (!qv) { [qv] = await helpers.embed(text, { inputType: "query" }); }
+    const ranked = CORPUS.map((t, i) => ({ t, s: helpers.cosineSim(qv, docVecs[i]) })).sort((a, b) => b.s - a.s);
+    const max = ranked[0].s || 1;
+    ctx.view.html('<table><tr><th>passage</th><th>cosine</th></tr>' + ranked.map(r =>
+      '<tr><td><div style="display:flex;align-items:center;gap:8px"><div style="background:var(--g,#76b900);height:10px;border-radius:3px;width:' +
+      Math.max(4, Math.round(80 * r.s / max)) + 'px"></div><span style="color:var(--td,#b0b0b0)">' +
+      r.t.slice(0, 56).replace(/</g, "&lt;") + '…</span></div></td><td style="font-family:var(--mono,monospace);color:var(--gs,#aee23a)">' +
+      r.s.toFixed(3) + '</td></tr>').join("") + '</table>');
+    const top = ranked.slice(0, 3).map((r, i) => "[" + (i + 1) + "] " + r.t).join("\\n");
+    ctx.view.tool("retrieved top 3 passages", top);   // the exact text handed to the model, in full
+    const s = await helpers.chatStream({ messages: [
+      { role: "system", content: "Answer ONLY from these passages and cite them as [n]. If they do not cover the question, say so.\\n\\n" + top },
+      ...(ctx.history || []),
+      { role: "user", content: text }], model: ctx.model, max_tokens: 8196, signal: ctx.signal }, (t) => ctx.view.token(t), { onReasoning: (r) => ctx.view.reasoning(r) });
+    if (s.usage) ctx.view.usage({ input: s.usage.prompt_tokens, output: s.usage.completion_tokens, model: s.model });
+  },
+});
+helpers.log("renderizado abaixo. Edite a configuração e execute.");
+
+// The panel calls helpers.embed(), ranks with helpers.cosineSim(), then answers.
+`,
+    });
+  </script>
+
+  <div class="foot-nav">
+    <a href="02a-routing.html">← Módulo 2a: Workflows</a>
+    <a class="next" href="02c-deep.html">Módulo 2c: Agentes Profundos →</a>
+  </div>
+</main>
+
+<script type="module">
+import { buildNav, chat, chatStream, updateKeyPill, mountJourneyMap, mountCanvasFlow, mountRunCell } from "./scripts/_shared.js";
+document.getElementById("nav").innerHTML = buildNav("02b-rag.html");
+const pill = document.getElementById("key-status");
+updateKeyPill(pill);
+mountJourneyMap("#journey-map", "2b");
+hljs.highlightAll();
+
+// ── M3b P1: one embedding ────────────────────────────────────────────────────
+mountRunCell("#cell-m3b-p1", {
+  openCode: false,
+  label: "Inspecione uma incorporação",
+  intro: "O modelo padrão retorna 2.048 valores. Escolha um exemplo e inspecione o comprimento fixo e a magnitude normalizada próxima de 1. Altere EXAMPLE ou adicione seu próprio texto.",
+  code: `const EXAMPLES = [
+  "The transformer architecture replaced recurrent neural networks for sequence modeling.",
+  "What replaced recurrent neural networks for sequence modeling?",
+  "A flaky pie crust needs cold butter and minimal mixing.",
+  "OpenShell limits an agent's filesystem and network access.",
+];
+const EXAMPLE = 0; // Try 0, 1, 2, or 3.
+const text = EXAMPLES[EXAMPLE];
+
+const [v] = await helpers.embed(text, {
+  model:     "nvidia/llama-nemotron-embed-1b-v2",
+  inputType: "passage",
+});
+return {
+  text,
+  dimensions: v.length,
+  first_16: v.slice(0, 16).map(x => +x.toFixed(4)),
+  magnitude: +Math.sqrt(v.reduce((sum, x) => sum + x * x, 0)).toFixed(4),
+};
+`,
+});
+
+// ── M3b P2: in-memory vector index ───────────────────────────────────────────
+mountCanvasFlow("#cell-m3b-p2", {
+  label: "Crie um índice de vetores na memória",
+  intro: "Um pequeno corpus é incorporado uma vez e mantido na memória. Cada consulta é incorporada e pontuada contra cada passagem por similaridade cosseno, retornando os K mais próximos. Este é o formato de recuperação de produção completo em escala de brinquedo, com cada etapa visível.",
+  edges: [
+    { from: "corpus", to: "index" },
+    { from: "query",  to: "retrieve" },
+    { from: "index",  to: "retrieve" },
+  ],
+  nodes: [
+    {
+      id: "corpus", icon: "📚", title: "Corpus", x: 0, y: 0,
+      summary: "Oito passagens curtas sobre padrões de agente, recuperação e APIs de modelo. A diversidade é deliberada e facilita ver quais passagens uma consulta puxa para o topo e quais deixa para trás. Edite qualquer passagem e execute novamente para alterar o que o índice contém.",
+      code: `// Seed the small dataset this retrieval example searches.
+state.corpus = [
+  "ReAct interleaves reasoning steps with tool calls, deciding what to do next after each observation.",
+  "ReWOO writes a full plan upfront in one LLM call, then executes every tool deterministically, then synthesizes.",
+  "Cosine similarity compares the angle between two vectors; it ignores magnitude and ranges -1 to 1.",
+  "Vector databases store learned embeddings of text alongside the original passages, indexed for fast nearest-neighbour search.",
+  "The transformer architecture replaced recurrent networks for sequence modeling because self-attention is parallelizable.",
+  "Function calling exposes JSON-schema'd tools to a model; the model emits structured requests rather than free text.",
+  "An agent loop reads a finish_reason on every step; 'tool_calls' means the model wants you to run a function, 'stop' means done.",
+  "The OpenAI Responses API stores conversation state server-side; subsequent calls reference a previous_response_id.",
+];
+return { n_docs: state.corpus.length };
+`,
+    },
+    {
+      id: "index", icon: "🗂", title: "Construir índice (incorporar todos)", x: 0, y: 1,
+      summary: "Incorpora cada passagem usando o tipo de entrada 'passagem' e armazena cada uma como um objeto que emparelha o texto original com seu vetor.",
+      code: `// Embed the text so similarity search can compare vectors.
+const vecs = await helpers.embed(state.corpus, {
+  model:     "nvidia/llama-nemotron-embed-1b-v2",
+  inputType: "passage",
+});
+state.index = state.corpus.map((text, i) => ({ text, vector: vecs[i] }));
+return { indexed: state.index.length, dim: vecs[0].length };
+`,
+    },
+    {
+      id: "query", icon: "❓", title: "Consulta do usuário", x: 1, y: 0,
+      summary: "A pergunta para recuperar contra. Alterá-la muda quais passagens têm o maior ranking, pois a consulta é incorporada usando o tipo de entrada 'consulta', que produz um vetor que o modelo foi treinado para apontar para passagens relevantes em vez de para texto idêntico.",
+      code: `// TODO: Experimente outra consulta e observe a mudança da classificação.
+state.query = "what is the difference between react and rewoo?";
+// state.query = "what does the openshell sandbox do?";           // single-fact lookup
+// state.query = "how do RAG and a deep-research agent compare?"; // spans several passages
+return state.query;
+`,
+    },
+    {
+      id: "retrieve", icon: "🎯", title: "Incorporar consulta + top-K", x: 1, y: 1,
+      summary: "Incorpora a consulta com o tipo de entrada 'consulta', calcula a pontuação do cosseno contra cada passagem e retorna as três principais.",
+      code: `// Embed the text so similarity search can compare vectors.
+const [qv] = await helpers.embed(state.query, {
+  model:     "nvidia/llama-nemotron-embed-1b-v2",
+  inputType: "query",
+});
+state.qv = qv;
+const scored = state.index.map((d, i) => ({
+  idx: i,
+  score: helpers.cosineSim(qv, d.vector),
+  text: d.text,
+}));
+scored.sort((a, b) => b.score - a.score);
+state.topK = scored.slice(0, 3);
+state.scored = scored;
+return state.topK.map(r => ({ score: r.score.toFixed(4), preview: r.text.slice(0, 90) }));
+`,
+    },
+  ],
+});
+
+// ── M3b P3: hierarchies (parent doc / child chunk) ───────────────────────────
+mountCanvasFlow("#cell-m3b-p3", {
+  label: "Recuperar pedaços de filho, retornar documentos pai",
+  intro: "Três documentos pai são divididos em pedaços de frases curtas que são incorporados e indexados, e um acerto em qualquer pedaço retorna o DOCUMENTO PAI COMPLETO, então a precisão dos pedaços curtos combina com o contexto dos documentos completos.",
+  edges: [
+    { from: "docs",  to: "split" },
+    { from: "split", to: "index" },
+    { from: "query", to: "lookup" },
+    { from: "index", to: "lookup" },
+  ],
+  nodes: [
+    {
+      id: "docs", icon: "📄", title: "Documentos pai", x: 0, y: 0,
+      showCode: false,
+      summary: "Três documentos sobre tópicos diferentes estão no repositório, onde o documento completo é o que o grande modelo de linguagem (LLM) eventualmente lê.",
+      code: `// Seed the small dataset this retrieval example searches.
+state.docs = [
+  { id: "react",  title: "ReAct",  body: "ReAct (Reason+Act) is the classic agent loop. The model is given the user's task plus a set of tools. At each iteration the model emits either a tool call request or a final answer. When a tool call is requested, the host code executes the tool, appends the result as an observation, and the model continues. The loop terminates when finish_reason is 'stop' and there are no tool_calls. The pattern's strength is that each step adapts to the previous step's observation; its weakness is sequential cost: N steps means N model calls in order." },
+  { id: "rewoo",  title: "ReWOO", body: "ReWOO (Reason Without Observation) is the alternative pattern. A planner LLM call writes the entire plan upfront as a list of tool calls. A deterministic executor then runs every tool, often in parallel. Finally a synthesizer LLM call reads all the gathered observations and writes the final answer. ReWOO trades adaptivity for parallelism: every tool call runs at once, but later steps cannot adjust based on earlier observations." },
+  { id: "rag",    title: "Geração aumentada por recuperação (RAG)",   body: "Retrieval-Augmented Generation (RAG) injects external knowledge into the model's context at inference time. A document corpus is embedded once and stored in a vector index. At query time the user's question is embedded and the top-K closest passages are retrieved. The retrieved passages are concatenated to the prompt and the model answers from that context. RAG sidesteps the model's training cutoff and lets you ground answers in private data without fine-tuning." },
+];
+return { n_docs: state.docs.length };
+`,
+    },
+    {
+      id: "split", icon: "✂️", title: "Dividir em pedaços de filho", x: 0, y: 1,
+      summary: "Divide cada documento pai em pedaços de frases e retém seu ID pai. As unidades mais estreitas melhoram a precisão da busca enquanto preservam uma rota de volta ao documento completo.",
+      code: `// Seed the small dataset this retrieval example searches.
+state.chunks = [];
+for (const d of state.docs) {
+  const sentences = d.body.split(/(?<=\\.) /);
+  for (let i = 0; i < sentences.length; i++) {
+    state.chunks.push({ parent: d.id, idx: i, text: sentences[i] });
+  }
+}
+return { n_chunks: state.chunks.length, per_doc: state.docs.map(d => ({ id: d.id, chunks: state.chunks.filter(c => c.parent === d.id).length })) };
+`,
+    },
+    {
+      id: "index", icon: "🗂", title: "Incorporar pedaços", x: 0, y: 2,
+      summary: "Incorpora todos os pedaços filhos para que possam ser pesquisados por similaridade cosseno. Em uma correspondência de pedaço, o recuperador fornece ao LLM todo o documento pai de onde veio o pedaço, restaurando o contexto circundante.",
+      code: `// Embed the text so similarity search can compare vectors.
+const vecs = await helpers.embed(state.chunks.map(c => c.text), {
+  model:     "nvidia/llama-nemotron-embed-1b-v2",
+  inputType: "passage",
+});
+state.chunkIndex = state.chunks.map((c, i) => ({ ...c, vector: vecs[i] }));
+return { indexed: state.chunkIndex.length };
+`,
+    },
+    {
+      id: "query", icon: "❓", title: "Consulta do usuário", x: 1, y: 0,
+      summary: "A pergunta sendo feita, estruturada da mesma forma que na tela anterior. Edite-a e execute novamente para ver qual documento pai sobe ao topo.",
+      code: `// TODO: Experimente outra consulta e observe qual documento pai fica em primeiro.
+state.query = "When does each retrieval pattern beat the other?";
+// state.query = "how does chunking change what the model sees?";
+// state.query = "what is a reranker, and when is it worth the step?";
+return state.query;
+`,
+    },
+    {
+      id: "lookup", icon: "🎯", title: "Acerto em pedaço → retornar pai (+ visualização de pontuação)", x: 1, y: 1,
+      showCode: false,
+      summary: "Pega o pedaço superior por similaridade cosseno e retorna seu documento pai completo. O código está colapsado por padrão porque a etapa de recuperação é curta e o restante constrói barras de pontuação e cartões de hierarquia.",
+      code: `// Reading guide: the retrieval happens first: embed the query, score chunks, pick the
+// top hit, then return that hit's parent document. The lower half renders the score bars and cards.
+const [qv] = await helpers.embed(state.query, {
+  model:     "nvidia/llama-nemotron-embed-1b-v2",
+  inputType: "query",
+});
+const scored = state.chunkIndex.map(c => ({ ...c, score: helpers.cosineSim(qv, c.vector) }));
+const ranked = [...scored].sort((a, b) => b.score - a.score);
+const top = ranked[0];
+const parent = state.docs.find(d => d.id === top.parent);
+state.hit = { matched_chunk: top.text, score: top.score, parent_id: parent.id, parent_body: parent.body };
+
+// Score bars, ordered best-first.
+// The top chunk is the single hit; everything below it is the rest of the distribution.
+helpers.viz.retrievalBars(
+  ranked.map(c => ({
+    score: c.score,
+    text: state.docs.find(d => d.id === c.parent).title.toUpperCase() + " · " + c.text,
+  })),
+  1,
+  "Chunk cosine scores · ★ is the single hit",
+);
+
+// Render hierarchy as HTML cards. Search chunks, then return the winning chunk's parent document.
+const esc = (x) => String(x).replace(/[&<>]/g, c => c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;");
+const cards = state.docs.map((d) => {
+  const docChunks = scored.filter(c => c.parent === d.id);
+  const isWinnerParent = d.id === parent.id;
+  const rows = docChunks.map((c) => {
+    const isTop = c === top;
+    return '<div style="margin:3px 0;padding:5px 8px;border-radius:5px;border:1px solid ' +
+      (isTop ? "var(--g,#76b900)" : "var(--bd,#2a2a2a)") + (isTop ? ";background:rgba(118,185,0,.12)" : "") + '">' +
+      '<div style="font-family:var(--mono,monospace);font-size:11px;color:' + (isTop ? "var(--gs,#aee23a)" : "var(--tf,#8a8a8a)") + '">chunk ' + c.idx + " · score " + c.score.toFixed(3) + (isTop ? " ★ returned" : "") + '</div>' +
+      '<div style="font-size:12px;color:var(--td,#b0b0b0)">' + esc(c.text) + '</div></div>';
+  }).join("");
+  return '<div style="flex:1 1 280px;border:1px solid ' + (isWinnerParent ? "var(--g,#76b900)" : "var(--bd,#2a2a2a)") + ';border-radius:8px;padding:10px 12px">' +
+    '<div style="font-weight:600;color:var(--tx,#e6edf3)">' + esc(d.title) + '</div>' +
+    '<div style="font-size:11px;color:var(--tf,#8a8a8a);margin-bottom:5px">' + docChunks.length + " chunks · " + d.body.length + " chars" +
+    (isWinnerParent ? ' · <span style="color:var(--gs,#aee23a)">full parent returned to the LLM</span>' : "") + '</div>' + rows + '</div>';
+}).join("");
+helpers.log.html('<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">' + cards + '</div>');
+
+return {
+  matched_chunk_preview: top.text.slice(0, 120),
+  chunk_score:           top.score.toFixed(4),
+  parent_returned:       parent.title,
+  parent_chars:          parent.body.length,
+  precision_gain:        "child chunk score; FULL parent body delivered to the LLM",
+};
+`,
+    },
+  ],
+});
+
+// ── M3b P4: RAG agent (retrieval as a tool) ──────────────────────────────────
+mountCanvasFlow("#cell-m3b-p4", {
+  label: "Expor recuperação como ferramenta de agente",
+  intro: "Um corpus é indexado uma vez e mantido na memória, então a pergunta vai para uma chamada de bate-papo com uma ferramenta de recuperação exposta. O modelo decide se deve recuperar; se fizer, a similaridade cosseno retorna as passagens superiores e uma segunda chamada escreve a resposta fundamentada nelas.",
+  edges: [
+    { from: "build_corpus", to: "agent" },
+    { from: "tool",         to: "agent" },
+    { from: "query",        to: "agent" },
+    { from: "agent",        to: "retrieve" },
+    { from: "retrieve",     to: "answer" },
+  ],
+  nodes: [
+    {
+      id: "build_corpus", icon: "📚", title: "Corpus + índice", x: 0, y: 0,
+      showCode: false,
+      summary: "Incorporar cada passagem e armazenar cada uma ao lado de seu vetor. O índice é construído uma vez aqui e mantido na memória para o restante do fluxo; cada consulta subsequente lê desta mesma estrutura sem re-incorporar o corpus.",
+      code: `// Seed the small dataset this retrieval example searches.
+state.corpus = [
+  "NVIDIA Nemotron is a family of NVIDIA's open-weights reasoning models. Nano variants are small and fast; Super and Ultra are larger.",
+  "Nemotron-3-Nano-30B-A3B is a text reasoning model with a hybrid mixture-of-experts architecture and 3 billion active parameters. Its Omni sibling, Nemotron-3-Nano-Omni-30B-A3B, is the multimodal variant that also reads images.",
+  "This course routes model and embedding calls to build.nvidia.com through a hosted Cloudflare worker proxy. No API key is required in the browser.",
+  "Web search in this course (helpers.webSearch) ranks a glossary of NVIDIA AI terms shipped with the course, searched directly in the browser with no key; a separate helpers.instantAnswer returns one term's definition when the query names it.",
+  "Cosine similarity between two embedding vectors measures their semantic closeness. Ranges -1 to 1; higher means more similar.",
+  "LangChain.js provides ChatOpenAI for chat completions and OpenAIEmbeddings for embeddings; both accept a custom baseURL.",
+];
+const vecs = await helpers.embed(state.corpus, { inputType: "passage" });
+state.index = state.corpus.map((text, i) => ({ text, vector: vecs[i] }));
+return { indexed: state.index.length, dim: vecs[0].length };
+`,
+    },
+    {
+      id: "tool", icon: "📄", title: "Especificação da ferramenta de recuperação", x: 2, y: 0,
+      showCode: false,
+      summary: "Declara a ferramenta de recuperação como um esquema JSON que o modelo pode ler. O modelo vê apenas o nome, descrição e tipos de parâmetros. Ele não tem visibilidade para a implementação do cosseno por trás dele. Essa separação é importante: você pode trocar o backend de recuperação posteriormente sem alterar nenhum contrato voltado para o modelo.",
+      code: `// Define the tool schema the model can choose from next.
+state.RETRIEVE_SCHEMA = [{
+  type: "function",
+  function: {
+    name: "retrieve",
+    description: "Look up passages in the knowledge base that are likely relevant to a question.",
+    parameters: {
+      type: "object",
+      properties: {
+        question: { type: "string", description: "The question to look up. Use the user's exact phrasing." },
+        k:        { type: "integer", description: "Number of passages to return; default 3.", default: 3 },
+      },
+      required: ["question"],
+    },
+  },
+}];
+return { tool: state.RETRIEVE_SCHEMA[0].function.name };
+`,
+    },
+    {
+      id: "query", icon: "❓", title: "Consulta do usuário", x: 1, y: 0,
+      summary: "A pergunta do usuário, mais um prompt do sistema que instrui o modelo a usar a ferramenta de recuperação apenas quando precisar de fatos específicos que não possa responder com confiança a partir do conhecimento de treinamento. Com essa instrução no lugar, o modelo avalia cada turno e escolhe se deve recuperar, em vez de recuperar em cada chamada.",
+      code: `// TODO: Escolha uma pergunta que deva recuperar, ignorar a recuperação ou ser ambígua.
+
+const EXAMPLES = {
+  default: "What model does this course use, and does it need an API key?",
+  skip: "What is 12 times 8?",
+  retrieve: "What does this course's OpenShell sandbox block?",
+  direct: "Explain cosine similarity in one sentence.",
+};
+state.query = EXAMPLES.default;
+
+state.messages = [
+  {
+    role: "system",
+    content: [
+      "You are a helpful assistant with a knowledge base accessible via the retrieve tool.",
+      "Use the tool for specific facts you do not already know with high confidence.",
+      "Otherwise answer directly.",
+    ].join(" "),
+  },
+  { role: "user", content: state.query },
+];
+return state.query;
+`,
+    },
+    {
+      id: "agent", icon: "🧠", title: "Agente decide", x: 1, y: 1,
+      summary: "A primeira chamada do LLM, feita com a ferramenta de recuperação exposta. Quando a resposta carrega chamadas de ferramenta, o modelo está pedindo que o código execute a recuperação e retorne os resultados. Quando finish_reason é 'stop', o modelo julgou a recuperação desnecessária e respondeu diretamente.",
+      code: `// Send the prepared messages and stream the model response.
+state.s1 = await helpers.chatStream({
+  messages:   state.messages,
+  tools:      state.RETRIEVE_SCHEMA,
+  max_tokens: 8196,   // a reasoning model thinks before it emits the tool call; 1500 can truncate mid-thought
+});
+state.messages.push({
+  role: "assistant",
+  content: state.s1.content || null,
+  tool_calls: state.s1.tool_calls.length ? state.s1.tool_calls : undefined,
+});
+return {
+  finish_reason: state.s1.finish_reason,
+  wants_to_retrieve: state.s1.tool_calls.length > 0,
+};
+`,
+    },
+    {
+      id: "retrieve", icon: "🎯", title: "Recuperação cosseno (+ visualização de pipeline)", x: 1, y: 2,
+      summary: "O JavaScript simples incorpora a pergunta, avalia-a em relação a cada passagem indexada e retorna as top-K, enquanto as barras de pontuação mostram a distribuição completa e quais K passagens são incluídas no contexto do grande modelo de linguagem (LLM).",
+      code: `// Handle the tool-call result from the previous model turn.
+if (!state.s1.tool_calls.length) { state.skipped = true; return { skipped: "model answered directly" }; }
+const tc        = state.s1.tool_calls[0];
+const args      = JSON.parse(tc.function.arguments || "{}");
+const k         = args.k || 3;
+const question  = args.question || state.query;
+const [qv]      = await helpers.embed(question, { inputType: "query" });
+const scored    = state.index.map((d, idx) => ({ text: d.text, score: helpers.cosineSim(qv, d.vector), origIdx: idx }));
+const sorted    = [...scored].sort((a, b) => b.score - a.score);
+state.retrieved = sorted.slice(0, k);
+const toolMsg = state.retrieved.map((r, i) => \`[\${i+1}] (score \${r.score.toFixed(3)}) \${r.text}\`).join("\\n");
+state.messages.push({ role: "tool", tool_call_id: tc.id, content: toolMsg });
+// Steer the synthesis call: answer from these passages, no more retrieval.
+state.messages.push({ role: "user", content: "Using only the retrieved passages above, write the final answer now. Do not retrieve again or output any tool-call syntax." });
+
+helpers.viz.retrievalBars(
+  sorted.map(r => ({ score: r.score, text: r.text })),
+  k,
+  "Cosine scores · top-" + k + " (★) becomes the LLM context",
+);
+helpers.log("recuperado" + k + " of " + sorted.length + " passages for the LLM context");
+
+return { question, k, top_scores: state.retrieved.map(r => r.score.toFixed(3)) };
+`,
+    },
+    {
+      id: "answer", icon: "🧠", title: "Resposta final (LLM #2)", x: 1, y: 3,
+      summary: "A segunda chamada do LLM, feita após a mensagem da ferramenta ser anexada. O modelo agora tem a pergunta original do usuário ao lado das passagens recuperadas e pode escrever uma resposta fundamentada, em vez de confiar apenas em seu conhecimento de treinamento.",
+      code: `// Handle the tool-call result from the previous model turn.
+if (state.skipped) return state.s1.content || "(model answered directly but produced no text; raise max_tokens)";
+// No tools here: the model must synthesize from retrieved passages.
+state.s2 = await helpers.chatStream({
+  messages:   state.messages,
+  max_tokens: 8196,
+});
+// Strip stray tool-call markup from models that emit it as text.
+const answer = (state.s2.content || "")
+  .replace(/<tool_call>[\\s\\S]*?<\\/tool_call>/g, "")
+  .replace(/<\\/?function[^>]*>|<\\/?parameter[^>]*>/g, "").trim();
+return answer || "(the model did not produce a final answer; try Run again)";
+`,
+    },
+  ],
+});
+</script>
+</body>
+</html>

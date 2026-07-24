@@ -1,0 +1,125 @@
+{
+  "schema": "nemoclaw-security-architecture/2",
+  "system": {
+    "target_of_evaluation": [
+      "DLI course source and repository CI definitions",
+      "validated static course artifact",
+      "course JavaScript, HTML, CSS, images, and locale overlays executed by the learner browser"
+    ],
+    "external_context": [
+      "source host and CI execution service",
+      "static hosting service",
+      "co-located launchable",
+      "learner browser and device",
+      "model service",
+      "NemoClaw runtime",
+      "cross-origin relays"
+    ],
+    "ownership_rule": "Only Target of Evaluation entries are course-owned components. Every external-context participant is outside repository ownership and has no verified live controls in this diagram.",
+    "threat_enumeration": {
+      "rule": "Enumerate threats only for the declared edges and only for each edge's listed security objectives. Do not infer additional flows from external context.",
+      "route_consolidation": "Direct and operator-relayed variants from course client code to the same external service remain one Target of Evaluation boundary flow.",
+      "objective_rules": [
+        "Confidentiality is not a security objective for public course source, released static assets, or public asset delivery.",
+        "Integrity applies to course source, build output, published assets, browser code, and sensitive service messages.",
+        "Availability applies to course validation, publication, asset delivery, and the learner-visible integration boundary; external service capacity remains operator-owned."
+      ],
+      "excluded_external_interactions": [
+        {"id": "relay_to_model", "interaction": "external model relay to external model service", "reason": "Operator-internal upstream hop; browser-to-model-service risk is already represented by browser_to_models"},
+        {"id": "relay_to_nemoclaw", "interaction": "external OpenClaw relay to external NemoClaw runtime", "reason": "Operator-internal upstream hop; browser-to-runtime risk is already represented by browser_to_nemoclaw"},
+        {"id": "launchable_to_nemoclaw", "interaction": "external launchable control plane to external NemoClaw runtime", "reason": "External startup orchestration outside course ownership; the learner-visible runtime boundary is browser_to_nemoclaw"},
+        {"id": "launchable_to_model", "interaction": "external launchable to external model service", "reason": "Not a course route; model requests originate from course client code even when startup supplies the credential"},
+        {"id": "reviewer_handoff", "interaction": "release owner to external reviewer", "reason": "Human evidence workflow, not a deployed system component or runtime data flow"}
+      ]
+    }
+  },
+  "canvas": {"width": 1600, "height": 1640},
+  "layout": {
+    "allowed_edge_overlaps": [],
+    "shared_trunks": [
+      {
+        "id": "browser_egress",
+        "label": "Student-side browser egress",
+        "source_node": "browser",
+        "class": "neutral",
+        "points": [[400, 842.5], [800, 842.5]],
+        "branches": {
+          "browser_to_models": [800, 842.5],
+          "browser_to_nemoclaw": [800, 842.5]
+        }
+      }
+    ]
+  },
+  "zones": [
+    {"id": "supply", "label": "BUILD AND RELEASE PATH", "x": 40, "y": 90, "width": 1520, "height": 220, "class": "supply"},
+    {"id": "hosting", "label": "EXTERNAL HOSTING — LIVE CONTROLS NOT ATTESTED", "x": 40, "y": 380, "width": 1520, "height": 200, "class": "external"},
+    {"id": "client", "label": "COURSE CODE IN UNTRUSTED BROWSER", "x": 40, "y": 650, "width": 420, "height": 390, "class": "supply"},
+    {"id": "external", "label": "EXTERNAL SERVICES — LIVE CONTROLS NOT ATTESTED", "x": 500, "y": 650, "width": 1060, "height": 390, "class": "external"}
+  ],
+  "nodes": [
+    {
+      "id": "source", "label": "Course source & CI definitions", "detail": "Course-owned public source and workflow definitions", "zone": "supply", "kind": "source", "ownership": "toe", "assurance": "REPOSITORY EVIDENCE", "x": 100, "y": 150, "width": 300, "height": 105,
+      "controls": ["read-only proposed-change permissions", "immutable action pins", "required repository validators", "DCO checks", "parameterized optional relay source"],
+      "evidence": [{"path": "RELEASE_STATUS.json", "contains": ["approved-for-publication", "external-not-repository"]}, {"path": "README.md", "contains": ["Governance, release, and license", "may approve its own protected merge or release"]}, {"path": "scripts/cors-proxy/deployable/PROJECTION.json", "contains": ["source-projection/1", "Apache-2.0"]}]
+    },
+    {
+      "id": "ci", "label": "External CI execution & review", "detail": "Runs course workflows; live controls are not attested", "zone": "supply", "kind": "external_control", "ownership": "external", "assurance": "NO LIVE EVIDENCE FROM EXTERNAL OPERATOR", "x": 650, "y": 150, "width": 300, "height": 105,
+      "evidence": [{"path": ".gitlab/ci/core.yml", "contains": ["release_gate.py --tier ship", "human_review"]}, {"path": ".gitlab/ci/privileged.yml", "contains": ["privileged_course_operation", "pipeline_variables: false"]}, {"path": ".gitlab/ci/privileged-child.yml", "contains": ["live_candidate_interfaces", "cdn_prepare", "cdn_publish"]}, {"path": "scripts/validation/release_gate.py", "contains": ["scripts/validation/validate_bundle.py", "scripts/validation/security_architecture_audit.py"]}, {"path": ".github/workflows/pages.yml", "contains": ["build-and-verify", "name: github-pages"]}, {"path": ".github/workflows/codeql.yml", "contains": ["javascript-typescript", "python"]}]
+    },
+    {
+      "id": "artifact", "label": "Static course artifact", "detail": "Course-owned public HTML, JS, CSS, images, and locales", "zone": "supply", "kind": "artifact", "ownership": "toe", "assurance": "REPOSITORY EVIDENCE", "x": 1200, "y": 150, "width": 300, "height": 105,
+      "controls": ["bounded artifact", "complete SHA-256 file inventory", "locale integrity checks", "generated-tree browser test"],
+      "evidence": [{"path": "scripts/build/build_pages.sh", "contains": ["fully client-side site", "public/nemoclaw/"]}, {"path": "scripts/validation/pages_artifact_integrity.py", "contains": ["MANIFEST_SCHEMA", "remote script source"]}, {"path": ".gitlab/ci/core.yml", "contains": ["build_pages.sh", "pages_smoke"]}]
+    },
+    {
+      "id": "pages_host", "label": "External static host", "detail": "Serves course bytes; live controls are not attested", "zone": "hosting", "kind": "external_hosting", "ownership": "external", "ownership_align": "left", "assurance": "NO LIVE EVIDENCE FROM EXTERNAL OPERATOR", "x": 300, "y": 450, "width": 350, "height": 105,
+      "evidence": [{"path": "docs/pages_deploy.md", "contains": ["GitLab Pages", "GitHub Pages", "byte-identical builds"]}, {"path": ".github/workflows/pages.yml", "contains": ["needs: [build-and-verify, rebuild-for-comparison]", "cmp reviewed-public/pages-sha256.txt", "needs: attest-provenance"]}, {"path": ".gitlab/ci/core.yml", "contains": ["resource_group: pages-site", "PAGES_ENVIRONMENT_URL"]}]
+    },
+    {
+      "id": "launchable_host", "label": "External co-located launchable", "detail": "Integration target; deployment is not attested here", "zone": "hosting", "kind": "external_hosting", "ownership": "external", "assurance": "NO LIVE EVIDENCE FROM EXTERNAL OPERATOR", "x": 950, "y": 450, "width": 350, "height": 105,
+      "evidence": [{"path": "docs/security-design.md", "contains": ["may select a reviewed course release", "external and unattested"]}, {"path": "web/nemoclaw/scripts/_shared.js", "contains": ["sessionStorage.getItem(\"nvapi\")", "sessionStorage.setItem(\"nvapi\""]}]
+    },
+    {
+      "id": "browser", "label": "Course client code", "detail": "Course-owned code in an untrusted learner browser", "zone": "client", "kind": "client", "ownership": "toe", "ownership_position": "bottom", "assurance": "REPOSITORY EVIDENCE", "x": 100, "y": 790, "width": 300, "height": 105,
+      "sensitive": ["learner API credential in tab-scoped browser storage", "gateway credential", "access assertion", "prompts and responses"],
+      "controls": ["password inputs", "visible model destination", "explicit endpoint save", "tab-scoped credential storage", "explicit clear and change controls"],
+      "evidence": [{"path": "web/nemoclaw/scripts/_shared.js", "contains": ["setModelApiBaseUrl", "sessionStorage.setItem(\"nvapi\""]}, {"path": "web/nemoclaw/scripts/_connection.js", "contains": ["setOpenClawConnection", "secretStorage"]}, {"path": "web/nemoclaw/scripts/_openclaw.js", "contains": ["/cli/gateway", "getOpenClawConnection()"]}]
+    },
+    {
+      "id": "model_api", "label": "External model service", "detail": "Selected API; live controls are not attested", "zone": "external", "kind": "external_service", "ownership": "external", "assurance": "NO LIVE EVIDENCE FROM EXTERNAL OPERATOR", "x": 1200, "y": 865, "width": 300, "height": 105,
+      "sensitive": ["learner API key", "prompts and responses"],
+      "evidence": [{"path": "web/nemoclaw/scripts/_shared.js", "contains": ["DEFAULT_MODEL_API_BASE_URL", "Authorization"]}, {"path": "web/nemoclaw/scripts/_keypanel.js", "contains": ["normalizeModelApiBaseUrl(endpointInput.value)", "setModelApiBaseUrl(endpoint)", "Custom endpoint uses direct browser requests"]}]
+    },
+    {
+      "id": "nemoclaw", "label": "External NemoClaw runtime", "detail": "Agent integration; deployment is not attested here", "zone": "external", "kind": "external_runtime", "ownership": "external", "assurance": "NO LIVE EVIDENCE FROM EXTERNAL OPERATOR", "x": 1200, "y": 715, "width": 300, "height": 105,
+      "sensitive": ["gateway credential", "access assertion", "agent commands and events"],
+      "evidence": [{"path": "web/nemoclaw/03a-kickstart.html", "contains": ["Identity, tools", "/cli/gateway"]}, {"path": "web/nemoclaw/SKILL.html", "contains": ["Connect NemoClaw", "runtime endpoints"]}]
+    }
+  ],
+  "edges": [
+    {"id": "source_to_ci", "from": "source", "to": "ci", "protocol": "Git transport; live host configuration unverified", "data": "proposed public source and commit metadata", "auth": "developer identity and review policy; operator evidence required", "trust_boundary": "TOE source to external source host and CI execution", "security_objectives": ["integrity", "availability"], "evidence": [{"path": "CONTRIBUTING.md", "contains": ["required CI", "protected-ref"]}]},
+    {"id": "ci_to_artifact", "from": "ci", "to": "artifact", "protocol": "external CI execution of course workflow", "data": "public static course bundle", "auth": "CI job identity; live runner controls unverified", "trust_boundary": "external build execution to TOE artifact", "security_objectives": ["integrity", "availability"], "evidence": [{"path": ".gitlab/ci/core.yml", "contains": ["- job: test", "build_pages.sh"]}]},
+    {"id": "artifact_to_pages", "from": "artifact", "to": "pages_host", "protocol": "manifest-bound repository workflow artifact handoff", "data": "selected public course files and complete SHA-256 inventory", "auth": "protected deployment identity requested by workflow; live host and runner rules unverified", "trust_boundary": "TOE artifact to external static host", "security_objectives": ["integrity", "availability"], "route": {"from_side": "bottom", "from_fraction": 0.35, "to_side": "top", "to_fraction": 0.9, "via": [[1305, 330], [615, 330]], "badge_point": [960, 330]}, "evidence": [{"path": "docs/pages_deploy.md", "contains": ["required reviewers", "root-owned", "internal GitLab only"]}, {"path": ".github/workflows/pages.yml", "contains": ["actions/upload-pages-artifact", "actions/deploy-pages"]}, {"path": ".gitlab/ci/privileged-child.yml", "contains": ["GIT_STRATEGY: \"none\"", "/opt/dli-course-publisher/publish"]}, {"path": "scripts/ci/devbox_cdn_publisher.py", "contains": ["bucket_name", "get-caller-identity"]}]},
+    {"id": "artifact_to_launchable", "from": "artifact", "to": "launchable_host", "protocol": "external vendoring integration", "data": "public static course tree and integration metadata", "auth": "external release identities; no live evidence", "trust_boundary": "TOE artifact to external launchable", "security_objectives": ["integrity", "availability"], "route": {"from_side": "bottom", "from_fraction": 0.65, "to_side": "top", "to_fraction": 0.1, "via": [[1395, 360], [985, 360]], "badge_point": [1190, 360]}, "evidence": [{"path": "docs/security-design.md", "contains": ["may select a reviewed course release", "external and unattested"]}]},
+    {"id": "pages_to_browser", "from": "pages_host", "to": "browser", "protocol": "declared HTTPS route; live host configuration unverified", "data": "public course pages and assets", "auth": "public or host-controlled access; live policy unverified", "trust_boundary": "external static host to TOE client code in learner device", "security_objectives": ["integrity", "availability"], "route": {"from_side": "bottom", "to_side": "top", "to_fraction": 0.25, "via": [[475, 605], [175, 605]], "badge_point": [325, 605]}, "evidence": [{"path": "docs/pages_deploy.md", "contains": ["fully client-side site"]}]},
+    {"id": "launchable_to_browser", "from": "launchable_host", "to": "browser", "protocol": "declared same-origin HTTPS bootstrap; live configuration unverified", "data": "course pages, assets, and browser-readable startup credential", "auth": "external launchable session; no live evidence", "security_objectives": ["confidentiality", "integrity", "availability"], "trust_boundary": "external launchable to TOE client code in learner device", "sensitive": true, "route": {"from_side": "bottom", "to_side": "top", "to_fraction": 0.75, "via": [[1125, 625], [325, 625]], "badge_point": [725, 625]}, "evidence": [{"path": "docs/security-design.md", "contains": ["Startup-provided material", "same storage entry"]}]},
+    {"id": "browser_to_models", "from": "browser", "to": "model_api", "protocol": "browser HTTPS request; optional external iframe relay", "data": "learner API credential, prompts, and responses", "auth": "browser-readable bearer credential; external service validation unverified", "security_objectives": ["confidentiality", "integrity", "availability"], "trust_boundary": "TOE client code to external model service", "sensitive": true, "route": {"from_point": [800, 842.5], "to_side": "left", "to_fraction": 0.5, "via": [[800, 917.5]], "badge_point": [800, 880]}, "evidence": [{"path": "web/nemoclaw/scripts/_shared.js", "contains": ["Authorization", "getModelApiBaseUrl"]}]},
+    {"id": "browser_to_nemoclaw", "from": "browser", "to": "nemoclaw", "protocol": "browser HTTPS/WebSocket; reviewed relay or direct browser-session route", "data": "gateway credential, agent requests and events; relay session on relay route only", "auth": "tab-scoped course credentials; HttpOnly launchable session remains browser-bound; external runtime validation unverified", "security_objectives": ["confidentiality", "integrity", "availability"], "trust_boundary": "TOE client code to external NemoClaw integration endpoint", "sensitive": true, "route": {"from_point": [800, 842.5], "to_side": "left", "to_fraction": 0.5, "via": [[800, 767.5]], "badge_point": [800, 805]}, "evidence": [{"path": "web/nemoclaw/scripts/_connection.js", "contains": ["shouldProxyOpenClaw", "secretStorage"]}, {"path": "web/nemoclaw/scripts/_openshell.js", "contains": ["openclawLoopbackProbe", "POMERIUM_LOOPBACK_PROBES"]}]}
+  ],
+  "coverage": {
+    "toe_nodes": ["source", "artifact", "browser"],
+    "external_context_nodes": ["ci", "pages_host", "launchable_host", "model_api", "nemoclaw"],
+    "repository_surfaces": {
+      "web": "browser",
+      "scripts/build/build_pages.sh": "artifact",
+      ".gitlab-ci.yml": "source",
+      ".gitlab/ci": "source",
+      ".github/workflows": "source",
+      "scripts/cors-proxy/deployable": "source"
+    },
+    "non_deployed_reference_sources": {
+      "scripts/cors-proxy": "compact teaching examples plus parameterized optional deployment source; no operated relay or environment values"
+    },
+    "observed_contract_sha256": "c06a2733b579709e8443b07f63880b6902b058da4c7e3376a5291c3fe4915dff"
+  }
+}

@@ -1,0 +1,207 @@
+{
+  "schema": "codeql-vendor-dispositions/1",
+  "authored_controls": [
+    {
+      "fingerprints": [
+        "1cf37de4a5a4a42919901a4f832d3d2e4ee90e8d2e77f70cb0aa043b9d719ecc",
+        "31c3a4d5762dd13fe4aeccb6ff0723e7d6f45faece3ff46fb7420858705765df"
+      ],
+      "artifact": "web/nemoclaw/scripts/_course_assistant.js",
+      "artifact_sha256": "6b857ce45a665d5057e224581bd71388ad762848bcd9191516cb57ce613e560d",
+      "decision": "opaque-origin-sandbox-execution",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "controls": [
+        {
+          "path": "scripts/validation/browser_security_boundary_audit.py",
+          "contains": "Course Assistant preview must retain an opaque origin"
+        },
+        {
+          "path": "scripts/validation/learner_flow_runtime_audit.py",
+          "contains": "Course Assistant artifact escaped its opaque-origin boundary"
+        }
+      ],
+      "scope": "Learner-authored artifact code is intentionally executable only in a no-same-origin iframe with deny-by-default CSP, bounded helper messaging, and hostile runtime probes."
+    },
+    {
+      "fingerprints": [
+        "6d01f0b092a269d1f8fae557b5fa03b88e916a640cee8a68bf24dcc078580170"
+      ],
+      "artifact": "scripts/pyodide/examples/live-playground.js",
+      "artifact_sha256": "830dc68c65f5bcc835c53eeb27d1ce1856af90460db4f6932f42ec26519a8b0f",
+      "decision": "inert-parse-allowlist-reconstruction",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "controls": [
+        {
+          "path": "scripts/validation/browser_security_boundary_audit.py",
+          "contains": "Pyodide rich output must reconstruct only allowlisted elements"
+        },
+        {
+          "path": "scripts/skills/skill_renderer_runtime_audit.py",
+          "contains": "Pyodide rich output sanitizer admitted executable or network-active HTML"
+        }
+      ],
+      "scope": "Rich output is parsed in an inert template and copied into a new fragment through fixed tag, attribute, and URL allowlists exercised with active-content mutations."
+    },
+    {
+      "fingerprints": [
+        "3b3e0a72e96fde4e8f79c8ce54abcd2c02ed4f2d3bb9fe2b75baf26b8ce7be5b"
+      ],
+      "artifact": "web/nemoclaw/scripts/studio_main.js",
+      "artifact_sha256": "905f56bb4784354f39d576e6a64e12adaed8391dead9e5c394ae4be9315b89db",
+      "decision": "inert-parse-allowlist-reconstruction",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "controls": [
+        {
+          "path": "scripts/validation/browser_security_boundary_audit.py",
+          "contains": "Studio preview must parse edited HTML in an inert document"
+        },
+        {
+          "path": "scripts/validation/studio_responsive_audit.py",
+          "contains": "Studio preview sanitizer admitted active content"
+        }
+      ],
+      "scope": "The authoring preview parses inertly, removes active elements and event attributes, canonicalizes URL attributes, and is exercised with hostile content before DOM insertion."
+    },
+    {
+      "fingerprints": [
+        "04933b4cd5704d82b7d36eff8cbf294bbf4be31c9233df0e466c381c6a10bcbf",
+        "9ff174a9c00fa9764170fec2d0bb51ec42727534460312a30c835df986827ecd"
+      ],
+      "source_findings": [
+        {
+          "rule": "js/clear-text-storage-of-sensitive-data",
+          "source_line": "if (key) sessionStorage.setItem(\"nvapi\", key);"
+        },
+        {
+          "rule": "js/clear-text-storage-of-sensitive-data",
+          "source_line": "if (key) sessionStorage.setItem(EMBEDDING_API_KEY, key);"
+        }
+      ],
+      "artifact": "web/nemoclaw/scripts/_shared.js",
+      "artifact_sha256": "21ab49bddded27855875e3669e5154839c422ce6631c38135a2da91155a6250e",
+      "decision": "explicit-user-tab-credential-boundary",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "controls": [
+        {
+          "path": "scripts/validation/browser_security_boundary_audit.py",
+          "contains": "sensitive browser value"
+        },
+        {
+          "path": "docs/product-design.md",
+          "contains": "Tab-scoped browser `sessionStorage`"
+        }
+      ],
+      "scope": "The learner explicitly supplies model credentials, which remain tab-scoped, are never persisted in localStorage, and are discarded on tab close or explicit clear."
+    },
+    {
+      "fingerprints": [
+        "ed7637f0d5001db656769e4162f3e4f98d83b6905f9f9ae0017da02d78fbefff"
+      ],
+      "artifact": "scripts/runtime/test_page_runtime.js",
+      "artifact_sha256": "829abf7b95bae1deee5d365daebc93a7c0f0abe126cfa256a0f66f4975514ae2",
+      "decision": "explicit-user-tab-credential-boundary",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "controls": [
+        {
+          "path": "scripts/validation/browser_security_boundary_audit.py",
+          "contains": "sensitive browser value"
+        },
+        {
+          "path": "docs/security-design.md",
+          "contains": "browser storage is not a vault"
+        }
+      ],
+      "scope": "The optional live browser harness projects an operator-provided model credential into tab-scoped sessionStorage only for the isolated test page and never writes it to repository artifacts or persistent browser storage."
+    }
+  ],
+  "artifacts": [
+    {
+      "fingerprints": [
+        "4fdca09e789d191a8aede11f5ea8965c9102ad17542269f98c59569e520fd11c",
+        "5f983f596ac9c7b082698ecefd0770f2b5bf52a226da570319c3763b9671a7ca",
+        "776c27127598bd37bbb25caa98e62d39181c06fc339b14f4518fdf13ab1737ac",
+        "9195f6bf663e508ae4587e453a128a4bc02ea887d09f5fc16439fe35571b49cf"
+      ],
+      "artifact": "web/nemoclaw/vendor/langchain-1.4.7.esm.js",
+      "artifact_sha256": "e2a3458789b501bd86acb4ade45bb4e14ee6b903c4a39e030a611e03d451b18f",
+      "component": "@langchain/openai and reviewed transitive bundle",
+      "version": "1.4.7",
+      "decision": "not-exploitable-in-delivered-use",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "evidence": [
+        "web/nemoclaw/vendor/browser-dependencies.json",
+        "scripts/compliance/docs/browser_vendor_exceptions.json",
+        "scripts/browser-vendor/package-lock.json",
+        "tests/validation/test_codeql_sarif_audit.py"
+      ],
+      "scope": "The generated, unmodified-source bundle uses reviewed UUID formatting and an upstream schema validator only with repository-authored tool schemas."
+    },
+    {
+      "fingerprints": [
+        "d6b83a215e416be5eedec350ab3dbb1cab149751407b29aba63af4e4e98c8b31"
+      ],
+      "artifact": "web/nemoclaw/vendor/codemirror-mode-xml-5.65.21.js",
+      "artifact_sha256": "dc7e44d410399326f802e2924573cbf6f942a79f647fd0b97f0b607973bc9a09",
+      "component": "codemirror",
+      "version": "5.65.21",
+      "decision": "not-exploitable-in-delivered-use",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "evidence": [
+        "web/nemoclaw/vendor/browser-dependencies.json",
+        "scripts/compliance/docs/vendor_policy.md",
+        "tests/validation/test_codeql_sarif_audit.py"
+      ],
+      "scope": "The upstream tokenizer recognizes markup for syntax display. It is not an HTML sanitizer or an execution boundary."
+    },
+    {
+      "fingerprints": [
+        "62c0ffc48787dd612fba144802fc3083f2c3256692a415121925495bab9c8a47",
+        "7d63ae3f26cd329dcd7983eadf6a0a265e2f718f14436410ed63183c5e00da5e",
+        "80b6bc45edd83352ea7f11c12b6fb8ec9e6e80df146f1cc5bc46d091c75efe76",
+        "fb57a74d1bc8a30a3d73c5ea9e59cf0a7813fb3afaaffd9e17fb45c17ff2fafa"
+      ],
+      "artifact": "web/nemoclaw/vendor/marked-14.1.4.esm.js",
+      "artifact_sha256": "7d0eba3a3b1ba7b53ed4a92f39b7ab4c2412f6d4d22b435ff29b55048e926e06",
+      "component": "marked",
+      "version": "14.1.4",
+      "decision": "not-exploitable-in-delivered-use",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "evidence": [
+        "web/nemoclaw/vendor/browser-dependencies.json",
+        "web/_skill_explorer.js",
+        "web/nemoclaw/scripts/_chat.js",
+        "tests/validation/test_codeql_sarif_audit.py"
+      ],
+      "scope": "The upstream parser is not trusted as a sanitizer. Repository code sanitizes parsed output before DOM insertion."
+    },
+    {
+      "fingerprints": [
+        "07b1b1112a891ca98a9993f5e3d7f30b96224f818bbeb627d6574b34a539e0eb",
+        "7430749e358332976b8d90751b349eaf3a6f51a47c572ce7023e5259b1c53ba6",
+        "fb96058461ea8bcd2bd49591f986889710053614bd3ee986141ae9e25eb8ba2e",
+        "fdd2be8aac7dd21daf3ed86e0294d27636837cbf88f732bec780575ea79fec1b"
+      ],
+      "artifact": "web/shared/vendor/marked-14.1.4.esm.js",
+      "artifact_sha256": "7d0eba3a3b1ba7b53ed4a92f39b7ab4c2412f6d4d22b435ff29b55048e926e06",
+      "component": "marked",
+      "version": "14.1.4",
+      "decision": "not-exploitable-in-delivered-use",
+      "owner": "course-maintainers",
+      "expires": "2026-10-24",
+      "evidence": [
+        "web/shared/vendor/browser-dependencies.json",
+        "web/_skill_explorer.js",
+        "tests/validation/test_codeql_sarif_audit.py"
+      ],
+      "scope": "The upstream parser is not trusted as a sanitizer. Repository code sanitizes parsed output before DOM insertion."
+    }
+  ]
+}

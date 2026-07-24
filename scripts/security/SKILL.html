@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>scripts/security audits</title>
+
+<script type="application/json" id="skill-meta">
+{
+  "schema": "dir-skill/1.0",
+  "node_type": "directory-explorer",
+  "title": "scripts/security audits",
+  "source_dir": "scripts/security/",
+  "summary": "Security checks for the course browser runtime, Python dependency declarations, fingerprinted exception registry, and full SCA/SBOM workflow. Agents start here for iframe relay checks, dependency vulnerability floors, exception validation, and installed-environment scans.",
+  "related": [
+    "scripts/security/audit_iframe_proxy_opt_in.py",
+    "scripts/security/audit_cors_proxy_projection.py",
+    "scripts/security/iframe_proxy_worker_findings.md",
+    "scripts/security/audit_python_dependencies.py",
+    "scripts/security/audit_dependency_locks.py",
+    "scripts/security/audit_sbom_policy.py",
+    "scripts/security/audit_codeql_sarif.py",
+    "scripts/security/audit_github_code_scanning.py",
+    "scripts/security/codeql-vendor-dispositions.json",
+    "scripts/materials/requirements.lock",
+    "scripts/security/requirements-sca.lock",
+    "scripts/security/audit_vulnerability_waivers.py",
+    "scripts/security/run_full_sca.py",
+    "scripts/security/vulnerability-waivers.json",
+    "scripts/validation/sensitive_content_audit.py",
+    "scripts/validation/sensitive-content-policy.json",
+    "scripts/browser-vendor/package-lock.json",
+    "scripts/validation/course_dependency_integrity.py",
+    "docs/dependency_security.md",
+    "web/nemoclaw/scripts/_shared.js",
+    "scripts/cors-proxy/cors-proxy-worker-build.js",
+    "scripts/cors-proxy/cors-proxy-worker-openclaw.js"
+  ],
+  "explorer": "../../web/_skill_explorer.js"
+}
+</script>
+
+<script type="application/json" id="explorer-config">
+{
+  "title": "scripts/security audits",
+  "summary": "Security checks live here. Browser iframe relay use stays explicit, Python dependency floors and pins are scanned, accepted exceptions are fingerprinted and time-boxed, and the full installed-environment SCA/SBOM workflow is discoverable.",
+  "ties": ["build", "security"],
+  "nav": {
+    "home": "../../web/index.html",
+    "up": { "label": "scripts", "href": "../SKILL.html" }
+  },
+  "files": [
+    {
+      "path": "audit_iframe_proxy_opt_in.py",
+      "role": "iframe relay contract audit",
+      "desc": "Checks one-time model endpoint selection, explicit iframe mode, safe credential routing, billing headers, and hosted relay contracts."
+    },
+    {
+      "path": "audit_cors_proxy_projection.py",
+      "role": "relay source projection audit",
+      "desc": "Exhaustively binds the optional deployment source to its manifest and rejects history, local state, operator infrastructure values, missing licenses, and undeclared dependencies."
+    },
+    {
+      "path": "iframe_proxy_worker_findings.md",
+      "role": "hosted relay reference findings",
+      "desc": "Separates repository client-contract fixtures from the externally maintained hosted deployment."
+    },
+    {
+      "path": "audit_python_dependencies.py",
+      "role": "dependency vulnerability floor audit",
+      "desc": "Checks Python dependency floors and exact direct workspace pins against PyPI/OSV metadata, and rejects retired dependencies without a new runtime and OSRB decision."
+    },
+    {
+      "path": "audit_vulnerability_waivers.py",
+      "role": "security exception audit",
+      "desc": "Validates that accepted exceptions are fingerprinted, owned, controlled, scoped, and unexpired without publishing private finding details."
+    },
+    {
+      "path": "audit_dependency_locks.py",
+      "role": "dependency lock audit",
+      "desc": "Rejects non-exact, missing, stale, or retired Python 3.11 runtime, material-tool, and SCA lock entries with mutation coverage."
+    },
+    {
+      "path": "audit_sbom_policy.py",
+      "role": "runtime SBOM policy audit",
+      "desc": "Checks installed-environment SBOM completeness, rejects retired components, and reports license metadata quality without claiming legal approval."
+    },
+    {
+      "path": "audit_codeql_sarif.py",
+      "role": "CodeQL result policy gate",
+      "desc": "Rejects every unreviewed authored finding and accepts vendor or intentional reviewed-boundary results only when the stable CodeQL line identity, exact source bytes, controls, owner, scope, and expiry still match."
+    },
+    {
+      "path": "audit_github_code_scanning.py",
+      "role": "GitHub CodeQL host-state gate",
+      "desc": "Requires the exact head's host-owned Advanced Security check to pass and the pull-request merge ref to have zero open alerts; an Actions workflow success cannot substitute for this result."
+    },
+    {
+      "path": "codeql-vendor-dispositions.json",
+      "role": "exact CodeQL result dispositions",
+      "desc": "Stores public-safe component and construction decisions bound to CodeQL rule, path, exact reviewed source, and artifact SHA-256. Unrelated line movement cannot invalidate a reviewed boundary; new findings or changed bytes still fail."
+    },
+    {
+      "path": "run_full_sca.py",
+      "role": "full SCA and SBOM runner",
+      "desc": "Prints or runs pip-audit, reproducible CycloneDX, OSV-Scanner, Grype, and Trivy commands; release jobs can target a runtime interpreter and site-packages from a separate scanner environment."
+    },
+    {
+      "path": "vulnerability-waivers.json",
+      "role": "fingerprinted exception registry",
+      "desc": "Versioned registry containing opaque fingerprints, review ownership, executable controls, scope, and expiry only."
+    },
+    {
+      "path": "../../docs/dependency_security.md",
+      "role": "dependency security process",
+      "desc": "Explains the fast source gate, full pip-audit/OSV scans, and GitLab Dependency Scanning policy layer."
+    }
+  ],
+  "tour": [
+    {
+      "title": "Default versus iframe mode",
+      "file": "audit_iframe_proxy_opt_in.py",
+      "lines": [24, 38],
+      "note": "The audit treats direct build.nvidia.com as the default and the hosted relay as the explicit iframe path."
+    },
+    {
+      "title": "Reference and deployment stay separate",
+      "file": "iframe_proxy_worker_findings.md",
+      "lines": [1, 15],
+      "note": "Reference worker source documents the client boundary; hosted deployment changes require deployment-owner review."
+    }
+  ]
+}
+</script>
+
+<style data-skill-static="1">
+.skill-static{padding:24px clamp(18px,4vw,44px);border-bottom:1px solid #2a2a2a;background:#0d0d0d;color:#f2f2f2;font:15px/1.55 system-ui,sans-serif}
+.skill-static a{color:#76b900}.skill-static h1{margin:.1em 0 .25em;color:#76b900;font-size:1.65rem}.skill-static h2{font-size:1.02rem;margin:1.2rem 0 .45rem}.skill-static p{max-width:76rem;color:#b0b0b0}.skill-list{display:grid;grid-template-columns:1fr;max-width:76rem;margin:.7rem 0}.skill-link{display:grid;grid-template-columns:minmax(180px,280px) 1fr;gap:12px;border-top:1px solid #2a2a2a;padding:9px 4px;text-decoration:none}.skill-link:last-child{border-bottom:1px solid #2a2a2a}.skill-link b{display:block;color:#aee23a;margin-bottom:4px}.skill-link code,.skill-cmd code{font-family:ui-monospace,Consolas,monospace}.skill-link span{color:#b0b0b0;font-size:.9rem}.skill-cmds{display:grid;gap:8px;margin:.7rem 0}.skill-cmd{display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:8px;align-items:center;border:1px solid #2a2a2a;border-radius:8px;background:#111;padding:9px 11px}.skill-cmd b{color:#aee23a}.skill-cmd code{display:block;overflow:auto;white-space:nowrap;color:#f2f2f2}.skill-note{border-left:3px solid #76b900;background:rgba(118,185,0,.08);padding:10px 13px;margin:.8rem 0;color:#ddd}.skill-nav{display:flex;gap:12px;flex-wrap:wrap;margin:.8rem 0}.skill-nav a{border:1px solid #2a2a2a;border-radius:999px;padding:5px 10px;text-decoration:none}.skill-nav a:hover{border-color:#76b900}@media(max-width:700px){.skill-cmd{grid-template-columns:1fr}.skill-static{padding:18px}.skill-link{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<section class="skill-static" aria-labelledby="skill-title">
+  <header data-skill-header="1">
+<nav class="skill-nav" aria-label="Skill navigation"><a href="../../web/index.html">Home</a><a href="../SKILL.html">scripts</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../SKILL.html">Repository map</a></nav>
+</header>
+  <h1 id="skill-title">scripts/security audits</h1>
+  <p>Security checks live here. Browser iframe relay use stays explicit, Python dependency floors and pins are scanned, accepted exceptions are fingerprinted and time-boxed, and private finding details stay outside the repository.</p>
+  <div class="skill-note">Run commands from the repository root. Root-level script paths remain compatibility entrypoints; implementation files live in this directory tree.</div>
+  <h2>Executable checks</h2>
+  <div class="skill-cmds">
+    <div class="skill-cmd"><b>Endpoint + hosted relay contract</b><code>python3 scripts/security/audit_iframe_proxy_opt_in.py --self-test &amp;&amp; python3 scripts/security/audit_iframe_proxy_opt_in.py</code></div>
+    <div class="skill-cmd"><b>Relay source projection</b><code>python3 scripts/security/audit_cors_proxy_projection.py</code></div>
+    <div class="skill-cmd"><b>Live hosted relays</b><code>python3 scripts/security/audit_iframe_proxy_opt_in.py --live</code></div>
+    <div class="skill-cmd"><b>Dependency vulnerability audit</b><code>python3 scripts/security/audit_python_dependencies.py</code></div>
+    <div class="skill-cmd"><b>Security exception audit</b><code>python3 scripts/security/audit_vulnerability_waivers.py</code></div>
+    <div class="skill-cmd"><b>Sensitive contribution boundary</b><code>python3 -m unittest discover -v -s tests/validation &amp;&amp; python3 scripts/validation/sensitive_content_audit.py</code></div>
+    <div class="skill-cmd"><b>Dependency locks</b><code>python3 scripts/security/audit_dependency_locks.py --self-test &amp;&amp; python3 scripts/security/audit_dependency_locks.py</code></div>
+    <div class="skill-cmd"><b>SBOM policy detector</b><code>python3 scripts/security/audit_sbom_policy.py --self-test</code></div>
+    <div class="skill-cmd"><b>CodeQL result policy</b><code>python3 -m unittest -v tests.validation.test_codeql_sarif_audit &amp;&amp; python3 scripts/security/audit_codeql_sarif.py --sarif &lt;results.sarif&gt;</code></div>
+    <div class="skill-cmd"><b>GitHub CodeQL host state</b><code>python3 -m unittest -v tests.validation.test_github_code_scanning_audit &amp;&amp; GITHUB_TOKEN=&lt;read-token&gt; python3 scripts/security/audit_github_code_scanning.py --repository &lt;owner/repo&gt; --pull-request &lt;number&gt; --head-sha &lt;full-head-sha&gt;</code></div>
+    <div class="skill-cmd"><b>SBOM evidence links</b><code>python3 scripts/compliance/sbom_evidence.py --self-test &amp;&amp; python3 scripts/compliance/sbom_evidence.py --check</code></div>
+    <div class="skill-cmd"><b>Browser SCA</b><code>security_browser_sca</code></div>
+    <div class="skill-cmd"><b>Full SCA plan</b><code>python3 scripts/security/run_full_sca.py</code></div>
+    <div class="skill-cmd"><b>Full SCA execute</b><code>python3 scripts/security/run_full_sca.py --execute --python-local --cyclonedx-env</code></div>
+    <div class="skill-cmd"><b>Python material-tool SCA</b><code>security_python_sca</code></div>
+    <div class="skill-cmd"><b>Ship gate</b><code>python3 scripts/validation/validate_bundle.py --no-write --scope ship</code></div>
+  </div>
+  <h2>Linkage map</h2>
+  <div class="skill-list">
+    <a class="skill-link" href="audit_iframe_proxy_opt_in.py"><b>audit_iframe_proxy_opt_in.py</b><span>Model endpoint and iframe relay audit. Checks explicit persistence, credential destination warnings, default-only iframe proxying, billing headers, and hosted endpoint contracts.</span></a>
+    <a class="skill-link" href="audit_cors_proxy_projection.py"><b>audit_cors_proxy_projection.py</b><span>Relay source projection audit. Verifies manifest membership and hashes, Apache-2.0 headers, dependency-free runtime source, parameterized infrastructure, and the absence of operator environment identifiers.</span></a>
+    <a class="skill-link" href="iframe_proxy_worker_findings.md"><b>iframe_proxy_worker_findings.md</b><span>hosted relay reference findings. Separates repository client-contract fixtures from the externally maintained deployment.</span></a>
+    <a class="skill-link" href="audit_python_dependencies.py"><b>audit_python_dependencies.py</b><span>dependency vulnerability floor audit. Checks tracked Python declarations against PyPI/OSV metadata, exact workspace pins, and retired direct dependencies.</span></a>
+    <a class="skill-link" href="audit_vulnerability_waivers.py"><b>audit_vulnerability_waivers.py</b><span>security exception audit. Validates opaque fingerprints, ownership, executable controls, scope, and expiry.</span></a>
+    <a class="skill-link" href="audit_dependency_locks.py"><b>audit_dependency_locks.py</b><span>dependency lock audit. Enforces exact Python 3.11 closures, direct-manifest parity, and absence of retired runtime components.</span></a>
+    <a class="skill-link" href="audit_sbom_policy.py"><b>audit_sbom_policy.py</b><span>runtime SBOM policy audit. Proves lock coverage, rejects retired components, and reports whether license metadata is SPDX, named, or absent.</span></a>
+    <a class="skill-link" href="audit_codeql_sarif.py"><b>audit_codeql_sarif.py</b><span>Fails on new authored CodeQL findings and on any disposition whose exact source identity, artifact bytes, evidence, controls, or expiry drifted.</span></a>
+    <a class="skill-link" href="audit_github_code_scanning.py"><b>audit_github_code_scanning.py</b><span>Fails when the exact commit's host-owned CodeQL check is absent, pending, or red, or when the pull-request merge ref retains an open alert.</span></a>
+    <a class="skill-link" href="codeql-vendor-dispositions.json"><b>codeql-vendor-dispositions.json</b><span>Time-boxed public policy bound to CodeQL rule, path, exact reviewed source, and exact reviewed bytes. It is not a pattern waiver.</span></a>
+    <a class="skill-link" href="../compliance/sbom_evidence.py"><b>sbom_evidence.py</b><span>Verifies the committed catalog and emits commit-bound manifests plus reconciled license appendices from CI SBOMs.</span></a>
+    <a class="skill-link" href="run_full_sca.py"><b>run_full_sca.py</b><span>SCA and SBOM runner for the installed Python validation environment and repository source.</span></a>
+    <a class="skill-link" href="vulnerability-waivers.json"><b>vulnerability-waivers.json</b><span>fingerprinted exception registry. Public metadata never republishes private finding details.</span></a>
+    <a class="skill-link" href="../../docs/dependency_security.md"><b>dependency_security.md</b><span>standard integration path for fast source checks, waiver policy, SBOM output, full SCA scans, and GitLab Dependency Scanning.</span></a>
+  </div>
+  <h2>Interactive explorer</h2>
+  <p>The explorer below opens source files, tours important sections, and checks documented paths against the repository tree.</p>
+</section>
+<div id="explorer"></div>
+<noscript>
+  <section class="skill-static"><h2>JavaScript disabled</h2><p>The static command list and file links above remain usable. Enable JavaScript for source viewing and guided tours.</p></section>
+</noscript>
+<script src="../../web/_skill_explorer.js"></script>
+</body>
+</html>

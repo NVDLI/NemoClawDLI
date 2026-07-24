@@ -1,0 +1,132 @@
+<svg data-locale="es-ES" class="gfx-dark" viewBox="0 0 1300 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres formas de acceder a un modelo o agente: endpoints REST, un protocolo de herramientas y una conexión persistente." preserveAspectRatio="xMidYMid meet" style="width:100%; height:auto; display:block; background:var(--gfx-bg); border:1px solid var(--gfx-line); border-radius:12px; padding:16px; max-width:1400px; margin:1.5rem auto">
+          <!-- Standalone fallback: course pages override these variables through .gfx-dark, while
+               img/PPTX/rendering tools still receive a complete dark palette. -->
+          <style>
+            svg.gfx-dark{--gfx-ink:#e8eaed;--gfx-ink2:#c6cace;--gfx-sub:#9aa0a6;--gfx-faint:#6b7177;--gfx-line:#3a3f45;--gfx-panel:#17191c;--gfx-bg:#0d0d0d;--gfx-blue:#5aa8ff;--gfx-green:#9bd14a;--gfx-tint-blue:#15273d;--gfx-tint-green:#1d2a12}
+          </style>
+          <defs>
+            <marker id="arrow-gray" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M0,2 L6,5 L0,8 Z" fill="var(--gfx-line)"/>
+            </marker>
+            <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M0,2 L6,5 L0,8 Z" fill="var(--gfx-blue)"/>
+            </marker>
+            <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M0,2 L6,5 L0,8 Z" fill="var(--gfx-green)"/>
+            </marker>
+          </defs>
+
+          <line x1="435" y1="20" x2="435" y2="345" stroke="var(--gfx-line)" stroke-width="1.5"/>
+          <line x1="865" y1="20" x2="865" y2="345" stroke="var(--gfx-line)" stroke-width="1.5"/>
+
+          <g class="protocol-column" id="col-http-rest" transform="translate(-9, -34) scale(1.3)">
+            <g class="column-header" transform="translate(0, 0)">
+              <text x="175" y="44" font-family="Arial, sans-serif" font-size="12.5" fill="var(--gfx-sub)" text-anchor="middle" font-weight="700" letter-spacing="0.05em">HTTP · ENDPOINTS REST</text>
+              <line x1="15" y1="52" x2="335" y2="52" stroke="var(--gfx-line)" stroke-width="1"/>
+              <rect x="75" y="60" width="200" height="52" rx="4" fill="var(--gfx-panel)" stroke="var(--gfx-line)" stroke-width="1.2"/>
+              <text x="175" y="82" font-family="Arial, sans-serif" font-size="17" fill="var(--gfx-ink)" text-anchor="middle" font-weight="800">endpoints de modelos</text>
+              <text x="175" y="100" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-faint)" text-anchor="middle">conexión de corta duración</text>
+            </g>
+
+            <g class="node-card" id="node-chat-completions" transform="translate(25, 120)">
+              <rect x="10" y="0" width="135" height="72" rx="4" fill="var(--gfx-panel)" stroke="var(--gfx-line)" stroke-width="1.2"/>
+              <text x="77.5" y="22" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-ink2)" text-anchor="middle" font-weight="700">/chat/completions</text>
+              <text x="77.5" y="42" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-faint)" text-anchor="middle">Ejecución sin estado</text>
+              <text x="77.5" y="56" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-sub)" text-anchor="middle">El cliente reenvía el historial</text>
+            </g>
+
+            <g class="node-card" id="node-responses-api" transform="translate(170, 120)">
+              <rect x="10" y="0" width="135" height="72" rx="4" fill="var(--gfx-panel)" stroke="var(--gfx-tint-green)" stroke-width="1.2"/>
+              <text x="77.5" y="22" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-green)" text-anchor="middle" font-weight="700">/responses</text>
+              <text x="77.5" y="42" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-green)" text-anchor="middle">Orquestador con estado</text>
+              <text x="77.5" y="56" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-sub)" text-anchor="middle">previous_response_id</text>
+            </g>
+
+            <g class="routing-infrastructure" id="http-internal-routing">
+              <path d="M 92.5 192 L 92.5 198 L 175 198" fill="none" stroke="var(--gfx-line)" stroke-width="1.2"/>
+              <path d="M 257.5 192 L 257.5 198 L 175 198" fill="none" stroke="var(--gfx-green)" stroke-width="1.2"/>
+
+              <line x1="175" y1="202" x2="175" y2="214" stroke="var(--gfx-line)" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+
+              <rect x="70" y="205" width="210" height="30" rx="4" fill="var(--gfx-panel)" stroke="var(--gfx-line)" stroke-width="1"/>
+              <text x="175" y="224" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-sub)" text-anchor="middle">núcleo de inferencia sin estado</text>
+
+              <line x1="175" y1="235" x2="175" y2="248" stroke="var(--gfx-blue)" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+
+              <rect x="50" y="250" width="250" height="36" rx="4" fill="var(--gfx-tint-blue)" stroke="var(--gfx-blue)" stroke-width="1.2"/>
+              <text x="175" y="273" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-blue)" text-anchor="middle" font-weight="600">← respuesta REST estática</text>
+            </g>
+
+            <g class="column-footer" transform="translate(0, 320)">
+              <text x="175" y="0" font-family="Arial, sans-serif" font-size="11.5" fill="var(--gfx-faint)" text-anchor="middle">Ciclo transaccional de solicitud y respuesta</text>
+            </g>
+          </g>
+
+
+          <g class="protocol-column" id="col-mcp" transform="translate(423, -33) scale(1.3)">
+            <g class="column-header" transform="translate(0, 0)">
+              <text x="175" y="44" font-family="Arial, sans-serif" font-size="12.5" fill="var(--gfx-green)" text-anchor="middle" font-weight="700" letter-spacing="0.05em">MCP · MODEL CONTEXT PROTOCOL</text>
+              <line x1="15" y1="52" x2="335" y2="52" stroke="var(--gfx-tint-green)" stroke-width="1"/>
+              <rect x="75" y="60" width="200" height="52" rx="4" fill="var(--gfx-panel)" stroke="var(--gfx-line)" stroke-width="1.2"/>
+              <text x="175" y="82" font-family="Arial, sans-serif" font-size="16" fill="var(--gfx-ink)" text-anchor="middle" font-weight="800">capa de protocolos</text>
+              <text x="175" y="100" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-faint)" text-anchor="middle">integración desacoplada de herramientas &amp; contexto</text>
+            </g>
+
+            <g class="node-card" id="node-mcp-client" transform="translate(20, 120)">
+              <rect x="40" y="0" width="230" height="36" rx="4" fill="var(--gfx-panel)" stroke="var(--gfx-tint-green)" stroke-width="1.2"/>
+              <text x="155" y="22" font-family="Arial, sans-serif" font-size="12.5" fill="var(--gfx-ink2)" text-anchor="middle">Cliente MCP (núcleo del agente)</text>
+            </g>
+
+            <line x1="175" y1="156" x2="175" y2="185" stroke="var(--gfx-green)" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+
+            <g class="node-card" id="node-mcp-transport" transform="translate(20, 185)">
+              <rect x="40" y="0" width="230" height="36" rx="4" fill="var(--gfx-tint-green)" stroke="var(--gfx-green)" stroke-width="1.2"/>
+              <text x="155" y="22" font-family="Arial, sans-serif" font-size="12.5" fill="var(--gfx-green)" text-anchor="middle" font-weight="700">JSON-RPC (stdio / HTTP)</text>
+            </g>
+
+            <line x1="175" y1="221" x2="175" y2="250" stroke="var(--gfx-green)" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+
+            <g class="node-card" id="node-mcp-server" transform="translate(20, 250)">
+              <rect x="40" y="0" width="230" height="36" rx="4" fill="var(--gfx-panel)" stroke="var(--gfx-tint-green)" stroke-width="1.2"/>
+              <text x="155" y="22" font-family="Arial, sans-serif" font-size="12.5" fill="var(--gfx-ink2)" text-anchor="middle">Servidor MCP (herramientas &amp; recursos)</text>
+            </g>
+
+            <g class="column-footer" transform="translate(0, 320)">
+              <text x="175" y="0" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-faint)" text-anchor="middle">Estandariza contratos de runtime entre proveedores</text>
+            </g>
+          </g>
+
+
+          <g class="protocol-column" id="col-websockets" transform="translate(851, -33) scale(1.3)">
+            <g class="column-header" transform="translate(0, 0)">
+              <text x="175" y="44" font-family="Arial, sans-serif" font-size="12.5" fill="var(--gfx-green)" text-anchor="middle" font-weight="700" letter-spacing="0.05em">WEBSOCKET · ESTADO PERSISTENTE</text>
+              <line x1="15" y1="52" x2="335" y2="52" stroke="var(--gfx-tint-green)" stroke-width="1"/>
+              <rect x="75" y="60" width="200" height="52" rx="4" fill="var(--gfx-panel)" stroke="var(--gfx-line)" stroke-width="1.2"/>
+              <text x="175" y="82" font-family="Arial, sans-serif" font-size="16" fill="var(--gfx-green)" text-anchor="middle" font-weight="800">runtime del agente</text>
+              <text x="175" y="100" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-faint)" text-anchor="middle">estado continuo de la conexión</text>
+            </g>
+
+            <g class="node-card" id="node-ws-gateway" transform="translate(20, 120)">
+              <rect x="40" y="0" width="230" height="36" rx="4" fill="var(--gfx-panel)" stroke="var(--gfx-tint-green)" stroke-width="1.2"/>
+              <text x="155" y="22" font-family="Arial, sans-serif" font-size="12.5" fill="var(--gfx-ink2)" text-anchor="middle">ws:// puerta de enlace dúplex interactiva</text>
+            </g>
+
+            <line x1="175" y1="156" x2="175" y2="185" stroke="var(--gfx-green)" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+
+            <g class="node-card" id="node-ws-dispatch" transform="translate(20, 185)">
+              <rect x="40" y="0" width="230" height="36" rx="4" fill="var(--gfx-panel)" stroke="var(--gfx-tint-green)" stroke-width="1.2"/>
+              <text x="155" y="22" font-family="Arial, sans-serif" font-size="12.5" fill="var(--gfx-sub)" text-anchor="middle">→ chat.send({ sessionKey })</text>
+            </g>
+
+            <line x1="175" y1="221" x2="175" y2="250" stroke="var(--gfx-green)" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+
+            <g class="node-card" id="node-ws-stream" transform="translate(20, 250)">
+              <rect x="40" y="0" width="230" height="36" rx="4" fill="var(--gfx-tint-green)" stroke="var(--gfx-green)" stroke-width="1.2"/>
+              <text x="155" y="22" font-family="Arial, sans-serif" font-size="12.5" fill="var(--gfx-green)" text-anchor="middle" font-weight="700">← stream: tool_calls · eventos</text>
+            </g>
+
+            <g class="column-footer" transform="translate(0, 320)">
+              <text x="175" y="0" font-family="Arial, sans-serif" font-size="12" fill="var(--gfx-faint)" text-anchor="middle">La conexión permanece activa</text>
+            </g>
+          </g>
+        </svg>

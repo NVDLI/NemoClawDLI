@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Connect NemoClaw · Securing Agents</title>
+  <link rel="stylesheet" href="styles/_style.css" />
+  <script src="vendor/highlight-11.10.0.min.js"></script>
+  <link rel="stylesheet" href="vendor/codemirror-5.65.21.css"/>
+  <link rel="stylesheet" href="vendor/codemirror-monokai-5.65.21.css"/>
+  <script src="vendor/codemirror-5.65.21.js"></script>
+  <script src="vendor/codemirror-mode-xml-5.65.21.js"></script>
+  <script src="vendor/codemirror-mode-javascript-5.65.21.js"></script>
+  <script src="vendor/codemirror-mode-css-5.65.21.js"></script>
+  <script src="vendor/codemirror-mode-htmlmixed-5.65.21.js"></script>
+  <script src="vendor/codemirror-mode-python-5.65.21.js"></script>
+  <style>
+    .url-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 1em 0;
+    }
+
+    @media (max-width: 700px) {
+      .url-pair {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .url-card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      background: var(--e1);
+      border: 1px solid var(--bd);
+      border-radius: var(--r);
+      padding: 14px 16px;
+      transition: opacity .15s;
+    }
+
+    a.url-card:hover {
+      opacity: .8;
+    }
+
+    .url-card h3 {
+      margin: 0 0 .35em;
+      font-size: .95rem;
+      color: var(--gs);
+      font-family: var(--mono);
+    }
+
+    .url-card h3 a {
+      color: inherit;
+    }
+
+    .url-card p {
+      margin: .25em 0;
+      font-size: .84rem;
+      color: var(--td);
+      line-height: 1.55;
+    }
+
+    .url-card code {
+      font-size: .82em;
+    }
+
+    figure.lp-video {
+      margin: 1.4em 0;
+    }
+
+    figure.lp-video .video-wrap {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1px solid var(--bd);
+      background: var(--e1);
+    }
+
+    figure.lp-video .video-wrap iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    figure.lp-video figcaption {
+      font-size: .88rem;
+      color: var(--td, #b0b0b0);
+      line-height: 1.6;
+      margin-top: .55em;
+    }
+
+    figure.lp-video figcaption b {
+      color: var(--gs, #aee23a);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <a class="logo" href="index.html">NVIDIA · Securing Agents</a>
+    <nav id="nav"></nav>
+    <div class="spacer"></div>
+    <span class="key-pill" id="key-status" onclick="location.href='01a-loop.html?openKeyPanel=1'">…</span>
+    <span class="key-pill" id="claw-status" onclick="location.href='03a-kickstart.html#probe-claw'">…</span>
+  </div>
+
+  <main>
+    <div id="journey-map"></div>
+
+    <div class="hero">
+      <div class="eyebrow">Module 3 · Part A of 3 · live calls begin</div>
+      <h1>Connect the <span>NemoClaw</span> Stack</h1>
+      <p class="lead">
+        Modules 1 and 2 kept orchestration in the browser. A workflow ended when the page stopped
+        carrying its messages, intermediate results, or branch state. Module 3 moves the same agent patterns into a
+        <a href="https://brev.nvidia.com/launchable/deploy?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990" target="_blank" rel="noopener">
+        NemoClaw Brev launchable</a>. OpenClaw preserves session history and a file-backed workspace
+        while continuing to expose tools; OpenShell limits what that running agent can reach. From the browser, you will compare
+        the stateless model API with the persistent OpenClaw gateway.
+      </p>
+      <figure style="margin:1.4em 0">
+        <div class="fig-embed" data-svg-src="assets/figures/03a-kickstart-1.svg" style="aspect-ratio:1300 / 400"></div>
+        <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">Access moves from stateless model HTTP, to server-side conversation state, to standard tool protocols, to the long-lived WebSocket that streams a live OpenClaw agent session.</figcaption>
+      </figure>
+
+
+    </div>
+
+    <p>The diagram traces that spectrum left to right:</p>
+    <ul>
+      <li><strong>HTTP REST endpoints.</strong> The model answers each call in isolation: the <a href="https://platform.openai.com/docs/api-reference/chat" target="_blank" rel="noopener"><em>Chat Completions API</em></a>, where your code carries the history, or the <em>Responses API</em>, where the server keeps it for you.</li>
+      <li><strong>The <a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener">Model Context Protocol</a>.</strong> A standard wire that lets a runtime reach tools without writing bespoke glue for each one.</li>
+      <li><strong>A persistent gateway.</strong> OpenClaw keeps a <code>/cli/gateway</code> <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API" target="_blank" rel="noopener">WebSocket</a> open and streams events back over <a href="https://www.jsonrpc.org/specification" target="_blank" rel="noopener">JSON-RPC</a> instead of answering one request at a time.</li>
+    </ul>
+
+    <!-- video removed: hour-long NemoClaw session, too long and distracting for an inline companion. Re-enable by uncommenting.
+    <figure class="lp-video">
+      <div class="video-wrap">
+        <iframe src="https://www.youtube-nocookie.com/embed/DznyClsBZWY?autoplay=0&rel=0"
+          title="Introduction to Building Autonomous AI Agents" loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </div>
+      <figcaption><b>Watch:</b> An introduction to designing and deploying long-running, self-evolving
+        autonomous agents with OpenClaw, NemoClaw, and OpenShell. It sets up the kickstart this page runs,
+        so it is a useful companion before you probe the endpoints below. Part of NVIDIA's
+        <a href="https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-safer-autonomous-agent-using-openclaw"
+          target="_blank" rel="noopener">Agentic AI Learning Path</a>.
+      </figcaption>
+    </figure>
+    -->
+
+    <h2>The two endpoints you work with from here</h2>
+    <p>
+      The model endpoint answers the same API as before. The launchable gateway reaches an
+      OpenClaw process that preserves sessions and can run tools. Supporting protocol code stays
+      available in the cells, but the endpoint, credential, and state boundary are the parts to track.
+    </p>
+
+    <div class="url-pair">
+      <a class="url-card" href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener">
+        <h3>build.nvidia.com</h3>
+        <p>Chat Completions API. Stateless: one POST, one reply,
+          no tools or session. Generate a key at API Keys.</p>
+        <p style="color:var(--tf);font-size:.8rem">Your <code>nvapi-</code> key.
+          The proxy forwards it unchanged.</p>
+      </a>
+      <article class="url-card" style="background:rgba(118,185,0,.06)">
+        <h3><a
+          href="https://brev.nvidia.com/launchable/deploy?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990"
+          target="_blank" rel="noopener">Launch NemoClaw on Brev</a></h3>
+        <p>The setup creates a launchable that runs OpenClaw inside OpenShell. Its App URL may use the Cloudflare Access or Pomerium Brev host family; the connection dropdown below accepts either. Identity, tools, session memory, and sandbox policy live there. The browser reaches the agent through
+          the WebSocket gateway at <code>/cli/gateway</code>. For a local deployment, follow the
+          <a href="https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986" target="_blank" rel="noopener">NemoClaw setup playbook</a>
+          and keep the same connection boundary.
+        </p>
+        <p style="color:var(--tf);font-size:.8rem">Gateway token auth. Sessions
+          via <code>x-openclaw-session-key</code>.</p>
+      </article>
+    </div>
+
+    <h2>Step 1 · Probe the endpoints</h2>
+    <p>The widgets below make a small request to each endpoint and show
+      what comes back. Green = ready.</p>
+
+    <h3>Model route settings</h3>
+    <p>The model probe is a read-only mirror of the persistent chat route configured on the course home
+      page or in Module 1a. Change it here once; the benchmark and later lessons reuse that route. The
+      NemoClaw launchable settings below remain separate.</p>
+    <div id="model-route-settings"></div>
+    <div id="probe-llm"></div>
+
+    <h3>Latency and time to first token across models</h3>
+    <p>Before committing to a model, measure it. The cells below pull matching
+      models from the catalog, stream a short prompt through each one, and
+      record each model's <em>time to first token</em> (TTFT) and time to
+      finish. The catalog-fetching cell starts open so the filter list is visible
+      before you run the benchmark.</p>
+
+    <div id="bench-llm"></div>
+
+    <div id="probe-claw"></div>
+
+    <div class="callout warn">
+      <strong>If the OpenClaw probe times out or returns a 502.</strong>
+      The agent harness likely has not finished booting, which usually means the
+      launchable started before OpenClaw finished loading its policy YAML. Wait
+      30 seconds and click Probe again. If it stays down, use the Recover cell in
+      the gateway section below before continuing.
+    </div>
+
+    <h3>The probe's request, as editable code</h3>
+    <p>The exposed code makes the same request as the probe. It reuses the URL, token,
+      access provider, and session the probe saved. Edit <code>PATH</code>, <code>METHOD</code>,
+      and <code>BODY</code> to send other requests. The status, headers, and body come back
+      below.</p>
+    <p><code>TRANSPORT</code> controls how the credential reaches the launchable:</p>
+    <ul>
+      <li><code>"configured"</code> follows the relay toggle saved above. Cross-origin Brev uses the NVIDIA relay by default.</li>
+      <li><code>"direct"</code> calls the launchable origin with <code>credentials:&nbsp;"include"</code>, relying on the matching launchable cookie your browser already holds.</li>
+    </ul>
+    <p>
+      Pomerium launchables keep their signed session in the browser. The course uses their direct
+      WebSockets and reads the two bootstrap endpoints through a fixed loopback request in that
+      authenticated terminal. Cloudflare Access launchables use the hosted relay and its explicit session field.
+      When the course is vendored inside the same NemoClaw launchable as its runtime,
+      direct mode is same-origin and the relay is not needed.
+    </p>
+
+    <div id="claw-raw-cell"></div>
+
+    <h2>Step 2 · The gateway</h2>
+
+    <p>The model endpoint speaks the Chat Completions API, where a single POST
+      carries everything the call needs.</p>
+    <ul>
+      <li>The request line is a single <code>POST</code> to the completions route.</li>
+      <li>The JSON body carries <code>model</code> and <code>messages</code>.</li>
+      <li>An <code>Authorization</code> header names the caller.</li>
+    </ul>
+    <p>OpenClaw implements that same route internally too, but a separately hosted course reaches it through the launchable access layer and relay rather than as an unauthenticated browser request.</p>
+    <p>The channel that <em>is</em> open to you runs a different protocol, a
+      WebSocket at <code>/cli/gateway</code> speaking JSON-RPC.
+    </p>
+
+    <div class="callout">
+      <p>The Control UI in your browser tab does not use a special private channel.
+        It talks to the agent over the same WebSocket at <code>/cli/gateway</code> that is
+        open to you, and the only credential it needs is the gateway token. The probe above
+        discovers that token for you, so you never paste it in. A
+        <code>GET /api/agent</code> returns it under the field <code>agent.dashboardUrl</code>,
+        a read that your launchable session authorises, so you can leave the
+        token field blank and let probing fill it in.</p>
+    </div>
+
+    <p>That token carries <code>operator.admin</code> scope, the same authority
+      the Control UI holds. With it you can:</p>
+    <ul>
+      <li><code>models.list</code> enumerates every model the runtime serves.</li>
+      <li><code>cron.add</code> schedules work that runs without you.</li>
+      <li><code>chat.send</code> with a <code>sessionKey</code> drops a message
+        straight into the running agent's loop.</li>
+    </ul>
+
+    <figure style="margin:1.4em 0">
+      <div id="fig-calls"></div>
+      <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">A single POST drives a loop inside the gateway, where the session key carries memory forward to the next call.</figcaption>
+    </figure>
+
+    <h3>Check before changing runtime settings</h3>
+    <p>Supported NemoClaw launchables normally report <code>tools.toolSearch=false</code>. A custom configuration can still enable it, so the health check reads the live value before Recover changes anything:</p>
+    <ul>
+      <li><strong>Symptom:</strong> you ask for a command, nothing comes back,
+        the run stalls, and then it times out.</li>
+      <li><strong>Cause:</strong> toolSearch lets the model reach its tools by writing
+        code for a bridge (<code>tool_search_code</code> &middot; &ldquo;run bridge
+        code&rdquo;), and the model loops on that bridge instead of calling
+        <code>exec</code>.
+      </li>
+      <li><strong>Recovery:</strong> run the health check. If <code>toolSearch</code> is on and the exec probe fails, Recover can turn it off with <code>config.patch</code>. Session clearing and restart remain opt-in.</li>
+    </ul>
+
+    <figure style="margin:1.4em 0">
+      <div id="fig-toolsearch"></div>
+      <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">The healthy path uses exec directly. Recover changes toolSearch only when the live check finds it enabled.</figcaption>
+    </figure>
+
+    <div id="gw-recover"></div>
+
+    <p>With the runtime shaped, you can drop a message into the agent's loop. The three
+      cells below run in order so that the first ones connect and list models and crons
+      before a later cell sends a chat turn and the last one streams the trace back. Read
+      that trace row by row:</p>
+    <ul>
+      <li>Each <code>⚙️</code> row is a tool call with its input arguments.</li>
+      <li>Each <code>✓</code>/<code>✗</code> row is that tool's result.</li>
+      <li>The model's reasoning is not forwarded by the gateway, so this input/output
+        trace is the deepest per-step view. When a run stalls with no result, the
+        📜 logs cell above tails the runtime instead.</li>
+    </ul>
+    <p>Every chat run self-checks: if one logs <code>⚠ DEGRADED</code>, come back up
+      here, run Recover, then retry.</p>
+
+    <div id="gw-demo"></div>
+
+    <div class="callout warn">
+      <p>Anyone who can read the launchable environment can read that token,
+        and a reader of the token is an operator with everything above. Module 4
+        turns this from a convenience into the central security question.</p>
+    </div>
+
+    <h2>Step 3 · Memory lives in the session key</h2>
+    <p>Every <code>chat.send</code> takes a <code>sessionKey</code>, and that key
+      decides what the turn remembers:</p>
+    <ul>
+      <li><strong>Same key, twice:</strong> the gateway rehydrates the first turn's
+        history before the second runs, so the agent answers from a conversation
+        your client never re-sent.</li>
+      <li><strong>Different key:</strong> a clean start, nothing carried over.</li>
+    </ul>
+    <p>The first cell below plants a fact and then asks for it back under the same key.
+      The agent answers from a turn your client never re-sent, because the gateway
+      rehydrated that history server-side. The other two cells let you manage the stored
+      state.</p>
+    <ul>
+      <li><strong>Clear</strong> wipes one session in a single call, so the next turn
+        starts from nothing. Every chat cell also carries a commented
+        <code>sessions.reset</code> line to start fresh in place.
+      </li>
+      <li><strong>Clean up</strong> sweeps the throwaway sessions that pile up in the
+        Control UI as you experiment (including Step 2's per-run keys), keeping only
+        the Main Session.</li>
+    </ul>
+
+    <div id="session-call"></div>
+
+    <div class="callout warn">
+      <strong>The session key is all the client sends to identify a conversation.</strong>
+      From that one string the gateway resolves the full session server-side before every
+      call, so the client never has to ship the transcript itself. Any two keys
+      that differ at all address two separate sessions even when the conversations behind
+      them hold identical content.
+    </div>
+
+    <h2>What's next</h2>
+    <p>Module 3b opens the files that shape each OpenClaw turn. Module 3c adds skills
+      and scheduled triggers, then Module 4 tests how OpenShell limits the actions those
+      persistent instructions can start.</p>
+
+    <div class="references">
+      <h3>References</h3>
+      <ul>
+        <li><a href="https://platform.openai.com/docs/api-reference/chat" target="_blank" rel="noopener">OpenAI Chat
+            Completions API</a>. The wire format the model endpoint speaks, including the <code>finish_reason</code>
+          field this page surfaces.</li>
+        <li><a href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener">NVIDIA build.nvidia.com</a>. The model API
+          behind the course proxy; paste your nvapi- key in the bearer field to authenticate.</li>
+        <li><a href="https://docs.anthropic.com/en/docs/claude-code/overview" target="_blank" rel="noopener">Anthropic,
+            <em>Claude Code</em> (docs)</a>. The directory-as-session pattern that the next page edits to change what
+          OpenClaw is.</li>
+        <li><a href="https://arxiv.org/abs/2304.03442" target="_blank" rel="noopener">Park et al., <em>Generative
+              Agents</em> (2023)</a>. Establishes server-side memory plus identity as durable runtime structure, the
+          model the session-key header implements.</li>
+      </ul>
+      <p class="references-note">Comprehensive list at <a href="04c-going-further.html#refs">Going Further ·
+          References</a>.</p>
+    </div>
+
+    <h2>Try it · talk to your launchable</h2>
+    <p>
+      Once the probe above is green, this artifact opens the same
+      <code>/cli/gateway</code> WebSocket and lets you chat with your live OpenClaw
+      agent. It streams the reply and shows a chip whenever the agent reaches for a
+      tool. Every reply you see here came back over that live gateway connection.
+    </p>
+    <div id="kickstart-cell"></div>
+    <div id="kickstart-artifact"></div>
+    <script type="module">
+      import { mountRunCell } from "./scripts/_shared.js";
+      mountRunCell("#kickstart-cell", {
+        label: "the Try-it artifact, in code",
+        autorun: true,
+        code: `// This opens the same /cli/gateway WebSocket the probe above used; openclawChat
+// streams the reply into the view and fires a chip per tool call.
+helpers.mountChatUI("#kickstart-artifact", {
+  disabled: () => { const c = helpers.getOpenClawConnection(); return !(c.token && c.rawUrl); },
+  disabledMsg: "Connect the launchable in the probe above. This panel unlocks as soon as its URL and token are saved.",
+  greeting: "Connect your launchable in the probe above, then say hi or ask the agent to run whoami and pwd with exec.",
+  examples: [
+    "Use your exec tool to run whoami and pwd, then report both results",
+    "Use your exec tool to run ls -la /sandbox/.openclaw/workspace, then explain each file",
+    "What model are you running on?",
+    "What tools can you call?",
+    "Read your SOUL.md and summarize who you are",
+    "Try to curl https://example.com and tell me what happened",
+  ],
+  respond: async (text, ctx) => { await helpers.openclawChat(text, { session: "art-" + ctx.thread, view: ctx.view, signal: ctx.signal }); },
+});
+helpers.log("rendered below. Edit the config and Run.");
+
+// The panel is helpers.mountChatUI and it streams through helpers.openclawChat; open the helpers tab above to read either one's source.
+`,
+      });
+    </script>
+
+    <div class="foot-nav">
+      <a href="02c-deep.html">← Module 2c: Deep Agents</a>
+      <a class="next" href="03b-openclaw.html">Module 3b: OpenClaw →</a>
+    </div>
+  </main>
+
+  <script type="module">
+    import { buildNav, gatewayTokenFromAgentMetadata, getConfig, getKey, modelRequestCredentials, updateKeyPill, updateClawPill, mountJourneyMap, mountClawProbe, mountModelEndpointProbe, mountKeyPanel, mountCanvasFlow, mountRunCell, GW_CONNECT, mountGwRecover, mountDiagram } from "./scripts/_shared.js";
+    document.getElementById("nav").innerHTML = buildNav("03a-kickstart.html");
+    const pill = document.getElementById("key-status");
+    updateKeyPill(pill);
+    updateClawPill(document.getElementById("claw-status"));
+    mountJourneyMap("#journey-map", "3a");
+    hljs.highlightAll();
+
+    // ── The call, expanded: one POST drives a loop inside the gateway ────────────
+    mountDiagram("#fig-calls", {
+      kicker: "ONE POST · A LOOP INSIDE THE GATEWAY",
+      title: "One agent call, expanded",
+      maxWidth: 760, boxW: 268, boxH: 116, gapX: 86, top: 58,
+      nodes: [
+        {
+          id: "you", label: "your code", kind: "data", x: 0, y: 0,
+          lines: ["notebook or browser", "one POST per turn"]
+        },
+
+        {
+          id: "gw", label: "OpenClaw gateway", kind: "agent", x: 1, y: 0,
+          lines: ["plans, calls tools,", "loops until it answers"],
+          socket: "the loop runs here"
+        },
+      ],
+      edges: [
+        { from: "you", to: "gw", label: "POST", side: "top", tint: "data" },
+        { from: "gw", to: "you", label: "reply", side: "bottom", tint: "agent" },
+        { from: "gw", to: "gw", tint: "agent" },
+      ],
+    });
+
+    // ── toolSearch trap vs fix (the resilience graphic) ──────────────────────────
+    mountDiagram("#fig-toolsearch", {
+      kicker: "CHECK THE LIVE VALUE BEFORE REPAIR",
+      title: "toolSearch is a conditional failure mode",
+      maxWidth: 1040, boxW: 252, boxH: 98, gapX: 92, rowGap: 76,
+      nodes: [
+        { id: "on", label: "toolSearch ON", kind: "neutral", x: 0, y: 0, lines: ["custom configuration"] },
+        { id: "loop", label: "tool_search_code", kind: "tool", x: 1, y: 0, lines: ["model loops on the", "code bridge"] },
+        { id: "stall", label: "no output", kind: "neutral", x: 2, y: 0, lines: ["exec never runs"] },
+        { id: "off", label: "toolSearch OFF", kind: "model", x: 0, y: 1, lines: ["healthy setting"] },
+        { id: "exec", label: "exec", kind: "tool", x: 1, y: 1, lines: ["model calls the", "shell directly"] },
+        { id: "ok", label: "command output", kind: "env", x: 2, y: 1, lines: ["the shell runs"] },
+      ],
+
+      edges: [
+        { from: "on", to: "loop", side: "top", tint: "tool" },
+        { from: "loop", to: "stall", side: "top", tint: "tool" },
+        { from: "off", to: "exec", side: "bottom", tint: "model" },
+        { from: "exec", to: "ok", side: "bottom", tint: "env" },
+      ],
+    });
+
+    const NVIDIA_BUILD_URL = "https://build.nvidia.com/?ncid=ref-dli-146986";
+
+    // ── Probe model endpoint ─────────────────────────────────────────────────────
+    async function renderModelEndpointProbe() {
+      const MODEL_API_CONFIG = await getConfig();
+      const MODEL_API_BASE_URL = MODEL_API_CONFIG.url;
+      mountModelEndpointProbe("#probe-llm", {
+      label: "Probe active model endpoint",
+      intro: "Read-only mirror of the saved chat route. Change it in Model route settings above; it never reads or writes NemoClaw launchable values.",
+      defaultUrl: MODEL_API_BASE_URL,
+      defaultToken: getKey() || "",
+      credentials: modelRequestCredentials(MODEL_API_BASE_URL),
+      failureHint: "Check the model route saved above, its bearer key, public HTTPS tunnel, and served model ID.",
+      fieldHelp: {
+        url: `<p><strong>What it is:</strong> The model API base saved on the course home page.</p>
+<p><strong>How requests reach it:</strong> The default is <code>integrate.api.nvidia.com</code>.
+A presenter can select a compatible launchable once; every lesson and this probe reuse that value.
+Iframe proxy mode remains available only for the default NVIDIA endpoint.</p>
+<p><strong>Active endpoint:</strong> <code>${MODEL_API_BASE_URL}</code>.</p>`,
+
+        token: `<p><strong>What it is:</strong> The bearer key saved with the active model endpoint.
+NVIDIA API keys start with <code>nvapi-</code>.</p>
+<p><strong>How to get one:</strong> Sign in at <a href="${NVIDIA_BUILD_URL}" target="_blank" rel="noopener">build.nvidia.com</a>
+→ API Keys → Generate Key.</p>
+<p><strong>Running locally:</strong> Same key works everywhere. Store it as an environment variable
+(<code>NVIDIA_API_KEY</code>) rather than pasting it into code.</p>`,
+      },
+      actions: [
+        {
+          label: "GET /v1/models", path: "/models", method: "GET",
+          filterModels: ["120b", "glm", "kimi", "minimax"]
+        },
+
+        {
+          label: "Hello chat", path: "/chat/completions", method: "POST",
+          body: () => ({
+            model: MODEL_API_CONFIG.model,
+            max_tokens: 8196,   // reasoning model: leave room past the thinking for the answer
+            messages: [{ role: "user", content: "In one sentence: who runs you?" }],
+          })
+        },
+      ],
+    });
+    }
+    mountKeyPanel(document.getElementById("model-route-settings"), {
+      onSave: renderModelEndpointProbe,
+      onClear: renderModelEndpointProbe,
+    });
+    await renderModelEndpointProbe();
+
+    // ── TTFT / latency benchmark across matching models ──────────────────────────
+    const bench = document.querySelector("#bench-llm");
+    bench.innerHTML = `<div id="bench-fetch-models"></div><div id="bench-measure-models" style="margin-top:12px"></div>`;
+
+    mountRunCell("#bench-fetch-models", {
+      label: "Fetch matching models",
+      openCode: true,
+      intro: "Run this short discovery request first. It lists models matching the editable prefix; code stays visible because changing that filter is the exercise.",
+      code: `// Fetch the model catalog and keep only the IDs this benchmark compares.
+const FILTER = ["120b", "glm", "kimi", "minimax"];
+const CFG      = await helpers.getConfig();
+const ENDPOINT = CFG.url.replace(/\\/+$/, "");
+const KEY    = helpers.getKey() || "";
+
+if (!KEY) {
+  helpers.log("No API key saved. Go to the course home and save the endpoint and key first.");
+  return;
+}
+const r = await helpers.browserChatFetch()(ENDPOINT + "/models", {
+  headers: { Authorization: "Bearer " + KEY },
+});
+
+if (!r.ok) { helpers.log("models fetch failed: HTTP " + r.status); return; }
+const { data } = await r.json();
+// Optional visibility: uncomment to inspect every model ID before filtering.
+// helpers.log.json("all model IDs", data.map(model => model.id));
+const models = data.map(m => m.id).filter(id => FILTER.some(s => id.toLowerCase().includes(s.toLowerCase())));
+if (!models.length) {
+  helpers.log("No models matched filter: " + FILTER.join(", "));
+  return;
+}
+helpers.log(models.length + " model(s) to bench:\\n  " + models.join("\\n  "));
+state.models = models;
+state.endpoint = ENDPOINT;
+state.key    = KEY;
+return { count: models.length };`,
+    });
+
+    mountRunCell("#bench-measure-models", {
+      label: "Measure TTFT per model",
+      code: `// Stream one prompt through each selected model and measure first-token latency.
+if (!state.models?.length) { helpers.log("Run 'Fetch matching models' first."); return; }
+const PROMPT       = "List five prime numbers.";
+// Try another prompt (uncomment one) to compare how the models behave on different work:
+// const PROMPT    = "Explain step by step why the sky is blue.";                // a reasoning task
+// const PROMPT    = "Write a haiku about GPUs, then one line on what it means."; // a longer generation
+const MAX_TOKENS   = 256;     // reasoning models think first; too low and they never answer
+const TTFT_TIMEOUT = 30000;   // ms; give up on a model with no first token by now (some are slow to start)
+
+// Time first-token latency and count both reasoning and answer tokens.
+async function bench(model) {
+  const ctrl  = new AbortController();
+  const stop = () => ctrl.abort();
+  if (helpers.signal.aborted) ctrl.abort();
+  else helpers.signal.addEventListener("abort", stop, { once: true });
+  const guard = setTimeout(() => ctrl.abort(), TTFT_TIMEOUT);   // first-token watchdog
+  const t0 = performance.now();
+  let ttft = null, total = null, tokens = 0, reasoning = 0, gapSum = 0, last = t0;
+  let text = "", think = "", finish = null, err = null;
+
+  try {
+    const r = await helpers.browserChatFetch()(state.endpoint + "/chat/completions", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + state.key, "Content-Type": "application/json" },
+      body: JSON.stringify({ model, messages: [{ role: "user", content: PROMPT }], max_tokens: MAX_TOKENS, stream: true }),
+      signal: ctrl.signal,
+    });
+
+    if (!r.ok) { err = "HTTP " + r.status; }
+    else {
+      const reader = r.body.getReader(), dec = new TextDecoder();
+      let buf = "";
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        // Server-sent events: one "data: {json}" line per chunk.
+        let nl;
+        while ((nl = buf.indexOf("\\n")) >= 0) {
+          const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1);
+          if (!line.startsWith("data:")) continue;
+          const body = line.slice(5).trim();
+          if (body === "[DONE]") continue;
+
+          let j; try { j = JSON.parse(body); } catch { continue; }
+          const choice  = j.choices?.[0] || {};
+          const delta   = choice.delta || {};
+          if (choice.finish_reason) finish = choice.finish_reason;
+          const answer  = delta.content || "";
+          const thought = delta.reasoning_content || "";
+          if (!answer && !thought) continue;          // role-only / empty keepalive delta
+          const now = performance.now();
+
+          if (ttft === null) { ttft = Math.round(now - t0); clearTimeout(guard); }  // first token of ANY kind
+          else { gapSum += now - last; }
+          last = now; tokens++;
+          if (thought) { reasoning++; think += thought; }
+          if (answer)  { text += answer; }
+        }
+      }
+      total = Math.round(performance.now() - t0);
+    }
+  } catch (e) {
+    err = e.name === "AbortError" ? ("no first token in " + (TTFT_TIMEOUT / 1000) + "s") : e.message;
+  } finally {
+    clearTimeout(guard);
+    helpers.signal.removeEventListener("abort", stop);
+  }
+  const avgGap = tokens > 1 ? Math.round(gapSum / (tokens - 1)) : null;   // mean inter-token latency
+  return { model, ttft, total, tokens, reasoning, avgGap, text, think, finish, err };
+}
+
+// Launch every model concurrently, then await them in catalog order, so the log prints in a stable order even though the requests overlap.
+const pending = state.models.map(bench);
+const results = [];
+for (let i = 0; i < pending.length; i++) {
+  const res = await pending[i];
+  results.push(res);
+  if (res.err) {
+    helpers.log("✗ " + res.model + "  " + res.err);
+    continue;
+  }
+
+  helpers.log("✓ " + res.model +
+    "  TTFT " + (res.ttft ?? "n/a") + "ms · total " + res.total + "ms · " +
+    res.tokens + " tok" + (res.reasoning ? " (" + res.reasoning + " thinking)" : "") + " · " +
+    (res.avgGap != null ? res.avgGap + "ms/tok" : "n/a") +
+    (res.finish === "length" ? " · hit max_tokens" : ""));
+  // Show the answer; if the model spent its whole budget thinking, show that instead.
+  const raw = res.text
+    ? res.text
+    : (res.think ? "(no answer: the model used all " + MAX_TOKENS + " tokens thinking; raise MAX_TOKENS)\\n\\n" + res.think : "(empty response)");
+  helpers.log.details("raw output · " + res.model, raw);
+}
+
+// Rank survivors by TTFT, the metric that matters when streaming to a user.
+// A model that never produced a token (ttft null) sorts last, not first.
+const ok = results.filter(r => !r.err).sort((a, b) => (a.ttft ?? Infinity) - (b.ttft ?? Infinity));
+if (ok.length) {
+  helpers.log("\\n── ranked by TTFT ──────────────────────────");
+  ok.forEach((r, i) => helpers.log(
+    String(i + 1).padStart(2) + ". " + r.model.padEnd(46) +
+    String(r.ttft ?? "n/a").padStart(5) + "ms · " + String(r.avgGap ?? "n/a").padStart(4) + "ms/tok · " + r.tokens + " tok"));
+}
+state.results = results;
+// Optional visibility: uncomment to inspect the complete timing records.
+// helpers.log.json("timing rows", results);
+return { ranked: ok.map(r => r.model), errors: results.filter(r => r.err).length };`,
+    });
+
+
+    // ── Probe OpenClaw runtime ───────────────────────────────────────────────────
+    mountClawProbe("#probe-claw", {
+      label: "Probe OpenClaw (NemoClaw launchable)",
+      intro: "",
+      defaultUrl: "",
+      defaultToken: "",
+      proxyControls: true,
+      syncCanvas: true,
+      cfAccess: true,
+      unexpectedHtmlHint: "Expected JSON but received the OpenClaw Control page. The request reached the launchable root instead of this API path. Keep Base URL at the launchable origin and retry; this response is not a health result.",
+      helpHint: "Need a value? Select the ? beside that field. Start with Base URL; GET /api/agent fills the bearer token.",
+
+      // GET /api/agent returns agent.dashboardUrl with the gateway token.
+      autofillToken: gatewayTokenFromAgentMetadata,
+      fieldHelp: {
+        url: `<p><strong>What it is:</strong> The root URL of your NemoClaw launchable running OpenClaw inside OpenShell, with no trailing <code>/v1</code>.</p>
+<p><strong>How to find it:</strong> Copy the App URL from the Brev dashboard. Either supported launchable type works. For local OpenClaw, use <code>http://localhost:8088</code> or its exposed port and leave Access session empty.</p>`,
+
+        token: `<p><strong>Usually you can leave this blank.</strong> Run <strong>GET /api/agent</strong> below and the probe
+reads the gateway token out of <code>agent.dashboardUrl</code> and fills this field for you. For Pomerium, opening the launchable and signing in is enough. Cloudflare also needs its Access session below.</p>
+<p><strong>Manual fallback:</strong> If autofill doesn't fire, run <code>printenv OPENCLAW_GATEWAY_TOKEN</code> in your
+launchable terminal and paste the complete value here. Do not assume a fixed length or character set.</p>`,
+
+        accessProvider: `<p><strong>Automatic</strong> chooses from the App URL. A <code>*.brevlab.com</code> launchable uses <strong>Cloudflare Access</strong> through the hosted relay. A <code>*.apps.run.brev.nvidia.com</code> launchable uses <strong>Pomerium</strong> directly through the signed-in browser.</p>`,
+        accessSession: `<p>This field is only for <strong>Cloudflare Access</strong>. Open that launchable, sign in, then copy the complete <code>CF_Authorization</code> value from DevTools → <strong>Application → Storage → Cookies</strong>.</p>
+<p>For <strong>Pomerium</strong>, the field is disabled. Open the launchable and sign in; its <code>HttpOnly</code> cookie stays in the browser and is never copied into course code or storage.</p>`,
+        proxy: `<p>The shared NVIDIA relay is used for cross-origin <strong>Cloudflare Access</strong> launchables. Pomerium connects directly with the browser's signed-in session, even when this toggle remains enabled for Cloudflare compatibility.</p>`,
+        proxyBase: `<p><strong>One shared setting:</strong> this defaults to the NVIDIA-hosted relay and persists for Modules 3a–4b. Presenters can also prefill it with <code>?openclaw_proxy_base=...</code> and enable or disable it with <code>?openclaw_proxy=1</code> or <code>0</code>.</p>`,
+      },
+
+      actions: [
+        { label: "GET /healthz", path: "/healthz", method: "GET", expectJson: true },
+        { label: "GET /api/agent", path: "/api/agent", method: "GET", expectJson: true },
+      ],
+    });
+
+    // ── Raw request console: the probe's fetch as editable code ───────────────────
+    mountRunCell("#claw-raw-cell", {
+      label: "the probe's request, as editable code",
+      openCode: true,
+      intro: "Use the probe UI above for the normal path. This cell exposes its request so you can compare proxy and direct transport or inspect an unexpected response.",
+      autorun: false,
+      code: `// The probe saved the launchable URL and selected access provider.
+const connection = helpers.getOpenClawConnection();
+const configured = connection.effectiveUrl; // follows the saved relay toggle
+const url   = connection.rawUrl;             // launchable origin, direct
+const token = connection.token;
+const provider = connection.resolvedAccessProvider;
+const session  = connection.accessSession;
+if (!url) return helpers.log('Run the probe above first.');
+
+const METHOD    = 'GET';
+const PATH      = '/api/agent';   // read-only bootstrap endpoint
+// const PATH   = '/healthz';     // alternate read-only bootstrap endpoint
+const BODY      = null;           // e.g. { key: 'value' }
+const TRANSPORT = 'configured';   // 'configured': saved relay toggle. 'direct': bypass the relay.
+
+// Pomerium keeps its HttpOnly cookie in the browser. Its authenticated terminal
+// reads this fixed endpoint over launchable loopback, so no cookie enters course code.
+if (provider === 'pomerium') {
+  const result = await helpers.openclawLoopbackProbe(PATH, { baseUrl: url, signal: helpers.signal });
+  helpers.log.kv({ status: result.status + ' ' + result.statusText, transport: result.transport });
+  helpers.log.details('body', result.body);
+  return result.json ?? result.body;
+}
+
+// Cloudflare Access uses the configured hosted relay.
+const direct  = TRANSPORT === 'direct';
+const target  = direct ? url : (configured || url);
+const viaRelay = !direct && target !== url;
+const headers = { Accept: 'application/json, text/html, */*' };
+if (token)            headers.Authorization = 'Bearer ' + token;
+if (viaRelay && session) {
+  headers['X-OpenClaw-Access-Provider'] = provider;
+  headers['X-OpenClaw-Access-Session'] = session;
+}
+if (BODY)             headers['Content-Type'] = 'application/json';
+
+const res = await helpers.fetch(target + PATH, {
+  method: METHOD,
+  headers,
+  body: BODY ? JSON.stringify(BODY) : null,
+  credentials: direct ? 'include' : 'same-origin',   // direct mode sends the launchable cookie held by this browser
+});
+
+helpers.log.kv({ status: res.status + ' ' + res.statusText, type: res.type });
+helpers.log.details('headers', Object.fromEntries(res.headers));
+helpers.log.details('body', await res.text());
+`,
+    });
+
+    // Shared chat-turn snippet. Subscribe first or tool events stay invisible.
+    const gwChat = (sk, msg) => {
+      // sk is normally a literal string.
+      // Pass { raw: "<js expr>" } to compute the sessionKey at run time.
+      // A fresh unique-per-run key makes the agent re-run its tools; reuse replays.
+      const skExpr = (sk && typeof sk === "object" && sk.raw) ? sk.raw : JSON.stringify(sk);
+      // msg is normally a literal string.
+      // Pass { raw: "<js>" } for a custom message-assignment block.
+      const msgBlock = (msg && typeof msg === "object" && msg.raw)
+        ? msg.raw
+        : ("let message = " + JSON.stringify(msg) + ";");
+
+      return `if (!state.call) { helpers.log("Run Connect first."); return; }
+
+// ── tune these ──────────────────────────────────────────────────────────────
+${msgBlock}
+const sessionKey      = ${skExpr};   // which agent session to talk to
+const IDLE_TIMEOUT_S  = 90;          // give up if the agent goes silent this long
+const TOTAL_TIMEOUT_S = 240;         // hard ceiling for the whole turn
+const FINAL_EVENT_GRACE_MS = 1500;   // lifecycle end can arrive just before chat.final
+// ──────────────────────────────────────────────────────────────────────────────
+helpers.log("→ " + message);
+
+// chat.send returns prose; subscribed agent frames carry tool steps.
+if (!state._subs) state._subs = {};
+if (!state._subs[sessionKey]) {
+  await state.call("sessions.messages.subscribe", { key: sessionKey });
+  state._subs[sessionKey] = true;
+}
+
+// Uncomment to clear this session and force fresh tool work.
+// await state.call("sessions.reset", { key: sessionKey }); helpers.log("🧹 cleared session memory: " + sessionKey);
+
+const _params = {
+  sessionKey,
+  idempotencyKey: Math.random().toString(36).slice(2) + Date.now().toString(36),
+  message,
+};
+
+// ── stream handler ───────────────────────────────────────────────────────────
+
+// Frames are tagged by pl.stream. The "tool" stream is the trace:
+//   phase "start"  = the tool's args (INPUT)
+//   phase "result" = result + isError (OUTPUT), for every tool
+
+// The "assistant" stream is the answer text; "lifecycle" phase:end ends the run.
+
+// Gateway omits reasoning; tool args/results are the deepest step view here.
+
+// Two timers guard the run: an idle timer (reset only by REAL activity, never by heartbeats) and a global backstop.
+let _text = "", _finalEv, _t0 = performance.now(), _ttft = 0, _myRun = null;
+let _toolStarts = 0, _didResult = false;            // for the degradation check below
+const IDLE_MS = IDLE_TIMEOUT_S * 1000, GLOBAL_MS = TOTAL_TIMEOUT_S * 1000;
+await new Promise((resolve, reject) => {
+  let _idle, _global, _endGrace, _finished = false;
+  function finish(why, stalled) {
+    if (_finished) return; _finished = true;
+    clearTimeout(_idle); clearTimeout(_global); clearTimeout(_endGrace); state._chatCb = null;
+    if (why) helpers.log(why);
+
+    // Abort timed-out runs server-side so they stop consuming work and leaking frames.
+    if (stalled) {
+      helpers.log("⛔ aborting the run on " + sessionKey + " so it does not keep running in the background…");
+      state.call("chat.abort", { sessionKey }).catch(() => {});
+    }
+    resolve();
+  }
+
+  function bumpIdle() { clearTimeout(_idle); _idle = setTimeout(() => finish("⏱ no agent activity for " + (IDLE_MS / 1000) + "s; stopping", true), IDLE_MS); }
+  _global = setTimeout(() => finish("⏱ hit the " + (GLOBAL_MS / 1000) + "s global cap", true), GLOBAL_MS);
+  if (helpers.signal) helpers.signal.addEventListener("abort", () => finish("⏹ stopped", true), { once: true });
+  state._chatCb = d => {
+   try {
+    const pl = d.payload || {};
+    // Heartbeats stream the whole time the socket is open, and are NOT activity.
+    // Ignore them; otherwise a stalled run emitting only heartbeats would keep the idle timer alive and never time out.
+    if (pl.isHeartbeat || d.event === "health" || d.event === "tick") return;
+
+    // Keep only this runId before bumpIdle, or stale frames can mask a stall.
+    if (_myRun && pl.runId && pl.runId !== _myRun) return;
+    bumpIdle();   // real activity on OUR run pushes the idle deadline back
+    if (d.event === "chat" && pl.state === "final") {
+      // final chat frame: fallback prose if no agent text deltas arrived
+      _finalEv = d;
+      _text = helpers.openclawMessageText(pl.message) || _text;
+      finish(); return;
+    }
+    if (d.event !== "agent") return;
+
+    const sk = pl.sessionKey || "";
+    if (sk !== sessionKey && !sk.endsWith(":" + sessionKey)) return;   // not our session
+    const data = pl.data || {};
+    const stream = pl.stream || "";
+
+    if (stream === "assistant" || ("delta" in data && "text" in data)) {
+      // the answer, streamed as cumulative text
+      if (!_ttft) _ttft = performance.now() - _t0;
+      _text = data.text || _text;
+    } else if (stream === "tool" && data.phase === "start") {
+      // Show tool input; bad args often explain hangs.
+      _toolStarts++;
+      const inp = data.args ? JSON.stringify(data.args) : (data.meta || "");
+      helpers.log.details("⚙️ " + (data.name || "tool") + (inp ? "  " + inp.replace(/\\n/g, " ").slice(0, 160) : ""), helpers.filterOpenClawRuntimeValue(d));
+
+    } else if (stream === "tool" && data.phase === "result") {
+      // a tool finished, so show its OUTPUT (works for exec, read, edit, browser, …)
+      _didResult = true;
+      const txt = helpers.openclawResultText(data.result);
+      const mark = data.isError ? "✗" : "✓";
+      helpers.log.details(mark + " " + (data.name || "tool") + (txt ? "  " + txt.trim().replace(/\\n/g, " ⏎ ").slice(0, 200) : ""), helpers.filterOpenClawRuntimeValue(d));
+
+    } else if (data.phase === "end" && !data.itemId) {
+      // chat.final is authoritative and can trail lifecycle end by one browser turn.
+      clearTimeout(_endGrace); _endGrace = setTimeout(() => finish(), FINAL_EVENT_GRACE_MS);
+    }
+   } catch (e) {
+    // A throw inside a WS frame handler is otherwise swallowed silently and looks like a hang, so surface it instead of hiding the failure.
+    helpers.log("⚠ frame-handler error: " + (e && e.message ? e.message : e));
+   }
+  };
+
+  bumpIdle();
+  // Lock onto this runId so shared-session chatter is ignored.
+  state.call("chat.send", _params)
+    .then(res => { _myRun = (res && res.runId) || null; })
+    .catch(e => { clearTimeout(_idle); clearTimeout(_global); state._chatCb = null; reject(e); });
+});
+
+// ── response ─────────────────────────────────────────────────────────────────
+helpers.log(_text);
+if (_finalEv) helpers.log.details("← final chat frame", _finalEv);
+const _secs = (performance.now() - _t0) / 1000;
+const _toks = Math.round(_text.length / 4);          // rough estimate: ~4 chars/token
+helpers.log("⏱ " + _secs.toFixed(1) + "s · ~" + _toks + " tok · " +
+            (_secs ? (_toks / _secs).toFixed(1) : "0") + " tok/s" +
+            (_ttft ? " · first token " + (_ttft / 1000).toFixed(2) + "s" : ""));
+state.out = _text;
+
+// Degradation check: a healthy run returns text and/or a tool result.
+// If tools STARTED but none returned a result, a tool is hung or the model is looping, a runtime problem rather than your code.
+// The ⚙️ rows show which tools ran; the Health check flags toolSearch.
+if (!_text.trim() && !_didResult && _toolStarts > 0) {
+  helpers.log("⚠ DEGRADED: started " + _toolStarts + " tool call(s) but none returned a result or answer.");
+  helpers.log("   A tool is hung or the model is looping. The ⚙️ rows above show the exact tool + args it got stuck on.");
+  helpers.log("   Run the 🩺 Health check (it flags toolSearch) + 🛠 Recover; for a deeper look, the 📜 logs cell tails the runtime.");
+}
+`;
+    };
+
+    // ── Gateway demo: connect → list → chat ──────────────────────────────────────
+    mountCanvasFlow("#gw-demo", {
+      label: "Gateway · WebSocket protocol, step by step",
+      intro: "The same WebSocket at /cli/gateway that the Control UI uses is written out here as a challenge/response handshake, a JSON-RPC method call, and then a streaming chat turn.",
+      edges: [
+        { from: "gw-connect", to: "gw-list" },
+        { from: "gw-list", to: "gw-chat" },
+      ],
+      nodes: [
+        {
+          id: "gw-connect", icon: "🔌", title: "Open the gateway connection", x: 0, y: 0,
+          summary: "Open a WebSocket to /cli/gateway, respond to the server's challenge frame with the operator.admin credential, then store a call() helper on state so subsequent nodes can send typed requests without repeating the handshake.",
+          code: GW_CONNECT,
+        },
+
+        {
+          id: "gw-list", icon: "📋", title: "Call models.list and cron.list", x: 1, y: 0,
+          showCode: false,
+          summary: "Two JSON-RPC calls go through the open connection: models.list names every model the runtime serves, while cron.list reports the currently scheduled jobs.",
+          code: `// Use the existing gateway socket to list models and scheduled jobs.
+if (!state.call) { helpers.log("Run the Connect node first."); return; }
+
+const models = await state.call("models.list");
+helpers.log("models (" + (models?.models?.length || 0) + "):");
+(models?.models || []).slice(0, 8).forEach(m =>
+  helpers.log("  " + m.id + (m.provider ? "  [" + m.provider + "]" : ""))
+);
+helpers.log.details("raw models.list", models);
+
+const crons = await state.call("cron.list");
+const jobs  = crons?.jobs || [];
+helpers.log("\\ncron jobs: " + (jobs.length
+  ? jobs.map(j => j.id + " @ " + j.schedule).join(", ")
+  : "(none)"));
+helpers.log.details("raw cron.list", crons);
+return { models: models?.models?.length, cronJobs: jobs.length };
+`,
+        },
+
+        {
+          id: "gw-chat", icon: "💬", title: "Send a chat message (streaming)", x: 2, y: 0,
+          showCode: false,
+          summary: "Call chat.send with a fresh sessionKey and stream tool frames until run-end. The fresh suffix keeps each demo clean and forces a new tool run. The default prompt executes a command; commented alternatives test simpler turns.",
+          code: gwChat({ raw: `"quick-3a-gw-" + Math.random().toString(36).slice(2, 8)` }, {
+            raw:
+              `// The LAST uncommented line wins; comment the bottom ones to try those above.
+let message = "Can you tell me about yourself?";
+message = "What tools do you have access to?";
+message = "Use your exec tool to run \`whoami\` and \`pwd\` in your sandbox, then tell me in one sentence which user you are and where you are.";` }),
+        },
+      ],
+    });
+
+    // Health / recover / logs flow is shared from _shared.js:
+    mountGwRecover("#gw-recover");
+
+    // ── One session, carried memory: recall the earlier gw-chat turn ─────────────
+    mountCanvasFlow("#session-call", {
+      label: "The sessionKey rehydrates history across turns",
+      intro: "Plant a fact and recall it under the same sessionKey, then clear that history and remove the throwaway sessions. The recall sends only the question; the gateway restores the earlier turn server-side.",
+      edges: [
+        { from: "sk-memory", to: "sk-clear" },
+        { from: "sk-clear", to: "sk-cleanup" },
+      ],
+
+      nodes: [
+        {
+          id: "sk-memory", icon: "🧠", title: "Plant a fact, then ask it back", x: 0, y: 0,
+          showCode: false,
+          summary: "Send two turns under the same sessionKey. The second sends only a recall question; the gateway restores the first turn before the model runs. A different key addresses a separate history.",
+          code: GW_CONNECT + `
+helpers.log("turn 1 · plant a fact");
+{
+${gwChat("quick-3a-memory", "Remember this for later: my access code is BLUEJAY-7. Just acknowledge it in a few words.")}
+}
+
+helpers.log("turn 2 · ask it back (only the question is sent)");
+{
+${gwChat("quick-3a-memory", "What access code did I give you earlier? Reply with just the code.")}
+}
+
+helpers.log(/BLUEJAY-7/i.test(state.out)
+  ? "✓ recalled across turns; the gateway rehydrated the planted fact server-side"
+  : "✗ no recall; confirm both turns used the same sessionKey");
+`,
+        },
+
+        {
+          id: "sk-clear", icon: "🧹", title: "Clear the session memory", x: 1, y: 0,
+          showCode: false,
+          summary: "Wipe a session's server-side history with one call. Run it on the memory session above, then re-run the recall turn: the planted code is gone, because the conversation the gateway held is gone. Change sessionKey to clear any session you like. This is the drop-in to copy anywhere you want a fresh start.",
+          code: GW_CONNECT + `
+// One call wipes the conversation the gateway holds for this key.
+const sessionKey = "quick-3a-memory";
+helpers.log("🧹 clearing session memory for " + sessionKey + " …");
+const res = await state.call("sessions.reset", { key: sessionKey });
+helpers.log(res && res.ok
+  ? "✓ cleared; that session now has no history."
+  : "✗ sessions.reset returned an unexpected payload (see below).");
+helpers.log.details("sessions.reset response", res);
+helpers.log("Re-run the recall turn above and the planted code is gone.");
+`,
+        },
+
+        {
+          id: "sk-cleanup", icon: "🗑", title: "Clean up old sessions", x: 2, y: 0,
+          showCode: false,
+          summary: "Every distinct sessionKey you use leaves a session behind, and they accumulate in the Control UI. This lists them all (paginated) and deletes the throwaway ones, keeping only the Main Session. Edit KEEP to change what survives, e.g. /:(main|quick-3c-skill)$/ to also keep a session you care about.",
+          code: GW_CONNECT + `
+// Keep these; delete the rest. The default keeps only the Main Session.
+const KEEP = /:main$/;
+
+// sessions.list is paginated, so walk every page before deleting anything.
+let offset = 0, all = [];
+for (;;) {
+  const page = await state.call("sessions.list", { limit: 100, offset });
+  all = all.concat(page.sessions || []);
+  if (!page.hasMore) break;
+  offset = page.nextOffset;
+}
+const doomed = all.filter(s => !KEEP.test(s.key));
+helpers.log("found " + all.length + " session(s); keeping " + (all.length - doomed.length) + ", deleting " + doomed.length + ".");
+
+let removed = 0;
+for (const s of doomed) {
+  try { await state.call("sessions.delete", { key: s.key }); helpers.log("  🗑  " + s.key); removed++; }
+  catch (e) { helpers.log("  ✗ " + s.key + ": " + (e.message || e)); }
+}
+helpers.log(removed ? ("✓ removed " + removed + " stale session(s).") : "nothing to remove; already tidy.");
+`,
+        },
+      ],
+    });
+  </script>
+</body>
+
+</html>

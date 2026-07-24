@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Localization Studio · Securing Agents</title>
+<link rel="stylesheet" href="styles/_style.css"/>
+<style>
+  :root{--loc-side:20rem} body{overflow:hidden}.loc-shell{height:100vh;display:grid;grid-template-rows:auto 1fr;background:var(--bg)}
+  .loc-top{min-height:52px;display:flex;align-items:center;gap:.7rem;padding:.55rem 1rem;border-bottom:1px solid var(--bd);overflow-x:auto}
+  .loc-brand{font-weight:800;color:var(--g);white-space:nowrap}.loc-brand span{color:var(--tx);font-weight:650}.loc-spacer{flex:1}
+  .loc-top a,.loc-top button{min-height:34px;padding:.35rem .7rem;border:1px solid var(--bd);border-radius:7px;background:var(--e2);color:var(--td);white-space:nowrap;text-decoration:none;cursor:pointer}
+  .loc-top a:hover,.loc-top button:hover{border-color:var(--g);color:var(--gs)}#loc-summary{font:700 .75rem var(--mono);color:var(--td);white-space:nowrap}
+  .loc-body{min-height:0;display:grid;grid-template-columns:var(--loc-side) minmax(0,1fr)}.loc-side{min-height:0;border-right:1px solid var(--bd);display:flex;flex-direction:column;background:var(--e1)}
+  .loc-kinds{display:grid;grid-template-columns:1fr 1fr;gap:.35rem;padding:.65rem .75rem 0}.loc-kinds button{padding:.4rem;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--td);cursor:pointer}.loc-kinds button.active{border-color:var(--g);color:var(--gs);background:rgba(118,185,0,.08)}
+  .loc-filters{display:flex;flex-wrap:wrap;gap:.35rem;padding:.75rem;border-bottom:1px solid var(--bd)}.loc-filter{font:.7rem var(--mono);padding:.35rem .5rem;border:1px solid var(--bd);border-radius:999px;background:var(--bg);color:var(--td);cursor:pointer}.loc-filter.active{background:var(--g);color:#0a0a0a;border-color:var(--g)}
+  #loc-pages{min-height:0;overflow:auto;padding:.45rem}.loc-page{width:100%;display:grid;grid-template-columns:auto 1fr;gap:.55rem;text-align:left;padding:.6rem;border:0;border-radius:7px;background:transparent;color:var(--tx);cursor:pointer}.loc-page:hover,.loc-page.active{background:var(--e2)}
+  .loc-dot{width:.65rem;height:.65rem;border-radius:50%;margin-top:.3rem;background:var(--tf)}.loc-dot.current{background:var(--g)}.loc-dot.stale,.loc-dot.blocked{background:var(--err)}.loc-dot.needs-review{background:var(--warn)}
+  .loc-page b{display:block;font:.78rem var(--mono)}.loc-page small{display:block;color:var(--tf);font-size:.7rem;margin-top:.15rem}
+  .loc-main{min-width:0;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto}.loc-evidence{padding:.55rem .8rem;border-bottom:1px solid var(--bd);display:flex;gap:1rem;align-items:center;overflow-x:auto;font:.72rem var(--mono);color:var(--td)}.loc-evidence code{white-space:nowrap}.loc-evidence strong{color:var(--tx)}
+  .loc-compare{min-height:0;display:grid;grid-template-columns:1fr 1fr}.loc-pane{min-width:0;min-height:0;display:grid;grid-template-rows:auto 1fr;border-right:1px solid var(--bd)}.loc-pane:last-child{border-right:0}.loc-pane-head{display:flex;align-items:center;justify-content:space-between;padding:.5rem .75rem;background:var(--e1);border-bottom:1px solid var(--bd);font:.75rem var(--mono)}.loc-pane-head span{color:var(--tf)}.loc-pane iframe{width:100%;height:100%;border:0;background:#fff}
+  .loc-findings{max-height:9rem;overflow:auto;border-top:1px solid var(--bd);padding:.65rem .8rem;color:var(--td);font-size:.78rem}.loc-findings strong{color:var(--tx)}.loc-findings ul{margin:.35rem 0 0 1.1rem}.loc-findings code{font-size:.72rem}.loc-empty{padding:1rem;color:var(--tf)}
+  @media(max-width:850px){body{overflow:auto}.loc-shell{height:auto;min-height:100vh}.loc-body{grid-template-columns:1fr}.loc-side{max-height:15rem;border-right:0;border-bottom:1px solid var(--bd)}.loc-main{min-height:70rem}.loc-compare{grid-template-columns:1fr;grid-template-rows:1fr 1fr}.loc-pane{border-right:0;border-bottom:1px solid var(--bd)}}
+</style>
+</head>
+<body>
+<div class="loc-shell">
+  <header class="loc-top">
+    <div class="loc-brand">Studio <span>Localization</span></div>
+    <label for="loc-locale" class="loc-pane-head">Locale</label>
+    <select id="loc-locale" aria-label="Localization target"><option value="pt">Português (Brasil)</option><option value="es">Español</option></select>
+    <a href="studio.html">Course Studio</a>
+    <a href="index.html">Course</a>
+    <div class="loc-spacer"></div>
+    <div id="loc-summary" role="status">Loading drift…</div>
+  </header>
+  <div class="loc-body">
+    <aside class="loc-side" aria-label="Localization pages">
+      <div class="loc-kinds" id="loc-kinds"><button class="active" data-kind="pages">Pages</button><button data-kind="assets">SVGs</button></div>
+      <div class="loc-filters" id="loc-filters"></div>
+      <div id="loc-pages"></div>
+    </aside>
+    <main class="loc-main">
+      <div class="loc-evidence" id="loc-evidence"><strong>Select a page</strong></div>
+      <div class="loc-compare">
+        <section class="loc-pane"><div class="loc-pane-head"><b>English source</b><span id="loc-source-label"></span></div><iframe id="loc-source" title="English source page"></iframe></section>
+        <section class="loc-pane"><div class="loc-pane-head"><b id="loc-target-name">Localized target</b><span id="loc-target-label"></span></div><iframe id="loc-target" title="Localized target page"></iframe></section>
+      </div>
+      <div class="loc-findings" id="loc-findings" aria-live="polite"></div>
+    </main>
+  </div>
+</div>
+<script type="module" src="scripts/localization_main.js"></script>
+</body>
+</html>

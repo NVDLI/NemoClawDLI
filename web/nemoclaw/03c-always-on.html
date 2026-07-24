@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Always-On · Securing Agents</title>
+<link rel="stylesheet" href="styles/_style.css"/>
+<script src="vendor/highlight-11.10.0.min.js"></script>
+<link rel="stylesheet" href="vendor/codemirror-5.65.21.css"/>
+<link rel="stylesheet" href="vendor/codemirror-monokai-5.65.21.css"/>
+<script src="vendor/codemirror-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-xml-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-javascript-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-css-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-htmlmixed-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-python-5.65.21.js"></script>
+<style>
+</style>
+<style>
+  .knobs-table { width: 100%; border-collapse: collapse; font-size: .88rem; margin: .8em 0; }
+  .knobs-table thead tr { border-bottom: 2px solid var(--bd); }
+  .knobs-table th { text-align: left; padding: 8px 12px; color: var(--td);
+                    font-size: .76rem; text-transform: uppercase; letter-spacing: .05em; }
+  .knobs-table td { padding: 10px 12px; border-bottom: 1px solid var(--e2); vertical-align: top; }
+  .knobs-table tr:last-child td { border-bottom: none; }
+  .knobs-table td:first-child { font-family: var(--mono); color: var(--gs); font-weight: 700; }
+  .knobs-table code { font-size: .82em; }
+  .file-tree {
+    background: var(--e2); border: 1px solid var(--bd); border-radius: var(--r);
+    padding: 14px 18px; font-family: var(--mono); font-size: .82rem;
+    line-height: 1.7; color: var(--td); white-space: pre-wrap; margin: 1em 0;
+  }
+  .file-tree .fname { color: var(--gs); font-weight: 700; }
+  .skill-file { overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="logo" href="index.html">NVIDIA · Securing Agents</a>
+  <nav id="nav"></nav>
+  <div class="spacer"></div>
+  <span class="key-pill" id="key-status" onclick="location.href='01a-loop.html?openKeyPanel=1'">…</span>
+  <span class="key-pill" id="claw-status" onclick="location.href='03a-kickstart.html#probe-claw'">…</span>
+</div>
+
+<main>
+  <div id="journey-map"></div>
+
+  <div class="hero">
+    <div class="eyebrow">Module 3 · Part C of 3</div>
+    <h1>The <span>Always-On</span> Agent</h1>
+    <p class="lead">
+      Module 3b ran the agent when you sent a message. OpenClaw can also start work
+      from skills, heartbeats,
+      <a href="https://en.wikipedia.org/wiki/Cron" target="_blank" rel="noopener">cron</a>
+      jobs, and sub-agents. Each path still enters the same agent loop and OpenShell
+      sandbox; the session, directive, and trigger determine what runs. You will install
+      a skill and observe a cron-fired write.
+    </p>
+
+    <div class="fig-embed" data-svg-src="assets/figures/03c-always-on-1.svg" style="aspect-ratio:820 / 478"></div>
+  </div>
+
+  <h2>How triggers choose context and instructions</h2>
+  <p>Every mechanism on this page is described by the same three knobs:</p>
+  <ul>
+    <li>The <strong>session</strong> sets whose context a run inherits.</li>
+    <li>The <strong>directive</strong> is the markdown file that tells the agent what to do.</li>
+    <li>The <strong>trigger</strong> decides when a run starts.</li>
+  </ul>
+  <p>The table shows the course configuration. Use the same three fields to classify other
+     trigger types; OpenClaw also exposes additional session modes.</p>
+
+  <table class="knobs-table">
+    <thead><tr><th>Name</th><th>Session</th><th>Directive lives in</th><th>Trigger</th></tr></thead>
+    <tbody>
+      <tr><td>Skill <span style="color:var(--gs);font-weight:400;font-style:italic">(run below)</span></td>      <td>reuses the caller's</td>          <td><code>workspace/skills/&lt;name&gt;.md</code></td> <td>model picks it mid-turn when the directive matches the user's ask</td></tr>
+      <tr><td>Heartbeat <span style="color:var(--tf);font-weight:400;font-style:italic">(concept only)</span></td>  <td>main session here</td>             <td><code>HEARTBEAT.md</code></td>                    <td>gateway timer, ~30 min by default</td></tr>
+      <tr><td>Cron <span style="color:var(--gs);font-weight:400;font-style:italic">(run below)</span></td>       <td>isolated here; fresh per fire</td><td>JSON drop-in <code>prompt</code> field</td>       <td>cron schedule, per-minute precision</td></tr>
+      <tr><td>Sub-agent <span style="color:var(--tf);font-weight:400;font-style:italic">(concept only)</span></td>  <td>fresh, parent holds the handle</td><td>inline string at <code>delegate()</code> time</td><td>parent agent decides mid-turn</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    OpenClaw cron can bind a job to the
+    <a href="https://docs.openclaw.ai/cron-vs-heartbeat" target="_blank" rel="noopener">main, isolated, current, or a named session</a>.
+    This course uses isolated cron runs so each demonstration starts clean. You run the skill
+    and the cron job on this page. Heartbeat and the sub-agent
+    <code>delegate()</code> call are covered here only as table entries;
+    no cell on this page fires them, so do not wait for one.
+  </div>
+
+  <h2>Step 1 · Add a Skill</h2>
+  <p>A skill starts as a markdown file placed under <code>skills/</code>, usually with a
+     short front-matter or heading block that lets the runtime decide when to reveal it.
+     The agent does not load every instruction at once; it progressively discloses the
+     matching skill when the next turn asks for it. You do not restart it, redeploy it,
+     or touch the system prompt yourself.</p>
+
+  <div class="file-tree skill-file"><span class="fname"># skills/triage-incident.md</span>
+
+When the user asks about a production incident, or pastes a log line
+suggesting one, do these things in order:
+
+1. Confirm the affected service and the time window.
+2. Open the runbook for that service from /sandbox/runbooks/.
+3. Suggest the smallest reversible mitigation; do not run it yourself.
+4. Ask the user before opening a Jira ticket.</div>
+
+  <p>The widget below asks the agent to install that exact skill, then fires a
+     chat completion designed to match it. Matching is automatic. The agent
+     compares your request against the description of every skill in its workspace,
+     so your prompt never has to name the one you want. Watch the agent reach for the
+     new skill on its second turn.</p>
+
+  <div id="fig-calls"></div>
+
+  <div class="callout">
+    <p><strong>Same runtime as Kickstart.</strong> You are driving the same OpenClaw
+       agent you connected on the Kickstart page.</p>
+  </div>
+
+  <div id="gw-recover"></div>
+
+  <div id="cell-skill"></div>
+
+  <h2>Step 2 · Inspect your running agent</h2>
+
+  <p>Scheduled jobs live on the gateway rather than behind an HTTP REST route, so the
+     same WebSocket connection the Control UI uses is also where you list and manage them
+     through the cron methods <code>cron.list</code> <code>cron.add</code> and
+     <code>cron.remove</code>. A cron job lets an always-on agent act with no human in
+     the loop because scheduled work fires on its own timer. The course runtime creates
+     an isolated session for this demonstration. OpenClaw can instead bind scheduled work
+     to another supported session mode when continuity is more important than isolation.</p>
+
+  <p>The widget below walks the full lifecycle of a cron job:</p>
+  <ol>
+    <li>It connects and lists the crons already installed.</li>
+    <li>It installs a demo job that fires every minute and appends a line to
+        <code>MEMORY.md</code>.</li>
+    <li>It waits about seventy seconds so the job can cross a minute boundary and
+        run on its own.</li>
+    <li>The next cell reads the tail of <code>MEMORY.md</code> off the sandbox, so
+        you see the line the cron-fired agent wrote while nothing was driving it.</li>
+    <li>The last cell removes the job so nothing lingers.</li>
+  </ol>
+  <p>No human prompted that write. The cron schedule drove it on its own, doing
+     real work on the agent's behalf while you were away.</p>
+
+  <div id="probe-cron"></div>
+
+  <div class="callout warn">
+    <strong>Cron jobs run unattended.</strong> A scheduled directive
+    that asks the agent to "send the daily report" will fire whether
+    you are watching or not. The course selects an isolated session for
+    each fire, so a bug in one run cannot poison the next run's transcript.
+    Other cron configurations can retain or bind session context between fires.
+    Module 4a adds a kernel-level containment layer on
+    top of this. Every filesystem access and network connection the
+    cron-fired agent attempts passes through an explicit allow-list
+    before the syscall runs. A misbehaving scheduled job can then only
+    reach what the policy permits.
+  </div>
+
+  <h2>Where to take this</h2>
+  <p>
+    Public
+    <a href="https://github.com/NousResearch/hermes-agent" target="_blank" rel="noopener">Hermes</a>
+    repository exposes the same broad capability categories: reusable skills, persistent
+    memory, scheduled work, and a messaging gateway. Its implementation and defaults differ
+    from OpenClaw, so compare the security boundary and session behavior rather than assuming
+    that matching feature names imply matching risk controls.
+  </p>
+
+  <p>Any harness that can write reusable instructions, schedule work, and accept remote
+     messages can persist a compromised directive beyond one conversation. Module 4 separates
+     those application controls from the sandbox controls that bound filesystem, process, and
+     network access.
+  </p>
+  <div class="callout warn">
+    <strong>Hermes gates its messaging surface.</strong> Its current
+    <a href="https://hermes-agent.nousresearch.com/docs/user-guide/security/" target="_blank" rel="noopener">security guide</a>
+    documents pairing codes and platform or global user allowlists, with
+    <code>default: deny</code> when no allow rule matches. Those application controls decide who
+    may talk to the agent. An operating-system sandbox separately bounds what its tools can reach.
+  </div>
+  <p>The same skills-as-memoised-trajectories pattern appears across the ecosystem
+     under other names and shapes:</p>
+  <ul>
+    <li><a href="https://arxiv.org/abs/2305.16291" target="_blank" rel="noopener">Wang et al., <em>Voyager</em> (2023)</a>. The research origin, demonstrated in a Minecraft agent.</li>
+    <li><a href="https://langchain-ai.github.io/langgraph/concepts/persistence/" target="_blank" rel="noopener">LangGraph Persistence</a>. Checkpointed graphs as save-and-resume.</li>
+    <li><a href="https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview" target="_blank" rel="noopener">Anthropic, <em>Agent Skills</em></a>. The production skill-folder layout.</li>
+  </ul>
+
+  <div class="references">
+    <h3>References</h3>
+    <ul>
+      <li><a href="https://arxiv.org/abs/2305.16291" target="_blank" rel="noopener">Wang et al., <em>Voyager: An Open-Ended Embodied Agent</em> (2023)</a>. The skill-library / memoised-trajectory mechanic this page builds on, demonstrated in a Minecraft agent.</li>
+      <li><a href="https://arxiv.org/abs/2304.03442" target="_blank" rel="noopener">Park et al., <em>Generative Agents</em> (2023)</a>. Multi-day autonomous-agent simulation; the reflection and memory-consolidation patterns an always-on loop reuses.</li>
+      <li><a href="https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview" target="_blank" rel="noopener">Anthropic, <em>Agent Skills</em></a>. The production skill-folder layout this page's <code>skills/&lt;name&gt;.md</code> drop-in mirrors.</li>
+      <li><a href="https://langchain-ai.github.io/langgraph/concepts/persistence/" target="_blank" rel="noopener">LangGraph, <em>Persistence</em> (checkpointers)</a>. Checkpointed graphs as the same save-and-resume primitive in a different production shape.</li>
+      <li><a href="https://github.com/NousResearch/hermes-agent" target="_blank" rel="noopener">Hermes Agent</a>. Agent application with self-improving skills, persistent memory, cron, and a messaging gateway; NVIDIA's DGX Spark playbooks list Hermes and NemoClaw as separate setup paths.</li>
+      <li><a href="https://docs.openclaw.ai/cron-vs-heartbeat" target="_blank" rel="noopener">OpenClaw, <em>Automation &amp; Tasks</em></a>. Current session and trigger semantics for cron, heartbeat, hooks, and background tasks.</li>
+      <li><a href="https://hermes-agent.nousresearch.com/docs/user-guide/security/" target="_blank" rel="noopener">Hermes Agent, <em>Security</em></a>. Pairing and allowlist behavior for messaging-gateway callers.</li>
+      <li><a href="https://en.wikipedia.org/wiki/Cron" target="_blank" rel="noopener">cron(8)</a>. The canonical reference for the scheduling primitive the cron drop-in borrows.</li>
+    </ul>
+    <p class="references-note">Comprehensive list at <a href="04c-going-further.html#refs">Going Further · References</a>.</p>
+  </div>
+
+  <h2>Try it · trigger a skill in conversation</h2>
+  <p>
+    Chat with your live agent over the gateway. If you installed the
+    triage-incident skill in Step 1, paste an incident and watch the agent pick the
+    skill up mid-turn without you ever naming it.
+  </p>
+  <p>
+    That is the same machinery a heartbeat or a cron fire would use, only driven by
+    your own message instead of by a timer.
+  </p>
+  <div id="alwayson-cell"></div>
+  <div id="alwayson-artifact"></div>
+  <script type="module">
+    import { mountRunCell } from "./scripts/_shared.js";
+    mountRunCell("#alwayson-cell", {
+      label: "the Try-it artifact, in code",
+      autorun: true,
+      code: `// This is the Try-it artifact. Paste an incident and the live agent picks up a
+// matching skill mid-turn, the same machinery a heartbeat or cron fire uses.
+// Edit the greeting, examples, or respond logic, then Run to re-render.
+helpers.mountChatUI("#alwayson-artifact", {
+  disabled: () => { const c = helpers.getOpenClawConnection(); return !(c.token && c.rawUrl); },
+  disabledMsg: "Connect your launchable in Module 3a first. This panel needs its URL and token.",
+  greeting: "Connect on the Kickstart page, then send something that matches a skill, such as “checkout-service is throwing 502s in us-east-1, what do I do?”",
+  examples: ["checkout-service is throwing 502s in us-east-1", "What skills are you configured with?", "Walk me through your incident runbook", "What cron jobs do you have scheduled?", "How would you triage a sudden latency spike?", "Summarize what you would do if paged at 3am"],
+  respond: async (text, ctx) => { await helpers.openclawChat(text, { session: "art-" + ctx.thread, view: ctx.view, signal: ctx.signal }); },
+});
+helpers.log("rendered below. Edit the config and Run.");
+
+// The panel is helpers.mountChatUI and it streams through helpers.openclawChat; open the helpers tab above to read either one's source.
+`,
+    });
+  </script>
+
+  <div class="foot-nav">
+    <a href="03b-openclaw.html">← Module 3b: OpenClaw</a>
+    <a class="next" href="04a-safety.html">Module 4a: OpenShell in NemoClaw →</a>
+  </div>
+</main>
+
+<script type="module">
+import { buildNav, updateKeyPill, updateClawPill, mountJourneyMap, mountCanvasFlow, GW_CONNECT, mountGwRecover, mountDiagram } from "./scripts/_shared.js";
+document.getElementById("nav").innerHTML = buildNav("03c-always-on.html");
+const pill = document.getElementById("key-status");
+updateKeyPill(pill);
+updateClawPill(document.getElementById("claw-status"));
+mountJourneyMap("#journey-map", "3c");
+hljs.highlightAll();
+
+// ── The always-on loop: the agent wakes on a schedule, acts, writes back ──────
+mountDiagram("#fig-calls", {
+  kicker: "NO HUMAN IN THE LOOP",
+  title: "The always-on loop",
+  maxWidth: 980,
+  boxW: 268,
+  boxH: 116,
+  gapX: 86,
+  top: 58,
+  nodes: [
+    { id: "cron", label: "schedule", kind: "env", x: 0, y: 0, lines: ["cron or heartbeat", "fires on a timer"] },
+    { id: "gw",   label: "gateway loop", kind: "agent", x: 1, y: 0,
+      lines: ["model plans, calls tools", "then repeats"], socket: "configured session" },
+    { id: "logs", label: "workspace / logs", kind: "data", x: 2, y: 0, lines: ["MEMORY.md", "logs and artifacts"] },
+  ],
+  edges: [
+    { from: "cron", to: "gw",   label: "wake",  fromPort: "right", toPort: "left", labelDy: -42, tint: "env"   },
+    { from: "gw",   to: "logs", label: "write", fromPort: "right", toPort: "left", labelDy: -42, tint: "agent" },
+    { from: "logs", to: "gw",   label: "read",  fromPort: "bottom-left", toPort: "right", toOffset: 34, labelDy: 34, return: true, tint: "data"  },
+  ],
+});
+
+// ── Shared WS connect snippet (used as prefix in each connect node) ──────────
+
+// ── Shared chat-turn snippet ───────────────────────────────────────────────────
+// Subscribe before chat.send, or tool events stay invisible.
+const gwChat = (sk, msg) => {
+  // Pass { raw: "<js expr>" } when sessionKey must be computed at run time.
+  const skExpr = (sk && typeof sk === "object" && sk.raw) ? sk.raw : JSON.stringify(sk);
+  // msg is usually a literal.
+  // Pass { raw: "<js>" } to supply the whole message-assignment block, e.g. a stack of prompts where the last line wins.
+  const msgBlock = (msg && typeof msg === "object" && msg.raw)
+    ? msg.raw
+    : ("let message = " + JSON.stringify(msg) + ";");
+  return `if (!state.call) { helpers.log("Run Connect first."); return; }
+
+// ── tune these ──────────────────────────────────────────────────────────────
+${msgBlock}
+const sessionKey      = ${skExpr};   // which agent session to talk to
+const IDLE_TIMEOUT_S  = 90;          // give up if the agent goes silent this long (this model can be slow to first token)
+const TOTAL_TIMEOUT_S = 240;         // hard ceiling for the whole turn
+const FINAL_EVENT_GRACE_MS = 1500;   // lifecycle end can arrive just before chat.final
+// ──────────────────────────────────────────────────────────────────────────────
+helpers.log("→ " + message);
+
+// Agent frames go only to sockets subscribed to this session; subscribe before sending the turn.
+if (!state._subs) state._subs = {};
+if (!state._subs[sessionKey]) {
+  await state.call("sessions.messages.subscribe", { key: sessionKey });
+  state._subs[sessionKey] = true;
+}
+
+// Uncomment to clear this session and force fresh tool work.
+// await state.call("sessions.reset", { key: sessionKey }); helpers.log("🧹 cleared session memory: " + sessionKey);
+
+const _params = {
+  sessionKey,
+  idempotencyKey: Math.random().toString(36).slice(2) + Date.now().toString(36),
+  message,
+};
+
+// Stream handler: tool frames show args/results; assistant frames show answer text.
+// Idle and global timers stop stalled runs; heartbeats never reset the idle timer.
+let _text = "", _finalEv, _t0 = performance.now(), _ttft = 0, _myRun = null;
+let _toolStarts = 0, _didResult = false;            // for the degradation check below
+const IDLE_MS = IDLE_TIMEOUT_S * 1000, GLOBAL_MS = TOTAL_TIMEOUT_S * 1000;
+await new Promise((resolve, reject) => {
+  let _idle, _global, _endGrace, _finished = false;
+  function finish(why, stalled) {
+    if (_finished) return; _finished = true;
+    clearTimeout(_idle); clearTimeout(_global); clearTimeout(_endGrace); state._chatCb = null;
+    if (why) helpers.log(why);
+    // Abort timed-out runs server-side so they stop consuming work and leaking frames.
+    if (stalled) {
+      helpers.log("⛔ aborting the run on " + sessionKey + " so it does not keep running in the background…");
+      state.call("chat.abort", { sessionKey }).catch(() => {});
+    }
+    resolve();
+  }
+  function bumpIdle() { clearTimeout(_idle); _idle = setTimeout(() => finish("⏱ no agent activity for " + (IDLE_MS / 1000) + "s; stopping", true), IDLE_MS); }
+  _global = setTimeout(() => finish("⏱ hit the " + (GLOBAL_MS / 1000) + "s global cap", true), GLOBAL_MS);
+  if (helpers.signal) helpers.signal.addEventListener("abort", () => finish("⏹ stopped", true), { once: true });
+  state._chatCb = d => {
+   try {
+    const pl = d.payload || {};
+    // Heartbeats stream the whole time the socket is open but are NOT activity.
+    // Ignore them so they never reset the idle timer (a stalled run emits only heartbeats and must still time out).
+    if (pl.isHeartbeat || d.event === "health" || d.event === "tick") return;
+    // One sessionKey can have several runs; keep only this runId before bumpIdle.
+    // Otherwise stale frames can mask a real stall.
+    if (_myRun && pl.runId && pl.runId !== _myRun) return;
+    bumpIdle();   // real activity on OUR run pushes the idle deadline back
+    if (d.event === "chat" && pl.state === "final") {
+      // final chat frame: fallback prose if no agent text deltas arrived
+      _finalEv = d;
+      _text = helpers.openclawMessageText(pl.message) || _text;
+      finish(); return;
+    }
+    if (d.event !== "agent") return;
+    const sk = pl.sessionKey || "";
+    if (sk !== sessionKey && !sk.endsWith(":" + sessionKey)) return;   // not our session
+    const data = pl.data || {};
+    const stream = pl.stream || "";
+    if (stream === "assistant" || ("delta" in data && "text" in data)) {
+      // the answer, streamed as cumulative text
+      if (!_ttft) _ttft = performance.now() - _t0;
+      _text = data.text || _text;
+    } else if (stream === "tool" && data.phase === "start") {
+      // Show tool input; bad args often explain hangs.
+      _toolStarts++;
+      const inp = data.args ? JSON.stringify(data.args) : (data.meta || "");
+      helpers.log.details("⚙️ " + (data.name || "tool") + (inp ? "  " + inp.replace(/\\n/g, " ").slice(0, 160) : ""), helpers.filterOpenClawRuntimeValue(d));
+    } else if (stream === "tool" && data.phase === "result") {
+      // a tool finished, so show its OUTPUT (works for exec, read, edit, browser, …)
+      _didResult = true;
+      const txt = helpers.openclawResultText(data.result);
+      const mark = data.isError ? "✗" : "✓";
+      helpers.log.details(mark + " " + (data.name || "tool") + (txt ? "  " + txt.trim().replace(/\\n/g, " ⏎ ").slice(0, 200) : ""), helpers.filterOpenClawRuntimeValue(d));
+    } else if (data.phase === "end" && !data.itemId) {
+      // chat.final is authoritative and can trail lifecycle end by one browser turn.
+      clearTimeout(_endGrace); _endGrace = setTimeout(() => finish(), FINAL_EVENT_GRACE_MS);
+    }
+   } catch (e) {
+    // Surface WS handler errors; swallowed exceptions look like hangs.
+    helpers.log("⚠ frame-handler error: " + (e && e.message ? e.message : e));
+   }
+  };
+  bumpIdle();
+  // Lock onto this runId so shared-session chatter is ignored.
+  state.call("chat.send", _params)
+    .then(res => { _myRun = (res && res.runId) || null; })
+    .catch(e => { clearTimeout(_idle); clearTimeout(_global); state._chatCb = null; reject(e); });
+});
+
+// ── response ─────────────────────────────────────────────────────────────────
+helpers.log(_text);
+if (_finalEv) helpers.log.details("← final chat frame", _finalEv);
+const _secs = (performance.now() - _t0) / 1000;
+const _toks = Math.round(_text.length / 4);          // rough estimate: ~4 chars/token
+helpers.log("⏱ " + _secs.toFixed(1) + "s · ~" + _toks + " tok · " +
+            (_secs ? (_toks / _secs).toFixed(1) : "0") + " tok/s" +
+            (_ttft ? " · first token " + (_ttft / 1000).toFixed(2) + "s" : ""));
+state.out = _text;
+
+// Automatic degradation check. A healthy run returns text and/or a tool result.
+// Started-without-result means a hung tool or model loop; Health check can flag toolSearch.
+if (!_text.trim() && !_didResult && _toolStarts > 0) {
+  helpers.log("⚠ DEGRADED: started " + _toolStarts + " tool call(s) but none returned a result or answer.");
+  helpers.log("   A tool is hung or the model is looping. The ⚙️ rows above show the exact tool + args it got stuck on.");
+  helpers.log("   Run the 🩺 Health check (it flags toolSearch) + 🛠 Recover; for a deeper look, the 📜 logs cell tails the runtime.");
+}
+`;
+};
+
+// Health / recover / logs flow is shared from _shared.js:
+mountGwRecover("#gw-recover");
+
+mountCanvasFlow("#cell-skill", {
+  label: "Install a skill, then trigger it",
+  intro: "In one session the agent writes the skill to disk, answers a matching question, then checks its reply against the skill's recipe. It picks the skill up by reading its own workspace, finding it without any prompt from you.",
+  edges: [
+    { from: "sk-conn",    to: "sk-install" },
+    { from: "sk-install", to: "sk-trigger" },
+    { from: "sk-trigger", to: "sk-check" },
+  ],
+  nodes: [
+    {
+      id: "sk-conn", icon: "🔌", title: "Connect", x: 0, y: 0,
+      showCode: false,
+      summary: "Open a WebSocket to the gateway and authenticate. This flow stores its connection in state.call so the next three nodes can send chat turns without re-connecting.",
+      code: GW_CONNECT + `state._sk = "quick-3c-skill";`,
+    },
+    {
+      id: "sk-install", icon: "🧩", title: "Turn 1 · install the skill", x: 0, y: 1,
+      showCode: false,
+      summary: "Ask the agent to write skills/triage-incident.md to its own workspace. The skill is a markdown recipe the agent reads automatically on the next turn, without any system-prompt change.",
+      code: gwChat("quick-3c-skill",
+        "Add a skill file at skills/triage-incident.md with this content:\n\n" +
+        "When the user asks about a production incident, or pastes a log line suggesting one, " +
+        "do these things in order: 1) confirm the affected service and time window, " +
+        "2) open the runbook for that service from /sandbox/runbooks/, " +
+        "3) suggest the smallest reversible mitigation, do not run it yourself, " +
+        "4) ask the user before opening a Jira ticket. Confirm when the file is saved."),
+    },
+    {
+      id: "sk-trigger", icon: "🚨", title: "Turn 2 · trigger it", x: 0, y: 2,
+      showCode: false,
+      summary: "Send an incident question that matches the skill's trigger conditions. The prompt doesn't name the skill; the agent matches it against the skill descriptions in its workspace.",
+      code: gwChat("quick-3c-skill",
+        "I just got paged. checkout-service is throwing 502s in us-east-1 for the last 12 minutes. What should I do?"),
+    },
+    {
+      id: "sk-check", icon: "🔬", title: "Did it follow the recipe?", x: 0, y: 3,
+      showCode: false,
+      summary: "Scan the agent's reply for the four steps in the skill: confirming scope, opening the runbook, proposing a reversible mitigation, pausing before Jira.",
+      code: `// Inspect the latest reply for signs that the skill recipe shaped it.
+helpers.log.details("agent reply", state.out);
+const r = (state.out || "").toLowerCase();
+const hits = ["runbook", "reversible", "confirm", "jira"].filter(w => r.includes(w));
+helpers.log("skill steps echoed in the reply: " + (hits.join(", ") || "(none this run)"));
+return { matched_steps: hits };
+`,
+    },
+  ],
+});
+
+mountCanvasFlow("#probe-cron", {
+  label: "Gateway · cron management",
+  intro: "Manage scheduled jobs over the gateway WebSocket: list, add, poll run history, compare MEMORY.md, and remove. The completed flow leaves visible evidence of an unattended write.",
+  edges: [
+    { from: "cr-conn",  to: "cr-list"  },
+    { from: "cr-list",  to: "cr-add"   },
+    { from: "cr-add",   to: "cr-watch" },
+    { from: "cr-watch", to: "cr-rm"    },
+  ],
+  nodes: [
+    {
+      id: "cr-conn", icon: "🔌", title: "Connect", x: 0, y: 0,
+      showCode: false,
+      summary: "Open the gateway WebSocket and authenticate.",
+      code: GW_CONNECT,
+    },
+    {
+      id: "cr-list", icon: "📋", title: "List current crons", x: 0, y: 1,
+      showCode: false,
+      summary: "Call cron.list to see what is already scheduled. Each job carries a server-assigned id, a structured schedule, and a structured payload.",
+      code: `// Use the gateway socket to list scheduled jobs without changing anything.
+if (!state.call) { helpers.log("Run Connect first."); return; }
+const pl = await state.call("cron.list");
+const jobs = pl?.jobs || [];
+if (!jobs.length) {
+  helpers.log("(no cron jobs installed)");
+} else {
+  jobs.forEach(j => {
+    const schedule = j.schedule?.kind === "cron" ? j.schedule.expr : JSON.stringify(j.schedule || {});
+    const message = j.payload?.message || j.payload?.text || "";
+    helpers.log(j.id + "  " + schedule + "  " + message.slice(0, 60));
+  });
+}
+helpers.log.details("raw cron.list", pl);
+return { count: jobs.length };
+`,
+    },
+    {
+      id: "cr-add", icon: "➕", title: "Install a demo cron", x: 0, y: 2,
+      showCode: false,
+      summary: "Call cron.add with a name, structured schedule, isolated-session target, and agent-turn payload. The gateway assigns the id used for later removal.",
+      code: `// Install one short-lived demo cron job so the unattended path is visible.
+if (!state.call) { helpers.log("Run Connect first."); return; }
+const name = "quick-3c-demo";
+const before = await state.call("cron.list");
+let added = (before?.jobs || []).find(job => job.name === name);
+if (!added) {
+  added = await state.call("cron.add", {
+    name,
+    schedule: { kind: "cron", expr: "* * * * *", tz: "UTC" },
+    sessionTarget: "isolated",
+    wakeMode: "now",
+    payload: {
+      kind: "agentTurn",
+      message: "Append one short line to MEMORY.md noting the current UTC minute, then exit.",
+    },
+  });
+}
+if (!added?.id) throw new Error("cron.add returned no job id");
+state.demoCronId = added.id;
+state.demoCronInstalledAt = Date.now();
+let historyEntries = [];
+try {
+  const history = await state.call("cron.runs", { id: added.id, limit: 20 });
+  historyEntries = history?.entries || history?.runs || [];
+  state.demoCronHistoryAvailable = true;
+} catch (_) {
+  state.demoCronHistoryAvailable = false;
+}
+state.demoCronBaselineRunAt = Math.max(
+  Number(added.state?.lastRunAtMs || 0),
+  ...historyEntries.map(entry => Math.max(Number(entry.ts || 0), Number(entry.runAtMs || 0)))
+);
+helpers.log("installed " + name + " as " + added.id + " (fires every minute)");
+helpers.log.details("raw cron.add", added);
+const pl = await state.call("cron.list");
+helpers.log("cron jobs now: " + (pl?.jobs || []).map(j => j.name + " (" + j.id + ")").join(", "));
+helpers.log.details("raw cron.list", pl);
+return { installed: added.id, name };
+`,
+    },
+    {
+      id: "cr-watch", icon: "⏳", title: "Check run status, then read MEMORY.md", x: 0, y: 3,
+      showCode: false,
+      summary: "Check cron once and return immediately. Re-run after the scheduled minute, or opt into the commented watch mode when you specifically want automatic polling.",
+      code: `// Check once by default so the lesson never traps you in a 90-second wait.
+// cron.list state is the compatibility fallback for older runtimes.
+if (typeof state.call !== "function" || !state.demoCronId) {
+  helpers.log("Connect OpenClaw in Module 3a, then run the cron setup nodes first.");
+  return;
+}
+const AGENT = "my-assistant";   // your agent's name, from GET /api/agent on the Kickstart page
+const POLL_MS = 5000;
+const AUTO_WATCH = false;
+// Alternate mode: change AUTO_WATCH to true to poll for up to 90 seconds.
+const MEMORY_CMD = "echo '=== MEMORY.md (tail) ==='; tail -n 8 .openclaw/workspace/MEMORY.md 2>/dev/null || echo '(no MEMORY.md yet)'";
+const runStamp = entry => Math.max(Number(entry?.ts || 0), Number(entry?.runAtMs || 0));
+
+const baseline = Number(state.demoCronBaselineRunAt || 0);
+const startedAt = Date.now();
+let observed = null;
+let polls = 0;
+let historyWarningShown = false;
+const maxPolls = AUTO_WATCH ? 18 : 1;
+const progress = helpers.log(AUTO_WATCH
+  ? "watching for a completed cron run · polling every 5s"
+  : "checking cron run status once");
+progress.setAttribute("role", "status");
+progress.setAttribute("aria-live", "polite");
+
+while (polls < maxPolls) {
+  polls++;
+  let entries = [];
+  try {
+    const history = await state.call("cron.runs", { id: state.demoCronId, limit: 20 });
+    entries = history?.entries || history?.runs || [];
+  } catch (_) {
+    if (!historyWarningShown) {
+      helpers.log("cron.runs is unavailable; polling cron.list runtime state instead.");
+      historyWarningShown = true;
+    }
+  }
+  const listing = await state.call("cron.list");
+  const job = (listing?.jobs || []).find(item => item.id === state.demoCronId || item.name === "quick-3c-demo");
+  const latestEntry = entries.reduce((latest, entry) => runStamp(entry) > runStamp(latest) ? entry : latest, null);
+  const latestStamp = Math.max(runStamp(latestEntry), Number(job?.state?.lastRunAtMs || 0));
+  const status = latestEntry?.status || job?.state?.lastRunStatus || job?.state?.lastStatus || "not completed yet";
+  if (latestStamp > baseline) {
+    observed = { stamp: latestStamp, status };
+    progress.textContent = "✓ cron run reported · " + status + " · " + polls + " check" + (polls === 1 ? "" : "s");
+    break;
+  }
+  progress.textContent = status + " · check " + polls + " of " + maxPolls;
+  if (polls < maxPolls) await helpers.delay(POLL_MS);
+}
+
+if (!observed) helpers.log(AUTO_WATCH
+  ? "No completed run was reported within 90s."
+  : "No new run yet. Re-run this node after the scheduled minute, or enable AUTO_WATCH.");
+
+helpers.log("reading MEMORY.md from sandbox '" + AGENT + "' over the operator terminal …");
+const { output, raw, frames } = await helpers.terminal(
+  "openshell sandbox connect " + AGENT,
+  { send: [MEMORY_CMD] }
+);
+helpers.log(output);
+helpers.log.details("raw transcript (" + frames + " WebSocket frames)", raw);
+// Optional visibility: uncomment to inspect the raw cron observation.
+// helpers.log.json("cron observation", observed);
+return {
+  elapsed_s: Math.floor((Date.now() - startedAt) / 1000),
+  polls,
+  run_status: observed?.status || "not observed",
+  auto_watch: AUTO_WATCH,
+};
+`,
+    },
+    {
+      id: "cr-rm", icon: "🗑", title: "Remove the demo cron", x: 0, y: 4,
+      showCode: false,
+      summary: "Call cron.remove with the server-assigned id from cron.add. If the page reloaded, recover that id by name before removing the job.",
+      code: `// Remove the demo cron so the launchable does not keep running it.
+if (!state.call) { helpers.log("Run Connect first."); return; }
+const before = await state.call("cron.list");
+const job = (before?.jobs || []).find(j => j.id === state.demoCronId || j.name === "quick-3c-demo");
+if (!job) { helpers.log("quick-3c-demo is already absent"); return { remaining: (before?.jobs || []).map(j => j.id) }; }
+const removed = await state.call("cron.remove", { id: job.id });
+helpers.log("removed quick-3c-demo (" + job.id + ")");
+helpers.log.details("raw cron.remove", removed);
+const pl = await state.call("cron.list");
+const remaining = (pl?.jobs || []).map(j => j.id);
+helpers.log("cron jobs remaining: " + (remaining.length ? remaining.join(", ") : "(none)"));
+helpers.log.details("raw cron.list", pl);
+return { remaining };
+`,
+    },
+  ],
+});
+</script>
+</body>
+</html>

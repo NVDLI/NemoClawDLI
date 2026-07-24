@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>scripts/browser-vendor exact browser package inputs</title>
+<script type="application/json" id="skill-meta">
+{
+  "schema": "dir-skill/1.0",
+  "node_type": "directory-explorer",
+  "title": "scripts/browser-vendor exact browser package inputs",
+  "source_dir": "scripts/browser-vendor/",
+  "summary": "Exact npm lock, publisher distribution paths, one browser compatibility entrypoint, regeneration guidance, and upstream license overrides for packages shipped to learners.",
+  "related": [
+    "scripts/browser-vendor/package.json",
+    "scripts/browser-vendor/package-lock.json",
+    "scripts/browser-vendor/README.md",
+    "scripts/browser-vendor/embedded-component-evidence.json",
+    "scripts/build/vendor_browser_dependencies.mjs",
+    "scripts/validation/course_dependency_integrity.py",
+    "web/nemoclaw/dependencies.html",
+    "web/nemoclaw/vendor/browser-dependencies.json",
+    "web/nemoclaw/vendor/browser-sbom.cdx.json"
+  ],
+  "explorer": "../../web/_skill_explorer.js"
+}
+</script>
+<script type="application/json" id="explorer-config">
+{
+  "title": "scripts/browser-vendor · exact browser package inputs",
+  "summary": "Review exact versions, publisher file copies, and the one compatibility entrypoint here. Generated learner assets, license evidence, hashes, references, and CycloneDX components live under web/nemoclaw/vendor/.",
+  "ties": ["build"],
+  "nav": {"home": "../../web/index.html", "up": {"label": "scripts", "href": "../SKILL.html"}},
+  "files": [
+    {"path": "README.md", "role": "update procedure", "desc": "Install the exact lock, regenerate, review, and validate."},
+    {"path": "package.json", "role": "direct package selection", "desc": "Exact student-browser inputs and pinned esbuild version."},
+    {"path": "package-lock.json", "role": "transitive lock", "desc": "Registry integrity and exact transitive resolution."},
+    {"path": "langchain-entry.js", "role": "browser compatibility entry", "desc": "Selects the browser APIs that require ESM/CommonJS interoperability; its output is not minified and remains classified as transformed."}
+    ,{"path": "embedded-component-evidence.json", "role": "embedded source evidence", "desc": "Pins utility source already copied into LangChain, full licenses, source hashes, and esbuild legal-comment mappings."}
+  ]
+}
+</script>
+<style data-skill-static="1">
+.skill-static{padding:24px clamp(18px,4vw,44px);border-bottom:1px solid #2a2a2a;background:#0d0d0d;color:#f2f2f2;font:15px/1.55 system-ui,sans-serif}.skill-static a{color:#76b900}.skill-static h1{margin:.1em 0 .25em;color:#76b900;font-size:1.65rem}.skill-static p{max-width:76rem;color:#b0b0b0}.skill-cmd{display:block;overflow:auto;white-space:nowrap;border:1px solid #2a2a2a;border-radius:8px;background:#111;padding:9px 11px;color:#f2f2f2;font-family:ui-monospace,Consolas,monospace}.skill-nav{display:flex;gap:12px;flex-wrap:wrap;margin:.8rem 0}.skill-nav a{border:1px solid #2a2a2a;border-radius:999px;padding:5px 10px;text-decoration:none}
+</style>
+</head>
+<body>
+<section class="skill-static" aria-labelledby="skill-title">
+  <header data-skill-header="1">
+<nav class="skill-nav" aria-label="Skill navigation"><a href="../../web/index.html">Home</a><a href="../SKILL.html">scripts</a><a href="../../web/nemoclaw/dependencies.html">public inventory</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../SKILL.html">Repository map</a></nav>
+</header>
+  <h1 id="skill-title">Exact browser package inputs</h1>
+  <p>Package changes start here. Generated files remain committed, so production builds never resolve packages from the network. Highlight.js and js-yaml use minified files supplied by their publishers. CodeMirror uses an unminified publisher file. esbuild combines the reachable LangChain npm graph without minifying it. <a href="embedded-component-evidence.json">Embedded-source evidence</a> identifies utility code already copied into LangChain; the generated <code>.LEGAL.txt</code> lists preserved source comments.</p>
+  <h2>Executable checks</h2>
+  <code class="skill-cmd">python3 -m unittest discover -v -s tests/validation &amp;&amp; python3 scripts/validation/course_dependency_integrity.py</code>
+  <code class="skill-cmd">security_browser_sca</code>
+  <h2>Linkage map</h2>
+  <p><a href="README.md">Update procedure</a> → <a href="embedded-component-evidence.json">embedded-source evidence</a> → <a href="../build/vendor_browser_dependencies.mjs">generator</a> → <a href="../../web/nemoclaw/vendor/browser-dependencies.json">generated manifest</a> → <a href="../../web/nemoclaw/dependencies.html">public inventory</a>.</p>
+  <p>Reviewed fallbacks live under <a href="license-overrides/SKILL.html">license-overrides</a>.</p>
+  <h2>Interactive explorer</h2>
+  <p>The explorer exposes the lock, compatibility entrypoint, and update procedure without requiring local repository tools.</p>
+</section>
+<div id="explorer"></div>
+<noscript><ul><li><a href="README.md">README.md</a></li><li><a href="package.json">package.json</a></li><li><a href="package-lock.json">package-lock.json</a></li></ul></noscript>
+<script src="../../web/_skill_explorer.js"></script>
+</body>
+</html>

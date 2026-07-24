@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Securing Agents · Getting Started · NVIDIA DLI</title>
+<style>
+
+/* ── Reset & base ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: #ffffff;
+  color: #1a1a1a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 16px; line-height: 1.65;
+  max-width: 980px; margin: 0 auto; padding: 0 20px 60px;
+}
+:root[data-theme="dark"] body { background:#0d0d0d; color:#f2f2f2; }
+:root[data-theme="dark"] h2,
+:root[data-theme="dark"] p strong { color:#f2f2f2; }
+:root[data-theme="dark"] p,
+:root[data-theme="dark"] ul,
+:root[data-theme="dark"] ol { color:#c4c4c4; }
+:root[data-theme="dark"] a { color:#aee23a; }
+:root[data-theme="dark"] .launch-box { background:#161616; }
+:root[data-theme="dark"] .launch-box .lb-text h2 { color:#f2f2f2; }
+:root[data-theme="dark"] .launch-box .lb-text p { color:#c4c4c4; }
+:root[data-theme="dark"] .launch-box .lb-text p:last-child,
+:root[data-theme="dark"] .launch-box .lb-cta .lb-hint { color:#b0b0b0; }
+:root[data-theme="dark"] .callout { background:#1e2a16; color:#d8d8d8; }
+:root[data-theme="dark"] .callout strong { color:#f2f2f2; }
+:root[data-theme="dark"] .callout.info { background:#12283b; }
+h2 { font-size: 1.25rem; font-weight: 700; margin: 2.2em 0 .7em; color: #1a1a1a; }
+p { margin: .65em 0; color: #3b3b3b; }
+p strong { color: #1a1a1a; }
+a { color: #2e7d32; }
+ul, ol { margin: .5em 0 .5em 1.3em; color: #3b3b3b; }
+li { margin: .25em 0; }
+
+/* ── Launch callout (the in-page hero that points at the real play button) ─── */
+.launch-box {
+  border: 2px solid #76b900;
+  border-radius: 10px;
+  padding: 22px 26px;
+  margin: 1.4em 0 1.6em;
+  background: linear-gradient(135deg, #f6fbee 0%, #fff 100%);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  align-items: center;
+}
+.launch-box .lb-text h2 {
+  margin: 0 0 .35em; font-size: 1.15rem; color: #1a1a1a; border: none;
+}
+.launch-box .lb-text p {
+  margin: .25em 0; color: #444; font-size: .92rem; line-height: 1.55;
+}
+.launch-box .lb-text p:last-child {
+  margin-top: .55em; font-size: .82rem; color: #57606a;
+}
+.launch-box .lb-cta {
+  display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+  min-width: 170px;
+}
+.launch-box .lb-cta button {
+  background: #76b900; color: #000;
+  border: none; border-radius: 8px;
+  padding: 12px 18px;
+  font-family: inherit; font-size: .95rem; font-weight: 800;
+  cursor: pointer;
+  transition: background .15s, transform .15s;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.launch-box .lb-cta button:hover    { background: #8fd400; }
+.launch-box .lb-cta button:active   { transform: scale(.97); }
+.launch-box .lb-cta button:disabled { background: #d0d7de; color: #57606a; cursor: not-allowed; }
+.launch-box .lb-cta .lb-hint {
+  font-size: .72rem; color: #57606a; text-align: center; line-height: 1.4;
+}
+.launch-box .lb-cta .lb-status {
+  font-size: .78rem; color: #2f6a00; text-align: center;
+  font-weight: 700; display: none;
+}
+@media (max-width: 640px) {
+  .launch-box { grid-template-columns: 1fr; }
+  .launch-box .lb-cta { min-width: 0; }
+}
+
+/* ── Callout boxes ─── */
+.callout { border-left: 3px solid #76b900; background: #f0f8e6; padding: 10px 14px; border-radius: 0 6px 6px 0; margin: 1.2em 0; font-size: .88rem; color: #3b3b3b; }
+.callout strong { color: #1a1a1a; }
+.callout.info { border-left-color: #0969da; background: #ddf4ff; }
+
+/* ── Hide edX chrome that overlaps course content ── */
+.navigation_arrows_div { visibility: hidden; margin: 0; }
+.bookmark-button-wrapper { visibility: hidden; margin-bottom: -50px !important; }
+</style>
+</head>
+<body>
+
+<!-- ── Launch callout: the bridge from the navigator above to the
+        ▶ play button at the bottom of the page. The green button
+        forwards its click to the xblock's real launch control. -->
+<div class="launch-box" id="_launchBox">
+  <div class="lb-text">
+    <h2>▶ Start the course</h2>
+    <p>The course runs in your browser. Modules 3 and 4 prompt you to open a NemoClaw launchable when they need the external agent runtime.</p>
+    <p>The status card in the top-right tracks the DLI course session and links back to the course.</p>
+  </div>
+  <div class="lb-cta">
+    <button type="button" id="_lbBtn" aria-label="Start lab environment">
+      <span id="_lbBtnIcon">▶</span>
+      <span id="_lbBtnLabel">Start Course</span>
+    </button>
+    <div class="lb-hint" id="_lbHint">Or use the ▶ button at the bottom</div>
+    <div class="lb-status" id="_lbStatus"></div>
+  </div>
+</div>
+
+<div class="callout info">
+  <strong>API key note.</strong> Browser exercises call NVIDIA APIs with the key stored in this browser. The external NemoClaw launchable manages its own session separately.
+</div>
+
+<script>
+/* DLI environment widget: mirrors xblock state, forwards launch clicks, and captures lab URLs. */
+(function () {
+  'use strict';
+  var POLL=1000, CARD_W=200;
+  var CARD_R='max(14px, calc(100vw / 4 - 353px))';
+  var PRI={assess:7,running:6,loading:5,starting:4,stopping:3,grading:3,restart:2,launch:1,unknown:0,none:-1};
+  var card=null, bodyEl=null, collapsed=false, lastSt=null, lastTimer=null, pmState='';
+  var LAB_KEY='_dli_lab_url';
+
+  /* Fast-poll iframe/src changes until waitUntil expires. */
+  var waitUntil = 0;
+  var mo = null;
+
+  // ── URL persistence ─────────────────────────────────────────────────
+  function store(k,v){try{sessionStorage.setItem(k,v);}catch(e){}try{localStorage.setItem(k,v);}catch(e){}}
+  function retrieve(k){try{var v=sessionStorage.getItem(k);if(v)return v;}catch(e){}try{var v2=localStorage.getItem(k);if(v2)return v2;}catch(e){}return '';}
+
+  function labBaseUrl(u){
+    if(!u||typeof u!=='string') return false;
+    try {
+      var parsed=new URL(u);
+      if(parsed.protocol!=='https:') return false;
+      if(parsed.username||parsed.password||parsed.port) return false;
+      var host=parsed.hostname.toLowerCase();
+      var allowed=/(?:^|\.)cloudapp\.azure\.com$/.test(host) ||
+                  /(?:^|\.)azurecontainerapps\.io$/.test(host) ||
+                  /(?:^|\.)azurewebsites\.net$/.test(host) ||
+                  /(?:^|\.)(?:eastus|westus|northeurope|southeastasia)\.azure\.[a-z.]+$/.test(host);
+      return allowed?'https://'+host+'/':false;
+    } catch(e) { return false; }
+  }
+  function isLabUrl(u){return !!labBaseUrl(u);}
+
+  function trustedMessage(e){
+    if(e.source!==window&&e.source!==window.parent&&e.source!==window.top) return false;
+    if(e.origin===location.origin) return true;
+    if(e.origin==='null'&&location.protocol==='file:') return true;
+    try{
+      var sender=new URL(e.origin);
+      return sender.protocol==='https:'&&/(?:^|\.)nvidia\.com$/.test(sender.hostname.toLowerCase());
+    }catch(err){return false;}
+  }
+
+  function saveBase(url){
+    url=labBaseUrl(url);
+    if(!url) return;
+    try{sessionStorage.removeItem(LAB_KEY+'_x');}catch(e){}
+    if(retrieve(LAB_KEY)===url) return;
+    store(LAB_KEY,url);
+    try{window.parent._dliLabUrl=url;}catch(e){}
+    try{window.parent.postMessage({type:'_dli_lab_url',url:url},'*');}catch(e){}
+    waitUntil = 0;
+    if(card){lastSt=null;lastTimer=null;}
+  }
+
+  function getBase(){
+    try{if(sessionStorage.getItem(LAB_KEY+'_x')) return '';}catch(e){}
+    var saved=retrieve(LAB_KEY);
+    return labBaseUrl(saved)||'';
+  }
+
+  function clearLabUrl(){
+    try{localStorage.removeItem(LAB_KEY);}catch(e){}
+    try{sessionStorage.removeItem(LAB_KEY);}catch(e){}
+    try{sessionStorage.setItem(LAB_KEY+'_x','1');}catch(e){}
+    try{window.parent._dliLabUrl='';}catch(e){}
+    if(card){lastSt=null;lastTimer=null;}
+  }
+
+  // ── window.open patch ──
+  function hookOpen(win){
+    if(!win||win._dliH) return;
+    try{
+      var o=win.open;
+      win.open=function(u,n,f){ if(isLabUrl(u)) saveBase(u); return o?o.call(win,u,n,f):null; };
+      win._dliH=1;
+    }catch(e){}
+  }
+
+  function scanXb(xb){
+    if(!xb||retrieve(LAB_KEY)) return;
+    try{
+      var links=xb.querySelectorAll('a[href],area[href]');
+      for(var i=0;i<links.length;i++){if(isLabUrl(links[i].href)){saveBase(links[i].href);return;}}
+      var onclicks=xb.querySelectorAll('[onclick]');
+      for(var i=0;i<onclicks.length;i++){
+        var m=(onclicks[i].getAttribute('onclick')||'').match(/https?:\/\/\S+/);
+        if(m&&isLabUrl(m[0])){saveBase(m[0]);return;}
+      }
+      var dataAttrs=xb.querySelectorAll('[data-task-link],[data-lab-url],[data-target-url]');
+      for(var i=0;i<dataAttrs.length;i++){
+        var d=dataAttrs[i];
+        var u=d.getAttribute('data-task-link')||d.getAttribute('data-lab-url')||d.getAttribute('data-target-url');
+        if(isLabUrl(u)){saveBase(u);return;}
+      }
+    }catch(e){}
+  }
+
+  function deepScan(){
+    if(retrieve(LAB_KEY)) return;
+    function scanDocAll(doc){
+      try{
+        var all=doc.querySelectorAll('a[href]');
+        for(var i=0;i<all.length;i++) if(isLabUrl(all[i].href)){saveBase(all[i].href);return true;}
+      }catch(e){}
+      return false;
+    }
+    if(scanDocAll(document)) return;
+    try{scanDocAll(window.parent.document);}catch(e){}
+  }
+
+  function scanGlobals(){
+    if(retrieve(LAB_KEY)) return;
+    try{
+      var pw=window.parent;
+      var ks=['_dliLabUrl','labUrl','taskUrl','dliLabUrl','vmTaskLink','dli_lab_url','envUrl','currentLabUrl'];
+      for(var i=0;i<ks.length;i++) if(isLabUrl(pw[ks[i]])){saveBase(pw[ks[i]]);return;}
+    }catch(e){}
+  }
+
+  window.addEventListener('message',function(e){
+    if(!trustedMessage(e)) return;
+    if(!e.data||typeof e.data!=='object') return;
+    if(e.data.type==='dli_env_status'){
+      pmState=e.data.status||'';
+      var u=e.data.url||e.data.link||e.data.task_link||'';
+      if(isLabUrl(u)) saveBase(u);
+      if(card){lastSt=null;lastTimer=null;}
+    }
+    if(e.data.type==='_dli_lab_url'&&isLabUrl(e.data.url)) saveBase(e.data.url);
+  });
+  function reqState(){
+    try{window.parent.postMessage({type:'dli_pin_env_bar',source:'content_block'},'*');}catch(e){}
+    try{window.parent.postMessage({type:'dli_env_request'},'*');}catch(e){}
+  }
+
+  // ── xblock discovery ─────────────────────────────────────────────
+  function scanDoc(doc){if(!doc)return[];try{return Array.prototype.slice.call(doc.querySelectorAll('.xblock-dli-gpu-task .xblock-controls,[data-block-type="nvidia-dli-platform-gpu-task-xblock"] .xblock-controls'));}catch(e){return[];}}
+  function allXC(){var r=scanDoc(document);if(!r.length)try{r=scanDoc(window.parent.document);}catch(e){}if(!r.length)try{r=scanDoc(window.parent.parent.document);}catch(e){}return r;}
+  function vis(el){return el&&el.style.display!=='none';}
+  function detect(c){if(!c)return 'none';
+    var tl=c.querySelector('.xblock-control-taskloader'),sl=c.querySelector('.xblock-control-stoploader'),
+        gl=c.querySelector('.xblock-control-gradeloader'),st=c.querySelector('.xblock-control-stop'),
+        as=c.querySelector('.xblock-control-assess'),rs=c.querySelector('.xblock-control-restart'),
+        lc=c.querySelector('.xblock-control-launch'),sa=c.querySelector('.xblock-control-start');
+    if(vis(gl))return 'grading';if(vis(sl))return 'stopping';if(vis(tl)&&vis(st))return 'loading';
+    if(vis(tl))return 'starting';if(vis(as))return 'assess';if(vis(st))return 'running';
+    if(vis(rs))return 'restart';if(vis(lc)||vis(sa))return 'launch';return 'unknown';}
+  function bestXC(){var all=allXC(),best=null,bp=-99;
+    for(var i=0;i<all.length;i++){var s=detect(all[i]),p=PRI[s]||0;if(p>bp){bp=p;best={st:s,ctrl:all[i]};}}
+    if(best){if(best.st==='unknown'&&pmState)best.st=pmState==='running'?'running':'restart';
+      try{var xb=best.ctrl.closest('.xblock-student_view,.xblock-dli-gpu-task');scanXb(xb);}catch(e){}return best;}
+    return{st:pmState==='running'?'running':pmState==='stopped'?'restart':'none',ctrl:null};}
+  function readTimer(c){if(!c)return null;
+    var t=c.querySelector('.xblock-control-timer');if(!t||t.style.display==='none')return null;
+    var lab=t.querySelector('.xblock-control-timer-lab');if(!lab)return null;
+    var el=lab.querySelector('.xblock-control-timer-clock-elapsed'),to=lab.querySelector('.xblock-control-timer-clock-total');
+    function fmt(x){if(!x)return null;var h=x.querySelector('.xblock-timer-hr'),m=x.querySelector('.xblock-timer-min'),s=x.querySelector('.xblock-timer-sec');return(!h||h.textContent==='-')?null:h.textContent+':'+m.textContent+':'+s.textContent;}
+    var e=fmt(el),f=fmt(to);return(e&&f)?e+' / '+f:null;}
+
+  // ── Aggressive URL watch ─────────────────────────────────────────
+  function beginUrlWatch(){
+    waitUntil = Date.now() + 30000;
+    if (mo) { try { mo.disconnect(); } catch(e){} }
+    var r = bestXC();
+    if (!r.ctrl) return;
+    try{
+      var xb = r.ctrl.closest('.xblock-student_view,.xblock-dli-gpu-task') || r.ctrl;
+      mo = new MutationObserver(function(){ scanXb(xb); deepScan(); scanGlobals(); });
+      mo.observe(xb, { childList: true, subtree: true, attributes: true,
+                       attributeFilter: ['href','onclick','data-task-link','data-lab-url','data-target-url'] });
+    }catch(e){}
+  }
+
+  // In-page launch button: relabel from current xblock state.
+  var lbBtn    = document.getElementById('_lbBtn');
+  var lbIcon   = document.getElementById('_lbBtnIcon');
+  var lbLabel  = document.getElementById('_lbBtnLabel');
+  var lbHint   = document.getElementById('_lbHint');
+  var lbStatus = document.getElementById('_lbStatus');
+
+  function bestXBtn(actClass){
+    var r = bestXC();
+    if (!r.ctrl) return null;
+    return r.ctrl.querySelector('.xblock-control-' + actClass) || null;
+  }
+  function pickLaunchBtn(){
+    return bestXBtn('launch') || bestXBtn('start') || null;
+  }
+
+  // User-click only: find the real xblock control, scroll, then click.
+  function clickReal(getBtn){
+    var deadline = Date.now() + 4000;
+    (function attempt(){
+      var real = null;
+      try { real = getBtn(); } catch(e){}
+      if (real){
+        try { real.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(e){}
+        // Let the scroll begin before the click; some xblocks ignore a click on a control that is still off-screen.
+        setTimeout(function(){ try { real.click(); } catch(e){} }, 160);
+        return;
+      }
+      if (Date.now() < deadline) { setTimeout(attempt, 150); return; }
+      if (lbStatus){ lbStatus.textContent = 'Scroll down to the ▶ button to start'; lbStatus.style.display = 'block'; }
+    })();
+  }
+
+  var lbAction = 'launch';
+  if (lbBtn){
+    lbBtn.addEventListener('click', function(){
+      if (lbAction === 'open')    { var u = labBaseUrl(getBase()); if(u){ window.open(u, '_blank', 'noopener'); } return; }
+      if (lbAction === 'launch')  { beginUrlWatch(); clickReal(pickLaunchBtn); return; }
+      if (lbAction === 'restart') { beginUrlWatch(); clickReal(function(){ return bestXBtn('restart'); }); return; }
+      if (lbAction === 'assess')  { clickReal(function(){ return bestXBtn('assess'); }); return; }
+      if (lbAction === 'cancel' || lbAction === 'stop') { clickReal(function(){ return bestXBtn('stop'); }); return; }
+    });
+  }
+
+  function setLb(state, base){
+    if (!lbBtn) return;
+    var spec = {
+      none:     { icon:'▶',  label:'Start Lab',   action:'launch',  hint:'Or hit the ▶ button at the bottom', dis:false, busy:'' },
+      launch:   { icon:'▶',  label:'Start Lab',   action:'launch',  hint:'Or hit the ▶ button at the bottom', dis:false, busy:'' },
+      starting: { icon:'⏳', label:'Starting…',   action:'cancel',  hint:'Provisioning the lab',              dis:false, busy:'Starting…' },
+      loading:  { icon:'⏳', label:'Cancel',      action:'cancel',  hint:'Loading the workshop',              dis:false, busy:'Loading…' },
+      running:  { icon:'↗',  label:'Open Lab',    action:'open',    hint:'Or click the ▶ button below',       dis:false, busy:'Running' },
+      assess:   { icon:'↗',  label:'Open Lab',    action:'open',    hint:'Or click the ▶ button below',       dis:false, busy:'Running (assessable)' },
+      restart:  { icon:'↻',  label:'Restart Lab', action:'restart', hint:'The lab was stopped; restart it',   dis:false, busy:'Stopped' },
+      stopping: { icon:'⏳', label:'Stopping…',   action:'cancel',  hint:'Tearing down the lab',              dis:true,  busy:'Stopping…' },
+      grading:  { icon:'⏳', label:'Grading…',    action:'cancel',  hint:'Grading the lab',                   dis:true,  busy:'Grading…' },
+      unknown:  { icon:'▶',  label:'Start Lab',   action:'launch',  hint:'Or hit the ▶ button at the bottom', dis:false, busy:'' }
+    };
+    var s = spec[state] || spec.unknown;
+    if ((state === 'running' || state === 'assess') && !base) {
+      // Open the lab through LAUNCH so window.open can capture deep links.
+      s = { icon:'↗', label:'Open Lab', action:'launch', hint:'Opens the running lab', dis:false, busy:'Running' };
+    }
+    lbIcon.textContent  = s.icon;
+    lbLabel.textContent = s.label;
+    lbHint.textContent  = s.hint;
+    lbBtn.disabled      = !!s.dis;
+    lbAction            = s.action;
+    if (s.busy){ lbStatus.textContent = s.busy; lbStatus.style.display = 'block'; }
+    else       { lbStatus.style.display = 'none'; }
+  }
+
+  // ── Delegate clicks on the real launch button (capture phase) ──
+  function _onClickCapture(e){
+    var t = e.target && (e.target.closest ? e.target.closest('.xblock-control-launch, .xblock-control-start') : null);
+    if (t){ beginUrlWatch(); }
+  }
+  document.addEventListener('click', _onClickCapture, true);
+  try { window.parent.document.addEventListener('click', _onClickCapture, true); } catch(e){}
+
+  // ── Pinned status card (the small dark widget in the top-right) ──
+  function buildCard(){
+    var s=document.createElement('style');
+    s.textContent='#_ec{position:fixed;top:12px;right:'+CARD_R+';width:'+CARD_W+'px;background:#fff;border:2px solid #76b900;border-radius:10px;box-shadow:0 6px 24px rgba(31,42,0,.18);z-index:99999;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:.8rem;color:#1a1a1a;transition:opacity .25s}'
+      +'#_ec._dim{opacity:.6}'+'#_ec._chip ._eb{display:none}'+'#_ec._chip ._chv{transform:rotate(-90deg)}'
+      +'._eh{background:linear-gradient(135deg,#f6fbee 0%,#fff 100%);border-bottom:1px solid #e6efd6;padding:7px 11px;display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}'
+      +'._edot{width:9px;height:9px;border-radius:2px;background:#76b900;flex-shrink:0}'
+      +'._etit{flex:1;font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2f6a00}'
+      +'._chv{color:#575e66;font-size:.68rem;transition:transform .2s;line-height:1}'
+      +'._eb{padding:10px 10px 11px}'+'._es{font-weight:700;margin-bottom:5px;font-size:.8rem}'
+      +'._etm{font-family:ui-monospace,Menlo,monospace;font-size:.71rem;color:#57606a;margin-bottom:8px;background:#f3f6ee;border-radius:4px;padding:3px 7px;border:1px solid #e6efd6}'
+      +'#_ec button,#_ec a._eab{display:block!important;width:100%!important;padding:8px 8px!important;margin-bottom:5px!important;border-radius:6px!important;cursor:pointer!important;font-weight:800!important;font-size:.76rem!important;text-align:center!important;text-decoration:none!important;line-height:1.4!important;box-sizing:border-box!important;font-family:inherit!important}'
+      +'#_ec button:last-child,#_ec a._eab:last-child{margin-bottom:0!important}'
+      +'#_ec ._eg,#_ec a._eg{background:#76b900!important;color:#000!important;border:none!important}'
+      +'#_ec ._eg:hover{background:#8fd400!important}'
+      +'#_ec ._er{background:#fdeaea!important;color:#b3261e!important;border:1px solid #f3b0b0!important}'
+      +'#_ec ._er:hover{background:#fbdcdc!important}'
+      +'._ediv{border:none;border-top:1px solid #eaeaea;margin:8px 0}'
+      +'._enav{display:flex;flex-direction:column;gap:4px}'
+      +'#_ec ._enav a{display:block!important;padding:6px 8px!important;border-radius:5px!important;font-size:.73rem!important;font-weight:600!important;text-align:left!important;text-decoration:none!important;border:1px solid #cfe6a8!important;color:#2f6a00!important;background:#fff!important}'
+      +'#_ec ._enav a:hover{background:#f0f8e6!important}'
+      +'#_ec ._enav a._dis{color:#6b6b6b!important;border-color:#d8d8d8!important;pointer-events:none!important}';
+    document.head.appendChild(s);
+    var d=document.createElement('div');d.id='_ec';
+    var h=document.createElement('div');h.className='_eh';
+    h.innerHTML='<div class="_edot"></div><span class="_etit">DLI Lab</span><span class="_chv">&#9662;</span>';
+    h.addEventListener('click',function(){d.classList.toggle('_chip');});
+    bodyEl=document.createElement('div');bodyEl.className='_eb';
+    bodyEl.innerHTML='<div class="_es" style="color:#555">&#9737; Lab environment</div>';
+    d.appendChild(h);d.appendChild(bodyEl);document.body.appendChild(d);return d;}
+
+  var ST={
+    starting:'⏳ Starting…', loading:'⏳ Loading…',
+    stopping:'⏳ Stopping…', grading:'⏳ Grading…',
+    running:'● Running',     assess:'● Running',
+    restart:'⭭ Stopped',     launch:'⚪ Not started',
+    unknown:'☉ Lab environment', none:'☉ Lab environment'
+  };
+  var SC={starting:'#57606a',loading:'#57606a',stopping:'#b26a00',grading:'#57606a',
+          running:'#1f9e4d',assess:'#1f9e4d',restart:'#6a6a6a',launch:'#57606a',unknown:'#8a8a8a',none:'#8a8a8a'};
+
+  function navLink(base,path,lbl){
+    var a=document.createElement('a');a.className='_eab';
+    if(isLabUrl(base)){a.href=new URL(path,base).href;a.target='_blank';a.rel='noopener';}
+    else{a.className='_eab _dis';a.href='#';}
+    a.textContent=lbl;return a;}
+
+  function render(st,ctrl,timer){
+    if(st===lastSt&&timer===lastTimer) return;
+    lastSt=st;lastTimer=timer;
+    if(st==='stopping'||st==='restart'||st==='starting') clearLabUrl();
+    var base=getBase();
+    setLb(st, base);
+    if(collapsed&&PRI[st]>=PRI['running']){collapsed=false;card.classList.remove('_chip');}
+    card.classList.toggle('_dim',st==='none'||st==='unknown');
+    if(collapsed) return;
+    bodyEl.replaceChildren();
+    var status=document.createElement('div');status.className='_es';
+    status.style.color=SC[st]||'#555';status.textContent=ST[st]||ST.none;
+    bodyEl.appendChild(status);
+    if(timer){
+      var te=document.createElement('div');te.className='_etm';
+      var clock=document.createElement('span');clock.style.cssText='color:#555;font-size:.66rem';
+      clock.textContent='◷ ';te.append(clock,document.createTextNode(String(timer)));
+      bodyEl.appendChild(te);}
+    if((st==='running'||st==='assess')&&!base){
+      var nudge=document.createElement('div');
+      nudge.style.cssText='font-size:.7rem;color:#888;margin-bottom:6px;line-height:1.4;';
+      nudge.textContent='Lab is up. Open it to surface the deep-links below.';
+      bodyEl.appendChild(nudge);
+      var ob=document.createElement('button');ob.className='_eab _eg';
+      ob.textContent='↗ Open Lab';
+      ob.addEventListener('click',function(e){e.stopPropagation();beginUrlWatch();clickReal(pickLaunchBtn);});
+      bodyEl.appendChild(ob);}
+    if((st==='running'||st==='assess')&&labBaseUrl(base)){
+      var oa=document.createElement('a');oa.className='_eab _eg';
+      oa.href=labBaseUrl(base);oa.target='_blank';oa.rel='noopener';
+      oa.textContent='↗ Open Lab';
+      bodyEl.appendChild(oa);}
+    function btn(txt,cls,act){
+      if(!ctrl) return;
+      var real=ctrl.querySelector('.xblock-control-'+act);if(!real) return;
+      var b=document.createElement('button');b.className='_eab '+cls;
+      b.textContent=txt;
+      b.addEventListener('click',function(e){
+        e.stopPropagation();
+        if (act==='launch' || act==='start') beginUrlWatch();
+        try { real.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(e2){}
+        setTimeout(function(){ try { real.click(); } catch(e2){} }, 160);
+        if(act==='stop'){collapsed=true;card.classList.add('_chip');lastSt=null;clearLabUrl();}});
+      bodyEl.appendChild(b);}
+    if(st==='loading') btn('▮ Cancel',         '_er','stop');
+    if(st==='running') btn('▮ Stop Task',       '_er','stop');
+    if(st==='assess'){btn('✓ Assess Task','_eg','assess');btn('▮ Stop Task','_er','stop');}
+    if(st==='restart') btn('↻ Restart',         '_eg','restart');
+    if(st==='launch'){var lc=ctrl&&ctrl.querySelector('.xblock-control-launch');
+      btn('&#9654; Start Lab','_eg',vis(lc)?'launch':'start');}
+    // Keep a play action visible before xblock state resolves.
+    if(st==='none'||st==='unknown'){
+      var sb=document.createElement('button');sb.className='_eab _eg';
+      sb.innerHTML='&#9654; Start Lab';
+      sb.addEventListener('click',function(e){e.stopPropagation();beginUrlWatch();clickReal(pickLaunchBtn);});
+      bodyEl.appendChild(sb);}
+    var hr=document.createElement('hr');hr.className='_ediv';
+    var nav=document.createElement('div');nav.className='_enav';
+    nav.appendChild(navLink(base,'courses',          '📚 Course home'));
+    nav.appendChild(navLink(base,'securing-agents','⬢ Securing Agents'));
+    bodyEl.appendChild(hr);bodyEl.appendChild(nav);}
+
+  var _tN=0;
+  function tick(){
+    _tN++;
+    var r=bestXC();
+    if(!r.ctrl && _tN%10===0) reqState();
+    scanGlobals();
+    if (Date.now() < waitUntil) {
+      deepScan();
+      try { scanXb(r.ctrl && r.ctrl.closest('.xblock-student_view,.xblock-dli-gpu-task')); } catch(e){}
+    } else if (mo) {
+      try { mo.disconnect(); } catch(e){}
+      mo = null;
+    }
+    var t=readTimer(r.ctrl);
+    if(!collapsed||PRI[r.st]>=PRI['running']) render(r.st,r.ctrl,t);
+    setTimeout(tick,POLL);
+  }
+
+  function boot(){
+    var _sv=retrieve(LAB_KEY);if(_sv&&!isLabUrl(_sv)){try{localStorage.removeItem(LAB_KEY);}catch(e){}try{sessionStorage.removeItem(LAB_KEY);}catch(e){}}
+    card=buildCard();
+    hookOpen(window);try{hookOpen(window.parent);}catch(e){}
+    reqState();
+    var r=bestXC();
+    render(r.st,r.ctrl,readTimer(r.ctrl));
+    tick();
+    setTimeout(reqState,800);setTimeout(reqState,2500);setTimeout(reqState,6000);
+  }
+
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',boot);}else{boot();}
+})();
+</script>
+</body>
+</html>

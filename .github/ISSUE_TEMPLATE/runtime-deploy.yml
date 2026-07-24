@@ -1,18 +1,18 @@
 name: Runtime or deployment issue
-description: Report local bring-up, Pages, service, browser runtime, or DLI platform behavior.
+description: Report host authoring, Pages, browser runtime, or external platform behavior.
 title: "[runtime] "
 labels: ["state:needs-triage", "kind:bug", "area:deploy"]
 body:
   - type: markdown
     attributes:
       value: |
-        The production release is the static `web/nemoclaw/` course, delivered by Pages or vendored into a NemoClaw launchable. Local authoring services are not production. Redact secrets and private deployment details.
+        The production release is the static `web/nemoclaw/` course, delivered by Pages or vendored into a NemoClaw launchable. Repository tools run on the host; isolation is operator-owned. Redact secrets and private deployment details.
   - type: dropdown
     id: environment
     attributes:
       label: Environment
       options:
-        - local CPU
+        - host authoring
         - DLI platform
         - GitLab Pages
         - GitHub Pages
@@ -51,7 +51,6 @@ body:
       label: Scope
       options:
         - label: Learner page or browser runtime
-        - label: Shared service stack
-        - label: Compose or nginx deployment
+        - label: External runtime integration
         - label: CI/CD or Pages
         - label: Source/vendor/licensing

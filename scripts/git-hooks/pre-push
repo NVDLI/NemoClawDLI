@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# Canonical pre-push boundary: verify base and complete proposed history, then delegate
+# deterministic current-tree validation to release_gate.py. Local hooks are feedback;
+# required host CI reruns independently and remains authoritative.
+set -euo pipefail
+
+REMOTE="${1:-origin}"
+T1="$(git rev-parse --show-toplevel)"
+[ -d "$T1/task1/scripts" ] && T1="$T1/task1"
+RANGE="origin/main..HEAD"
+
+# Refuse stale-base pushes before any expensive validation. The hook reports recovery;
+# it never rebases, resolves conflicts, or rewrites contributor history.
+if [ "$REMOTE" = "origin" ]; then
+    if ! git fetch origin main --quiet; then
+        echo "pre-push: REFUSING PUSH - cannot verify origin/main."
+        echo "Fix network or authentication, run 'git fetch origin main', then retry."
+        exit 1
+    fi
+    LOCAL="$(git rev-parse HEAD)"
+    REMOTE_SHA="$(git rev-parse origin/main 2>/dev/null || true)"
+    if [ -n "$REMOTE_SHA" ] && [ "$LOCAL" != "$REMOTE_SHA" ]; then
+        AHEAD="$(git rev-list HEAD..origin/main --count 2>/dev/null || echo 0)"
+        if [ "$AHEAD" -gt 0 ]; then
+            echo "pre-push: REFUSING PUSH - origin/main is $AHEAD commit(s) ahead."
+            echo "Review the drift, then run: git rebase origin/main"
+            exit 1
+        fi
+    fi
+else
+    echo "pre-push: remote '$REMOTE' is not origin; base comparison skipped."
+fi
+
+# Complete-history checks catch a prohibited value or missing signoff introduced in one
+# commit and removed later. Current-tree checks and detector mutations run once below.
+SAFETY="$T1/scripts/validation/contribution_safety_audit.py"
+if [ -f "$SAFETY" ] && ! python3 "$SAFETY" --commit-range "$RANGE"; then
+    echo "pre-push: REFUSING PUSH - contribution origin/signoff contract failed."
+    exit 1
+fi
+
+LOCAL_PATH_AUDIT="$T1/scripts/validation/local_path_leak_audit.py"
+if [ -f "$LOCAL_PATH_AUDIT" ] && ! python3 "$LOCAL_PATH_AUDIT" --commit-range "$RANGE"; then
+    echo "pre-push: REFUSING PUSH - contributor-local path found in proposed history."
+    exit 1
+fi
+
+SENSITIVE_AUDIT="$T1/scripts/validation/sensitive_content_audit.py"
+if [ -f "$SENSITIVE_AUDIT" ] && ! python3 "$SENSITIVE_AUDIT" --commit-range "$RANGE"; then
+    echo "pre-push: REFUSING PUSH - restricted detail found in proposed history."
+    exit 1
+fi
+
+RELEASE_REMINDER="$T1/scripts/validation/release_change_reminder.py"
+if [ -f "$RELEASE_REMINDER" ] && ! python3 "$RELEASE_REMINDER" --commit-range "$RANGE"; then
+    echo "pre-push: REFUSING PUSH - release follow-up classification failed."
+    exit 1
+fi
+
+SPECIALIZATION_AUDIT="$T1/scripts/validation/validator_specialization_audit.py"
+if [ -f "$SPECIALIZATION_AUDIT" ] && ! python3 "$SPECIALIZATION_AUDIT" --commit-range "$RANGE"; then
+    echo "pre-push: REFUSING PUSH - proposed history adds repository-specialized validator logic."
+    exit 1
+fi
+
+# One canonical deterministic gate. Mutation suites are change-aware; current-tree audits
+# remain complete. If this exact clean commit already passed the same local gate, reuse that
+# result instead of replaying several minutes. Fresh CI never receives the worktree cache.
+GATE="$T1/scripts/validation/release_gate.py"
+if [ -f "$GATE" ] \
+   && ! python3 "$GATE" --tier ship --no-write --changed-since origin/main --reuse-success --jobs 4; then
+    echo "pre-push: REFUSING PUSH - canonical ship gate failed."
+    exit 1
+fi
+
+exit 0

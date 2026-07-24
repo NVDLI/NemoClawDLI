@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>The materials catalog behind web_search · Securing Agents</title>
+<link rel="stylesheet" href="styles/_style.css"/>
+<script src="vendor/highlight-11.10.0.min.js"></script>
+<link rel="stylesheet" href="vendor/codemirror-5.65.21.css"/>
+<link rel="stylesheet" href="vendor/codemirror-monokai-5.65.21.css"/>
+<script src="vendor/codemirror-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-xml-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-javascript-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-css-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-htmlmixed-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-python-5.65.21.js"></script>
+<style>
+  /* Page-specific bits only. The canvas flow, diagram, callouts, and code all come from
+     _style.css and theme with the dark/light toggle; these few rules use theme vars too. */
+  main { max-width: min(74rem, 100%); margin: 0 auto; padding: clamp(1.5rem,4vw,2.5rem) clamp(1rem,4vw,2rem) 90px; }
+  .gx-eyebrow { font-family: var(--mono); font-size: .72rem; color: var(--gs); text-transform: uppercase; letter-spacing: .12em; margin-bottom: .6em; }
+  .gx-hero h1 { font-size: 2.1rem; line-height: 1.12; margin: 0 0 .35em; }
+  .gx-hero h1 code { font-size: .78em; background: var(--e2); padding: 2px 10px; border-radius: 6px; color: var(--gs); }
+  .gx-lead { font-size: 1.05rem; color: var(--td); line-height: 1.65; }
+  section { margin: 2.6em 0; }
+  .gx-stat { font-family: var(--mono); color: var(--gs); }
+  .gx-filter { width: 100%; padding: 11px 14px; font-size: .95rem; background: var(--e2); border: 1px solid var(--bd); border-radius: 8px; color: var(--tx); font-family: var(--mono); outline: none; margin: 4px 0 12px; }
+  .gx-filter:focus { border-color: var(--g); }
+  .gx-tiers { display: flex; flex-wrap: wrap; gap: 14px; margin: 1.2em 0; }
+  .gx-tier { flex: 1 1 280px; background: var(--e1); border: 1px solid var(--bd); border-radius: 10px; padding: 14px 16px; }
+  .gx-tier h3 { margin: 0 0 .3em; font-size: .98rem; }
+  .gx-tier p { margin: .2em 0 0; font-size: .86rem; color: var(--td); line-height: 1.55; }
+  table.gx-data { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  table.gx-data th { text-align: left; color: var(--tf); font-family: var(--mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; padding: 6px 10px; border-bottom: 1px solid var(--e3); position: sticky; top: 0; background: var(--bg); }
+  table.gx-data td { padding: 8px 10px; border-bottom: 1px solid var(--e3); color: var(--td); vertical-align: top; }
+  table.gx-data td.term { color: var(--tx); font-weight: 600; }
+  table.gx-data td.term a { color: var(--tx); }
+  .gx-tag { font-family: var(--mono); font-size: .72rem; background: var(--e3); color: var(--td); padding: 1px 7px; border-radius: 999px; }
+  .gx-badge { font-family: var(--mono); font-size: .64rem; border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
+  .gx-badge.cached { color: var(--gs); border: 1px solid var(--gd); }
+  .gx-badge.on_demand { color: var(--tf); border: 1px solid var(--e3); }
+  .gx-deep { font-family: var(--mono); font-size: .62rem; color: var(--gs); margin-left: 6px; }
+  .gx-table-wrap { max-height: 460px; overflow: auto; border: 1px solid var(--e3); border-radius: 10px; }
+  .gx-back { color: var(--td); font-size: .85rem; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="logo" href="index.html">NVIDIA · Securing Agents</a>
+  <div class="spacer"></div>
+  <a class="gx-back" href="index.html">Course home →</a>
+</div>
+
+<main>
+  <div class="gx-hero">
+    <div class="gx-eyebrow">NVIDIA · Securing Agents · reference</div>
+    <h1>The materials catalog behind <code>web_search</code></h1>
+    <p class="gx-lead">
+      When an agent in this course calls the <code>web_search</code> tool you wire by hand in
+      <a href="01c-tools.html">Module 1c</a>, nothing ever leaves your browser. The tool ranks the
+      course's own <strong>materials catalog</strong>, a fixed and fully inspectable corpus that ships
+      inside the page itself. That catalog is organized into two tiers, and the sections below walk
+      through the whole pipeline, from loading the catalog and running the agent's own ranking against
+      it to seeing how the corpus is kept current and reading the ranking functions line by line.
+    </p>
+  </div>
+
+  <section>
+    <h2>How the catalog is split and served</h2>
+    <p class="gx-lead">
+      The whole backend is one static file named <code>assets/materials_index.json</code> that holds
+      <span class="gx-stat" id="gx-count">…</span> entries in <span class="gx-stat" id="gx-size">…</span>
+      and splits them into <span class="gx-stat" id="gx-cached">…</span> cached and <span class="gx-stat" id="gx-od">…</span>
+      on-demand. Because it ships in the same bundle as the page the browser loads it same-origin with no
+      key and no CORS. <code>webSearch</code> ranks both tiers together so that one query reaches a glossary
+      definition and a paper abstract through a single shared surface.
+    </p>
+    <div class="gx-tiers">
+      <div class="gx-tier cached">
+        <h3>Cached · the NVIDIA glossary</h3>
+        <p>The 79-term glossary index ships in full, and seven of those terms also carry their complete
+        vendored article alongside the definition. All of that text already travels with the page so the
+        agent can quote it word for word inside the bundle without reaching across the network for a live
+        connection. The index rarely changes. Nearly every search the agent runs still draws on it and so the
+        copy riding along in the bundle earns its place in the cache many times over.</p>
+      </div>
+      <div class="gx-tier ondemand">
+        <h3>On-demand · papers and posts</h3>
+        <p>Larger sources such as the arXiv abstracts and the posts from the NVIDIA developer blog ship
+        instead as a catalog card that carries a title, a short blurb, and the source URL but leaves out
+        the full text. The agent surfaces that card and follows the link out to the source whenever it needs
+        more than the blurb offers. Because these entries are bulky and far less likely to be reused than a
+        glossary definition the cache earns little by holding them and the agent fetches them fresh on
+        demand.</p>
+      </div>
+    </div>
+    <figure style="margin:1.4em 0">
+      <div id="gx-delivery"></div>
+      <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">Vendored sources become a static catalog, then an in-memory cache, then ranked results without a live network call.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>How it stays current (and how you would fix it)</h2>
+    <p class="gx-lead">
+      A vendored corpus drifts away from its sources over time unless something actively keeps it
+      honest. That job belongs to a single script, <code>scripts/materials/pull_materials.py</code>, which is
+      written so that any drift it finds is surfaced to everyone at once and described in exactly
+      the same words.
+    </p>
+    <figure style="margin:1.4em 0">
+      <div id="gx-pipeline-doc"></div>
+      <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">The pull script fingerprints each source, and the same drift result appears in CLI, CI, and the validator screen.</figcaption>
+    </figure>
+    <p class="gx-lead" style="margin-top:1em">
+      The loop runs like this. A contributor (or the deploy build) runs the pull, and every source gets
+      fingerprinted in <code>_materials.json</code>. Passing <code>--check</code> re-fetches each source
+      and flags any drift or outage. That same status lands on the validation screen, reachable from the
+      site's landing page or reproduced locally with <code>python3 scripts/validation/validate_bundle.py</code>, and
+      it names the exact command to fix whatever broke. Nothing about the corpus is a moving target you
+      have to trust.
+    </p>
+  </section>
+
+  <section>
+    <h2>Run the search the agent runs</h2>
+    <p class="gx-lead">
+      The cell below shows the real pipeline behind one <code>web_search</code> call drawn as one node per
+      step. Edit the query in the first node and hit <strong>Run all</strong>. The catalog loads from cache
+      and every entry across both tiers gets scored together. The surviving top matches are then formatted
+      into the exact text block the model reads back with each match's tier marked alongside it. The scoring
+      node runs the same algorithm that <code>helpers.webSearch</code> uses. Change a weight and watch the
+      ranking move.
+    </p>
+    <div id="gx-pipeline"></div>
+  </section>
+
+  <section>
+    <h2>Call the functions, edit and run</h2>
+    <p class="gx-lead">
+      Two functions back the one tool contract. <code>webSearch</code> is the broad, ranked lookup over
+      the whole catalog the agent grounds answers in; <code>instantAnswer</code> is the narrow one that
+      returns a single glossary definition only when the query names a term. Both run key-less against
+      the cached catalog: edit the queries below and Run, then open the helpers tab to read each
+      function's real source, pulled live from <code>_shared.js</code> so it cannot drift from what runs.
+    </p>
+    <div id="gx-src-cell"></div>
+  </section>
+
+  <section>
+    <h2>Every material it can find · <span class="gx-stat" id="gx-tcount">…</span></h2>
+    <p class="gx-lead">
+      The list below is the full catalog that the ranking searches over. A <span class="gx-badge cached">cached</span>
+      entry carries its complete text inside the bundle and a <span class="gx-deep">deep</span> glossary term
+      brings its vendored article along too under <code>mats/glossary_raw/</code>, while an <span class="gx-badge on_demand">on_demand</span>
+      entry appears only as a card that links out to its source. Filter it to see what the agent could ground a claim in.
+    </p>
+    <input class="gx-filter" id="gx-filter" placeholder="filter by name, tag, blurb, tier, or kind…" spellcheck="false" autocomplete="off"/>
+    <div class="gx-table-wrap">
+      <table class="gx-data">
+        <thead><tr><th>Material</th><th>Tier</th><th>Kind</th><th>Tags</th><th>Blurb</th></tr></thead>
+        <tbody id="gx-rows"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script type="module">
+import { webSearch, instantAnswer, loadMaterialsCatalog, mountDiagram, mountCanvasFlow, mountRunCell } from "./scripts/_shared.js";
+
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const $ = (id) => document.getElementById(id);
+
+// ── The materials pipeline: web sources -> pull -> catalog -> cache -> search ──
+mountDiagram("#gx-delivery", {
+  title: "How the catalog reaches a search",
+  maxWidth: 1040,
+  boxW: 268,
+  boxH: 104,
+  gapX: 96,
+  rowGap: 76,
+  nodes: [
+    { id: "web",    label: "web sources",          kind: "env",     x: 0, y: 0, lines: ["glossary, arXiv, blog"] },
+    { id: "pull",   label: "pull_materials.py",    kind: "tool",    x: 1, y: 0, lines: ["fetch + fingerprint", "on build / on demand"] },
+    { id: "file",   label: "materials_index.json", kind: "data",    x: 1, y: 1, lines: ["cached + on-demand", "ships in the bundle"] },
+    { id: "cache",  label: "in-memory cache",      kind: "neutral", x: 2, y: 1, lines: ["fetched once"] },
+    { id: "search", label: "webSearch",            kind: "model",   x: 2, y: 2, lines: ["ranks both tiers", "no key, no network"] },
+  ],
+
+  edges: [
+    { from: "web",   to: "pull",   label: "vendor" },
+    { from: "pull",  to: "file",   label: "write" },
+    { from: "file",  to: "cache",  label: "fetch once" },
+    { from: "cache", to: "search", label: "every query" },
+  ],
+});
+
+// ── The control loop: pull -> fingerprint -> drift check -> validator screen ──
+mountDiagram("#gx-pipeline-doc", {
+  title: "Keeping the corpus honest",
+  maxWidth: 980,
+  boxW: 268,
+  boxH: 104,
+  gapX: 96,
+  rowGap: 76,
+  nodes: [
+    { id: "pull",  label: "pull",             kind: "tool",  x: 0, y: 0, lines: ["pull_materials.py", "rebase to the web"] },
+    { id: "prov",  label: "_materials.json",  kind: "data",  x: 1, y: 0, lines: ["url + sha256", "per source"] },
+    { id: "check", label: "--check",          kind: "tool",  x: 1, y: 1, lines: ["re-fetch + compare", "ok / drifted / unreachable"] },
+    { id: "screen",label: "validator screen", kind: "model", x: 2, y: 1, lines: ["names the source", "+ the fix command"] },
+  ],
+
+  edges: [
+    { from: "pull",  to: "prov",   label: "fingerprint" },
+    { from: "prov",  to: "check",  label: "compare" },
+    { from: "check", to: "screen", label: "report" },
+  ],
+});
+
+// ── The search pipeline, as an editable canvas flow (key-less; no model calls) ──
+mountCanvasFlow("#gx-pipeline", {
+  label: "materials search · query in, ranked entries out",
+  intro: "Each node is one real step web_search takes over the unified catalog. Edit the query, " +
+         "then Run all. No API key: this pipeline only loads a file and sorts it.",
+  edges: [
+    { from: "query", to: "load" },
+    { from: "load",  to: "rank" },
+    { from: "rank",  to: "format" },
+  ],
+  nodes: [
+    {
+      id: "query", icon: "🔎", title: "The query", x: 0, y: 0,
+      summary: "The text the agent passes to web_search. Edit it and rerun to see the ranking change. " +
+               "A short topical phrase beats a full question, because the catalog is keyed on names and tags.",
+      code: `state.query = "retrieval augmented generation";
+helpers.log("query:", state.query);
+return state.query;`,
+    },
+
+    {
+      id: "load", icon: "📚", title: "Load the cached catalog", x: 0, y: 1,
+      summary: "Fetch the shipped catalog: cached glossary terms plus on-demand materials, one list. " +
+               "The browser hits a same-origin static file with no key. After the first run the catalog " +
+               "is cached, so later queries are effectively free.",
+      code: `const r = await helpers.fetch("assets/materials_index.json");
+state.entries = (await r.json()).entries;
+const cached = state.entries.filter(e => e.tier === "cached").length;
+helpers.log(state.entries.length, "entries (" + cached + " cached, " + (state.entries.length - cached) + " on-demand)");
+return { entries: state.entries.length };`,
+    },
+
+    {
+      id: "rank", icon: "📊", title: "Score and rank every entry", x: 0, y: 2,
+      summary: "The exact scoring helpers.webSearch uses: an exact or substring name match ranks " +
+               "highest, then tag hits, then blurb hits. Cached and on-demand entries compete in the " +
+               "same ranking. Tweak a weight and watch the order move.",
+      code: `// Same scoring as helpers.webSearch (see "The functions, in full" below).
+function score(t, q) {
+  q = q.trim().toLowerCase();
+  if (!q) return 0;
+  const name  = (t.term  || "").toLowerCase();
+  const blurb = (t.blurb || "").toLowerCase();
+  const tags  = (t.tags  || []).map(x => String(x).toLowerCase());
+
+  let s = 0;
+  if (name === q) s += 100;
+  else if (name.includes(q) || q.includes(name)) s += 40;
+  for (const tok of q.split(/[^a-z0-9]+/).filter(Boolean)) {
+    if (name.includes(tok))              s += 12;
+    if (tags.some(g => g.includes(tok))) s += 6;
+    if (blurb.includes(tok))             s += 3;
+  }
+  return s;
+}
+
+state.ranked = state.entries
+  .map(t => ({ t, s: score(t, state.query) }))
+  .filter(x => x.s > 0)
+  .sort((a, b) => b.s - a.s)
+  .slice(0, 5);
+for (const { t, s } of state.ranked) helpers.log(String(s).padStart(4), "[" + t.tier + "]", t.term);
+return { hits: state.ranked.length };`,
+    },
+
+    {
+      id: "format", icon: "📤", title: "Format for the model", x: 0, y: 3,
+      summary: "Turn the ranked entries into the numbered text block the model receives as the tool " +
+               "result. Each line is marked cached or on-demand, so the model knows whether it has the " +
+               "full text or should rely on the linked source. If the block is empty, the agent is told " +
+               "to say it found nothing rather than answer from memory.",
+      code: `state.out = helpers.formatSearchResults({
+  source: "materials", query: state.query, unreachable: false,
+  count: state.ranked.length,
+  results: state.ranked.map(({ t }) => ({ title: t.term, body: t.blurb, href: t.url, tier: t.tier, kind: t.kind })),
+});
+helpers.log(state.out);
+return { chars: state.out.length };`,
+    },
+  ],
+});
+
+// Editable keyless cell: helpers expose webSearch and instantAnswer source.
+mountRunCell("#gx-src-cell", {
+  code: `// webSearch ranks the whole catalog; instantAnswer returns one term's definition.
+// Edit the queries and Run. Open the helpers tab above to read each one's real source.
+const hits = await helpers.webSearch("retrieval augmented generation");
+helpers.log("webSearch found " + hits.count + ":");
+helpers.log(helpers.formatSearchResults(hits));
+
+const card = await helpers.instantAnswer("deep agents");
+helpers.log("instantAnswer:", card);`,
+});
+
+// ── The catalog table ──────────────────────────────────────────────────────────
+let CATALOG = [];
+function renderTable(filter) {
+  const f = (filter || "").trim().toLowerCase();
+  const rows = CATALOG.filter((t) => !f
+    || (t.term || "").toLowerCase().includes(f)
+    || (t.blurb || "").toLowerCase().includes(f)
+    || (t.tier || "").toLowerCase().includes(f)
+    || (t.kind || "").toLowerCase().includes(f)
+    || (t.tags || []).some((g) => g.toLowerCase().includes(f)));
+  $("gx-rows").innerHTML = rows.map((t) => `
+    <tr>
+      <td class="term"><a href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.term)}</a>${t.deep ? '<span class="gx-deep">deep</span>' : ""}</td>
+      <td><span class="gx-badge ${esc(t.tier)}">${esc(t.tier)}</span></td>
+      <td>${esc(t.kind)}</td>
+      <td>${(t.tags || []).map((g) => `<span class="gx-tag">${esc(g)}</span>`).join(" ")}</td>
+      <td>${esc(t.blurb)}</td>
+    </tr>`).join("") || `<tr><td colspan="5" style="color:var(--tf);font-style:italic;padding:12px">No material matches that filter.</td></tr>`;
+}
+const debounce = (fn, ms) => { let h; return (...a) => { clearTimeout(h); h = setTimeout(() => fn(...a), ms); }; };
+
+(async function init() {
+  try {
+    const raw = await fetch("assets/materials_index.json");
+    const kb = Math.round((Number(raw.headers.get("content-length")) || (await raw.clone().text()).length) / 1024);
+    $("gx-size").textContent = kb + " KB";
+  } catch (_) { $("gx-size").textContent = "one static file"; }
+  CATALOG = await loadMaterialsCatalog();
+  const cached = CATALOG.filter((e) => e.tier === "cached").length;
+  $("gx-count").textContent = CATALOG.length;
+  $("gx-cached").textContent = cached;
+  $("gx-od").textContent = CATALOG.length - cached;
+  $("gx-tcount").textContent = CATALOG.length + " entries";
+  renderTable("");
+  $("gx-filter").addEventListener("input", debounce(() => renderTable($("gx-filter").value), 120));
+})();
+</script>
+</body>
+</html>

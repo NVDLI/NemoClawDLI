@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Workflows · Securing Agents</title>
+<link rel="stylesheet" href="styles/_style.css"/>
+<script src="vendor/highlight-11.10.0.min.js"></script>
+<link rel="stylesheet" href="vendor/codemirror-5.65.21.css"/>
+<link rel="stylesheet" href="vendor/codemirror-monokai-5.65.21.css"/>
+<script src="vendor/codemirror-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-xml-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-javascript-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-css-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-htmlmixed-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-python-5.65.21.js"></script>
+<style>
+  .pattern-card { background:var(--e2); border:1px solid var(--bd); border-radius:8px; padding:14px 18px; }
+  .pattern-card h3 { margin:0 0 6px; color:var(--gs); font-size:1.0rem; }
+  .pattern-card .when { color:var(--g); font-weight:600; font-size:.8rem; margin-bottom:6px; }
+  .pattern-card p { font-size:.86rem; color:var(--td); line-height:1.55; margin:0; }
+  .pattern-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:1em 0; }
+  @media (max-width:720px) { .pattern-grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="logo" href="index.html">NVIDIA · Securing Agents</a>
+  <nav id="nav"></nav>
+  <div class="spacer"></div>
+  <span class="key-pill" id="key-status" onclick="location.href='01a-loop.html?openKeyPanel=1'">…</span>
+</div>
+
+<main>
+  <div id="journey-map"></div>
+
+  <div class="hero">
+    <div class="eyebrow">Module 2 · Part A of 3</div>
+    <h1>The <span>Workflow</span> Agent</h1>
+    <p class="lead">
+      A single ReAct loop handles most one-shot tasks, but harder problems sometimes need
+      structure that decides work before the next tool result arrives. A <strong>workflow
+      agent</strong> means an agent system where your harness controls a workflow: a graph
+      of model calls, deterministic code steps, tool calls, and specialist loops. This shape
+      helps when sub-tasks that run in parallel can share results, when a plan can be written
+      before tools run, or when routing should follow a rule instead of the last observation.
+    </p>
+    <p>
+      The harness can scope a workflow around a model call, a deterministic step,
+      a specialist loop, or a group of parallel branches. At each boundary, it decides
+      what context crosses, what can branch, and which results feed the next pipeline
+      stage. Fan-out and fixed routing make that control visible without replacing the
+      ReAct loop from the previous page.
+    </p>
+  </div>
+
+  <!-- ── Part 1: ReAct vs ReWOO ───────────────────────────────────────────── -->
+  <h2>Two key patterns that differ in when the model decides</h2>
+
+  <div class="pattern-grid">
+    <div class="pattern-card">
+      <div class="when">REACTIVE · STEP-BY-STEP</div>
+      <h3>ReAct (Reason + Act)</h3>
+      <p>
+        At each step the model reads the latest observation before it picks an action
+        and runs a tool, then sizes up whatever came back and chooses again. The agent
+        <em>reacts</em> to whatever the previous tool call returned, so the path
+        through the tools takes shape as it runs. That makes ReAct strong when the
+        path depends on intermediate results and weak when many steps could have
+        run at once.
+        <br><br>
+        Paper: <a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">Yao et al., 2022</a>.
+      </p>
+    </div>
+    <div class="pattern-card">
+      <div class="when">DELIBERATIVE · PLAN-THEN-EXECUTE</div>
+      <h3>ReWOO (Reason Without Observation)</h3>
+      <p>
+        The model writes the full plan upfront in one LLM call before any tool runs at
+        all. A deterministic executor then runs every tool that the plan named, often in
+        parallel, and a second LLM call reads what came back to synthesize the results.
+        Because the plan never sees a tool result, the model "reasons without observation."
+        That makes ReWOO strong when the steps are independent and weak when later steps
+        need to react to earlier ones.
+        <br><br>
+        Paper: <a href="https://arxiv.org/abs/2305.18323" target="_blank" rel="noopener">Xu et al., 2023</a>.
+      </p>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin:1.4em 0">
+    <figure style="margin:0;flex:1 1 320px;max-width:430px">
+      <div class="fig-embed" data-figure-mode="fixed-white" data-svg-src="assets/figures/fig2_react.svg"
+           style="margin:0;background:var(--gfx-paper-surface,#fff);border:1px solid var(--gfx-line,#2a2a2a);border-radius:8px;padding:14px"></div>
+      <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.5em">ReAct interleaves a reasoning step with each tool call, reacting to every observation before deciding the next move.</figcaption>
+    </figure>
+    <figure style="margin:0;flex:1 1 320px;max-width:430px">
+      <div class="fig-embed" data-figure-mode="fixed-white" data-svg-src="assets/figures/fig2_rewoo.svg"
+           style="margin:0;background:var(--gfx-paper-surface,#fff);border:1px solid var(--gfx-line,#2a2a2a);border-radius:8px;padding:14px"></div>
+      <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.5em">ReWOO writes the full plan before any tool runs, executes the steps without re-asking the model, then synthesizes once.</figcaption>
+    </figure>
+  </div>
+
+  <div class="callout">
+    <strong>In practice, you can have both.</strong>
+    Many real systems borrow from each approach at once. The tools a ReAct loop calls
+    might internally run a planned, ReWOO-style pipeline, and a planner that lays its
+    work out in advance still needs sub-agents to execute each step, which are usually
+    ReAct loops in their own right. Compose these software components wherever their
+    strengths fit, reserving a Workflow Agent for tasks that split into independent workstreams.
+  </div>
+
+  <h2>When a single loop beats splitting into agents</h2>
+  <p>
+    Without independent workstreams, the coordination overhead of multi-agent
+    composition buys nothing, and one plain loop stays faster and easier
+    to debug.
+  </p>
+
+  <div class="callout warn">
+    <strong>The overhead tax in concrete terms.</strong>
+    Every agent boundary adds model-call latency and routing logic. It also creates another
+    source of malformed messages and replaces a readable timeline with a trajectory that
+    fans across workers.
+  </div>
+
+  <p>
+    That tax is fixed regardless of the task, so the question becomes whether the work
+    returns enough to cover it. A linear job that one prompt already handles will never
+    recoup the extra calls and the routing logic that they require. The split begins to
+    earn its keep only once the task itself carries the kind of structure that a single
+    loop has no choice but to flatten down into one timeline. Any one of the conditions
+    below makes the trade pay off.
+  </p>
+  <ul>
+    <li><strong>Specialization matters.</strong> Different workstreams need different system prompts, tools, or models. One agent forced into both roles degrades both.</li>
+    <li><strong>Parallelism is possible.</strong> Two workers run concurrently, where one agent could only run them in sequence. Three independent searches finish in the time of the slowest.</li>
+    <li><strong>Context bloat is real.</strong> A single agent doing everything accumulates 10000-token context. Specialists stay focused on their slice.</li>
+    <li><strong>Failure isolation helps.</strong> A crashed worker does not kill the whole task. The orchestrator retries, skips, or routes around it.</li>
+  </ul>
+
+  <!-- ── Part 3: A real ReWOO research pipeline ───────────────────────────── -->
+  <details class="learning-block" open data-learning-id="rewoo-glossary-pipeline" data-learning-tier="applied" data-learning-artifact="optional" data-localization-scope="en-shell">
+  <summary data-localization-scope="en"><span class="learning-scope">Applied · Pipeline</span><span class="learning-question">Run the full plan-execute-synthesize pipeline?</span></summary>
+  <div class="learning-block-body">
+  <h2>Running a ReWOO pipeline against the NVIDIA glossary</h2>
+
+  <p>
+    The cell below runs a ReWOO pipeline against the NVIDIA glossary, using
+    <code>helpers.webSearch</code> (the ranked glossary search you met in Module 1c) for every retrieval the plan calls for. The <a href="glossary.html">glossary explorer</a> shows the full index this searches and lets you run any query the planner might emit:
+  </p>
+  <p>
+    <code>Promise.all</code> is JavaScript's helper for starting several promises and waiting
+    until all of them finish. Here it is just the concurrency mechanism: it does not call
+    the model and it does not decide which searches to run.
+  </p>
+  <ol>
+    <li><strong>Planner.</strong> One schema-bound LLM call emits a JSON list of 3-5 search queries.</li>
+    <li><strong>Executor.</strong> Plain JavaScript. Every query runs concurrently via <code>Promise.all</code>, with no LLM calls at this stage.</li>
+    <li><strong>Synthesizer.</strong> A second LLM call reads every result and writes the brief, citing each search by index.</li>
+  </ol>
+  <p>
+    Two LLM calls total, plus N parallel glossary searches. Edit the research goal and
+    watch the planner's query list change.
+  </p>
+
+  <figure style="margin:1.4em 0">
+    <div id="cell-m2a-rewoo"></div>
+    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">The ReWOO pattern plans every tool call up front, runs them in parallel, then synthesizes in one final call. <a href="https://arxiv.org/abs/2305.18323" target="_blank" rel="noopener">Xu et al. (2023)</a>.</figcaption>
+  </figure>
+  </div>
+  </details>
+
+  <!-- ── Part 4: Schema-bound triage ──────────────────────────────────────── -->
+  <h2>Routing a ticket to one specialist with a fixed enum</h2>
+
+  <p>
+    Routing is a different shape of multi-agent in which a triage agent classifies the
+    input and hands it to one specialist. Because the classifier must emit one of a fixed
+    enum of categories, the output needs a tight contract. A <strong>fixed enum</strong>
+    is a closed list of allowed labels; if the model returns anything else, the router
+    should reject the route or retry under stricter instructions instead of guessing.
+    Each specialist downstream owns a narrow system prompt and does not need to see the
+    triage agent's reasoning.
+  </p>
+
+  <figure style="margin:1.4em 0">
+    <div class="fig-embed" data-svg-src="assets/figures/02a-routing-1.svg" style="aspect-ratio:760 / 214"></div>
+    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">The four-value enum picks exactly one specialist to handle the request.</figcaption>
+  </figure>
+
+  <div id="cell-m2a-triage"></div>
+
+  <!-- ── Part 5: Parallel specialists ─────────────────────────────────────── -->
+  <h2>Fanning one shared input out to specialists at once</h2>
+
+  <p>
+    The ReWOO pipeline was parallel by construction, since every query it planned ran
+    concurrently against the glossary. A more common parallel pattern fans one shared
+    input out to several specialists that each carry their own system prompt and all run
+    at once. In the trace, total wall time tracks the slowest specialist while the others
+    overlap inside that window, the Gantt chart shows each specialist's duration, and all
+    specialists share one web-search result so cost stays bounded.
+  </p>
+
+  <div id="cell-m2a-parallel"></div>
+
+  <!-- ── Part 6: Agent factories ──────────────────────────────────────────── -->
+  <details class="learning-block" open data-learning-id="specialist-factory" data-learning-tier="deep" data-learning-artifact="optional" data-learning-exercise="optional" data-localization-scope="en-shell">
+  <summary data-localization-scope="en"><span class="learning-scope">Deep · Factory</span><span class="learning-question">Factor repeated specialists into one declaration?</span></summary>
+  <div class="learning-block-body">
+  <h2>Declaring specialists from a factory instead of hand-writing each</h2>
+
+  <p>
+    Each of the four exercises above built a small agent by hand from the same few
+    pieces of boilerplate that production code should never have to retype for every new
+    specialist. Those pieces are a role label, a system prompt, a tool list, and an
+    invocation. The factory pattern parameterises those four moving parts, so you declare
+    specialists instead of writing them:
+  </p>
+  <ul>
+    <li><strong>Role.</strong> A short label, used for logs and routing.</li>
+    <li><strong>System prompt.</strong> The behaviour contract: what it does, what it refuses, and how it phrases its replies.</li>
+    <li><strong>Tools.</strong> The <a href="https://json-schema.org/" target="_blank" rel="noopener">JSON-Schema</a>-described functions it can call, if any.</li>
+    <li><strong>Invoke contract.</strong> A consistent shape (<code>specialist.run(input)</code>) that returns the final reply.</li>
+  </ul>
+  <p>
+    <a href="https://www.crewai.com/" target="_blank" rel="noopener">CrewAI</a>,
+    <a href="https://www.langchain.com/" target="_blank" rel="noopener">LangChain</a>, and
+    <a href="https://www.langchain.com/langgraph" target="_blank" rel="noopener">LangGraph</a>
+    all expose this same factory under names that vary by framework, whether
+    <code>Agent</code> or <code>create_agent</code> or a role/goal dataclass.
+    The cell below builds two specialists from the same four parameters, an
+    arithmetic tutor and a translator that both run on one input with their replies
+    rendered side by side.
+  </p>
+
+  <div id="cell-m2a-factory"></div>
+
+  <h2>Before you continue</h2>
+  <ol>
+    <li>The ReWOO planner above emits a JSON list of queries. What is the failure
+        mode if a later query needs a fact from an earlier query's result? Which of
+        the two patterns from the top of this page do you switch to?</li>
+    <li>The triage router has a fixed enum of categories. What should the
+        router do if the model emits a category that is not in the enum? Is the JSON
+        schema enough by itself, or do you also need application-side validation?</li>
+    <li>The factory exercise parameterises four things (role, system prompt, tools,
+        invoke). What would you add as a fifth parameter to prevent a specialist from
+        drifting into another specialist's domain when the input is ambiguous?</li>
+  </ol>
+
+  <div class="callout info" style="margin-top:2em">
+    <strong>The next two parts carry this composition idea forward.</strong> Part B
+    (Indices) points the same idea at corpora rather than at other agents so that a
+    knowledge layer becomes an agent wrapping a body of data behind a query interface.
+    Part C (Deep Agents) takes it further still, into a planner agent that dispatches
+    sub-agents in fresh contexts and persists their working state to a virtual filesystem.
+  </div>
+  </div>
+  </details>
+
+  <div class="references">
+    <h3>References</h3>
+    <ul>
+      <li><a href="https://arxiv.org/abs/2305.18323" target="_blank" rel="noopener">Xu et al., <em>ReWOO: Decoupling Reasoning from Observations</em> (2023)</a>. The planner / worker / solver decomposition this module's Workflow Agent implements.</li>
+      <li><a href="https://arxiv.org/abs/2305.04091" target="_blank" rel="noopener">Wang et al., <em>Plan-and-Solve Prompting</em> (2023)</a>. The simpler ancestor: a single LLM call writes a plan, the same LLM executes step-by-step. ReWOO splits planner from executor.</li>
+      <li><a href="https://arxiv.org/abs/2303.17651" target="_blank" rel="noopener">Madaan et al., <em>Self-Refine: Iterative Refinement with Self-Feedback</em> (2023)</a>. The pattern behind iterative multi-pass research: an agent critiques its own output and re-runs until a quality threshold is met.</li>
+      <li><a href="https://www.langchain.com/langgraph" target="_blank" rel="noopener">LangGraph</a>. The production framework that formalises the workflow / state-machine pattern this module sketches by hand.</li>
+    </ul>
+    <p class="references-note">Comprehensive list at <a href="04c-going-further.html#refs">Going Further · References</a>.</p>
+  </div>
+
+  <h2>Try it · the triage router, live</h2>
+  <p>
+    Ask a support question and the artifact classifies it into one category with a
+    single model call before it routes that ticket to the matching specialist's system
+    prompt and streams the answer back in that voice. It runs the same
+    classify-then-specialist pattern shown above. The categories here are a
+    customer-support set rather than the IT help-desk enum. Its four values are billing,
+    technical, account, and other. Only the category list changes when the domain
+    changes, while the routing mechanism underneath stays identical.
+  </p>
+  <div id="router-cell"></div>
+  <div id="router-artifact"></div>
+  <script type="module">
+    import { mountRunCell } from "./scripts/_shared.js";
+    mountRunCell("#router-cell", {
+      label: "the Try-it artifact, in code",
+      autorun: true,
+      code: `// This is the Try-it artifact. Each turn is two calls: one classify call that
+// returns a category word, then calls the matching specialist. Edit the routes and rerun.
+const SPECIALISTS = {
+  billing:   "You are a billing specialist. Answer only billing, payment, and refund questions, crisply.",
+  technical: "You are a technical support engineer. Answer setup, error, and how-to questions with concrete steps.",
+  account:   "You are an account specialist. Answer login, profile, and security questions.",
+  other:     "You are a general assistant. Answer the question helpfully and briefly.",
+};
+
+helpers.mountChatUI("#router-artifact", {
+  memory: true,
+  greeting: "Ask a support question (billing, a technical error, your account…). I classify it, route it to a specialist, and answer in that voice. Follow-ups keep the conversation; the 🧠 toggle clears it, and ✎ edit rewinds.",
+  models: [
+    { id: "nvidia/nemotron-3-nano-30b-a3b",    label: "Nemotron Nano 30B · fast" },
+    { id: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron Super 120B · stronger" },
+  ],
+  examples: ["I was double charged on my invoice", "The app crashes every time I log in", "How do I reset my password?", "I want a refund for last month's subscription", "The API returns 500 errors since this morning", "How do I update my email address?"],
+  respond: async (text, ctx) => {
+    const r = await helpers.chat({ messages: [
+      { role: "system", content: "Classify the user's question into ONE category and reply with ONLY that word.\\nbilling = payments, charges, double charges, refunds, invoices, subscriptions\\ntechnical = errors, bugs, setup, configuration, how-to\\naccount = login, password, profile, security, access\\nother = anything that fits none of the above" },
+      { role: "user", content: text }], model: ctx.model, max_tokens: 8196, signal: ctx.signal });   // nano reasons first; give it room to reach the word
+    const raw = ((r.choices && r.choices[0] && r.choices[0].message.content) || "").trim();
+    const cat = raw.toLowerCase().match(/billing|technical|account|other/);
+    const c = cat ? cat[0] : "other";
+    ctx.view.tool("routed → " + c, "classifier replied: " + (raw || "(empty)"));
+
+    const s = await helpers.chatStream({ messages: [{ role: "system", content: SPECIALISTS[c] }, ...(ctx.history || []), { role: "user", content: text }], model: ctx.model, max_tokens: 8196, signal: ctx.signal },
+      (t) => ctx.view.token(t), { onReasoning: (x) => ctx.view.reasoning(x) });
+    const inTok  = (r.usage && r.usage.prompt_tokens || 0)     + (s.usage && s.usage.prompt_tokens || 0);
+    const outTok = (r.usage && r.usage.completion_tokens || 0) + (s.usage && s.usage.completion_tokens || 0);
+    if (inTok || outTok) ctx.view.usage({ input: inTok, output: outTok, model: s.model });
+  },
+});
+helpers.log("rendered below. Edit the config and Run.");
+
+/* mountChatUI renders the panel; respond() makes one classify call and one answer call. */
+`,
+    });
+  </script>
+
+  <div class="foot-nav">
+    <a href="01c-tools.html">← Module 1c: Tools at Scale</a>
+    <a class="next" href="02b-rag.html">Module 2b: The Index Agent →</a>
+  </div>
+</main>
+
+<script type="module">
+import { buildNav, chat, chatStream, updateKeyPill, mountJourneyMap, mountCanvasFlow } from "./scripts/_shared.js";
+document.getElementById("nav").innerHTML = buildNav("02a-routing.html");
+const pill = document.getElementById("key-status");
+updateKeyPill(pill);
+mountJourneyMap("#journey-map", "2a");
+hljs.highlightAll();
+
+// Extract JSON even when the model wraps it in prose or fences.
+function extractJson(text) {
+  if (!text) return null;
+  let t = text.replace(/^\s*```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "");
+
+  const start = t.indexOf("{");
+  if (start < 0) return null;
+
+  let depth = 0, inStr = false, esc = false;
+  for (let i = start; i < t.length; i++) {
+    const c = t[i];
+
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === "\\") esc = true;
+      else if (c === '"') inStr = false;
+    } else {
+      if (c === '"') inStr = true;
+      else if (c === "{") depth++;
+      else if (c === "}" && --depth === 0) {
+        try { return JSON.parse(t.slice(start, i + 1)); } catch (_) { return null; }
+      }
+    }
+  }
+  return null;
+}
+window.__extractJson = extractJson;
+
+// ── Part 3: ReWOO research pipeline ──────────────────────────────────────────
+mountCanvasFlow("#cell-m2a-rewoo", {
+  label: "Plan parallel glossary research",
+  intro: "ReWOO writes the whole plan upfront, so every tool runs without re-asking the model and one synthesis call closes it out. Edit the goal in node 1 and rerun.",
+  edges: [
+    { from: "goal",         to: "planner"  },
+    { from: "planner",      to: "executor" },
+    { from: "executor",     to: "synth"    },
+  ],
+
+  nodes: [
+    {
+      id: "goal", icon: "🎯", title: "Research goal", x: 0, y: 0,
+      summary: "The research goal that drives the entire pipeline. Edit it and rerun to see how the planner generates a different set of queries and the synthesizer produces a different brief.",
+      code: `// TODO: Change the research goal and watch the planner rewrite its queries.
+state.goal = "How do retrieval-augmented generation, vector databases, and AI agents fit together?";
+// state.goal = "How do evaluation methods differ for retrieval and generation?";
+// state.goal = "When should an agent use a tool instead of answer directly?";
+return state.goal;
+`,
+    },
+
+    {
+      id: "planner", icon: "🧠", title: "Planner (LLM, JSON schema)", x: 0, y: 1,
+      summary: "A single model call constrained by response_format to emit a JSON object with a topic field and a queries array of three to five search strings. Because the output is schema-bound, the executor can iterate over it programmatically without any parsing guesswork.",
+      code: `// Define the planner output shape the model must fill in.
+state.PLAN_SCHEMA = {
+  name: "research_plan", strict: true,
+  schema: {
+    type: "object", additionalProperties: false,
+    properties: {
+      topic:   { type: "string" },
+      queries: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 5 },
+    },
+    required: ["topic", "queries"],
+  },
+};
+
+const plan = await helpers.chatStream({
+  messages: [
+    {
+      role: "system",
+      content: [
+        "You are a research planner.",
+        "Decompose the goal into 3-5 short, complementary search queries over the NVIDIA glossary.",
+        "Return JSON matching the schema.",
+      ].join(" "),
+    },
+    { role: "user",   content: state.goal },
+  ],
+  response_format: { type: "json_schema", json_schema: state.PLAN_SCHEMA },
+  max_tokens: 8196,
+});
+state.plan = (
+  window.__extractJson(plan.content)
+  || window.__extractJson(plan.reasoning)
+  || { topic: state.goal, queries: [state.goal] }
+);
+`,
+    },
+
+    {
+      id: "executor", icon: "🌐", title: "Executor (parallel searches)", x: 0, y: 2,
+      summary: "A purely deterministic step with no model calls. It fans out all of the planner's queries in parallel using Promise.all, so every search runs concurrently and the wall time tracks the slowest query while the rest overlap inside it.",
+      code: `// Call the model and time the routed response.
+const t0 = performance.now();
+state.searches = await Promise.all(
+  state.plan.queries.map(q => helpers.webSearch(q, { maxResults: 3 }))
+);
+const wall = ((performance.now() - t0) / 1000).toFixed(2);
+const unreachable = state.searches.filter(s => s.unreachable);
+if (unreachable.length) {
+  helpers.log("⚠ search service unreachable for", unreachable.length, "of", state.searches.length,
+    "queries; check your network connection and try again");
+}
+helpers.log("ran", state.searches.length, "searches concurrently in", wall + "s");
+
+// Show structured search hits so [search N] citations can be checked.
+helpers.log.details("searches", state.searches);
+state.context = state.searches.map((s, i) =>
+  \`### search \${i + 1}: "\${s.query}"\\n\${helpers.formatSearchResults(s)}\`
+).join("\\n\\n");
+return {
+  queries_run: state.searches.length,
+  wall_seconds: parseFloat(wall),
+  per_search_counts: state.searches.map(s => s.count || 0),
+};
+`,
+    },
+
+    {
+      id: "synth", icon: "🧠", title: "Synthesizer (LLM) + pipeline viz", x: 0, y: 3,
+      showCode: false,
+      summary: "The second and final model call reads the search results and writes the brief. The code is collapsed by default because most of the block builds the pipeline diagram from the plan and search counts.",
+      code: `// Reading guide: the first block is the actual synthesis call. The rest converts the
+// planner/search data into a diagram spec so the page can show the pipeline beside the answer.
+const synth = await helpers.chatStream({
+  messages: [
+    { role: "system", content: "You are a research synthesizer. Write a 4-6 sentence brief grounded in the sources. Cite as [search N] when referencing a result." },
+    { role: "user",   content: \`Topic: \${state.plan.topic}\\n\\n\${state.context}\` },
+  ],
+  max_tokens: 8196,
+});
+
+// Build a node/edge spec from the plan the planner emitted, then let helpers.viz.diagram lay it out and theme it.
+// The N search queries become N tool nodes in one grid row; the planner fans out to each, each fans back into the synthesizer.
+const queries = state.plan.queries || [];
+const N = queries.length;
+const nodes = [
+  { id: "goal",    label: "GOAL",      kind: "env",   x: Math.floor(N / 2), y: 0,
+    lines: [state.goal.slice(0, 44) + (state.goal.length > 44 ? "…" : "")] },
+  { id: "planner", label: "PLANNER",   kind: "agent", x: Math.floor(N / 2), y: 1,
+    lines: ["1 LLM call · " + N + " queries",
+            "topic = " + state.plan.topic.slice(0, 36) + (state.plan.topic.length > 36 ? "…" : "")] },
+  { id: "synth",   label: "SYNTHESIZER", kind: "agent", x: Math.floor(N / 2), y: 3,
+    lines: ["1 LLM call · reads all " + N, "writes the 4-6 sentence brief"] },
+];
+
+const edges = [];
+queries.forEach((q, i) => {
+  const s = state.searches?.[i] || { count: 0, query: q };
+  nodes.push({
+    id: "s" + i, label: "search " + (i + 1), kind: "tool", x: i, y: 2,
+    lines: [q.slice(0, 28) + (q.length > 28 ? "…" : ""), (s.count || 0) + " hits"],
+  });
+  edges.push({ from: "planner", to: "s" + i });
+  edges.push({ from: "s" + i, to: "synth" });
+});
+edges.unshift({ from: "goal", to: "planner" });
+
+helpers.viz.diagram({
+  title: "ReWOO pipeline · plan → parallel searches → synthesize",
+  nodes, edges,
+});
+
+return synth.content || synth.reasoning || "(empty)";
+`,
+    },
+  ],
+});
+
+
+// ── Part 4: Schema-bound triage ──────────────────────────────────────────────
+mountCanvasFlow("#cell-m2a-triage", {
+  label: "Route a ticket to a specialist",
+  intro: "A schema-bound first LLM call emits {category, priority, summary}, a plain-JS router selects a specialist system prompt from the category, and a second LLM call writes the response under that prompt.",
+  edges: [
+    { from: "ticket",    to: "triage" },
+    { from: "schema",    to: "triage" },
+    { from: "triage",    to: "router" },
+    { from: "router",    to: "specialist" },
+  ],
+
+  nodes: [
+    {
+      id: "ticket", icon: "👤", title: "User ticket", x: 0, y: 0,
+      summary: "The support ticket the triage agent will classify. Edit it to try different problem types and watch the router pick a different specialist each time.",
+      code: `// TODO: Try a billing or account-access ticket and watch the route change.
+state.ticket = "My laptop won't connect to the VPN. I've tried restarting and re-installing the client.";
+// state.ticket = "I was charged twice for the same subscription this month.";
+// state.ticket = "My account is locked after I changed phones.";
+return state.ticket;
+`,
+    },
+
+    {
+      id: "schema", icon: "📄", title: "Triage schema", x: 2, y: 0,
+      summary: "The JSON schema that locks the triage model's output to three fields: category (one of four fixed enum values), priority (high, medium, or low), and a one-line summary. Without this schema the router would need to parse free text and would break on any paraphrase; the enum makes routing fully deterministic.",
+      code: `// Define the support-ticket routing fields the model must return.
+state.TRIAGE_SCHEMA = {
+  name: "triage", strict: true,
+  schema: {
+    type: "object", additionalProperties: false,
+    properties: {
+      category: { type: "string", enum: ["network", "hardware", "software", "account"] },
+      priority: { type: "string", enum: ["high", "medium", "low"] },
+      summary:  { type: "string" },
+    },
+    required: ["category", "priority", "summary"],
+  },
+};
+
+return state.TRIAGE_SCHEMA.schema.properties.category.enum;
+`,
+    },
+
+    {
+      id: "triage", icon: "🧠", title: "Triage (LLM)", x: 1, y: 1,
+      summary: "The first model call, constrained by response_format to emit the triage schema. The extractJson helper is used rather than a raw JSON.parse because reasoning models sometimes wrap JSON in markdown fences or place it inside the reasoning channel. This step needs to succeed reliably in all of those cases.",
+      code: `// Send the prepared messages and stream the model response.
+const t = await helpers.chatStream({
+  messages: [
+    {
+      role: "system",
+      content: [
+        "You are a help desk triage agent.",
+        "Classify the ticket into one category: network, hardware, software, or account.",
+        "Assign priority and restate the problem in one line.",
+      ].join(" "),
+    },
+    { role: "user",   content: state.ticket },
+  ],
+  response_format: { type: "json_schema", json_schema: state.TRIAGE_SCHEMA },
+  max_tokens: 8196,
+});
+
+state.classification = window.__extractJson(t.content) || window.__extractJson(t.reasoning);
+if (!state.classification) throw new Error("could not parse triage JSON; would fall back to a catch-all in production");
+return state.classification;
+`,
+    },
+
+    {
+      id: "router", icon: "🔀", title: "Router (plain JS)", x: 1, y: 2,
+      summary: "A plain JavaScript lookup with no model call. It reads the category field from the triage result and selects the matching specialist system prompt, which is the only thing that changes between specialists. Keeping this step code-only means it cannot hallucinate a route.",
+      code: `// Register the specialist prompts this router can choose.
+const SPECIALISTS = {
+  network:  "You are a network support specialist. Give 3-5 concise, numbered troubleshooting steps for the network issue.",
+  hardware: "You are a hardware support specialist. Give 3-5 concise, numbered troubleshooting steps for the hardware problem.",
+  software: "You are a software support specialist. Give 3-5 concise, numbered steps to resolve the software issue.",
+  account:  "You are an account support specialist. Give 3-5 clear, numbered steps for account access and permission issues.",
+};
+state.specialistPrompt = SPECIALISTS[state.classification.category] || SPECIALISTS.software;
+return { picked: state.classification.category };
+`,
+    },
+
+    {
+      id: "specialist", icon: "🧠", title: "Specialist (LLM)", x: 1, y: 3,
+      summary: "The second model call, running under whichever specialist system prompt the router selected. Because each specialist prompt is narrow and category-specific, the model never has to hedge between support domains. It answers as if that is the only kind of problem it handles.",
+      code: `// Send the prepared messages and stream the model response.
+const r = await helpers.chatStream({
+  messages: [
+    { role: "system", content: state.specialistPrompt },
+    { role: "user",   content: state.ticket },
+  ],
+  max_tokens: 8196,
+});
+return r.content || r.reasoning || "(empty)";
+`,
+    },
+  ],
+});
+
+// ── Part 5: Parallel specialists ─────────────────────────────────────────────
+mountCanvasFlow("#cell-m2a-parallel", {
+  label: "Fan out one input to specialists",
+  intro: "A single shared search result fans out to three specialists with different system prompts that Promise.all dispatches concurrently, so the total wall time tracks the slowest specialist rather than the sum.",
+  edges: [
+    { from: "topic",    to: "search" },
+    { from: "search",   to: "parallel" },
+    { from: "parallel", to: "summary" },
+  ],
+
+  nodes: [
+    {
+      id: "topic", icon: "👤", title: "Topic", x: 0, y: 0,
+      summary: "The question that all three specialists will receive. Because every specialist reads the same input, you can compare their outputs directly and see how the system prompt alone shapes the response.",
+      code: `// TODO: Ask a new topic and compare how each specialist frames it.
+state.topic = "Why does the transformer architecture need positional encoding?";
+// state.topic = "When is retrieval more useful than fine-tuning?";
+// state.topic = "How should an agent decide whether to call a tool?";
+return state.topic;
+`,
+    },
+
+    {
+      id: "search", icon: "🌐", title: "Shared search (1 call)", x: 0, y: 1,
+      summary: "A single web search whose results are shared across all three specialists. Running it once and fanning the output out keeps the cost bounded regardless of how many specialists you add downstream.",
+      code: `// Fetch evidence the specialists will use for grounded answers.
+state.search  = await helpers.webSearch(state.topic, { maxResults: 4 });
+state.context = helpers.formatSearchResults(state.search);
+// Share one search across specialists so their claims trace to the same sources.
+helpers.log.details("search", state.search);
+return { count: state.search.count || 0, unreachable: !!state.search.unreachable };
+`,
+    },
+
+    {
+      id: "parallel", icon: "⚡", title: "Three specialists · Promise.all", x: 0, y: 2,
+      summary: "Three model calls dispatched simultaneously with Promise.all, each under its own system prompt. Total wall time tracks the slowest specialist while the other two overlap inside that window. That gap widens as you add more specialists or as individual calls get slower.",
+      code: `// Build one reusable specialist wrapper around a prompt and tools.
+async function specialist(label, systemPrompt) {
+  const t0 = performance.now();
+  const s = await helpers.chatStream({
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user",   content: \`Topic: \${state.topic}\\n\\nSources:\\n\${state.context}\\n\\nWrite your version.\` },
+    ],
+    max_tokens: 8196,
+  }, null);
+  return { label, content: s.content || s.reasoning || "(empty)", dt: (performance.now() - t0) / 1000 };
+}
+
+const t0 = performance.now();
+state.specialists = await Promise.all([
+  specialist("Technical · ML engineer",       "You are explaining to an ML engineer. Use precise terms (embedding, sinusoidal, rotary). 2-3 sentences."),
+  specialist("Simple · non-technical reader", "You are explaining to a non-technical reader. No jargon, one concrete analogy. 2-3 sentences."),
+  specialist("Critic · what's missing",       "You are a critic. Name one thing the sources leave out or oversimplify. 2-3 sentences."),
+]);
+state.wall = (performance.now() - t0) / 1000;
+return state.specialists.map(s => ({ label: s.label, wall_s: s.dt.toFixed(2), preview: s.content.slice(0, 200) }));
+`,
+    },
+
+    {
+      id: "summary", icon: "📊", title: "Timing Gantt + speedup", x: 0, y: 3,
+      summary: "Renders a Gantt bar chart showing each specialist's duration alongside the total wall-clock window. This makes the concurrency benefit concrete: the three bars fit inside a dashed window that is shorter than their combined length.",
+      code: `// Compare the routed work against a serial baseline.
+const serial = state.specialists.reduce((s, x) => s + x.dt, 0);
+
+// Draw worker, serial-total, wall-clock, and speedup bars from the same timings.
+helpers.viz.ganttBars(
+  state.specialists.map(s => ({ label: s.label.split(" · ")[0], dt: s.dt })),
+  state.wall,
+  "Three specialists · wall clock vs serial total",
+);
+
+return {
+  total_wall_s:           state.wall.toFixed(2),
+  max_specialist_wall_s:  Math.max(...state.specialists.map(s => s.dt)).toFixed(2),
+  serial_cost_s:          serial.toFixed(2),
+  parallel_speedup:       (serial / state.wall).toFixed(2) + "x",
+  note:                   "See the Gantt chart in the cell's log area: three bars (specialists) inside a dashed wall-clock window.",
+};
+`,
+    },
+  ],
+});
+
+// ── Part 6: Agent factory ────────────────────────────────────────────────────
+mountCanvasFlow("#cell-m2a-factory", {
+  label: "Build specialists from a factory",
+  intro: "The factory function takes (role, systemPrompt, tools) and returns a callable specialist, and two specialists built from it run on the same input.",
+  edges: [
+    { from: "factory",     to: "specialists" },
+    { from: "specialists", to: "run" },
+  ],
+
+  nodes: [
+    {
+      id: "factory", icon: "🏭", title: "Define the factory", x: 0, y: 0,
+      summary: "Defines the factory function that closes over a role, a system prompt, and an optional tools list, and returns a callable object with a run method. Every specialist built from this factory has the same internal loop; only the three parameters you pass in change its behaviour.",
+      code: `// Build one reusable specialist wrapper around a prompt and tools.
+state.createSpecialist = function({ role, systemPrompt, tools = [] }) {
+  return {
+    role,
+    async run(input) {
+      const messages = [
+        { role: "system", content: systemPrompt },
+        { role: "user",   content: input },
+      ];
+
+      const s = await helpers.chatStream({
+        messages,
+        tools: tools.length ? tools : undefined,
+        max_tokens: 8196,   // reasoning model: leave room to think AND emit the tool call / answer
+      });
+      return {
+        role,
+        finish_reason: s.finish_reason,
+        reply:         (s.content || s.reasoning || "").trim(),
+      };
+    },
+  };
+};
+
+helpers.log("factory ready: createSpecialist({ role, systemPrompt, tools })");
+return { factory: "createSpecialist" };
+`,
+    },
+
+    {
+      id: "specialists", icon: "👥", title: "Build two specialists", x: 0, y: 1,
+      summary: "Two specialists stamped out from the same factory, differing only in their role label and system prompt. Neither needs tools for this exercise, but in production you would pass a distinct tools array to each one so its capabilities match its domain.",
+      code: `// Instantiate one specialist with its own role, prompt, and tools.
+state.arithmetician = state.createSpecialist({
+  role: "arithmetician",
+  systemPrompt:
+    "You are an arithmetic tutor. For any math question, show your work in one or two short steps and end with FINAL: <integer>. Refuse non-math questions politely.",
+});
+
+state.translator = state.createSpecialist({
+  role: "translator",
+  systemPrompt: [
+    "You translate the user's input from any language into French,",
+    "then back into the original language.",
+    "Output exactly two lines: 'FR: <french>' and 'BACK: <original-language>'.",
+    "Refuse non-translation requests politely.",
+  ].join(" "),
+});
+
+helpers.log("built 2 specialists ·", state.arithmetician.role, "·", state.translator.role);
+return { specialists: [state.arithmetician.role, state.translator.role] };
+`,
+    },
+
+    {
+      id: "run", icon: "🚀", title: "Run both on the same input", x: 0, y: 2,
+      summary: "Sends the same input to both specialists concurrently and renders their replies side by side. The factory body is identical for both, so any divergence in the two responses traces back to their system prompts, and the side-by-side view lets you spot that divergence at a glance.",
+      code: `// TODO: Give both specialists a new translation-and-arithmetic request.
+state.input = "Translate 'thirty-seven times eleven' and then evaluate the arithmetic.";
+// state.input = "Translate 'the square root of one hundred forty-four' and solve it.";
+// state.input = "Evaluate twenty-five times sixteen, then translate the result into French.";
+helpers.log("input:", state.input);
+
+const [arithRes, transRes] = await Promise.all([
+  state.arithmetician.run(state.input),
+  state.translator.run(state.input),
+]);
+
+helpers.log("[" + arithRes.role + "]", arithRes.reply.slice(0, 200));
+helpers.log("[" + transRes.role + "]", transRes.reply.slice(0, 200));
+
+// Wrap replies before helpers.viz.sideBySide renders the two columns.
+const wrap = (text, width = 52) => {
+  const out = [];
+  for (const para of String(text).split(/\\n+/)) {
+    let line = "";
+    for (const w of para.split(/\\s+/)) {
+      if (line && (line.length + 1 + w.length) > width) { out.push(line); line = w; }
+      else line = line ? line + " " + w : w;
+    }
+    if (line) out.push(line);
+  }
+  return out.slice(0, 8);
+};
+
+helpers.viz.sideBySide(
+  wrap(arithRes.reply),
+  wrap(transRes.reply),
+  { leftTitle: arithRes.role, rightTitle: transRes.role,
+    footer: "Same factory · two instances · same input" },
+);
+
+return { arithmetician: arithRes.reply.slice(0, 200), translator: transRes.reply.slice(0, 200) };
+`,
+    },
+  ],
+});
+</script>
+</body>
+</html>

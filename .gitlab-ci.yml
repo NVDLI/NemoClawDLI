@@ -1,0 +1,7 @@
+# This root is intentionally inert and exact. Add repository tests under tests/ and
+# register them in the release gate. Delivery, SCA, and internal privileged operations live in
+# exact owner-gated modules.
+include:
+  - local: "/.gitlab/ci/core.yml"
+  - local: "/.gitlab/ci/sca.yml"
+  - local: "/.gitlab/ci/privileged.yml"

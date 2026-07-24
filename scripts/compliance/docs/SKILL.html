@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>scripts/compliance/docs - release readiness</title>
+<script type="application/json" id="skill-meta">
+{
+  "schema": "dir-skill/1.0",
+  "node_type": "directory-explorer",
+  "title": "scripts/compliance/docs release readiness",
+  "source_dir": "scripts/compliance/docs/",
+  "summary": "Release-safe compliance guidance, source inventory, and vendor policy for Apache-2.0 publication preparation. This directory intentionally avoids internal process links and private system names.",
+  "related": [
+    "scripts/compliance/docs/open_source_readiness.md",
+    "scripts/compliance/docs/sbom_generation.md",
+    "scripts/compliance/docs/sbom_evidence.json",
+    "scripts/compliance/docs/ci_sbom_evidence.json",
+    "scripts/compliance/docs/document_sources.json",
+    "scripts/compliance/docs/browser_vendor_exceptions.json",
+    "scripts/compliance/docs/vendor_policy.md",
+    "scripts/compliance/docs/source_inventory.json",
+    "scripts/compliance/SKILL.html"
+  ],
+  "explorer": "../../../web/_skill_explorer.js"
+}
+</script>
+<script type="application/json" id="explorer-config">
+{
+  "title": "scripts/compliance/docs - release readiness",
+  "summary": "Release-safe process docs for scope, licensing, vendor ingestion, execution evidence, maintenance, contribution terms, and security review. Use with scripts/compliance/source_gate.py before adding new material.",
+  "ties": [
+    "build"
+  ],
+  "nav": {
+    "home": "../../../web/index.html",
+    "up": {
+      "label": "scripts/compliance",
+      "href": "../SKILL.html"
+    }
+  },
+  "files": [
+    {
+      "path": "open_source_readiness.md",
+      "role": "release checklist",
+      "desc": "Release-safe workflow for preparing course material for external publication review."
+    },
+    {
+      "path": "sbom_generation.md",
+      "role": "SBOM runbook",
+      "desc": "Exact browser, Python-tool, source-tree, checksum, and attachment commands."
+    },
+    {
+      "path": "sbom_evidence.json",
+      "role": "SBOM evidence catalog",
+      "desc": "Maps distributed and CI-generated software scopes to immutable component evidence."
+    },
+    {
+      "path": "ci_sbom_evidence.json",
+      "role": "staged CI evidence links",
+      "desc": "A source-tree unavailable marker that Pages replaces only with verified artifacts from the exact pipeline commit."
+    },
+    {
+      "path": "browser_vendor_exceptions.json",
+      "role": "browser modification exception",
+      "desc": "The exact, sole LangChain browser interoperability transformation permitted by the source gate."
+    },
+    {
+      "path": "vendor_policy.md",
+      "role": "vendor policy",
+      "desc": "Where material belongs and what provenance is required before new sources are committed."
+    },
+    {
+      "path": "source_inventory.json",
+      "role": "machine inventory",
+      "desc": "Inputs consumed by scripts/compliance/source_gate.py."
+    },
+    {
+      "path": "document_sources.json",
+      "role": "document source evidence",
+      "desc": "Official-source paper licenses, paper authors, NVIDIA bylines, and repository-item mappings."
+    }
+  ],
+  "related": [
+    {
+      "label": "source gate",
+      "href": "../SKILL.html"
+    },
+    {
+      "label": "contribution terms",
+      "href": "../../../CONTRIBUTING.md"
+    }
+  ]
+}
+</script>
+<style data-skill-static="1">
+.skill-static{padding:24px clamp(18px,4vw,44px);border-bottom:1px solid #2a2a2a;background:#0d0d0d;color:#f2f2f2;font:15px/1.55 system-ui,sans-serif}
+.skill-static a{color:#76b900}.skill-static h1{margin:.1em 0 .25em;color:#76b900;font-size:1.65rem}.skill-static h2{font-size:1.02rem;margin:1.2rem 0 .45rem}.skill-static p{max-width:76rem;color:#b0b0b0}.skill-list{display:grid;grid-template-columns:1fr;max-width:76rem;margin:.7rem 0}.skill-link{display:grid;grid-template-columns:minmax(180px,280px) 1fr;gap:12px;border-top:1px solid #2a2a2a;padding:9px 4px;text-decoration:none}.skill-link:last-child{border-bottom:1px solid #2a2a2a}.skill-link b{display:block;color:#aee23a;margin-bottom:4px}.skill-link span{color:#b0b0b0;font-size:.9rem}.skill-note{border-left:3px solid #76b900;background:rgba(118,185,0,.08);padding:10px 13px;margin:.8rem 0;color:#ddd}.skill-nav{display:flex;gap:12px;flex-wrap:wrap;margin:.8rem 0}.skill-nav a{border:1px solid #2a2a2a;border-radius:999px;padding:5px 10px;text-decoration:none}
+@media(max-width:700px){.skill-link{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<section class="skill-static" aria-labelledby="skill-title">
+  <header data-skill-header="1">
+<nav class="skill-nav" aria-label="Skill navigation"><a href="../../../web/index.html">Home</a><a href="../SKILL.html">scripts/compliance</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../../SKILL.html">Repository map</a></nav>
+</header>
+  <h1 id="skill-title">scripts/compliance/docs release readiness</h1>
+  <p>Release-safe process docs live here so source governance stays with the scripts that enforce it. These files avoid private process links and describe contributor-facing requirements only.</p>
+  <div class="skill-note">Use these docs with <code>python3 scripts/compliance/source_gate.py</code> before adding assets, mats, datasets, cached references, or copied examples.</div>
+  <h2>Executable checks</h2>
+  <div class="skill-note"><code>python3 scripts/compliance/source_gate.py</code> checks the inventory before review.</div>
+  <h2>Linkage map</h2>
+  <div class="skill-list">
+    <a class="skill-link" href="open_source_readiness.md"><b>open_source_readiness.md</b><span>Release checklist and review evidence.</span></a>
+    <a class="skill-link" href="sbom_generation.md"><b>sbom_generation.md</b><span>Exact SBOM generation and attachment procedure.</span></a>
+    <a class="skill-link" href="sbom_evidence.json"><b>sbom_evidence.json</b><span>Distribution-aware links to committed and CI-generated SBOM evidence.</span></a>
+    <a class="skill-link" href="ci_sbom_evidence.json"><b>ci_sbom_evidence.json</b><span>Commit-bound staging links for raw and resolved CI SBOM artifacts.</span></a>
+    <a class="skill-link" href="browser_vendor_exceptions.json"><b>browser_vendor_exceptions.json</b><span>The machine-enforced reason and limits for the sole LangChain browser transformation.</span></a>
+    <a class="skill-link" href="vendor_policy.md"><b>vendor_policy.md</b><span>Source placement, allowed material, and provenance rules.</span></a>
+    <a class="skill-link" href="source_inventory.json"><b>source_inventory.json</b><span>Machine-readable inventory consumed by the source gate.</span></a>
+    <a class="skill-link" href="document_sources.json"><b>document_sources.json</b><span>Reviewed arXiv license and NVIDIA author evidence.</span></a>
+  </div>
+  <h2>Interactive explorer</h2>
+  <p>The explorer below opens the policy files and verifies documented paths against the repository tree.</p>
+</section>
+<div id="explorer"></div>
+<noscript>
+  <h1>scripts/compliance/docs release readiness</h1>
+  <ul>
+    <li><a href="open_source_readiness.md">open_source_readiness.md</a></li>
+    <li><a href="sbom_generation.md">sbom_generation.md</a></li>
+    <li><a href="sbom_evidence.json">sbom_evidence.json</a></li>
+    <li><a href="ci_sbom_evidence.json">ci_sbom_evidence.json</a></li>
+    <li><a href="browser_vendor_exceptions.json">browser_vendor_exceptions.json</a></li>
+    <li><a href="vendor_policy.md">vendor_policy.md</a></li>
+    <li><a href="source_inventory.json">source_inventory.json</a></li>
+    <li><a href="document_sources.json">document_sources.json</a></li>
+  </ul>
+</noscript>
+<script src="../../../web/_skill_explorer.js"></script>
+</body>
+</html>

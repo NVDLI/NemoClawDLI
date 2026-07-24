@@ -1,0 +1,64 @@
+{
+  "schema": "dli-interface-inventory/1",
+  "course": "nemoclaw",
+  "validation_profile": [
+    "browser-course",
+    "editable-code-cells",
+    "interactive-diagrams",
+    "openclaw-client",
+    "remote-model-client"
+  ],
+  "discovery": {
+    "html": "all",
+    "mount_calls": "all",
+    "markers": "all"
+  },
+  "factory_profiles": {
+    "mountAgentChat": "streaming-chat",
+    "mountCanvasFlow": "ordered-flow",
+    "mountChatUI": "streaming-chat",
+    "mountClawProbe": "runtime-probe",
+    "mountConsole": "terminal-console",
+    "mountDiagram": "interactive-diagram",
+    "mountGwRecover": "ordered-flow",
+    "mountJourneyMap": "course-progress",
+    "mountKeyPanel": "credential-controls",
+    "mountModelEndpointProbe": "model-probe",
+    "mountOpenClawCli": "gateway-console",
+    "mountPolicyMap": "policy-map",
+    "mountRunCell": "editable-code-cell"
+  },
+  "factory_mount_probes": {
+    "mountPolicyMap": {
+      "mode": "mount-target",
+      "module": "scripts/_openshell.js",
+      "export": "mountPolicyMap",
+      "argument": {}
+    }
+  },
+  "marker_profiles": {
+    "scenario-picker": "scenario-picker"
+  },
+  "form_factors": {
+    "course-progress": {"states": ["ready", "current"], "authority": "none"},
+    "credential-controls": {"states": ["empty", "ready", "failed"], "authority": "learner-secret"},
+    "editable-code-cell": {"states": ["ready", "running", "stopped", "succeeded", "failed", "reset"], "authority": "bounded-browser"},
+    "gateway-console": {"states": ["blocked", "ready", "running", "stopped", "succeeded", "failed"], "authority": "openclaw-operator"},
+    "interactive-diagram": {"states": ["ready", "selected"], "authority": "none"},
+    "model-probe": {"states": ["ready", "blocked", "running", "succeeded", "failed"], "authority": "learner-model"},
+    "ordered-flow": {"states": ["blocked", "ready", "running", "stopped", "succeeded", "failed", "reset"], "authority": "bounded-browser"},
+    "policy-map": {"states": ["empty", "ready", "selected", "failed"], "authority": "openclaw-operator"},
+    "runtime-probe": {"states": ["ready", "blocked", "running", "succeeded", "failed"], "authority": "openclaw-operator"},
+    "scenario-picker": {"states": ["ready", "selected"], "authority": "none"},
+    "streaming-chat": {"states": ["blocked", "ready", "running", "stopped", "succeeded", "failed"], "authority": "bounded-browser"},
+    "terminal-console": {"states": ["blocked", "ready", "running", "stopped", "succeeded", "failed"], "authority": "openclaw-operator"}
+  },
+  "live_capabilities": [
+    "model-request",
+    "model-stream",
+    "openclaw-chat",
+    "openclaw-cron",
+    "openclaw-gateway",
+    "operator-terminal"
+  ]
+}

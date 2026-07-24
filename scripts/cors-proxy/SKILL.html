@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CORS relay contracts · explore</title>
+
+<script type="application/json" id="skill-meta">
+{
+  "schema": "dir-skill/1.0",
+  "node_type": "directory-explorer",
+  "title": "CORS relay contracts",
+  "source_dir": "scripts/cors-proxy/",
+  "summary": "Hosted relays used by the LMS/static iframe and Brev launchable paths. Main browser traffic can call build.nvidia.com directly. This directory keeps compact teaching references and a deployable, history-free middleware projection.",
+  "related": [
+    "scripts/cors-proxy/cors-proxy-worker-build.js",
+    "scripts/cors-proxy/cors-proxy-worker-openclaw.js",
+    "scripts/cors-proxy/deployable/README.md"
+  ],
+  "explorer": "../../web/_skill_explorer.js"
+}
+</script>
+
+<script type="application/json" id="explorer-config">
+{
+  "title": "CORS relay contracts",
+  "summary": "The compact workers explain the browser contract. The deployable child directory contains the parameterized Lambda, CloudFront, generic infrastructure-template, test, and smoke-test projection. This repository publishes source but does not operate a relay deployment.",
+  "nav": {
+    "home": "../../web/index.html",
+    "up": {
+      "label": "scripts",
+      "href": "../SKILL.html"
+    }
+  },
+  "files": [
+    {
+      "path": "cors-proxy-worker-build.js",
+      "role": "model relay reference",
+      "desc": "Reference behavior for the iframe-host relay to build.nvidia.com. It reflects request origins for CORS and forwards X-BILLING-INVOKE-ORIGIN; the hosted endpoint is maintained separately.",
+      "bytes": 1933
+    },
+    {
+      "path": "cors-proxy-worker-openclaw.js",
+      "role": "launchable relay reference",
+      "desc": "Reference behavior for the NemoClaw launchable relay. It restricts upstream hosts to the approved Cloudflare Access and Pomerium Brev families and describes the required HTTP and WebSocket boundary.",
+      "bytes": 3481
+    }
+  ],
+  "tour": [
+    {
+      "title": "Iframe path, not default runtime",
+      "file": "cors-proxy-worker-build.js",
+      "lines": [
+        3,
+        12
+      ],
+      "note": "The course runtime can opt into this worker for iframe hosts; direct API calls remain available in main."
+    },
+    {
+      "title": "Reference CORS behavior",
+      "file": "cors-proxy-worker-build.js",
+      "lines": [
+        17,
+        34
+      ],
+      "note": "The reference reflects the request origin. The hosted deployment owns its origin policy."
+    },
+    {
+      "title": "Launchable host and provider check",
+      "file": "cors-proxy-worker-openclaw.js",
+      "lines": [
+        21,
+        28
+      ],
+      "note": "The relay accepts only the approved Brev host families and rejects a provider that does not match its target host."
+    },
+    {
+      "title": "Access-session handling",
+      "file": "cors-proxy-worker-openclaw.js",
+      "lines": [
+        30,
+        40
+      ],
+      "note": "Fetch callers provide neutral provider and session headers. Browser WebSocket callers use equivalent query fields because WebSocket constructors cannot set headers. The relay removes those fields and creates only CF_Authorization for Cloudflare Access or X-Pomerium-Authorization for Pomerium. WebSocket upgrades return the upstream 101 response directly and pin Origin to http://localhost:8088 for the OpenClaw gateway allowlist."
+    }
+  ],
+  "related": [
+    {
+      "label": "where the course uses it: Kickstart",
+      "href": "../../web/nemoclaw/03a-kickstart.html"
+    }
+  ]
+}
+</script>
+<style data-skill-static="1">
+.skill-static{padding:24px clamp(18px,4vw,44px);border-bottom:1px solid #2a2a2a;background:#0d0d0d;color:#f2f2f2;font:15px/1.55 system-ui,sans-serif}
+.skill-static a{color:#76b900}.skill-static h1{margin:.1em 0 .25em;color:#76b900;font-size:1.65rem}.skill-static h2{font-size:1.02rem;margin:1.2rem 0 .45rem}.skill-static p{max-width:76rem;color:#b0b0b0}.skill-list{display:grid;grid-template-columns:1fr;max-width:76rem;margin:.7rem 0}.skill-link{display:grid;grid-template-columns:minmax(180px,280px) 1fr;gap:12px;border-top:1px solid #2a2a2a;padding:9px 4px;text-decoration:none}.skill-link:last-child{border-bottom:1px solid #2a2a2a}.skill-link b{display:block;color:#aee23a;margin-bottom:4px}.skill-link code,.skill-cmd code{font-family:ui-monospace,Consolas,monospace}.skill-link span{color:#b0b0b0;font-size:.9rem}.skill-cmds{display:grid;gap:8px;margin:.7rem 0}.skill-cmd{display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:8px;align-items:center;border:1px solid #2a2a2a;border-radius:8px;background:#111;padding:9px 11px}.skill-cmd b{color:#aee23a}.skill-cmd code{display:block;overflow:auto;white-space:nowrap;color:#f2f2f2}.skill-note{border-left:3px solid #76b900;background:rgba(118,185,0,.08);padding:10px 13px;margin:.8rem 0;color:#ddd}.skill-nav{display:flex;gap:12px;flex-wrap:wrap;margin:.8rem 0}.skill-nav a{border:1px solid #2a2a2a;border-radius:999px;padding:5px 10px;text-decoration:none}.skill-nav a:hover{border-color:#76b900}@media(max-width:700px){.skill-cmd{grid-template-columns:1fr}.skill-static{padding:18px}.skill-link{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<section class="skill-static" aria-labelledby="skill-title">
+  <header data-skill-header="1">
+<nav class="skill-nav" aria-label="Skill navigation"><a href="../../web/index.html">Home</a><a href="../SKILL.html">scripts</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../SKILL.html">Repository map</a></nav>
+</header>
+  <h1 id="skill-title">CORS relay contracts</h1>
+  <p>The compact workers define the browser contract expected from model and NemoClaw relays. The launchable relay binds each Cloudflare Access or Pomerium session to its matching Brev host family. The deployable projection supplies the full Lambda, CloudFront, generic infrastructure-template, smoke-test, and unit-test implementation without environment identifiers or provisioning dependencies.</p>
+  <div class="skill-note">Run commands from the repository root. This repository publishes optional middleware source; credentials, state, DNS, resource names, and operated deployments remain outside it.</div>
+  <h2>Executable checks</h2>
+  <div class="skill-cmds">
+    <div class="skill-cmd"><b>Static contract</b><code>python3 scripts/security/audit_iframe_proxy_opt_in.py</code></div>
+    <div class="skill-cmd"><b>Mutation proof</b><code>python3 scripts/security/audit_iframe_proxy_opt_in.py --self-test</code></div>
+    <div class="skill-cmd"><b>WebSocket contract</b><code>node scripts/validation/openclaw_worker_ws_audit.mjs</code></div>
+    <div class="skill-cmd"><b>Deployable tests</b><code>node --test scripts/cors-proxy/deployable/test/*.test.mjs</code></div>
+  </div>
+  <h2>Linkage map</h2>
+  <div class="skill-list">
+    <a class="skill-link" href="cors-proxy-worker-build.js"><b>cors-proxy-worker-build.js</b><span>Reference model-relay CORS and header behavior.</span></a>
+    <a class="skill-link" href="cors-proxy-worker-openclaw.js"><b>cors-proxy-worker-openclaw.js</b><span>Reference launchable-relay HTTP and WebSocket behavior.</span></a>
+    <a class="skill-link" href="deployable/SKILL.html"><b>deployable/SKILL.html</b><span>Parameterized deployment source, tests, smoke checks, and provenance.</span></a>
+    <a class="skill-link" href="../security/SKILL.html"><b>security/SKILL.html</b><span>Validators and deployment-boundary findings.</span></a>
+  </div>
+  <h2>Interactive explorer</h2>
+  <p>The explorer below opens both references and tours their required boundaries.</p>
+</section>
+<div id="explorer"></div>
+
+<noscript>
+  <section class="skill-static"><h2>JavaScript disabled</h2><p>The static commands and links above remain usable. Enable JavaScript for source viewing and guided tours.</p></section>
+</noscript>
+
+<script src="../../web/_skill_explorer.js"></script>
+</body>
+</html>

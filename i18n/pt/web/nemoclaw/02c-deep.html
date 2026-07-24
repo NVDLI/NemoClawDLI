@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Agente Profundo · Segurança do Agente</title>
+<link rel="stylesheet" href="styles/_style.css"/>
+<script src="vendor/highlight-11.10.0.min.js"></script>
+<link rel="stylesheet" href="vendor/codemirror-5.65.21.css"/>
+<link rel="stylesheet" href="vendor/codemirror-monokai-5.65.21.css"/>
+<script src="vendor/codemirror-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-xml-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-javascript-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-css-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-htmlmixed-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-python-5.65.21.js"></script>
+<style>
+  .deep-stages { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 1em 0 1.4em; }
+  .deep-stage { min-width: 0; padding: 12px 14px; border: 1px solid var(--bd); border-radius: 6px; background: var(--e1); }
+  .deep-stage-label { margin-bottom: 4px; color: var(--gs); font: .7rem var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  .deep-stage p { margin: 0; color: var(--td); font-size: .84rem; line-height: 1.5; }
+  .research-board { min-width: 0; border: 1px solid var(--bd); border-radius: 7px; background: var(--bg); overflow: hidden; }
+  .research-board > header { display: flex; align-items: baseline; gap: 10px; padding: 9px 11px; border-bottom: 1px solid var(--bd); }
+  .research-board > header strong { color: var(--gs); font: 800 .7rem/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+  .research-board-status { color: var(--tf); font: .72rem/1.35 var(--mono); }
+  .research-thread-rail { display: flex; justify-content: flex-start; align-items: stretch; gap: 9px; padding: 10px; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; }
+  .research-thread { flex: 0 0 min(19rem, calc(100vw - 74px)); min-width: 0; height: 18rem; display: flex; flex-direction: column; text-align: left; scroll-snap-align: start; border: 1px solid var(--bd); border-radius: 6px; background: var(--e1); outline: none; }
+  .research-thread:focus, .research-thread:hover { border-color: var(--artifact); box-shadow: 0 0 0 1px color-mix(in srgb, var(--artifact) 34%, transparent); }
+  .research-thread.running { border-color: var(--warn); }
+  .research-thread.done { border-color: var(--g); }
+  .research-thread.gap { border-color: var(--acc); }
+  .research-thread.failed { border-color: var(--err); }
+  .research-thread > header { padding: 9px 10px 7px; border-bottom: 1px solid var(--bd); }
+  .research-thread-kind { color: var(--artifact-text); font: 800 .63rem/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+  .research-thread h3 { margin: 5px 0 0; color: var(--td); font-size: .82rem; line-height: 1.3; }
+  .research-thread-status { min-height: 1.8rem; padding: 6px 10px; color: var(--tf); font: .68rem/1.35 var(--mono); border-bottom: 1px solid var(--bd); }
+  .research-thread-stream { flex: 1; min-height: 0; margin: 0; padding: 9px 10px; overflow: auto; overscroll-behavior: contain; white-space: pre-wrap; color: var(--td); font: .74rem/1.45 var(--mono); }
+  .research-thread-source { flex: 0 0 auto; border-top: 1px solid var(--bd); }
+  .research-thread-source summary { padding: 6px 10px; color: var(--tf); font: .66rem/1.3 var(--mono); cursor: pointer; }
+  .research-thread-source pre { max-height: 10rem; margin: 0; padding: 8px 10px; overflow: auto; white-space: pre-wrap; color: var(--tf); font: .68rem/1.4 var(--mono); }
+  @media (max-width: 720px) { .deep-stages { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="logo" href="index.html">NVIDIA · Segurança de Agentes</a>
+  <nav id="nav"></nav>
+  <div class="spacer"></div>
+  <span class="key-pill" id="key-status" onclick="location.href='01a-loop.html?openKeyPanel=1'">…</span>
+</div>
+
+<main>
+  <div id="journey-map"></div>
+
+  <div class="hero">
+    <div class="eyebrow">Módulo 2 · Parte C de 3</div>
+    <h1><span>Agente Profundo</span></h1>
+    <p class="lead">
+ O Módulo 2 trata o escopo do workflow como uma superfície de controle. A Parte A introduziu um harness de execução que decide o que cruza cada fronteira, o que pode ramificar e como os resultados percorrem um pipeline. A Parte B aplicou esse controle a um pipeline de recuperação definido pelo desenvolvedor e ao seu pacote de contexto limitado.
+ </p>
+    <p class="lead">
+ Um agente de <em>pesquisa profunda</em> aplica a mesma ideia a uma pergunta cujas evidências excederiam uma única conversa. Em tempo de execução, um planejador escolhe ramos independentes e fornece a cada trabalhador apenas a pergunta original, a tarefa atribuída e as ferramentas necessárias. Os históricos dos demais ramos ficam de fora. Uma etapa final sintetiza as evidências registradas pelos trabalhadores. Primeiro execute o padrão; depois inspecione sua implementação.
+ </p>
+  </div>
+
+  <h2>Como a fronteira do workflow muda</h2>
+  <p>
+ Em todo o Módulo 2, o workflow externo controla o escopo e o fluxo de dados. A recuperação e a pesquisa profunda posicionam essa fronteira de maneiras diferentes.
+ </p>
+  <ul>
+    <li><strong>Workflow de indexação.</strong> O desenvolvedor define o pipeline, e a geração recebe o pacote de recuperação limitado da Parte B.</li>
+    <li><strong>Workflow de pesquisa profunda.</strong> O planejador cria ramos em tempo de execução. Os trabalhadores recebem contexto específico da tarefa e armazenam evidências para síntese.</li>
+  </ul>
+  <p>
+ Qualquer workflow pode colocar um ciclo ReAct dentro de uma etapa que deve se adaptar a resultados intermediários.
+ </p>
+
+  <h2>Por que um contexto compartilhado falha</h2>
+  <p>
+ Um único ciclo <a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct</a> mantém todas as instruções e observações em um só histórico. Assim, as evidências anteriores competem com cada novo resultado de ferramenta. Com o tempo, o próprio histórico se torna parte do problema.
+ </p>
+  <figure style="margin:1.4em 0">
+    <div class="fig-embed" data-svg-src="assets/figures/02c-deep-1.svg" style="aspect-ratio:680 / 430"></div>
+    <figcaption>Um coordenador atribui trabalho focado. Trabalhadores independentes retornam evidências por meio de armazenamento compartilhado e uma etapa final combina-as.</figcaption>
+  </figure>
+  <ul>
+    <li><strong>Transbordamento:</strong> evidências e saídas de ferramentas excedem a janela de contexto.</li>
+    <li><strong>Degradação do contexto:</strong> evidências relevantes estão presentes, mas recebem peso insuficiente (<a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al.</a>).</li>
+    <li><strong>Interferência:</strong> o raciocínio de um ramo distrai o próximo ramo.</li>
+  </ul>
+
+  <h2>Como a pesquisa avança pelo workflow</h2>
+  <div class="deep-stages">
+    <div class="deep-stage" id="deep-stage-plan">
+      <div class="deep-stage-label">1 · Planejar</div>
+      <p>O <strong>orquestrador</strong> transforma a pergunta em tarefas independentes, tornando o escopo pretendido inspecionável antes do início do trabalho.</p>
+    </div>
+    <div class="deep-stage" id="deep-stage-investigate">
+      <div class="deep-stage-label">2 · Investigar</div>
+      <p>Cada <strong>subagente</strong> recebe uma tarefa em um contexto novo e isolado, sem os históricos dos outros ramos.</p>
+    </div>
+    <div class="deep-stage" id="deep-stage-preserve">
+      <div class="deep-stage-label">3 · Preservar</div>
+      <p>Os trabalhadores escrevem as descobertas em um sistema de arquivos <strong>virtual compartilhado</strong>, onde as evidências sobrevivem após o término de seus contextos.</p>
+    </div>
+    <div class="deep-stage" id="deep-stage-synthesize">
+      <div class="deep-stage-label">4 · Sintetizar</div>
+      <p>O orquestrador lê as evidências salvas e produz uma resposta cujas afirmações permanecem rastreáveis até seus ramos.</p>
+    </div>
+  </div>
+
+  <div class="callout info">
+ <strong>Contexto novo não é um sandbox.</strong> O isolamento de contexto separa
+ os ramos de raciocínio, enquanto o sandbox limita o acesso ao sistema operacional.
+ O artefato no navegador abaixo não tem shell; o exemplo manual posterior usa
+ um sistema de arquivos em memória para tornar o estado compartilhado visível.
+ </div>
+
+  <h2>Tente · planejar → investigar → sintetizar</h2>
+  <p>
+ Faça uma pergunta de pesquisa e observe o agente criar ramos que são executados
+ em paralelo em materiais externos selecionados e neste curso antes de escrever uma resposta com citações.
+ Cada trabalhador transmite o resultado para seu próprio painel focalizável, para
+ que você possa inspecionar operações ativas sem aguardar toda a execução paralela.
+ </p>
+  <div id="deep-cell"></div>
+  <div id="deep-artifact"></div>
+
+  <h2>Inspecione a implementação</h2>
+  <p>As próximas três células isolam uma camada de implementação de cada vez, começando
+ com o adaptador de modelo e terminando com o agente de pesquisa completo. Cada
+ célula é executada de forma independente.</p>
+
+  <div class="callout warn">
+ <strong>As células de implementação usam o pacote de navegador incluído.</strong> Elas
+ importam o pacote exato da mesma origem registrado no <a href="dependencies.html">inventário de dependências do navegador</a>. A CI bloqueia a publicação quando o pacote, o lock, as licenças ou as referências no código divergem.
+ </div>
+
+  <!-- ── Part 3: ChatOpenAI ─────────────────────────────────────────────────── -->
+  <h2>1 · Conectar o modelo</h2>
+  <p>
+ <code>ChatOpenAI</code> encapsula qualquer endpoint compatível com a OpenAI. A célula lê
+ a URL ativa e a credencial de <code>helpers.getConfig()</code>, então o
+ resto do grafo não depende de onde o modelo é executado.
+ </p>
+
+  <div id="cell-m3c-p1"></div>
+
+  <p><code>.invoke()</code> retorna uma mensagem completa; <code>.stream()</code>
+ produz mensagens parciais. Ambos atendem à interface <code>Runnable</code> do LangChain.</p>
+
+  <!-- ── Part 4: LangGraph createReactAgent ───────────────────────────────── -->
+  <h2>2 · Transforme o ciclo em um grafo</h2>
+  <p>
+ <code>createReactAgent({llm, tools})</code> transforma o ciclo ReAct do Módulo 1
+ em nós de modelo e ferramenta explícitos. O grafo compilado pode ser executado sozinho ou
+ se tornar um nó dentro de um workflow maior.
+ </p>
+
+  <div id="cell-m3c-p2"></div>
+
+  <p>Use um grafo quando um ciclo simples não pode mais expressar o fluxo de controle necessário.</p>
+
+  <!-- ── Part 5: Deep agent (planner + sub-agents + VFS) ──────────────────── -->
+  <h2>3 · Monte o agente de pesquisa</h2>
+  <p>
+ Essa célula expõe cada estágio como seu próprio nó, com arquivos compartilhados visíveis
+ entre a delegação e a síntese. O pacote <a href="https://github.com/langchain-ai/deepagentsjs" target="_blank" rel="noopener"><code>deepagents</code></a>
+ encapsula um padrão semelhante para aplicações Node.js.
+ </p>
+
+  <div id="cell-m3c-p3"></div>
+
+  <h2>Verifique sua compreensão</h2>
+  <ol>
+    <li>O que entra no contexto de cada sub-agente e o que fica de fora?</li>
+    <li>Por que preservar os resultados em vez de passar uma transcrição em crescimento?</li>
+    <li>Como o isolamento de contexto e o sandbox do sistema operacional impedem falhas diferentes?</li>
+  </ol>
+
+  <div class="references">
+    <h3>Referências</h3>
+    <ul>
+      <li><a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., <em>Lost in the Middle</em></a>. Evidências de falhas relacionadas à posição no contexto.</li>
+      <li><a href="https://blog.langchain.com/deep-agents/" target="_blank" rel="noopener">LangChain, <em>Deep Agents</em></a> e a <a href="https://github.com/langchain-ai/deepagentsjs" target="_blank" rel="noopener">implementação em JavaScript</a>.</li>
+      <li><a href="https://developer.nvidia.com/blog/add-a-specialized-deep-research-skill-to-agent-harnesses/" target="_blank" rel="noopener">Habilidade de pesquisa profunda da NVIDIA AI-Q</a> e seu <a href="https://github.com/NVIDIA-AI-Blueprints/aiq" target="_blank" rel="noopener">modelo</a>.</li>
+      <li><a href="https://developer.nvidia.com/case-studies/scientific-literature-ai-nvidia-nemotron" target="_blank" rel="noopener">Kosmos</a>. Um exemplo de pesquisa científica multi-agente.</li>
+    </ul>
+    <p class="references-note">Lista abrangente em <a href="04c-going-further.html#refs">Ir Além · Referências</a>.</p>
+  </div>
+  <script type="text/plain" id="deep-src">
+// Deep-research artifact: plan, fan out sub-agents, then synthesize a cited answer.
+
+window.DEEP_AGENT_MAX_TOKENS = 8196;
+
+const PAGES = helpers.coursePages();
+const INDEX = PAGES.map(p => "  " + p.id + " · " + p.title).join("\n");
+const FAST  = "nvidia/nemotron-3-nano-30b-a3b";   // sub-agents are cheap workers: always the fast model
+const MATERIAL_TOPICS = [
+  "AI Agents", "Deep Agents", "Multi-Agent Systems", "Chain of Thought Prompting",
+  "Retrieval-Augmented Generation (RAG)", "Large Language Models",
+  "ReAct: Synergizing Reasoning and Acting in Language Models",
+  "ReWOO: Decoupling Reasoning from Observations for Efficient Augmented Language Models",
+];
+
+helpers.mountChatUI("#deep-artifact", {
+  models: [
+    { id: "nvidia/nemotron-3-nano-30b-a3b",    label: "Nemotron Nano 30B · rápido" },
+    { id: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron Super 120B · mais forte" },
+  ],
+  greeting: (
+    "I'm a deep research agent. Ask me something and I'll plan a few parallel sub-investigations"
+    + " across curated NVIDIA materials and this course's own sections, then synthesize a grounded answer."
+  ),
+  examples: [
+    "How does this course's OpenShell sandbox relate to agent safety in general?",
+    "What is RAG, and how does this course build it?",
+    "Compare the ReAct loop with the deep-agent pattern",
+    "What are the main failure modes of autonomous agents?",
+    "How do production CLI agents sandbox themselves?",
+    "Trace this course from a single LLM call to an always-on agent",
+  ],
+
+  respond: async (text, ctx) => {
+    const sig = ctx.signal;
+
+    // ── 1. PLAN: decompose into parallel sub-investigations ──────────────
+    ctx.view.tool("planning sub-investigations…");
+    const planSys =
+      "You are a research planner. Break the user's question into 3 to 4 INDEPENDENT " +
+      "sub-investigations that can run in parallel. Each is either:\n" +
+      "  - source \"materials\": search the course's curated NVIDIA glossary and cited papers; " +
+      "target = one listed material topic that can support the goal.\n" +
+      "  - source \"section\": read ONE section of THIS course; target = a page id below.\n" +
+      "You MUST include AT LEAST ONE \"section\" branch AND AT LEAST ONE \"materials\" branch: " +
+      "use course sections for this course's implementation and curated materials for outside framing. " +
+      "Do not claim the materials branch searches the open web. " +
+      "Return ONLY JSON: {\"branches\":[{\"source\":\"materials\"|\"section\",\"target\":\"...\",\"goal\":\"...\"}]}.\n\n" +
+      "Course sections:\n" + INDEX + "\n\nMaterial topics:\n  " + MATERIAL_TOPICS.join("\n  ");
+
+    const planRes = await helpers.chatStream(
+      { messages: [{ role: "system", content: planSys }, { role: "user", content: text }],
+        model: ctx.model, max_tokens: window.DEEP_AGENT_MAX_TOKENS, signal: sig }, null);
+
+    let branches = [];
+    try { branches = JSON.parse(planRes.content.match(/\{[\s\S]*\}/)[0]).branches || []; } catch (_) {}
+    const ids = new Set(PAGES.map(p => p.id));
+    branches = branches
+      .filter(b => b && b.goal && (b.source === "materials" || (b.source === "section" && ids.has(b.target))));
+
+    // Guarantee the fan-out spans both the web and this course's sections, even if the planner under-specified.
+    // Section pick uses title/id keyword overlap.
+    const pickSection = () => {
+      const words = text.toLowerCase().match(/[a-z]{4,}/g) || [];
+      let best = PAGES.find(p => p.id === "overview") || PAGES[0], score = 0;
+      for (const p of PAGES) {
+        const hay = (p.id + " " + p.title).toLowerCase();
+        const s = words.filter(w => hay.includes(w)).length;
+        if (s > score) { score = s; best = p; }
+      }
+      return best.id;
+    };
+
+    if (!branches.some(b => b.source === "section")) branches.push({ source: "section", target: pickSection(), goal: text });
+    if (!branches.some(b => b.source === "materials")) branches.push({ source: "materials", target: "AI Agents", goal: text });
+    branches = branches.slice(0, 4);
+
+    // Show the parsed plan so each branch's source, target, and goal are visible.
+    ctx.view.tool("plan", { branches });
+
+    // Build a live HTML operation board. Each branch owns one left-aligned,
+    // independently scrollable panel and begins updating before its siblings finish.
+    const board = ctx.view.html(
+      '<section class="research-board" aria-label="Operações de pesquisa ao vivo">' +
+      '<header><strong>Pesquisa paralela</strong><span class="research-board-status" role="status" aria-live="polite">Iniciando trabalhadores…</span></header>' +
+      '<div class="research-thread-rail"></div></section>'
+    ).querySelector(".research-board");
+    const boardStatus = board.querySelector(".research-board-status");
+    const rail = board.querySelector(".research-thread-rail");
+    const cards = branches.map((b, i) => {
+      const card = document.createElement("article");
+      card.className = "research-thread queued";
+      card.tabIndex = 0;
+      card.setAttribute("aria-label", "Trabalhador de pesquisa " + (i + 1) + ": " + b.goal);
+      card.innerHTML = '<header><span class="research-thread-kind"></span><h3></h3></header>' +
+        '<div class="research-thread-status" role="status" aria-live="polite">Na fila</div>' +
+        '<pre class="research-thread-stream">Aguardando o trabalhador…</pre>' +
+        '<details class="research-thread-source"><summary>Inspecionar fonte</summary><pre></pre></details>';
+      card.querySelector(".research-thread-kind").textContent = "Trabalhador " + (i + 1) + " · " + b.source;
+      card.querySelector("h3").textContent = b.goal;
+      rail.appendChild(card);
+      return {
+        card,
+        status: card.querySelector(".research-thread-status"),
+        stream: card.querySelector(".research-thread-stream"),
+        source: card.querySelector(".research-thread-source pre"),
+        text: "",
+      };
+    });
+    const setWorker = (worker, state, status) => {
+      worker.card.classList.remove("queued", "running", "done", "gap", "failed");
+      worker.card.classList.add(state);
+      worker.status.textContent = status;
+    };
+    const streamWorker = (worker, token) => {
+      worker.text += token;
+      worker.stream.textContent = worker.text;
+      worker.stream.scrollTop = worker.stream.scrollHeight;
+    };
+
+    // ── 2. FAN OUT: one sub-agent per branch, all at once ───────────────
+    const t0 = performance.now();
+    boardStatus.textContent = branches.length + " trabalhadores ativos · selecione um painel para inspecioná-lo";
+    const runBranch = async (b, i) => {
+      const bt0 = performance.now();
+      const label = (b.source === "materials" ? "materiais · " : "seção · ") + b.target;
+      const worker = cards[i];
+      let finding, src = "";
+      try {
+        setWorker(worker, "running", "Lendo " + label + "…");
+        worker.stream.textContent = "Carregando fonte…";
+        src = b.source === "materials"
+          ? helpers.formatSearchResults(await helpers.webSearch(b.target, { maxResults: 4 }))
+          : (await helpers.coursePage(b.target)).slice(0, 6000);
+        worker.source.textContent = src;
+        worker.stream.textContent = "";
+        worker.text = "";
+        setWorker(worker, "running", "Extraindo evidências…");
+
+        const r = await helpers.chatStream({ messages: [
+          { role: "system", content: (
+            "You are a sub-agent. From the SOURCE, extract only what supports the GOAL, in 2-4 sentences."
+            + " If coverage is partial, report the supported point and end with 'Coverage gap:' plus what is missing."
+            + " Use 'not covered' only when the source has no relevant information at all."
+          ) },
+          { role: "user", content: "GOAL: " + b.goal + "\n\nSOURCE:\n" + src }],
+          model: FAST, max_tokens: window.DEEP_AGENT_MAX_TOKENS, signal: sig },
+          (token) => streamWorker(worker, token));
+        finding = (r.content || "").trim() || "(no finding)";
+        worker.text = finding;
+        worker.stream.textContent = finding;
+        const gap = /^not covered\.?$/i.test(finding) || /\bcoverage gap:/i.test(finding);
+        setWorker(worker, gap ? "gap" : "done", gap ? "Lacuna de cobertura" : "Concluído");
+      } catch (e) {
+        finding = "(branch failed: " + (e.message || e) + ")";
+        worker.stream.textContent = finding;
+        setWorker(worker, "failed", "Falhou");
+      }
+      const dt = (performance.now() - bt0) / 1000;
+      worker.status.textContent += " · " + dt.toFixed(1) + "s";
+      return { finding, label, src, goal: b.goal, dt, gap: worker.card.classList.contains("gap") };
+    };
+
+    const results = await Promise.all(branches.map(runBranch));
+    const wall = (performance.now() - t0) / 1000;
+    const serial = results.reduce((sum, r) => sum + r.dt, 0);
+    const gaps = results.filter(r => r.gap).length;
+    boardStatus.textContent = branches.length + " trabalhadores concluídos · " + wall.toFixed(1) +
+      "s em paralelo vs " + serial.toFixed(1) + "s em série" + (gaps ? " · " + gaps + (gaps === 1 ? " lacuna de cobertura" : " lacunas de cobertura") : "") + " · sintetizando…";
+
+    // ── 3. SYNTHESIZE: one grounded answer from the findings ────────────
+    const findings = results.map((r, i) => "[" + (i + 1) + "] (" + r.label + ")\n" + r.finding).join("\n\n");
+    // Show the findings corpus that each [n] citation maps back to.
+    ctx.view.tool("findings corpus", { findings: results.map((r, i) => ({ n: i + 1, branch: r.label, finding: r.finding })) });
+    const s = await helpers.chatStream({ messages: [
+      { role: "system", content: (
+        "You are a research assistant. Answer the user's question using ONLY the findings below, citing each claim with its [n]."
+        + " If a finding names a coverage gap or is empty, do not invent; preserve that limitation in the answer."
+      ) },
+      { role: "user", content: "QUESTION: " + text + "\n\nFINDINGS:\n" + findings }],
+      model: ctx.model, max_tokens: window.DEEP_AGENT_MAX_TOKENS, signal: sig },
+      (tok) => ctx.view.token(tok));   // no reasoning here: the sub-agents did the thinking; keep the synthesis one clean answer
+    boardStatus.textContent = branches.length + " trabalhadores + síntese concluídos · " + wall.toFixed(1) + "s de execução paralela";
+    if (s.usage) ctx.view.usage({ input: s.usage.prompt_tokens, output: s.usage.completion_tokens, model: s.model });
+  },
+});
+helpers.log("renderizado abaixo. Edite a configuração e execute.");
+  </script>
+  <script type="module">
+    import { mountRunCell } from "./scripts/_shared.js";
+    mountRunCell("#deep-cell", {
+      label: "Fonte de artefato de pesquisa profunda",
+      autorun: true,
+      code: document.getElementById("deep-src").textContent.trim(),
+    });
+  </script>
+
+  <div class="foot-nav">
+    <a href="02b-rag.html">← Módulo 2b: O Agente de Índice</a>
+    <a class="next" href="03a-kickstart.html">Módulo 3a: Iniciar →</a>
+  </div>
+</main>
+
+<script type="module">
+import { buildNav, chatStream, updateKeyPill, mountJourneyMap, mountCanvasFlow } from "./scripts/_shared.js";
+document.getElementById("nav").innerHTML = buildNav("02c-deep.html");
+const pill = document.getElementById("key-status");
+updateKeyPill(pill);
+mountJourneyMap("#journey-map", "2c");
+hljs.highlightAll();
+
+// ── M3c P1: ChatOpenAI from @langchain/openai ────────────────────────────────
+window.DEEP_AGENT_MAX_TOKENS = 8196;
+
+mountCanvasFlow("#cell-m3c-p1", {
+  label: "Conectar LangChain ao modelo ativo",
+  intro: "Criar o cliente do modelo a partir da configuração do curso e inspecionar a mensagem retornada por invoke().",
+  edges: [{ from: "import", to: "invoke" }],
+  nodes: [
+    {
+      id: "import", icon: "📦", title: "Criar o cliente do modelo", x: 0, y: 0,
+      summary: "Ler o endpoint ativo de getConfig(); o código do gráfico posterior permanece independente do endpoint.",
+      code: `// Load the same-origin vendor bundle used by this example.
+helpers.log("importando @langchain/openai ...");
+const { ChatOpenAI } = await import(new URL("./vendor/langchain-1.4.7.esm.js", location.href).href);
+helpers.log("importar OK");
+
+const cfg = await helpers.getConfig();
+// LangChain calls new URL(baseURL) internally, so it needs an absolute URL, not a relative path.
+const baseURL = cfg.url.startsWith("http") ? cfg.url : (window.location.origin + cfg.url);
+state.llm = new ChatOpenAI({
+  configuration: { baseURL, dangerouslyAllowBrowser: true, fetch: helpers.browserChatFetch() },
+  apiKey:    cfg.needsKey ? helpers.getKey() : "no-key-needed",
+  model:     cfg.model,
+  maxTokens: 800,
+  temperature: 0,
+});
+return { ready: true, baseURL, model: cfg.model };
+`,
+    },
+
+    {
+      id: "invoke", icon: "🧠", title: "Inspecionar a resposta", x: 0, y: 1,
+      summary: "invoke() retorna uma AIMessage com o conteúdo da resposta e metadados de uso.",
+      code: `// Send the prepared messages and stream the model response.
+const messages = [
+  { role: "system", content: "You are a concise tutor. 2 sentences max." },
+  { role: "user",   content: "What is the difference between LangChain Runnable.invoke() and our chatStream()?" },
+];
+
+const result = await state.llm.invoke(messages);
+return {
+  content: result.content,
+  type:    result.constructor.name,
+  tokens:  result.usage_metadata,
+};
+`,
+    },
+  ],
+});
+
+// ── M3c P2: LangGraph ReAct agent ────────────────────────────────────────────
+mountCanvasFlow("#cell-m3c-p2", {
+  label: "Construir um gráfico ReAct",
+  intro: "Adicionar uma ferramenta tipada, compilar o gráfico e inspecionar a trajetória da mensagem resultante.",
+  edges: [
+    { from: "import", to: "tool" },
+    { from: "tool",   to: "build" },
+    { from: "build",  to: "invoke" },
+  ],
+
+  nodes: [
+    {
+      id: "import", icon: "📦", title: "Carregar dependências do grafo", x: 0, y: 0,
+      summary: "Carregar os pacotes do modelo, grafo, ferramenta e esquema.",
+      code: `// Load the same-origin vendor bundle used by this example.
+helpers.log("Importando o ecossistema LangChain...");
+const { ChatOpenAI, tool, createReactAgent, z } =
+  await import(new URL("./vendor/langchain-1.4.7.esm.js", location.href).href);
+state.deps = { ChatOpenAI, tool, createReactAgent, z };
+helpers.log("Importações OK");
+
+const cfg = await helpers.getConfig();
+const baseURL = cfg.url.startsWith("http") ? cfg.url : (window.location.origin + cfg.url);
+state.llm = new ChatOpenAI({
+  configuration: { baseURL, dangerouslyAllowBrowser: true, fetch: helpers.browserChatFetch() },
+  apiKey:    cfg.needsKey ? helpers.getKey() : "no-key-needed",
+  model:     cfg.model,
+  maxTokens: 1200,
+});
+return { imports: Object.keys(state.deps) };
+`,
+    },
+
+    {
+      id: "tool", icon: "🛠", title: "Declarar uma ferramenta de tempo tipada", x: 0, y: 1,
+      summary: "Um esquema Zod fornece ao modelo e ao runtime o mesmo contrato validado.",
+      code: `// Pull the LangChain helpers this agent cell needs.
+const { tool, z } = state.deps;
+state.getCurrentTime = tool(
+  async () => new Date().toISOString().slice(0, 19).replace("T", " ") + " UTC",
+  {
+    name:        "get_current_time",
+    description: "Returns the current UTC time as 'YYYY-MM-DD HH:MM:SS UTC'.",
+    schema:      z.object({}),
+  },
+);
+return { name: state.getCurrentTime.name, description: state.getCurrentTime.description };
+`,
+    },
+
+    {
+      id: "build", icon: "📐", title: "Compilar o grafo ReAct", x: 0, y: 2,
+      summary: "O modelo e a ferramenta se tornam o ciclo de decidir/executar do Módulo 1.",
+      code: `// Construct the agent from the model, tools, and prompt.
+state.agent = state.deps.createReactAgent({
+  llm:   state.llm,
+  tools: [state.getCurrentTime],
+});
+return { graph_compiled: true };
+`,
+    },
+
+    {
+      id: "invoke", icon: "🚀", title: "Inspecionar a trajetória", x: 0, y: 3,
+      summary: "Executar o grafo e renderizar suas mensagens, incluindo chamadas de ferramentas e resultados.",
+      code: `// Ask the agent a concrete question to drive the loop.
+const question = "What time is it right now in UTC?";
+// Try another (uncomment one) and rerun to watch the trajectory change:
+// const question = "What is the capital of France?";               // answered directly, no tool call
+// const question = "What time is it, and is that AM or PM in UTC?"; // one tool call, a longer answer
+const result = await state.agent.invoke({
+  messages: [{ role: "user", content: question }],
+});
+
+// Map LangGraph message objects to the role-tagged shape viz.messageList wants.
+const roleFor = type =>
+  /Human/i.test(type) ? "user"
+  : /Tool/i.test(type) ? "tool"
+  : /AI/i.test(type)   ? "assistant"
+  : "system";
+const trajectory = result.messages.map(m => ({
+  role: roleFor(m.constructor.name),
+  content: typeof m.content === "string" ? m.content : JSON.stringify(m.content),
+  tool_calls: (m.tool_calls || []).map(tc => ({ function: { name: tc.name, arguments: JSON.stringify(tc.args || {}) } })),
+}));
+helpers.viz.messageList(trajectory, "LangGraph trajectory · the message list .invoke() returns");
+
+return {
+  message_count: result.messages.length,
+  final_reply:   result.messages.at(-1).content,
+  message_types: result.messages.map(m => m.constructor.name),
+};
+`,
+    },
+  ],
+});
+
+// ── M3c P3: hand-rolled deep agent (planner + sub-agents + VFS) ─────────────
+mountCanvasFlow("#cell-m3c-p3", {
+  label: "Montar o workflow de pesquisa",
+  intro: "Esses nós expõem os limites de contexto, evidências salvas e caminho de síntese.",
+  edges: [
+    { from: "setup",      to: "planner" },
+    { from: "vfs",        to: "dispatcher" },
+    { from: "planner",    to: "dispatcher" },
+    { from: "dispatcher", to: "synth" },
+    { from: "synth",      to: "render" },
+  ],
+
+  nodes: [
+    {
+      id: "setup", icon: "📦", title: "Criar o cliente do modelo", x: 0, y: 0,
+      summary: "Repetir a configuração do modelo para que essa célula execute independentemente.",
+      code: `// Load the same-origin vendor bundle used by this example.
+helpers.log("Importando pacotes LangChain...");
+const { ChatOpenAI, tool, createReactAgent, z } =
+  await import(new URL("./vendor/langchain-1.4.7.esm.js", location.href).href);
+state.deps = { ChatOpenAI, tool, createReactAgent, z };
+
+const cfg = await helpers.getConfig();
+const baseURL = cfg.url.startsWith("http") ? cfg.url : (window.location.origin + cfg.url);
+state.llm = new ChatOpenAI({
+  configuration: { baseURL, dangerouslyAllowBrowser: true, fetch: helpers.browserChatFetch() },
+  apiKey:    cfg.needsKey ? helpers.getKey() : "no-key-needed",
+  model:     cfg.model,
+  maxTokens: 1500,
+  temperature: 0,
+});
+return { imports: Object.keys(state.deps) };
+`,
+    },
+
+    {
+      id: "vfs", icon: "🗂", title: "Criar ferramentas de evidência compartilhadas", x: 2, y: 0,
+      summary: "Os trabalhadores trocam evidências por meio de arquivos na memória em vez de históricos compartilhados.",
+      code: `// Pull the LangChain helpers this agent cell needs.
+const { tool, z } = state.deps;
+state.vfs = {};
+
+state.writeFile = tool(
+  async ({ path, content }) => { state.vfs[path] = content; return "wrote " + path + " (" + content.length + " chars)"; },
+  { name: "write_file",
+    description: "Save text to a file. Call this whenever you finish a deliverable. Files persist across sub-agent calls.",
+    schema: z.object({ path: z.string(), content: z.string() }) },
+);
+
+state.readFile = tool(
+  async ({ path }) => state.vfs[path] || ("(file " + path + " not found)"),
+  { name: "read_file", description: "Read a previously-saved file.",
+    schema: z.object({ path: z.string() }) },
+);
+
+state.listFiles = tool(
+  async () => Object.keys(state.vfs).length ? Object.keys(state.vfs).join(", ") : "(no files saved yet)",
+  { name: "list_files", description: "List paths of every saved file.", schema: z.object({}) },
+);
+return { tools: ["write_file", "read_file", "list_files"], vfs_state: Object.keys(state.vfs) };
+`,
+    },
+
+    {
+      id: "planner", icon: "🧠", title: "Planeje subtarefas tipadas", x: 1, y: 1,
+      summary: "Saída estruturada evita a análise de um plano de texto livre.",
+      code: `// TODO: Mude a entrega e observe o planejador criar novas subtarefas tipadas.
+state.goal = [
+  "Research NVIDIA NIM (NVIDIA Inference Microservices) and produce three files: ",
+  "nim_overview.md, a technical overview of what NIM is and how it works; ",
+  "nim_use_cases.md, three concrete deployment scenarios with a sentence on why NIM fits each one; ",
+  "nim_vs_hosting.md, a short comparison of using a managed NIM endpoint versus self-hosting a model directly, ",
+  "covering latency, operational overhead, and when each makes sense.",
+].join("");
+// state.goal = "Compare RAG evaluation methods and produce metrics.md, risks.md, and test_plan.md.";
+// state.goal = "Research agent memory and produce short_term.md, long_term.md, and tradeoffs.md.";
+
+// withStructuredOutput binds the output to this schema and returns a parsed object.
+
+const planner = state.llm.withStructuredOutput({
+  type: "object", additionalProperties: false,
+  properties: {
+    subtasks: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 4 },
+  },
+  required: ["subtasks"],
+}, { name: "plan" });
+
+const out = await planner.invoke([
+  {
+    role: "system",
+    content: [
+      "Decompose the user goal into 3-4 self-contained subtasks.",
+      "Each subtask is one imperative sentence a sub-agent can execute independently.",
+      "Every subtask must produce a file via write_file.",
+    ].join(" "),
+  },
+  { role: "user",   content: state.goal },
+]);
+state.subtasks = out.subtasks;
+return out;
+`,
+    },
+
+    {
+      id: "dispatcher", icon: "🚀", title: "Execute trabalhadores com escopo de tarefa", x: 1, y: 2,
+      summary: "Cada trabalhador recebe sua tarefa e a lista de arquivos salvos. Os históricos dos demais ramos ficam fora de seu contexto.",
+      code: `// Pull the LangChain helpers this agent cell needs.
+const { createReactAgent } = state.deps;
+state.subResults = [];
+
+for (let i = 0; i < state.subtasks.length; i++) {
+  const sub = createReactAgent({
+    llm: state.llm,
+    tools: [state.writeFile, state.readFile, state.listFiles],
+  });
+  const ctx = i === 0
+    ? "(no prior files)"
+    : "Files saved so far: " + (Object.keys(state.vfs).join(", ") || "(none)");
+  const r = await sub.invoke({
+    messages: [{
+      role: "user",
+      content: state.subtasks[i] + "\\n\\nContext: " + ctx + ". Use write_file when saving deliverables.",
+    }],
+  });
+
+  const last = r.messages.at(-1).content || "";
+  helpers.log("subtarefa" + (i+1) + " · " + state.subtasks[i].slice(0, 80));
+  helpers.log("resposta: " + last);
+  state.subResults.push({ subtask: state.subtasks[i], message_count: r.messages.length, last_reply: last });
+}
+return state.subResults;
+`,
+    },
+
+    {
+      id: "synth", icon: "🧠", title: "Sintetize evidências salvas", x: 1, y: 3,
+      summary: "Leia os arquivos dos trabalhadores, cite seus nomes e escreva final_report.md.",
+      code: `// Inspect the virtual files the deep agent can read.
+const paths = Object.keys(state.vfs);
+if (!paths.length) {
+  state.synthesis = "(no files on the virtual filesystem to synthesise)";
+  helpers.log("nada a sintetizar: os subagentes não escreveram arquivos");
+  return { synthesised: false };
+}
+const corpus = paths.map(p => "### " + p + "\\n" + state.vfs[p]).join("\\n\\n");
+
+const out = await helpers.chatStream({
+  messages: [
+    {
+      role: "system",
+      content: [
+        "You are the synthesiser for a research agent.",
+        "Read every file below and write one combined deliverable that answers the original goal.",
+        "Reference each source file by name.",
+        "Do not invent facts that are not in the files.",
+      ].join(" "),
+    },
+    { role: "user",   content: "Goal: " + state.goal + "\\n\\nFiles on the virtual filesystem:\\n\\n" + corpus },
+  ],
+  max_tokens: window.DEEP_AGENT_MAX_TOKENS,
+});
+
+state.synthesis = (out.content || out.reasoning || "").trim() || "(synthesiser produced no text)";
+state.vfs["final_report.md"] = state.synthesis;
+helpers.log("sintetizado" + paths.length + " files into final_report.md (" + state.synthesis.length + " chars)");
+return { synthesised: true, source_files: paths, report_chars: state.synthesis.length };
+`,
+    },
+
+    {
+      id: "render", icon: "📊", title: "Mostre o fluxo de trabalho observado", x: 1, y: 4,
+      showCode: false,
+      summary: "Renderize os trabalhadores e contagens de arquivos registrados durante esta execução.",
+      code: `// Reading guide: this block does not run another model call. It turns state.subResults
+// Build the diagram directly from the run: orchestrator, workers, synthesizer.
+
+const workers = state.subResults.map((r, i) => ({
+  id: "w" + i,
+  label: "trabalhador" + (i + 1),
+  kind: "agent",
+  x: i,
+  y: 1,
+  lines: [
+    r.subtask.slice(0, 32),
+    r.message_count + " msgs",
+  ],
+}));
+
+const sourceCount = Object.keys(state.vfs).filter(p => p !== "final_report.md").length;
+const reportChars = (state.synthesis || "").length;
+const spec = {
+  title: "Execução de pesquisa profunda",
+  nodes: [
+    { id: "orch", label: "orquestrador", kind: "model", x: Math.max(0, (workers.length - 1) / 2), y: 0,
+      lines: ["plans " + workers.length + " subtasks"] },
+    ...workers,
+    { id: "synth", label: "sintetizador", kind: "model", x: Math.max(0, (workers.length - 1) / 2), y: 2,
+      lines: ["reads " + sourceCount + " files", "writes final_report.md (" + reportChars + " chars)"] },
+  ],
+
+  edges: [
+    ...workers.map(w => ({ from: "orch", to: w.id })),
+    ...workers.map(w => ({ from: w.id, to: "synth" })),
+  ],
+};
+
+helpers.viz.diagram(spec);
+
+return {
+  goal:            state.goal,
+  subtasks_run:    state.subResults.length,
+  vfs_paths:       Object.keys(state.vfs),
+  final_report:    state.synthesis,
+  vfs_contents:    Object.fromEntries(Object.entries(state.vfs)),
+};
+`,
+    },
+  ],
+});
+</script>
+</body>
+</html>

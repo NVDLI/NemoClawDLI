@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Modern CLIs · Securing Agents</title>
+<link rel="stylesheet" href="styles/_style.css"/>
+<script src="vendor/highlight-11.10.0.min.js"></script>
+<link rel="stylesheet" href="vendor/codemirror-5.65.21.css"/>
+<link rel="stylesheet" href="vendor/codemirror-monokai-5.65.21.css"/>
+<script src="vendor/codemirror-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-xml-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-javascript-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-css-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-htmlmixed-5.65.21.js"></script>
+<script src="vendor/codemirror-mode-python-5.65.21.js"></script>
+<style>
+</style>
+<style>
+  .cli-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 1em 0; }
+  @media (max-width: 720px) { .cli-grid { grid-template-columns: 1fr; } }
+  .cli-card { background: var(--e1); border: 1px solid var(--bd); border-radius: var(--r); padding: 14px 16px; }
+  .cli-card h3 { font-size: 1rem; color: var(--gs); margin: 0 0 .35em; }
+  .cli-card p  { font-size: .85rem; color: var(--td); margin: .25em 0; line-height: 1.55; }
+  .cli-card code { font-size: .82em; }
+  .dof-table, .map-table { width: 100%; border-collapse: collapse; font-size: .86rem; margin: 1em 0; }
+  .dof-table thead tr, .map-table thead tr { border-bottom: 2px solid var(--bd); }
+  .dof-table th, .map-table th { text-align: left; padding: 8px 12px; color: var(--td); font-size: .76rem; text-transform: uppercase; letter-spacing: .05em; }
+  .dof-table td, .map-table td { padding: 9px 12px; border-bottom: 1px solid var(--e2); vertical-align: top; }
+  .dof-table tr:last-child td, .map-table tr:last-child td { border-bottom: none; }
+  .dof-table td:first-child, .map-table td:first-child { font-family: var(--mono); color: var(--gs); font-weight: 600; }
+  .dof-table code, .map-table code { font-size: .82em; }
+  .da-term { background: var(--code-surface); border: 1px solid var(--bd); border-radius: var(--r); padding: 12px 14px; font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: .84rem; line-height: 1.5; color: var(--tx); margin: 1em 0; }
+  .da-term .da-out { white-space: pre-wrap; word-break: break-word; }
+  .da-term .da-out > div { padding: 1px 0; }
+  .da-term .da-cmd { color: var(--g); }
+  .da-term .da-err { color: var(--err); }
+  .da-term .da-dim { color: var(--tf); }
+  .da-term .da-line { display: flex; align-items: flex-start; gap: 8px; margin-top: 2px; }
+  .da-term .da-ps { color: var(--g, #76b900); flex: none; }
+  .da-term .da-in { flex: 1; background: transparent; border: 0; outline: 0; color: var(--tx); font: inherit; padding: 0; }
+  .da-term .da-in:disabled { opacity: .6; }
+  .da-term .da-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; border-top: 1px solid var(--bd); padding-top: 8px; }
+  .da-term .da-chip { background: var(--e1); border: 1px solid var(--bd); color: var(--g); font: inherit; font-size: .76rem; padding: 2px 9px; border-radius: 999px; cursor: pointer; }
+  .da-term .da-chip:hover { background: var(--e2); border-color: var(--g); }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="logo" href="index.html">NVIDIA · Securing Agents</a>
+  <nav id="nav"></nav>
+  <div class="spacer"></div>
+  <span class="key-pill" id="key-status" onclick="location.href='01a-loop.html?openKeyPanel=1'">…</span>
+  <span class="key-pill" id="claw-status" onclick="location.href='03a-kickstart.html#probe-claw'">…</span>
+</div>
+
+<main>
+  <div id="journey-map"></div>
+
+  <div class="hero">
+    <div class="eyebrow">Module 4 · Part B of 3</div>
+    <h1>Modern <span>CLI Agents</span></h1>
+    <p class="lead">
+      The agents compared below wrap the same handful of capabilities:
+    </p>
+    <ul class="lead">
+      <li>a working directory</li>
+      <li>a tool palette</li>
+      <li>a memory</li>
+      <li>optional ways to run without a person actively typing, such as cron, long tasks, or queued jobs</li>
+      <li>a network</li>
+    </ul>
+    <p class="lead">
+      Their security profiles depend on which capabilities are open by default and whether
+      unattended execution is enabled. The runtime underneath must also catch a bad call.
+    </p>
+    <p class="lead">
+      Module 4a separated application decisions from operating-system enforcement.
+      Application wrappers sit above that boundary. You will compare them before building
+      a browser-based CLI agent of your own.
+    </p>
+  </div>
+
+  <h2>Shared loop, different application defaults</h2>
+  <p>Each product runs a model in a loop with tools. Defaults and built-in capabilities
+     differ. Implementation detail varies too. Their combined cost and convenience form
+     the <em>harness weight</em> used below.</p>
+  <ul class="cli-list">
+    <li><a href="https://docs.claude.com/en/docs/claude-code" target="_blank" rel="noopener"><strong>Claude Code</strong></a> (Anthropic).
+        Beacon <code>CLAUDE.md</code> at the project root, plus <code>~/.claude/CLAUDE.md</code> for user-wide rules.
+        A rich palette (edit, bash, web, sub-agents, long tasks) with hooks that intercept tool calls, and conservative
+        defaults: you opt into broader file and network reach.</li>
+    <li><a href="https://github.com/openai/codex" target="_blank" rel="noopener"><strong>Codex CLI</strong></a> (OpenAI).
+        Beacon <code>AGENTS.md</code>. Its default sandbox is approval mode: every write or shell command waits for your
+        nod unless you pass <code>--full-auto</code>. The palette centres on shell, and even file-edit is shell.</li>
+    <li><a href="https://docs.cursor.com" target="_blank" rel="noopener"><strong>Cursor</strong></a> (IDE-resident).
+        Beacon <code>.cursor/rules/*.mdc</code>. The agent is wired through your
+        editor, so the palette is editor-shaped ("apply this diff to file X") and the sandbox is whatever your editor and
+        OS already grant.</li>
+    <li><a href="https://github.com/NousResearch/hermes-agent" target="_blank" rel="noopener"><strong>Hermes</strong></a> (Nous Research).
+        A self-improving terminal agent: it <em>creates skills from experience</em>, persists memory across sessions,
+        runs a built-in cron, and is reachable from Telegram, Discord, and Slack through its gateway. The same application
+        shape as OpenClaw, with self-modification and a messaging surface turned on.</li>
+    <li><a href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener"><strong>OpenClaw</strong></a> (in NVIDIA NemoClaw).
+        The one you have been driving. Its beacon is the whole <code>workspace/</code> folder (SOUL.md, AGENTS.md,
+        IDENTITY.md, and the rest). It supports unattended operation through gateway-managed triggers, and in the
+        NemoClaw reference stack it runs <em>inside</em> the OpenShell sandbox, so its tool palette is gated by a kernel policy
+        regardless of what the model decides.</li>
+  </ul>
+
+  <p>Note that Hermes seems to differ from the editor CLIs because "automatic learning"
+    is supported by default as a flagship feature. This system still uses the same fundamental
+    primitives as the other agents (skills/cron/memory updates with write permissions),
+    so the risk is not unique to Hermes.</p>
+
+  <div class="callout">
+    <strong>OpenShell can host this class of agent application; NemoClaw is the
+    reference stack this course runs.</strong> The same OpenShell integration is documented by
+    NVIDIA for Codex, Cursor, and OpenCode. The CLI you pick decides the starting
+    defaults, while the OpenShell wrapper around it governs how far
+    any of those defaults are permitted to reach.
+  </div>
+
+  <h2>The degrees of freedom are the attack surface</h2>
+  <p>Every one of these agents is configured along the same axes, and each axis
+     names a capability you grant or withhold. The NemoClaw column below reads
+     straight from the OpenShell policy your launchable is running, the one you
+     read live and proved in <a href="04a-safety.html">Module 4a</a>.</p>
+
+  <table class="dof-table">
+    <thead><tr><th>Degree of freedom</th><th>The knob</th><th>NemoClaw default (live policy)</th></tr></thead>
+    <tbody>
+      <tr><td>Filesystem</td><td>which paths are readable / writable</td>
+        <td>write only <code>/tmp</code>, <code>/sandbox/.openclaw</code>, <code>/sandbox/.nemoclaw</code>, and the workdir; system paths read-only. Enforced by Landlock (<code>best_effort</code>).</td></tr>
+      <tr><td>Network egress</td><td>host + port + HTTP method/path, per binary</td>
+        <td>deny by default; a short allowlist (NVIDIA inference, <code>inference.local</code>, clawhub/npm), each scoped to one HTTP shape and bound to a specific binary.</td></tr>
+      <tr><td>Process identity</td><td>which user the agent runs as</td>
+        <td>non-root <code>sandbox</code> user; <code>ptrace</code>, <code>mount</code>, <code>setuid</code> blocked by seccomp.</td></tr>
+      <tr><td>Binary identity</td><td>which executable may use a grant</td>
+        <td>resolved by exe path plus an ancestor walk with a trust-on-first-use hash; <code>argv[0]</code> is distrusted because it is spoofable.</td></tr>
+      <tr><td>Persistence</td><td>cron, skills, and the SOUL.md persona</td>
+        <td>writable inside the workspace. The policy schema cannot make a single file read-only, so SOUL.md protection is DAC plus <code>chattr +i</code> under "shields up", not the sandbox.</td></tr>
+      <tr><td>Inference routing</td><td>which model endpoint calls leave through</td>
+        <td>routed through the managed <code>inference.local</code> gateway; the Privacy Router decides what context may leave on the operator's policy, not the agent's.</td></tr>
+    </tbody>
+  </table>
+
+
+  <h2>Try it · the same task, weighed across harnesses</h2>
+  <p>
+    The artifact compares harness weight along these axes:
+  </p>
+  <ul>
+    <li><strong>Abstractions</strong> the harness hides, so you write less code and also see less of what runs.</li>
+    <li><strong>Assumptions and defaults</strong> it bakes in, which decide how far it reaches before you ask.</li>
+    <li><strong>First-class features</strong> it ships built in, against the same capability left for you to hand-roll.</li>
+  </ul>
+  <p>
+    Describe a task and compare how much machinery each harness supplies. The editable
+    cell exposes its system prompt and response logic. It also shows the examples. Rerun
+    the cell after an edit to rebuild the artifact.
+  </p>
+  <div id="clis-cell"></div>
+  <div id="clis-artifact"></div>
+  <script type="module">
+    import { mountRunCell } from "./scripts/_shared.js";
+    mountRunCell("#clis-cell", {
+      label: "the Try-it artifact, in code",
+      autorun: true,
+      code: `// "Weigh the harnesses" artifact. Grounds on the vendored framework READMEs
+// Inline CLI extracts seed the prompt; README toggles add full docs for one turn.
+const META = { frameworks: [
+  { id: "claude-code", name: "Claude Code", note: "Anthropic. Beacon CLAUDE.md.", source: "https://raw.githubusercontent.com/anthropics/claude-code/main/README.md", extract: "Claude Code is an agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster by executing routine tasks, explaining complex code, and handling git workflows -- all through natural language commands. Use it in your terminal, IDE, or tag @claude on Github." },
+  { id: "codex", name: "Codex CLI", note: "OpenAI. Beacon AGENTS.md.", source: "https://raw.githubusercontent.com/openai/codex/main/README.md", extract: "Codex CLI is a coding agent from OpenAI that runs locally on your computer. If you want Codex in your code editor (VS Code, Cursor, Windsurf), install in your IDE. If you want the desktop app experience, run codex app or visit the Codex App page." },
+  { id: "cursor", name: "Cursor", note: "Closed-source editor agent. No public repo; described from the course.", source: "course-authored (no public repo)", extract: "Cursor is a closed-source AI code editor with a built-in agent. It has no public repository, so this description stands in for a README." },
+  { id: "hermes", name: "Hermes", note: "Nous Research. Skills, memory, cron, and a multi-platform gateway.", source: "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/README.md", extract: "Hermes Agent is an open-source agent framework by Nous Research. Its public documentation covers reusable skills, persistent memory, scheduled tasks, and messaging gateways, with provider and tool configuration left to the operator." },
+  { id: "openclaw", name: "OpenClaw", note: "Open-source personal agent harness; this course runs it through NVIDIA NemoClaw.", source: "https://raw.githubusercontent.com/openclaw/openclaw/main/README.md", extract: "OpenClaw is a personal AI assistant that runs on the operator's devices and communicates through configured channels. The NemoClaw reference stack used by this course runs OpenClaw inside OpenShell so filesystem, process, network, and inference access can be governed outside the model." }
+] };
+const FW = META.frameworks;                       // [{ id, name, note, source, extract }]
+const nameOf = (id) => (FW.find((f) => f.id === id) || {}).name || id;
+const _cache = {};
+async function readme(id) {
+  const fallback = () => (FW.find((f) => f.id === id) || {}).extract || "";
+  if (_cache[id] == null) {
+    try { const r = await helpers.fetch("assets/cli_readme_" + id + ".txt"); _cache[id] = r.ok ? await r.text() : fallback(); }
+    catch (e) { _cache[id] = fallback(); }
+  }
+  return _cache[id];
+}
+
+// A grounded system prompt, assembled from the READMEs instead of guessed.
+const SYS =
+  "These agent CLIs share one shape, a model looping over tools. Grounded descriptions from their docs:\\n" +
+  FW.map((f) => "- " + f.name + " (" + f.note + "): " + f.extract).join("\\n") +
+  "\\n\\nThey are interchangeable for almost any task; what differs is harness weight: the abstractions each hides, the defaults it assumes, and the capabilities it makes first-class instead of leaving you to hand-roll. " +
+  "Self-modification is not unique to any one of them: any that can edit files can rewrite its own skills, so treat it as a difference of emphasis, not capability. " +
+  "Ground every claim in the descriptions above and in any READMEs the user attached. If a detail is not supported there, say you are unsure instead of inventing a feature. " +
+  "For the user's task, answer in three parts. (1) In two sentences, the near-identical core loop all of them would run, so it is clear any could do it. (2) One line per CLI: the single thing that is first-class for THIS task versus what you would hand-roll, plus the default that sets its weight, citing the doc detail it rests on. (3) One sentence: none is more capable here, so the choice is how much harness weight the task is worth. Do not crown a single winner.";
+
+// One toggle per framework; selection clears after the next question.
+const selected = new Set();
+const stale = document.querySelector("#clis-readme-bar");
+if (stale) stale.remove();
+
+const bar = document.createElement("div");
+bar.id = "clis-readme-bar"; bar.className = "chatui-mods";
+bar.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 8px";
+bar.innerHTML = "<label>READMEs</label>";
+
+const btnFor = {};
+FW.forEach((f) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chatui-modchip"; b.textContent = "+ " + f.name; b.title = f.source;
+  b.addEventListener("click", () => { b.classList.toggle("on"); selected.has(f.id) ? selected.delete(f.id) : selected.add(f.id); });
+  btnFor[f.id] = b; bar.appendChild(b);
+});
+document.querySelector("#clis-artifact").before(bar);
+const clearSel = () => { selected.clear(); FW.forEach((f) => btnFor[f.id].classList.remove("on")); };
+
+helpers.mountChatUI("#clis-artifact", {
+  growLog: true,   // flow with the page instead of an internal 480px scroll that traps the wheel
+  greeting: "Tell me a task and where it runs. I will show the one core loop all of these CLIs would run for it, then weigh each from its docs, rather than crowning a single winner. Toggle a README above to hand me its full text for your next question.",
+  examples: ["Refactor a large repo unattended overnight", "A personal assistant I message from my phone", "Triage prod incidents on a server 24/7"],
+
+  respond: async (text, ctx) => {
+    let primer = "";
+    const sel = [...selected];
+    if (sel.length) {
+      const parts = await Promise.all(sel.map(async (id) => "## " + nameOf(id) + " README\\n\\n" + (await readme(id))));
+      primer = "\\n\\nThe user attached these full READMEs as reference for this decision. Ground your answer in them:\\n\\n" + parts.join("\\n\\n---\\n\\n");
+      ctx.view.tool("injected READMEs: " + sel.map(nameOf).join(", "));
+    }
+    const s = await helpers.chatStream({ messages: [{ role: "system", content: SYS + primer }, { role: "user", content: text }], max_tokens: 8196, signal: ctx.signal },
+      (t) => ctx.view.token(t), { onReasoning: (r) => ctx.view.reasoning(r) });
+    if (s.usage) ctx.view.usage({ input: s.usage.prompt_tokens, output: s.usage.completion_tokens, model: s.model });
+    clearSel();                                   // deselect so the same README never double-injects
+  },
+});
+helpers.log("rendered below. Toggle a README to add it as context, then ask.");
+
+/* mountChatUI renders the panel; respond() streams one chat call. */
+`,
+    });
+  </script>
+
+  <details class="learning-block" open data-learning-id="browser-cli-agent" data-learning-tier="deep" data-learning-artifact="optional" data-localization-scope="en-shell">
+  <summary data-localization-scope="en"><span class="learning-scope">Deep · Browser</span><span class="learning-question">Build an agent around the browser runtime?</span></summary>
+  <div class="learning-block-body">
+  <h2>Build a CLI agent whose shell is this browser</h2>
+  <p>
+    The CLIs above attach an agent to a terminal on a real machine. You can build the same
+    shape with the browser's own JavaScript runtime as the shell. The agent below has one
+    tool, <code>js</code>, with which it writes JavaScript that runs in this live page and
+    returns a result the agent reads before deciding what to run next. The runtime is already
+    loaded, so the harness weighs nothing to stand up. Its reach is still wide: the agent can
+    read the DOM, call <code>fetch</code>, and use the course helpers, all inside the tab you
+    are reading.
+  </p>
+  <p>
+    Module 4c returns to this browser form factor and separates the transferable part&mdash;an
+    interactive web surface with visible state and controls&mdash;from the authentication,
+    storage, network, and tool adapters supplied by a particular host.
+  </p>
+  <div id="cell-jsagent"></div>
+  <div id="jsagent-artifact"></div>
+  <script type="module">
+    import { mountRunCell } from "./scripts/_shared.js";
+    mountRunCell("#cell-jsagent", {
+      openCode: false,
+      label: "a CLI agent bound to the browser runtime, in code",
+      intro: "Give the mounted agent a goal and watch its JavaScript tool calls first. Open the implementation when you want to change the tool boundary, loop cap, or final-answer rule.",
+      autorun: true,
+      code: `// A CLI agent whose shell is THIS browser's JS runtime. Its one tool, js, runs
+// code in the live page and returns a value, so the agent loops: reason, run, read, repeat.
+// The runtime is already loaded, nothing to install.
+const JS_TOOL = {
+  type: "function",
+  function: {
+    name: "js",
+    description: [
+      "Run JavaScript in this browser page and return a value.",
+      "You have the full window: document, fetch, location, and the course helpers object.",
+      "End with a return statement to report the result.",
+    ].join(" "),
+    parameters: {
+      type: "object",
+      properties: { code: { type: "string", description: "JavaScript to run. Use return." } },
+      required: ["code"],
+    },
+  },
+};
+
+// Run agent-written code against the live runtime. helpers is injected; document, window, and fetch are ambient.
+async function runJS(code) {
+  const fn = new Function("helpers", "return (async () => { " + code + " })();");
+  return await fn(helpers);
+}
+
+helpers.mountChatUI("#jsagent-artifact", {
+  growLog: true,   // flow with the page instead of an internal 480px scroll that traps the wheel
+  greeting: "Give me a goal. My shell is this page's JavaScript runtime, so I act by running JS right here in your tab.",
+  examples: [
+    "How many code editors are on this page?",
+    "List the H2 section headings on this page.",
+    "Fetch assets/rag_index.json and report the embed model and how many docs it pins.",
+    "How many links on this page open in a new tab?",
+    "Compute the 12th Fibonacci number and return it.",
+    "Which keys are in localStorage right now?",
+  ],
+  respond: async (goal, ctx) => {
+    const messages = [
+      {
+        role: "system",
+        content: [
+          "You are a CLI agent whose shell is this browser's JavaScript runtime.",
+          "To learn anything, call the js tool with code that runs in the live page.",
+          "End each code snippet with a return statement.",
+          "Never claim a result you did not run.",
+          "Editable code cells render as .CodeMirror elements, not .code-editor.",
+          "If a selector returns nothing, inspect the DOM before concluding.",
+          "When you have enough, reply with a short plain-text answer and no tool call.",
+        ].join(" "),
+      },
+      { role: "user", content: goal },
+    ];
+
+    let answered = false;
+    for (let step = 0; step < 8; step++) {
+      const r = await helpers.chat({ messages, tools: [JS_TOOL], max_tokens: 8196 });
+      const m = r.choices[0].message;
+      messages.push(m);
+
+      const calls = m.tool_calls || [];
+      if (!calls.length) {
+        const txt = (m.content || "").trim();
+        if (txt) { ctx.view.token(txt); answered = true; break; }
+        messages.push({ role: "user", content: "Run js to gather what you need, or give your final plain-text answer." });
+        continue;
+      }
+      for (const tc of calls) {
+        let code = "";
+        try { code = JSON.parse(tc.function.arguments || "{}").code || ""; } catch (_) {}
+        if (!code.trim()) {
+          ctx.view.tool("$ js", "(empty)");
+          ctx.view.tool("returned", "no code submitted");
+          messages.push({ role: "tool", tool_call_id: tc.id, content: "Error: no code submitted. Put JavaScript in the code argument and end with a return statement." });
+          continue;
+        }
+        ctx.view.tool("$ js", code);                       // the JS the agent chose to run
+
+        let out;
+        try { out = await runJS(code); } catch (e) { out = "Error: " + ((e && e.message) || e); }
+        const text = out === undefined ? "undefined (did the snippet end with a return?)" : (typeof out === "object" ? JSON.stringify(out) : String(out));
+        ctx.view.tool("returned", text.slice(0, 700));     // what the runtime handed back
+        messages.push({ role: "tool", tool_call_id: tc.id, content: text.slice(0, 1500) });
+      }
+    }
+    // Always land on a plain-text answer instead of dead-ending at "(no answer)".
+    if (!answered) {
+      const r = await helpers.chat({ messages: messages.concat([{ role: "user", content: "Give your best final answer now in one or two plain-text sentences, using only what the tool returned." }]), max_tokens: 8196 });
+      ctx.view.token((r.choices[0].message.content || "I could not determine that from the page.").trim());
+    }
+  },
+});
+helpers.log("CLI agent mounted below. Give it a goal and watch it drive the runtime.");
+`,
+    });
+  </script>
+  </div>
+  </details>
+
+  <details class="learning-block" open data-learning-id="launchable-shell" data-learning-tier="applied" data-learning-artifact="optional" data-localization-scope="en-shell">
+  <summary data-localization-scope="en"><span class="learning-scope">Applied · Shell</span><span class="learning-question">Open the launchable shell and sandbox shortcut?</span></summary>
+  <div class="learning-block-body">
+  <h2>Open a real shell on your launchable</h2>
+  <p>Your NemoClaw launchable gives you a real host shell over the same <code>/ws/terminal</code>
+     connection Module 4a's policy probes use. That host carries the <strong>openshell</strong> CLI, the
+     operator tool that manages your sandboxed agent. Every line you type below runs on the launchable, and
+     the output is its own.</p>
+  <p>Connect your launchable on <a href="03a-kickstart.html">Module 3a</a> first. Type a command, click a
+     chip, or press Tab to autocomplete. On the host, <code>openshell sandbox list</code> shows your agent
+     and <code>openshell status</code> reports the gateway. Your agent runs inside a sandbox, so prefix a
+     command with <code>agent</code> to run it there: <code>agent ls</code> lists its files through
+     <code>openshell sandbox exec</code>. Each command runs in its own short-lived shell, so to chat with the
+     agent interactively, use the panel below rather than the <code>openclaw tui</code>.</p>
+  <div id="cell-deepagents"></div>
+  <div id="deepagents-artifact"></div>
+  <script type="module">
+    import { mountRunCell } from "./scripts/_shared.js";
+    mountRunCell("#cell-deepagents", {
+      label: "a real terminal on your launchable, with an agent-sandbox shortcut",
+      autorun: true,
+      code: `// This is the real launchable shell used by Module 4a through helpers.terminal.
+// The host carries openshell; prefix a command with "agent" to run it in the sandbox.
+// Interactive sessions need a persistent connection, so chatting lives in the panel below.
+
+function launchableUrl() {
+  let u = helpers.getOpenClawConnection().rawUrl;
+  while (u.length && u[u.length - 1] === "/") u = u.slice(0, -1);
+  return u;
+}
+
+const SUGGESTIONS = ["help", "openshell sandbox list", "openshell status", "openshell --help", "agent ls", "agent ls -a", "agent pwd"];
+// Interactive sessions a one-shot terminal cannot drive: steer the student to the chat panel or to exec.
+const INTERACTIVE = ["openshell term", "openshell sandbox connect", "nemoclaw", "openclaw chat", "openclaw tui", "openclaw configure"];
+const HELP = 'This is your launchable host shell. The host carries the openshell CLI; your agent runs inside a sandbox. On the host, try: openshell sandbox list, openshell status, openshell --help. To run a command inside your agent, prefix it with "agent", for example: agent ls. To chat with the agent, use the panel below this terminal. Type clear to empty the screen.';
+
+function hintFor(output) {
+  if (/execvp|command not found|No such file or directory/i.test(String(output || ""))) {
+    return "Not a command on the launchable host. The host carries openshell, so try openshell --help or openshell sandbox list, or run it inside your agent with: agent <command>.";
+  }
+  return "";
+}
+
+async function run(cmd, con, ctx) {
+  const t = cmd.trim();
+  if (t === "/help" || t === "help" || t === "?") return con.write(HELP, "da-dim");
+  if (t === "/clear" || t === "clear") return con.clear();
+  if (t.charAt(0) === "/") return con.write("Slash commands belong to the chat panel below or the openclaw tui, not this host shell. Type a command without the slash, or help.", "da-dim");
+  if (t === "agent" || t.indexOf("agent ") === 0) {
+    const inner = t.slice(5).trim();
+    if (!inner) return con.write('usage: agent <command>   runs <command> inside your agent sandbox, for example: agent ls', "da-dim");
+    let r;
+    try { r = await helpers.sandboxExec(inner, { signal: ctx.signal }); } catch (e) {
+      con.write(String((e && e.message) || e), "da-err");
+      return { status: "error", message: "Command failed. Read the message, then retry." };
+    }
+    con.write((r.output || "").trimEnd() || "(no output)");
+    const h = hintFor(r.output); if (h) con.write(h, "da-dim");
+    return;
+  }
+  if (INTERACTIVE.some(function (x) { return t.indexOf(x) === 0; })) return con.write('That starts an interactive session this one-shot terminal cannot hold open. To chat with your agent, use the panel below. For a one-shot command inside the agent, use: agent <command>.', "da-dim");
+  let got = false, captured = "";
+  try {
+    await helpers.terminal(t, { totalMs: 120000, idleMs: 8000, signal: ctx.signal, onChunk: function (c) { if (c) { got = true; captured += c; con.raw(c); } } });
+  } catch (e) {
+    con.write(String((e && e.message) || e), "da-err");
+    return { status: "error", message: "Terminal connection failed. Re-authenticate, then retry." };
+  }
+  if (!got) con.write("(no output)", "da-dim");
+  const h = hintFor(captured); if (h) con.write(h, "da-dim");
+}
+
+const connected = !!launchableUrl();
+helpers.mountConsole("#deepagents-artifact", {
+  prompt: "$",
+  suggestions: SUGGESTIONS,
+  disabled: !connected,
+  disabledMsg: "No launchable connected. Open Module 3a (Kickstart), connect your launchable, then return here.",
+  greeting: connected ? "Connected to your launchable host shell. It carries the openshell CLI; your agent runs in a sandbox. Type help, click a chip, or press Tab to autocomplete." : "",
+  onSubmit: run,
+});
+helpers.log("launchable terminal mounted below. If it says no launchable, connect on Module 3a.");
+`,
+    });
+  </script>
+
+  </div>
+  </details>
+
+  <h2>Chat with your agent</h2>
+  <p>The <code>openclaw tui</code> is an interactive, full-screen chat that a one-shot terminal cannot hold
+     open. The panel below talks to the same live agent over the OpenClaw gateway, the
+     <code>/cli/gateway</code> connection Modules <a href="03b-openclaw.html">3b</a> and
+     <a href="03c-always-on.html">3c</a> use, so you can chat with it without leaving the page. It streams the agent's
+     reply and shows each tool or command the agent runs. Connect your launchable on
+     <a href="03a-kickstart.html">Module 3a</a> first (its URL and token). Ask it anything, click a prompt,
+     or press Tab to autocomplete.</p>
+  <div id="cell-agentchat"></div>
+  <div id="agent-chat"></div>
+  <script type="module">
+    import { mountRunCell } from "./scripts/_shared.js";
+    mountRunCell("#cell-agentchat", {
+      label: "chat with your live agent over the OpenClaw gateway",
+      autorun: true,
+      code: `// Mount the live CLI artifact; gateway transport and session plumbing live in one shared helper.
+const cli = helpers.mountOpenClawCli("#agent-chat");
+if (!cli.connected) {
+  helpers.log("Connect your launchable on Module 3a, then rerun this cell.");
+  return { mounted: cli.mounted, connected: false };
+}
+
+// Optional visibility: uncomment to inspect the artifact's current session.
+// helpers.log.json("CLI state", { connected: cli.connected, session: cli.session });
+helpers.log("agent chat mounted below");
+return { mounted: cli.mounted, connected: cli.connected, session: cli.session };
+`,
+    });
+  </script>
+
+  <div class="callout">
+    <p><strong>The terminal above is the operator plane.</strong> From your launchable's host shell,
+    openshell manages the sandboxed agent, so the host is the control plane that sits above the policy, the
+    perimeter <a href="04a-safety.html">Module 4a</a> flagged. Commands you push into the agent with
+    <code>agent &lt;cmd&gt;</code> run under its deny-by-default policy. The host shell answers to the
+    operator instead.</p>
+    <ul>
+      <li><strong>Cost to stand up.</strong> The launchable was provisioned for you and is already running. On your own machine a CLI takes an install and a configured runtime before its first turn.</li>
+      <li><strong>Reach.</strong> Inside the agent the kernel policy gates every call, the deny-by-default rules you read in Module 4a. On your own machine the CLI can read and write your files and reach your whole network.</li>
+      <li><strong>Blast radius.</strong> A prompt injection inside the agent hits that sandbox and its audit trail. The same injection on your own machine runs against your real files, which is the degrees-of-freedom argument from the top of this page, now in your hands.</li>
+    </ul>
+    <p>A heavier harness earns its weight whenever a task calls for persistence and real work that a tab
+    cannot carry. The skill worth building is reading a task well enough to pick the weight it needs, which
+    is the layered view <a href="04c-going-further.html">Module 4c</a> closes on.</p>
+  </div>
+
+  <div class="foot-nav">
+    <a href="04a-safety.html">← Module 4a: OpenShell</a>
+    <a class="next" href="04c-going-further.html">Module 4c: Going Further →</a>
+  </div>
+</main>
+
+<script type="module">
+import { buildNav, updateKeyPill, updateClawPill, mountJourneyMap } from "./scripts/_shared.js";
+document.getElementById("nav").innerHTML = buildNav("04b-modern-clis.html");
+updateKeyPill(document.getElementById("key-status"));
+updateClawPill(document.getElementById("claw-status"));
+mountJourneyMap("#journey-map", "4b");
+hljs.highlightAll();
+
+
+
+</script>
+</body>
+</html>

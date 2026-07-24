@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="page-role" content="tool"/>
+<title>Browser dependencies · Securing Agents</title>
+<link rel="stylesheet" href="styles/_style.css"/>
+<style>
+main{max-width:92rem;margin:0 auto;padding:clamp(1.4rem,4vw,3.5rem)}
+.dep-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.4rem}.dep-head h1{margin:.15rem 0 .35rem;color:var(--tx)}
+.dep-head p{max-width:54rem;margin:0;color:var(--td)}.dep-back{color:var(--gs);text-decoration:none;border:1px solid var(--bd);border-radius:999px;padding:.45rem .8rem}
+.dep-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:.75rem;margin:1.2rem 0 1.8rem}.dep-stat{border:1px solid var(--bd);border-radius:10px;background:var(--e1);padding:1rem}.dep-stat b{display:block;color:var(--gs);font:800 1.55rem/1 var(--mono);margin-bottom:.35rem}.dep-stat span{color:var(--tf);font-size:.78rem}
+.dep-section{margin:1.8rem 0}.dep-section h2{margin:0 0 .35rem}.dep-section>p{color:var(--td);max-width:70rem;margin:.35rem 0 1rem}
+.dep-table-wrap{overflow:auto;border:1px solid var(--bd);border-radius:10px}.dep-table{width:100%;border-collapse:collapse;min-width:54rem;background:var(--e1)}.dep-table th,.dep-table td{text-align:left;vertical-align:top;padding:.7rem .8rem;border-bottom:1px solid var(--bd)}.dep-table th{position:sticky;top:0;background:var(--e2);color:var(--tx);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}.dep-table tr:last-child td{border-bottom:0}.dep-table td{color:var(--td);font-size:.83rem}.dep-table code{color:var(--gs)}
+.dep-kind{display:inline-block;border:1px solid var(--bd);border-radius:999px;padding:.12rem .45rem;color:var(--tf);font-size:.68rem;white-space:nowrap}.dep-license{color:var(--gs)}.dep-hash{font:normal .72rem/1.4 var(--mono);overflow-wrap:anywhere;color:var(--tf)}
+.dep-note{border-left:3px solid var(--g);background:rgba(118,185,0,.07);padding:.8rem 1rem;color:var(--td);margin:1rem 0}.dep-links{margin:.8rem 0;padding-left:1.2rem;color:var(--td)}.dep-links li+li{margin-top:.35rem}.dep-error{color:var(--err)}
+.dep-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.75rem;counter-reset:step;margin:1rem 0}.dep-step{counter-increment:step;border:1px solid var(--bd);border-radius:10px;background:var(--e1);padding:1rem}.dep-step::before{content:counter(step);display:grid;place-items:center;width:1.7rem;height:1.7rem;border-radius:50%;background:var(--g);color:var(--bg);font-weight:800;margin-bottom:.65rem}.dep-step h3{margin:0 0 .35rem;color:var(--tx);font-size:1rem}.dep-step p{margin:0;color:var(--td);font-size:.86rem}.dep-plain{display:grid;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));gap:.75rem;margin:1rem 0}.dep-plain article{border:1px solid var(--bd);border-radius:10px;padding:1rem;background:var(--e1)}.dep-plain h3{margin:0 0 .35rem;color:var(--tx);font-size:1rem}.dep-plain p{margin:0;color:var(--td);font-size:.86rem}
+@media(max-width:700px){main{padding:1rem}.dep-table{min-width:46rem}}
+</style>
+</head>
+<body>
+<main>
+  <header class="dep-head">
+    <div>
+      <h1>Browser dependency inventory</h1>
+      <p>These are the JavaScript and CSS files shipped to the learner browser. Generation starts from locked package inputs. It then records the emitted bytes and every runtime source reference.</p>
+    </div>
+    <a class="dep-back" href="index.html">Course home</a>
+  </header>
+
+  <div class="dep-note">All listed assets come from the static course origin; course pages never fetch executable packages from a public package CDN at runtime.</div>
+  <section class="dep-summary" id="summary" aria-label="Dependency summary"><div class="dep-stat"><b>…</b><span>Loading inventory</span></div></section>
+
+  <section class="dep-section">
+    <h2>How the browser file is assembled</h2>
+    <p>The course needs a few LangChain APIs, but their published files refer to other packages by name and some use Node-style modules. A static browser cannot resolve that layout on its own.</p>
+    <div class="dep-steps">
+      <article class="dep-step"><h3>The course chooses features</h3><p>One small entry file imports the five APIs used by the exercises.</p></article>
+      <article class="dep-step"><h3>The lock chooses exact packages</h3><p>The npm lock fixes every package version and registry integrity value, including indirect requirements.</p></article>
+      <article class="dep-step"><h3>esbuild follows the imports</h3><p>esbuild resolves the reachable npm graph and combines it into one browser ESM file. This project does not minify that file.</p></article>
+      <article class="dep-step"><h3>The inventory records the result</h3><p>The tables below record the npm packages, copied utilities already inside LangChain, full licenses, output hashes, and dependency links.</p></article>
+    </div>
+    <div class="dep-plain">
+      <article><h3>Why <code>p-timeout</code> appears here</h3><p><code>@langchain/core</code> and <code>langsmith</code> require <code>p-queue</code>. That package requires <code>p-timeout</code>, which requires <code>p-finally</code>. The table records the full dependency chain even when a file has no special legal comment.</p></article>
+      <article><h3>Preserved comments are not a package list</h3><p>Some source authors mark comments with forms such as <code>/*!</code> or <code>@license</code>. Because the build uses esbuild's <code>legalComments: "external"</code> setting, esbuild moves those marked comments into <code>.LEGAL.txt</code>. Ordinary dependencies can have no such comment, and embedded copied code can have a comment without being a separate npm package.</p></article>
+    </div>
+  </section>
+
+  <section class="dep-section">
+    <h2>npm packages included in the course</h2>
+    <p>“Selected by this project” means the course requested the package. “Required by” names the included package that brought an indirect dependency into the browser file. Each license link opens the complete license text shipped with this course version.</p>
+    <div class="dep-table-wrap"><table class="dep-table" id="package-table"><thead><tr><th>Package</th><th>Version</th><th>Why included</th><th>License</th><th>Purpose</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="dep-section">
+    <h2>Utility code already copied into LangChain</h2>
+    <p>The rows below describe utility sources already present in <code>@langchain/core</code> 1.1.48. The course receives them through that pinned package, and esbuild includes only the portions reached by course imports. No separate npm install occurs. When LangChain omits an original upstream release number, this inventory records that uncertainty instead of guessing.</p>
+    <div class="dep-table-wrap"><table class="dep-table" id="embedded-table"><thead><tr><th>Embedded component</th><th>Recorded version</th><th>License</th><th>Used for</th><th>Exact source evidence</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="dep-section">
+    <h2>Delivered assets</h2>
+    <p>SHA-256 binds each committed browser asset. Reference counts cover canonical pages plus pt-BR and es-ES runtime source.</p>
+    <div class="dep-table-wrap"><table class="dep-table" id="asset-table"><thead><tr><th>Asset</th><th>Size</th><th>Packages</th><th>Source refs</th><th>SHA-256</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="dep-section">
+    <h2>Reproduction boundary</h2>
+    <p>The exact npm inputs live in <code>scripts/browser-vendor/package.json</code> and <code>package-lock.json</code>. Embedded-source evidence is pinned to the official <code>@langchain/core@1.1.48</code> tag and commit. CI regenerates the browser file, rejects an unmapped legal-comment section, verifies every license and hash, and checks that the dependency graph and CycloneDX inventory agree. Package-CDN URLs are rejected in student runtime code.</p>
+    <ul class="dep-links"><li id="legal-list"></li><li id="sbom-link"></li></ul>
+  </section>
+  <p class="dep-error" id="error" role="alert"></p>
+</main>
+<script>
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const size=n=>n<1024?`${n} B`:n<1048576?`${(n/1024).toFixed(1)} KiB`:`${(n/1048576).toFixed(2)} MiB`;
+fetch("vendor/browser-dependencies.json").then(r=>{if(!r.ok)throw new Error(`inventory request failed: ${r.status}`);return r.json()}).then(data=>{
+  const direct=data.packages.filter(p=>p.direct).length;
+  const totalBytes=data.assets.reduce((sum,a)=>sum+a.bytes,0);
+  document.getElementById("summary").innerHTML=[
+    [data.packages.length,"npm packages"],[data.embedded_components.length,"embedded components"],[direct,"packages selected directly"],[data.assets.length,"same-origin assets"],[size(totalBytes),"total browser bytes"]
+  ].map(([v,l])=>`<div class="dep-stat"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("");
+  document.querySelector("#package-table tbody").innerHTML=data.packages.map(p=>`<tr><td><a class="dep-license" href="${esc(p.package_url)}" target="_blank" rel="noopener"><code>${esc(p.name)}</code></a></td><td>${esc(p.version)}</td><td><span class="dep-kind">${p.direct?"selected by this project":"indirect dependency"}</span><br>${p.direct?"Imported by the course entry file.":`Required by ${p.required_by.map(esc).join(", ")}.`}</td><td><a class="dep-license" href="vendor/${esc(p.license_file)}">${esc(p.license)}</a></td><td>${esc(p.purpose)}</td></tr>`).join("");
+  document.querySelector("#embedded-table tbody").innerHTML=data.embedded_components.map(c=>`<tr><td><a class="dep-license" href="${esc(c.upstream_url)}" target="_blank" rel="noopener"><code>${esc(c.name)}</code></a><br><span class="dep-kind">copied into ${esc(c.parent_package)} by LangChain</span></td><td>${esc(c.version)}<br><small>${esc(c.version_note)}</small></td><td><a class="dep-license" href="vendor/${esc(c.license_file)}">${esc(c.license)}</a></td><td>${esc(c.purpose)}</td><td><a class="dep-license" href="${esc(c.langchain_source_url)}" target="_blank" rel="noopener">Pinned LangChain source</a><br><span class="dep-hash">${esc(c.source_commit)}</span></td></tr>`).join("");
+  document.querySelector("#asset-table tbody").innerHTML=data.assets.map(a=>`<tr><td><a class="dep-license" href="vendor/${esc(a.file)}"><code>${esc(a.file)}</code></a></td><td>${size(a.bytes)}</td><td>${a.packages.map(esc).join("<br>")}</td><td>${a.references.length}</td><td class="dep-hash">${esc(a.sha256)}</td></tr>`).join("");
+  document.getElementById("legal-list").innerHTML=`Comments preserved by esbuild (supplemental evidence, not the component list): ${data.legal_notices.map(n=>`<a class="dep-license" href="vendor/${esc(n.file)}"><code>${esc(n.file)}</code></a>`).join(", ")}.`;
+  document.getElementById("sbom-link").innerHTML=`Machine-readable inventory: <a class="dep-license" href="vendor/${esc(data.sbom.file)}"><code>${esc(data.sbom.file)}</code></a> (${data.sbom.component_count} npm and embedded CycloneDX components).`;
+}).catch(error=>{document.getElementById("error").textContent=`Could not load dependency inventory: ${error.message}`});
+</script>
+</body>
+</html>
