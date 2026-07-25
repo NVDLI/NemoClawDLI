@@ -164,16 +164,136 @@ export function artifactJavaScriptIssue(source) {
   return issues.join(" ");
 }
 
+function artifactTagEnd(source, start) {
+  let quote = "";
+  for (let index = start; index < source.length; index += 1) {
+    const character = source[index];
+    if (quote) {
+      if (character === quote) quote = "";
+    } else if (character === '"' || character === "'") quote = character;
+    else if (character === ">") return index;
+  }
+  return -1;
+}
+
+function artifactTagAttributes(source, start, end) {
+  const attributes = [];
+  let cursor = start;
+  while (cursor < end) {
+    while (cursor < end && /[\s/]/.test(source[cursor])) cursor += 1;
+    if (cursor >= end) break;
+    const nameStart = cursor;
+    while (cursor < end && !/[\s"'/>=]/.test(source[cursor])) cursor += 1;
+    if (cursor === nameStart) return { attributes, malformed: true };
+    const name = source.slice(nameStart, cursor).toLowerCase();
+    while (cursor < end && /\s/.test(source[cursor])) cursor += 1;
+    let value = "";
+    if (source[cursor] === "=") {
+      cursor += 1;
+      while (cursor < end && /\s/.test(source[cursor])) cursor += 1;
+      const quote = source[cursor] === '"' || source[cursor] === "'" ? source[cursor++] : "";
+      const valueStart = cursor;
+      if (quote) {
+        while (cursor < end && source[cursor] !== quote) cursor += 1;
+        if (cursor >= end) return { attributes, malformed: true };
+        value = source.slice(valueStart, cursor);
+        cursor += 1;
+      } else {
+        while (cursor < end && !/[\s>]/.test(source[cursor])) cursor += 1;
+        value = source.slice(valueStart, cursor);
+      }
+    }
+    attributes.push({ name, value });
+  }
+  return { attributes, malformed: false };
+}
+
+function artifactTagAt(source, start) {
+  if (source[start] !== "<") return null;
+  let cursor = start + 1;
+  const closing = source[cursor] === "/";
+  if (closing) cursor += 1;
+  while (cursor < source.length && /\s/.test(source[cursor])) cursor += 1;
+  const nameStart = cursor;
+  if (!/[A-Za-z]/.test(source[cursor] || "")) return null;
+  while (cursor < source.length && /[A-Za-z0-9:-]/.test(source[cursor])) cursor += 1;
+  const name = source.slice(nameStart, cursor).toLowerCase();
+  const boundary = source[cursor];
+  if (boundary && !/[\s/>]/.test(boundary)) return null;
+  const end = artifactTagEnd(source, cursor);
+  if (end < 0) return { name, closing, end, attributes: [], malformed: true };
+  const parsed = closing
+    ? { attributes: [], malformed: false }
+    : artifactTagAttributes(source, cursor, end);
+  return { name, closing, end, ...parsed };
+}
+
+function artifactCommentEnd(source, start) {
+  const standard = source.indexOf("-->", start);
+  const permissive = source.indexOf("--!>", start);
+  if (standard < 0) return permissive < 0 ? null : { start: permissive, length: 4 };
+  if (permissive < 0 || standard < permissive) return { start: standard, length: 3 };
+  return { start: permissive, length: 4 };
+}
+
+export function inspectArtifactHtmlSource(value) {
+  const source = String(value || "");
+  const inlineJavaScript = [];
+  let externalScripts = 0;
+  let navigationElements = false;
+  let malformed = source.includes("\0");
+  let cursor = 0;
+  while (!malformed && cursor < source.length) {
+    const next = source.indexOf("<", cursor);
+    if (next < 0) break;
+    if (source.slice(next, next + 4) === "<!--") {
+      const end = artifactCommentEnd(source, next + 4);
+      if (!end) { malformed = true; break; }
+      cursor = end.start + end.length;
+      continue;
+    }
+    const tag = artifactTagAt(source, next);
+    if (!tag) { cursor = next + 1; continue; }
+    if (tag.malformed) { malformed = true; break; }
+    cursor = tag.end + 1;
+    if (tag.closing) continue;
+    const attributeNames = new Set(tag.attributes.map(attribute => attribute.name));
+    if (["base", "iframe", "object", "embed"].includes(tag.name)
+        || (tag.name === "meta" && attributeNames.has("http-equiv"))) {
+      navigationElements = true;
+    }
+    for (const attribute of tag.attributes) {
+      if (attribute.name.startsWith("on")) inlineJavaScript.push(attribute.value);
+      if (/^\s*javascript\s*:/i.test(attribute.value)) navigationElements = true;
+    }
+    if (tag.name !== "script") continue;
+    if (attributeNames.has("src")) externalScripts += 1;
+    let closeStart = -1, closeTag = null, search = cursor;
+    while (search < source.length) {
+      const candidate = source.indexOf("<", search);
+      if (candidate < 0) break;
+      const parsed = artifactTagAt(source, candidate);
+      if (parsed?.malformed) { malformed = true; break; }
+      if (parsed?.closing && parsed.name === "script") {
+        closeStart = candidate; closeTag = parsed; break;
+      }
+      search = candidate + 1;
+    }
+    if (malformed || closeStart < 0 || !closeTag) { malformed = true; break; }
+    inlineJavaScript.push(source.slice(cursor, closeStart));
+    cursor = closeTag.end + 1;
+  }
+  return { inlineJavaScript, externalScripts, navigationElements, malformed };
+}
+
 export function artifactCodeIssue(artifact) {
   const html = String(artifact?.html || "");
-  const parsed = new DOMParser().parseFromString(html, "text/html");
-  const scripts = [...parsed.querySelectorAll("script")];
-  const external = scripts.filter(script => script.hasAttribute("src"));
-  const inline = scripts.filter(script => !script.hasAttribute("src")).map(script => script.textContent || "").join("\n");
-  const javascript = [inline, String(artifact?.javascript || "")].filter(Boolean).join("\n");
+  const inspection = inspectArtifactHtmlSource(html);
+  const javascript = [...inspection.inlineJavaScript, String(artifact?.javascript || "")].filter(Boolean).join("\n");
   const issues = [];
-  if (external.length) issues.push("External scripts are unavailable in the artifact sandbox. Use self-contained browser JavaScript.");
-  if (parsed.querySelector("base,meta[http-equiv],iframe,object,embed")) {
+  if (inspection.malformed) issues.push("Malformed artifact HTML cannot be validated safely.");
+  if (inspection.externalScripts) issues.push("External scripts are unavailable in the artifact sandbox. Use self-contained browser JavaScript.");
+  if (inspection.navigationElements) {
     issues.push("Navigation and embedded browsing elements are unavailable in the artifact sandbox.");
   }
   if (/(?:\bfetch\s*\(|\bXMLHttpRequest\b|\bWebSocket\s*\(|\blocalStorage\b|\bsessionStorage\b|\bindexedDB\b|\bwindow\.open\s*\(|\b(?:window\.)?location\s*=)/.test(javascript)) {
@@ -368,18 +488,127 @@ export function mountCourseAssistant(runtime = {}) {
     if (activeView === "artifact") setTimeout(() => Object.values(artifactEditors).forEach(editor => editor?.refresh()), 0);
   };
   const artifactDocument = (artifact, channel = artifactBridgeId) => {
-    const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; img-src data: blob:; font-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">`;
-    const javascript = String(artifact?.javascript || "").replace(/<\/script/gi, "<\\/script");
-    const bridge = `<script>(function(){const channel=${JSON.stringify(channel)},pending=new Map();let seq=0;const emit=(type,payload={})=>parent.postMessage({channel,type,...payload},"*");const report=value=>emit("artifact-error",{message:String(value?.message||value),line:value?.lineno||0,column:value?.colno||0});const embed=(input,options={})=>new Promise((resolve,reject)=>{const id=++seq;pending.set(id,{resolve,reject});emit("request",{id,method:"embed",args:[input,options]});setTimeout(()=>{if(pending.delete(id))reject(new Error("course.embed timed out"));},65000);});const cosineSim=(a,b)=>{if(!Array.isArray(a)||!Array.isArray(b)||!a.length||a.length!==b.length)throw new Error("helpers.cosineSim expects two non-empty vectors of equal length");let dot=0,aa=0,bb=0;for(let i=0;i<a.length;i++){const x=Number(a[i]),y=Number(b[i]);if(!Number.isFinite(x)||!Number.isFinite(y))throw new Error("helpers.cosineSim expects finite numbers");dot+=x*y;aa+=x*x;bb+=y*y;}return aa&&bb?dot/Math.sqrt(aa*bb):0;};const api=Object.freeze({embed,cosineSim});window.course=api;window.helpers=new Proxy(api,{get(target,key){if(key in target)return target[key];throw new Error("Artifact helper helpers."+String(key)+" is unavailable. Supported: helpers.embed, helpers.cosineSim.");}});window.__courseArtifact=Object.freeze({ready:()=>emit("artifact-ready"),report});const probe=async()=>{const original={alert:window.alert,confirm:window.confirm,prompt:window.prompt};window.alert=()=>{};window.confirm=()=>true;window.prompt=()=>"";try{for(const input of [...document.querySelectorAll("input,select,textarea")].slice(0,12)){if(input.disabled)continue;if(input.type==="radio"||input.type==="checkbox")input.checked=true;else if(input.tagName==="SELECT"&&input.options.length)input.selectedIndex=0;else if(!input.value)input.value="probe";input.dispatchEvent(new Event("input",{bubbles:true}));input.dispatchEvent(new Event("change",{bubbles:true}));}for(const button of [...document.querySelectorAll("button,input[type=button],input[type=submit]")].slice(0,12)){if(button.disabled)continue;try{button.click();}catch(error){report(error);}await Promise.resolve();}await new Promise(resolve=>setTimeout(resolve,120));}finally{window.alert=original.alert;window.confirm=original.confirm;window.prompt=original.prompt;}emit("artifact-probe-complete");};addEventListener("message",event=>{if(event.source!==parent)return;const data=event.data||{};if(data.channel!==channel)return;if(data.type==="response"&&pending.has(data.id)){const item=pending.get(data.id);pending.delete(data.id);data.error?item.reject(new Error(data.error)):item.resolve(data.result);}else if(data.type==="artifact-probe")probe().catch(error=>{report(error);emit("artifact-probe-complete");});});addEventListener("error",event=>report(event));addEventListener("unhandledrejection",event=>report(event.reason));})();<\/script>`;
-    const runner = `<script>\n(async () => {\n${javascript}\n})().then(()=>window.__courseArtifact.ready()).catch(error=>{window.__courseArtifact.report(error);window.__courseArtifact.ready();});\n<\/script>`;
+    const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; img-src data: blob:; font-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline' 'unsafe-eval'; base-uri 'none'; form-action 'none'">`;
+    const bridge = `<script>
+(() => {
+  const channel = ${JSON.stringify(channel)};
+  const pending = new Map();
+  let sequence = 0;
+  let sourceStarted = false;
+  const emit = (type, payload = {}) => parent.postMessage({ channel, type, ...payload }, "*");
+  const report = value => emit("artifact-error", {
+    message: String(value?.message || value),
+    line: value?.lineno || 0,
+    column: value?.colno || 0,
+  });
+  const embed = (input, options = {}) => new Promise((resolve, reject) => {
+    const id = ++sequence;
+    pending.set(id, { resolve, reject });
+    emit("request", { id, method: "embed", args: [input, options] });
+    setTimeout(() => {
+      if (pending.delete(id)) reject(new Error("course.embed timed out"));
+    }, 65000);
+  });
+  const cosineSim = (a, b) => {
+    if (!Array.isArray(a) || !Array.isArray(b) || !a.length || a.length !== b.length) {
+      throw new Error("helpers.cosineSim expects two non-empty vectors of equal length");
+    }
+    let dot = 0, aa = 0, bb = 0;
+    for (let index = 0; index < a.length; index += 1) {
+      const x = Number(a[index]), y = Number(b[index]);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        throw new Error("helpers.cosineSim expects finite numbers");
+      }
+      dot += x * y; aa += x * x; bb += y * y;
+    }
+    return aa && bb ? dot / Math.sqrt(aa * bb) : 0;
+  };
+  const api = Object.freeze({ embed, cosineSim });
+  window.course = api;
+  window.helpers = new Proxy(api, {
+    get(target, key) {
+      if (key in target) return target[key];
+      throw new Error("Artifact helper helpers." + String(key)
+        + " is unavailable. Supported: helpers.embed, helpers.cosineSim.");
+    },
+  });
+  const runSource = async source => {
+    const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+    const run = new AsyncFunction("course", "helpers", '"use strict";\\n' + source);
+    await run(api, window.helpers);
+  };
+  const probe = async () => {
+    const original = { alert: window.alert, confirm: window.confirm, prompt: window.prompt };
+    window.alert = () => {};
+    window.confirm = () => true;
+    window.prompt = () => "";
+    try {
+      for (const input of [...document.querySelectorAll("input,select,textarea")].slice(0, 12)) {
+        if (input.disabled) continue;
+        if (input.type === "radio" || input.type === "checkbox") input.checked = true;
+        else if (input.tagName === "SELECT" && input.options.length) input.selectedIndex = 0;
+        else if (!input.value) input.value = "probe";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      for (const button of [...document.querySelectorAll("button,input[type=button],input[type=submit]")].slice(0, 12)) {
+        if (button.disabled) continue;
+        try { button.click(); } catch (error) { report(error); }
+        await Promise.resolve();
+      }
+      await new Promise(resolve => setTimeout(resolve, 120));
+    } finally {
+      window.alert = original.alert;
+      window.confirm = original.confirm;
+      window.prompt = original.prompt;
+    }
+    emit("artifact-probe-complete");
+  };
+  addEventListener("message", event => {
+    if (event.source !== parent) return;
+    const data = event.data || {};
+    if (data.channel !== channel) return;
+    if (data.type === "response" && pending.has(data.id)) {
+      const item = pending.get(data.id);
+      pending.delete(data.id);
+      data.error ? item.reject(new Error(data.error)) : item.resolve(data.result);
+    } else if (data.type === "artifact-source" && !sourceStarted) {
+      sourceStarted = true;
+      const source = typeof data.javascript === "string" ? data.javascript : "";
+      if (source.length > ${MAX_ARTIFACT_FIELD_CHARS}) {
+        report(new Error("Artifact JavaScript exceeds the course limit."));
+        emit("artifact-ready");
+      } else {
+        runSource(source)
+          .catch(report)
+          .finally(() => emit("artifact-ready"));
+      }
+    } else if (data.type === "artifact-probe") {
+      probe().catch(error => {
+        report(error);
+        emit("artifact-probe-complete");
+      });
+    }
+  });
+  addEventListener("error", event => report(event));
+  addEventListener("unhandledrejection", event => report(event.reason));
+})();
+<\/script>`;
     const html = String(artifact?.html || "").trim();
     if (/<html[\s>]/i.test(html)) {
       let documentText = /<head[\s>]/i.test(html)
         ? html.replace(/<head([^>]*)>/i, `<head$1>${csp}${bridge}`)
         : html.replace(/<html([^>]*)>/i, `<html$1><head>${csp}${bridge}</head>`);
-      return /<\/body>/i.test(documentText) ? documentText.replace(/<\/body>/i, runner + "</body>") : documentText + runner;
+      return documentText;
     }
-    return `<!doctype html><html><head><meta charset="utf-8">${csp}${bridge}<style>:root{color-scheme:light}body{font:16px/1.5 system-ui;margin:1rem;color:var(--tx,#161616)}*{box-sizing:border-box}</style></head><body>${html}${runner}</body></html>`;
+    return `<!doctype html><html><head><meta charset="utf-8">${csp}${bridge}<style>:root{color-scheme:light}body{font:16px/1.5 system-ui;margin:1rem;color:var(--tx,#161616)}*{box-sizing:border-box}</style></head><body>${html}</body></html>`;
+  };
+  const sendArtifactSource = (frame, artifact, channel) => {
+    frame.contentWindow?.postMessage({
+      channel,
+      type: "artifact-source",
+      javascript: String(artifact?.javascript || ""),
+    }, "*");
   };
   const validateArtifactRuntime = artifact => new Promise(resolve => {
     const channel = randomId("artifact-check-");
@@ -413,7 +642,9 @@ export function mountCourseAssistant(runtime = {}) {
     };
     window.addEventListener("message", onMessage);
     const timer = setTimeout(() => finish("Artifact runtime validation timed out before its controls became ready."), 5000);
-    document.body.appendChild(frame); frame.src = blobUrl;
+    frame.addEventListener("load", () => sendArtifactSource(frame, artifact, channel), { once: true });
+    frame.src = blobUrl;
+    document.body.appendChild(frame);
   });
   const renderArtifact = (run = false) => {
     const artifact = activeSession()?.artifact;
@@ -426,6 +657,7 @@ export function mountCourseAssistant(runtime = {}) {
     if (run && artifact) {
       const previousBlobUrl = artifactBlobUrl;
       artifactBlobUrl = URL.createObjectURL(new Blob([artifactDocument(artifact)], { type: "text/html" }));
+      artifactFrame.addEventListener("load", () => sendArtifactSource(artifactFrame, artifact, artifactBridgeId), { once: true });
       artifactFrame.src = artifactBlobUrl;
       if (previousBlobUrl) URL.revokeObjectURL(previousBlobUrl);
     } else if (!artifact) clearArtifactPreview();
@@ -705,6 +937,7 @@ export function mountCourseAssistant(runtime = {}) {
       },
       intro: copy.intro,
       greeting: copy.greeting(page.id, attachedPage?.id || ""),
+      showGreetingWithHistory: true,
       examples: copy.examples,
       system: pt
         ? `Você é o Assistente do Curso Securing Agents. ${position} Para perguntas sobre o curso, use list_course_pages, search_course_pages e read_course_page. Para código, use list_course_code e depois read_course_source com o URI retornado; para módulos compartilhados, use list_course_runtime_files e read_course_runtime_source. Invoque as ferramentas pela API: nunca imprima os argumentos JSON como resposta. O runtime do curso é JavaScript no navegador: use HTML/JavaScript por padrão. O sandbox fornece a API assíncrona course.embed e os aliases helpers.embed e helpers.cosineSim; sempre use await course.embed(textos, { inputType: "query" ou "passage" }) ou await helpers.embed(...). Nenhum outro helpers.* está disponível. O executor aceita await no nível superior. Não use import, fetch, localStorage nem pacotes externos. O curso não oferece uma célula genérica para colar código. Para qualquer artefato, diagrama, painel, questionário ou simulação solicitada, chame queue_course_artifact; coloque marcação e CSS em html e código executável em javascript. Use elementos button, input ou select nativos para ações do estudante. Não responda com HTML bruto nem blocos de código. Defina cada função e alvo DOM usado. Se a ferramenta rejeitar o artefato, corrija o erro e chame-a novamente. Só diga que está pronto após a aceitação da ferramenta. Leia o código antes de explicar e nunca invente uma implementação nem alegue que o código é privado ou inacessível. Cite os IDs das páginas e os arquivos usados.`

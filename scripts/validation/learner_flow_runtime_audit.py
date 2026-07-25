@@ -360,7 +360,7 @@ async function waitText(locator, pattern) {
   if (!courseSearch.length || courseSearch.length > 4 || courseSearch.some(result => !result.id || !result.excerpt || result.excerpt.length > 900)) throw new Error(`page assistant course search is not bounded/useful: ${JSON.stringify(courseSearch)}`);
   const sourceAccess = await coursePage.evaluate(async () => {
     const { courseCode, courseCodeArtifacts, courseRuntimeFiles, courseRuntimeSource, resolveCoursePageUrl } = await import('./scripts/_langchain.js');
-    const { artifactFromMarkdown, artifactCodeIssue, artifactJavaScriptIssue, parseInlineCourseSourceIntent, questionTargetsCurrentPage, resolveCourseSourceUri } = await import('./scripts/_course_assistant.js');
+    const { artifactFromMarkdown, artifactCodeIssue, artifactJavaScriptIssue, inspectArtifactHtmlSource, parseInlineCourseSourceIntent, questionTargetsCurrentPage, resolveCourseSourceUri } = await import('./scripts/_course_assistant.js');
     const artifacts = await courseCodeArtifacts('02c-deep');
     const overviewArtifacts = await courseCodeArtifacts('overview');
     const overviewDocument = await courseCode('overview', 'page-html');
@@ -391,6 +391,16 @@ async function waitText(locator, pattern) {
       inlineScriptGuard:/browser storage APIs/.test(artifactCodeIssue({ html:'<script>localStorage.setItem("x", "y")</script>', javascript:'' })),
       externalScriptGuard:/External scripts/.test(artifactCodeIssue({ html:'<script src="https://example.com/demo.js"></script>', javascript:'' })),
       inlineHelperGuard:/helpers\.mountChatUI/.test(artifactCodeIssue({ html:'<script>helpers.mountChatUI("#app")</script>', javascript:'' })),
+      hostileHtmlScanner:[
+        /External scripts/.test(artifactCodeIssue({ html:'<SCRIPT\nSRC = "https://example.com/demo.js"></SCRIPT ignored>', javascript:'' })),
+        /browser storage APIs/.test(artifactCodeIssue({ html:'<script>localStorage.clear()</script foo="bar">', javascript:'' })),
+        /browser storage APIs/.test(artifactCodeIssue({ html:'<button onClick = "sessionStorage.clear()">Run</button>', javascript:'' })),
+        /Navigation/.test(artifactCodeIssue({ html:'<meta\nHTTP-EQUIV = "refresh" content="0;url=https://example.invalid">', javascript:'' })),
+        /Navigation/.test(artifactCodeIssue({ html:'<a href=" javascript:void(0)">Leave</a>', javascript:'' })),
+        /Malformed artifact HTML/.test(artifactCodeIssue({ html:'<script>unterminated', javascript:'' })),
+        artifactCodeIssue({ html:'<!-- <script src=x></script> --><div data-example="<script src=y>">Safe text</div>', javascript:'' }) === '',
+        inspectArtifactHtmlSource('<script>const marker = 1;</script data-extra>').inlineJavaScript.join("").includes('marker'),
+      ],
       inlineSourceRecovered:recoveredIntent?.uri === 'deep-src' && /Course source: 02c-deep · deep-src/.test(recoveredSource?.content || ''),
       artifactAsyncGuard:/asynchronous/.test(artifactJavaScriptIssue('const embeddings = course.embed(["hello"], { inputType: "query" });')),
       artifactInputGuard:/inputType/.test(artifactJavaScriptIssue('const embeddings = await course.embed(["hello"], { inputType: "text" });')),
@@ -403,7 +413,7 @@ async function waitText(locator, pattern) {
       deployedLessonUrl:resolveCoursePageUrl('02b-rag', 'https://pages.example/NemoClawDLIOS/nemoclaw/01a-loop.html'),
     };
   });
-  if (!sourceAccess.artifactIds.includes('deep-src') || !sourceAccess.artifactIds.includes('page-html') || !sourceAccess.artifactIds.some(id => /^module-/.test(id)) || !sourceAccess.overviewArtifactIds.includes('page-html') || !sourceAccess.overviewDocumentIsHtml || !sourceAccess.currentPageQuestions || sourceAccess.indexHasBodies || !sourceAccess.deepIsJavaScript || !sourceAccess.runtimeFiles.includes('_shared.js') || !sourceAccess.runtimeFiles.includes('_openclaw_cli.js') || !sourceAccess.sharedIsExact || !sourceAccess.traversalRejected || !sourceAccess.fencedArtifactCaptured || !sourceAccess.rawArtifactCaptured || !sourceAccess.inlineScriptGuard || !sourceAccess.externalScriptGuard || !sourceAccess.inlineHelperGuard || !sourceAccess.inlineSourceRecovered || !sourceAccess.artifactAsyncGuard || !sourceAccess.artifactInputGuard || !sourceAccess.artifactTopLevelAwait || !sourceAccess.artifactCombinedGuard || !sourceAccess.helperAliasAllowed || !sourceAccess.helperAsyncGuard || !sourceAccess.helperAllowlistGuard || sourceAccess.deployedOverviewUrl !== 'https://pages.example/NemoClawDLIOS/index.html' || sourceAccess.deployedLessonUrl !== 'https://pages.example/NemoClawDLIOS/nemoclaw/02b-rag.html') throw new Error(`Course Assistant source/artifact access is incomplete or unsafe: ${JSON.stringify(sourceAccess)}`);
+  if (!sourceAccess.artifactIds.includes('deep-src') || !sourceAccess.artifactIds.includes('page-html') || !sourceAccess.artifactIds.some(id => /^module-/.test(id)) || !sourceAccess.overviewArtifactIds.includes('page-html') || !sourceAccess.overviewDocumentIsHtml || !sourceAccess.currentPageQuestions || sourceAccess.indexHasBodies || !sourceAccess.deepIsJavaScript || !sourceAccess.runtimeFiles.includes('_shared.js') || !sourceAccess.runtimeFiles.includes('_openclaw_cli.js') || !sourceAccess.sharedIsExact || !sourceAccess.traversalRejected || !sourceAccess.fencedArtifactCaptured || !sourceAccess.rawArtifactCaptured || !sourceAccess.inlineScriptGuard || !sourceAccess.externalScriptGuard || !sourceAccess.inlineHelperGuard || !sourceAccess.hostileHtmlScanner.every(Boolean) || !sourceAccess.inlineSourceRecovered || !sourceAccess.artifactAsyncGuard || !sourceAccess.artifactInputGuard || !sourceAccess.artifactTopLevelAwait || !sourceAccess.artifactCombinedGuard || !sourceAccess.helperAliasAllowed || !sourceAccess.helperAsyncGuard || !sourceAccess.helperAllowlistGuard || sourceAccess.deployedOverviewUrl !== 'https://pages.example/NemoClawDLIOS/index.html' || sourceAccess.deployedLessonUrl !== 'https://pages.example/NemoClawDLIOS/nemoclaw/02b-rag.html') throw new Error(`Course Assistant source/artifact access is incomplete or unsafe: ${JSON.stringify(sourceAccess)}`);
   const sessionCap = await coursePage.evaluate(async () => {
     const { saveCourseAssistantStore, loadCourseAssistantStore } = await import('./scripts/_course_assistant.js');
     const values = new Map();
@@ -433,8 +443,12 @@ async function waitText(locator, pattern) {
   if (!/COURSE ASSISTANT/.test(await assistantPanel.innerText())) throw new Error('shared assistant was not rebranded course-wide');
   let sessionSelect = assistantPanel.locator('#course-assistant-session');
   if (await sessionSelect.locator('option').count() !== 1 || !/Persisted learner question/.test(await assistantPanel.innerText())) throw new Error('Course Assistant did not restore its local session');
-  if (!/Attached page: 01a-loop/.test(await assistantPanel.locator('.course-assistant-context').innerText())) throw new Error('restored Course Assistant session inherited the open page instead of its saved page');
-  if (!/Current page: 02b-rag/.test(await assistantPanel.locator('.course-assistant-context').innerText()) || !/You are on 02b-rag.*began on 01a-loop/s.test(await assistantPanel.locator('.chatui-log').innerText())) throw new Error('Course Assistant hides or misidentifies the live page when restoring another page session');
+  const restoredContext = await assistantPanel.locator('.course-assistant-context').innerText();
+  const restoredLog = await assistantPanel.locator('.chatui-log').innerText();
+  if (!/Attached page: 01a-loop/.test(restoredContext)) throw new Error(`restored Course Assistant session inherited the open page instead of its saved page: ${JSON.stringify({restoredContext})}`);
+  if (!/Current page: 02b-rag/.test(restoredContext) || !/You are on 02b-rag.*began on 01a-loop/s.test(restoredLog)) {
+    throw new Error(`Course Assistant hides or misidentifies the live page when restoring another page session: ${JSON.stringify({restoredContext,restoredLog})}`);
+  }
   await assistantPanel.locator('[data-course-assistant-view="history"]').click();
   if (!/read_course_page · 01a-loop/.test(await assistantPanel.locator('.course-assistant-history pre').innerText()) || !/Persisted course answer/.test(await assistantPanel.locator('.course-assistant-history pre').innerText())) throw new Error('Course Assistant History did not restore saved agent activity');
   await assistantPanel.locator('[data-course-assistant-view="chat"]').click();

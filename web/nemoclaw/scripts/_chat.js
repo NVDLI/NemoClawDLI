@@ -133,7 +133,9 @@ export function mountChatUI(container, opts = {}) {
   /* @doc <code>helpers.mountChatUI(el, opts)</code> ::
        Render a live, observable chat artifact (controls + streaming transcript + input) into
        <code>el</code>. <code>opts</code>: <code>{ modules:[{id,title}], models:[{id,label}],
-       intro, greeting, memory, respond(text, ctx), onReset() }</code>. With <code>memory:true</code>
+       intro, greeting, showGreetingWithHistory, memory, respond(text, ctx), onReset() }</code>.
+       Set <code>showGreetingWithHistory:true</code> when restored turns still need a current-context
+       notice. With <code>memory:true</code>
        the widget keeps the conversation, shows a memory toggle (starts on), offers prior turns as
        <code>ctx.history</code> (empty while the toggle is off, so the same respond reads as a stateless
        function), and makes the edit button rewind the transcript to that turn. <code>respond</code> streams
@@ -264,7 +266,9 @@ export function mountChatUI(container, opts = {}) {
   if (opts.intro) { const i = document.createElement("div"); i.className = "chatui-intro"; i.textContent = opts.intro; log.appendChild(i); }
   const scroll = () => { log.scrollTop = log.scrollHeight; };
   const bubble = (cls, txt) => { const d = document.createElement("div"); d.className = "chatui-msg " + cls; if (txt != null) d.textContent = txt; log.appendChild(d); scroll(); return d; };
-  if (!history.length && opts.greeting) bubble("chatui-bot", opts.greeting);
+  if (opts.greeting && (!history.length || opts.showGreetingWithHistory === true)) {
+    bubble("chatui-bot", opts.greeting);
+  }
   history.forEach(item => {
     if (item.role === "system") {
       const note = document.createElement("details"); note.className = "chatui-memory chatui-restored-summary";
@@ -546,7 +550,9 @@ export async function mountAgentChat(container, opts = {}) {
     return runtimes[activeModel];
   }
   return mountChatUI(el, {
-    modules: opts.modules, models: opts.models, intro: opts.intro, greeting: opts.greeting, examples: opts.examples, growLog: opts.growLog,
+    modules: opts.modules, models: opts.models, intro: opts.intro, greeting: opts.greeting,
+    showGreetingWithHistory: opts.showGreetingWithHistory,
+    examples: opts.examples, growLog: opts.growLog,
     memory: opts.memory,
     initialHistory: opts.initialHistory, initialActivity: opts.initialActivity, onUserMessage: opts.onUserMessage, onTurnSnapshot: opts.onTurnSnapshot,
     onAssistantMessage: opts.onAssistantMessage,
