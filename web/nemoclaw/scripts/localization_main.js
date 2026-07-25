@@ -1,26 +1,21 @@
 // Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import { languageManifestUrl } from "./_locale.js";
+
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
-const courseParent = new URL(".", location.href).pathname.replace(/\/$/, "").split("/").at(-2);
-const manifestCandidates = ["web", "es", "pt"].includes(courseParent)
-  ? ["../../languages.json", "../languages.json", "../../../languages.json", "../../../../languages.json"]
-  : ["../languages.json", "../../languages.json", "../../../languages.json", "../../../../languages.json"];
 let drift, languages, activeStatus = "all", activeKind = "pages", selected;
 const localeSelect = $("#loc-locale");
 
 async function languageManifest() {
-  for (const rel of manifestCandidates) {
-    try {
-      const url = new URL(rel, location.href);
-      const response = await fetch(url, {cache:"no-store"});
-      if (!response.ok) continue;
-      const data = await response.json();
-      if (data?.schema === "nemoclaw-languages/1") return {data, url};
-    } catch (_) {}
-  }
-  return null;
+  const url = languageManifestUrl();
+  try {
+    const response = await fetch(url, {cache:"no-store"});
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data?.schema === "nemoclaw-languages/1" ? {data, url} : null;
+  } catch (_) { return null; }
 }
 
 function courseRows() {
@@ -103,7 +98,17 @@ async function boot() {
     $("#loc-findings").textContent = "Use a multilingual build to review translation drift.";
     return;
   }
-  const requestedValue = new URLSearchParams(location.search).get("locale") || localeSelect?.value || "pt";
+  if (localeSelect) {
+    localeSelect.replaceChildren(...localized.map(item => {
+      const option = document.createElement("option");
+      option.value = item.code;
+      option.textContent = item.native_label || item.label || item.locale;
+      return option;
+    }));
+  }
+  const requestedValue = new URLSearchParams(location.search).get("locale")
+    || localeSelect?.value
+    || localized[0]?.code;
   const requested = localized.some(item => item.code === requestedValue) ? requestedValue : (localized[0]?.code || requestedValue);
   if (localeSelect) localeSelect.value = requested;
   const driftResponse = await fetch(`assets/localization-${requested}.json`, {cache:"no-store"});

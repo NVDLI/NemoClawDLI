@@ -6,7 +6,7 @@
 
 The gate stays course-agnostic: it discovers course directories from course SKILL
 beacons and checks shared interaction primitives plus each numbered lesson. It does
-not infer GPU availability or hard-code one delivery environment.
+not infer a specific processor or hard-code one delivery environment.
 """
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
         sys.path.insert(0, str(_p / "scripts"))
         break
 from _bootstrap import find_repo_root
+from translate.locale_catalog import discover_locales
 
 ROOT = find_repo_root(Path(__file__).resolve())
 WEB = ROOT / "web"
@@ -36,6 +37,9 @@ LAUNCHABLE_HELPER_RE = re.compile(
     r"helpers\.(?:openclawChat|terminal|sandboxExec|policyGet|sandboxNetwork|evalSandboxNetwork|evalSandboxFs)\b"
 )
 MODEL_HELPER_RE = re.compile(r"(?:helpers\.)?(?:chat|chatStream)\s*\(|helpers\.mountAgentChat\s*\(")
+COURSE_SOURCE_URI_RE = re.compile(
+    r'uri:\s*`\$\{[A-Za-z_$][\w$]*\}#\$\{item\.id\}`'
+)
 MAX_DEFAULT_OPEN_LINES = 60
 LONG_SEQUENCE_MIN_ITERATIONS = 12
 LEARNING_VIEW_REQUIRED = {"01a-loop.html", "01b-react.html", "01c-tools.html", "02b-rag.html"}
@@ -54,6 +58,44 @@ LEARNING_VIEW_MIN_BLOCKS = {
 LEARNING_TIERS = {"applied", "deep"}
 LEARNING_ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 REFERENCE_DISCLOSURE_ID_RE = re.compile(r"(?:references|reading-list)$")
+RUNTIME_MODULES = (
+    "01a-loop",
+    "01b-react",
+    "01c-tools",
+    "02c-deep",
+    "03a-kickstart",
+    "03b-openclaw",
+    "03c-always-on",
+    "04a-safety",
+    "04b-modern-clis",
+)
+
+
+def locale_course_roots(root: Path) -> list[tuple[str, Path]]:
+    """Return canonical English plus every metadata-declared locale course root."""
+    return [
+        ("en", root / "web/nemoclaw"),
+        *((spec.url_code, spec.course_root) for spec in discover_locales(root)),
+    ]
+
+
+def load_runtime_pages(root: Path) -> dict[str, str]:
+    pages: dict[str, str] = {}
+    for locale, prefix in locale_course_roots(root):
+        for module in RUNTIME_MODULES:
+            page = prefix / f"{module}.html"
+            if not page.is_file():
+                raise FileNotFoundError(f"{page}: runtime-contract page is missing")
+            pages[f"{locale}-{module[:3]}"] = page.read_text(encoding="utf-8")
+    return pages
+
+
+def runtime_page_locales(pages: dict[str, str]) -> list[str]:
+    return sorted({
+        key.rsplit("-", 1)[0]
+        for key in pages
+        if re.search(r"-0[1-4][a-c]$", key)
+    })
 
 
 class LearningBlockParser(HTMLParser):
@@ -196,7 +238,9 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
         'assistant: "ASISTENTE DEL CURSO"': "page assistant needs Spanish chrome",
         'if (!location.pathname.includes("/nemoclaw/")) return;': "page assistant must stay scoped to course pages",
         'pageId: String(item.pageId || "")': "Course Assistant page grounding must persist with its session",
-        'initialContext: attachedPage ? async () => ({ label: localized(': "Course Assistant must seed its attached prose and code index as inspectable context",
+        'export function questionTargetsCurrentPage': "Course Assistant must distinguish the live page from a restored session page",
+        'const targetPageId = requested => questionTargetsCurrentPage(turnQuestion) ? page.id : requested': "Course Assistant current-page requests must resolve to the live browser page",
+        'initialContext: async () => ({ label: localized(': "Course Assistant must seed the live page prose and code index as inspectable context",
         'name: "list_course_pages"': "page assistant must expose the course map to its ReAct loop",
         'name: "search_course_pages"': "page assistant must search the course before guessing which page matters",
         'export async function searchCoursePages': "course search must remain independently testable without a model call",
@@ -206,7 +250,6 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
         'name: "read_course_source"': "Course Assistant must read exact lesson artifact source through one stable URI",
         'name: "list_course_runtime_files"': "Course Assistant must enumerate shared runtime modules",
         'name: "read_course_runtime_source"': "Course Assistant must read allow-listed shared runtime source",
-        'uri: `${id}#${item.id}`': "lesson code index must expose one stable source URI",
         'never invent an implementation or claim source is private or inaccessible': "Course Assistant prompt must forbid invented or inaccessible-source claims",
         'Use the code-reading tools for exact source': "attached page context must advertise exact code access",
         '"Show me this page\'s code"': "Course Assistant must make source access discoverable without tool-name knowledge",
@@ -241,11 +284,15 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
         'opts.onTurnSnapshot(cleanHistory(items), { state, activity }, ctx)': "shared chat must snapshot a turn before completion",
         'const activitySnapshot = () =>': "shared chat must persist visible ReAct activity, not only model-context messages",
         'ctx.view.updateTool(c.el': "shared chat must capture completed tool results in persisted activity",
+        'const hasMeaningfulAnswer = value =>': "shared chat must reject punctuation-only agent endings",
+        'The tool run ended without a final answer; synthesizing one from the completed results.': "shared chat must recover a tool-only turn instead of leaving a blank answer",
         'initialActivity: opts.initialActivity': "shared agent chat must forward restored activity into its UI runtime",
+        'memory: opts.memory': "shared agent chat must preserve the host's explicit memory contract",
         'window.addEventListener("pagehide", snapshotBeforeNavigation': "shared chat must flush the latest streamed text during navigation",
         'onUserMessage: opts.onUserMessage': "shared chat must forward the preflight session-title hook",
         'onTurnSnapshot: opts.onTurnSnapshot': "shared chat must forward transcript snapshots",
         'onAssistantMessage: opts.onAssistantMessage': "shared chat must forward completed answers for deterministic artifact capture",
+        'await opts.onAssistantMessage(answer, ctx)': "shared chat must await deterministic answer capture before declaring a turn complete",
         'opts.onUserMessage(q, ctx)': "shared chat must invoke session titling before the model request",
         'onHistoryChange: history =>': "Course Assistant must persist completed turns",
         'compactAtTokens: 12000': "Course Assistant must set an explicit compaction threshold",
@@ -257,8 +304,18 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
         'Nemotron Super 120B · recommended': "Course Assistant artifact requests must default to the model validated for tool use",
         'export function parseInlineCourseSourceIntent': "Course Assistant must detect source arguments emitted as plain JSON",
         'recoverInlineToolIntent: async answer =>': "Course Assistant must recover a model that prints source arguments instead of invoking its tool",
-        'ctx.view.discardAnswer()': "shared agent chat must replace recovered tool JSON with the synthesized answer",
         'export function artifactFromMarkdown': "Course Assistant must detect generated HTML/JavaScript without model tool compliance",
+        'recoverInlineArtifact: async answer =>': "Course Assistant must validate and surface raw generated artifacts before completing the turn",
+        'artifactStatus.textContent = `Generated artifact rejected: ${issue}`': "Course Assistant must expose the exact generated-artifact rejection",
+        'artifactCorrectionLimit: 2': "Course Assistant must bound generated-artifact correction attempts",
+        'const correctionLimit = Math.max(0, Math.min(3, Number(opts.artifactCorrectionLimit) || 0))': "shared chat must enforce the configured generated-artifact correction bound",
+        'Requesting bounded correction ${attempt} of ${correctionLimit}.': "Course Assistant must make each generated-artifact correction visible",
+        'const correctionStream = await runtime.llm.stream(correctionMessages, { signal: ctx.signal })': "Course Assistant artifact correction must remain cancellable and use the selected model",
+        'const corrected = correctedText ? await opts.recoverInlineArtifact(correctedText, ctx) : null': "Course Assistant must run corrected artifacts through the same browser gate",
+        'rejected: true,': "Course Assistant must distinguish a rejected recovery from an accepted artifact",
+        'retryPrompt: `The browser rejected that artifact: ${issue}': "Course Assistant must bind its bounded correction to the exact rejection",
+        'Could not recover the generated artifact': "shared chat must make inline artifact recovery failures visible",
+        'ctx.view.tool(recovered.label || "queue_course_artifact", recovered.content)': "shared chat must expose recovered artifact validation as inspectable activity",
         'onAssistantMessage: async answer =>': "Course Assistant must auto-fill fenced or raw browser code after completed replies",
         'raw.search(/(?:<!doctype': "Course Assistant must recover complete raw HTML when the model skips its tool",
         'data-course-assistant-view="artifact"': "Course Assistant needs a discoverable Artifact tab",
@@ -292,6 +349,7 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
         'The sandbox provides the asynchronous course.embed API': "Course Assistant prompt must teach the artifact bridge instead of inventing imports",
         'always use await course.embed': "Course Assistant prompt must state that embedding calls are asynchronous",
         'No other helpers.* API is available': "Course Assistant prompt must distinguish lesson helpers from artifact APIs",
+        'Use native button, input, or select elements for learner actions': "Course Assistant must request observable accessible controls for interactive artifacts",
         'activateView("artifact")': "generated artifacts must open the real Artifact view",
         'mountCourseLicenseNote': "shared chrome must mount the course license note",
         'Course-authored prose, example code, and original diagrams': "license note must state the exact Apache-2.0 scope",
@@ -299,6 +357,17 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
     }
     for token, message in contract.items():
         _need(findings, token in assistant or token in shared or token in chat, message)
+    _need(findings, re.search(
+        r"if \(opts\.recoverInlineArtifact\) \{[\s\S]{0,700}?ctx\.view\.discardAnswer\(\)", chat
+    ) is not None, "shared agent chat must replace raw generated code after artifact recovery")
+    _need(findings, re.search(
+        r"if \(opts\.recoverInlineToolIntent\) \{[\s\S]{0,700}?ctx\.view\.discardAnswer\(\)", chat
+    ) is not None, "shared agent chat must replace inline tool JSON before source synthesis")
+    _need(findings, re.search(
+        r"if \(!hasMeaningfulAnswer\(answerText\)\) \{[\s\S]{0,700}?ctx\.view\.discardAnswer\(\)", chat
+    ) is not None, "shared agent chat must replace empty tool-only output before synthesis")
+    _need(findings, COURSE_SOURCE_URI_RE.search(assistant) is not None,
+          "lesson code index must expose stable page-qualified source URIs")
     _need(findings, "mountCourseAssistant({ embed });" in shared,
           "shared chrome must mount the page assistant on every course page")
     _need(findings, "initialContext" in chat and "ctx.view.tool(label" in chat,
@@ -320,8 +389,9 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
     _need(findings, ".course-assistant-panel > header button {" in css and
           ".course-assistant-panel header button {" not in css,
           "Course Assistant close-button sizing must not leak into nested History controls")
-    _need(findings, assistant.count("artifactCodeIssue(") >= 4 and
-          "await validateArtifactRuntime(artifact)" in assistant and
+    _need(findings, "const issue = artifactCodeIssue({" in assistant and
+          assistant.count("artifactCodeIssue(artifact) || await validateArtifactRuntime(artifact)") >= 2 and
+          "const issue = artifactCodeIssue(candidate);" in assistant and
           "await validateArtifactRuntime(candidate)" in assistant,
           "Course Assistant must validate manual runs, tool queues, and fallback capture")
     _need(findings, assistant.count('URL.createObjectURL(new Blob([') >= 2,
@@ -348,6 +418,7 @@ def audit_course_source_runtime(langchain: str) -> list[str]:
         'COURSE_RUNTIME_FILES.find(([name]) => name === safe)': "runtime source reads must remain allow-listed",
         'script[type="text/plain"][id]': "course source index must discover text-backed lesson artifacts",
         'script[type="module"]:not([src])': "course source index must discover inline page modules",
+        'id: "page-html"': "every course page must expose its complete HTML document even when it has no inline cell",
         'export async function courseCodeArtifacts': "lesson code index must remain independently testable",
         '.map(({ source: _source, ...metadata }) => metadata)': "lesson code index must not inline every source body",
         'export async function courseCode(pageId, artifactId)': "exact lesson source must remain readable by artifact id",
@@ -430,7 +501,7 @@ def audit_model_routes(shared: str, keypanel: str, rag: str, chat: str, openclaw
         r'credentials:\s*action\.credentials\s*\|\|\s*opts\.credentials\s*\|\|', openclaw
     ) is not None,
           "generic probes must permit an explicit credential mode")
-    for locale in ("en", "pt", "es"):
+    for locale in runtime_page_locales(pages):
         loop = pages[f"{locale}-01a"]
         react = pages[f"{locale}-01b"]
         kickstart = pages[f"{locale}-03a"]
@@ -480,7 +551,7 @@ def audit_runtime_integrations(
     _need(findings, 'return { status: "error", message:' in cli_runtime,
           "shared OpenClaw CLI failures must preserve an error state")
 
-    for locale in ("en", "pt", "es"):
+    for locale in runtime_page_locales(pages):
         kickstart = pages[f"{locale}-03a"]
         workspace = pages[f"{locale}-03b"]
         cron = pages[f"{locale}-03c"]
@@ -904,19 +975,19 @@ def course_dirs() -> list[Path]:
 
 def audit_home(text: str) -> list[str]:
     findings: list[str] = []
-    cpu_baseline = bool(re.search(
-        r"\b(?:CPU-based|uses?\s+(?:a\s+)?CPU|runs?\s+on\s+(?:a\s+)?CPU)\b",
-        text,
-        re.I,
-    ))
     no_gpu_requirement = bool(re.search(
         r"\b(?:without\s+GPU\s+access|do(?:es)?\s+not\s+require\s+(?:a\s+)?"
         r"(?:learner-managed\s+)?GPU)\b",
         text,
         re.I,
     ))
-    _need(findings, cpu_baseline and no_gpu_requirement,
-          "web/nemoclaw/index.html: setup must state the CPU baseline and that learner-managed GPU hardware is not required")
+    hosted_model_route = bool(re.search(
+        r"\b(?:using|uses?)\s+(?:hosted\s+)?model\s+endpoints?\b",
+        text,
+        re.I,
+    ))
+    _need(findings, no_gpu_requirement and hosted_model_route,
+          "web/nemoclaw/index.html: setup must state that model endpoints allow local reproduction without learner-managed GPU hardware")
     return findings
 
 
@@ -1004,14 +1075,7 @@ def audit_tree(root: Path = ROOT) -> list[str]:
         (root / "docs/lab_runtime_testing.md").read_text(encoding="utf-8"),
         (root / "scripts/runtime/SKILL.html").read_text(encoding="utf-8"),
     ))
-    runtime_pages = {}
-    for locale, prefix in (
-        ("en", root / "web/nemoclaw"),
-        ("pt", root / "i18n/pt/web/nemoclaw"),
-        ("es", root / "i18n/es/web/nemoclaw"),
-    ):
-        for module in ("01a-loop", "01b-react", "01c-tools", "02c-deep", "03a-kickstart", "03b-openclaw", "03c-always-on", "04a-safety", "04b-modern-clis"):
-            runtime_pages[f"{locale}-{module[:3]}"] = (prefix / f"{module}.html").read_text(encoding="utf-8")
+    runtime_pages = load_runtime_pages(root)
     helper_pages = {
         str(page.relative_to(root)): page.read_text(encoding="utf-8")
         for page in sorted((root / "web/nemoclaw").glob("0*.html"))
@@ -1121,7 +1185,9 @@ def self_test() -> list[str]:
     assistant = (ROOT / "web/nemoclaw/scripts/_course_assistant.js").read_text(encoding="utf-8")
     assistant_cases = [
         ("assistant loses session page", assistant.replace('pageId: String(item.pageId || "")', 'legacyPage: String(item.pageId || "")', 1), shared, chat, css, "grounding must persist"),
-        ("assistant loses page context", assistant.replace('initialContext: attachedPage ? async () => ({ label: localized(', 'initialContext: null && async () => ({ label: localized(', 1), shared, chat, css, "attached prose and code index"),
+        ("assistant loses live-page targeting", assistant.replace('export function questionTargetsCurrentPage', 'function removedCurrentPageTarget', 1), shared, chat, css, "distinguish the live page"),
+        ("assistant ignores current-page intent", assistant.replace('const targetPageId = requested => questionTargetsCurrentPage(turnQuestion) ? page.id : requested', 'const targetPageId = requested => requested', 1), shared, chat, css, "resolve to the live browser page"),
+        ("assistant loses page context", assistant.replace('initialContext: async () => ({ label: localized(', 'initialContext: null && async () => ({ label: localized(', 1), shared, chat, css, "live page prose and code index"),
         ("assistant loses Portuguese chrome", assistant.replace('assistant: "ASSISTENTE DO CURSO"', 'assistant: "COURSE ASSISTANT"', 1), shared, chat, css, "Brazilian Portuguese chrome"),
         ("assistant loses Spanish chrome", assistant.replace('assistant: "ASISTENTE DEL CURSO"', 'assistant: "COURSE ASSISTANT"', 1), shared, chat, css, "Spanish chrome"),
         ("assistant loses course map", assistant.replace('name: "list_course_pages"', 'name: "missing_course_map"', 1), shared, chat, css, "course map"),
@@ -1129,6 +1195,7 @@ def self_test() -> list[str]:
         ("assistant returns structured tool payload", assistant.replace('return JSON.stringify(await searchCoursePages(query, readPage, catalog), null, 2);', 'return searchCoursePages(query, readPage, catalog);', 1), shared, chat, css, "endpoint-safe text"),
         ("assistant loses lesson code index", assistant.replace('name: "list_course_code"', 'name: "missing_course_code"', 1), shared, chat, css, "enumerate exact lesson code"),
         ("assistant loses exact lesson source", assistant.replace('name: "read_course_source"', 'name: "missing_read_course_source"', 1), shared, chat, css, "exact lesson artifact source"),
+        ("assistant emits unqualified source ids", assistant.replace('uri: `${target}#${item.id}`', 'uri: item.id', 1), shared, chat, css, "page-qualified source URIs"),
         ("assistant loses runtime index", assistant.replace('name: "list_course_runtime_files"', 'name: "missing_runtime_files"', 1), shared, chat, css, "enumerate shared runtime"),
         ("assistant loses runtime source", assistant.replace('name: "read_course_runtime_source"', 'name: "missing_runtime_source"', 1), shared, chat, css, "allow-listed shared runtime source"),
         ("assistant can invent inaccessible code", assistant.replace('never invent an implementation or claim source is private or inaccessible', 'guess code when useful', 1), shared, chat, css, "forbid invented or inaccessible-source claims"),
@@ -1158,12 +1225,22 @@ def self_test() -> list[str]:
         ("shared chat never writes snapshots", assistant, shared, chat.replace('opts.onTurnSnapshot(cleanHistory(items), { state, activity }, ctx)', 'void items', 1), css, "snapshot a turn before completion"),
         ("shared chat drops activity snapshot", assistant, shared, chat.replace('const activitySnapshot = () =>', 'const removedActivitySnapshot = () =>', 1), css, "visible ReAct activity"),
         ("shared chat drops tool result activity", assistant, shared, chat.replace('ctx.view.updateTool(c.el', 'ctx.view.missingToolUpdate(c.el'), css, "completed tool results"),
+        ("shared chat accepts punctuation as an answer", assistant, shared, chat.replace('const hasMeaningfulAnswer = value =>', 'const removedMeaningfulAnswer = value =>', 1), css, "punctuation-only"),
+        ("shared chat strands tool-only turns", assistant, shared, chat.replace('The tool run ended without a final answer; synthesizing one from the completed results.', 'Tool run complete.', 1), css, "recover a tool-only turn"),
         ("shared chat loses navigation tail", assistant, shared, chat.replace('window.addEventListener("pagehide", snapshotBeforeNavigation', 'window.addEventListener("never", snapshotBeforeNavigation', 1), css, "flush the latest streamed text"),
+        ("shared chat drops memory mode", assistant, shared, chat.replace('memory: opts.memory', 'memory: false', 1), css, "explicit memory contract"),
         ("shared chat drops artifact capture", assistant, shared, chat.replace('onAssistantMessage: opts.onAssistantMessage', 'onAssistantMessage: null', 1), css, "deterministic artifact capture"),
+        ("shared chat races artifact capture", assistant, shared, chat.replace('await opts.onAssistantMessage(answer, ctx)', 'opts.onAssistantMessage(answer, ctx)', 1), css, "await deterministic answer capture"),
         ("assistant loses artifact queue", assistant.replace('name: "queue_course_artifact"', 'name: "missing_artifact_queue"', 1), shared, chat, css, "queue generated browser code"),
         ("assistant defaults artifact work to weak model", assistant.replace('Nemotron Super 120B · recommended', 'Nemotron Super 120B · optional', 1), shared, chat, css, "model validated for tool use"),
         ("assistant loses 120B source recovery", assistant.replace('recoverInlineToolIntent: async answer =>', 'recoverLostIntent: async answer =>', 1), shared, chat, css, "prints source arguments"),
-        ("shared chat preserves raw tool JSON", assistant, shared, chat.replace('ctx.view.discardAnswer()', 'void recovered', 1), css, "replace recovered tool JSON"),
+        ("shared chat preserves raw generated code", assistant, shared, chat.replace('if (opts.recoverInlineArtifact) {', 'if (false) {', 1), css, "replace raw generated code"),
+        ("assistant disables bounded artifact correction", assistant.replace('artifactCorrectionLimit: 2', 'artifactCorrectionLimit: 0', 1), shared, chat, css, "bound generated-artifact correction attempts"),
+        ("shared chat ignores artifact correction bound", assistant, shared, chat.replace('const correctionLimit = Math.max(0, Math.min(3, Number(opts.artifactCorrectionLimit) || 0))', 'const correctionLimit = 99', 1), css, "enforce the configured generated-artifact correction bound"),
+        ("shared chat skips corrected artifact validation", assistant, shared, chat.replace('await opts.recoverInlineArtifact(correctedText, ctx)', 'Promise.resolve({ content: correctedText })', 1), css, "same browser gate"),
+        ("assistant hides generated artifact rejection", assistant.replace('artifactStatus.textContent = `Generated artifact rejected: ${issue}`', 'artifactStatus.textContent = copy.saved', 1), shared, chat, css, "exact generated-artifact rejection"),
+        ("shared chat preserves raw tool JSON", assistant, shared, chat.replace('if (opts.recoverInlineToolIntent) {', 'if (false) {', 1), css, "replace inline tool JSON"),
+        ("shared chat preserves empty tool-only output", assistant, shared, chat.replace('ctx.view.discardAnswer();\n          ctx.view.note("The tool run ended', 'ctx.view.note("The tool run ended', 1), css, "empty tool-only output"),
         ("assistant loses fenced-code capture", assistant.replace('export function artifactFromMarkdown', 'function removedArtifactFromMarkdown', 1), shared, chat, css, "detect generated HTML/JavaScript"),
         ("assistant loses raw HTML recovery", assistant.replace('raw.search(/(?:<!doctype', 'raw.search(/never-match', 1), shared, chat, css, "recover complete raw HTML"),
         ("assistant loses artifact tab", assistant.replace('data-course-assistant-view="artifact"', 'data-missing-view="artifact"'), shared, chat, css, "discoverable Artifact tab"),
@@ -1227,6 +1304,7 @@ def self_test() -> list[str]:
         ("runtime source loses allow-list", langchain.replace('COURSE_RUNTIME_FILES.find(([name]) => name === safe)', 'COURSE_RUNTIME_FILES[0]', 1), "remain allow-listed"),
         ("lesson source ignores text artifacts", langchain.replace('script[type="text/plain"][id]', 'script[data-missing]', 1), "text-backed lesson artifacts"),
         ("lesson source ignores page modules", langchain.replace('script[type="module"]:not([src])', 'script[data-missing-module]', 1), "inline page modules"),
+        ("code-less page loses its HTML source", langchain.replace('id: "page-html"', 'id: "missing-page-html"', 1), "complete HTML document"),
         ("code index inlines all source", langchain.replace('.map(({ source: _source, ...metadata }) => metadata)', '.map(item => item)', 1), "must not inline every source"),
         ("lesson source reader removed", langchain.replace('export async function courseCode(pageId, artifactId)', 'async function removedCourseCode(pageId, artifactId)', 1), "exact lesson source"),
         ("runtime source reader removed", langchain.replace('export async function courseRuntimeSource(file)', 'async function removedRuntimeSource(file)', 1), "shared runtime source must remain readable"),
@@ -1238,14 +1316,7 @@ def self_test() -> list[str]:
     openclaw = (ROOT / "web/nemoclaw/scripts/_openclaw.js").read_text(encoding="utf-8")
     openshell = (ROOT / "web/nemoclaw/scripts/_openshell.js").read_text(encoding="utf-8")
     runtime_chat = (ROOT / "web/nemoclaw/scripts/_chat.js").read_text(encoding="utf-8")
-    runtime_pages = {}
-    for locale, prefix in (
-        ("en", ROOT / "web/nemoclaw"),
-        ("pt", ROOT / "i18n/pt/web/nemoclaw"),
-        ("es", ROOT / "i18n/es/web/nemoclaw"),
-    ):
-        for module in ("01a-loop", "01b-react", "01c-tools", "02c-deep", "03a-kickstart", "03b-openclaw", "03c-always-on", "04a-safety", "04b-modern-clis"):
-            runtime_pages[f"{locale}-{module[:3]}"] = (prefix / f"{module}.html").read_text(encoding="utf-8")
+    runtime_pages = load_runtime_pages(ROOT)
     helper_registry_cases = [
         (
             "registered helper removed",
@@ -1394,12 +1465,12 @@ def self_test() -> list[str]:
         misses.append("detector missed oversized default-open implementation")
 
     home = (ROOT / "web/nemoclaw/index.html").read_text(encoding="utf-8")
-    broken = home.replace("uses CPU", "uses unspecified hardware", 1)
-    if not any("CPU baseline" in finding for finding in audit_home(broken)):
-        misses.append("detector missed missing CPU baseline")
     broken = home.replace("without GPU access", "with unspecified accelerator access", 1)
-    if not any("CPU baseline" in finding for finding in audit_home(broken)):
+    if not any("learner-managed GPU" in finding for finding in audit_home(broken)):
         misses.append("detector missed missing no-GPU requirement")
+    broken = home.replace("using model endpoints", "using unspecified infrastructure", 1)
+    if not any("model endpoints" in finding for finding in audit_home(broken)):
+        misses.append("detector missed missing model-endpoint baseline")
 
     gitlab = (ROOT / ".gitlab/ci/core.yml").read_text(encoding="utf-8")
     github = (ROOT / ".github/workflows/pages.yml").read_text(encoding="utf-8")

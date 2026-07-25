@@ -7,8 +7,14 @@ from __future__ import annotations
 
 import argparse
 import re
+import sys
 from pathlib import Path
 
+for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
+    if (_p / "scripts" / "_bootstrap.py").exists():
+        sys.path.insert(0, str(_p / "scripts"))
+        break
+from translate.locale_catalog import discover_locales
 
 ROOT = Path(__file__).resolve().parents[2]
 SHARED = "web/nemoclaw/scripts/_shared.js"
@@ -18,11 +24,6 @@ KEYPANEL = "web/nemoclaw/scripts/_keypanel.js"
 RUNTIME_HARNESS = "scripts/runtime/test_page_runtime.js"
 EXPLORER = "web/_skill_explorer.js"
 BROWSER_INTEGRATION = "scripts/validation/runtime_integration_browser_audit.py"
-PAGES = (
-    "web/nemoclaw/03a-kickstart.html",
-    "i18n/pt/web/nemoclaw/03a-kickstart.html",
-    "i18n/es/web/nemoclaw/03a-kickstart.html",
-)
 
 PROTECTED_WRITERS = {
     "nemoclaw_model_api_base_url_v1": {SHARED, RUNTIME_HARNESS},
@@ -47,7 +48,8 @@ OPENCLAW_QUERY_KEYS = ("openclaw_url", "openclaw_proxy_base", "openclaw_proxy", 
 
 def source_files() -> list[Path]:
     files: list[Path] = []
-    for base in (ROOT / "web/nemoclaw", ROOT / "i18n/pt/web/nemoclaw", ROOT / "i18n/es/web/nemoclaw"):
+    bases = [ROOT / "web/nemoclaw", *(spec.course_root for spec in discover_locales(ROOT))]
+    for base in bases:
         for path in base.rglob("*"):
             if path.suffix not in {".js", ".mjs", ".html"}:
                 continue
@@ -57,6 +59,14 @@ def source_files() -> list[Path]:
     files.append(ROOT / RUNTIME_HARNESS)
     files.append(ROOT / EXPLORER)
     return sorted(set(files))
+
+
+def endpoint_pages() -> list[str]:
+    return [
+        "web/nemoclaw/03a-kickstart.html",
+        *(f"i18n/{spec.url_code}/web/nemoclaw/03a-kickstart.html"
+          for spec in discover_locales(ROOT)),
+    ]
 
 
 def text(rel: str, overrides: dict[str, str]) -> str:
@@ -147,7 +157,7 @@ def audit(overrides: dict[str, str] | None = None) -> list[str]:
     if 'openclawHttpUrl(displayUrl, ""' in openclaw:
         findings.append("OpenClaw probe normalizes a combined URL and drops /healthz or /api/agent")
 
-    for rel in PAGES:
+    for rel in endpoint_pages():
         page = text(rel, overrides)
         if 'mountModelEndpointProbe("#probe-llm"' not in page:
             findings.append(f"{rel}: model endpoint is not mounted through its typed probe")
@@ -185,19 +195,20 @@ def self_test() -> list[str]:
     misses: list[str] = []
     if audit():
         return ["baseline endpoint registration audit does not pass"]
-    en = (ROOT / PAGES[0]).read_text(encoding="utf-8")
-    pt = (ROOT / PAGES[1]).read_text(encoding="utf-8")
+    pages = endpoint_pages()
+    en = (ROOT / pages[0]).read_text(encoding="utf-8")
+    localized = (ROOT / pages[1]).read_text(encoding="utf-8")
     openclaw = (ROOT / OPENCLAW).read_text(encoding="utf-8")
     shared = (ROOT / SHARED).read_text(encoding="utf-8")
     explorer = (ROOT / EXPLORER).read_text(encoding="utf-8")
     browser_integration = (ROOT / BROWSER_INTEGRATION).read_text(encoding="utf-8")
     cases = (
-        ("model mounted as OpenClaw", {PAGES[0]: en.replace('mountModelEndpointProbe("#probe-llm"', 'mountClawProbe("#probe-llm"', 1)}, "mounted as OpenClaw"),
+        ("model mounted as OpenClaw", {pages[0]: en.replace('mountModelEndpointProbe("#probe-llm"', 'mountClawProbe("#probe-llm"', 1)}, "mounted as OpenClaw"),
         ("conditional registration removed", {OPENCLAW: openclaw.replace("const openClawConnection = isOpenClaw", "const openClawConnection = true", 1)}, "typed endpoint probe"),
         ("probe path folded into launchable", {OPENCLAW: openclaw.replace("openclawHttpUrl(baseUrl, pathAndQuery, _proxyConfig())", 'openclawHttpUrl(displayUrl, "", _proxyConfig())', 1)}, "drops /healthz"),
-        ("probe JSON guard removed", {PAGES[0]: en.replace(', expectJson: true', '', 1)}, "JSON/path guard"),
-        ("model route panel removed", {PAGES[1]: pt.replace('id="model-route-settings"', 'id="removed-model-route-settings"', 1)}, "model route source"),
-        ("page writes launchable registration", {PAGES[0]: en + '\n<script>localStorage.setItem("nemoclaw_clawrawurl", "bad")</script>\n'}, "writes protected endpoint"),
+        ("probe JSON guard removed", {pages[0]: en.replace(', expectJson: true', '', 1)}, "JSON/path guard"),
+        ("model route panel removed", {pages[1]: localized.replace('id="model-route-settings"', 'id="removed-model-route-settings"', 1)}, "model route source"),
+        ("page writes launchable registration", {pages[0]: en + '\n<script>localStorage.setItem("nemoclaw_clawrawurl", "bad")</script>\n'}, "writes protected endpoint"),
         ("embedding conflated with chat", {SHARED: shared.replace('const EMBEDDING_API_BASE_URL_KEY = "nemoclaw_embedding_api_base_url_v1"', 'const EMBEDDING_API_BASE_URL_KEY = "nemoclaw_model_api_base_url_v1"', 1)}, "registry contract"),
         ("explorer bypasses course model registry", {EXPLORER: explorer.replace("return shared.chat({", "return fetch(self.cfg.proxy, {", 1)}, "SKILL explorer bypasses"),
         ("explorer browser handoff removed", {BROWSER_INTEGRATION: browser_integration.replace("SKILL explorer model registry handoff failed", "browser handoff removed", 1)}, "browser integration audit"),

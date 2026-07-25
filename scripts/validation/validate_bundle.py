@@ -126,6 +126,7 @@ import learner_flow_audit as lfa  # noqa: E402
 import contribution_safety_audit as csa  # noqa: E402
 import sensitive_content_audit as sca  # noqa: E402
 import localization_audit as la  # noqa: E402
+from translate.locale_catalog import discover_locales  # noqa: E402
 import helper_notebook_runtime_audit as hna  # noqa: E402
 import studio_interface_audit as sia  # noqa: E402
 import openclaw_fallback_audit as ofa  # noqa: E402
@@ -290,7 +291,7 @@ SUITE_META = [
 
      "scripts/validation/cell_audit.py", "run"),
     ("learner_flow", "Learner interaction flow", "required",
-     "Learner-facing implementation uses progressive disclosure; prerequisite state appears before launchable input; Run, Stop, Reset, error, and completion states stay visible and cancellable without moving the page viewport; the course states its CPU baseline without assuming GPU hardware.",
+     "Learner-facing implementation uses progressive disclosure; prerequisite state appears before launchable input; Run, Stop, Reset, error, and completion states stay visible and cancellable without moving the page viewport; the course explains how model endpoints support local reproduction without learner-managed GPU hardware.",
      "scripts/validation/learner_flow_audit.py", "audit_tree"),
     ("contribution_safety", "Contribution safety", "required",
      "Ideas remain easy to submit while code, merge, deploy, and release authority stay separated. Templates expose evidence and ownership; hooks refuse without mutating; pull-request CI is read-only; required checks and protected environments gate writes.",
@@ -728,23 +729,26 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
 
     # Same-branch localization contract (required): every declared locale is gated.
     localization_find = []
-    localization_manifest = {"pages": [], "counts": {}}
+    localization_manifest: dict[str, dict] = {}
     try:
-        for locale_dir in sorted((TASK1 / "scripts/translate/locales").iterdir()):
-            profile_path = locale_dir / "profile.json"
-            if not profile_path.is_file():
-                continue
-            locale = json.loads(profile_path.read_text(encoding="utf-8"))["locale"]
-            locale_find, locale_manifest = la.scan(TASK1, locale)
+        for spec in discover_locales(TASK1):
+            locale_find, locale_manifest = la.scan(TASK1, spec.locale)
             localization_find.extend(locale_find)
-            localization_manifest[locale] = locale_manifest
+            localization_manifest[spec.locale] = locale_manifest
             if write:
-                _, _, _, localization_profile, _ = la.locale_paths(TASK1, locale)
-                la.write_manifest(TASK1, localization_profile, locale_manifest)
+                la.write_manifest(TASK1, spec.profile, locale_manifest)
     except Exception as e:
         localization_find = [{"code": "audit-error", "path": "i18n",
                               "detail": f"localization audit error: {e}"}]
         suite_errors["localization"] = str(e)
+    localization_by_locale = {
+        locale: manifest.get("counts", {})
+        for locale, manifest in localization_manifest.items()
+    }
+    localization_counts: dict[str, int] = {}
+    for counts in localization_by_locale.values():
+        for state, count in counts.items():
+            localization_counts[state] = localization_counts.get(state, 0) + count
     if localization_find:
         vl_ok = False
         ok = False
@@ -1125,7 +1129,7 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
         "figure_audit": [_fig(k, t) for k, items in fa_find.items() for t in items],
         "cell_audit": [_cell(k, t) for k, items in ca_find.items() for t in items],
         "learner_flow": [D("web/nemoclaw", x, REQUIRED,
-                           "Restore the shared learner interaction contract: focus before implementation, bounded default-open code, visible prerequisite status, cancellable Run/Stop/Reset/error states, stable viewport, and explicit CPU baseline.")
+                           "Restore the shared learner interaction contract: focus before implementation, bounded default-open code, visible prerequisite status, cancellable Run/Stop/Reset/error states, stable viewport, and an explicit model-endpoint/no-GPU baseline.")
                          for x in learner_flow_find],
         "contribution_safety": [D(x.get("path", "repository"),
                                   f"[{x.get('code', 'finding')}] {x.get('message', '')}",
@@ -1292,7 +1296,8 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
         "contribution_safety": {"findings": len(contribution_safety_find)},
         "sensitive_content": {"findings": len(sensitive_find), "scanned": sensitive_scanned},
         "localization": {"findings": len(localization_find),
-                         "counts": localization_manifest.get("counts", {})},
+                         "counts": localization_counts,
+                         "by_locale": localization_by_locale},
         "diagram_geom": {"findings": len(dg_find)},
         "skill_contract": {"skills": skc_scanned,
                            "schema": len(skc_find.get("schema", [])),
@@ -1361,7 +1366,7 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
           f"run-cell-style {len(ca_find.get('run_cell_style', []))}, "
           f"prompt-experiment {len(ca_find.get('prompt_experiment', []))})")
     print(f"  learner flow    : {len(learner_flow_find)} required finding(s) "
-          f"(progressive disclosure / prerequisites / lifecycle / CPU baseline)")
+          f"(progressive disclosure / prerequisites / lifecycle / model-endpoint/no-GPU baseline)")
     print(f"  contribution    : {len(contribution_safety_find)} required finding(s) "
           f"(intake / submissions / hooks / CI permissions / release authority)")
     print(f"  sensitive data  : {len(sensitive_find)} required finding(s) over {sensitive_scanned} text inputs")
@@ -1370,7 +1375,7 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
     print(f"  repository files: {len(repository_work_products_find)} required finding(s) "
           f"over {repository_work_products_scanned} reviewed work products")
     print(f"  localization    : {len(localization_find)} required finding(s) "
-          f"({localization_manifest.get('counts', {})})")
+          f"({localization_by_locale})")
     print(f"  figure geometry : {len(dg_find)} runtime-figure finding(s) (text overlap / past bounds / connector-crosses-box / useless)")
     print(f"  course contract : {len(course_contract_find)} finding(s) (title / abstract / learning objectives)")
     print(f"  browser deps    : {len(cdi_find)} finding(s) over {cdi_scanned} package, asset, and notice records")

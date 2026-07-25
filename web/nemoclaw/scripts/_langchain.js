@@ -71,7 +71,13 @@ async function _courseHtml(pageId) {
 
 function _courseCodeArtifacts(html) {
   const doc = new DOMParser().parseFromString(html, "text/html");
-  const artifacts = [];
+  const artifacts = [{
+    id: "page-html",
+    kind: "page document",
+    summary: "complete course-page HTML",
+    lines: html.split("\n").length,
+    source: html,
+  }];
   doc.querySelectorAll('script[type="text/plain"][id]').forEach(script => {
     const source = script.textContent.trim();
     if (source) artifacts.push({

@@ -337,20 +337,24 @@ HTML
 # holds inline executable structure equivalent. The assembled tree is temporary build input.
 if [ "$LANGS" = 1 ] && [ -d "$T1/i18n" ]; then
     for d in "$T1"/i18n/*/; do
-        [ -f "${d}locale.json" ] || continue
-        [ -f "${d}localization_state.json" ] || continue
         lang="$(basename "$d")"
+        if [ ! -f "${d}locale.json" ] || [ ! -f "${d}localization_state.json" ]; then
+            echo "[build_pages] ERROR: i18n/$lang must declare locale.json and localization_state.json" >&2
+            exit 1
+        fi
         echo "[build_pages] language $lang -> $OUT/$lang/ (from i18n/$lang) ..."
         mkdir -p "$OUT/$lang"
         locale_tmp="$(mktemp -d)"
         if ! python3 "$T1/scripts/build/assemble_locale_overlay.py" --locale-root "i18n/$lang" --out "$locale_tmp"; then
-            echo "[build_pages]   WARN: $lang overlay assembly failed; the other languages still ship"
-            rm -rf "$locale_tmp"; continue
+            echo "[build_pages] ERROR: $lang overlay assembly failed" >&2
+            rm -rf "$locale_tmp"
+            exit 1
         fi
         if ! python3 "$T1/scripts/build/bundle_standalone.py" --src "$locale_tmp/web/nemoclaw" \
                 --out "$OUT/$lang/nemoclaw" --clean --full; then
-            echo "[build_pages]   WARN: $lang course build failed; the other languages still ship"
-            rm -rf "$locale_tmp"; continue
+            echo "[build_pages] ERROR: $lang course build failed" >&2
+            rm -rf "$locale_tmp"
+            exit 1
         fi
         # the language foyer is its own translated web/index.html, /lab/static -> relative
         if [ -f "$locale_tmp/web/index.html" ]; then
@@ -381,7 +385,7 @@ fi
 # that actually exist in this artifact. The English URL follows COURSE_PREFIX;
 # translation courses live under <lang>/nemoclaw/.
 if [ -f "$T1/scripts/build/build_language_manifest.py" ]; then
-    python3 "$T1/scripts/build/build_language_manifest.py" --out "$OUT/languages.json" --site-root "$OUT" --course-prefix "$COURSE_PREFIX" || echo "[build_pages] language manifest skipped"
+    python3 "$T1/scripts/build/build_language_manifest.py" --out "$OUT/languages.json" --site-root "$OUT" --course-prefix "$COURSE_PREFIX"
 fi
 
 # Source mirrors execute the same foyer and locale runtime as their production projections.

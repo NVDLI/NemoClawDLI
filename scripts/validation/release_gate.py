@@ -76,6 +76,7 @@ SOURCE_LICENSE_CONTRACT_TESTS = py(
 PYODIDE_RUNTIME_SMOKE = ("bash", "scripts/runtime/run_node.sh", "scripts/pyodide/runtime_smoke.mjs", "--cdn")
 REACS_REGISTRY_TESTS = py("-m", "unittest", "-v", "tests.validation.test_reacs_registry")
 PRIVILEGED_COURSE_OPS_TESTS = py("-m", "unittest", "-v", "tests.validation.test_privileged_course_ops")
+LOCALE_CATALOG_TESTS = py("-m", "unittest", "-v", "tests.validation.test_locale_catalog")
 STANDARD_TEST_DISCOVERY = py("-m", "unittest", "discover", "-v", "-s", "tests/validation")
 
 
@@ -142,6 +143,9 @@ FAST_COMMANDS: tuple[tuple[str, ...], ...] = (
     py("scripts/security/audit_codeql_sarif.py"),
     py("scripts/validation/browser_security_boundary_audit.py", "--self-test"),
     py("scripts/validation/browser_security_boundary_audit.py"),
+    LOCALE_CATALOG_TESTS,
+    py("scripts/build/assemble_locale_overlay.py", "--self-test"),
+    py("scripts/validation/localization_audit.py", "--self-test"),
     py("scripts/materials/build_rag_index.py", "--check"),
     py("scripts/validation/validate_bundle.py", "--scope", "ship", "--no-write"),
 )
@@ -243,6 +247,7 @@ SHIP_COMMANDS: tuple[tuple[str, ...], ...] = (
     py("scripts/security/audit_codeql_sarif.py"),
     py("scripts/validation/browser_security_boundary_audit.py", "--self-test"),
     py("scripts/validation/browser_security_boundary_audit.py"),
+    LOCALE_CATALOG_TESTS,
     py("scripts/materials/build_rag_index.py", "--check"),
     py("scripts/validation/validate_bundle.py", "--scope", "ship"),
 )
@@ -254,6 +259,12 @@ SHIP_COMMANDS: tuple[tuple[str, ...], ...] = (
 MUTATION_IMPACTS: dict[tuple[str, ...], tuple[str, ...]] = {
     STANDARD_TEST_DISCOVERY: (
         "tests/validation/*.py", "tests/validation/**/*.py",
+    ),
+    LOCALE_CATALOG_TESTS: (
+        "scripts/translate/locale_catalog.py", "tests/validation/test_locale_catalog.py",
+        "i18n/*/locale.json", "i18n/*/localization_state.json",
+        "i18n/*/SKILL.html", "scripts/translate/locales/*/profile.json",
+        "scripts/translate/locales/*/SKILL.html",
     ),
     REACS_REGISTRY_TESTS: (
         "scripts/validation/reacs_registry.json", "scripts/validation/reacs_registry.py",
@@ -445,19 +456,23 @@ MUTATION_IMPACTS: dict[tuple[str, ...], tuple[str, ...]] = {
         "scripts/runtime/browser_runtime_test.sh", "scripts/runtime/host_browser.py", "web/nemoclaw/scripts/_connection.js",
         "web/nemoclaw/scripts/_openclaw.js", "web/nemoclaw/scripts/_openshell.js",
         "web/nemoclaw/scripts/_shared.js", "web/nemoclaw/03a-kickstart.html", "web/nemoclaw/04b-modern-clis.html",
-        "i18n/pt/web/nemoclaw/03a-kickstart.html", "i18n/es/web/nemoclaw/03a-kickstart.html",
-        "i18n/pt/web/nemoclaw/04b-modern-clis.html", "i18n/es/web/nemoclaw/04b-modern-clis.html",
+        "i18n/*/locale.json", "i18n/*/web/nemoclaw/03*.html",
+        "i18n/*/web/nemoclaw/04b-modern-clis.html", "scripts/translate/locale_catalog.py",
         "scripts/runtime/engine.js", "scripts/runtime/link_projection.py", "scripts/runtime/run_engine.sh",
         "scripts/runtime/run_node.sh",
     ),
     py("scripts/build/assemble_locale_overlay.py", "--self-test"): (
         "scripts/build/assemble_locale_overlay.py", "scripts/translate/code_localization.py",
-        "scripts/translate/locale_projection.py", "i18n/*/locale.json",
+        "scripts/translate/locale_catalog.py", "scripts/translate/locale_projection.py",
+        "i18n/*/locale.json", "i18n/*/localization_state.json",
+        "scripts/translate/locales/*/profile.json",
     ),
     py("scripts/validation/localization_audit.py", "--self-test"): (
-        "scripts/validation/localization_audit.py", "scripts/translate/locales/*",
+        "scripts/validation/localization_audit.py", "scripts/translate/locale_catalog.py",
+        "scripts/translate/locales/*",
         "scripts/translate/code_localization.py", "scripts/translate/locale_projection.py",
         "scripts/build/assemble_locale_overlay.py", "i18n/*/locale.json",
+        "i18n/*/localization_state.json",
         "web/nemoclaw/scripts/_keypanel.js", "web/nemoclaw/scripts/_locale.js",
         "web/nemoclaw/scripts/_shared.js",
     ),
@@ -490,7 +505,8 @@ MUTATION_IMPACTS: dict[tuple[str, ...], tuple[str, ...]] = {
         "web/nemoclaw/scripts/_openclaw.js", "web/nemoclaw/03a-kickstart.html",
         "web/_skill_explorer.js", "scripts/cors-proxy/SKILL.html",
         "scripts/runtime/test_page_runtime.js", "scripts/validation/runtime_integration_browser_audit.py",
-        "i18n/pt/web/nemoclaw/03a-kickstart.html", "i18n/es/web/nemoclaw/03a-kickstart.html",
+        "scripts/translate/locale_catalog.py", "i18n/*/locale.json",
+        "i18n/*/localization_state.json", "i18n/*/web/nemoclaw/03a-kickstart.html",
     ),
     unit_test("course_dependency_integrity"): (
         "scripts/validation/course_dependency_integrity.py", "scripts/browser-vendor/*",
@@ -762,7 +778,7 @@ def self_test() -> list[str]:
          "ship tier delegates layout to validate_bundle"),
         (py("scripts/validation/course_dependency_integrity.py") not in ship,
          "ship tier delegates browser dependency audit to validate_bundle"),
-        (py("scripts/validation/localization_audit.py", "--locale", "pt-BR") not in ship,
+        (py("scripts/validation/localization_audit.py") not in ship,
          "ship tier delegates locale current-tree audits to validate_bundle"),
         (mutation_commands <= set(MUTATION_IMPACTS),
          "every mutation command declares change-impact inputs"),

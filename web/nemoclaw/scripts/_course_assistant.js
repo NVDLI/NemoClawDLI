@@ -102,6 +102,13 @@ function currentTitle(page) {
   return (document.querySelector("h1")?.textContent || page.title).replace(/\s+/g, " ").trim();
 }
 
+export function questionTargetsCurrentPage(value) {
+  const text = String(value || "").normalize("NFC").toLowerCase();
+  return /\b(?:this|current|open) page\b/.test(text)
+    || /\besta página\b/.test(text)
+    || /\bpágina (?:actual|abierta|atual)\b/.test(text);
+}
+
 export async function searchCoursePages(query, readPage = coursePage, catalog = coursePages()) {
   const terms = (String(query || "").toLowerCase().match(/[\p{L}\p{N}-]{3,}/gu) || []).slice(0, 8);
   if (!terms.length) return [];
@@ -230,7 +237,9 @@ export function mountCourseAssistant(runtime = {}) {
     created: "Nova sessão criada", deleted: "Sessão excluída", renamed: "Sessão renomeada", attachedNow: "Página vinculada à sessão", compacted: "Contexto condensado e salvo localmente",
     emptyTitle: "Nova sessão", clear: "↺ Limpar sessão",
     intro: "As sessões ficam neste navegador. Turnos antigos são condensados automaticamente.",
-    greeting: id => id ? `A sessão usa ${id}. A prosa e o índice de código estão vinculados; o código exato fica disponível sob demanda.` : "Nenhuma página está vinculada. Pesquise ou leia qualquer parte do curso.",
+    greeting: (liveId, sessionId) => sessionId && sessionId !== liveId
+      ? `Você está em ${liveId}. Esta sessão começou em ${sessionId}; “esta página” sempre significa ${liveId}.`
+      : liveId ? `Você está em ${liveId}. A prosa, o documento HTML e o índice de código desta página estão disponíveis.` : "Nenhuma página está vinculada. Pesquise ou leia qualquer parte do curso.",
     examples: ["Resuma esta página", "Mostre o código desta página", "Crie um artefato HTML/JavaScript executável", "Como _shared.js apoia esta página?"],
   } : es ? {
     open: "Abrir el Asistente del curso", assistant: "ASISTENTE DEL CURSO", dialog: "Asistente del curso",
@@ -248,7 +257,9 @@ export function mountCourseAssistant(runtime = {}) {
     created: "Nueva sesión creada", deleted: "Sesión eliminada", renamed: "Sesión renombrada", attachedNow: "Página vinculada a la sesión", compacted: "Contexto condensado y guardado localmente",
     emptyTitle: "Nueva sesión", clear: "↺ Borrar sesión",
     intro: "Las sesiones permanecen en este navegador. Los turnos antiguos se condensan automáticamente.",
-    greeting: id => id ? `La sesión usa ${id}. Su prosa y su índice de código están vinculados; el código exacto está disponible bajo demanda.` : "No hay ninguna página vinculada. Busque o lea cualquier parte del curso.",
+    greeting: (liveId, sessionId) => sessionId && sessionId !== liveId
+      ? `Está en ${liveId}. Esta sesión comenzó en ${sessionId}; «esta página» siempre significa ${liveId}.`
+      : liveId ? `Está en ${liveId}. La prosa, el documento HTML y el índice de código de esta página están disponibles.` : "No hay ninguna página vinculada. Busque o lea cualquier parte del curso.",
     examples: ["Resuma esta página", "Muéstreme el código de esta página", "Cree un artefacto HTML/JavaScript ejecutable", "¿Cómo ayuda _shared.js a esta página?"],
   } : {
     open: "Open Course Assistant", assistant: "COURSE ASSISTANT", dialog: "Course Assistant",
@@ -266,7 +277,9 @@ export function mountCourseAssistant(runtime = {}) {
     created: "New session created", deleted: "Session deleted", renamed: "Session renamed", attachedNow: "Page attached to session", compacted: "Compacted and saved locally",
     emptyTitle: "New session", clear: "↺ Clear session",
     intro: "Sessions stay in this browser. Older turns compact automatically.",
-    greeting: id => id ? `This session uses ${id}. Its prose and code index are attached; exact source is available on demand.` : "No page is attached. Search or read any part of the course.",
+    greeting: (liveId, sessionId) => sessionId && sessionId !== liveId
+      ? `You are on ${liveId}. This session began on ${sessionId}; “this page” always means ${liveId}.`
+      : liveId ? `You are on ${liveId}. This page's prose, HTML document, and code index are available.` : "No page is attached. Search or read any part of the course.",
     examples: ["Summarize this page", "Show me this page's code", "Build a runnable HTML/JavaScript artifact", "How does _shared.js support this page?"],
   };
   const page = currentPage();
@@ -429,7 +442,10 @@ export function mountCourseAssistant(runtime = {}) {
     sessionName.value = label;
     sessionTitle.textContent = label;
     const attached = session?.pageId ? `${copy.attached}: ${session.pageId}${session.pageTitle ? " · " + session.pageTitle : ""}` : copy.noPage;
-    contextText.textContent = attached + " · " + copy.tools;
+    const livePage = session?.pageId && session.pageId !== page.id
+      ? ` · ${localized("Página atual", "Página actual", "Current page")}: ${page.id}`
+      : "";
+    contextText.textContent = attached + livePage + " · " + copy.tools;
     usePageButton.textContent = session?.pageId === page.id ? copy.refreshPage : copy.usePage(page.id);
     newSessionButton.disabled = store.sessions.length >= MAX_ASSISTANT_SESSIONS;
   };
@@ -629,6 +645,8 @@ export function mountCourseAssistant(runtime = {}) {
     mountedSessionId = session.id;
     const attachedPage = coursePages().find(item => item.id === session.pageId) || null;
     const attachedTitle = session.pageTitle || attachedPage?.title || "";
+    let turnQuestion = "";
+    const targetPageId = requested => questionTargetsCurrentPage(turnQuestion) ? page.id : requested;
     const pageContext = async id => {
       const [prose, artifacts] = await Promise.all([coursePage(id), courseCodeArtifacts(id)]);
       const codeIndex = artifacts.length
@@ -636,6 +654,11 @@ export function mountCourseAssistant(runtime = {}) {
         : "(no lesson code artifacts on this page)";
       return `${prose}\n\n## Available implementation source\n${codeIndex}\n\nUse the code-reading tools for exact source. Course-authored source is public and Apache-2.0; never claim it is private or inaccessible.`;
     };
+    const position = localized(
+      `O navegador está em ${page.id}, “${title}”. ${attachedPage && attachedPage.id !== page.id ? `A sessão salva começou em ${attachedPage.id}, “${attachedTitle}”, mas “esta página” e “página atual” sempre significam ${page.id}.` : "A sessão está vinculada à página atual."}`,
+      `El navegador está en ${page.id}, «${title}». ${attachedPage && attachedPage.id !== page.id ? `La sesión guardada comenzó en ${attachedPage.id}, «${attachedTitle}», pero «esta página» y «página actual» siempre significan ${page.id}.` : "La sesión está vinculada a la página actual."}`,
+      `The browser is currently on ${page.id}, “${title}”. ${attachedPage && attachedPage.id !== page.id ? `The saved session began on ${attachedPage.id}, “${attachedTitle}”, but “this page” and “current page” always mean ${page.id}.` : "This session is attached to the current page."}`,
+    );
     chatApi = await mountAgentChat(body, {
       models: MODELS,
       memory: true,
@@ -645,6 +668,7 @@ export function mountCourseAssistant(runtime = {}) {
       compactAtTokens: 12000,
       compactKeepMessages: 6,
       onUserMessage: question => {
+        turnQuestion = String(question || "");
         const current = store.sessions.find(item => item.id === mountedSessionId);
         if (!current) return;
         if (!current.manualTitle) current.title = question.replace(/\s+/g, " ").trim().slice(0, 48) || "New session";
@@ -680,18 +704,62 @@ export function mountCourseAssistant(runtime = {}) {
         artifactStatus.classList.toggle("error", !!issue);
       },
       intro: copy.intro,
-      greeting: copy.greeting(attachedPage?.id || ""),
+      greeting: copy.greeting(page.id, attachedPage?.id || ""),
       examples: copy.examples,
       system: pt
-        ? `Você é o Assistente do Curso Securing Agents. ${attachedPage ? `Esta sessão está vinculada à página ${attachedPage.id}, “${attachedTitle}”, fornecida como contexto inicial. Comece por ela.` : "Esta sessão não tem uma página vinculada."} Para perguntas sobre o curso, use list_course_pages, search_course_pages e read_course_page. Para código, use list_course_code e depois read_course_source com o URI retornado; para módulos compartilhados, use list_course_runtime_files e read_course_runtime_source. Invoque as ferramentas pela API: nunca imprima os argumentos JSON como resposta. O runtime do curso é JavaScript no navegador: use HTML/JavaScript por padrão. O sandbox fornece a API assíncrona course.embed e os aliases helpers.embed e helpers.cosineSim; sempre use await course.embed(textos, { inputType: "query" ou "passage" }) ou await helpers.embed(...). Nenhum outro helpers.* está disponível. O executor aceita await no nível superior. Não use import, fetch, localStorage nem pacotes externos. O curso não oferece uma célula genérica para colar código. Para qualquer artefato, diagrama, painel, questionário ou simulação solicitada, chame queue_course_artifact; coloque marcação e CSS em html e código executável em javascript. Não responda com HTML bruto nem blocos de código. Defina cada função e alvo DOM usado. Se a ferramenta rejeitar o artefato, corrija o erro e chame-a novamente. Só diga que está pronto após a aceitação da ferramenta. Leia o código antes de explicar e nunca invente uma implementação nem alegue que o código é privado ou inacessível. Cite os IDs das páginas e os arquivos usados.`
+        ? `Você é o Assistente do Curso Securing Agents. ${position} Para perguntas sobre o curso, use list_course_pages, search_course_pages e read_course_page. Para código, use list_course_code e depois read_course_source com o URI retornado; para módulos compartilhados, use list_course_runtime_files e read_course_runtime_source. Invoque as ferramentas pela API: nunca imprima os argumentos JSON como resposta. O runtime do curso é JavaScript no navegador: use HTML/JavaScript por padrão. O sandbox fornece a API assíncrona course.embed e os aliases helpers.embed e helpers.cosineSim; sempre use await course.embed(textos, { inputType: "query" ou "passage" }) ou await helpers.embed(...). Nenhum outro helpers.* está disponível. O executor aceita await no nível superior. Não use import, fetch, localStorage nem pacotes externos. O curso não oferece uma célula genérica para colar código. Para qualquer artefato, diagrama, painel, questionário ou simulação solicitada, chame queue_course_artifact; coloque marcação e CSS em html e código executável em javascript. Use elementos button, input ou select nativos para ações do estudante. Não responda com HTML bruto nem blocos de código. Defina cada função e alvo DOM usado. Se a ferramenta rejeitar o artefato, corrija o erro e chame-a novamente. Só diga que está pronto após a aceitação da ferramenta. Leia o código antes de explicar e nunca invente uma implementação nem alegue que o código é privado ou inacessível. Cite os IDs das páginas e os arquivos usados.`
         : es
-          ? `Es el Asistente del curso Securing Agents. ${attachedPage ? `Esta sesión está vinculada a la página ${attachedPage.id}, «${attachedTitle}», proporcionada como contexto inicial. Comience por ella.` : "Esta sesión no tiene ninguna página vinculada."} Para preguntas sobre el curso, use list_course_pages, search_course_pages y read_course_page. Para código, use list_course_code y luego read_course_source con el URI devuelto; para módulos compartidos, use list_course_runtime_files y read_course_runtime_source. Invoque las herramientas mediante la API: nunca imprima los argumentos JSON como respuesta. El runtime del curso es JavaScript en el navegador; use HTML/JavaScript de forma predeterminada. El sandbox proporciona la API asíncrona course.embed y los alias helpers.embed y helpers.cosineSim; use siempre await course.embed(textos, { inputType: "query" o "passage" }) o await helpers.embed(...). Ningún otro helpers.* está disponible. El ejecutor admite await en el nivel superior. No use import, fetch, localStorage ni paquetes externos. El curso no ofrece una celda genérica para pegar código. Para cualquier artefacto, diagrama, panel, cuestionario o simulación solicitada, llame a queue_course_artifact; coloque el marcado y CSS en html y el código ejecutable en javascript. No responda con HTML sin procesar ni bloques de código. Defina cada función y destino DOM utilizado. Si la herramienta rechaza el artefacto, corrija el error y vuelva a llamarla. Diga que está listo solo después de que la herramienta lo acepte. Lea el código antes de explicarlo; nunca invente una implementación ni afirme que el código es privado o inaccesible. Cite los ID de página y los archivos utilizados.`
-          : `You are the Course Assistant for Securing Agents. ${attachedPage ? `This session is attached to ${attachedPage.id}, “${attachedTitle}”, supplied as initial context. Begin there.` : "This session has no attached page."} For course questions, use list_course_pages, search_course_pages, and read_course_page. For code, use list_course_code then read_course_source with the returned URI; for shared modules use list_course_runtime_files and read_course_runtime_source. Invoke tools through the API: never print tool arguments as JSON. The course runtime is browser JavaScript: default to HTML/JavaScript. The sandbox provides the asynchronous course.embed API plus helpers.embed and helpers.cosineSim compatibility aliases; always use await course.embed(texts, { inputType: "query" or "passage" }) or await helpers.embed(...). No other helpers.* API is available. Top-level await is supported by the artifact runner. Do not use import, fetch, localStorage, or external packages. The course has no generic pasteable code cell. For every requested artifact, diagram, dashboard, quiz, or simulation, call queue_course_artifact; put markup and CSS in html and executable code in javascript. Do not answer with raw HTML or code fences. Define every function and DOM target you use. If the tool rejects the artifact, correct the reported error and call it again. Claim it is ready only after the tool accepts it. Inspect source before explaining code, and never invent an implementation or claim source is private or inaccessible. Cite course page ids and source files used.`,
+          ? `Es el Asistente del curso Securing Agents. ${position} Para preguntas sobre el curso, use list_course_pages, search_course_pages y read_course_page. Para código, use list_course_code y luego read_course_source con el URI devuelto; para módulos compartidos, use list_course_runtime_files y read_course_runtime_source. Invoque las herramientas mediante la API: nunca imprima los argumentos JSON como respuesta. El runtime del curso es JavaScript en el navegador; use HTML/JavaScript de forma predeterminada. El sandbox proporciona la API asíncrona course.embed y los alias helpers.embed y helpers.cosineSim; use siempre await course.embed(textos, { inputType: "query" o "passage" }) o await helpers.embed(...). Ningún otro helpers.* está disponible. El ejecutor admite await en el nivel superior. No use import, fetch, localStorage ni paquetes externos. El curso no ofrece una celda genérica para pegar código. Para cualquier artefacto, diagrama, panel, cuestionario o simulación solicitada, llame a queue_course_artifact; coloque el marcado y CSS en html y el código ejecutable en javascript. Use elementos button, input o select nativos para las acciones del estudiante. No responda con HTML sin procesar ni bloques de código. Defina cada función y destino DOM utilizado. Si la herramienta rechaza el artefacto, corrija el error y vuelva a llamarla. Diga que está listo solo después de que la herramienta lo acepte. Lea el código antes de explicarlo; nunca invente una implementación ni afirme que el código es privado o inaccesible. Cite los ID de página y los archivos utilizados.`
+          : `You are the Course Assistant for Securing Agents. ${position} For course questions, use list_course_pages, search_course_pages, and read_course_page. For code, use list_course_code then read_course_source with the returned URI; for shared modules use list_course_runtime_files and read_course_runtime_source. Invoke tools through the API: never print tool arguments as JSON. The course runtime is browser JavaScript: default to HTML/JavaScript. The sandbox provides the asynchronous course.embed API plus helpers.embed and helpers.cosineSim compatibility aliases; always use await course.embed(texts, { inputType: "query" or "passage" }) or await helpers.embed(...). No other helpers.* API is available. Top-level await is supported by the artifact runner. Do not use import, fetch, localStorage, or external packages. The course has no generic pasteable code cell. For every requested artifact, diagram, dashboard, quiz, or simulation, call queue_course_artifact; put markup and CSS in html and executable code in javascript. Use native button, input, or select elements for learner actions. Do not answer with raw HTML or code fences. Define every function and DOM target you use. If the tool rejects the artifact, correct the reported error and call it again. Claim it is ready only after the tool accepts it. Inspect source before explaining code, and never invent an implementation or claim source is private or inaccessible. Cite course page ids and source files used.`,
+      artifactCorrectionLimit: 2,
       recoverInlineToolIntent: async answer => {
         const intent = parseInlineCourseSourceIntent(answer);
-        return intent ? resolveCourseSourceUri(intent.uri, attachedPage?.id || "") : null;
+        return intent ? resolveCourseSourceUri(intent.uri, targetPageId(attachedPage?.id || page.id)) : null;
       },
-      initialContext: attachedPage ? async () => ({ label: localized("página + índice de código · ", "página + índice de código · ", "page + code index · ") + attachedPage.id, content: await pageContext(attachedPage.id) }) : null,
+      recoverInlineArtifact: async answer => {
+        const current = store.sessions.find(item => item.id === mountedSessionId);
+        if (!current) return null;
+        const artifact = artifactFromMarkdown(answer, `${current.title || "Course Assistant"} artifact`);
+        if (!artifact) return null;
+        const issue = artifactCodeIssue(artifact) || await validateArtifactRuntime(artifact);
+        if (issue) {
+          current.artifact = artifact;
+          current.updatedAt = Date.now();
+          persistStore(copy.saved);
+          renderArtifact(false);
+          activateView("artifact");
+          artifactStatus.textContent = `Generated artifact rejected: ${issue}`;
+          artifactStatus.classList.add("error");
+          return {
+            label: "queue_course_artifact",
+            content: `Artifact rejected at runtime: ${issue}`,
+            rejected: true,
+            retryPrompt: `The browser rejected that artifact: ${issue} Inspect the exact source near the failing operation, then return one simpler corrected artifact using only fenced HTML and JavaScript. Initialize every value before reading or indexing it. Keep the requested controls and behavior. Do not explain the correction.`,
+            answer: localized(
+              `O artefato gerado está aberto para edição, mas não passou nas verificações do navegador: ${issue}`,
+              `El artefacto generado está abierto para editar, pero no superó las comprobaciones del navegador: ${issue}`,
+              `The generated artifact is open for editing, but it did not pass its browser checks: ${issue}`,
+            ),
+          };
+        }
+        current.artifact = artifact;
+        current.updatedAt = Date.now();
+        persistStore(copy.saved);
+        renderArtifact(true);
+        activateView("artifact");
+        artifactStatus.textContent = copy.generatedReady;
+        artifactStatus.classList.remove("error");
+        return {
+          label: "queue_course_artifact",
+          content: `Validated and queued browser artifact “${artifact.title}” with ${artifact.html.length} HTML chars and ${artifact.javascript.length} JavaScript chars.`,
+          answer: localized(
+            "O artefato passou nas verificações do navegador e está aberto na visualização Artefato.",
+            "El artefacto superó las comprobaciones del navegador y está abierto en la vista Artefacto.",
+            "The artifact passed its browser checks and is open in the Artifact view.",
+          ),
+        };
+      },
+      initialContext: async () => ({ label: localized("página + índice de código · ", "página + índice de código · ", "page + code index · ") + page.id, content: await pageContext(page.id) }),
       buildTools: ({ tool, z, coursePage: readPage, coursePages: pages }) => {
         const catalog = pages();
         return [
@@ -707,14 +775,17 @@ export function mountCourseAssistant(runtime = {}) {
             description: localized("Busque no texto do curso e retorne as páginas mais relevantes com trechos curtos.", "Busque en el texto del curso y devuelva las páginas más relevantes con fragmentos breves.", "Search all course prose and return the most relevant page ids with short excerpts."),
             schema: z.object({ query: z.string().min(2).describe(localized("conceito ou frase a localizar no curso", "concepto o frase que debe localizarse en el curso", "concept or phrase to find across the course")) }),
           }),
-          tool(async ({ page: id }) => readPage(id), {
+          tool(async ({ page: id }) => readPage(targetPageId(id)), {
             name: "read_course_page",
             description: localized("Leia uma página completa depois que o mapa ou a busca a identificar.", "Lea una página completa después de identificarla mediante el mapa o la búsqueda.", "Read one complete Securing Agents page after the map or search identifies it."),
             schema: z.object({ page: z.enum(catalog.map(item => item.id)).describe("course page id") }),
           }),
-          tool(async ({ page: id }) => JSON.stringify((await courseCodeArtifacts(id)).map(item => ({ ...item, uri: `${id}#${item.id}` })), null, 2), {
+          tool(async ({ page: id }) => {
+            const target = targetPageId(id);
+            return JSON.stringify((await courseCodeArtifacts(target)).map(item => ({ ...item, uri: `${target}#${item.id}` })), null, 2);
+          }, {
             name: "list_course_code",
-            description: localized("Liste as células e os módulos JavaScript disponíveis em uma página.", "Enumere los artefactos y módulos JavaScript disponibles en una página.", "List the exact JavaScript lesson artifacts and page modules available on one course page."),
+            description: localized("Liste o documento HTML, as células e os módulos JavaScript disponíveis em uma página.", "Enumere el documento HTML, los artefactos y los módulos JavaScript disponibles en una página.", "List the HTML document, exact JavaScript lesson artifacts, and page modules available on one course page."),
             schema: z.object({ page: z.enum(catalog.map(item => item.id)).describe("course page id") }),
           }),
           tool(async ({ uri }) => {

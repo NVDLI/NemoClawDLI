@@ -94,6 +94,11 @@ jobs:
           if [ -n "$GATE_BASE" ]; then GATE_ARGS+=(--changed-since "$GATE_BASE"); fi
           python3 scripts/validation/release_gate.py --tier ship --jobs 4 "${GATE_ARGS[@]}" \
             --timing-report docs/validation/release-gate-timings.json
+          if ! git diff --quiet --; then
+            echo "The ship gate changed tracked source. Regenerate and review these projections:" >&2
+            git diff --name-only -- >&2
+            exit 1
+          fi
       - name: Exercise the pull-request Pages artifact in the host browser
         if: github.event_name == 'pull_request'
         run: |

@@ -3,6 +3,8 @@
 Translations live beside English on the same branch as sparse overlays under `i18n/<url-code>/`.
 Current locale profiles include Brazilian Portuguese (`pt-BR`, URL code `pt`) and neutral technical
 Spanish (`es-ES`, URL code `es`). Each locale owns its terminology, rhythm, and calque rules.
+`locale_catalog.py` discovers every directory under `i18n/` and rejects missing metadata, conflicting
+locale tags, orphaned profiles, unsafe paths, and missing directory beacons before any build proceeds.
 
 This shape keeps review honest. One commit can change English, its translations, the drift metadata,
 and the validator that protects the relationship. A translation branch cannot hide an old runtime,
@@ -48,8 +50,8 @@ prose; Studio keeps English and the selected locale side by side so a human can 
 ## Contributor loop
 
 ```bash
-# 1. See all same-branch states and refresh Studio data.
-python3 scripts/validation/localization_audit.py --locale pt-BR
+# 1. See every same-branch state and refresh Studio data.
+python3 scripts/validation/localization_audit.py
 
 # 2. Optionally generate a draft. Use a fresh cache when changing the prompt or model.
 #    The API key may be in NVIDIA_API_KEY or untracked .env-dev.
@@ -114,9 +116,7 @@ needs-review, and missing pages. Each row shows source/review/target hashes and 
 - `translate_svg_text.py`: geometry-preserving SVG label/accessibility translation.
 - `locales/pt-BR/svg_translations.json`: reviewed, provider-free SVG translation map.
 - `locales/es-ES/svg_translations.json`: reviewed, provider-free Spanish SVG translation map.
+- `locale_catalog.py`: required discovery and cross-file identity contract for every locale.
 - `scripts/validation/localization_audit.py`: required drift and language gate with mutation tests.
 - `scripts/build/assemble_locale_overlay.py`: deterministic canonical-plus-prose assembly.
 - `web/nemoclaw/localization.html`: same-branch comparison Studio.
-
-`translation_status.py` and `translation_base.json` remain only for reading historical
-`translate-*` branches. New locale work does not use or advance them.

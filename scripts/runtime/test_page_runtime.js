@@ -365,7 +365,7 @@ function findChrome() {
     const prompts = [
       'Build a runnable interactive agent-loop diagram with Observe, Reason, Act, and Update. Include Next and Reset buttons that visibly advance and reset the active step.',
       'Build a runnable context-budget dashboard for four agents. Include Normal load and Overloaded controls that update bar widths, values, and warning state.',
-      'Build a runnable three-question quiz about retrieval and cosine similarity from this page. Include selectable answers, immediate feedback, a score, and Restart.',
+      'Build a runnable three-question quiz about the main ideas from this page. Use button elements for every selectable answer, with immediate feedback, a score, and Restart.',
     ];
     const results = [];
     for (let index = 0; index < prompts.length; index++) {
@@ -380,12 +380,15 @@ function findChrome() {
       const model = await chat.locator('.chatui-model').inputValue();
       if (!/nemotron-3-super-120b/i.test(model)) throw new Error(`Course Assistant artifact default is not the validated model: ${model}`);
       await chat.locator('.chatui-text').fill(prompts[index]);
-      await chat.locator('.chatui-send').click();
+      const send = chat.locator('.chatui-send');
+      await send.click();
+      await page.waitForFunction(() => document.querySelector('.course-assistant-body .chatui-send')?.textContent.trim() !== 'Send', null, { timeout:5000 });
       await page.waitForFunction(() => document.querySelector('.course-assistant-body .chatui-send')?.textContent.trim() === 'Send', null, { timeout:180000 });
       const toolBodies = await chat.locator('.chatui-tool-body').allInnerTexts();
       const validated = toolBodies.some(text => /Validated and queued browser artifact/.test(text));
       const rejections = toolBodies.filter(text => /Artifact rejected (?:before execution|at runtime)/.test(text));
       const chatErrors = await chat.locator('.chatui-msg.err,.chatui-warn').allInnerTexts();
+      const lastAnswer = (await chat.locator('.chatui-msg.chatui-bot').last().innerText().catch(() => '')).slice(0, 600);
       await panel.locator('[data-course-assistant-view="artifact"]').click();
       const sourceChars = await panel.evaluate(node => {
         const html = node.querySelector('[data-course-artifact-html]');
@@ -422,7 +425,7 @@ function findChrome() {
         } catch (_) {}
       }
       const status = await panel.locator('.course-artifact-actions [role="status"]').innerText();
-      const result = { prompt:index + 1, model, validated, rejections:rejections.length, chatErrors, sourceChars, controlCount, changed, status };
+      const result = { prompt:index + 1, model, validated, rejections:rejections.length, chatErrors, sourceChars, controlCount, changed, status, lastAnswer };
       results.push(result);
       if (!validated || !sourceChars || !controlCount || !changed || chatErrors.length || /error|rejected|erro/i.test(status)) {
         console.log('COURSE_ASSISTANT_ARTIFACTS:', JSON.stringify(results, null, 2));

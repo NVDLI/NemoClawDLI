@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import fs from 'node:fs';
+import path from 'node:path';
 
 const storage = new Map();
 const secretStorage = new Map();
@@ -134,14 +135,19 @@ ok(openclawCli.includes('runtime.openclawGatewayWsUrl(connection.rawUrl, connect
   'OpenClaw CLI runtime bypasses shared gateway routing');
 ok(!openclawCli.includes('return u + "/cli/gateway"'),
   'OpenClaw CLI runtime rebuilt a direct gateway URL');
-for (const path of [
-  'web/nemoclaw/04b-modern-clis.html',
-  'i18n/pt/web/nemoclaw/04b-modern-clis.html',
-  'i18n/es/web/nemoclaw/04b-modern-clis.html',
-]) {
-  const page = fs.readFileSync(path, 'utf8');
-  ok(page.includes('helpers.mountOpenClawCli("#agent-chat")'), `${path} bypasses the shared CLI runtime`);
-  ok(!page.includes('return u + "/cli/gateway"'), `${path} rebuilt a direct gateway URL`);
+const cliPages = ['web/nemoclaw/04b-modern-clis.html'];
+for (const entry of fs.readdirSync('i18n', { withFileTypes: true })) {
+  if (!entry.isDirectory()) continue;
+  const metadataPath = path.join('i18n', entry.name, 'locale.json');
+  ok(fs.existsSync(metadataPath), `${metadataPath}: every locale directory must declare locale.json`);
+  const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+  ok(metadata.url_code === entry.name, `${metadataPath}: url_code must match its directory`);
+  cliPages.push(path.join('i18n', entry.name, 'web/nemoclaw/04b-modern-clis.html'));
+}
+for (const pagePath of cliPages) {
+  const page = fs.readFileSync(pagePath, 'utf8');
+  ok(page.includes('helpers.mountOpenClawCli("#agent-chat")'), `${pagePath} bypasses the shared CLI runtime`);
+  ok(!page.includes('return u + "/cli/gateway"'), `${pagePath} rebuilt a direct gateway URL`);
 }
 
 clearStorage();

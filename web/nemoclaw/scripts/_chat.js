@@ -450,7 +450,8 @@ export function mountChatUI(container, opts = {}) {
         const answer = (roundAnswer && roundAnswer._t) || "";
         history.push({ role: "user", content: q }, { role: "assistant", content: answer });
         notifyHistory();
-        if (opts.onAssistantMessage) try { opts.onAssistantMessage(answer, ctx); } catch (_) {}
+        if (opts.onAssistantMessage) try { await opts.onAssistantMessage(answer, ctx); }
+        catch (error) { view.warn("Answer post-processing failed: " + (error?.message || error)); }
       } else if (memoryEnabled) snapshotTurn(curAC.signal.aborted ? "stopped" : "error", true);
       activityText = activitySnapshot();
       if (curAC.signal.aborted || errored) {
@@ -546,6 +547,7 @@ export async function mountAgentChat(container, opts = {}) {
   }
   return mountChatUI(el, {
     modules: opts.modules, models: opts.models, intro: opts.intro, greeting: opts.greeting, examples: opts.examples, growLog: opts.growLog,
+    memory: opts.memory,
     initialHistory: opts.initialHistory, initialActivity: opts.initialActivity, onUserMessage: opts.onUserMessage, onTurnSnapshot: opts.onTurnSnapshot,
     onAssistantMessage: opts.onAssistantMessage,
     onHistoryChange: opts.onHistoryChange, resetLabel: opts.resetLabel,
@@ -612,6 +614,7 @@ export async function mountAgentChat(container, opts = {}) {
       // Arg-delta chunks reset their index to 0 each model message, so an index key would let a later read overwrite an earlier one.
       const byId = {}, activeByIndex = {};
       let lastInput = 0, totalOutput = 0, sawUsage = false, answerText = "";
+      const hasMeaningfulAnswer = value => /[\p{L}\p{N}]/u.test(String(value || ""));
       const labelFor = (name, args) => {
         let a = ""; try { const o = JSON.parse(args || "{}"); a = o.page || o.id || o.query || o.expression || Object.values(o)[0] || ""; } catch (_) {}
         return a ? name + " · " + a : name;
@@ -656,6 +659,50 @@ export async function mountAgentChat(container, opts = {}) {
           answerText += chunk.content; ctx.view.token(chunk.content);
         }
       }
+      if (opts.recoverInlineArtifact) {
+        let recovered = null;
+        try { recovered = await opts.recoverInlineArtifact(answerText, ctx); }
+        catch (error) { ctx.view.warn("Could not recover the generated artifact: " + (error?.message || error)); }
+        if (recovered?.content) {
+          ctx.view.discardAnswer();
+          ctx.view.tool(recovered.label || "queue_course_artifact", recovered.content);
+          if (recovered.rejected && recovered.retryPrompt) {
+            const system = typeof opts.system === "function" ? opts.system(ctx) : opts.system;
+            const correctionLimit = Math.max(0, Math.min(3, Number(opts.artifactCorrectionLimit) || 0));
+            let candidateText = answerText;
+            for (let attempt = 1; recovered.rejected && recovered.retryPrompt && attempt <= correctionLimit; attempt++) {
+              ctx.view.note(`The generated artifact failed its browser check. Requesting bounded correction ${attempt} of ${correctionLimit}.`);
+              const correctionMessages = [
+                ...(system ? [{ role: "system", content: system }] : []),
+                { role: "user", content: text },
+                { role: "assistant", content: candidateText.slice(0, 60000) },
+                { role: "user", content: recovered.retryPrompt },
+              ];
+              let correctedText = "";
+              try {
+                const correctionStream = await runtime.llm.stream(correctionMessages, { signal: ctx.signal });
+                for await (const chunk of correctionStream) {
+                  if (typeof chunk.content === "string" && chunk.content) correctedText += chunk.content;
+                }
+                const corrected = correctedText ? await opts.recoverInlineArtifact(correctedText, ctx) : null;
+                if (!corrected?.content) {
+                  ctx.view.warn("The bounded artifact correction did not return runnable browser code.");
+                  break;
+                }
+                ctx.view.tool(corrected.label || "queue_course_artifact", corrected.content);
+                recovered = corrected;
+                candidateText = correctedText;
+              } catch (error) {
+                if (ctx.signal.aborted) throw error;
+                ctx.view.warn("The bounded artifact correction did not complete: " + (error?.message || error));
+                break;
+              }
+            }
+          }
+          answerText = recovered.answer || recovered.content;
+          ctx.view.token(answerText);
+        }
+      }
       if (opts.recoverInlineToolIntent) {
         let recovered = null;
         try { recovered = await opts.recoverInlineToolIntent(answerText, ctx); }
@@ -680,6 +727,36 @@ export async function mountAgentChat(container, opts = {}) {
             }
           } catch (error) { ctx.view.warn("Source read succeeded, but answer synthesis failed: " + (error?.message || error)); }
           if (!recoveryText) ctx.view.token("I recovered and opened the requested source above, but the follow-up answer did not complete. Retry the question to continue from the saved session.");
+          answerText = recoveryText || answerText;
+        }
+      }
+      if (!hasMeaningfulAnswer(answerText)) {
+        const observations = Object.values(byId)
+          .filter(item => item.result)
+          .map(item => `${item.name}\n${item.result}`)
+          .join("\n\n---\n\n")
+          .slice(0, 60000);
+        if (observations) {
+          ctx.view.discardAnswer();
+          ctx.view.note("The tool run ended without a final answer; synthesizing one from the completed results.");
+          const system = typeof opts.system === "function" ? opts.system(ctx) : opts.system;
+          const recoveryMessages = [
+            ...(system ? [{ role: "system", content: system }] : []),
+            ...ctx.history.slice(-6),
+            { role: "user", content: text },
+            { role: "user", content: `Answer the request using these completed tool results. Do not narrate planning and do not emit tool arguments.\n\n${observations}` },
+          ];
+          try {
+            const recoveryStream = await runtime.llm.stream(recoveryMessages, { signal: ctx.signal });
+            for await (const chunk of recoveryStream) {
+              if (typeof chunk.content === "string" && chunk.content) {
+                answerText += chunk.content;
+                ctx.view.token(chunk.content);
+              }
+            }
+          } catch (error) {
+            ctx.view.warn("The tools completed, but final answer synthesis failed: " + (error?.message || error));
+          }
         }
       }
       if (sawUsage) ctx.view.usage({ input: lastInput, output: totalOutput });
