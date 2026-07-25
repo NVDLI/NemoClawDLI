@@ -67,8 +67,8 @@ jobs:
         run: |
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$GITHUB_SHA")"
           BUILD_PAGES_PULL_MATERIALS=0 BUILD_PAGES_REUSE_VALIDATION=1 \
-            bash scripts/build/build_pages.sh pull-request-public
-          python3 scripts/skills/skill_renderer_runtime_audit.py --site-root pull-request-public --timeout-seconds 600
+            bash scripts/build/build_pages.sh "$RUNNER_TEMP/pull-request-public"
+          python3 scripts/skills/skill_renderer_runtime_audit.py --site-root "$RUNNER_TEMP/pull-request-public" --timeout-seconds 600
       - name: Prepare the pull-request Pages action canary
         if: github.event_name == 'pull_request'
         run: |
