@@ -55,7 +55,7 @@ SUMMARIES = {
 GUIDANCE = {
     ".gitlab": '''
   <section aria-labelledby="gitlab-boundary"><h2 id="gitlab-boundary">Why this directory is public</h2>
-    <p>The internal integration repository imports reviewed public commits. This directory keeps the generic validation and intake definitions required for that handoff. Runner addresses, deployment destinations, credentials, account identifiers, and generated artifacts remain outside the public source.</p>
+    <p>This directory keeps the generic validation and intake definitions that the import requires. Runner addresses, deployment destinations, credentials, account identifiers, and generated artifacts remain outside the public source.</p>
   </section>''',
     "scripts/ci": '''
   <section aria-labelledby="operator-flow"><h2 id="operator-flow">Operator flow</h2>
@@ -65,7 +65,7 @@ GUIDANCE = {
       <li><strong>Exercise or publish:</strong> a separate secret-free job builds the pinned browser runtime without opening candidate content. Candidate browsers run without protected variables. Live probes receive only environment-scoped file secrets. CDN preparation has no AWS authority; the root-installed devbox publisher accepts only its hash plan.</li>
     </ol>
     <p><a href="../../docs/pages_deploy.md">Open the exact <code>glab</code> branch/language commands and runner provisioning steps.</a></p>
-    <p>These operations are internal GitLab capabilities. Public GitHub receives the source and ordinary validation, but no trigger, secret, protected environment, devbox runner, or AWS authority.</p>
+    <p>These operations stay inside GitLab, so public GitHub receives the source and ordinary validation but no trigger, secret, protected environment, devbox runner, or AWS authority.</p>
   </section>''',
     "scripts/cors-proxy/deployable": '''
   <section aria-labelledby="projection-flow"><h2 id="projection-flow">Verify before use</h2>

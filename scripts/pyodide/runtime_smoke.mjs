@@ -148,8 +148,12 @@ if (!shellReply.ok || !shellReply.stdout.includes("SEPIP OLLEH")) {
   throw new Error(`Bounded browser-shell pipeline did not execute: ${JSON.stringify(shellReply)}`);
 }
 const magicReply = await execute("%magic", {});
-if (!magicReply.ok || !magicReply.display.includes("value? / value??")) {
-  throw new Error("Notebook magic help did not render");
+// Assert the magics a learner actually types, not the prose that describes them, so the
+// help text stays free to satisfy the prose gates.
+const magicTokens = ["value?", "%%bash", "%%time", "%who", "%pwd", "%pip list", "%timeit", "%magic"];
+const missingMagics = magicTokens.filter((token) => !magicReply.display.includes(token));
+if (!magicReply.ok || missingMagics.length) {
+  throw new Error(`Notebook magic help did not render: ${JSON.stringify(missingMagics)}`);
 }
 const prettyReply = await execute("{'outer': {'numbers': list(range(12)), 'ready': True}}", {});
 if (prettyReply.display_type !== "application/json" || prettyReply.display_language !== "json"

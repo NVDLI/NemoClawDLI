@@ -244,7 +244,7 @@
  Um agente de índice top-K simples enfrenta uma troca entre revocação e precisão que nenhum modelo de incorporação elimina. Você deve escolher entre trechos curtos e documentos longos:
  </p>
   <ul>
-    <li>Trechos curtos produzem incorporações precisas — o vetor representa uma ideia focada —, mas carecem de contexto; uma frase raramente basta para responder.</li>
+    <li>Um trecho curto representa uma ideia focada, e o vetor resultante fica preciso. Falta-lhe contexto, e uma frase raramente basta para responder.</li>
     <li>Documentos longos preservam o contexto, mas produzem incorporações difusas; o vetor representa a média de muitas ideias.</li>
   </ul>
   <p>
@@ -290,15 +290,15 @@
     <li><strong>Documentos hierárquicos.</strong> Um segmentador preserva a hierarquia de títulos e combina extração de tabelas atômicas, ponteiros para o pai e um índice duplo para busca estrutural e semântica. Você indexa trechos filhos pequenos para obter boa revocação e recupera o pai correspondente, permitindo que o modelo leia a cláusula junto com sua seção.</li>
     <li><strong>Recuperação de imagens de página para figuras e gráficos.</strong> Uma configuração com dois espaços vetoriais incorpora a página renderizada e seu texto. Assim, a consulta também pode recuperar uma figura ou um slide quando a resposta estiver nesse conteúdo visual.</li>
     <li><strong>Tabelas estruturadas e governadas.</strong> Não são construídas neste curso. O padrão de produção usa uma camada semântica entre o agente e os dados no nível de linha, expondo apenas as métricas selecionadas exigidas pelo pacote.</li>
-    <li><strong>Dados relacionais ou em grafo.</strong> O agente chama uma ferramenta de travessia de grafo — Cypher, GraphQL ou personalizada — em vez de um armazenamento vetorial. O pacote recebido é um subgrafo cujas arestas explícitas seguem para o prompt, preservando as relações entre entidades.</li>
+    <li><strong>Dados relacionais ou em grafo.</strong> Em vez de um armazenamento vetorial, o agente chama uma ferramenta de travessia de grafo escrita em Cypher, GraphQL ou linguagem personalizada. O pacote recebido é um subgrafo cujas arestas explícitas seguem para o prompt, preservando as relações entre entidades.</li>
   </ul>
 
   <!-- ── Frontier: GraphRAG for global questions ───────────────────────────── -->
   <h2>Quando o top-K é a ferramenta errada: GraphRAG e perguntas globais</h2>
   <p>
  Cada recuperador nesta página responde a uma <em>pergunta local</em>, cuja resposta está em poucas passagens que a similaridade top-K
- consegue encontrar — por exemplo, o que um contrato diz sobre rescisão ou qual artigo
- introduziu o <a href="https://arxiv.org/abs/2212.10496" target="_blank" rel="noopener">HyDE</a>. Outra classe de pergunta não possui resposta em uma passagem isolada. Ao perguntar pelos principais temas de mil documentos,
+ consegue encontrar. O que um contrato diz sobre rescisão e qual artigo
+ introduziu o <a href="https://arxiv.org/abs/2212.10496" target="_blank" rel="noopener">HyDE</a> são perguntas desse tipo. Outra classe de pergunta não possui resposta em uma passagem isolada. Ao perguntar pelos principais temas de mil documentos,
  você descobre que a resposta é difusa demais para existir em um único trecho; ela emerge do corpus inteiro.
  </p>
   <p>

@@ -1169,15 +1169,14 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
                          for x in reach.get("strays", []) if isinstance(x, dict) and not x.get("expected")],
     }
 
-    # Translation branch: drop the English-prose suites' findings (they do not apply to the target
-    # language) and strip the em-dash signal from grounding (the dash is ordinary punctuation in most
-    # languages). The structural suites are left untouched, so a translation is still fully gated on
-    # links, layout, the SKILL contract, modules, figures, and cells.
+    # Translation branch: drop the English-prose suites' findings, which score English rhythm and
+    # cadence and do not transfer to the target language. The structural suites are left untouched,
+    # so a translation is still fully gated on links, layout, the SKILL contract, modules, figures,
+    # and cells. The em-dash signal is NOT dropped: the dash is banned repository-wide in every
+    # language, and a translator reintroducing one is the case this branch used to hide.
     if not lang_en:
         for sid in na_suites:
             findings_detail[sid] = []
-        findings_detail["grounding"] = [fo for fo in findings_detail.get("grounding", [])
-                                        if "em-dash" not in (fo.get("detail") or "")]
 
     # Roll the per-finding severities up into the advertised gradient.
     # Layout and foyer failures are required-tier too, but live outside findings_detail.
