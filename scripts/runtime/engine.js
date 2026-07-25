@@ -173,7 +173,14 @@
   function findAll(re, s) { var out = [], m; re.lastIndex = 0; while ((m = re.exec(s))) { out.push(m[1]); if (m.index === re.lastIndex) re.lastIndex++; } return out; }
   function reHref() { return /(?:href|src)\s*=\s*["']([^"']+)["']/ig; }
   function reMd() { return /!?\[[^\]]*\]\(\s*<?([^)\s>]+)/g; }
+  function reBeaconImport() { return /^@((?:\.{0,2}\/)?[A-Za-z0-9_.\/-]+\.(?:md|html))\s*$/gm; }
   function reUrl() { return /(https?:\/\/[^\s)"'<>\]\[(]+)/g; }
+  function linkTargets(raw, txt, suf) {
+    var links = (suf === ".html" || suf === ".htm") ? findAll(reHref(), raw) : findAll(reHref(), txt);
+    links = links.concat(findAll(reMd(), txt));
+    if (suf === ".md") links = links.concat(findAll(reBeaconImport(), txt));
+    return links;
+  }
 
   function htmlTagEnd(text, start) {
     var quote = "";
@@ -369,8 +376,7 @@
       nodes[rel] = { id: rel, course: courseOf(rel), skill: skill, nav: graphNavigable(rel) && !mat, mat: mat, "in": 0, out: 0 };
       var rl = readForLinks(io, rel), raw = rl[0], suf = rl[1];
       var txt = stripNoncontent(raw, suf);
-      var hs = (suf === ".html" || suf === ".htm") ? findAll(reHref(), raw) : findAll(reHref(), txt);
-      hs = hs.concat(findAll(reMd(), txt));
+      var hs = linkTargets(raw, txt, suf);
       var seenH = {};
       for (var k = 0; k < hs.length; k++) {
         m = hs[k]; if (has(seenH, m)) continue; seenH[m] = 1;
@@ -432,8 +438,7 @@
     for (i = 0; i < pages.length; i++) {
       var rel = pages[i], rl = readForLinks(io, rel), raw = rl[0], suf = rl[1];
       var txt = stripNoncontent(raw, suf);
-      var hs = (suf === ".html" || suf === ".htm") ? findAll(reHref(), raw) : findAll(reHref(), txt);
-      hs = hs.concat(findAll(reMd(), txt));
+      var hs = linkTargets(raw, txt, suf);
       var seenH = {};
       for (var k = 0; k < hs.length; k++) {
         var m = hs[k]; if (has(seenH, m)) continue; seenH[m] = 1;
@@ -488,7 +493,7 @@
       var srcCourse = courseOf(rel), ship = shipRelevant(rel);
       var rl = readForLinks(io, rel), raw = rl[0], suf = rl[1];
       var txt = stripNoncontent(raw, suf);
-      var raws = {}, hh = findAll(reHref(), txt).concat(findAll(reMd(), txt));
+      var raws = {}, hh = linkTargets(raw, txt, suf);
       for (var z = 0; z < hh.length; z++) raws[hh[z]] = 1;
       for (var rawk in raws) {
         if (!has(raws, rawk)) continue;
@@ -687,6 +692,15 @@
     expect("raw-text scanner recognizes permissive comment endings", stripped.indexOf("hidden-comment") < 0, stripped);
     expect("raw-text scanner retains authored asset tags", stripped.indexOf('src="keep.js"') >= 0 && stripped.indexOf('href="keep.html"') >= 0, stripped);
     expect("raw-text scanner does not consume similarly named elements", stripped.indexOf("<scripture>not-a-script</scripture>") >= 0, stripped);
+    var imports = findAll(reBeaconImport(), [
+      "@AGENTS.md",
+      "@../shared/AGENTS.md",
+      "owner@example.com",
+      "prefix @DECOY.md",
+      "@not-a-document.txt"
+    ].join("\n"));
+    expect("agent beacon imports are links without matching email or inline near-matches",
+      JSON.stringify(imports) === '["AGENTS.md","../shared/AGENTS.md"]', JSON.stringify(imports));
     return checks;
   }
 

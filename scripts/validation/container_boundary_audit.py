@@ -12,6 +12,7 @@ command in this repository.
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import tempfile
 from pathlib import Path
@@ -28,7 +29,7 @@ def tracked(root: Path) -> list[Path]:
     proc = subprocess.run(
         ["git", "ls-files", "-z"], cwd=root, stdout=subprocess.PIPE, check=True
     )
-    return [root / item.decode() for item in proc.stdout.split(b"\0") if item]
+    return [root / os.fsdecode(item) for item in proc.stdout.split(b"\0") if item]
 
 
 def inspect(root: Path) -> list[str]:
@@ -58,7 +59,11 @@ def self_test() -> int:
         root = Path(raw)
         subprocess.run(["git", "init", "-q"], cwd=root, check=True)
         (root / "safe.md").write_text("Use an external container if your organization requires one.\n")
-        subprocess.run(["git", "add", "safe.md"], cwd=root, check=True)
+        malformed = os.fsencode(root) + b"/safe-\xff.md"
+        descriptor = os.open(malformed, os.O_WRONLY | os.O_CREAT, 0o600)
+        os.write(descriptor, b"Safe source with a non-UTF-8 Git path.\n")
+        os.close(descriptor)
+        subprocess.run(["git", "add", "-A"], cwd=root, check=True)
         if inspect(root):
             print("container_boundary_audit self-test: FAIL (safe prose rejected)")
             return 1

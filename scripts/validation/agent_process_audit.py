@@ -13,6 +13,8 @@ for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
         sys.path.insert(0, str(_p / "scripts"))
         break
 from _bootstrap import find_repo_root
+import agent_model_experiment_audit
+import codex_continuity_audit
 
 ROOT = find_repo_root(Path(__file__).resolve())
 FILES = {
@@ -59,8 +61,13 @@ REQUIRED = {
     "root_skill": ["asset provenance beacon", "inspect light and dark theme output", "source_gate"],
     "assets_skill": ["theme/mount classification", "Semantic labels stay in diagrams", "visual_preview_policy",
                      "light and dark theme screenshots", "activate the lightbox", "horizontal panning"],
-    "docs_skill": ["agent_process.md", "agent process"],
-    "validation_skill": ["agent_process_audit.py", "Agent process", "cell_ui_runtime_audit.py", "Rendered page screenshots", "learner_flow_audit.py", "learner_flow_runtime_audit.py", "contribution_safety_audit.py", "Contribution safety"],
+    "docs_skill": ["agent_process.md", "agent process", "agent_model_experiment.md",
+                   "agent_model_experiment_protocol.json", "agent_model_experiment_prompts.json"],
+    "validation_skill": ["agent_process_audit.py", "Agent process",
+                         "agent_model_experiment_audit.py", "codex_continuity_audit.py",
+                         "cell_ui_runtime_audit.py", "Rendered page screenshots",
+                         "learner_flow_audit.py", "learner_flow_runtime_audit.py",
+                         "contribution_safety_audit.py", "Contribution safety"],
     "figures_skill": ["rendered-preview", "harness screenshot"],
     "pre_push": ["release_gate.py", "--tier ship --no-write --changed-since origin/main --reuse-success", "contribution_safety_audit.py", "--commit-range \"$RANGE\"", "release_change_reminder.py", "REFUSING PUSH - origin/main is"],
 }
@@ -92,6 +99,8 @@ def audit() -> list[str]:
             line = next((ln for ln in raw_doc.splitlines() if token in ln), "")
             if "Never run" not in line and "Do not" not in line:
                 findings.append(f"docs/agent_process.md gives unsafe auth probe without banning it: {token}")
+    findings.extend(codex_continuity_audit.audit(ROOT))
+    findings.extend(agent_model_experiment_audit.audit(ROOT))
     return findings
 
 

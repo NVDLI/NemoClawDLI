@@ -51,6 +51,8 @@
     "scripts/validation/branch_preview_manifest_audit.py",
     "scripts/validation/branch_preview_runtime_audit.py",
     "scripts/validation/agent_process_audit.py",
+    "scripts/validation/agent_model_experiment_audit.py",
+    "scripts/validation/codex_continuity_audit.py",
     "scripts/validation/course_contract.py",
     "scripts/validation/course_content_contract.py",
     "scripts/validation/course_dependency_integrity.py",
@@ -323,6 +325,16 @@
       "desc": "Checks that issue/MR, taxonomy, validation, and safe-auth process guardrails remain discoverable from repo beacons."
     },
     {
+      "path": "agent_model_experiment_audit.py",
+      "role": "agent model experiment contract",
+      "desc": "Validates dynamic model and task matrices, preregistration integrity, sanitized results, hard-violation caps, and complete run coverage."
+    },
+    {
+      "path": "codex_continuity_audit.py",
+      "role": "agent continuity contract",
+      "desc": "Discovers repository skills and checks cross-harness entry points, reviewed lifecycle hooks, checkpoint semantics, UI metadata, and tamper mutations."
+    },
+    {
       "path": "course_contract.py",
       "role": "Course contract audit",
       "desc": "Required invariant for the English source course title, abstract, and learning objectives."
@@ -407,6 +419,8 @@
   <div class="skill-cmd"><b>Pages branch availability</b><code>python3 scripts/validation/branch_preview_manifest_audit.py --self-test</code></div>
   <div class="skill-cmd"><b>Pages branch selector browser</b><code>python3 scripts/validation/branch_preview_runtime_audit.py --site-root public</code></div>
   <div class="skill-cmd"><b>Agent process</b><code>python3 scripts/validation/agent_process_audit.py</code></div>
+  <div class="skill-cmd"><b>Agent model experiment</b><code>python3 scripts/validation/agent_model_experiment_audit.py</code></div>
+  <div class="skill-cmd"><b>Codex continuity</b><code>python3 scripts/validation/codex_continuity_audit.py</code></div>
   <div class="skill-cmd"><b>Course contract</b><code>python3 scripts/validation/course_contract.py</code></div>
   <div class="skill-cmd"><b>Required content contract</b><code>python3 scripts/validation/course_content_contract.py</code></div>
   <div class="skill-cmd"><b>Dependency integrity</b><code>python3 scripts/validation/course_dependency_integrity.py</code></div>
@@ -468,6 +482,8 @@
     <a class="skill-link" href="branch_preview_manifest_audit.py"><b>branch_preview_manifest_audit.py</b><span>Pages branch manifest audit. Rejects selector entries without published paths or browser dependency evidence, self-tests detection, and probes live Pages output.</span></a>
     <a class="skill-link" href="branch_preview_runtime_audit.py"><b>branch_preview_runtime_audit.py</b><span>Pages branch selector browser audit. Injects a ghost preview and proves root/branch foyers hide it.</span></a>
     <a class="skill-link" href="agent_process_audit.py"><b>agent_process_audit.py</b><span>Agent process audit. Checks issue/MR, taxonomy, validation, and safe-auth guardrail visibility.</span></a>
+    <a class="skill-link" href="agent_model_experiment_audit.py"><b>agent_model_experiment_audit.py</b><span>Agent model experiment contract. Holds the preregistered matrix, containment, scoring, and sanitized result boundary.</span></a>
+    <a class="skill-link" href="codex_continuity_audit.py"><b>codex_continuity_audit.py</b><span>Agent continuity contract. Discovers native skills and rejects beacon, hook, metadata, or lifecycle tampering.</span></a>
     <a class="skill-link" href="course_contract.py"><b>course_contract.py</b><span>Course contract audit. Holds the English course title, abstract, and objectives verbatim.</span></a>
     <a class="skill-link" href="course_content_contract.py"><b>course_content_contract.py</b><span>Required content contract. Locks retrieval/safety teaching promises and current product/platform qualifiers.</span></a>
     <a class="skill-link" href="course_dependency_integrity.py"><b>course_dependency_integrity.py</b><span>Dependency integrity. Validates exact locks, licenses, hashes, source references, and same-origin delivery.</span></a>
