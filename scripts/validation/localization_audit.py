@@ -54,7 +54,13 @@ INTERFACE_CONTRACT = {
     "scripts/translate/localization_scope.py": ("en-shell", "data-localization-scope", "translation_sha"),
     "scripts/translate/locale_projection.py": ("project_locale_html", "project_localized_code_templates", "missing localized shell segment"),
     "scripts/translate/code_localization.py": ("project_localized_code_templates", "code_contract_literals", "localized runnable code contract differs"),
-    "scripts/validation/localization_runtime_audit.py": ("pageerror", "language-menu entries are clipped", "Localization Studio"),
+    "scripts/validation/localization_runtime_audit.py": (
+        "pageerror",
+        "language-menu entries are clipped",
+        "Localization Studio",
+        "localizedFigurePages",
+        "labels outside their cards",
+    ),
     ".gitlab/ci/core.yml": ("release_gate.py --tier ship",),
     ".github/workflows/pages.yml": ("release_gate.py --tier ship",),
     ".github/workflows/release.yml": ("release_gate.py --tier ship",),
@@ -1305,24 +1311,17 @@ def self_test() -> list[str]:
             shutil.copy2(src, dst)
         if interface_findings(fixture):
             failures.append("clean localization interface fixture rejected")
-        interface_mutations = (
-            ("web/nemoclaw/scripts/_locale.js", "available_pages"),
-            ("web/nemoclaw/scripts/_locale.js", "export function languageManifestUrl"),
-            ("web/nemoclaw/scripts/localization_main.js", 'import { languageManifestUrl } from "./_locale.js"'),
-            ("web/nemoclaw/localization.html", 'id="loc-target"'),
-            ("scripts/build/build_pages.sh", "assemble_locale_overlay.py"),
-            ("scripts/translate/translate_html_segments.py", "required_dimensions"),
-        )
-        for rel, token in interface_mutations:
-            if rel not in INTERFACE_CONTRACT or token not in INTERFACE_CONTRACT[rel]:
-                failures.append(f"interface mutation is not declared by the contract: {rel}: {token}")
-                continue
+        for rel, tokens in INTERFACE_CONTRACT.items():
             path = fixture / rel
             raw = path.read_text(encoding="utf-8")
-            path.write_text(raw.replace(token, "removed-contract-token"), encoding="utf-8")
-            if "interface-contract" not in {item["code"] for item in interface_findings(fixture)}:
-                failures.append(f"interface mutation escaped detector: {rel}: {token}")
-            path.write_text(raw, encoding="utf-8")
+            for index, token in enumerate(tokens):
+                replacement = f"removed-contract-token-{index}"
+                path.write_text(raw.replace(token, replacement), encoding="utf-8")
+                if "interface-contract" not in {
+                        item["code"] for item in interface_findings(fixture)}:
+                    failures.append(
+                        f"interface mutation escaped detector: {rel}: {token}")
+                path.write_text(raw, encoding="utf-8")
         path = fixture / "web/nemoclaw/scripts/_locale.js"
         raw = path.read_text(encoding="utf-8")
         key = RUNTIME_UI_TRANSLATION_KEYS[0]
