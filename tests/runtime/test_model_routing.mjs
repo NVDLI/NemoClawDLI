@@ -14,13 +14,21 @@ const {
   setModelApiBaseUrl,
 } = sharedRuntime;
 
-test('the model relay default covers the exact DLI CDN origin and local file previews', () => {
-  assert.equal(defaultIframeProxyModeForLocation('https://cdn.dli.learn.nvidia.com/course-static/nemoclaw/'), true);
-  assert.equal(defaultIframeProxyModeForLocation('file:course-preview.html'), true);
-  assert.equal(defaultIframeProxyModeForLocation('http://cdn.dli.learn.nvidia.com/course-static/nemoclaw/'), false);
-  assert.equal(defaultIframeProxyModeForLocation('https://cdn.dli.learn.nvidia.com.example.invalid/'), false);
-  assert.equal(defaultIframeProxyModeForLocation('https://example.com/'), false);
-  assert.equal(defaultIframeProxyModeForLocation('data:text/html,course'), false);
+test('the model relay default covers only the exact published course origins and local files', () => {
+  const cases = [
+    ['https://cdn.dli.learn.nvidia.com/course-static/nemoclaw/', true],
+    ['https://nvdli.github.io/NemoClawDLI/nemoclaw/', true],
+    ['file:course-preview.html', true],
+    ['http://cdn.dli.learn.nvidia.com/course-static/nemoclaw/', false],
+    ['https://cdn.dli.learn.nvidia.com.example.invalid/', false],
+    ['http://nvdli.github.io/NemoClawDLI/nemoclaw/', false],
+    ['https://nvdli.github.io.example.invalid/NemoClawDLI/', false],
+    ['https://example.com/', false],
+    ['data:text/html,course', false],
+  ];
+  for (const [location, expected] of cases) {
+    assert.equal(defaultIframeProxyModeForLocation(location), expected, location);
+  }
 });
 
 test('a failed model call from a local file explains the supported preview paths', async () => {
