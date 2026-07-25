@@ -450,7 +450,8 @@ export function mountChatUI(container, opts = {}) {
         const answer = (roundAnswer && roundAnswer._t) || "";
         history.push({ role: "user", content: q }, { role: "assistant", content: answer });
         notifyHistory();
-        if (opts.onAssistantMessage) try { opts.onAssistantMessage(answer, ctx); } catch (_) {}
+        if (opts.onAssistantMessage) try { await opts.onAssistantMessage(answer, ctx); }
+        catch (error) { view.warn("Answer post-processing failed: " + (error?.message || error)); }
       } else if (memoryEnabled) snapshotTurn(curAC.signal.aborted ? "stopped" : "error", true);
       activityText = activitySnapshot();
       if (curAC.signal.aborted || errored) {
