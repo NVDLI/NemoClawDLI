@@ -797,6 +797,12 @@ def audit_repo(
         out.append(finding("github-global-permissions", ".github/workflows/pages.yml",
                            "workflow-level permissions are not read-only",
                            "keep contents: read globally and grant Pages writes only to the deploy job"))
+    if action_steps(pages, "actions/configure-pages"):
+        out.append(finding(
+            "github-pages-host-configuration", ".github/workflows/pages.yml",
+            "source-controlled CI can query, enable, or reconfigure the Pages host",
+            "initialize Pages once through an authorized repository owner and keep builders read-only",
+        ))
     production_condition = "if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'"
     for job_name in ("build-and-verify", "rebuild-for-comparison", "compare-builds", "attest-provenance", "deploy"):
         block = workflow_job(pages, job_name)
@@ -1871,6 +1877,7 @@ def self_test() -> list[str]:
             ("github-pages-build-dependency-isolation", ".github/workflows/pages.yml", "      - name: Build the client-side static site\n", "      - name: Build the client-side static site\n        run: npm ci\n"),
             ("github-pages-signing-source-execution", ".github/workflows/pages.yml", "    needs: compare-builds\n    runs-on: ubuntu-latest\n", "    needs: compare-builds\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@bad\n"),
             ("github-pages-deploy-source-execution", ".github/workflows/pages.yml", "    steps:\n      - id: deploy\n", "    steps:\n      - run: python3 scripts/steal_token.py\n      - id: deploy\n"),
+            ("github-pages-host-configuration", ".github/workflows/pages.yml", "    steps:\n      - id: deploy\n", "    steps:\n      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d\n      - id: deploy\n"),
             ("github-source-resource-preflight", ".github/workflows/pages.yml", "pages_artifact_integrity.py --source-root .", "pages_artifact_integrity.py --help"),
             ("release-source-resource-preflight", ".github/workflows/release.yml", "pages_artifact_integrity.py --source-root .", "pages_artifact_integrity.py --help"),
             ("release-live-material-check", ".github/workflows/release.yml", "pull_materials.py --check --fetch-attempts", "pull_materials.py --list --fetch-attempts"),
