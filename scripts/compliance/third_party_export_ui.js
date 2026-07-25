@@ -363,6 +363,9 @@
       } else if (relationship === "conversion" || relationship === "provided course asset") {
         category = "vendored-material"; distributed = "Yes";
         note = "A copied or format-shifted material artifact is distributed; the source terms remain controlling.";
+      } else if (relationship === "remote display") {
+        category = "referenced-source"; distributed = "No - the browser loads the image from NVIDIA's host";
+        note = "The repository stores the source link and caption. The learner's browser requests the image from NVIDIA's host; the image is not copied into this repository.";
       } else {
         category = "referenced-source"; distributed = "Yes - repository-authored item";
         note = "The repository item is distributed, but the external work is cited, summarized, used as inspiration, or compiled as links rather than vendored wholesale.";
@@ -401,9 +404,11 @@
       });
       var copied = (counts.conversion || 0) + (counts["provided course asset"] || 0);
       var recreated = counts.recreation || 0;
+      var remote = counts["remote display"] || 0;
       var category = copied ? "vendored-material" : recreated ? "recreated-asset" : "referenced-source";
       var distributed = copied ? "Yes - copied or converted into " + copied + " repository item(s)" :
         recreated ? "Yes - represented by " + recreated + " repository-authored recreation(s)" :
+        remote ? "No - " + remote + " course page(s) load the image from NVIDIA's host; the repository stores links and captions only" :
         "Yes - represented by " + repositoryItems.length + " repository-authored reference item(s); the external document is not copied wholesale";
       var evidencePath = repositoryItems[0] || "THIRD_PARTY_LICENSES.md";
       var uses = Object.keys(counts).sort().map(function (name) { return name + ": " + counts[name]; }).join(", ");
@@ -480,6 +485,7 @@
     scopeRelationship: {
       "recreation": "Recreated from a source",
       "conversion": "Copied into another format",
+      "remote display": "Displayed from NVIDIA's host",
       "summary": "Summarized",
       "inspiration": "Used as inspiration",
       "compilation": "Collected as links or references",

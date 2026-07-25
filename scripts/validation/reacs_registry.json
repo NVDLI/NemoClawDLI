@@ -1328,12 +1328,30 @@
       "parallel_safe": false
     },
     {
+      "id": "check-rag-index",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 63,
+        "ship": 89
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/materials/build_rag_index.py",
+        "--check"
+      ],
+      "parallel_safe": false
+    },
+    {
       "id": "validate-bundle-scope-ship-no-write",
       "tiers": [
         "fast"
       ],
       "order": {
-        "fast": 63
+        "fast": 64
       },
       "mode": "current-tree",
       "argv": [
@@ -1992,7 +2010,7 @@
         "ship"
       ],
       "order": {
-        "ship": 89
+        "ship": 90
       },
       "mode": "current-tree",
       "argv": [

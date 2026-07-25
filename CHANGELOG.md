@@ -14,6 +14,8 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
   public workflows; mismatched manifests block provenance, and privileged Pages jobs execute no
   repository-controlled source.
 - Thanks to Vadim Kudlay for reviewing the Portuguese and Spanish course updates.
+- Thanks to Vadim Kudlay for reviewing the coordinated English, Spanish, and Portuguese
+  course entrypoint refresh.
 - Thanks to Juan Jose Durillo Barrionuevo for the expert Spanish course translation and developer-language review.
 - Refined Spanish runtime labels and course parity while retaining Juan Jose Durillo Barrionuevo's reviewed prose baseline.
 - Thanks to Vadim Kudlay for clarifying the CLI comparison and its application defaults.

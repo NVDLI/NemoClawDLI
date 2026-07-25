@@ -271,7 +271,15 @@ def audit(overrides: dict[str, str] | None = None) -> list[str]:
         for array in arrays:
             for item in data.get(array, []) or []:
                 if item.get("source_url"):
-                    local = f"{base}/{item['file']}"
+                    if item.get("file"):
+                        local = f"{base}/{item['file']}"
+                    elif item.get("image_url") and item.get("used_by"):
+                        local = f"{Path(base).parent.as_posix()}/{item['used_by']}"
+                    else:
+                        findings.append(
+                            f"external material lacks a repository file or remote-image use: {path}"
+                        )
+                        continue
                     if local not in material_paths:
                         findings.append(f"missing external-material row: {local}")
 
@@ -308,6 +316,7 @@ def self_test() -> list[str]:
         ("Python row", {INVENTORY: re.sub(r"(?m)^\| [^|\n]*tooling[^|\n]* \| requests \| [^|]+ \|.*$", "| removed | requests | 0 |", document, count=1)}, "missing Python package row"),
         ("Python identifier", {INVENTORY: re.sub(r"(?m)^(\| [^\n|]+ \| pip-audit \| [^|]+ \|) Apache-2\.0 (\|.*)$", r"\1 NOASSERTION \2", document, count=1)}, "non-specific Python license identifier"),
         ("material row", {INVENTORY: document.replace("| web/nemoclaw/assets/figures/fig2_react.svg |", "| removed/fig2_react.svg |", 1)}, "missing external-material row"),
+        ("remote material row", {INVENTORY: document.replace("| web/nemoclaw/index.html | remote display |", "| removed/index.html | remote display |", 1)}, "missing external-material row"),
         ("artifact distribution", {"scripts/build/build_pages.sh": pages_build.replace('cp "$T1/THIRD_PARTY_LICENSES.md" "$OUT/THIRD_PARTY_LICENSES.md"', "# removed third-party inventory", 1)}, "Pages artifact does not distribute required license file"),
         ("runbook distribution", {"scripts/build/build_pages.sh": pages_build.replace('cp "$T1/scripts/compliance/docs/sbom_generation.md" "$OUT/scripts/compliance/docs/sbom_generation.md"', "# removed SBOM runbook", 1)}, "Pages artifact does not distribute required license file"),
         ("argparse explanation", {INVENTORY: document.replace("`argparse@2.0.1` is a JavaScript npm package used transitively by `js-yaml@5.2.2`.", "argparse is unexplained.", 1)}, "missing license-scope explanation"),

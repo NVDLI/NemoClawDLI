@@ -44,14 +44,14 @@ NVIDIA defines deep agents as AI agents designed for complex, long-running work,
 
 NVIDIA defines large language models as deep learning algorithms that can recognize, summarize, translate, predict, and generate content using very large datasets. They are a class of transformer networks, the architecture introduced in Google's 2017 paper "Attention Is All You Need," which uses self-attention and positional encoding to track relationships across a sequence rather than processing it strictly in order. An LLM is trained by unsupervised learning over internet-scale text and can carry up to hundreds of billions of parameters, which is what lets a single model handle a wide range of tasks from a prompt alone, from drafting code to answering domain questions ([NVIDIA, "Large Language Models"](https://www.nvidia.com/en-us/glossary/large-language-models/)).
 
-*In the course:* the LLM is the reasoning core the agent loop sits on. Every model call routes through the llm_client gateway, so the course treats the model as a swappable component behind one interface rather than a fixed dependency.
+*In the course:* the LLM is the reasoning core the agent loop sits on. Every model call uses the configured chat route, so the course treats the model as a swappable component behind one interface rather than a fixed dependency.
 *Related:* [AI reasoning](#ai-reasoning), [AI inference](#ai-inference), [Retrieval-augmented generation (RAG)](#retrieval-augmented-generation-rag).
 
 ### AI inference
 
 NVIDIA defines inference as the application of a trained model to real-world data: the phase where the model generates new outputs by making predictions or classifications on inputs it has not seen before. It is the production half of a model's life, optimized for speed and efficiency with techniques such as speculative decoding, quantization, pruning, and layer fusion. For large language models, inference is the process of generating tokens, and the token rate sets the cost, latency, and feel of the system, which is why it runs on high-performance GPUs ([NVIDIA, "AI Inference"](https://www.nvidia.com/en-us/glossary/ai-inference/)).
 
-*In the course:* every model call is an inference request through llm_client, which fronts models served by NVIDIA NIM (its containerized inference microservices) and NVAPI behind one OpenAI-compatible API. The high per-query cost of reasoning-model inference is the reason the course verifies chains instead of just asking for longer ones.
+*In the course:* every model call is an inference request. The default route reaches NVIDIA-hosted models through an OpenAI-compatible API, while the same interface can target another configured endpoint. The high per-query cost of reasoning-model inference is the reason the course verifies chains instead of just asking for longer ones.
 *Related:* [Large language model (LLM)](#large-language-model-llm), [AI reasoning](#ai-reasoning).
 
 ---

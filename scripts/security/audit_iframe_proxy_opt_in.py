@@ -55,9 +55,13 @@ CHECKS = [
         [],
     ),
     (
-        "landing page names the bounded relay mode",
+        "landing page mounts the bounded route controls",
         "web/nemoclaw/index.html",
-        ["sends each saved key only to its selected endpoint", "chat endpoint belongs here only", "hosted CORS relay is limited"],
+        [
+            'id="key-panel"',
+            "mountKeyPanel(document.getElementById(\"key-panel\")",
+            "selected endpoint",
+        ],
         [],
     ),
     (

@@ -75,6 +75,12 @@ def material_rows(base: str, ref: str) -> list[list[str]]:
         elif relationship in {"conversion", "provided course asset"}:
             category = "vendored-material"
             note = "A copied, provided, or format-shifted material artifact is distributed; the source terms remain controlling."
+        elif relationship == "remote display":
+            category = "referenced-source"
+            note = (
+                "The repository stores the source link and caption. The learner's browser requests "
+                "the image from NVIDIA's host; the image is not copied into this repository."
+            )
         else:
             category = "referenced-source"
             note = (
@@ -85,7 +91,11 @@ def material_rows(base: str, ref: str) -> list[list[str]]:
             repository_file,
             category,
             relationship,
-            "Yes - repository-authored item" if category == "referenced-source" else "Yes",
+            (
+                "No - the browser loads the image from NVIDIA's host"
+                if relationship == "remote display"
+                else "Yes - repository-authored item" if category == "referenced-source" else "Yes"
+            ),
             "No",
             source_url,
             terms,
@@ -125,12 +135,19 @@ def document_rows(base: str, ref: str) -> list[list[str]]:
         counts = Counter(relationship_by_item[path] for path in repository_items)
         copied = counts["conversion"] + counts["provided course asset"]
         recreated = counts["recreation"]
+        remote = counts["remote display"]
         if copied:
             category = "vendored-material"
             distribution = f"Yes - copied or converted into {copied} repository item(s)"
         elif recreated:
             category = "recreated-asset"
             distribution = f"Yes - represented by {recreated} repository-authored recreation(s)"
+        elif remote:
+            category = "referenced-source"
+            distribution = (
+                f"No - {remote} course page(s) load the image from NVIDIA's host; "
+                "the repository stores links and captions only"
+            )
         else:
             category = "referenced-source"
             distribution = (
@@ -219,7 +236,7 @@ def self_test() -> list[str]:
         "Third-party course-material relationships",
     )))
     material_relationships = {
-        "recreation", "conversion", "provided course asset", "summary", "inspiration",
+        "recreation", "conversion", "provided course asset", "remote display", "summary", "inspiration",
         "compilation", "original", "original course graphic",
     }
     exported_material_count = sum(row[2] in material_relationships for row in rows)
@@ -228,6 +245,9 @@ def self_test() -> list[str]:
     favicon = next((row for row in rows if row[0] == "web/nemoclaw/assets/favicon.ico"), None)
     if not favicon or favicon[1] != "vendored-material" or favicon[2] != "provided course asset":
         findings.append("NVIDIA favicon is not exported as a provided, vendored brand asset")
+    remote_image = next((row for row in rows if row[2] == "remote display"), None)
+    if not remote_image or remote_image[1] != "referenced-source" or not remote_image[3].startswith("No -"):
+        findings.append("remote NVIDIA image is not exported as externally loaded and not distributed")
     documents = document_inventory()
     expected_documents = len(documents.get("arxiv_papers", [])) + len(documents.get("nvidia_documents", []))
     if sum(row[2] in {"paper citation", "document use roll-up"} for row in rows) != expected_documents:
@@ -235,7 +255,7 @@ def self_test() -> list[str]:
     nvidia_rollups = [row for row in rows if row[2] == "document use roll-up"]
     if len(nvidia_rollups) != len(documents.get("nvidia_documents", [])):
         findings.append("scope export does not produce one classified roll-up per NVIDIA document")
-    if any(not row[3].startswith("Yes - ") for row in nvidia_rollups):
+    if any(not row[3].startswith(("Yes - ", "No - ")) for row in nvidia_rollups):
         findings.append("NVIDIA document roll-ups do not state their repository distribution directly")
     return findings
 

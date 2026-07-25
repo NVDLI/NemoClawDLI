@@ -28,7 +28,14 @@ THIRD_PARTY = ROOT / "THIRD_PARTY_LICENSES.md"
 SECTION_HEADING = "## Document source evidence"
 ARXIV_RE = re.compile(r"https?://arxiv\.org/(?:abs|pdf)/(\d{4}\.\d{4,5})(?:v\d+)?(?:\.pdf)?")
 MAX_RESPONSE_BYTES = 8 * 1024 * 1024
-ALLOWED_HOSTS = {"arxiv.org", "developer.nvidia.com", "blogs.nvidia.com", "build.nvidia.com", "www.nvidia.com"}
+ALLOWED_HOSTS = {
+    "arxiv.org",
+    "assets.ngc.nvidia.com",
+    "developer.nvidia.com",
+    "blogs.nvidia.com",
+    "build.nvidia.com",
+    "www.nvidia.com",
+}
 LICENSES = {
     "https://creativecommons.org/licenses/by/4.0/": (
         "CC-BY-4.0",
@@ -267,6 +274,8 @@ def render_markdown(data: dict) -> str:
     ])
     for item in data.get("nvidia_documents", []):
         document = f"[{item['title']}]({item['source_url']})"
+        if item.get("asset_url"):
+            document += f"<br>[Displayed image]({item['asset_url']})"
         if item.get("authors"):
             authors = []
             profiles = item.get("author_profiles") or []
@@ -311,7 +320,7 @@ def expected_material_source(data: dict, repository_item: str, source_url: str) 
 def sync_material_relationships(document: str, data: dict) -> str:
     lines = []
     for line in document.splitlines():
-        if not line.startswith("| web/nemoclaw/"):
+        if not re.match(r"\| (?:web/nemoclaw|i18n/[^/]+/web/nemoclaw)/", line):
             lines.append(line)
             continue
         row = [cell.strip() for cell in line.strip("|").split("|")]
@@ -378,6 +387,12 @@ def audit(data: dict | None = None) -> list[str]:
             findings.append(f"NVIDIA byline/status mismatch: {source_url}")
         if item.get("author_evidence_url") != source_url:
             findings.append(f"NVIDIA author evidence URL drift: {source_url}")
+        asset_url = item.get("asset_url", "")
+        if item.get("relationship") == "remote display":
+            if (urlparse(asset_url).hostname or "") not in ALLOWED_HOSTS:
+                findings.append(f"remote NVIDIA image URL missing or invalid: {source_url}")
+        elif asset_url:
+            findings.append(f"NVIDIA document has an asset URL without remote-display use: {source_url}")
         for path in item.get("repository_items", []):
             if not (ROOT / path).exists():
                 findings.append(f"NVIDIA document references missing repository item: {path}")
@@ -434,6 +449,7 @@ def self_test() -> list[str]:
         ("paper license", lambda value: value["arxiv_papers"][0].update(license="Apache-2.0"), "license label"),
         ("paper coverage", lambda value: value["arxiv_papers"].pop(), "missing arXiv source record"),
         ("NVIDIA author state", lambda value: value["nvidia_documents"][0].update(author_status="unknown"), "author status"),
+        ("remote NVIDIA image", lambda value: value["nvidia_documents"][0].update(asset_url="https://example.invalid/image.jpg"), "remote NVIDIA image URL"),
         ("NVIDIA material coverage", remove_nvidia_material_coverage, "lacks author/source record"),
     ]
     for label, mutate, expected in mutations:

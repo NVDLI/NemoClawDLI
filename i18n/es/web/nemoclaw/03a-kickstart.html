@@ -40,7 +40,8 @@
       transition: opacity .15s;
     }
 
-    a.url-card:hover {
+    .url-card:hover,
+    .url-card:focus-visible {
       opacity: .8;
     }
 
@@ -126,11 +127,11 @@
 
     </div>
 
-    <p>El diagrama recorre ese espectro de izquierda a derecha:</p>
+    <p>El diagrama separa tres interfaces:</p>
     <ul>
-      <li><strong>Endpoints HTTP REST.</strong> El modelo responde a cada llamada de forma aislada: en <a href="https://platform.openai.com/docs/api-reference/chat" target="_blank" rel="noopener"><em>Chat Completions API</em></a>, el código cliente transporta el historial; en <em>Responses API</em>, el servidor puede conservarlo.</li>
-      <li><strong><a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener">Model Context Protocol (MCP)</a>.</strong> Un protocolo estándar permite al runtime acceder a herramientas sin escribir una integración específica para cada una.</li>
-      <li><strong>Gateway persistente.</strong> OpenClaw mantiene abierto <code>/cli/gateway</code> como <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API" target="_blank" rel="noopener">WebSocket</a> y transmite eventos mediante <a href="https://www.jsonrpc.org/specification" target="_blank" rel="noopener">JSON-RPC</a>, en lugar de responder a una solicitud cada vez.</li>
+      <li><strong>REST.</strong> Una solicitud produce una respuesta. Con la <a href="https://platform.openai.com/docs/api-reference/chat" target="_blank" rel="noopener"><em>Chat Completions API</em></a>, el cliente incluye el historial de la conversación; una <em>Responses API</em> puede conservar ese estado en el servidor.</li>
+      <li><strong><a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener">Model Context Protocol (MCP)</a>.</strong> Un formato de solicitud común permite que un runtime descubra e invoque herramientas.</li>
+      <li><strong>Gateway de OpenClaw.</strong> Un <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API" target="_blank" rel="noopener">WebSocket</a> en <code>/cli/gateway</code> transporta eventos <a href="https://www.jsonrpc.org/specification" target="_blank" rel="noopener">JSON-RPC</a> de la sesión del agente.</li>
     </ul>
 
     <!-- video removed: hour-long NemoClaw session, too long and distracting for an inline companion. Re-enable by uncommenting.
@@ -151,18 +152,19 @@
     -->
 
     <h2>Los dos endpoints que usarás a partir de ahora</h2>
-    <p>El endpoint del modelo responde mediante la misma API que utilizaste antes. El gateway del launchable conecta con un proceso de OpenClaw que conserva sesiones y puede ejecutar herramientas. El código de soporte de ambos protocolos permanece disponible en las celdas; presta atención al endpoint, la credencial y el límite de estado de cada interfaz.</p>
+    <p>La ruta del modelo no conserva estado y usa una clave <code>nvapi-</code>. La ruta de NemoClaw mantiene una sesión de OpenClaw dentro de OpenShell. Compara la URL, la credencial y el estado de cada una.</p>
 
     <div class="url-pair">
-      <a class="url-card" href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener"><h3>build.nvidia.com</h3> <p>Chat Completions API. Sin estado: un POST, una respuesta, sin herramientas ni sesión. Genera una clave en API Keys.</p> <p style="color:var(--tf);font-size:.8rem">Tu clave <code>nvapi-</code>. El proxy la reenvía sin cambios.</p></a>
-      <article class="url-card" style="background:rgba(118,185,0,.06)">
-        <h3><a
-          href="https://brev.nvidia.com/launchable/deploy?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990"
-          target="_blank" rel="noopener">Inicia NemoClaw en Brev</a></h3>
-        <p>La configuración crea un launchable que ejecuta OpenClaw dentro de OpenShell. La App URL puede usar la familia Brev con Cloudflare Access o Pomerium; el menú de conexión admite ambas. La identidad, las herramientas, la memoria de sesión y la política del sandbox residen allí. El navegador llega al agente mediante el gateway WebSocket en <code>/cli/gateway</code>. Para una implementación local, sigue el <a href="https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986" target="_blank" rel="noopener">playbook de configuración de NemoClaw</a> y mantén el mismo límite de conexión.</p>
-        <p style="color:var(--tf);font-size:.8rem">Autenticación mediante token del gateway. Sesiones mediante <code>x-openclaw-session-key</code>.</p>
-      </article>
+      <a class="url-card" href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener"><h3>build.nvidia.com</h3> <p>Invoca la API de Chat Completions con una clave <code>nvapi-</code>. Cada POST incluye sus propios mensajes. No conserva herramientas ni estado de sesión entre llamadas.</p> <p style="color:var(--tf);font-size:.8rem">Credencial: clave <code>nvapi-</code>.</p></a>
+      <a class="url-card"
+        href="https://brev.nvidia.com/launchable/deploy?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990"
+        target="_blank" rel="noopener">
+        <h3>Inicia NemoClaw en Brev</h3>
+        <p>OpenClaw se ejecuta dentro de OpenShell y conserva la identidad del agente, sus herramientas y la memoria de sesión. La configuración inferior admite ambas familias de hosts de Brev compatibles y se conecta a <code>/cli/gateway</code>.</p>
+        <p style="color:var(--tf);font-size:.8rem">Credencial: token del gateway. Sesión: <code>x-openclaw-session-key</code>.</p>
+      </a>
     </div>
+    <p>Las implementaciones locales usan el mismo contrato del gateway; sigue el <a href="https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986" target="_blank" rel="noopener">playbook de configuración de NemoClaw</a>.</p>
 
     <h2>Paso 1 · Prueba los endpoints</h2>
     <p>Los widgets siguientes envían una solicitud breve a cada endpoint y muestran la respuesta. Verde significa que está listo.</p>

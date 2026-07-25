@@ -904,7 +904,18 @@ def course_dirs() -> list[Path]:
 
 def audit_home(text: str) -> list[str]:
     findings: list[str] = []
-    _need(findings, "CPU-based" in text and "do not require a learner-managed GPU" in text,
+    cpu_baseline = bool(re.search(
+        r"\b(?:CPU-based|uses?\s+(?:a\s+)?CPU|runs?\s+on\s+(?:a\s+)?CPU)\b",
+        text,
+        re.I,
+    ))
+    no_gpu_requirement = bool(re.search(
+        r"\b(?:without\s+GPU\s+access|do(?:es)?\s+not\s+require\s+(?:a\s+)?"
+        r"(?:learner-managed\s+)?GPU)\b",
+        text,
+        re.I,
+    ))
+    _need(findings, cpu_baseline and no_gpu_requirement,
           "web/nemoclaw/index.html: setup must state the CPU baseline and that learner-managed GPU hardware is not required")
     return findings
 
@@ -1383,9 +1394,12 @@ def self_test() -> list[str]:
         misses.append("detector missed oversized default-open implementation")
 
     home = (ROOT / "web/nemoclaw/index.html").read_text(encoding="utf-8")
-    broken = home.replace("CPU-based", "unspecified", 1)
+    broken = home.replace("uses CPU", "uses unspecified hardware", 1)
     if not any("CPU baseline" in finding for finding in audit_home(broken)):
         misses.append("detector missed missing CPU baseline")
+    broken = home.replace("without GPU access", "with unspecified accelerator access", 1)
+    if not any("CPU baseline" in finding for finding in audit_home(broken)):
+        misses.append("detector missed missing no-GPU requirement")
 
     gitlab = (ROOT / ".gitlab/ci/core.yml").read_text(encoding="utf-8")
     github = (ROOT / ".github/workflows/pages.yml").read_text(encoding="utf-8")
