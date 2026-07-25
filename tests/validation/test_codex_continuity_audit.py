@@ -69,6 +69,7 @@ class CodexContinuityAuditTests(unittest.TestCase):
         paths = [
             Path("AGENTS.md"),
             Path("CLAUDE.md"),
+            Path("SKILL.html"),
             Path(".codex/config.toml"),
             Path(".codex/continuity-contract.json"),
             Path(".codex/hooks/continuity.sh"),
@@ -87,6 +88,7 @@ class CodexContinuityAuditTests(unittest.TestCase):
             Path(".codex/hooks/continuity.sh"),
             Path(".agents/skills/nemoclaw-contribution/SKILL.md"),
             Path(".agents/skills/nemoclaw-contribution/agents/openai.yaml"),
+            Path("SKILL.html"),
         ):
             (root / path).write_text((ROOT / path).read_text(encoding="utf-8"), encoding="utf-8")
         (root / "AGENTS.md").write_text(
@@ -354,6 +356,45 @@ class CodexContinuityAuditTests(unittest.TestCase):
         self.assertTrue(
             any("missing continuity invariant changed-surface-preflight" in item
                 for item in findings)
+        )
+
+    def test_generated_projection_round_trip_cannot_be_removed(self) -> None:
+        temporary, root, paths = self.fixture()
+        self.addCleanup(temporary.cleanup)
+        contract_path = root / ".codex/continuity-contract.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        contract["invariants"].remove("generated-projection-round-trip")
+        contract_path.write_text(json.dumps(contract, indent=2) + "\n", encoding="utf-8")
+        skill_path = root / ".agents/skills/nemoclaw-contribution/SKILL.md"
+        skill_path.write_text(
+            skill_path.read_text(encoding="utf-8").replace(
+                "`generated-projection-round-trip`", "`generated-output-check`"
+            ),
+            encoding="utf-8",
+        )
+        findings = audit.audit(root, paths)
+        self.assertTrue(
+            any("missing invariants: generated-projection-round-trip" in item
+                for item in findings)
+        )
+        self.assertTrue(
+            any("missing continuity invariant generated-projection-round-trip" in item
+                for item in findings)
+        )
+
+    def test_every_declared_harness_beacon_is_navigable_from_the_root_skill(self) -> None:
+        temporary, root, paths = self.fixture()
+        self.addCleanup(temporary.cleanup)
+        root_skill = root / "SKILL.html"
+        root_skill.write_text(
+            root_skill.read_text(encoding="utf-8").replace(
+                'href="CLAUDE.md"', 'href="missing-claude-entry.md"'
+            ),
+            encoding="utf-8",
+        )
+        self.assertTrue(
+            any("missing navigable harness beacon CLAUDE.md" in item
+                for item in audit.audit(root, paths))
         )
 
     def test_hook_trust_instructions_are_required(self) -> None:

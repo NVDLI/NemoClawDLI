@@ -28,6 +28,7 @@ CONTRACT_PATH = Path(".codex/continuity-contract.json")
 CONFIG_PATH = Path(".codex/config.toml")
 AGENTS_PATH = Path("AGENTS.md")
 CLAUDE_PATH = Path("CLAUDE.md")
+ROOT_SKILL_PATH = Path("SKILL.html")
 
 REQUIRED_CHECKPOINT_FIELDS = {
     "objective",
@@ -48,6 +49,7 @@ REQUIRED_INVARIANTS = {
     "live-policy-discovery",
     "fail-fast-before-expensive",
     "changed-surface-preflight",
+    "generated-projection-round-trip",
     "one-terminal-owner",
     "no-host-repository-python",
 }
@@ -395,7 +397,7 @@ def audit(root: Path = ROOT, files: list[Path] | None = None) -> list[str]:
             )
 
     missing_required: list[Path] = []
-    for required in (CONTRACT_PATH, CONFIG_PATH, AGENTS_PATH, CLAUDE_PATH):
+    for required in (CONTRACT_PATH, CONFIG_PATH, AGENTS_PATH, CLAUDE_PATH, ROOT_SKILL_PATH):
         if required not in source_set:
             findings.append(f"{required}: required Codex continuity file is missing")
             missing_required.append(required)
@@ -459,6 +461,10 @@ def audit(root: Path = ROOT, files: list[Path] | None = None) -> list[str]:
     beacons = _string_set(contract, "harness_beacons", CONTRACT_PATH, findings)
     if beacons != {AGENTS_PATH.as_posix(), CLAUDE_PATH.as_posix()}:
         findings.append(f"{CONTRACT_PATH}: harness_beacons must bind Codex and Claude entry points")
+    root_skill_raw = _read_utf8(root, ROOT_SKILL_PATH, findings) or ""
+    for beacon in sorted(beacons):
+        if not re.search(rf'href=["\']{re.escape(beacon)}["\']', root_skill_raw):
+            findings.append(f"{ROOT_SKILL_PATH}: missing navigable harness beacon {beacon}")
     if contract.get("harness_capabilities") != EXPECTED_HARNESS_CAPABILITIES:
         findings.append(
             f"{CONTRACT_PATH}: harness_capabilities must distinguish Codex reminders from Claude fallback"

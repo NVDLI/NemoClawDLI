@@ -42,6 +42,9 @@ policy change, or handoff.
   every changed contract, document, skill, validator, workflow, and generated projection. Clear
   focused failures first. If a full gate later fails, return to that failing constituent and its
   adjacent contracts before repeating the full gate.
+- `generated-projection-round-trip`: Regenerate tracked projections from the candidate before its
+  exact build. The build must compare tracked source before and after assembly; any generated diff
+  is a failed preflight, even when the build otherwise passes.
 - `one-terminal-owner`: Send a handoff with exact SHAs, overlapping files, verified evidence,
   remaining failures, and the new owner. The sending thread stops duplicate monitoring.
 - `no-host-repository-python`: On macOS, use the installed Apple Container course-testing skill for
@@ -59,7 +62,8 @@ policy change, or handoff.
 5. On macOS, run Apple Container `doctor`, then one `fast-gate` after focused checks are clear.
 6. Create the final candidate. If the host creates the commit, complete the remote round trip before
    updating the contribution ref.
-7. Run Apple Container `build-pages` on the exact final commit and require a clean source tree.
+7. Regenerate tracked projections, then run Apple Container `build-pages` on the exact final commit.
+   Require the build snapshot and host source tree to remain clean.
 8. Push, inspect every required repository and host-owned check on that exact head, and read complete
    failing logs.
 9. Merge only through the currently authorized policy. Never invent approval or weaken a gate.

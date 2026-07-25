@@ -311,7 +311,6 @@ def gen_task():
             ("CHANGELOG.md", "CHANGELOG.md", "Version history for public releases and pending changes."),
             ("LICENSE", "LICENSE", "Apache License 2.0 for the public release."),
             ("SECURITY.md", "SECURITY.md", "Official NVIDIA private vulnerability-reporting policy."),
-            ("AGENTS.md", "AGENTS.md", "Cross-harness agent contract and task routing."),
             ("CONTRIBUTING.md", "CONTRIBUTING.md", "How to contribute: hooks, the validation gate, conventions."),
             ("DCO.md", "DCO.md", "Required per-commit origin signoff and repair guidance."),
             ("CODE_OF_CONDUCT.md", "CODE_OF_CONDUCT.md", "Community behavior, private reporting, and enforcement."),
@@ -320,6 +319,22 @@ def gen_task():
             ("scripts/compliance/docs/vendor_policy.md", "scripts/compliance/docs/vendor_policy.md", "Source and vendor-ingestion policy."),
             ("SKILL_CONTRACT.md", "SKILL_CONTRACT.md", "The SKILL.html beacon spec.")]
     docs = [(n, h, d) for n, h, d in docs if (TASK1 / h).is_file()]
+    beacon_descriptions = {
+        "AGENTS.md": "Cross-harness agent contract and task routing.",
+        "CLAUDE.md": "Claude Code entry point for the canonical agent contract.",
+    }
+    continuity_path = TASK1 / ".codex" / "continuity-contract.json"
+    try:
+        harness_beacons = json.loads(continuity_path.read_text()).get("harness_beacons", [])
+    except (OSError, ValueError, AttributeError):
+        harness_beacons = []
+    for raw in harness_beacons:
+        beacon = Path(raw) if isinstance(raw, str) else Path()
+        if (not raw or beacon.is_absolute() or ".." in beacon.parts
+                or not (TASK1 / beacon).is_file()):
+            continue
+        href = beacon.as_posix()
+        docs.append((href, href, beacon_descriptions.get(href, "Agent harness entry point.")))
     document_descriptions = {
         "agentic-compliance-suite.md": "How repository contracts guide agents from discovery through deterministic checks and protected human decisions.",
     }
