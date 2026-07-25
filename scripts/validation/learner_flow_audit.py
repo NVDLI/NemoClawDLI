@@ -302,7 +302,6 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
         'Nemotron Super 120B · recommended': "Course Assistant artifact requests must default to the model validated for tool use",
         'export function parseInlineCourseSourceIntent': "Course Assistant must detect source arguments emitted as plain JSON",
         'recoverInlineToolIntent: async answer =>': "Course Assistant must recover a model that prints source arguments instead of invoking its tool",
-        'ctx.view.discardAnswer()': "shared agent chat must replace recovered tool JSON with the synthesized answer",
         'export function artifactFromMarkdown': "Course Assistant must detect generated HTML/JavaScript without model tool compliance",
         'onAssistantMessage: async answer =>': "Course Assistant must auto-fill fenced or raw browser code after completed replies",
         'raw.search(/(?:<!doctype': "Course Assistant must recover complete raw HTML when the model skips its tool",
@@ -344,6 +343,8 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
     }
     for token, message in contract.items():
         _need(findings, token in assistant or token in shared or token in chat, message)
+    _need(findings, chat.count("ctx.view.discardAnswer()") >= 2,
+          "shared agent chat must replace inline tool JSON and empty tool-only output before synthesis")
     _need(findings, COURSE_SOURCE_URI_RE.search(assistant) is not None,
           "lesson code index must expose stable page-qualified source URIs")
     _need(findings, "mountCourseAssistant({ embed });" in shared,
@@ -1209,7 +1210,8 @@ def self_test() -> list[str]:
         ("assistant loses artifact queue", assistant.replace('name: "queue_course_artifact"', 'name: "missing_artifact_queue"', 1), shared, chat, css, "queue generated browser code"),
         ("assistant defaults artifact work to weak model", assistant.replace('Nemotron Super 120B · recommended', 'Nemotron Super 120B · optional', 1), shared, chat, css, "model validated for tool use"),
         ("assistant loses 120B source recovery", assistant.replace('recoverInlineToolIntent: async answer =>', 'recoverLostIntent: async answer =>', 1), shared, chat, css, "prints source arguments"),
-        ("shared chat preserves raw tool JSON", assistant, shared, chat.replace('ctx.view.discardAnswer()', 'void recovered', 1), css, "replace recovered tool JSON"),
+        ("shared chat preserves raw tool JSON", assistant, shared, chat.replace('ctx.view.discardAnswer()', 'void recovered', 1), css, "replace inline tool JSON"),
+        ("shared chat preserves empty tool-only output", assistant, shared, chat.replace('ctx.view.discardAnswer();\n          ctx.view.note("The tool run ended', 'ctx.view.note("The tool run ended', 1), css, "empty tool-only output"),
         ("assistant loses fenced-code capture", assistant.replace('export function artifactFromMarkdown', 'function removedArtifactFromMarkdown', 1), shared, chat, css, "detect generated HTML/JavaScript"),
         ("assistant loses raw HTML recovery", assistant.replace('raw.search(/(?:<!doctype', 'raw.search(/never-match', 1), shared, chat, css, "recover complete raw HTML"),
         ("assistant loses artifact tab", assistant.replace('data-course-assistant-view="artifact"', 'data-missing-view="artifact"'), shared, chat, css, "discoverable Artifact tab"),
