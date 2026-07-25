@@ -331,8 +331,8 @@ function findChrome() {
     } catch (e) { console.log('ACCESS_COOKIE: skipped (' + e.message + ')'); }
   }
 
-  // The web course is remote-service-only: browser pages call integrate.api.nvidia.com directly with the learner's nvapi key.
-  // The harness mirrors that path.
+  // The web course is remote-service-only. Published course origins and local previews use the
+  // bounded browser relay for the default endpoint; custom endpoints remain direct.
   await page.addInitScript(({ apiKey, apiUrl, useIframeProxy }) => {
     try {
       const defaultUrl = "https://integrate.api.nvidia.com/v1";
@@ -425,7 +425,20 @@ function findChrome() {
         } catch (_) {}
       }
       const status = await panel.locator('.course-artifact-actions [role="status"]').innerText();
-      const result = { prompt:index + 1, model, validated, rejections:rejections.length, chatErrors, sourceChars, controlCount, changed, status, lastAnswer };
+      const result = {
+        prompt:index + 1,
+        model,
+        validated,
+        rejections:rejections.length,
+        chatErrors,
+        pageErrors:[...errors],
+        resourceErrors:[...resourceErrors],
+        sourceChars,
+        controlCount,
+        changed,
+        status,
+        lastAnswer,
+      };
       results.push(result);
       if (!validated || !sourceChars || !controlCount || !changed || chatErrors.length || /error|rejected|erro/i.test(status)) {
         console.log('COURSE_ASSISTANT_ARTIFACTS:', JSON.stringify(results, null, 2));
