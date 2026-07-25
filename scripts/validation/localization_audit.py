@@ -26,6 +26,7 @@ for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
 from _bootstrap import find_repo_root
 from runtime.html_document import raw_text_blocks
 from translate.code_localization import code_contract_literals, code_templates, js_shape
+from translate.locale_catalog import LocaleCatalogError, discover_locales, locale_by_tag
 from translate.locale_projection import project_locale_html
 from translate.localization_scope import editorial_sha, translation_canonical, translation_sha
 from translate.translate_html_segments import extract_segments, protected_tokens
@@ -36,7 +37,7 @@ SKIP_TEXT = {"script", "style", "pre", "code", "svg", "noscript"}
 STRUCTURE_NEUTRAL_TAGS = {"i", "em"}
 INTERFACE_CONTRACT = {
     "web/nemoclaw/localization.html": ("id=\"loc-kinds\"", "data-kind=\"assets\"", "id=\"loc-filters\"", "id=\"loc-source\"", "id=\"loc-target\"", "scripts/localization_main.js"),
-    "web/nemoclaw/scripts/localization_main.js": ("localization-", '"current", "stale", "blocked", "needs-review", "missing"', "reviewed_source_sha256", "asset_counts", 'activeKind === "assets"', "loc-locale", 'courseParent', '["web", "es", "pt"].includes(courseParent)'),
+    "web/nemoclaw/scripts/localization_main.js": ("localization-", '"current", "stale", "blocked", "needs-review", "missing"', "reviewed_source_sha256", "asset_counts", 'activeKind === "assets"', "loc-locale", "languageManifest"),
     "web/nemoclaw/scripts/_locale.js": ("mountLanguageMenu", "available_pages", 'aria-haspopup', "languageFallback", "language-fallback-badge", "PT_PREFIXES", "ES_PREFIXES"),
     "web/nemoclaw/scripts/_keypanel.js": ("mountKeyPanel", "model-api-base-url", "Save &amp; verify"),
     "web/nemoclaw/scripts/_connection.js": ("DEFAULT_OPENCLAW_PROXY_BASE", "openclaw_proxy", "migrateOpenClawConnectionStorage"),
@@ -46,17 +47,10 @@ INTERFACE_CONTRACT = {
     "scripts/build/build_language_manifest.py": ("native_label", "available_pages", "localization-"),
     "scripts/build/build_pages.sh": ("assemble_locale_overlay.py",),
     "scripts/build/assemble_locale_overlay.py": ("source_sha256", "translation_sha256", "self-test", "stale translation did not fall back"),
+    "scripts/translate/locale_catalog.py": ("discover_locales", "locale_by_tag", "unreachable from i18n/*/locale.json"),
     "scripts/translate/translate_svg_text.py": ("extract_svg_segments", "data-locale", "--no-api", "svg_translations.json"),
     "scripts/translate/translate_html_segments.py": ("review_protocol", "required_dimensions", "Review dimensions:",
                                                         "--revise-against-source", "editorial_examples"),
-    "scripts/translate/locales/pt-BR/svg_translations.json": ("Ambiente", "ETAPA DE DECISÃO", "Agentes com aprendizado"),
-    "scripts/translate/locales/es-ES/profile.json": (
-        "es-ES", "agentes de IA", "generación aumentada por recuperación",
-        '"review_protocol"', '"native_editorial_signal"', '"style_reference"',
-        '"style_reference_origin_commit"', '"style_reference_editorial_sha256"', '"acceptance_boundary"',
-        '"editorial_patterns"', '"voice_rules"', '"orthography_rules"', '"english_function_words"',
-        '"foreign_function_words"', '"minimum_block_word_ratio"',
-    ),
     "scripts/translate/localization_scope.py": ("en-shell", "data-localization-scope", "translation_sha"),
     "scripts/translate/locale_projection.py": ("project_locale_html", "project_localized_code_templates", "missing localized shell segment"),
     "scripts/translate/code_localization.py": ("project_localized_code_templates", "code_contract_literals", "localized runnable code contract differs"),
@@ -69,7 +63,7 @@ INTERFACE_CONTRACT = {
         'localization_audit.py", "--self-test"',
         "scripts/translate/locales",
     ),
-    "scripts/translate/SKILL.html": ("locales/pt-BR/SKILL.html", "locales/es-ES/SKILL.html", "same-branch localization", "translate_svg_text.py"),
+    "scripts/translate/SKILL.html": ("locale_catalog.py", "same-branch localization", "translate_svg_text.py"),
 }
 
 RUNTIME_UI_TRANSLATION_KEYS = (
@@ -520,12 +514,8 @@ def canonical_pages(root: Path) -> list[Path]:
 
 
 def locale_paths(root: Path, locale: str) -> tuple[Path, Path, Path, dict, dict]:
-    profile_path = root / "scripts" / "translate" / "locales" / locale / "profile.json"
-    profile = json.loads(profile_path.read_text(encoding="utf-8"))
-    locale_root = root / "i18n" / profile["url_code"]
-    state_path = locale_root / "localization_state.json"
-    state = json.loads(state_path.read_text(encoding="utf-8"))
-    return profile_path, locale_root, state_path, profile, state
+    spec = locale_by_tag(root, locale)
+    return spec.profile_path, spec.locale_root, spec.state_path, spec.profile, spec.state
 
 
 def interface_findings(root: Path) -> list[dict[str, str]]:
@@ -942,7 +932,10 @@ def self_test() -> list[str]:
         profile_dir.mkdir(parents=True)
         target_dir.mkdir(parents=True)
         source_dir.mkdir(parents=True)
-        profile = {"locale": "pt-BR", "url_code": "pt", "label": "Portuguese", "native_label": "Português",
+        (root / "i18n/pt/SKILL.html").write_text("<!doctype html>")
+        (profile_dir / "SKILL.html").write_text("<!doctype html>")
+        profile = {"schema": "nemoclaw-locale-profile/1",
+                   "locale": "pt-BR", "url_code": "pt", "label": "Portuguese", "native_label": "Português",
                    "html_lang": "pt-BR", "english_sentence_markers": ["Course home"],
                    "english_ui_markers": ["Run the node"],
                    "unfit_phrases": {"soquete de raciocínio": "use etapa de decisão"}}
@@ -953,8 +946,18 @@ def self_test() -> list[str]:
         target_raw = '<!doctype html><html lang="pt-BR"><body><main id="lesson">Início do curso</main><script>const x=1; helpers.log("Execute o nó");</script></body></html>'
         (source_dir / "index.html").write_text(source_raw)
         (target_dir / "index.html").write_text(target_raw)
-        (root / "i18n/pt/locale.json").write_text('{}')
-        state = {"overlay_files": ["web/nemoclaw/index.html"],
+        (root / "i18n/pt/locale.json").write_text(json.dumps({
+            "schema": "nemoclaw-locale/1",
+            "locale": "pt-BR",
+            "url_code": "pt",
+            "label": "Portuguese",
+            "native_label": "Português",
+            "profile": "scripts/translate/locales/pt-BR/profile.json",
+            "source_root": "web",
+            "overlay_root": "i18n/pt/web",
+        }))
+        state = {"schema": "nemoclaw-localization-state/1", "locale": "pt-BR", "url_code": "pt",
+                 "overlay_files": ["web/nemoclaw/index.html"],
                  "reviews": {"web/nemoclaw/index.html": {"source_sha256": sha(source_raw)}}}
         (root / "i18n/pt/localization_state.json").write_text(json.dumps(state))
         base, _ = scan(root, "pt-BR")
@@ -1302,11 +1305,16 @@ def self_test() -> list[str]:
             shutil.copy2(src, dst)
         if interface_findings(fixture):
             failures.append("clean localization interface fixture rejected")
-        for rel, token in (("web/nemoclaw/scripts/_locale.js", "available_pages"),
-                           ("web/nemoclaw/localization.html", 'id="loc-target"'),
-                           ("scripts/build/build_pages.sh", "assemble_locale_overlay.py"),
-                           ("scripts/translate/translate_html_segments.py", "required_dimensions"),
-                           ("scripts/translate/locales/es-ES/profile.json", '"review_protocol"')):
+        interface_mutations = (
+            ("web/nemoclaw/scripts/_locale.js", "available_pages"),
+            ("web/nemoclaw/localization.html", 'id="loc-target"'),
+            ("scripts/build/build_pages.sh", "assemble_locale_overlay.py"),
+            ("scripts/translate/translate_html_segments.py", "required_dimensions"),
+        )
+        for rel, token in interface_mutations:
+            if rel not in INTERFACE_CONTRACT or token not in INTERFACE_CONTRACT[rel]:
+                failures.append(f"interface mutation is not declared by the contract: {rel}: {token}")
+                continue
             path = fixture / rel
             raw = path.read_text(encoding="utf-8")
             path.write_text(raw.replace(token, "removed-contract-token"), encoding="utf-8")
@@ -1333,7 +1341,7 @@ def self_test() -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--locale", default="pt-BR")
+    parser.add_argument("--locale", help="exact declared locale tag; omit to audit every locale")
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--accept", action="append", default=[], metavar="REPO_PATH")
     parser.add_argument("--no-write", action="store_true")
@@ -1348,6 +1356,8 @@ def main() -> int:
             return 1
         print("localization audit self-test: OK")
         return 0
+    if args.accept and not args.locale:
+        parser.error("--accept requires --locale so review authority cannot cross locale boundaries")
     if args.accept:
         errors = accept(ROOT, args.locale, args.accept)
         if errors:
@@ -1355,12 +1365,26 @@ def main() -> int:
             for item in errors:
                 print(f"  - {item}")
             return 1
-    _, _, _, profile, _ = locale_paths(ROOT, args.locale)
-    findings, manifest = scan(ROOT, args.locale)
-    if not args.no_write:
-        path = write_manifest(ROOT, profile, manifest)
-        print(f"localization manifest: {path.relative_to(ROOT)}")
-    result = {"ok": not findings, "findings": findings, "manifest": manifest}
+    try:
+        specs = [locale_by_tag(ROOT, args.locale)] if args.locale else discover_locales(ROOT)
+    except LocaleCatalogError as exc:
+        print(f"localization audit: FAIL: {exc}")
+        return 1
+    findings: list[dict[str, str]] = []
+    manifests: dict[str, dict] = {}
+    for spec in specs:
+        locale_findings, manifest = scan(ROOT, spec.locale)
+        findings.extend(locale_findings)
+        manifests[spec.locale] = manifest
+        if not args.no_write:
+            path = write_manifest(ROOT, spec.profile, manifest)
+            print(f"localization manifest: {path.relative_to(ROOT)}")
+    result = {
+        "ok": not findings,
+        "findings": findings,
+        "manifest": next(iter(manifests.values())) if len(manifests) == 1 else None,
+        "locales": manifests,
+    }
     if args.report:
         Path(args.report).write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     if findings:
@@ -1368,7 +1392,8 @@ def main() -> int:
         for item in findings:
             print(f"  [{item['code']}] {item['path']}: {item['detail']}")
         return 1
-    print(f"localization audit: OK ({manifest['counts']})")
+    summary = ", ".join(f"{locale}={manifest['counts']}" for locale, manifest in manifests.items())
+    print(f"localization audit: OK ({summary})")
     return 0
 
 

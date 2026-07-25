@@ -415,7 +415,7 @@
   <div class="skill-cmd"><b>Helper notebook browser</b><code>python3 scripts/validation/helper_notebook_runtime_audit.py</code></div>
   <div class="skill-cmd"><b>Studio responsive</b><code>python3 scripts/validation/studio_responsive_audit.py</code></div>
   <div class="skill-cmd"><b>Authored browser boundaries</b><code>python3 scripts/validation/browser_security_boundary_audit.py --self-test &amp;&amp; python3 scripts/validation/browser_security_boundary_audit.py</code></div>
-  <div class="skill-cmd"><b>Localization + mutations</b><code>python3 scripts/validation/localization_audit.py --self-test &amp;&amp; for locale in pt-BR es-ES; do python3 scripts/validation/localization_audit.py --locale "$locale"; done</code></div>
+  <div class="skill-cmd"><b>Localization + mutations</b><code>python3 scripts/validation/localization_audit.py --self-test &amp;&amp; python3 scripts/validation/localization_audit.py</code></div>
   <div class="skill-cmd"><b>Localization browser</b><code>python3 scripts/validation/localization_runtime_audit.py --site-root /tmp/pt-localization-pages</code></div>
 </div>
   <h2>Linkage map</h2>
@@ -461,7 +461,7 @@
     <a class="skill-link" href="studio_responsive_audit.py"><b>studio_responsive_audit.py</b><span>studio responsive audit. Uses host Playwright to stress narrow and short Studio viewports for scrollable topbar controls and sidebar panel floors.</span></a>
     <a class="skill-link" href="openclaw_fallback_audit.py"><b>openclaw_fallback_audit.py</b><span>OpenClaw fallback audit. Checks fail-fast behavior, backup guidance, and static probe-frame cleanup.</span></a>
     <a class="skill-link" href="gateway_token_audit.mjs"><b>gateway_token_audit.mjs</b><span>Gateway/chat contract. Exercises token formats, final-event ordering, locale wiring, runtime-noise filtering, live harness wiring, and mutation coverage.</span></a>
-    <a class="skill-link" href="endpoint_registration_audit.py"><b>endpoint_registration_audit.py</b><span>Endpoint registration contract. Keeps chat, embedding, and OpenClaw storage, query hints, writers, the SKILL explorer, and typed EN/PT/ES probes on their declared registries.</span></a>
+    <a class="skill-link" href="endpoint_registration_audit.py"><b>endpoint_registration_audit.py</b><span>Endpoint registration contract. Keeps chat, embedding, and OpenClaw storage, query hints, writers, the SKILL explorer, and every discovered locale probe on their declared registries.</span></a>
     <a class="skill-link" href="openclaw_connection_audit.mjs"><b>openclaw_connection_audit.mjs</b><span>OpenClaw connection routing contract. Exercises configurable relay, direct-mode and same-origin bypasses, retired-state migration, terminal routing, and downstream locale reuse.</span></a>
     <a class="skill-link" href="openclaw_connection_browser_audit.mjs"><b>openclaw_connection_browser_audit.mjs</b><span>OpenClaw browser contract. Proves Module 3a routing, final-after-end delivery, final-only answers, actionable tool errors, and runtime-noise filtering.</span></a>
     <a class="skill-link" href="openclaw_probe_frame_runtime_audit.py"><b>openclaw_probe_frame_runtime_audit.py</b><span>OpenClaw probe frame browser audit. Exercises HTML-to-JSON/error/access-warning cleanup plus remount and reload.</span></a>

@@ -129,7 +129,7 @@
 
     <p>El diagrama separa tres interfaces:</p>
     <ul>
-      <li><strong>REST.</strong> Una solicitud produce una respuesta. Con la <a href="https://platform.openai.com/docs/api-reference/chat" target="_blank" rel="noopener"><em>Chat Completions API</em></a>, el cliente incluye el historial de la conversación; una <em>Responses API</em> puede conservar ese estado en el servidor.</li>
+      <li><strong>REST (transferencia de estado representacional).</strong> Una solicitud contiene todo lo necesario para producir una respuesta. Consulta la <a href="https://developers.openai.com/api/docs/guides/migrate-to-responses" target="_blank" rel="noopener">guía de migración a Responses</a>.</li>
       <li><strong><a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener">Model Context Protocol (MCP)</a>.</strong> Un formato de solicitud común permite que un runtime descubra e invoque herramientas.</li>
       <li><strong>Gateway de OpenClaw.</strong> Un <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API" target="_blank" rel="noopener">WebSocket</a> en <code>/cli/gateway</code> transporta eventos <a href="https://www.jsonrpc.org/specification" target="_blank" rel="noopener">JSON-RPC</a> de la sesión del agente.</li>
     </ul>

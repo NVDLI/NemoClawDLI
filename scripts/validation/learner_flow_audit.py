@@ -6,7 +6,7 @@
 
 The gate stays course-agnostic: it discovers course directories from course SKILL
 beacons and checks shared interaction primitives plus each numbered lesson. It does
-not infer GPU availability or hard-code one delivery environment.
+not infer a specific processor or hard-code one delivery environment.
 """
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
         sys.path.insert(0, str(_p / "scripts"))
         break
 from _bootstrap import find_repo_root
+from translate.locale_catalog import discover_locales
 
 ROOT = find_repo_root(Path(__file__).resolve())
 WEB = ROOT / "web"
@@ -54,6 +55,44 @@ LEARNING_VIEW_MIN_BLOCKS = {
 LEARNING_TIERS = {"applied", "deep"}
 LEARNING_ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 REFERENCE_DISCLOSURE_ID_RE = re.compile(r"(?:references|reading-list)$")
+RUNTIME_MODULES = (
+    "01a-loop",
+    "01b-react",
+    "01c-tools",
+    "02c-deep",
+    "03a-kickstart",
+    "03b-openclaw",
+    "03c-always-on",
+    "04a-safety",
+    "04b-modern-clis",
+)
+
+
+def locale_course_roots(root: Path) -> list[tuple[str, Path]]:
+    """Return canonical English plus every metadata-declared locale course root."""
+    return [
+        ("en", root / "web/nemoclaw"),
+        *((spec.url_code, spec.course_root) for spec in discover_locales(root)),
+    ]
+
+
+def load_runtime_pages(root: Path) -> dict[str, str]:
+    pages: dict[str, str] = {}
+    for locale, prefix in locale_course_roots(root):
+        for module in RUNTIME_MODULES:
+            page = prefix / f"{module}.html"
+            if not page.is_file():
+                raise FileNotFoundError(f"{page}: runtime-contract page is missing")
+            pages[f"{locale}-{module[:3]}"] = page.read_text(encoding="utf-8")
+    return pages
+
+
+def runtime_page_locales(pages: dict[str, str]) -> list[str]:
+    return sorted({
+        key.rsplit("-", 1)[0]
+        for key in pages
+        if re.search(r"-0[1-4][a-c]$", key)
+    })
 
 
 class LearningBlockParser(HTMLParser):
@@ -430,7 +469,7 @@ def audit_model_routes(shared: str, keypanel: str, rag: str, chat: str, openclaw
         r'credentials:\s*action\.credentials\s*\|\|\s*opts\.credentials\s*\|\|', openclaw
     ) is not None,
           "generic probes must permit an explicit credential mode")
-    for locale in ("en", "pt", "es"):
+    for locale in runtime_page_locales(pages):
         loop = pages[f"{locale}-01a"]
         react = pages[f"{locale}-01b"]
         kickstart = pages[f"{locale}-03a"]
@@ -480,7 +519,7 @@ def audit_runtime_integrations(
     _need(findings, 'return { status: "error", message:' in cli_runtime,
           "shared OpenClaw CLI failures must preserve an error state")
 
-    for locale in ("en", "pt", "es"):
+    for locale in runtime_page_locales(pages):
         kickstart = pages[f"{locale}-03a"]
         workspace = pages[f"{locale}-03b"]
         cron = pages[f"{locale}-03c"]
@@ -904,19 +943,19 @@ def course_dirs() -> list[Path]:
 
 def audit_home(text: str) -> list[str]:
     findings: list[str] = []
-    cpu_baseline = bool(re.search(
-        r"\b(?:CPU-based|uses?\s+(?:a\s+)?CPU|runs?\s+on\s+(?:a\s+)?CPU)\b",
-        text,
-        re.I,
-    ))
     no_gpu_requirement = bool(re.search(
         r"\b(?:without\s+GPU\s+access|do(?:es)?\s+not\s+require\s+(?:a\s+)?"
         r"(?:learner-managed\s+)?GPU)\b",
         text,
         re.I,
     ))
-    _need(findings, cpu_baseline and no_gpu_requirement,
-          "web/nemoclaw/index.html: setup must state the CPU baseline and that learner-managed GPU hardware is not required")
+    hosted_model_route = bool(re.search(
+        r"\b(?:using|uses?)\s+(?:hosted\s+)?model\s+endpoints?\b",
+        text,
+        re.I,
+    ))
+    _need(findings, no_gpu_requirement and hosted_model_route,
+          "web/nemoclaw/index.html: setup must state that model endpoints allow local reproduction without learner-managed GPU hardware")
     return findings
 
 
@@ -1004,14 +1043,7 @@ def audit_tree(root: Path = ROOT) -> list[str]:
         (root / "docs/lab_runtime_testing.md").read_text(encoding="utf-8"),
         (root / "scripts/runtime/SKILL.html").read_text(encoding="utf-8"),
     ))
-    runtime_pages = {}
-    for locale, prefix in (
-        ("en", root / "web/nemoclaw"),
-        ("pt", root / "i18n/pt/web/nemoclaw"),
-        ("es", root / "i18n/es/web/nemoclaw"),
-    ):
-        for module in ("01a-loop", "01b-react", "01c-tools", "02c-deep", "03a-kickstart", "03b-openclaw", "03c-always-on", "04a-safety", "04b-modern-clis"):
-            runtime_pages[f"{locale}-{module[:3]}"] = (prefix / f"{module}.html").read_text(encoding="utf-8")
+    runtime_pages = load_runtime_pages(root)
     helper_pages = {
         str(page.relative_to(root)): page.read_text(encoding="utf-8")
         for page in sorted((root / "web/nemoclaw").glob("0*.html"))
@@ -1238,14 +1270,7 @@ def self_test() -> list[str]:
     openclaw = (ROOT / "web/nemoclaw/scripts/_openclaw.js").read_text(encoding="utf-8")
     openshell = (ROOT / "web/nemoclaw/scripts/_openshell.js").read_text(encoding="utf-8")
     runtime_chat = (ROOT / "web/nemoclaw/scripts/_chat.js").read_text(encoding="utf-8")
-    runtime_pages = {}
-    for locale, prefix in (
-        ("en", ROOT / "web/nemoclaw"),
-        ("pt", ROOT / "i18n/pt/web/nemoclaw"),
-        ("es", ROOT / "i18n/es/web/nemoclaw"),
-    ):
-        for module in ("01a-loop", "01b-react", "01c-tools", "02c-deep", "03a-kickstart", "03b-openclaw", "03c-always-on", "04a-safety", "04b-modern-clis"):
-            runtime_pages[f"{locale}-{module[:3]}"] = (prefix / f"{module}.html").read_text(encoding="utf-8")
+    runtime_pages = load_runtime_pages(ROOT)
     helper_registry_cases = [
         (
             "registered helper removed",
@@ -1394,12 +1419,12 @@ def self_test() -> list[str]:
         misses.append("detector missed oversized default-open implementation")
 
     home = (ROOT / "web/nemoclaw/index.html").read_text(encoding="utf-8")
-    broken = home.replace("uses CPU", "uses unspecified hardware", 1)
-    if not any("CPU baseline" in finding for finding in audit_home(broken)):
-        misses.append("detector missed missing CPU baseline")
     broken = home.replace("without GPU access", "with unspecified accelerator access", 1)
-    if not any("CPU baseline" in finding for finding in audit_home(broken)):
+    if not any("learner-managed GPU" in finding for finding in audit_home(broken)):
         misses.append("detector missed missing no-GPU requirement")
+    broken = home.replace("using model endpoints", "using unspecified infrastructure", 1)
+    if not any("model endpoints" in finding for finding in audit_home(broken)):
+        misses.append("detector missed missing model-endpoint baseline")
 
     gitlab = (ROOT / ".gitlab/ci/core.yml").read_text(encoding="utf-8")
     github = (ROOT / ".github/workflows/pages.yml").read_text(encoding="utf-8")

@@ -18,6 +18,7 @@
     "scripts/translate/locales/es-ES/SKILL.html",
     "scripts/translate/locales/es-ES/profile.json",
     "scripts/translate/translate_html_segments.py",
+    "scripts/translate/locale_catalog.py",
     "scripts/translate/code_localization.py",
     "scripts/translate/locale_projection.py",
     "scripts/translate/translate_svg_text.py",
@@ -38,7 +39,8 @@
     {
       "title": "Localization workflow",
       "files": [
-        {"path": "README.md", "role": "same-branch process", "desc": "Sparse overlay boundary, page states, reviewer loop, build path, and historical branch-tool status."},
+        {"path": "README.md", "role": "same-branch process", "desc": "Sparse overlay boundary, page states, reviewer loop, and deterministic build path."},
+        {"path": "locale_catalog.py", "role": "locale discovery contract", "desc": "Discovers every i18n directory and rejects incomplete, contradictory, unsafe, or unreachable locale declarations."},
         {"path": "locales/pt-BR/SKILL.html", "role": "Portuguese first-touch", "desc": "Portuguese-language guidance for natural Brazilian developer prose and discoverable validation."},
         {"path": "locales/pt-BR/profile.json", "role": "locale profile", "desc": "NVIDIA terminology sources, preferred terms, accepted developer vocabulary, and static anti-patterns."},
         {"path": "locales/es-ES/SKILL.html", "role": "Spanish first-touch", "desc": "Spanish-language guidance for neutral technical prose, regional clarity, rhythm, and rendered SVG review."},
@@ -50,13 +52,6 @@
         {"path": "../build/assemble_locale_overlay.py", "role": "build assembler", "desc": "Copies canonical web/ and applies reviewed prose, runnable-code language, and SVG text without forking runtime contracts."},
         {"path": "localization_scope.py", "role": "translation-body boundary", "desc": "Hashes the stable translatable body independently from presentation-shell wording."},
         {"path": "locale_projection.py", "role": "structure projection", "desc": "Projects reviewed locale prose and translated shell prompts into the complete current canonical page structure."}
-      ]
-    },
-    {
-      "title": "Historical branch tools",
-      "files": [
-        {"path": "translation_status.py", "role": "legacy translate-* reader", "desc": "Reads the former branch-base marker. Do not use it for new same-branch localization."},
-        {"path": "translation_base.json", "role": "legacy marker", "desc": "Retained so historical translation branches remain understandable."}
       ]
     }
   ]
@@ -77,8 +72,7 @@
   <div class="skill-cmds">
     <div class="skill-cmd"><b>Publish-boundary mutations</b><code>python3 scripts/build/assemble_locale_overlay.py --self-test</code></div>
     <div class="skill-cmd"><b>Localization mutations</b><code>python3 scripts/validation/localization_audit.py --self-test</code></div>
-    <div class="skill-cmd"><b>Portuguese drift and language</b><code>python3 scripts/validation/localization_audit.py --locale pt-BR</code></div>
-    <div class="skill-cmd"><b>Spanish drift and language</b><code>python3 scripts/validation/localization_audit.py --locale es-ES</code></div>
+    <div class="skill-cmd"><b>All locale drift and language</b><code>python3 scripts/validation/localization_audit.py</code></div>
     <div class="skill-cmd"><b>Generate a measured draft</b><code>python3 scripts/translate/translate_html_segments.py web/nemoclaw/PAGE.html --usage-report /tmp/pt-usage.json</code></div>
   </div>
   <h2>Linkage map</h2>
@@ -88,6 +82,7 @@
     <a class="skill-link" href="locales/es-ES/SKILL.html"><b>es-ES language contract</b>Neutral technical Spanish, NVIDIA terminology sources, rhythm checks, and literal-translation traps.</a>
     <a class="skill-link" href="locales/SKILL.html"><b>Locale contracts</b>Directory map for every language-specific translation profile.</a>
     <a class="skill-link" href="../../web/nemoclaw/localization.html"><b>Localization Studio</b>Same-branch source and locale comparison with drift state.</a>
+    <a class="skill-link" href="locale_catalog.py"><b>Locale catalog</b>Default-on discovery, identity agreement, safe paths, and directory beacons.</a>
     <a class="skill-link" href="../validation/localization_audit.py"><b>Required validator</b>Overlay boundary, accepted source hash, structure, and locale-native checks.</a>
     <a class="skill-link" href="localization_scope.py"><b>Translation-body boundary</b>Hashes stable lesson prose separately from presentation-shell wording.</a>
     <a class="skill-link" href="code_localization.py"><b>Runnable-code language</b>Preserves localized learner output while blocking protocol and executable drift.</a>

@@ -16,6 +16,7 @@ for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
         sys.path.insert(0, str(_p / "scripts"))
         break
 from _bootstrap import find_repo_root
+from translate.locale_catalog import locale_by_tag
 from translate.translate_html_segments import (
     Segment,
     UsageLedger,
@@ -132,12 +133,13 @@ def main() -> int:
     parser.add_argument("--no-api", action="store_true", help="require every string from the locale SVG dictionary")
     parser.add_argument("--usage-report", type=Path)
     args = parser.parse_args()
-    profile = json.loads((ROOT / "scripts/translate/locales" / args.locale / "profile.json").read_text(encoding="utf-8"))
+    spec = locale_by_tag(ROOT, args.locale)
+    profile = spec.profile
     if args.cache is None:
         args.cache = Path(f"/tmp/nemoclaw-{profile['url_code']}-svg-translation-cache-v1.json")
-    dictionary_path = ROOT / "scripts/translate/locales" / args.locale / "svg_translations.json"
+    dictionary_path = spec.profile_path.parent / "svg_translations.json"
     dictionary = json.loads(dictionary_path.read_text(encoding="utf-8")) if dictionary_path.is_file() else {}
-    locale_root = ROOT / "i18n" / profile["url_code"]
+    locale_root = spec.locale_root
     ledger = UsageLedger(args.model)
     for raw_asset in args.assets:
         source = (ROOT / raw_asset).resolve()

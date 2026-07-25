@@ -1334,8 +1334,8 @@
         "ship"
       ],
       "order": {
-        "fast": 63,
-        "ship": 89
+        "fast": 66,
+        "ship": 90
       },
       "mode": "current-tree",
       "argv": [
@@ -1351,7 +1351,7 @@
         "fast"
       ],
       "order": {
-        "fast": 64
+        "fast": 67
       },
       "mode": "current-tree",
       "argv": [
@@ -1624,10 +1624,10 @@
         "web/nemoclaw/scripts/_shared.js",
         "web/nemoclaw/03a-kickstart.html",
         "web/nemoclaw/04b-modern-clis.html",
-        "i18n/pt/web/nemoclaw/03a-kickstart.html",
-        "i18n/es/web/nemoclaw/03a-kickstart.html",
-        "i18n/pt/web/nemoclaw/04b-modern-clis.html",
-        "i18n/es/web/nemoclaw/04b-modern-clis.html",
+        "i18n/*/locale.json",
+        "i18n/*/web/nemoclaw/03*.html",
+        "i18n/*/web/nemoclaw/04b-modern-clis.html",
+        "scripts/translate/locale_catalog.py",
         "scripts/runtime/engine.js",
         "scripts/runtime/link_projection.py",
         "scripts/runtime/run_engine.sh",
@@ -1637,9 +1637,11 @@
     {
       "id": "assemble-locale-overlay-self-test",
       "tiers": [
+        "fast",
         "ship"
       ],
       "order": {
+        "fast": 64,
         "ship": 43
       },
       "mode": "mutation",
@@ -1652,16 +1654,21 @@
       "impacts": [
         "scripts/build/assemble_locale_overlay.py",
         "scripts/translate/code_localization.py",
+        "scripts/translate/locale_catalog.py",
         "scripts/translate/locale_projection.py",
-        "i18n/*/locale.json"
+        "i18n/*/locale.json",
+        "i18n/*/localization_state.json",
+        "scripts/translate/locales/*/profile.json"
       ]
     },
     {
       "id": "localization-audit-self-test",
       "tiers": [
+        "fast",
         "ship"
       ],
       "order": {
+        "fast": 65,
         "ship": 44
       },
       "mode": "mutation",
@@ -1673,11 +1680,13 @@
       "parallel_safe": true,
       "impacts": [
         "scripts/validation/localization_audit.py",
+        "scripts/translate/locale_catalog.py",
         "scripts/translate/locales/*",
         "scripts/translate/code_localization.py",
         "scripts/translate/locale_projection.py",
         "scripts/build/assemble_locale_overlay.py",
         "i18n/*/locale.json",
+        "i18n/*/localization_state.json",
         "web/nemoclaw/scripts/_keypanel.js",
         "web/nemoclaw/scripts/_locale.js",
         "web/nemoclaw/scripts/_shared.js"
@@ -1843,8 +1852,10 @@
         "scripts/cors-proxy/SKILL.html",
         "scripts/runtime/test_page_runtime.js",
         "scripts/validation/runtime_integration_browser_audit.py",
-        "i18n/pt/web/nemoclaw/03a-kickstart.html",
-        "i18n/es/web/nemoclaw/03a-kickstart.html"
+        "scripts/translate/locale_catalog.py",
+        "i18n/*/locale.json",
+        "i18n/*/localization_state.json",
+        "i18n/*/web/nemoclaw/03a-kickstart.html"
       ]
     },
     {
@@ -2010,7 +2021,7 @@
         "ship"
       ],
       "order": {
-        "ship": 90
+        "ship": 91
       },
       "mode": "current-tree",
       "argv": [
@@ -2166,6 +2177,35 @@
         "scripts/validation/browser_security_boundary_audit.py"
       ],
       "parallel_safe": false
+    },
+    {
+      "id": "test-locale-catalog",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 63,
+        "ship": 89
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_locale_catalog"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/translate/locale_catalog.py",
+        "tests/validation/test_locale_catalog.py",
+        "i18n/*/locale.json",
+        "i18n/*/localization_state.json",
+        "i18n/*/SKILL.html",
+        "scripts/translate/locales/*/profile.json",
+        "scripts/translate/locales/*/SKILL.html"
+      ]
     }
   ]
 }

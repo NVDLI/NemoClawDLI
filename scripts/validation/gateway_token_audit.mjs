@@ -3,6 +3,42 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import fs from 'node:fs';
+import path from 'node:path';
+
+function discoverLocaleCourses() {
+  const root = 'i18n';
+  if (!fs.existsSync(root)) return [];
+  const seen = new Set();
+  return fs.readdirSync(root, { withFileTypes: true })
+    .filter(entry => entry.isDirectory())
+    .sort((left, right) => left.name.localeCompare(right.name))
+    .map(entry => {
+      const metadataPath = path.join(root, entry.name, 'locale.json');
+      if (!fs.existsSync(metadataPath)) {
+        throw new Error(`${metadataPath}: every locale directory must declare locale.json`);
+      }
+      const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+      const code = String(metadata.url_code || '');
+      if (code !== entry.name || !/^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/.test(code)) {
+        throw new Error(`${metadataPath}: url_code must match its safe lowercase directory name`);
+      }
+      if (seen.has(code)) throw new Error(`${metadataPath}: duplicate url_code ${code}`);
+      seen.add(code);
+      return { code, root: path.join(root, code, 'web/nemoclaw') };
+    });
+}
+
+const LOCALE_COURSES = [
+  { code: 'en', root: 'web/nemoclaw' },
+  ...discoverLocaleCourses(),
+];
+const LOCALIZED_CODES = LOCALE_COURSES.filter(item => item.code !== 'en').map(item => item.code);
+const PAGE_PATHS = Object.fromEntries(LOCALE_COURSES.flatMap(({ code, root }) => [
+  [code, path.join(root, '03a-kickstart.html')],
+  [`${code}3b`, path.join(root, '03b-openclaw.html')],
+  [`${code}3c`, path.join(root, '03c-always-on.html')],
+  [`${code}4b`, path.join(root, '04b-modern-clis.html')],
+]));
 
 const PATHS = {
   helper: 'web/nemoclaw/scripts/_openclaw.js',
@@ -14,18 +50,7 @@ const PATHS = {
   cliRuntime: 'web/nemoclaw/scripts/_openclaw_cli.js',
   runtime: 'scripts/runtime/test_page_runtime.js',
   lab: 'scripts/runtime/browser_runtime_test.sh',
-  en: 'web/nemoclaw/03a-kickstart.html',
-  pt: 'i18n/pt/web/nemoclaw/03a-kickstart.html',
-  es: 'i18n/es/web/nemoclaw/03a-kickstart.html',
-  en3b: 'web/nemoclaw/03b-openclaw.html',
-  pt3b: 'i18n/pt/web/nemoclaw/03b-openclaw.html',
-  es3b: 'i18n/es/web/nemoclaw/03b-openclaw.html',
-  en3c: 'web/nemoclaw/03c-always-on.html',
-  pt3c: 'i18n/pt/web/nemoclaw/03c-always-on.html',
-  es3c: 'i18n/es/web/nemoclaw/03c-always-on.html',
-  en4b: 'web/nemoclaw/04b-modern-clis.html',
-  pt4b: 'i18n/pt/web/nemoclaw/04b-modern-clis.html',
-  es4b: 'i18n/es/web/nemoclaw/04b-modern-clis.html',
+  ...PAGE_PATHS,
 };
 
 function readAll(overrides = {}) {
@@ -80,7 +105,7 @@ function audit(overrides = {}) {
   const runtimeParser = compile(files.runtime, 'function gatewayTokenFromDashboardUrl');
   findings.push(...parserFindings('browser harness', runtimeParser));
 
-  for (const key of ['en', 'pt', 'es']) {
+  for (const { code: key } of LOCALE_COURSES) {
     const source = files[key];
     if (!source.includes('gatewayTokenFromAgentMetadata')) {
       findings.push(`${key}: shared gateway-token parser is not imported`);
@@ -133,15 +158,17 @@ function audit(overrides = {}) {
   if (files.chat.includes('d.textContent = "(no answer)"') || !files.chat.includes('opts.emptyResponseMessage')) {
     findings.push('chat UI still presents an unexplained no-answer placeholder');
   }
-  for (const key of ['en', 'pt', 'es', 'en3b', 'pt3b', 'es3b', 'en3c', 'pt3c', 'es3c']) {
-    if (!files[key].includes('helpers.openclawMessageText(pl.message)')
-        || !files[key].includes('helpers.openclawResultText(data.result)')
-        || !files[key].includes('helpers.filterOpenClawRuntimeValue(d)')
-        || !files[key].includes('FINAL_EVENT_GRACE_MS')) {
-      findings.push(`${key}: gateway cell can finish before chat.final or expose unfiltered diagnostics`);
+  for (const { code } of LOCALE_COURSES) {
+    for (const key of [code, `${code}3b`, `${code}3c`]) {
+      if (!files[key].includes('helpers.openclawMessageText(pl.message)')
+          || !files[key].includes('helpers.openclawResultText(data.result)')
+          || !files[key].includes('helpers.filterOpenClawRuntimeValue(d)')
+          || !files[key].includes('FINAL_EVENT_GRACE_MS')) {
+        findings.push(`${key}: gateway cell can finish before chat.final or expose unfiltered diagnostics`);
+      }
     }
   }
-  for (const key of ['en', 'pt', 'es']) {
+  for (const { code: key } of LOCALE_COURSES) {
     const start = files[key].indexOf('helpers.mountChatUI("#kickstart-artifact"');
     const end = start < 0 ? -1 : files[key].indexOf('\n});', start);
     const artifact = start < 0 || end < 0 ? '' : files[key].slice(start, end);
@@ -149,7 +176,8 @@ function audit(overrides = {}) {
       findings.push(`${key}: Kickstart workspace prompt does not select the reliable exec path`);
     }
   }
-  for (const key of ['en4b', 'pt4b', 'es4b']) {
+  for (const { code } of LOCALE_COURSES) {
+    const key = `${code}4b`;
     if (!files[key].includes('helpers.mountOpenClawCli("#agent-chat")')) {
       findings.push(`${key}: Module 4b bypasses the shared OpenClaw CLI runtime`);
     }
@@ -222,10 +250,14 @@ function audit(overrides = {}) {
 
 function selfTest() {
   const base = readAll();
+  const localized = LOCALIZED_CODES[0];
   const mutations = [
     ['fragment token', { helper: base.helper.replace('fragment.get("token")', 'null') }],
     ['query token', { helper: base.helper.replace('parsed.searchParams.get("token")', 'null') }],
-    ['Portuguese wiring', { pt: base.pt.replace('autofillToken: gatewayTokenFromAgentMetadata', 'autofillToken: null') }],
+    ...(localized ? [[
+      'localized wiring',
+      { [localized]: base[localized].replace('autofillToken: gatewayTokenFromAgentMetadata', 'autofillToken: null') },
+    ]] : []),
     ['shared relay controls', { en: base.en.replace('proxyControls: true', 'proxyControls: false') }],
     ['terminal relay', { openshell: base.openshell.replace('openclawWebSocketUrl(rawUrl, "/ws/terminal?cmd="', 'directTerminalUrl(rawUrl, "/ws/terminal?cmd="') }],
     ['terminal direct fallback', { openshell: base.openshell.replace('[direct.url, routed.url]', '[routed.url]') }],
@@ -251,8 +283,13 @@ function selfTest() {
     ['terminal noise filter', { openshell: base.openshell.replace('output: clean(raw)', 'output: strip(raw)') }],
     ['terminal raw noise filter', { openshell: base.openshell.replace('raw: filterOpenClawRuntimeNoise(raw)', 'raw') }],
     ['chat empty response', { chat: base.chat.replace('opts.emptyResponseMessage', 'removedEmptyResponseMessage') }],
-    ['localized lifecycle', { pt3b: base.pt3b.replace('helpers.openclawMessageText(pl.message)', 'pl.message.content[0].text') }],
-    ['localized diagnostic filter', { es3c: base.es3c.replaceAll('helpers.filterOpenClawRuntimeValue(d)', 'd') }],
+    ...(localized ? [[
+      'localized lifecycle',
+      { [`${localized}3b`]: base[`${localized}3b`].replace('helpers.openclawMessageText(pl.message)', 'pl.message.content[0].text') },
+    ], [
+      'localized diagnostic filter',
+      { [`${localized}3c`]: base[`${localized}3c`].replaceAll('helpers.filterOpenClawRuntimeValue(d)', 'd') },
+    ]] : []),
     ['Kickstart exec prompt', { en: base.en.replace('Use your exec tool to run ls -la /sandbox/.openclaw/workspace, then explain each file', 'List the files in your workspace') }],
   ];
   const failures = [];

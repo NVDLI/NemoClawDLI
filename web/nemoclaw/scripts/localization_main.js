@@ -3,17 +3,24 @@
 
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
-const courseParent = new URL(".", location.href).pathname.replace(/\/$/, "").split("/").at(-2);
-const manifestCandidates = ["web", "es", "pt"].includes(courseParent)
-  ? ["../../languages.json", "../languages.json", "../../../languages.json", "../../../../languages.json"]
-  : ["../languages.json", "../../languages.json", "../../../languages.json", "../../../../languages.json"];
 let drift, languages, activeStatus = "all", activeKind = "pages", selected;
 const localeSelect = $("#loc-locale");
 
+function manifestCandidates() {
+  const candidates = [];
+  let directory = new URL(".", location.href);
+  for (let depth = 0; depth < 8; depth += 1) {
+    candidates.push(new URL("languages.json", directory));
+    const parent = new URL("../", directory);
+    if (parent.href === directory.href) break;
+    directory = parent;
+  }
+  return candidates;
+}
+
 async function languageManifest() {
-  for (const rel of manifestCandidates) {
+  for (const url of manifestCandidates()) {
     try {
-      const url = new URL(rel, location.href);
       const response = await fetch(url, {cache:"no-store"});
       if (!response.ok) continue;
       const data = await response.json();
@@ -103,7 +110,17 @@ async function boot() {
     $("#loc-findings").textContent = "Use a multilingual build to review translation drift.";
     return;
   }
-  const requestedValue = new URLSearchParams(location.search).get("locale") || localeSelect?.value || "pt";
+  if (localeSelect) {
+    localeSelect.replaceChildren(...localized.map(item => {
+      const option = document.createElement("option");
+      option.value = item.code;
+      option.textContent = item.native_label || item.label || item.locale;
+      return option;
+    }));
+  }
+  const requestedValue = new URLSearchParams(location.search).get("locale")
+    || localeSelect?.value
+    || localized[0]?.code;
   const requested = localized.some(item => item.code === requestedValue) ? requestedValue : (localized[0]?.code || requestedValue);
   if (localeSelect) localeSelect.value = requested;
   const driftResponse = await fetch(`assets/localization-${requested}.json`, {cache:"no-store"});

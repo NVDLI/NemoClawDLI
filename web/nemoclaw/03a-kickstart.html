@@ -136,7 +136,7 @@
 
     <p>The diagram separates three interfaces:</p>
     <ul>
-      <li><strong>REST.</strong> One request produces one response. With the <a href="https://platform.openai.com/docs/api-reference/chat" target="_blank" rel="noopener"><em>Chat Completions API</em></a>, the client includes the conversation history; a <em>Responses API</em> may retain that state on the server.</li>
+      <li><strong>REST (Representational State Transfer).</strong> One request carries all the info necessary to produces one response. See the <a href="https://developers.openai.com/api/docs/guides/migrate-to-responses" target="_blank" rel="noopener">Responses migration guide</a>.</li>
       <li><strong><a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener">Model Context Protocol (MCP)</a>.</strong> A common request format lets a runtime discover and call tools.</li>
       <li><strong>OpenClaw gateway.</strong> A <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API" target="_blank" rel="noopener">WebSocket</a> at <code>/cli/gateway</code> carries <a href="https://www.jsonrpc.org/specification" target="_blank" rel="noopener">JSON-RPC</a> events for the agent session.</li>
     </ul>

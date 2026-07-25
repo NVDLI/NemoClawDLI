@@ -25,6 +25,7 @@ for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
         break
 from _bootstrap import find_repo_root
 from translate.code_localization import project_localized_code_templates
+from translate.locale_catalog import load_locale
 from translate.locale_projection import project_locale_html
 from translate.localization_scope import translation_sha
 
@@ -44,16 +45,14 @@ def safe_relative(raw: str) -> Path:
 
 
 def assemble(locale_root: Path, out: Path, canonical_root: Path = ROOT) -> list[str]:
-    state_path = locale_root / "localization_state.json"
-    state = json.loads(state_path.read_text(encoding="utf-8"))
+    spec = load_locale(canonical_root, locale_root)
+    state = spec.state
     overlay_files = [safe_relative(item) for item in state.get("overlay_files", [])]
     asset_files = [safe_relative(item) for item in state.get("asset_files", [])]
     reviews = state.get("reviews", {})
     asset_reviews = state.get("asset_reviews", {})
-    locale_meta = json.loads((locale_root / "locale.json").read_text(encoding="utf-8"))
-    profile_ref = locale_meta.get("profile")
-    profile_path = canonical_root / profile_ref if profile_ref else None
-    shell_path = profile_path.parent / "shell_translations.json" if profile_path else locale_root / "shell_translations.json"
+    locale_meta = spec.metadata
+    shell_path = spec.profile_path.parent / "shell_translations.json"
     shell_translations = json.loads(shell_path.read_text(encoding="utf-8")) if shell_path.is_file() else {}
     if out.exists():
         shutil.rmtree(out)
@@ -91,20 +90,43 @@ def self_test() -> list[str]:
     failures: list[str] = []
     with tempfile.TemporaryDirectory(prefix="locale-overlay-") as td:
         root = Path(td)
-        canonical = root / "canonical"
+        canonical = root
         locale = root / "i18n/pt"
         rel = Path("web/nemoclaw/index.html")
         source = canonical / rel
         target = locale / rel
         source.parent.mkdir(parents=True)
         target.parent.mkdir(parents=True)
+        profile = canonical / "scripts/translate/locales/pt-BR/profile.json"
+        profile.parent.mkdir(parents=True)
+        (locale / "SKILL.html").write_text("<!doctype html>", encoding="utf-8")
+        (profile.parent / "SKILL.html").write_text("<!doctype html>", encoding="utf-8")
         source.write_text("English source", encoding="utf-8")
         target.write_text("Fonte em português", encoding="utf-8")
-        (locale / "locale.json").write_text(json.dumps({"locale": "pt-BR"}), encoding="utf-8")
-        (locale / "shell_translations.json").write_text(json.dumps({
+        (locale / "locale.json").write_text(json.dumps({
+            "schema": "nemoclaw-locale/1",
+            "locale": "pt-BR",
+            "url_code": "pt",
+            "label": "Portuguese (Brazil)",
+            "native_label": "Português (Brasil)",
+            "profile": "scripts/translate/locales/pt-BR/profile.json",
+            "source_root": "web",
+            "overlay_root": "i18n/pt/web",
+        }), encoding="utf-8")
+        profile.write_text(json.dumps({
+            "schema": "nemoclaw-locale-profile/1",
+            "locale": "pt-BR",
+            "url_code": "pt",
+            "label": "Portuguese (Brazil)",
+            "native_label": "Português (Brasil)",
+            "html_lang": "pt-BR",
+        }), encoding="utf-8")
+        (profile.parent / "shell_translations.json").write_text(json.dumps({
             "Need detail?": "Precisa de detalhes?"
         }), encoding="utf-8")
-        state = {"overlay_files": [rel.as_posix()],
+        state = {"schema": "nemoclaw-localization-state/1",
+                 "locale": "pt-BR", "url_code": "pt",
+                 "overlay_files": [rel.as_posix()],
                  "reviews": {rel.as_posix(): {"source_sha256": source_sha(source)}}}
         (locale / "localization_state.json").write_text(json.dumps(state), encoding="utf-8")
         out = root / "out"
@@ -140,7 +162,7 @@ def self_test() -> list[str]:
             failures.append("untranslated presentation-shell change was accepted")
         except ValueError:
             pass
-        (locale / "shell_translations.json").write_text(json.dumps({
+        (profile.parent / "shell_translations.json").write_text(json.dumps({
             "Need detail?": "Precisa de detalhes?", "Open detail?": "Abrir detalhes?"
         }), encoding="utf-8")
         if assemble(locale, out, canonical) != [rel.as_posix()]:

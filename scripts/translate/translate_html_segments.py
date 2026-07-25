@@ -31,6 +31,7 @@ for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
         break
 from _bootstrap import find_repo_root
 from runtime.html_document import raw_text_blocks_strict
+from translate.locale_catalog import locale_by_tag
 
 ROOT = find_repo_root(Path(__file__).resolve())
 TRANSLATION_REVISION = "locale-editorial-v5-source-draft"
@@ -560,11 +561,11 @@ def main() -> int:
     args = parser.parse_args()
     if args.polish and args.revise_against_source:
         parser.error("--polish and --revise-against-source are mutually exclusive")
-    profile_path = ROOT / "scripts" / "translate" / "locales" / args.locale / "profile.json"
-    profile = json.loads(profile_path.read_text(encoding="utf-8"))
+    spec = locale_by_tag(ROOT, args.locale)
+    profile = spec.profile
     if args.cache is None:
         args.cache = Path(f"/tmp/nemoclaw-{profile['url_code']}-translation-cache-v1.json")
-    locale_root = ROOT / "i18n" / profile["url_code"]
+    locale_root = spec.locale_root
     ledger = UsageLedger(args.model)
     for raw_page in args.pages:
         source = (ROOT / raw_page).resolve()
