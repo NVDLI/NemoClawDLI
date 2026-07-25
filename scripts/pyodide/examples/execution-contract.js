@@ -424,9 +424,9 @@ def notebook_time(expression, repeat=1):
 
 def notebook_magic():
     return [
-        "value? / value?? — inspect a live object", "!command / %%bash — bounded browser-shell commands",
-        "%%time — time a cell", "%who / %whos — inspect the live namespace", "%pwd / %ls / %cd — use the virtual filesystem",
-        "%pip list — list installed browser packages", "%time / %timeit — time an expression", "%magic — show this list",
+        "value? or value?? inspects a live object", "!command and %%bash run bounded browser-shell commands",
+        "%%time times a cell", "%who and %whos inspect the live namespace", "%pwd, %ls, and %cd use the virtual filesystem",
+        "%pip list shows installed browser packages", "%time and %timeit time an expression", "%magic shows this list",
     ]
 
 helper_defaults = {

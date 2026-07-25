@@ -673,7 +673,7 @@ helpers.log.details("veredito da política", verdict);
 // Binary identity, made visible: the same host can flip on which binary asks.
 const asOpenclaw = helpers.evalSandboxNetwork({ ...action, binary: "/usr/local/bin/openclaw", method: action.method || "GET", path: action.path || "/" }, policy);
 if (asOpenclaw.action !== verdict.action)
-  helpers.log("nota: como /usr/local/bin/openclaw, o resultado seria " + asOpenclaw.action.toUpperCase() + " — a regra de saída depende do binário, e curl não é esse binário.");
+  helpers.log("nota: a regra de saída depende do binário, e curl não é esse binário. Como /usr/local/bin/openclaw, o resultado seria " + asOpenclaw.action.toUpperCase() + ".");
 return verdict;
 `,
     },
@@ -718,10 +718,10 @@ helpers.log("previsto:  " + state.predicted.toUpperCase());
 helpers.log("observado: " + state.observed.toUpperCase());
 
 helpers.log(match
-  ? "concordam — o sandbox aplica exatamente o que a política reforçada prevê."
+  ? "O sandbox aplica exatamente o que a política reforçada prevê. As duas leituras concordam."
   : state.predicted === "deny"
-    ? "divergem — a política reforçada bloquearia a ação, mas o sandbox ativo a permitiu. Confira 'openshell policy get': Active 0 (Pending) indica que a política reforçada ainda não está ativa. Essa diferença é o achado."
-    : "divergem — a política reforçada permitiria a ação, mas o sandbox a bloqueou; há uma configuração mais restritiva que a representada pelo snapshot.");
+    ? "A política reforçada bloquearia a ação, mas o sandbox ativo a permitiu. As duas leituras divergem. Confira 'openshell policy get': Active 0 (Pending) indica que a política reforçada ainda não está ativa. Essa diferença é o achado."
+    : "A política reforçada permitiria a ação, mas o sandbox a bloqueou. As duas leituras divergem, e há uma configuração mais restritiva que a representada pelo snapshot.");
 return { predicted: state.predicted, observed: state.observed, agree: match };
 `,
     },
@@ -761,7 +761,7 @@ let cfg = null; try { cfg = await state.call("config.get"); } catch (_) {}
 helpers.log("config.get → " + (cfg ? "configuração completa disponível para leitura e alteração (modelo, ferramentas, toolSearch)" : "(não exposto nesta versão)"));
 
 helpers.log("");
-helpers.log("Um token alcança persona, agenda, memória, modelos e configuração — nada disso passa pelo sandbox.");
+helpers.log("O sandbox não vê a persona, a agenda, a memória, os modelos nem a configuração que um token alcança.");
 return { soulBytes: (soul?.content || "").length, crons: (crons?.jobs || []).length, models: (models?.models || []).length };
 `,
     },

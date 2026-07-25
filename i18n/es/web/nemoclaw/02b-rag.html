@@ -249,7 +249,7 @@ y <a href="https://developer.nvidia.com/blog/tips-for-building-a-rag-pipeline-wi
  Un agente de indexación top-K básico afronta una tensión entre recall y precisión que ningún modelo de embeddings elimina. Debes elegir entre fragmentos breves y documentos largos:
  </p>
   <ul>
-    <li>Los fragmentos breves producen embeddings precisos —el vector representa una idea concreta—, pero aportan poco contexto.</li>
+    <li>Los fragmentos breves producen embeddings precisos, pero aportan poco contexto: el vector representa una sola idea concreta.</li>
     <li>Los documentos largos conservan el contexto, pero generan embeddings difusos: el vector promedia muchas ideas.</li>
   </ul>
   <p>
@@ -300,7 +300,7 @@ y <a href="https://developer.nvidia.com/blog/tips-for-building-a-rag-pipeline-wi
     <li><strong>Documentos jerárquicos.</strong> Un segmentador conserva la jerarquía de títulos y combina extracción atómica de tablas, punteros al elemento padre y un índice doble para búsqueda estructural y semántica. Se indexan fragmentos hijos para mejorar el recall y se recupera el padre correspondiente para que el modelo lea la cláusula dentro de su sección.</li>
     <li><strong>Recuperación de imágenes de página para figuras y gráficos.</strong> Una configuración con dos espacios vectoriales genera embeddings de la página renderizada y de su texto. Así, la consulta también puede recuperar una figura o diapositiva cuando la respuesta esté en el contenido visual.</li>
     <li><strong>Tablas estructuradas y gobernadas.</strong> No se construyen en este curso. El patrón de producción sitúa una capa semántica entre el agente y los datos por fila, y expone solo las métricas seleccionadas que requiere el paquete.</li>
-    <li><strong>Datos relacionales o grafos.</strong> El agente invoca una herramienta de recorrido de grafos —Cypher, GraphQL o una interfaz propia— en lugar de un almacén vectorial. Recibe un subgrafo cuyas aristas explícitas llegan al prompt y conservan las relaciones entre entidades.</li>
+    <li><strong>Datos relacionales o grafos.</strong> En lugar de un almacén vectorial, el agente invoca una herramienta de recorrido de grafos escrita en Cypher, GraphQL o una interfaz propia. Recibe un subgrafo cuyas aristas explícitas llegan al prompt y conservan las relaciones entre entidades.</li>
   </ul>
     
   

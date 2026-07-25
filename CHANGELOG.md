@@ -18,6 +18,9 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
   course entrypoint refresh.
 - Thanks to Juan Jose Durillo Barrionuevo for the expert Spanish course translation and developer-language review.
 - Refined Spanish runtime labels and course parity while retaining Juan Jose Durillo Barrionuevo's reviewed prose baseline.
+- Removed the em-dashes from the Spanish and Portuguese course pages by reorganizing each sentence
+  rather than substituting punctuation, following Juan Jose Durillo Barrionuevo's reviewed Spanish
+  prose baseline for voice and bullet structure.
 - Thanks to Vadim Kudlay for clarifying the CLI comparison and its application defaults.
 - Added an optional, history-free relay source projection with parameterized infrastructure,
   request and WebSocket tests, license inventory, and public-source identifier gates.
