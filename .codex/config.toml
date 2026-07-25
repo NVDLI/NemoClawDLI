@@ -1,0 +1,32 @@
+# Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+[features]
+hooks = true
+
+[[hooks.SessionStart]]
+matcher = "startup|resume|clear|compact"
+
+[[hooks.SessionStart.hooks]]
+type = "command"
+command = 'sh "$(git rev-parse --show-toplevel)/.codex/hooks/continuity.sh" session-start'
+timeout = 5
+statusMessage = "Reconstructing the contribution checkpoint"
+
+[[hooks.PreCompact]]
+matcher = "manual|auto"
+
+[[hooks.PreCompact.hooks]]
+type = "command"
+command = 'sh "$(git rev-parse --show-toplevel)/.codex/hooks/continuity.sh" pre-compact'
+timeout = 5
+statusMessage = "Checking the contribution checkpoint before compaction"
+
+[[hooks.PostCompact]]
+matcher = "manual|auto"
+
+[[hooks.PostCompact.hooks]]
+type = "command"
+command = 'sh "$(git rev-parse --show-toplevel)/.codex/hooks/continuity.sh" post-compact'
+timeout = 5
+statusMessage = "Reconciling the contribution checkpoint after compaction"

@@ -4,6 +4,8 @@ This note guides agents and maintainers through repository changes. It is especi
 broad course prose.
 Issue anatomy and tracker cadence live in [`issue_standards.md`](issue_standards.md).
 Runtime checks live in [`lab_runtime_testing.md`](lab_runtime_testing.md).
+Contained cross-model changes use the frozen protocol and evidence boundary in
+[`agent_model_experiment.md`](agent_model_experiment.md).
 
 ## Start from the tracker
 

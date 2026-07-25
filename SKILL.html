@@ -62,7 +62,7 @@
     "assumptions": [
       "The public GitHub repository is canonical and approved for public release. Private approval evidence remains in its governing system. Everything worth keeping lives here and is versioned; scratch goes to /tmp and is never committed.",
       "The web surface holds the browser-only course and its course-scoped reference packets.",
-      "The brain is each source directory's SKILL.html skill-meta JSON, not a SKILL.md. Git-tracked and proposed files define the exhaustive directory set, with no opt-outs. Parse the current directory first, then walk children: task to surface to course to content. Visual work must also read the asset provenance beacon and validation beacon before edits.",
+      "The repository brain is each source directory's SKILL.html skill-meta JSON. Native agent skill packages may also carry their required SKILL.md payload. Git-tracked and proposed files define the exhaustive directory set, with no opt-outs. Parse the current directory first, then walk children: task to surface to course to content. Visual work must also read the asset provenance beacon and validation beacon before edits.",
       "One link engine (scripts/runtime/engine.js) is the single source for resolution, crawl, reachability, and the release contract; it runs headless and in-browser, with no second implementation to drift.",
       "The released course is nemoclaw (Securing Agents); the foyer (web/index.html) surfaces only it."
     ],
@@ -101,6 +101,14 @@
     {
       "name": "License and distribution evidence",
       "path": "scripts/compliance/SKILL.html"
+    },
+    {
+      "name": ".agents",
+      "path": ".agents/SKILL.html"
+    },
+    {
+      "name": ".codex",
+      "path": ".codex/SKILL.html"
     },
     {
       "name": ".github",
@@ -172,6 +180,16 @@
           "desc": "Review shipped software, source terms, SBOM evidence, and downloadable inventories."
         },
         {
+          "label": ".agents/",
+          "href": ".agents/SKILL.html",
+          "desc": "Repository-local agent capabilities that are portable across supported harnesses."
+        },
+        {
+          "label": ".codex/",
+          "href": ".codex/SKILL.html",
+          "desc": "Trusted-project Codex settings and the machine-readable contribution continuity contract."
+        },
+        {
           "label": ".github/",
           "href": ".github/SKILL.html",
           "desc": "GitHub contribution intake, dependency automation, and protected workflow definitions."
@@ -179,7 +197,7 @@
         {
           "label": ".gitlab/",
           "href": ".gitlab/SKILL.html",
-          "desc": "Public-safe source definitions consumed when reviewed GitHub commits enter the internal integration repository"
+          "desc": "Generic GitLab intake and validation source used when reviewed public commits enter the internal integration repository."
         },
         {
           "label": "docs/",
@@ -232,11 +250,6 @@
           "desc": "Official NVIDIA private vulnerability-reporting policy."
         },
         {
-          "label": "AGENTS.md",
-          "href": "AGENTS.md",
-          "desc": "Cross-harness agent contract and task routing."
-        },
-        {
           "label": "CONTRIBUTING.md",
           "href": "CONTRIBUTING.md",
           "desc": "How to contribute: hooks, the validation gate, conventions."
@@ -270,6 +283,21 @@
           "label": "SKILL_CONTRACT.md",
           "href": "SKILL_CONTRACT.md",
           "desc": "The SKILL.html beacon spec."
+        },
+        {
+          "label": "AGENTS.md",
+          "href": "AGENTS.md",
+          "desc": "Cross-harness agent contract and task routing."
+        },
+        {
+          "label": "CLAUDE.md",
+          "href": "CLAUDE.md",
+          "desc": "Claude Code entry point for the canonical agent contract."
+        },
+        {
+          "label": "docs/agent_model_experiment.md",
+          "href": "docs/agent_model_experiment.md",
+          "desc": ""
         },
         {
           "label": "docs/agent_process.md",
@@ -365,6 +393,8 @@
   <h2>Source &amp; tooling</h2>
   <ul>
     <li><a href="scripts/compliance/SKILL.html">License and distribution evidence</a></li>
+    <li><a href=".agents/SKILL.html">.agents/</a></li>
+    <li><a href=".codex/SKILL.html">.codex/</a></li>
     <li><a href=".github/SKILL.html">.github/</a></li>
     <li><a href=".gitlab/SKILL.html">.gitlab/</a></li>
     <li><a href="docs/SKILL.html">docs/</a></li>
@@ -379,7 +409,6 @@
     <li><a href="CHANGELOG.md">CHANGELOG.md</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="SECURITY.md">SECURITY.md</a></li>
-    <li><a href="AGENTS.md">AGENTS.md</a></li>
     <li><a href="CONTRIBUTING.md">CONTRIBUTING.md</a></li>
     <li><a href="DCO.md">DCO.md</a></li>
     <li><a href="CODE_OF_CONDUCT.md">CODE_OF_CONDUCT.md</a></li>
@@ -387,6 +416,9 @@
     <li><a href="scripts/compliance/docs/open_source_readiness.md">scripts/compliance/docs/open_source_readiness.md</a></li>
     <li><a href="scripts/compliance/docs/vendor_policy.md">scripts/compliance/docs/vendor_policy.md</a></li>
     <li><a href="SKILL_CONTRACT.md">SKILL_CONTRACT.md</a></li>
+    <li><a href="AGENTS.md">AGENTS.md</a></li>
+    <li><a href="CLAUDE.md">CLAUDE.md</a></li>
+    <li><a href="docs/agent_model_experiment.md">docs/agent_model_experiment.md</a></li>
     <li><a href="docs/agent_process.md">docs/agent_process.md</a></li>
     <li><a href="docs/agentic-compliance-suite.md">docs/agentic-compliance-suite.md</a></li>
     <li><a href="docs/course-prose-style.md">docs/course-prose-style.md</a></li>

@@ -24,7 +24,7 @@ Usage:
   python3 skill_audit.py --fix      # rewrite skill-meta to match reality, then report
 """
 from __future__ import annotations
-import argparse, json, re, subprocess, sys
+import argparse, json, os, re, subprocess, sys
 from pathlib import Path
 
 for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
@@ -55,7 +55,7 @@ def source_files() -> list[Path]:
     raw = subprocess.check_output(
         ["git", "-C", str(TASK1), "ls-files", "--cached", "--others", "--exclude-standard", "-z"]
     )
-    files = (Path(item.decode()) for item in raw.split(b"\0") if item)
+    files = (Path(os.fsdecode(item)) for item in raw.split(b"\0") if item)
     return sorted(path for path in files if (TASK1 / path).is_file())
 
 

@@ -1,0 +1,93 @@
+{
+  "schema": "nemoclaw-codex-continuity/1",
+  "skill": "../.agents/skills/nemoclaw-contribution/SKILL.md",
+  "hook": "hooks/continuity.sh",
+  "harness_beacons": [
+    "AGENTS.md",
+    "CLAUDE.md"
+  ],
+  "harness_capabilities": {
+    "codex": {
+      "entry": "AGENTS.md",
+      "lifecycle_reminders": true
+    },
+    "claude-code": {
+      "entry": "CLAUDE.md",
+      "lifecycle_reminders": false
+    }
+  },
+  "events": {
+    "SessionStart": {
+      "matcher": "startup|resume|clear|compact",
+      "phase": "session-start"
+    },
+    "PreCompact": {
+      "matcher": "manual|auto",
+      "phase": "pre-compact"
+    },
+    "PostCompact": {
+      "matcher": "manual|auto",
+      "phase": "post-compact"
+    }
+  },
+  "checkpoint_fields": [
+    "objective",
+    "terminal_condition",
+    "issue_branch_pull_request",
+    "exact_local_remote_main_sha",
+    "artifact_workflow_deployment",
+    "constraints_and_authority",
+    "verified_evidence",
+    "current_failure",
+    "remaining_actions",
+    "terminal_owner"
+  ],
+  "invariants": [
+    "preserve-terminal-condition",
+    "exact-head-evidence",
+    "remote-commit-round-trip",
+    "live-policy-discovery",
+    "fail-fast-before-expensive",
+    "changed-surface-preflight",
+    "generated-projection-round-trip",
+    "one-terminal-owner",
+    "no-host-repository-python"
+  ],
+  "cheap_checks": [
+    "submission-contract",
+    "commit-signoff",
+    "sensitive-content",
+    "branch-freshness",
+    "workflow-shape",
+    "changed-path-blast-radius",
+    "changed-surface-owner-audits"
+  ],
+  "expensive_checks": [
+    "dependency-installation",
+    "ship-build",
+    "browser-traversal",
+    "artifact-rebuild",
+    "deployment"
+  ],
+  "remote_commit_assertions": [
+    "parent",
+    "tree",
+    "verified-signature",
+    "dco-trailers"
+  ],
+  "evidence_resets": [
+    "commit",
+    "push",
+    "rebase",
+    "merge",
+    "pr-event-metadata-change",
+    "policy-change",
+    "deployment-rerun"
+  ],
+  "policy_sources": [
+    "current-branch-rules",
+    "current-environment-protection",
+    "current-pending-deployments",
+    "current-merge-state"
+  ]
+}

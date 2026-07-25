@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -77,6 +78,22 @@ def read(p: Path) -> str:
         return ""
 
 
+def source_top_level_directories(root: Path) -> set[str]:
+    """Discover tracked and proposed roots while excluding ignored build output."""
+    try:
+        raw = subprocess.check_output(
+            ["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+            stderr=subprocess.DEVNULL,
+        )
+        paths = [Path(os.fsdecode(item)) for item in raw.split(b"\0") if item]
+    except (OSError, subprocess.CalledProcessError):
+        paths = [path.relative_to(root) for path in root.rglob("*") if path.is_file()]
+    return {path.parts[0] for path in paths if len(path.parts) > 1}
+
+
+SOURCE_TOP_LEVELS = source_top_level_directories(TASK1)
+
+
 def skill_files() -> list[Path]:
     return sorted(p for p in TASK1.rglob("SKILL.html")
                   if not any(s in p.parts for s in SKIP_PARTS))
@@ -121,13 +138,20 @@ def inv_openclaw_token():
             fail(f"openclaw token DIVERGENCE: '{t}' in {found[t][:4]} (expected dli-openclaw-token)")
 
 
-# Dangling refs: mats paths stay recognized so stale SKILL links fail loudly.
-_PREFIXES = ("task1/", "web/", "repos/", ".github/", ".gitlab/", "i18n/",
-             "docs/", "scripts/", "tests/")
+# Dangling refs: discover repository-root path prefixes from the source tree so
+# a new visible or hidden directory participates without extending an allowlist.
+def _resolve(
+    ref: str,
+    base: Path | None = None,
+    task_root: Path = TASK1,
+    repo_root: Path = REPO,
+    root_prefixes: set[str] | None = None,
+) -> Path | None:
+    """Map a declared path using tracked/proposed repository roots, never live ignored dirs.
 
-
-def _resolve(ref: str, base: Path | None = None) -> Path | None:
-    """Map a declared path to a filesystem path, or None if it is not a repo path."""
+    Multi-component references whose first segment is a discovered source root are
+    repository-relative. Other references are relative to the declaring SKILL.html.
+    """
     ref = ref.strip()
     if not ref or ref.startswith(("http://", "https://", "#", "mailto:")):
         return None
@@ -135,9 +159,11 @@ def _resolve(ref: str, base: Path | None = None) -> Path | None:
     if "/" not in token and not token.endswith((".md", ".py", ".html", ".yaml", ".yml", ".json")):
         return None
     if token.startswith("task1/"):
-        return REPO / token
-    if token.startswith(_PREFIXES):
-        return TASK1 / token
+        return repo_root / token
+    first = Path(token).parts[0]
+    prefixes = SOURCE_TOP_LEVELS if root_prefixes is None else root_prefixes
+    if first in prefixes:
+        return task_root / token
     if base is not None:                       # relative to the SKILL's own dir
         return base / token
     return None
