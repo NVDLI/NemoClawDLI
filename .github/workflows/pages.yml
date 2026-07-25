@@ -185,7 +185,6 @@ jobs:
           python3 scripts/validation/runtime_integration_browser_audit.py --site-root public --timeout-ms 180000
           python3 scripts/validation/branch_preview_runtime_audit.py --site-root public
           python3 scripts/validation/pages_artifact_integrity.py --root public --expect-sha "$GITHUB_SHA" --check-manifest public/pages-sha256.txt
-      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - name: Archive every reviewed Pages file
         run: |
           # upload-pages-artifact always omits .github, which is part of this reviewed site.
