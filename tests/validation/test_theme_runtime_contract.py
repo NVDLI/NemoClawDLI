@@ -341,6 +341,16 @@ class ThemeRuntimeContractTests(unittest.TestCase):
         self.assertIn('This build contains English only.', studio)
         self.assertIn('localeSelect.hidden = true', studio)
 
+    def test_language_manifest_resolution_does_not_probe_missing_parent_paths(self) -> None:
+        locale = (ROOT / "web/nemoclaw/scripts/_locale.js").read_text(encoding="utf-8")
+        studio = (ROOT / "web/nemoclaw/scripts/localization_main.js").read_text(encoding="utf-8")
+        self.assertIn("export function languageManifestUrl", locale)
+        self.assertIn('parent === "web"', locale)
+        self.assertIn("/^[a-z]{2}(?:-[a-z0-9]+)*$/i.test(parent)", locale)
+        self.assertIn("its <html lang> is not reliable here", locale)
+        self.assertIn('import { languageManifestUrl } from "./_locale.js"', studio)
+        self.assertNotIn("manifestCandidates", locale + studio)
+
     def test_runtime_keeps_universal_narrow_layout_coverage(self) -> None:
         source = theme_runtime.RUNTIME_JS
         for token in (

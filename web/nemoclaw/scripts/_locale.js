@@ -304,29 +304,25 @@ function mountLocalizedUi() {
   })).observe(document.body, { childList: true, subtree: true, characterData: true });
 }
 
-function manifestCandidates() {
-  const parts = location.pathname.split("/").filter(Boolean);
+export function languageManifestUrl(pageUrl = location.href) {
+  const resolvedPage = new URL(pageUrl, location.href);
+  const parts = resolvedPage.pathname.split("/").filter(Boolean);
   const courseAt = parts.lastIndexOf("nemoclaw");
   const parent = courseAt > 0 ? parts[courseAt - 1] : "";
-  const nested = parent === "web" || /^[a-z]{2}(?:-[a-z0-9]+)?$/.test(parent);
-  const first = nested ? "../../languages.json" : "../languages.json";
-  return [first, "../languages.json", "../../languages.json", "../../../languages.json", "../../../../languages.json"]
-    .filter((item, index, all) => all.indexOf(item) === index);
+  // Built translations always live at /<locale>/nemoclaw/. The page itself can
+  // still be the English fallback, so its <html lang> is not reliable here.
+  const nested = parent === "web" || /^[a-z]{2}(?:-[a-z0-9]+)*$/i.test(parent);
+  return new URL(nested ? "../../languages.json" : "../languages.json", resolvedPage);
 }
 
 async function findManifest() {
-  for (const rel of manifestCandidates()) {
-    try {
-      const url = new URL(rel, location.href);
-      const response = await fetch(url, { cache: "no-store" });
-      if (!response.ok) continue;
-      const data = await response.json();
-      if (data?.schema === "nemoclaw-languages/1" && Array.isArray(data.languages)) {
-        return { data, url };
-      }
-    } catch (_) {}
-  }
-  return null;
+  const url = languageManifestUrl();
+  try {
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data?.schema === "nemoclaw-languages/1" && Array.isArray(data.languages) ? { data, url } : null;
+  } catch (_) { return null; }
 }
 
 function courseBase(entry, manifestUrl) {

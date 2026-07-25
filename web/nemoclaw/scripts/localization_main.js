@@ -1,33 +1,21 @@
 // Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import { languageManifestUrl } from "./_locale.js";
+
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
 let drift, languages, activeStatus = "all", activeKind = "pages", selected;
 const localeSelect = $("#loc-locale");
 
-function manifestCandidates() {
-  const candidates = [];
-  let directory = new URL(".", location.href);
-  for (let depth = 0; depth < 8; depth += 1) {
-    candidates.push(new URL("languages.json", directory));
-    const parent = new URL("../", directory);
-    if (parent.href === directory.href) break;
-    directory = parent;
-  }
-  return candidates;
-}
-
 async function languageManifest() {
-  for (const url of manifestCandidates()) {
-    try {
-      const response = await fetch(url, {cache:"no-store"});
-      if (!response.ok) continue;
-      const data = await response.json();
-      if (data?.schema === "nemoclaw-languages/1") return {data, url};
-    } catch (_) {}
-  }
-  return null;
+  const url = languageManifestUrl();
+  try {
+    const response = await fetch(url, {cache:"no-store"});
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data?.schema === "nemoclaw-languages/1" ? {data, url} : null;
+  } catch (_) { return null; }
 }
 
 function courseRows() {

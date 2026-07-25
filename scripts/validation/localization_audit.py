@@ -37,8 +37,8 @@ SKIP_TEXT = {"script", "style", "pre", "code", "svg", "noscript"}
 STRUCTURE_NEUTRAL_TAGS = {"i", "em"}
 INTERFACE_CONTRACT = {
     "web/nemoclaw/localization.html": ("id=\"loc-kinds\"", "data-kind=\"assets\"", "id=\"loc-filters\"", "id=\"loc-source\"", "id=\"loc-target\"", "scripts/localization_main.js"),
-    "web/nemoclaw/scripts/localization_main.js": ("localization-", '"current", "stale", "blocked", "needs-review", "missing"', "reviewed_source_sha256", "asset_counts", 'activeKind === "assets"', "loc-locale", "languageManifest"),
-    "web/nemoclaw/scripts/_locale.js": ("mountLanguageMenu", "available_pages", 'aria-haspopup', "languageFallback", "language-fallback-badge", "PT_PREFIXES", "ES_PREFIXES"),
+    "web/nemoclaw/scripts/localization_main.js": ("localization-", '"current", "stale", "blocked", "needs-review", "missing"', "reviewed_source_sha256", "asset_counts", 'activeKind === "assets"', "loc-locale", "languageManifest", 'import { languageManifestUrl } from "./_locale.js"'),
+    "web/nemoclaw/scripts/_locale.js": ("mountLanguageMenu", "available_pages", 'aria-haspopup', "languageFallback", "language-fallback-badge", "PT_PREFIXES", "ES_PREFIXES", "export function languageManifestUrl"),
     "web/nemoclaw/scripts/_keypanel.js": ("mountKeyPanel", "model-api-base-url", "Save &amp; verify"),
     "web/nemoclaw/scripts/_connection.js": ("DEFAULT_OPENCLAW_PROXY_BASE", "openclaw_proxy", "migrateOpenClawConnectionStorage"),
     "web/nemoclaw/scripts/_openclaw.js": ("mountClawProbe", "mountModelEndpointProbe", "connectionKind", "Hosted relay", "Use for cross-origin Cloudflare connections"),
@@ -1307,6 +1307,8 @@ def self_test() -> list[str]:
             failures.append("clean localization interface fixture rejected")
         interface_mutations = (
             ("web/nemoclaw/scripts/_locale.js", "available_pages"),
+            ("web/nemoclaw/scripts/_locale.js", "export function languageManifestUrl"),
+            ("web/nemoclaw/scripts/localization_main.js", 'import { languageManifestUrl } from "./_locale.js"'),
             ("web/nemoclaw/localization.html", 'id="loc-target"'),
             ("scripts/build/build_pages.sh", "assemble_locale_overlay.py"),
             ("scripts/translate/translate_html_segments.py", "required_dimensions"),
