@@ -22,6 +22,10 @@ agent contract.
    and [`scripts/validation/SKILL.html`](scripts/validation/SKILL.html) before editing.
    Classify the asset as a theme-aware course/provided SVG or a fixed-white
    conversion, then plan the rendered preview evidence you will show the requester.
+5. For issue, pull-request, CI, merge, Pages, deployment, or other substantial work,
+   use [the repository contribution skill](.agents/skills/nemoclaw-contribution/SKILL.md).
+   Its checkpoint schema is [`.codex/continuity-contract.json`](.codex/continuity-contract.json).
+   Reconcile that checkpoint after compaction, resume, or handoff before the next write.
 
 This file carries repo-level rules. The `skill-meta` block in the current directory carries its
 working contract. Every source directory has one; parent coverage is never a substitute.
@@ -48,6 +52,15 @@ old failure plus the corrected behavior with a mutation test.
 Before committing, read `CONTRIBUTING.md` and `DCO.md`. Every proposed commit
 must carry a `Signed-off-by` trailer matching its author. Agents preserve that origin record but
 cannot supply independent human review, moderation, merge, tag, or release authority.
+
+When an API creates a GitHub-signed commit, fetch it before moving the contribution ref. Compare
+the remote parent and tree with the validated candidate, then verify the host signature result and
+DCO trailers. A signed commit can still contain the wrong bytes.
+
+Read current branch rules, environment protection, pending deployments, and merge state from the
+host. Do not preserve a reviewer name or bypass assumption from an earlier run. In coordinated
+work, one thread owns each terminal merge or deployment; a handoff transfers exact SHAs, evidence,
+overlapping files, the current failure, and the next action, then the sender stops duplicate work.
 
 ## Visual changes
 

@@ -109,7 +109,8 @@ TENETS = {
         "evidence remains in its governing system. Everything worth keeping lives here and is versioned; scratch "
         "goes to /tmp and is never committed.",
         "The web surface holds the browser-only course and its course-scoped reference packets.",
-        "The brain is each source directory's SKILL.html skill-meta JSON, not a SKILL.md. Git-tracked "
+        "The repository brain is each source directory's SKILL.html skill-meta JSON. Native agent "
+        "skill packages may also carry their required SKILL.md payload. Git-tracked "
         "and proposed files define the exhaustive directory set, with no opt-outs. Parse the current "
         "directory first, then walk children: task to surface to course to content. Visual work must also "
         "read the asset provenance beacon and validation beacon before edits.",

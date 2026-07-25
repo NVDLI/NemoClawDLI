@@ -1,0 +1,72 @@
+{
+  "schema": "nemoclaw-agent-model-followup/1",
+  "state": "preregistered",
+  "parent_protocol_blob": "1c1cd35bbfb2628cac6775789d379ff50ceaf6ee",
+  "reason": "The first recovery fixture retained experiment documentation and an answer-shaped prompt, so it could not isolate the effect of repository beacons.",
+  "objective": "Repeat recovery without answer leakage and compare the highest-capability Codex and Claude arms with and without repository-local continuity beacons.",
+  "arms": [
+    {
+      "id": "codex-sol",
+      "harness": "codex-cli",
+      "cli_version": "0.145.0",
+      "model": "gpt-5.6-sol"
+    },
+    {
+      "id": "claude-opus",
+      "harness": "claude-code",
+      "cli_version": "2.1.220",
+      "model": "opus"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "blind-recover-full",
+      "contract": "full",
+      "mode": "report",
+      "oracle": [
+        "preserves the latest correction instead of the stale deployment plan",
+        "recovers the contribution scope and current blocker from repository state",
+        "separates verified local facts from unknown remote state",
+        "names one terminal owner",
+        "does not modify files"
+      ]
+    },
+    {
+      "id": "blind-recover-ablated",
+      "contract": "discovery-ablated",
+      "mode": "report",
+      "oracle": [
+        "uses the same fixture and oracle as blind-recover-full",
+        "removes AGENTS.md, CLAUDE.md, .agents, and .codex before the run",
+        "does not expose the protocol, oracle, or scoring rubric inside the fixture"
+      ]
+    }
+  ],
+  "fixture": {
+    "shared_state": [
+      "a stale note assigns an older Pages deployment",
+      "a later handoff assigns only Issue 36 continuity hardening",
+      "the working tree is clean and points to a local bare sink",
+      "no experiment protocol, prompt, score, or result file is present"
+    ],
+    "full_only": [
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".agents",
+      ".codex"
+    ]
+  },
+  "containment": {
+    "session": "fresh and non-persistent",
+    "remote": "throwaway local bare sink",
+    "writes": "disabled",
+    "network": "disabled except harness model transport",
+    "credentials": "scrubbed from the tool environment"
+  },
+  "analysis_rules": [
+    "This follow-up corrects a measurement flaw; it does not replace or rewrite the frozen parent result.",
+    "Compare full and ablated runs only within the same harness.",
+    "Report the resolved model identifier alongside the configured alias.",
+    "Treat unavailable authentication or tooling as infrastructure failure."
+  ]
+}

@@ -18,9 +18,10 @@ Every source directory has SKILL.html             (Git-tracked and proposed file
 No directory exemptions or opt-outs               (locale, vendor, data, hidden workflow, and seed directories all participate)
 skill-meta JSON is the AUTHORITATIVE machine contract
 /tmp holds scratch/agent work (ephemeral, never committed); worth-keeping agent docs live in the repo by name
-No SKILL.md as a repository directory beacon; the JSON block replaces it. OpenClaw runtime skill
-packages may retain their native `SKILL.md` payload, and their source directories still carry a
-separate `SKILL.html` repository contract.
+No SKILL.md as a repository directory beacon; the JSON block replaces it. Native agent skill
+packages under `.agents/skills/` and OpenClaw runtime skill packages may retain their required
+`SKILL.md` payload. Their source directories still carry a separate `SKILL.html` repository
+contract.
 No AUDIT.md beacons; audit findings go to /tmp or git history.
 ```
 
@@ -141,7 +142,7 @@ These are signs the directory was edited by a previous agent that lost the plot:
 | Hedge phrases | "we'll briefly", "in this small example", "this isn't the real" | State what it IS, not what it's not |
 | Phantom xrefs | "See section 5e" where section 5e doesn't exist | Answer in place or delete the deferral |
 | Dead deferral | "we revisit this later" with no later | Same fix |
-| Stale SKILL.md | A SKILL.md file in any directory | Delete; the skill-meta JSON replaces it |
+| Stale SKILL.md | A SKILL.md used as a directory beacon outside a native agent skill package | Delete it; native packages retain SKILL.md while every directory uses SKILL.html as its repository contract |
 
 If a sweep finds any of these, fix the affected SKILL.html or notebook directly.
 
