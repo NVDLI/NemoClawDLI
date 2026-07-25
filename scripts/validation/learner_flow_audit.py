@@ -37,6 +37,9 @@ LAUNCHABLE_HELPER_RE = re.compile(
     r"helpers\.(?:openclawChat|terminal|sandboxExec|policyGet|sandboxNetwork|evalSandboxNetwork|evalSandboxFs)\b"
 )
 MODEL_HELPER_RE = re.compile(r"(?:helpers\.)?(?:chat|chatStream)\s*\(|helpers\.mountAgentChat\s*\(")
+COURSE_SOURCE_URI_RE = re.compile(
+    r'uri:\s*`\$\{[A-Za-z_$][\w$]*\}#\$\{item\.id\}`'
+)
 MAX_DEFAULT_OPEN_LINES = 60
 LONG_SEQUENCE_MIN_ITERATIONS = 12
 LEARNING_VIEW_REQUIRED = {"01a-loop.html", "01b-react.html", "01c-tools.html", "02b-rag.html"}
@@ -235,7 +238,9 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
         'assistant: "ASISTENTE DEL CURSO"': "page assistant needs Spanish chrome",
         'if (!location.pathname.includes("/nemoclaw/")) return;': "page assistant must stay scoped to course pages",
         'pageId: String(item.pageId || "")': "Course Assistant page grounding must persist with its session",
-        'initialContext: attachedPage ? async () => ({ label: localized(': "Course Assistant must seed its attached prose and code index as inspectable context",
+        'export function questionTargetsCurrentPage': "Course Assistant must distinguish the live page from a restored session page",
+        'const targetPageId = requested => questionTargetsCurrentPage(turnQuestion) ? page.id : requested': "Course Assistant current-page requests must resolve to the live browser page",
+        'initialContext: async () => ({ label: localized(': "Course Assistant must seed the live page prose and code index as inspectable context",
         'name: "list_course_pages"': "page assistant must expose the course map to its ReAct loop",
         'name: "search_course_pages"': "page assistant must search the course before guessing which page matters",
         'export async function searchCoursePages': "course search must remain independently testable without a model call",
@@ -245,7 +250,6 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
         'name: "read_course_source"': "Course Assistant must read exact lesson artifact source through one stable URI",
         'name: "list_course_runtime_files"': "Course Assistant must enumerate shared runtime modules",
         'name: "read_course_runtime_source"': "Course Assistant must read allow-listed shared runtime source",
-        'uri: `${id}#${item.id}`': "lesson code index must expose one stable source URI",
         'never invent an implementation or claim source is private or inaccessible': "Course Assistant prompt must forbid invented or inaccessible-source claims",
         'Use the code-reading tools for exact source': "attached page context must advertise exact code access",
         '"Show me this page\'s code"': "Course Assistant must make source access discoverable without tool-name knowledge",
@@ -280,6 +284,8 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
         'opts.onTurnSnapshot(cleanHistory(items), { state, activity }, ctx)': "shared chat must snapshot a turn before completion",
         'const activitySnapshot = () =>': "shared chat must persist visible ReAct activity, not only model-context messages",
         'ctx.view.updateTool(c.el': "shared chat must capture completed tool results in persisted activity",
+        'const hasMeaningfulAnswer = value =>': "shared chat must reject punctuation-only agent endings",
+        'The tool run ended without a final answer; synthesizing one from the completed results.': "shared chat must recover a tool-only turn instead of leaving a blank answer",
         'initialActivity: opts.initialActivity': "shared agent chat must forward restored activity into its UI runtime",
         'window.addEventListener("pagehide", snapshotBeforeNavigation': "shared chat must flush the latest streamed text during navigation",
         'onUserMessage: opts.onUserMessage': "shared chat must forward the preflight session-title hook",
@@ -338,6 +344,8 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
     }
     for token, message in contract.items():
         _need(findings, token in assistant or token in shared or token in chat, message)
+    _need(findings, COURSE_SOURCE_URI_RE.search(assistant) is not None,
+          "lesson code index must expose stable page-qualified source URIs")
     _need(findings, "mountCourseAssistant({ embed });" in shared,
           "shared chrome must mount the page assistant on every course page")
     _need(findings, "initialContext" in chat and "ctx.view.tool(label" in chat,
@@ -387,6 +395,7 @@ def audit_course_source_runtime(langchain: str) -> list[str]:
         'COURSE_RUNTIME_FILES.find(([name]) => name === safe)': "runtime source reads must remain allow-listed",
         'script[type="text/plain"][id]': "course source index must discover text-backed lesson artifacts",
         'script[type="module"]:not([src])': "course source index must discover inline page modules",
+        'id: "page-html"': "every course page must expose its complete HTML document even when it has no inline cell",
         'export async function courseCodeArtifacts': "lesson code index must remain independently testable",
         '.map(({ source: _source, ...metadata }) => metadata)': "lesson code index must not inline every source body",
         'export async function courseCode(pageId, artifactId)': "exact lesson source must remain readable by artifact id",
@@ -1153,7 +1162,9 @@ def self_test() -> list[str]:
     assistant = (ROOT / "web/nemoclaw/scripts/_course_assistant.js").read_text(encoding="utf-8")
     assistant_cases = [
         ("assistant loses session page", assistant.replace('pageId: String(item.pageId || "")', 'legacyPage: String(item.pageId || "")', 1), shared, chat, css, "grounding must persist"),
-        ("assistant loses page context", assistant.replace('initialContext: attachedPage ? async () => ({ label: localized(', 'initialContext: null && async () => ({ label: localized(', 1), shared, chat, css, "attached prose and code index"),
+        ("assistant loses live-page targeting", assistant.replace('export function questionTargetsCurrentPage', 'function removedCurrentPageTarget', 1), shared, chat, css, "distinguish the live page"),
+        ("assistant ignores current-page intent", assistant.replace('const targetPageId = requested => questionTargetsCurrentPage(turnQuestion) ? page.id : requested', 'const targetPageId = requested => requested', 1), shared, chat, css, "resolve to the live browser page"),
+        ("assistant loses page context", assistant.replace('initialContext: async () => ({ label: localized(', 'initialContext: null && async () => ({ label: localized(', 1), shared, chat, css, "live page prose and code index"),
         ("assistant loses Portuguese chrome", assistant.replace('assistant: "ASSISTENTE DO CURSO"', 'assistant: "COURSE ASSISTANT"', 1), shared, chat, css, "Brazilian Portuguese chrome"),
         ("assistant loses Spanish chrome", assistant.replace('assistant: "ASISTENTE DEL CURSO"', 'assistant: "COURSE ASSISTANT"', 1), shared, chat, css, "Spanish chrome"),
         ("assistant loses course map", assistant.replace('name: "list_course_pages"', 'name: "missing_course_map"', 1), shared, chat, css, "course map"),
@@ -1161,6 +1172,7 @@ def self_test() -> list[str]:
         ("assistant returns structured tool payload", assistant.replace('return JSON.stringify(await searchCoursePages(query, readPage, catalog), null, 2);', 'return searchCoursePages(query, readPage, catalog);', 1), shared, chat, css, "endpoint-safe text"),
         ("assistant loses lesson code index", assistant.replace('name: "list_course_code"', 'name: "missing_course_code"', 1), shared, chat, css, "enumerate exact lesson code"),
         ("assistant loses exact lesson source", assistant.replace('name: "read_course_source"', 'name: "missing_read_course_source"', 1), shared, chat, css, "exact lesson artifact source"),
+        ("assistant emits unqualified source ids", assistant.replace('uri: `${target}#${item.id}`', 'uri: item.id', 1), shared, chat, css, "page-qualified source URIs"),
         ("assistant loses runtime index", assistant.replace('name: "list_course_runtime_files"', 'name: "missing_runtime_files"', 1), shared, chat, css, "enumerate shared runtime"),
         ("assistant loses runtime source", assistant.replace('name: "read_course_runtime_source"', 'name: "missing_runtime_source"', 1), shared, chat, css, "allow-listed shared runtime source"),
         ("assistant can invent inaccessible code", assistant.replace('never invent an implementation or claim source is private or inaccessible', 'guess code when useful', 1), shared, chat, css, "forbid invented or inaccessible-source claims"),
@@ -1190,6 +1202,8 @@ def self_test() -> list[str]:
         ("shared chat never writes snapshots", assistant, shared, chat.replace('opts.onTurnSnapshot(cleanHistory(items), { state, activity }, ctx)', 'void items', 1), css, "snapshot a turn before completion"),
         ("shared chat drops activity snapshot", assistant, shared, chat.replace('const activitySnapshot = () =>', 'const removedActivitySnapshot = () =>', 1), css, "visible ReAct activity"),
         ("shared chat drops tool result activity", assistant, shared, chat.replace('ctx.view.updateTool(c.el', 'ctx.view.missingToolUpdate(c.el'), css, "completed tool results"),
+        ("shared chat accepts punctuation as an answer", assistant, shared, chat.replace('const hasMeaningfulAnswer = value =>', 'const removedMeaningfulAnswer = value =>', 1), css, "punctuation-only"),
+        ("shared chat strands tool-only turns", assistant, shared, chat.replace('The tool run ended without a final answer; synthesizing one from the completed results.', 'Tool run complete.', 1), css, "recover a tool-only turn"),
         ("shared chat loses navigation tail", assistant, shared, chat.replace('window.addEventListener("pagehide", snapshotBeforeNavigation', 'window.addEventListener("never", snapshotBeforeNavigation', 1), css, "flush the latest streamed text"),
         ("shared chat drops artifact capture", assistant, shared, chat.replace('onAssistantMessage: opts.onAssistantMessage', 'onAssistantMessage: null', 1), css, "deterministic artifact capture"),
         ("assistant loses artifact queue", assistant.replace('name: "queue_course_artifact"', 'name: "missing_artifact_queue"', 1), shared, chat, css, "queue generated browser code"),
@@ -1259,6 +1273,7 @@ def self_test() -> list[str]:
         ("runtime source loses allow-list", langchain.replace('COURSE_RUNTIME_FILES.find(([name]) => name === safe)', 'COURSE_RUNTIME_FILES[0]', 1), "remain allow-listed"),
         ("lesson source ignores text artifacts", langchain.replace('script[type="text/plain"][id]', 'script[data-missing]', 1), "text-backed lesson artifacts"),
         ("lesson source ignores page modules", langchain.replace('script[type="module"]:not([src])', 'script[data-missing-module]', 1), "inline page modules"),
+        ("code-less page loses its HTML source", langchain.replace('id: "page-html"', 'id: "missing-page-html"', 1), "complete HTML document"),
         ("code index inlines all source", langchain.replace('.map(({ source: _source, ...metadata }) => metadata)', '.map(item => item)', 1), "must not inline every source"),
         ("lesson source reader removed", langchain.replace('export async function courseCode(pageId, artifactId)', 'async function removedCourseCode(pageId, artifactId)', 1), "exact lesson source"),
         ("runtime source reader removed", langchain.replace('export async function courseRuntimeSource(file)', 'async function removedRuntimeSource(file)', 1), "shared runtime source must remain readable"),

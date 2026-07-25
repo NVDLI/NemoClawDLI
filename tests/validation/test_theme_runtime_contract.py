@@ -304,6 +304,18 @@ class ThemeRuntimeContractTests(unittest.TestCase):
         self.assertIn("stages: [test, deploy, verify, review]", core)
         self.assertNotIn("stage: build", core)
 
+    def test_github_ship_gate_rejects_any_tracked_projection_drift_before_reuse(self) -> None:
+        source = (ROOT / ".github/workflows/pages.yml").read_text(encoding="utf-8")
+        gate = source.index("release_gate.py --tier ship")
+        clean_tree = source.index("if ! git diff --quiet --; then", gate)
+        reuse = source.index("BUILD_PAGES_REUSE_VALIDATION=1", clean_tree)
+        self.assertLess(gate, clean_tree)
+        self.assertLess(clean_tree, reuse)
+        guard = source[clean_tree:reuse]
+        self.assertIn("git diff --name-only --", guard)
+        self.assertNotIn("localization-", guard)
+        self.assertNotIn("link_graph", guard)
+
     def test_manifest_rewrites_reproject_every_discovered_mirror(self) -> None:
         pages = core_job("pages", "pages_smoke")
         self.assertIn(

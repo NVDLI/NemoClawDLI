@@ -612,6 +612,7 @@ export async function mountAgentChat(container, opts = {}) {
       // Arg-delta chunks reset their index to 0 each model message, so an index key would let a later read overwrite an earlier one.
       const byId = {}, activeByIndex = {};
       let lastInput = 0, totalOutput = 0, sawUsage = false, answerText = "";
+      const hasMeaningfulAnswer = value => /[\p{L}\p{N}]/u.test(String(value || ""));
       const labelFor = (name, args) => {
         let a = ""; try { const o = JSON.parse(args || "{}"); a = o.page || o.id || o.query || o.expression || Object.values(o)[0] || ""; } catch (_) {}
         return a ? name + " · " + a : name;
@@ -680,6 +681,36 @@ export async function mountAgentChat(container, opts = {}) {
             }
           } catch (error) { ctx.view.warn("Source read succeeded, but answer synthesis failed: " + (error?.message || error)); }
           if (!recoveryText) ctx.view.token("I recovered and opened the requested source above, but the follow-up answer did not complete. Retry the question to continue from the saved session.");
+          answerText = recoveryText || answerText;
+        }
+      }
+      if (!hasMeaningfulAnswer(answerText)) {
+        const observations = Object.values(byId)
+          .filter(item => item.result)
+          .map(item => `${item.name}\n${item.result}`)
+          .join("\n\n---\n\n")
+          .slice(0, 60000);
+        if (observations) {
+          ctx.view.discardAnswer();
+          ctx.view.note("The tool run ended without a final answer; synthesizing one from the completed results.");
+          const system = typeof opts.system === "function" ? opts.system(ctx) : opts.system;
+          const recoveryMessages = [
+            ...(system ? [{ role: "system", content: system }] : []),
+            ...ctx.history.slice(-6),
+            { role: "user", content: text },
+            { role: "user", content: `Answer the request using these completed tool results. Do not narrate planning and do not emit tool arguments.\n\n${observations}` },
+          ];
+          try {
+            const recoveryStream = await runtime.llm.stream(recoveryMessages, { signal: ctx.signal });
+            for await (const chunk of recoveryStream) {
+              if (typeof chunk.content === "string" && chunk.content) {
+                answerText += chunk.content;
+                ctx.view.token(chunk.content);
+              }
+            }
+          } catch (error) {
+            ctx.view.warn("The tools completed, but final answer synthesis failed: " + (error?.message || error));
+          }
         }
       }
       if (sawUsage) ctx.view.usage({ input: lastInput, output: totalOutput });
