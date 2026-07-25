@@ -820,6 +820,24 @@ def audit_repo(
     out.extend(audit_browser_runtime_jobs(
         pages, ".github/workflows/pages.yml", "github",
     ))
+    test_block = workflow_job(pages, "test")
+    pr_browser_steps = [
+        step for step in workflow_steps(test_block)
+        if "skill_renderer_runtime_audit.py" in step
+        and "--site-root pull-request-public" in step
+    ]
+    if (
+        len(pr_browser_steps) != 1
+        or "if: github.event_name == 'pull_request'" not in pr_browser_steps[0]
+        or "BUILD_PAGES_PULL_MATERIALS=0 BUILD_PAGES_REUSE_VALIDATION=1" not in pr_browser_steps[0]
+        or "build_pages.sh pull-request-public" not in pr_browser_steps[0]
+        or "--timeout-seconds 600" not in pr_browser_steps[0]
+    ):
+        out.append(finding(
+            "github-pr-browser-artifact", ".github/workflows/pages.yml",
+            "pull requests do not render the complete generated Pages artifact in the GitHub browser runtime",
+            "build the pull-request artifact after the ship gate and run the exhaustive renderer without deployment authority",
+        ))
     for job_name in ("build-and-verify", "rebuild-for-comparison"):
         block = workflow_job(pages, job_name)
         require(block, "BUILD_PAGES_REUSE_VALIDATION=1", ".github/workflows/pages.yml",
@@ -1826,6 +1844,7 @@ def self_test() -> list[str]:
             ("publication-release-guard", ".github/workflows/release.yml", "contribution_safety_audit.py --require-publication-approved", "contribution_safety_audit.py"),
             ("publication-deploy-guard", ".github/workflows/pages.yml", "contribution_safety_audit.py --require-publication-approved", "contribution_safety_audit.py"),
             ("github-reviewed-artifact-handoff", ".github/workflows/pages.yml", "needs: [build-and-verify, rebuild-for-comparison]", "needs: build-and-verify"),
+            ("github-pr-browser-artifact", ".github/workflows/pages.yml", "--site-root pull-request-public --timeout-seconds 600", "--site-root web --timeout-seconds 600"),
             ("github-pages-browser-review", ".github/workflows/pages.yml", "runtime_integration_browser_audit.py --site-root public --timeout-ms 180000", "runtime_integration_browser_audit.py --site-root web --timeout-ms 180000"),
             ("github-pages-artifact-integrity", ".github/workflows/pages.yml", "--write-manifest public/pages-sha256.txt", "--write-manifest web/pages-sha256.txt"),
             (

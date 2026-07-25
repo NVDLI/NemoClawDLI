@@ -311,6 +311,17 @@ class ThemeRuntimeContractTests(unittest.TestCase):
             with self.subTest(token=token):
                 self.assertIn(token, source)
 
+    def test_report_navigation_can_shrink_to_the_narrow_viewport(self) -> None:
+        source = (ROOT / "web/_skill_explorer.js").read_text(encoding="utf-8")
+        for token in (
+            "grid-template-columns:minmax(0,264px) minmax(0,1fr)",
+            "@media(max-width:760px){.rp-wrap{grid-template-columns:minmax(0,1fr)}}",
+            ".rp-rail{border-right:1px solid var(--e3);padding:1rem .6rem 5rem;min-width:0;max-width:100%}",
+            ".rp-rail button{display:flex;width:100%;min-width:0;max-width:100%",
+        ):
+            with self.subTest(token=token):
+                self.assertIn(token, source)
+
     def test_runtime_checks_every_internal_url_and_owned_request(self) -> None:
         source = theme_runtime.RUNTIME_JS
         for token in (
