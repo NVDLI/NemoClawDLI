@@ -33,6 +33,8 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
   fail on incomplete declarations, and retire the unused translation-branch compatibility reader.
 - Corrected the landing image source to its NVIDIA Build blueprint card and simplified the
   launchable and REST explanations in English, Spanish, and Brazilian Portuguese.
+- Thanks to Vadim Kudlay for reviewing the Module 3a English, Spanish, and Portuguese copy and
+  figure-fit corrections.
 
 At release time, move accepted entries under the immutable version tag and keep the remaining work
 under `Unreleased`.
