@@ -54,6 +54,18 @@
   .section > h2 { font-size: 1.2rem; color: var(--tx); border-bottom: 1px solid var(--e3);
                   padding-bottom: .35em; margin-bottom: .4em; }
   .section .help { font-size: .92rem; color: var(--td); margin: .5em 0 1.1em; }
+  .objectives-layout { display:grid; grid-template-columns:minmax(0, .9fr) minmax(340px, 1.1fr);
+                       gap:24px; align-items:start; }
+  .objectives-layout ul { padding-left:1.3rem; }
+  .objectives-layout li { margin:.45em 0; }
+  figure.objectives-figure { margin:.5em 0 1.8em; }
+  figure.objectives-figure img { display:block; width:100%; height:auto; border:1px solid var(--e3);
+                                border-radius:var(--r); }
+  figure.objectives-figure figcaption { font-size:.88rem; color:var(--td); line-height:1.6; margin-top:.55em; }
+  figure.objectives-figure figcaption b { color:var(--gs); }
+  @media (max-width: 780px) {
+    .objectives-layout { grid-template-columns:1fr; }
+  }
 
   /* Key panel is rendered by mountKeyPanel and styled by _style.css (.key-panel / .btn / .status). */
 
@@ -93,7 +105,9 @@
   .sys-card { background: var(--e1); border: 1px solid var(--e3); border-radius: 8px;
               padding: 15px 17px; text-decoration: none; display: block;
               transition: border-color .12s, background .12s; }
-  .sys-card:hover { border-color: var(--g); background: rgba(118,185,0,.04); text-decoration: none; }
+  .sys-card:hover, .sys-card:focus-visible {
+    border-color: var(--g); background: var(--e2); text-decoration: none;
+  }
   .sys-card .sys-label { font-family: var(--mono); font-size: .7rem; text-transform: uppercase;
                          letter-spacing: .1em; color: var(--tf); margin-bottom: .35em; }
   .sys-card .sys-name { font-weight: 700; font-size: .95rem; color: var(--gs); margin: 0 0 .35em; }
@@ -133,34 +147,43 @@
   </div>
 
   <div class="howto">
-    <div class="step"><span class="n">1</span><span><b>Confirme as rotas de modelo</b> abaixo. Chat e embeddings usam <a href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener"><code>build.nvidia.com</code></a> por padrão. Durante um evento de capacidade, configure uma vez o endpoint de chat do Brev fornecido pelo instrutor; a rota independente de embeddings permanece inalterada. Ative o modo iframe somente com o endpoint de chat padrão.</span></div>
+    <div class="step"><span class="n">1</span><span><b>Confirme as rotas de modelo</b> abaixo. Chat e embeddings usam por padrão os modelos do <a href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener"><code>build.nvidia.com</code></a>. Você pode trocar o modelo e o endpoint de cada rota conforme o desempenho necessário.</span></div>
     <div class="step"><span class="n">2</span><span><b>O curso completo está disponível em português.</b> As doze aulas mantêm a mesma sequência, os mesmos exercícios e os mesmos limites técnicos da versão canônica.</span></div>
-    <div class="step"><span class="n">3</span><span><b>Para usar o stack de agentes</b> nos Módulos 3 e 4, crie o launchable do NemoClaw quando o curso solicitar. Ele hospeda o stack <a href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener">OpenClaw</a> em <a href="https://github.com/NVIDIA/OpenShell" target="_blank" rel="noopener">OpenShell</a> definido pelo <a href="https://github.com/NVIDIA/NemoClaw" target="_blank" rel="noopener">blueprint do NemoClaw</a>. Os serviços do curso usam CPU e endpoints de modelos hospedados; portanto, os exercícios não exigem que o estudante gerencie uma GPU.</span></div>
+    <div class="step"><span class="n">3</span><span>Nos módulos posteriores, <b>crie um launchable do NemoClaw</b>. Ele hospeda a stack <a href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener">OpenClaw</a> dentro do <a href="https://github.com/NVIDIA/OpenShell" target="_blank" rel="noopener">OpenShell</a> definida pelo <a href="https://github.com/NVIDIA/NemoClaw" target="_blank" rel="noopener">blueprint do NemoClaw</a>. A stack de serviços usa CPU e endpoints de modelos hospedados, então você pode reproduzir os exercícios localmente sem GPU.</span></div>
   </div>
 
   <div class="section" id="learning-objectives">
     <h2>Objetivos de aprendizagem</h2>
-    <p class="help" id="learning-objectives-intro">Ao concluir o curso, você saberá:</p>
-    <ul>
-      <li id="learning-objective-1">Construir um ciclo básico de agente e identificar seus componentes centrais.</li>
-      <li id="learning-objective-2">Implementar uso confiável de ferramentas e chamadas de função em um sistema de agentes.</li>
-      <li id="learning-objective-3">Projetar e coordenar sistemas multiagente com padrões estruturados de roteamento.</li>
-      <li id="learning-objective-4">Desenvolver pipelines automatizados de avaliação para medir desempenho e confiabilidade.</li>
-      <li id="learning-objective-5">Usar o OpenShell para configurar identidades de agentes e garantir operações seguras em sandbox.</li>
-      <li id="learning-objective-6">Implantar e gerenciar agentes autônomos enquanto cria bibliotecas persistentes de skills.</li>
-    </ul>
+    <div class="objectives-layout">
+      <div>
+        <p class="help" id="learning-objectives-intro">Ao concluir o curso, você saberá:</p>
+        <ul>
+          <li id="learning-objective-1">Construir um ciclo básico de agente e identificar seus componentes centrais.</li>
+          <li id="learning-objective-2">Implementar uso confiável de ferramentas e chamadas de função em um sistema de agentes.</li>
+          <li id="learning-objective-3">Projetar e coordenar sistemas multiagente com padrões estruturados de roteamento.</li>
+          <li id="learning-objective-4">Usar o OpenShell para configurar identidades de agentes e garantir operações seguras em sandbox.</li>
+          <li id="learning-objective-5">Implantar e gerenciar agentes autônomos enquanto cria bibliotecas persistentes de skills.</li>
+        </ul>
+      </div>
+      <figure class="objectives-figure">
+        <a href="https://developer.nvidia.com/blog/build-a-secure-always-on-local-ai-agent-with-nvidia-nemoclaw-and-openclaw/" target="_blank" rel="noopener" aria-label="Ler a fonte no blog técnico da NVIDIA">
+          <img src="https://assets.ngc.nvidia.com/products/api-catalog/images/nemoclaw-for-openclaw.jpg" alt="O mascote do NemoClaw segura o escudo do OpenShell ao lado de uma estação de trabalho de IA local." loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
+        </a>
+        <figcaption>
+          <b>NemoClaw para OpenClaw em uma estação de trabalho local.</b>
+          Fonte: Patrick Moorhead e Edward Li,
+          <a href="https://developer.nvidia.com/blog/build-a-secure-always-on-local-ai-agent-with-nvidia-nemoclaw-and-openclaw/" target="_blank" rel="noopener">NVIDIA Technical Blog</a>.
+        </figcaption>
+      </figure>
+    </div>
   </div>
 
   <!-- ── Key setup ─────────────────────────────────────────────────────── -->
   <div class="section" id="setup">
     <h2>Como informar sua chave de API</h2>
     <p class="help">
-      O navegador salva as rotas de chat e embeddings em <code>localStorage</code>; uma única configuração
-      vale para todas as aulas e abas. O navegador envia cada chave salva somente ao endpoint selecionado.
-      Use um endpoint de chat personalizado apenas quando o instrutor o fornecer. As rotas de chat do
-      Brev exigem um túnel HTTPS público para a porta <code>5000</code>; túneis privados não aceitam requisições do curso entre origens. Nem a URL <code>/lab</code> do Jupyter nem
-      <code>localhost:5000</code> podem ser acessados pela página do curso. O proxy CORS hospedado fica
-      restrito ao modo LMS/iframe estático com o endpoint padrão.
+      O navegador salva as rotas de chat e embeddings entre as aulas e envia cada chave somente ao endpoint
+      selecionado. Use uma rota personalizada apenas quando tiver um endpoint HTTPS acessível.
     </p>
     <div id="key-panel"></div>
   </div>
@@ -234,41 +257,38 @@
   <div class="section">
     <h2>Onde o curso é executado</h2>
     <p class="help">
-      Pelo navegador, cada exercício acessa um de três sistemas independentes. Uma única aba
-      reúne o ambiente completo, sem configuração adicional do laboratório DLI nem toolchain local.
+      O curso usa estes três sistemas pelo navegador. Cada cartão mostra a função do sistema e
+      abre o serviço ou catálogo correspondente.
     </p>
     <div class="sys-grid">
       <a class="sys-card models" href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener">
         <div class="sys-label">Modelos</div>
         <div class="sys-name">build.nvidia.com</div>
-        <div class="sys-desc">Modelos Nemotron hospedados pela NVIDIA e compatíveis com a API da
-          OpenAI. Sua chave <code>nvapi-</code> é a única credencial necessária.</div>
+        <div class="sys-desc">Use modelos Nemotron hospedados pela NVIDIA por meio de uma API
+          compatível com OpenAI. As chamadas usam sua chave <code>nvapi-</code> e a rota de modelo
+          selecionada.</div>
       </a>
       <a class="sys-card search" href="./glossary.html">
         <div class="sys-label">Pesquisa</div>
         <div class="sys-name">Catálogo de materiais</div>
-        <div class="sys-desc">webSearch classifica o conteúdo distribuído com o curso,
-          incluindo o glossário em cache e artigos acessados sob demanda. instantAnswer
-          devolve uma definição quando a consulta identifica um termo. Abra o explorador para ver
-          os materiais, a classificação de cada fonte, a API e a pesquisa executada pelo agente.</div>
+        <div class="sys-desc"><code>webSearch</code> classifica o glossário, os artigos e as
+          publicações do curso. <code>instantAnswer</code> retorna uma definição correspondente do
+          glossário. Abra o catálogo para inspecionar as fontes e a solicitação de pesquisa.</div>
       </a>
       <a class="sys-card runtime" href="https://brev.nvidia.com/launchable/deploy?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990" target="_blank" rel="noopener">
         <div class="sys-label">Stack de agentes</div>
         <div class="sys-name">Launchable do NemoClaw no Brev</div>
-        <div class="sys-desc">
-          Este é o stack de agentes em sandbox usado no workshop. O OpenClaw fornece o harness do
-          agente, o OpenShell aplica a sandbox e o NemoClaw organiza os componentes em uma implantação
-          de referência. Por padrão, o ambiente usa um launchable do Brev; você também pode implantá-lo
-          localmente e adaptar o código.
-        </div>
+        <div class="sys-desc">O NemoClaw organiza o OpenClaw dentro de um sandbox do OpenShell. Os
+          módulos posteriores se conectam a este launchable do Brev. Uma implantação local usa os
+          mesmos componentes e permite adaptar o código-fonte.</div>
       </a>
     </div>
   </div>
 
 
   <div class="callout">
-    <strong>O curso é autocontido</strong> e funciona no GitHub Pages. Use uma chave <code>nvapi-</code>
-    e percorra os quatro módulos antes da página final de <a href="./04c-going-further.html">próximos passos</a>.
+    <strong>Este curso é autocontido</strong> e funciona por completo no GitHub Pages. Use uma chave
+    <code>nvapi-</code> e percorra os quatro módulos em ordem ou como preferir.
   </div>
 
   <footer>

@@ -12,7 +12,9 @@ from __future__ import annotations
 import json
 import re
 import sys
+from html import unescape
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
     if (_p / "scripts" / "_bootstrap.py").exists():
@@ -23,6 +25,11 @@ from _bootstrap import find_repo_root
 ROOT = find_repo_root(Path(__file__).resolve())
 COURSE = ROOT / "web" / "nemoclaw"
 ASSETS = COURSE / "assets"
+AUTHORED_TEXT_SUFFIXES = {".css", ".html", ".js", ".json", ".md", ".mjs", ".py"}
+OBSOLETE_RUNTIME_RE = re.compile(
+    r"\blab proxy\b|\bllm[_]client\b|(?:localhost|127\.0\.0\.1):9000|(?<!\d):9000\b",
+    re.I,
+)
 
 
 def _read(rel: str) -> str:
@@ -37,6 +44,53 @@ def _has_all(text: str, tokens: tuple[str, ...]) -> bool:
 def _json_script(text: str, script_id: str) -> dict:
     m = re.search(r'<script[^>]+id=["\']' + re.escape(script_id) + r'["\'][^>]*>(.*?)</script>', text, re.S)
     return json.loads(m.group(1)) if m else {}
+
+
+def _literal_remote_image_uses() -> dict[str, list[str]]:
+    """Discover literal remote image mounts across every course-language page."""
+    roots = [COURSE]
+    roots.extend(sorted(ROOT.glob("i18n/*/web/nemoclaw")))
+    uses: dict[str, list[str]] = {}
+    pattern = re.compile(r'<img\b[^>]*\bsrc=["\'](https://[^"\']+)["\']', re.I)
+    for course_root in roots:
+        if not course_root.is_dir():
+            continue
+        for page in sorted(course_root.glob("*.html")):
+            relative = page.relative_to(ROOT).as_posix()
+            for image_url in pattern.findall(page.read_text(encoding="utf-8", errors="replace")):
+                uses.setdefault(unescape(image_url), []).append(relative)
+    return uses
+
+
+def _remote_image_filename(image_url: str) -> str:
+    """Resolve a useful source filename, including image-resizing proxy URLs."""
+    parsed = urlparse(image_url)
+    nested = parse_qs(parsed.query).get("url", [])
+    source = nested[0] if nested else image_url
+    return Path(urlparse(source).path).name
+
+
+def obsolete_runtime_references() -> list[str]:
+    """Find retired course-runtime names in every authored course or material file."""
+    roots = [COURSE, ROOT / "scripts" / "materials"]
+    roots.extend(sorted(ROOT.glob("i18n/*/web/nemoclaw")))
+    findings: list[str] = []
+    visited: set[Path] = set()
+    for source_root in roots:
+        if not source_root.is_dir():
+            continue
+        for path in source_root.rglob("*"):
+            if (
+                path in visited
+                or not path.is_file()
+                or path.suffix.lower() not in AUTHORED_TEXT_SUFFIXES
+                or "vendor" in path.parts
+            ):
+                continue
+            visited.add(path)
+            if OBSOLETE_RUNTIME_RE.search(path.read_text(encoding="utf-8", errors="replace")):
+                findings.append(path.relative_to(ROOT).as_posix())
+    return sorted(findings)
 
 
 def run(verbose: bool = True) -> list[tuple[str, str]]:
@@ -119,8 +173,62 @@ def run(verbose: bool = True) -> list[tuple[str, str]]:
     provenance = _json_script(askill, "provenance")
     for row in provenance.get("figures", []):
         file_name = row.get("file", "")
+        image_url = row.get("image_url", "")
         used_by = row.get("used_by", "")
-        if not file_name.startswith("figures/") or not used_by.endswith(".html"):
+        if bool(file_name) == bool(image_url):
+            findings.append((
+                "web/nemoclaw/assets/SKILL.html",
+                "each image-provenance row must declare exactly one of file or image_url",
+            ))
+            continue
+        if image_url:
+            if not (
+                str(image_url).startswith("https://")
+                and str(row.get("source_url", "")).startswith("https://")
+                and str(row.get("license_url", "")).startswith("https://")
+                and row.get("license")
+                and row.get("source")
+                and row.get("source_authors")
+                and row.get("connection") == "remote display"
+                and row.get("distribution") == "not copied into this repository"
+            ):
+                findings.append((
+                    "web/nemoclaw/assets/SKILL.html",
+                    f"remote image lacks source, author, terms, or non-distribution evidence: {image_url}",
+                ))
+            if not used_by.endswith(".html"):
+                findings.append((
+                    "web/nemoclaw/assets/SKILL.html",
+                    f"remote image lacks a canonical used_by page: {image_url}",
+                ))
+            else:
+                try:
+                    page = _read(f"web/nemoclaw/{used_by}")
+                except FileNotFoundError:
+                    findings.append((
+                        "web/nemoclaw/assets/SKILL.html",
+                        f"remote image used_by page is missing: {used_by}",
+                    ))
+                else:
+                    if str(image_url) not in unescape(page):
+                        findings.append((
+                            "web/nemoclaw/assets/SKILL.html",
+                            f"remote image provenance is stale: {image_url} is not referenced by {used_by}",
+                        ))
+            source_name = _remote_image_filename(str(image_url))
+            if source_name:
+                copied = sorted(
+                    path.relative_to(ROOT).as_posix()
+                    for path in ROOT.rglob(source_name)
+                    if ".git" not in path.parts
+                )
+                if copied:
+                    findings.append((
+                        "web/nemoclaw/assets/SKILL.html",
+                        f"remote image marked not copied is present in the repository: {', '.join(copied)}",
+                    ))
+            continue
+        if not str(file_name).startswith("figures/") or not used_by.endswith(".html"):
             continue
         page_rel = f"web/nemoclaw/{used_by}"
         try:
@@ -130,6 +238,69 @@ def run(verbose: bool = True) -> list[tuple[str, str]]:
             continue
         if file_name not in page:
             findings.append(("web/nemoclaw/assets/SKILL.html", f"asset provenance row is stale: {file_name} is not referenced by {used_by}"))
+
+    remote_rows = {
+        str(row.get("image_url")): row
+        for row in provenance.get("figures", [])
+        if row.get("image_url")
+    }
+    remote_uses = _literal_remote_image_uses()
+    for image_url, pages in sorted(remote_uses.items()):
+        if image_url not in remote_rows:
+            findings.append((
+                "web/nemoclaw/assets/SKILL.html",
+                f"remote image lacks provenance: {image_url} used by {', '.join(pages)}",
+            ))
+            continue
+        source_url = str(remote_rows[image_url].get("source_url", ""))
+        for page_rel in pages:
+            page = _read(page_rel)
+            figure_match = re.search(
+                r"<figure\b[^>]*>.*?<img\b[^>]*\bsrc=[\"']"
+                + re.escape(image_url)
+                + r"[\"'][^>]*>.*?</figure>",
+                unescape(page),
+                re.I | re.S,
+            )
+            if not figure_match:
+                findings.append((
+                    page_rel,
+                    f"remote image must be presented inside a sourced figure: {image_url}",
+                ))
+                continue
+            figure = figure_match.group(0)
+            image_tag = re.search(
+                r"<img\b[^>]*\bsrc=[\"']" + re.escape(image_url) + r"[\"'][^>]*>",
+                figure,
+                re.I,
+            ).group(0)
+            required_image_attributes = (
+                r'\balt=["\'][^"\']+["\']',
+                r'\bloading=["\']lazy["\']',
+                r'\bdecoding=["\']async["\']',
+                r'\breferrerpolicy=["\']no-referrer["\']',
+            )
+            if any(not re.search(pattern, image_tag, re.I) for pattern in required_image_attributes):
+                findings.append((
+                    page_rel,
+                    f"remote image must carry alt, lazy loading, async decoding, and no-referrer attributes: {image_url}",
+                ))
+            if "<figcaption" not in figure.lower() or figure.count(source_url) < 2:
+                findings.append((
+                    page_rel,
+                    "remote figure media and caption must both link to its recorded source",
+                ))
+    for image_url in sorted(set(remote_rows) - set(remote_uses)):
+        findings.append((
+            "web/nemoclaw/assets/SKILL.html",
+            f"remote image provenance is unused across course-language pages: {image_url}",
+        ))
+
+    for path in obsolete_runtime_references():
+        findings.append((
+            path,
+            "retired lab-proxy runtime vocabulary returned; describe the active configurable route instead",
+        ))
 
     if verbose:
         if findings:

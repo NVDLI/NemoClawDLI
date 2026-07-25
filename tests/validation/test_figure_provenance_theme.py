@@ -6,9 +6,15 @@ from __future__ import annotations
 
 import unittest
 from pathlib import Path
+from urllib.parse import urlparse
 
 from scripts.validation import color_theme, figure_audit
-from scripts.validation.figure_provenance import fixed_white_figures, svg_modes, svg_semantic_contracts
+from scripts.validation.figure_provenance import (
+    fixed_white_figures,
+    remote_figure_rows,
+    svg_modes,
+    svg_semantic_contracts,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -99,6 +105,24 @@ class FigureProvenanceThemeTests(unittest.TestCase):
         self.assertIn("figures/01a-agent-environment.svg", contracts)
         source = (ROOT / "scripts/validation/figure_provenance.py").read_text(encoding="utf-8")
         self.assertNotIn("01a-agent-environment.svg", source)
+
+    def test_remote_images_share_the_common_provenance_contract(self) -> None:
+        rows = remote_figure_rows()
+        self.assertTrue(rows)
+        for row in rows:
+            with self.subTest(image_url=row.get("image_url")):
+                self.assertNotIn("file", row)
+                self.assertTrue(str(row.get("image_url", "")).startswith("https://"))
+                self.assertEqual("not copied into this repository", row.get("distribution"))
+                self.assertTrue(row.get("license"))
+                self.assertTrue(row.get("source_authors"))
+
+    def test_remote_images_are_not_copied_into_language_trees(self) -> None:
+        for row in remote_figure_rows():
+            source_name = Path(urlparse(str(row["image_url"])).path).name
+            with self.subTest(source_name=source_name):
+                self.assertFalse(list(ROOT.glob(f"web/nemoclaw/assets/figures/{source_name}")))
+                self.assertFalse(list(ROOT.glob(f"i18n/*/web/nemoclaw/assets/figures/{source_name}")))
 
 
 if __name__ == "__main__":

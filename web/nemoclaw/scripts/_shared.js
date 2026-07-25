@@ -6,7 +6,6 @@
 // Remote-service-only. Direct calls use the learner key. The published DLI CDN uses the
 // bounded NVIDIA DLI relay by default because the upstream browser CORS response is not stable.
 // Local file previews use the same relay; other origins stay direct unless the learner enables it.
-// No lab proxy, no llm_client:9000, no Python kernel.
 
 export const DEFAULT_MODEL_API_BASE_URL = "https://integrate.api.nvidia.com/v1";
 const IFRAME_PROXY_URL = "https://nvidia-api-cors-proxy.experiments.courses.nvidia.com/v1";

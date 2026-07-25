@@ -64,7 +64,7 @@ SIBLING_COURSES = {
 
 # Shared-infra directories the released course may freely depend on.
 SHARED_INFRA = {
-    "services", "llm_client", "export",
+    "services", "export",
 }
 
 # Where mats live. They are course-scoped under web/nemoclaw/; refs from mats are sanctioned.

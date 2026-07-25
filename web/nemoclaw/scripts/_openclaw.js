@@ -398,9 +398,8 @@ export function mountEndpointProbe(targetSel, opts = {}) {
     : { rawUrl: "", effectiveUrl: "", token: "", accessProvider: "auto", accessSession: "" };
   const suppliedDefault = opts.defaultUrl !== undefined ? opts.defaultUrl : (isOpenClaw ? "/lab/openclaw" : "");
   const defaultUrl = _normalizeBaseUrl(openClawConnection.rawUrl || suppliedDefault);
-  // Respect an explicit empty token from the no-bearer llm_client probe.
-  // A bare `|| default` would turn "" into the openclaw token.
-  // llm_client then forwards it upstream and the model backend rejects with a 400.
+  // Respect an explicit empty model key: a custom public endpoint may not require one.
+  // A bare `|| default` would replace that deliberate choice with the OpenClaw token.
   const defaultToken = (opts.defaultToken !== undefined) ? opts.defaultToken : "dli-openclaw-token";
   // The placeholder follows the default, so a no-bearer probe shows "(none needed)".
   // That beats showing the misleading openclaw token in a field that takes none.

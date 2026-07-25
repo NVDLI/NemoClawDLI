@@ -142,6 +142,7 @@ FAST_COMMANDS: tuple[tuple[str, ...], ...] = (
     py("scripts/security/audit_codeql_sarif.py"),
     py("scripts/validation/browser_security_boundary_audit.py", "--self-test"),
     py("scripts/validation/browser_security_boundary_audit.py"),
+    py("scripts/materials/build_rag_index.py", "--check"),
     py("scripts/validation/validate_bundle.py", "--scope", "ship", "--no-write"),
 )
 
@@ -242,6 +243,7 @@ SHIP_COMMANDS: tuple[tuple[str, ...], ...] = (
     py("scripts/security/audit_codeql_sarif.py"),
     py("scripts/validation/browser_security_boundary_audit.py", "--self-test"),
     py("scripts/validation/browser_security_boundary_audit.py"),
+    py("scripts/materials/build_rag_index.py", "--check"),
     py("scripts/validation/validate_bundle.py", "--scope", "ship"),
 )
 
@@ -751,6 +753,9 @@ def self_test() -> list[str]:
         (len(fast) < len(ship), "fast tier is smaller than ship tier"),
         (py("scripts/materials/pull_materials.py", "--verify-committed") in fast,
          "fast tier verifies committed material provenance"),
+        (py("scripts/materials/build_rag_index.py", "--check") in fast
+         and py("scripts/materials/build_rag_index.py", "--check") in ship,
+         "shared tiers reject stale generated retrieval indexes"),
         (py("scripts/validation/sensitive_content_audit.py") not in ship,
          "ship tier delegates the sensitive tree scan to validate_bundle"),
         (py("scripts/validation/validate_layout.py", "--quiet") not in ship,

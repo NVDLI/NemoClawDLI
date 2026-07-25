@@ -34,7 +34,6 @@ CANONICAL = {
         "Build a basic agent loop and identify its core components.",
         "Implement reliable tool use and function calling within an agent system.",
         "Design and coordinate multi-agent systems using structured routing patterns.",
-        "Develop automated evaluation pipelines to measure agent performance and reliability.",
         "Utilize OpenShell to configure agent identities and ensure safe, sandboxed operations.",
         "Deploy and manage autonomous agents while building persistent skill libraries.",
     ],
@@ -64,6 +63,17 @@ class TextById(HTMLParser):
             self.parts.append(data)
 
 
+class LearningObjectiveIds(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.ids: list[str] = []
+
+    def handle_starttag(self, tag, attrs):
+        identifier = dict(attrs).get("id", "")
+        if re.fullmatch(r"learning-objective-\d+", identifier):
+            self.ids.append(identifier)
+
+
 def norm(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
@@ -72,6 +82,17 @@ def text_by_id(path: Path, target_id: str) -> str:
     parser = TextById(target_id)
     parser.feed(path.read_text(encoding="utf-8"))
     return norm("".join(parser.parts))
+
+
+def learning_objective_ids(source: str) -> list[str]:
+    parser = LearningObjectiveIds()
+    parser.feed(source)
+    return parser.ids
+
+
+def course_homes() -> list[Path]:
+    localized = sorted((ROOT / "i18n").glob("*/web/nemoclaw/index.html"))
+    return [COURSE_HOME, *localized]
 
 
 def expect(findings: list[str], label: str, actual: str, expected: str) -> None:
@@ -102,6 +123,17 @@ def audit() -> list[str]:
     expect(findings, "course home objectives intro", text_by_id(COURSE_HOME, "learning-objectives-intro"), CANONICAL["learning_objectives_intro"])
     for idx, objective in enumerate(CANONICAL["learning_objectives"], start=1):
         expect(findings, f"course home objective {idx}", text_by_id(COURSE_HOME, f"learning-objective-{idx}"), objective)
+    expected_ids = [
+        f"learning-objective-{idx}"
+        for idx in range(1, len(CANONICAL["learning_objectives"]) + 1)
+    ]
+    for path in course_homes():
+        actual_ids = learning_objective_ids(path.read_text(encoding="utf-8"))
+        if actual_ids != expected_ids:
+            label = path.relative_to(ROOT).as_posix()
+            findings.append(
+                f"{label} objective IDs must be exactly {expected_ids}; found {actual_ids}"
+            )
 
     expect(findings, "foyer card title", text_by_id(FOYER, "nemoclaw-course-title"), CANONICAL["title"])
     expect(findings, "foyer card abstract", text_by_id(FOYER, "nemoclaw-course-abstract"), CANONICAL["abstract"])

@@ -8,7 +8,8 @@ This is the "index built offline, once" step the page teaches, made real. It emb
 default corpus and the example queries with the course's pinned embedding model and writes
 a static manifest the browser cell loads instead of re-embedding on every page view.
 
-Keys rule: embeds go through llm_client (the key-injecting proxy), never another service.
+The builder sends embeddings to the configured API route. By default it uses NVIDIA's
+hosted API and reads the bearer key from ``NVIDIA_API_KEY``.
 
 Usage:
     python3 scripts/materials/build_rag_index.py            # refresh the manifest
@@ -18,18 +19,24 @@ If you edit the seed CORPUS / QUERIES below, keep them identical to the literals
 #rag-cell and rerun this script. The cell re-embeds any text the manifest does not cover,
 so a drift degrades gracefully to a live embed rather than breaking.
 """
-import sys, json, hashlib, urllib.request
+import sys, json, hashlib, os, urllib.request
 from datetime import date
 from pathlib import Path
 
 for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
     if (_p / "scripts" / "_bootstrap.py").exists():
         sys.path.insert(0, str(_p / "scripts")); break
-from _bootstrap import add_script_paths, find_repo_root
+from _bootstrap import find_repo_root
 
-EMBED_URL = "http://localhost:9000/v1/embeddings"
+ROOT = find_repo_root(Path(__file__).resolve())
+EMBED_BASE_URL = os.environ.get(
+    "NEMOCLAW_EMBEDDING_API_BASE_URL",
+    "https://integrate.api.nvidia.com/v1",
+).rstrip("/")
+EMBED_URL = f"{EMBED_BASE_URL}/embeddings"
+API_KEY = os.environ.get("NVIDIA_API_KEY", "").strip()
 MODEL = "nvidia/llama-nemotron-embed-1b-v2"
-OUT = Path(__file__).resolve().parent.parent / "web" / "nemoclaw" / "assets" / "rag_index.json"
+OUT = ROOT / "web" / "nemoclaw" / "assets" / "rag_index.json"
 
 # Source of truth for the DEFAULT corpus + examples. Mirror these in #rag-cell verbatim.
 CORPUS = [
@@ -39,7 +46,7 @@ CORPUS = [
     "Retrieval-augmented generation embeds a query and the documents into the same vector space, retrieves the nearest chunks, and feeds them to the model as grounding.",
     "Cosine similarity scores two embedding vectors by the angle between them; closer to 1 means more semantically related.",
     "A deep or research agent plans a task, spawns sub-agents in fresh contexts, and shares work through a virtual filesystem to avoid context overflow.",
-    "OpenClaw is an agent runtime whose configuration is a folder of markdown files the runtime folds into the system prompt every turn.",
+    "OpenClaw is an agent harness whose configuration is a folder of markdown files the harness folds into the system prompt every turn.",
     "OpenShell is the kernel-level sandbox around the agent: netns, Landlock, seccomp, and an OPA-evaluated proxy decide what each tool call may touch.",
 ]
 QUERIES = ["What is retrieval-augmented generation?", "Why use cosine similarity?", "How does the ReAct loop work?", "What is a tool, mechanically?", "What does the OpenShell sandbox do?", "What is a deep research agent?"]
@@ -47,14 +54,17 @@ QUERIES = ["What is retrieval-augmented generation?", "Why use cosine similarity
 
 def embed(texts, input_type):
     body = json.dumps({"input": texts, "model": MODEL, "input_type": input_type}).encode()
-    req = urllib.request.Request(EMBED_URL, data=body, headers={"Content-Type": "application/json"})
+    headers = {"Content-Type": "application/json"}
+    if API_KEY:
+        headers["Authorization"] = f"Bearer {API_KEY}"
+    req = urllib.request.Request(EMBED_URL, data=body, headers=headers)
     with urllib.request.urlopen(req, timeout=60) as r:
         data = json.load(r)
     return [[round(x, 6) for x in row["embedding"]] for row in data["data"]]
 
 
-def corpus_hash():
-    return hashlib.sha256("\n".join(CORPUS).encode()).hexdigest()[:16]
+def corpus_hash(corpus=CORPUS):
+    return hashlib.sha256("\n".join(corpus).encode()).hexdigest()[:16]
 
 
 def build():
@@ -87,19 +97,27 @@ def cell_corpus():
     return re.findall(r'"((?:[^"\\]|\\.)*)"', block.group(1)) if block else []
 
 
+def manifest_problems(manifest, corpus=CORPUS, cell_docs=None):
+    """Return deterministic source/artifact drift without making a network request."""
+    problems = []
+    if manifest.get("model") != MODEL:
+        problems.append(f"model id {manifest.get('model')!r} != pinned {MODEL!r}")
+    if manifest.get("corpus_hash") != corpus_hash(corpus):
+        problems.append("corpus_hash drift: the seed CORPUS changed since the last build; rerun build_rag_index.py")
+    if {doc.get("text") for doc in manifest.get("docs", [])} != set(corpus):
+        problems.append("manifest docs do not match the seed CORPUS in this script")
+    if cell_docs is not None and set(cell_docs) != set(corpus):
+        problems.append("the CORPUS in #rag-cell (02b-rag.html) differs from this script's seed; sync them and rerun build_rag_index.py")
+    return problems
+
+
 def check():
     if not OUT.exists():
         print(f"MISSING {OUT}"); return 1
-    m = json.loads(OUT.read_text())
-    problems = []
-    if m.get("model") != MODEL:
-        problems.append(f"model id {m.get('model')!r} != pinned {MODEL!r}")
-    if m.get("corpus_hash") != corpus_hash():
-        problems.append("corpus_hash drift: the seed CORPUS changed since the last build; rerun build_rag_index.py")
-    if {d["text"] for d in m.get("docs", [])} != set(CORPUS):
-        problems.append("manifest docs do not match the seed CORPUS in this script")
-    if set(cell_corpus()) != set(CORPUS):
-        problems.append("the CORPUS in #rag-cell (02b-rag.html) differs from this script's seed; sync them and rerun build_rag_index.py")
+    problems = manifest_problems(
+        json.loads(OUT.read_text()),
+        cell_docs=cell_corpus(),
+    )
     for p in problems:
         print("DRIFT:", p)
     return 1 if problems else 0

@@ -301,6 +301,7 @@ A missing byline is reported as such and is not replaced with a guessed team or 
 
 | Document | Published author(s) | Source terms | Relationship | Repository items | Evidence checked |
 |---|---|---|---|---|---|
+| [Build a More Secure, Always-On Local AI Agent with OpenClaw and NVIDIA NemoClaw](https://developer.nvidia.com/blog/build-a-secure-always-on-local-ai-agent-with-nvidia-nemoclaw-and-openclaw/)<br>[Displayed image](https://assets.ngc.nvidia.com/products/api-catalog/images/nemoclaw-for-openclaw.jpg) | [Patrick Moorhead](https://developer.nvidia.com/blog/author/pmoorhead/), [Edward Li](https://developer.nvidia.com/blog/author/edwli/) | (c) NVIDIA; no reuse license stated on source page | remote display | `web/nemoclaw/index.html`<br>`i18n/es/web/nemoclaw/index.html`<br>`i18n/pt/web/nemoclaw/index.html` | 2026-07-24 |
 | [RAG 101: Demystifying Retrieval-Augmented Generation Pipelines](https://developer.nvidia.com/blog/rag-101-demystifying-retrieval-augmented-generation-pipelines/) | [Hayden Wolff](https://developer.nvidia.com/blog/author/hwolff/) | (c) NVIDIA; no reuse license stated on source page | recreation | `web/nemoclaw/assets/figures/02b-rag-1.svg` | 2026-07-10 |
 | [Tips for Building a RAG Pipeline with NVIDIA AI LangChain AI Endpoints](https://developer.nvidia.com/blog/tips-for-building-a-rag-pipeline-with-nvidia-ai-langchain-ai-endpoints/) | Amit Bleiweiss | (c) NVIDIA; no reuse license stated on source page | recreation | `web/nemoclaw/assets/figures/02b-rag-1.svg` | 2026-07-10 |
 | [Agentic AI Learning Path](https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/) | No author listed on the official source page | (c) NVIDIA; no reuse license stated on source page | compilation | `web/nemoclaw/mats/agentic_ai_learning_path_links.md` | 2026-07-08 |
@@ -324,6 +325,9 @@ This is not a dependency table. It records every provenance row with an external
 | Repository file | Relationship | External source | Recorded terms | Source |
 |---|---|---|---|---|
 | web/nemoclaw/assets/favicon.ico | provided course asset | NVIDIA corporate favicon | NVIDIA Logo and Brand Guidelines; trademark rights reserved | [source](https://www.nvidia.com/favicon.ico); [terms](https://www.nvidia.com/en-us/about-nvidia/legal-info/logo-brand-usage/) |
+| web/nemoclaw/index.html | remote display | NVIDIA NemoClaw for OpenClaw image | (c) NVIDIA; no reuse license stated on source page | [source](https://developer.nvidia.com/blog/build-a-secure-always-on-local-ai-agent-with-nvidia-nemoclaw-and-openclaw/) |
+| i18n/es/web/nemoclaw/index.html | remote display | NVIDIA NemoClaw for OpenClaw image | (c) NVIDIA; no reuse license stated on source page | [source](https://developer.nvidia.com/blog/build-a-secure-always-on-local-ai-agent-with-nvidia-nemoclaw-and-openclaw/) |
+| i18n/pt/web/nemoclaw/index.html | remote display | NVIDIA NemoClaw for OpenClaw image | (c) NVIDIA; no reuse license stated on source page | [source](https://developer.nvidia.com/blog/build-a-secure-always-on-local-ai-agent-with-nvidia-nemoclaw-and-openclaw/) |
 | web/nemoclaw/assets/figures/01a-loop-1.svg | inspiration | Russell & Norvig, AIMA ch.1 | (c) Pearson; no reuse license stated | [source](https://aima.cs.berkeley.edu/) |
 | web/nemoclaw/assets/figures/01a-loop-2.svg | inspiration | OpenAI API docs | OpenAI terms | [source](https://platform.openai.com/docs) |
 | web/nemoclaw/assets/figures/01b-react-1.svg | original | original course diagram; ReAct (Yao et al. 2022) | CC-BY-4.0 | [source](https://arxiv.org/abs/2210.03629) |

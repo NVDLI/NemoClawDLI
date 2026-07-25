@@ -62,7 +62,7 @@ REQUIRED_REPOSITORY_FILES = {
 
 README_SECTION_PATTERNS = {
     "project title": r"(?m)^#\s+Securing Agents with OpenShell and NemoClaw\s*$",
-    "learner start": r"(?im)^##\s+.*\b(course|learn|start)\b.*$",
+    "learner start": r"(?im)^##\s+(?:take|start|open|begin|learn)\b.*$",
     "local setup": r"(?im)^##\s+.*\b(run|build|setup|local)\b.*$",
     "contribution": r"(?im)^##\s+.*\bcontribut\w*\b.*$",
     "verification": r"(?im)^##\s+.*\b(verify|test|check)\w*\b.*$",
@@ -601,7 +601,13 @@ def self_test() -> list[str]:
     replace(".gitattributes", "SECURITY.md text eol=lf whitespace=-space-before-tab", "SECURITY.md text eol=lf", "security-template-whitespace", "security whitespace")
     replace("CHANGELOG.md", "## Unreleased", "## Pending", "changelog-contract", "changelog heading")
     replace("README.md", "](CHANGELOG.md)", "](history.md)", "readme-work-product-link", "readme link")
-    replace("README.md", "## Take the course", "## Overview route", "readme-section", "README route")
+    replace(
+        "README.md",
+        "## Take the course",
+        "## Audience entrypoint",
+        "readme-section",
+        "README route",
+    )
     replace("README.md", "untrusted proposal", "draft submission", "readme-boundary", "README trust boundary")
     replace("docs/agentic-compliance-suite.md", "## The workflow", "## Sequence", "agentic-compliance-contract", "agent workflow")
     replace("docs/release_playbook.md", "signed-out browser", "ordinary browser", "github-entrypoint-setup", "anonymous entrypoint")

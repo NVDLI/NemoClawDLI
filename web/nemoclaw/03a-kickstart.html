@@ -40,7 +40,8 @@
       transition: opacity .15s;
     }
 
-    a.url-card:hover {
+    .url-card:hover,
+    .url-card:focus-visible {
       opacity: .8;
     }
 
@@ -133,11 +134,11 @@
 
     </div>
 
-    <p>The diagram traces that spectrum left to right:</p>
+    <p>The diagram separates three interfaces:</p>
     <ul>
-      <li><strong>HTTP REST endpoints.</strong> The model answers each call in isolation: the <a href="https://platform.openai.com/docs/api-reference/chat" target="_blank" rel="noopener"><em>Chat Completions API</em></a>, where your code carries the history, or the <em>Responses API</em>, where the server keeps it for you.</li>
-      <li><strong>The <a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener">Model Context Protocol</a>.</strong> A standard wire that lets a runtime reach tools without writing bespoke glue for each one.</li>
-      <li><strong>A persistent gateway.</strong> OpenClaw keeps a <code>/cli/gateway</code> <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API" target="_blank" rel="noopener">WebSocket</a> open and streams events back over <a href="https://www.jsonrpc.org/specification" target="_blank" rel="noopener">JSON-RPC</a> instead of answering one request at a time.</li>
+      <li><strong>REST.</strong> One request produces one response. With the <a href="https://platform.openai.com/docs/api-reference/chat" target="_blank" rel="noopener"><em>Chat Completions API</em></a>, the client includes the conversation history; a <em>Responses API</em> may retain that state on the server.</li>
+      <li><strong><a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener">Model Context Protocol (MCP)</a>.</strong> A common request format lets a runtime discover and call tools.</li>
+      <li><strong>OpenClaw gateway.</strong> A <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API" target="_blank" rel="noopener">WebSocket</a> at <code>/cli/gateway</code> carries <a href="https://www.jsonrpc.org/specification" target="_blank" rel="noopener">JSON-RPC</a> events for the agent session.</li>
     </ul>
 
     <!-- video removed: hour-long NemoClaw session, too long and distracting for an inline companion. Re-enable by uncommenting.
@@ -159,32 +160,32 @@
 
     <h2>The two endpoints you work with from here</h2>
     <p>
-      The model endpoint answers the same API as before. The launchable gateway reaches an
-      OpenClaw process that preserves sessions and can run tools. Supporting protocol code stays
-      available in the cells, but the endpoint, credential, and state boundary are the parts to track.
+      The model route is stateless and uses an <code>nvapi-</code> key. The NemoClaw route keeps a
+      running OpenClaw session inside OpenShell. Compare each route's URL, credential, and state below.
     </p>
 
     <div class="url-pair">
       <a class="url-card" href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener">
         <h3>build.nvidia.com</h3>
-        <p>Chat Completions API. Stateless: one POST, one reply,
-          no tools or session. Generate a key at API Keys.</p>
-        <p style="color:var(--tf);font-size:.8rem">Your <code>nvapi-</code> key.
-          The proxy forwards it unchanged.</p>
+        <p>Call the Chat Completions API with an <code>nvapi-</code> key. Each POST carries its own
+          messages. No tool or session state is kept between calls.</p>
+        <p style="color:var(--tf);font-size:.8rem">Credential: <code>nvapi-</code> key.</p>
       </a>
-      <article class="url-card" style="background:rgba(118,185,0,.06)">
-        <h3><a
-          href="https://brev.nvidia.com/launchable/deploy?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990"
-          target="_blank" rel="noopener">Launch NemoClaw on Brev</a></h3>
-        <p>The setup creates a launchable that runs OpenClaw inside OpenShell. Its App URL may use the Cloudflare Access or Pomerium Brev host family; the connection dropdown below accepts either. Identity, tools, session memory, and sandbox policy live there. The browser reaches the agent through
-          the WebSocket gateway at <code>/cli/gateway</code>. For a local deployment, follow the
-          <a href="https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986" target="_blank" rel="noopener">NemoClaw setup playbook</a>
-          and keep the same connection boundary.
-        </p>
-        <p style="color:var(--tf);font-size:.8rem">Gateway token auth. Sessions
-          via <code>x-openclaw-session-key</code>.</p>
-      </article>
+      <a class="url-card"
+        href="https://brev.nvidia.com/launchable/deploy?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990"
+        target="_blank" rel="noopener">
+        <h3>Launch NemoClaw on Brev</h3>
+        <p>OpenClaw runs inside OpenShell and keeps agent identity, tools, and session memory. The
+          settings below accept either supported Brev host family and connect to
+          <code>/cli/gateway</code>.</p>
+        <p style="color:var(--tf);font-size:.8rem">Credential: gateway token. Session:
+          <code>x-openclaw-session-key</code>.</p>
+      </a>
     </div>
+    <p>Local deployments use the same gateway contract; follow the
+      <a href="https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986"
+        target="_blank" rel="noopener">NemoClaw setup playbook</a>.
+    </p>
 
     <h2>Step 1 · Probe the endpoints</h2>
     <p>The widgets below make a small request to each endpoint and show

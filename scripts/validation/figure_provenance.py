@@ -19,17 +19,31 @@ PROVENANCE_BLOCK = re.compile(
 
 
 @lru_cache(maxsize=1)
-def figure_rows() -> tuple[dict[str, object], ...]:
-    """Return every declared figure row; malformed or missing provenance is a hard error."""
+def provenance_payload() -> dict[str, object]:
+    """Return the complete image-provenance payload or fail on malformed data."""
     raw = PROVENANCE_PAGE.read_text(encoding="utf-8")
     match = PROVENANCE_BLOCK.search(raw)
     if not match:
         raise ValueError(f"missing provenance JSON in {PROVENANCE_PAGE.relative_to(ROOT)}")
     payload = json.loads(match.group(1))
-    rows = payload.get("figures")
+    if not isinstance(payload, dict):
+        raise ValueError("image provenance must be a JSON object")
+    return payload
+
+
+@lru_cache(maxsize=1)
+def figure_rows() -> tuple[dict[str, object], ...]:
+    """Return every displayed figure row, whether stored here or loaded remotely."""
+    rows = provenance_payload().get("figures")
     if not isinstance(rows, list):
         raise ValueError("image provenance must contain a figures list")
     return tuple(row for row in rows if isinstance(row, dict))
+
+
+@lru_cache(maxsize=1)
+def remote_figure_rows() -> tuple[dict[str, object], ...]:
+    """Derive remotely displayed figures from the common provenance inventory."""
+    return tuple(row for row in figure_rows() if row.get("connection") == "remote display")
 
 
 def svg_modes() -> dict[str, str]:
