@@ -12,14 +12,17 @@ or exemption list.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
+import signal
 import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 ROOT = Path(__file__).resolve().parents[2]
 MINIMUM_FULL_ARTIFACT_TIMEOUT_SECONDS = 600
@@ -42,6 +45,7 @@ const { chromium } = require('playwright-core');
 
 const root = process.env.SITE_ROOT || '/site';
 const htmlFiles = JSON.parse(fs.readFileSync(process.env.HTML_FILES || '/tmp/html-files.json', 'utf8'));
+const pageTimeoutMs = Number(process.env.PAGE_TIMEOUT_MS || '120000');
 let port = 0;
 const mime = {
   '.html':'text/html; charset=utf-8', '.js':'text/javascript; charset=utf-8',
@@ -104,9 +108,15 @@ server.on('upgrade', (request, socket) => {
 });
 
 async function inspect(browser, file) {
+  const startedAt = performance.now();
   let isSkill = /(?:^|\/)SKILL\.html$/.test(file);
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const errors = [];
+  let pageTimedOut = false;
+  const pageTimer = setTimeout(() => {
+    pageTimedOut = true;
+    page.close().catch(() => {});
+  }, pageTimeoutMs);
   const ownedOrigin = `http://127.0.0.1:${port}`;
   const successfulOwned = new Set();
   let closing = false;
@@ -169,7 +179,9 @@ async function inspect(browser, file) {
       { timeout:10000 }
     );
     await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
+    await page.evaluate(() => new Promise(resolve =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve))
+    ));
     isSkill = await page.evaluate(() =>
       /(?:^|\/)SKILL\.html$/.test(location.pathname) || !!document.getElementById('skill-meta')
     );
@@ -794,9 +806,11 @@ async function inspect(browser, file) {
   } catch (error) {
     errors.push(`navigation: ${error.message || String(error)}`);
   }
+  clearTimeout(pageTimer);
+  if (pageTimedOut) errors.push(`document audit exceeded ${pageTimeoutMs}ms`);
   closing = true;
-  await page.close();
-  return { file, errors: [...new Set(errors)] };
+  await page.close().catch(() => {});
+  return { file, durationMs: Math.round(performance.now() - startedAt), errors: [...new Set(errors)] };
 }
 
 (async () => {
@@ -816,14 +830,22 @@ async function inspect(browser, file) {
   let cursor = 0;
   let completed = 0;
   let nextProgressPercent = 10;
-  async function worker() {
+  async function worker(workerId) {
     while (cursor < htmlFiles.length) {
       const file = htmlFiles[cursor++];
-      const started = Date.now();
+      console.error(JSON.stringify({ event:'renderer-page-start', file, worker:workerId }));
+      const started = performance.now();
       const result = await inspect(browser, file);
+      console.error(JSON.stringify({
+        event:'renderer-page-finish',
+        file,
+        worker:workerId,
+        durationMs:result.durationMs,
+        findings:result.errors.length,
+      }));
       if (result.errors.length) findings.push(result);
       completed += 1;
-      const durationMs = Date.now() - started;
+      const durationMs = Math.round(performance.now() - started);
       const percent = Math.floor(completed * 100 / htmlFiles.length);
       if (durationMs >= 10000 || percent >= nextProgressPercent || completed === htmlFiles.length) {
         console.error(JSON.stringify({
@@ -838,7 +860,7 @@ async function inspect(browser, file) {
       }
     }
   }
-  await Promise.all(Array.from({ length: 4 }, worker));
+  await Promise.all(Array.from({ length:4 }, (_, index) => worker(index + 1)));
   await browser.close();
   server.close();
   console.log(JSON.stringify({ files:htmlFiles.length, findings }, null, 2));
@@ -849,6 +871,80 @@ async function inspect(browser, file) {
   process.exit(1);
 });
 """
+
+
+def _terminate_process(process: subprocess.Popen[str]) -> None:
+    """Stop the browser process tree after the whole-run deadline."""
+    if process.poll() is not None:
+        return
+    with contextlib.suppress(ProcessLookupError):
+        if os.name == "posix":
+            os.killpg(process.pid, signal.SIGTERM)
+        else:
+            process.terminate()
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        with contextlib.suppress(ProcessLookupError):
+            if os.name == "posix":
+                os.killpg(process.pid, signal.SIGKILL)
+            else:
+                process.kill()
+        process.wait()
+
+
+def stream_command(
+    command: list[str],
+    *,
+    cwd: Path,
+    environment: dict[str, str],
+    timeout_seconds: int,
+    write: Callable[[str], object] = sys.stdout.write,
+) -> tuple[int, bool, list[str]]:
+    """Stream renderer evidence and retain active documents if the run stalls."""
+    process = subprocess.Popen(
+        command,
+        cwd=cwd,
+        env=environment,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        start_new_session=os.name == "posix",
+    )
+    assert process.stdout is not None
+    active: set[str] = set()
+    active_lock = threading.Lock()
+
+    def pump() -> None:
+        for line in process.stdout:
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                event = {}
+            if isinstance(event, dict):
+                file = event.get("file")
+                if isinstance(file, str):
+                    with active_lock:
+                        if event.get("event") == "renderer-page-start":
+                            active.add(file)
+                        elif event.get("event") == "renderer-page-finish":
+                            active.discard(file)
+            write(line)
+
+    reader = threading.Thread(target=pump, name="renderer-output", daemon=True)
+    reader.start()
+    timed_out = False
+    try:
+        returncode = process.wait(timeout=timeout_seconds)
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        _terminate_process(process)
+        returncode = process.returncode if process.returncode is not None else 1
+    reader.join(timeout=5)
+    process.stdout.close()
+    with active_lock:
+        stalled = sorted(active)
+    return returncode, timed_out, stalled
 
 
 def run(args: argparse.Namespace) -> int:
@@ -871,6 +967,9 @@ def run(args: argparse.Namespace) -> int:
     if not files:
         print(f"skill_renderer_runtime_audit: FAIL\n  - no HTML files under {site}")
         return 1
+    if args.timeout_seconds <= 0 or args.page_timeout_seconds <= 0:
+        print("skill_renderer_runtime_audit: FAIL\n  - timeout values must be positive")
+        return 1
     with tempfile.TemporaryDirectory(prefix="skill-renderer-audit-") as temp:
         temp_path = Path(temp)
         script = temp_path / "audit.js"
@@ -885,15 +984,15 @@ def run(args: argparse.Namespace) -> int:
                 "CHROME_BIN": "" if args.chrome_bin == "auto" else args.chrome_bin,
                 "SITE_ROOT": str(site),
                 "HTML_FILES": str(manifest),
+                "PAGE_TIMEOUT_MS": str(args.page_timeout_seconds * 1000),
             })
-            result = subprocess.run(
+            returncode, timed_out, stalled = stream_command(
                 command,
                 cwd=ROOT,
-                env=environment,
-                text=True,
-                timeout=args.timeout_seconds,
+                environment=environment,
+                timeout_seconds=args.timeout_seconds,
             )
-        except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
+        except FileNotFoundError as exc:
             print(
                 "skill_renderer_runtime_audit: FAIL\n"
                 f"  - {exc}\n"
@@ -901,8 +1000,15 @@ def run(args: argparse.Namespace) -> int:
                 f"{args.timeout_seconds}-second process budget"
             )
             return 1
-    print("skill_renderer_runtime_audit: " + ("OK" if result.returncode == 0 else "FAIL"))
-    return result.returncode
+        if timed_out:
+            active = ", ".join(stalled) if stalled else "(no document reported active)"
+            print(
+                "skill_renderer_runtime_audit: FAIL\n"
+                f"  - renderer exceeded {args.timeout_seconds}s; active documents: {active}"
+            )
+            return 1
+    print("skill_renderer_runtime_audit: " + ("OK" if returncode == 0 else "FAIL"))
+    return returncode
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -916,6 +1022,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=MINIMUM_FULL_ARTIFACT_TIMEOUT_SECONDS,
         help="whole-audit process budget; CI must not set less than the full-artifact minimum",
+    )
+    parser.add_argument(
+        "--page-timeout-seconds",
+        type=int,
+        default=120,
+        help="maximum time for one document before it is closed and reported",
     )
     return parser
 
