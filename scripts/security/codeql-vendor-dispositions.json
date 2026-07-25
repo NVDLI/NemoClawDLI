@@ -6,8 +6,14 @@
         "1cf37de4a5a4a42919901a4f832d3d2e4ee90e8d2e77f70cb0aa043b9d719ecc",
         "31c3a4d5762dd13fe4aeccb6ff0723e7d6f45faece3ff46fb7420858705765df"
       ],
+      "source_findings": [
+        {
+          "rule": "js/code-injection",
+          "source_line": "const run = new AsyncFunction(\"course\", \"helpers\", '\"use strict\";\\\\n' + source);"
+        }
+      ],
       "artifact": "web/nemoclaw/scripts/_course_assistant.js",
-      "artifact_sha256": "e60592a7ea9bdb73804dae24140954921e76483e58ead1b152b3193852aa7d3c",
+      "artifact_sha256": "7e47eeae104b8829d1b5f0b4600ec40197bc4a0b3d433bb15b6dcf8214a35b6b",
       "decision": "opaque-origin-sandbox-execution",
       "owner": "course-maintainers",
       "expires": "2026-10-24",
@@ -21,7 +27,7 @@
           "contains": "Course Assistant artifact escaped its opaque-origin boundary"
         }
       ],
-      "scope": "Learner-authored artifact code is intentionally executable only in a no-same-origin iframe with deny-by-default CSP, bounded helper messaging, and hostile runtime probes."
+      "scope": "Learner-authored JavaScript crosses into an established no-same-origin iframe as bounded message data, then executes at one reviewed sink under deny-by-default CSP, bounded helper messaging, and hostile runtime probes."
     },
     {
       "fingerprints": [
