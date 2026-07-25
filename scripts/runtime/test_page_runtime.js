@@ -365,7 +365,7 @@ function findChrome() {
     const prompts = [
       'Build a runnable interactive agent-loop diagram with Observe, Reason, Act, and Update. Include Next and Reset buttons that visibly advance and reset the active step.',
       'Build a runnable context-budget dashboard for four agents. Include Normal load and Overloaded controls that update bar widths, values, and warning state.',
-      'Build a runnable three-question quiz about the main ideas from this page. Include selectable answers, immediate feedback, a score, and Restart.',
+      'Build a runnable three-question quiz about the main ideas from this page. Use button elements for every selectable answer, with immediate feedback, a score, and Restart.',
     ];
     const results = [];
     for (let index = 0; index < prompts.length; index++) {

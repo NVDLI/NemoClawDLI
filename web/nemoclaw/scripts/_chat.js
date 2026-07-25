@@ -659,6 +659,50 @@ export async function mountAgentChat(container, opts = {}) {
           answerText += chunk.content; ctx.view.token(chunk.content);
         }
       }
+      if (opts.recoverInlineArtifact) {
+        let recovered = null;
+        try { recovered = await opts.recoverInlineArtifact(answerText, ctx); }
+        catch (error) { ctx.view.warn("Could not recover the generated artifact: " + (error?.message || error)); }
+        if (recovered?.content) {
+          ctx.view.discardAnswer();
+          ctx.view.tool(recovered.label || "queue_course_artifact", recovered.content);
+          if (recovered.rejected && recovered.retryPrompt) {
+            const system = typeof opts.system === "function" ? opts.system(ctx) : opts.system;
+            const correctionLimit = Math.max(0, Math.min(3, Number(opts.artifactCorrectionLimit) || 0));
+            let candidateText = answerText;
+            for (let attempt = 1; recovered.rejected && recovered.retryPrompt && attempt <= correctionLimit; attempt++) {
+              ctx.view.note(`The generated artifact failed its browser check. Requesting bounded correction ${attempt} of ${correctionLimit}.`);
+              const correctionMessages = [
+                ...(system ? [{ role: "system", content: system }] : []),
+                { role: "user", content: text },
+                { role: "assistant", content: candidateText.slice(0, 60000) },
+                { role: "user", content: recovered.retryPrompt },
+              ];
+              let correctedText = "";
+              try {
+                const correctionStream = await runtime.llm.stream(correctionMessages, { signal: ctx.signal });
+                for await (const chunk of correctionStream) {
+                  if (typeof chunk.content === "string" && chunk.content) correctedText += chunk.content;
+                }
+                const corrected = correctedText ? await opts.recoverInlineArtifact(correctedText, ctx) : null;
+                if (!corrected?.content) {
+                  ctx.view.warn("The bounded artifact correction did not return runnable browser code.");
+                  break;
+                }
+                ctx.view.tool(corrected.label || "queue_course_artifact", corrected.content);
+                recovered = corrected;
+                candidateText = correctedText;
+              } catch (error) {
+                if (ctx.signal.aborted) throw error;
+                ctx.view.warn("The bounded artifact correction did not complete: " + (error?.message || error));
+                break;
+              }
+            }
+          }
+          answerText = recovered.answer || recovered.content;
+          ctx.view.token(answerText);
+        }
+      }
       if (opts.recoverInlineToolIntent) {
         let recovered = null;
         try { recovered = await opts.recoverInlineToolIntent(answerText, ctx); }

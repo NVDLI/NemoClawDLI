@@ -305,6 +305,17 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
         'export function parseInlineCourseSourceIntent': "Course Assistant must detect source arguments emitted as plain JSON",
         'recoverInlineToolIntent: async answer =>': "Course Assistant must recover a model that prints source arguments instead of invoking its tool",
         'export function artifactFromMarkdown': "Course Assistant must detect generated HTML/JavaScript without model tool compliance",
+        'recoverInlineArtifact: async answer =>': "Course Assistant must validate and surface raw generated artifacts before completing the turn",
+        'artifactStatus.textContent = `Generated artifact rejected: ${issue}`': "Course Assistant must expose the exact generated-artifact rejection",
+        'artifactCorrectionLimit: 2': "Course Assistant must bound generated-artifact correction attempts",
+        'const correctionLimit = Math.max(0, Math.min(3, Number(opts.artifactCorrectionLimit) || 0))': "shared chat must enforce the configured generated-artifact correction bound",
+        'Requesting bounded correction ${attempt} of ${correctionLimit}.': "Course Assistant must make each generated-artifact correction visible",
+        'const correctionStream = await runtime.llm.stream(correctionMessages, { signal: ctx.signal })': "Course Assistant artifact correction must remain cancellable and use the selected model",
+        'const corrected = correctedText ? await opts.recoverInlineArtifact(correctedText, ctx) : null': "Course Assistant must run corrected artifacts through the same browser gate",
+        'rejected: true,': "Course Assistant must distinguish a rejected recovery from an accepted artifact",
+        'retryPrompt: `The browser rejected that artifact: ${issue}': "Course Assistant must bind its bounded correction to the exact rejection",
+        'Could not recover the generated artifact': "shared chat must make inline artifact recovery failures visible",
+        'ctx.view.tool(recovered.label || "queue_course_artifact", recovered.content)': "shared chat must expose recovered artifact validation as inspectable activity",
         'onAssistantMessage: async answer =>': "Course Assistant must auto-fill fenced or raw browser code after completed replies",
         'raw.search(/(?:<!doctype': "Course Assistant must recover complete raw HTML when the model skips its tool",
         'data-course-assistant-view="artifact"': "Course Assistant needs a discoverable Artifact tab",
@@ -338,6 +349,7 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
         'The sandbox provides the asynchronous course.embed API': "Course Assistant prompt must teach the artifact bridge instead of inventing imports",
         'always use await course.embed': "Course Assistant prompt must state that embedding calls are asynchronous",
         'No other helpers.* API is available': "Course Assistant prompt must distinguish lesson helpers from artifact APIs",
+        'Use native button, input, or select elements for learner actions': "Course Assistant must request observable accessible controls for interactive artifacts",
         'activateView("artifact")': "generated artifacts must open the real Artifact view",
         'mountCourseLicenseNote': "shared chrome must mount the course license note",
         'Course-authored prose, example code, and original diagrams': "license note must state the exact Apache-2.0 scope",
@@ -345,8 +357,15 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
     }
     for token, message in contract.items():
         _need(findings, token in assistant or token in shared or token in chat, message)
-    _need(findings, chat.count("ctx.view.discardAnswer()") >= 2,
-          "shared agent chat must replace inline tool JSON and empty tool-only output before synthesis")
+    _need(findings, re.search(
+        r"if \(opts\.recoverInlineArtifact\) \{[\s\S]{0,700}?ctx\.view\.discardAnswer\(\)", chat
+    ) is not None, "shared agent chat must replace raw generated code after artifact recovery")
+    _need(findings, re.search(
+        r"if \(opts\.recoverInlineToolIntent\) \{[\s\S]{0,700}?ctx\.view\.discardAnswer\(\)", chat
+    ) is not None, "shared agent chat must replace inline tool JSON before source synthesis")
+    _need(findings, re.search(
+        r"if \(!hasMeaningfulAnswer\(answerText\)\) \{[\s\S]{0,700}?ctx\.view\.discardAnswer\(\)", chat
+    ) is not None, "shared agent chat must replace empty tool-only output before synthesis")
     _need(findings, COURSE_SOURCE_URI_RE.search(assistant) is not None,
           "lesson code index must expose stable page-qualified source URIs")
     _need(findings, "mountCourseAssistant({ embed });" in shared,
@@ -370,8 +389,9 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
     _need(findings, ".course-assistant-panel > header button {" in css and
           ".course-assistant-panel header button {" not in css,
           "Course Assistant close-button sizing must not leak into nested History controls")
-    _need(findings, assistant.count("artifactCodeIssue(") >= 4 and
-          "await validateArtifactRuntime(artifact)" in assistant and
+    _need(findings, "const issue = artifactCodeIssue({" in assistant and
+          assistant.count("artifactCodeIssue(artifact) || await validateArtifactRuntime(artifact)") >= 2 and
+          "const issue = artifactCodeIssue(candidate);" in assistant and
           "await validateArtifactRuntime(candidate)" in assistant,
           "Course Assistant must validate manual runs, tool queues, and fallback capture")
     _need(findings, assistant.count('URL.createObjectURL(new Blob([') >= 2,
@@ -1214,7 +1234,12 @@ def self_test() -> list[str]:
         ("assistant loses artifact queue", assistant.replace('name: "queue_course_artifact"', 'name: "missing_artifact_queue"', 1), shared, chat, css, "queue generated browser code"),
         ("assistant defaults artifact work to weak model", assistant.replace('Nemotron Super 120B · recommended', 'Nemotron Super 120B · optional', 1), shared, chat, css, "model validated for tool use"),
         ("assistant loses 120B source recovery", assistant.replace('recoverInlineToolIntent: async answer =>', 'recoverLostIntent: async answer =>', 1), shared, chat, css, "prints source arguments"),
-        ("shared chat preserves raw tool JSON", assistant, shared, chat.replace('ctx.view.discardAnswer()', 'void recovered', 1), css, "replace inline tool JSON"),
+        ("shared chat preserves raw generated code", assistant, shared, chat.replace('if (opts.recoverInlineArtifact) {', 'if (false) {', 1), css, "replace raw generated code"),
+        ("assistant disables bounded artifact correction", assistant.replace('artifactCorrectionLimit: 2', 'artifactCorrectionLimit: 0', 1), shared, chat, css, "bound generated-artifact correction attempts"),
+        ("shared chat ignores artifact correction bound", assistant, shared, chat.replace('const correctionLimit = Math.max(0, Math.min(3, Number(opts.artifactCorrectionLimit) || 0))', 'const correctionLimit = 99', 1), css, "enforce the configured generated-artifact correction bound"),
+        ("shared chat skips corrected artifact validation", assistant, shared, chat.replace('await opts.recoverInlineArtifact(correctedText, ctx)', 'Promise.resolve({ content: correctedText })', 1), css, "same browser gate"),
+        ("assistant hides generated artifact rejection", assistant.replace('artifactStatus.textContent = `Generated artifact rejected: ${issue}`', 'artifactStatus.textContent = copy.saved', 1), shared, chat, css, "exact generated-artifact rejection"),
+        ("shared chat preserves raw tool JSON", assistant, shared, chat.replace('if (opts.recoverInlineToolIntent) {', 'if (false) {', 1), css, "replace inline tool JSON"),
         ("shared chat preserves empty tool-only output", assistant, shared, chat.replace('ctx.view.discardAnswer();\n          ctx.view.note("The tool run ended', 'ctx.view.note("The tool run ended', 1), css, "empty tool-only output"),
         ("assistant loses fenced-code capture", assistant.replace('export function artifactFromMarkdown', 'function removedArtifactFromMarkdown', 1), shared, chat, css, "detect generated HTML/JavaScript"),
         ("assistant loses raw HTML recovery", assistant.replace('raw.search(/(?:<!doctype', 'raw.search(/never-match', 1), shared, chat, css, "recover complete raw HTML"),
