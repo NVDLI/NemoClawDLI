@@ -151,3 +151,24 @@ instructions. Use the rules below when a change also affects repository-wide ter
 - Never commit a contributor home, mounted drive, cache, tool-runtime, or absolute local file URI.
   Use repository-relative paths, environment variables, or `scripts/runtime/` discovery helpers.
   Then run `python3 -m unittest discover -v -s tests/validation` and the local-path audit itself.
+
+## Context hygiene across compaction
+
+Checkpoint discipline keeps the objective across a compaction. It does not keep the window small.
+Agent harnesses preserve user messages verbatim through compaction, so anything pasted into one is
+replayed into every later window for the rest of the thread. A pasted screenshot is stored as an
+inline base64 `data:` URI, so it never ages out.
+
+This is measurable, not hypothetical. Two long-running sessions against this repository each
+carried about 2.3 MB into every window; roughly 85% of that was three screenshots pasted 17 days
+earlier and unrelated to the work in progress. One had compacted 169 times. Both still delivered,
+but each window reopened near the ceiling and compacted again within half an hour.
+
+- Attach an image once, then refer to it by path. Send a path instead of a paste when several
+  images are coming, and keep long logs and artifact listings in a file the agent can read.
+- Read frequent compaction as a signal to inspect what is being carried, not only as a prompt to
+  re-summarize. When attachments rather than the checkpoint dominate the window, say so.
+- Forking copies the carried context, pinned attachments included. Fork to branch the work; start
+  a fresh thread, seeded with the handoff block, to escape a bloated window.
+- Prefer a durable artifact to a long transcript. Evidence that belongs to the contribution goes in
+  the branch, the issue, or the pull request, where it survives a fresh session at no window cost.
