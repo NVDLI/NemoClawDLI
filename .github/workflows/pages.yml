@@ -62,6 +62,13 @@ jobs:
           if [ -n "$GATE_BASE" ]; then GATE_ARGS+=(--changed-since "$GATE_BASE"); fi
           python3 scripts/validation/release_gate.py --tier ship --jobs 4 "${GATE_ARGS[@]}" \
             --timing-report docs/validation/release-gate-timings.json
+      - name: Exercise the pull-request Pages artifact in the host browser
+        if: github.event_name == 'pull_request'
+        run: |
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$GITHUB_SHA")"
+          BUILD_PAGES_PULL_MATERIALS=0 BUILD_PAGES_REUSE_VALIDATION=1 \
+            bash scripts/build/build_pages.sh "$RUNNER_TEMP/pull-request-public"
+          python3 scripts/skills/skill_renderer_runtime_audit.py --site-root "$RUNNER_TEMP/pull-request-public" --timeout-seconds 600
       - name: Prepare the pull-request Pages action canary
         if: github.event_name == 'pull_request'
         run: |
