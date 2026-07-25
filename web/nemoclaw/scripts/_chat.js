@@ -547,6 +547,7 @@ export async function mountAgentChat(container, opts = {}) {
   }
   return mountChatUI(el, {
     modules: opts.modules, models: opts.models, intro: opts.intro, greeting: opts.greeting, examples: opts.examples, growLog: opts.growLog,
+    memory: opts.memory,
     initialHistory: opts.initialHistory, initialActivity: opts.initialActivity, onUserMessage: opts.onUserMessage, onTurnSnapshot: opts.onTurnSnapshot,
     onAssistantMessage: opts.onAssistantMessage,
     onHistoryChange: opts.onHistoryChange, resetLabel: opts.resetLabel,
