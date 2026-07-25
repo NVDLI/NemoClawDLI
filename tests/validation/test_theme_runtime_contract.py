@@ -4,14 +4,11 @@
 """Standard-library contracts for browser-theme coverage and its CI triggers."""
 from __future__ import annotations
 
-import contextlib
-import io
 import shlex
+import sys
 import tempfile
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
-from unittest import mock
 
 from scripts.skills import skill_renderer_runtime_audit as theme_runtime
 from scripts.validation import (
@@ -129,35 +126,67 @@ class ThemeRuntimeContractTests(unittest.TestCase):
         source = theme_runtime.RUNTIME_JS
         for token in (
             "event:'renderer-progress'",
+            "event:'renderer-page-start'",
+            "event:'renderer-page-finish'",
             "completed",
             "total:htmlFiles.length",
             "percent",
             "file",
             "durationMs",
+            "document audit exceeded ${pageTimeoutMs}ms",
+            "requestAnimationFrame(() => requestAnimationFrame(resolve))",
+            "performance.now()",
         ):
             with self.subTest(token=token):
                 self.assertIn(token, source)
+        self.assertNotIn("waitForTimeout(500)", source)
+        self.assertNotIn("htmlFiles.filter", source)
 
-        with tempfile.TemporaryDirectory() as directory:
-            site = Path(directory)
-            (site / "index.html").write_text("<!doctype html><title>fixture</title>", encoding="utf-8")
-            args = theme_runtime.build_parser().parse_args(["--site-root", str(site)])
-            with (
-                mock.patch.object(
-                    theme_runtime.subprocess,
-                    "run",
-                    return_value=SimpleNamespace(returncode=0),
-                ) as run_process,
-                contextlib.redirect_stdout(io.StringIO()),
-            ):
-                self.assertEqual(theme_runtime.run(args), 0)
-            call = run_process.call_args
-            self.assertNotIn("stdout", call.kwargs)
-            self.assertNotIn("stderr", call.kwargs)
-            self.assertEqual(
-                call.kwargs["timeout"],
-                theme_runtime.MINIMUM_FULL_ARTIFACT_TIMEOUT_SECONDS,
-            )
+    def test_streamed_runner_reports_the_active_document_on_timeout(self) -> None:
+        lines: list[str] = []
+        command = [
+            sys.executable,
+            "-c",
+            (
+                "import json,time;"
+                "print(json.dumps({'event':'renderer-page-start','file':'slow/SKILL.html'}),flush=True);"
+                "time.sleep(5)"
+            ),
+        ]
+        returncode, timed_out, active = theme_runtime.stream_command(
+            command,
+            cwd=ROOT,
+            environment={},
+            timeout_seconds=1,
+            write=lines.append,
+        )
+        self.assertNotEqual(returncode, 0)
+        self.assertTrue(timed_out)
+        self.assertEqual(active, ["slow/SKILL.html"])
+        self.assertIn('"event": "renderer-page-start"', "".join(lines))
+
+    def test_streamed_runner_clears_completed_documents(self) -> None:
+        lines: list[str] = []
+        command = [
+            sys.executable,
+            "-c",
+            (
+                "import json;"
+                "print(json.dumps({'event':'renderer-page-start','file':'done.html'}),flush=True);"
+                "print(json.dumps({'event':'renderer-page-finish','file':'done.html'}),flush=True)"
+            ),
+        ]
+        returncode, timed_out, active = theme_runtime.stream_command(
+            command,
+            cwd=ROOT,
+            environment={},
+            timeout_seconds=5,
+            write=lines.append,
+        )
+        self.assertEqual(returncode, 0)
+        self.assertFalse(timed_out)
+        self.assertEqual(active, [])
+        self.assertEqual(len(lines), 2)
 
     def test_report_producer_has_the_pinned_browser_runtime(self) -> None:
         core = (ROOT / ".gitlab/ci/core.yml").read_text(encoding="utf-8")
