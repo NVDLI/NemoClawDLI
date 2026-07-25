@@ -28,12 +28,44 @@ jobs:
           persist-credentials: false
       - name: Reject oversized proposed source before expensive analysis
         run: python3 scripts/validation/pages_artifact_integrity.py --source-root .
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: "24"
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.11"
+      - name: Pull request submission contract
+        if: github.event_name == 'pull_request'
+        env:
+          CONTRIBUTION_BODY: ${{ github.event.pull_request.body }}
+        run: python3 scripts/validation/contribution_safety_audit.py --submission-env CONTRIBUTION_BODY
+      - name: Pull request commit signoff
+        if: github.event_name == 'pull_request'
+        env:
+          DCO_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/validation/contribution_safety_audit.py --commit-range "$DCO_RANGE"
+      - name: Pull request contributor-local boundary
+        if: github.event_name == 'pull_request'
+        env:
+          PATH_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/validation/local_path_leak_audit.py --commit-range "$PATH_RANGE"
+      - name: Pull request sensitive metadata boundary
+        if: github.event_name == 'pull_request'
+        env:
+          SENSITIVE_TITLE: ${{ github.event.pull_request.title }}
+          SENSITIVE_BODY: ${{ github.event.pull_request.body }}
+          SENSITIVE_REF: ${{ github.event.pull_request.head.ref }}
+        run: python3 scripts/validation/sensitive_content_audit.py --submission-env SENSITIVE_TITLE --submission-env SENSITIVE_BODY --submission-env SENSITIVE_REF
+      - name: Pull request sensitive history boundary
+        if: github.event_name == 'pull_request'
+        env:
+          SENSITIVE_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/validation/sensitive_content_audit.py --commit-range "$SENSITIVE_RANGE"
+      - name: Pull request external release follow-up reminder
+        if: github.event_name == 'pull_request'
+        env:
+          RELEASE_CHANGE_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/validation/release_change_reminder.py --commit-range "$RELEASE_CHANGE_RANGE" --report docs/validation/release-change-reminder.json
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
       - name: Verify the no-fetch Pages dependency boundary
         run: BUILD_PAGES_PULL_MATERIALS=0 BUILD_PAGES_REUSE_VALIDATION=1 BUILD_PAGES_PREFLIGHT_ONLY=1 bash scripts/build/build_pages.sh
       - name: Install the pinned host-browser API
@@ -104,38 +136,6 @@ jobs:
             --extract-to "$RUNNER_TEMP/pages-action-canary-extracted"
           test -f "$RUNNER_TEMP/pages-action-canary-extracted/.course-review-marker"
           test -f "$RUNNER_TEMP/pages-action-canary-extracted/.github/course-review-marker"
-      - name: Pull request submission contract
-        if: github.event_name == 'pull_request'
-        env:
-          CONTRIBUTION_BODY: ${{ github.event.pull_request.body }}
-        run: python3 scripts/validation/contribution_safety_audit.py --submission-env CONTRIBUTION_BODY
-      - name: Pull request commit signoff
-        if: github.event_name == 'pull_request'
-        env:
-          DCO_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
-        run: python3 scripts/validation/contribution_safety_audit.py --commit-range "$DCO_RANGE"
-      - name: Pull request contributor-local boundary
-        if: github.event_name == 'pull_request'
-        env:
-          PATH_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
-        run: python3 scripts/validation/local_path_leak_audit.py --commit-range "$PATH_RANGE"
-      - name: Pull request sensitive metadata boundary
-        if: github.event_name == 'pull_request'
-        env:
-          SENSITIVE_TITLE: ${{ github.event.pull_request.title }}
-          SENSITIVE_BODY: ${{ github.event.pull_request.body }}
-          SENSITIVE_REF: ${{ github.event.pull_request.head.ref }}
-        run: python3 scripts/validation/sensitive_content_audit.py --submission-env SENSITIVE_TITLE --submission-env SENSITIVE_BODY --submission-env SENSITIVE_REF
-      - name: Pull request sensitive history boundary
-        if: github.event_name == 'pull_request'
-        env:
-          SENSITIVE_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
-        run: python3 scripts/validation/sensitive_content_audit.py --commit-range "$SENSITIVE_RANGE"
-      - name: Pull request external release follow-up reminder
-        if: github.event_name == 'pull_request'
-        env:
-          RELEASE_CHANGE_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
-        run: python3 scripts/validation/release_change_reminder.py --commit-range "$RELEASE_CHANGE_RANGE" --report docs/validation/release-change-reminder.json
       - name: Materials drift check (advisory; complains on drift, never blocks the deploy)
         continue-on-error: true
         run: python3 scripts/materials/pull_materials.py --check --fetch-attempts 4 --retry-backoff 2 --host-delay 3

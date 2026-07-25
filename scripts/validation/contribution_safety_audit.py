@@ -827,6 +827,26 @@ def audit_repo(
         pages, ".github/workflows/pages.yml", "github",
     ))
     test_block = workflow_job(pages, "test")
+    fail_fast_steps = (
+        "Pull request submission contract",
+        "Pull request commit signoff",
+        "Pull request contributor-local boundary",
+        "Pull request sensitive metadata boundary",
+        "Pull request sensitive history boundary",
+        "Pull request external release follow-up reminder",
+    )
+    expensive_boundary = test_block.find("actions/setup-node@")
+    fail_fast_offsets = [test_block.find(f"- name: {name}") for name in fail_fast_steps]
+    if (
+        expensive_boundary < 0
+        or any(offset < 0 for offset in fail_fast_offsets)
+        or max(fail_fast_offsets, default=expensive_boundary) >= expensive_boundary
+    ):
+        out.append(finding(
+            "github-pr-fail-fast-order", ".github/workflows/pages.yml",
+            "cheap pull-request integrity checks can run after dependency or browser work",
+            "run submission, DCO, local-path, sensitive-content, and release-reminder checks before setup-node",
+        ))
     pr_browser_steps = [
         step for step in workflow_steps(test_block)
         if "skill_renderer_runtime_audit.py" in step
@@ -1798,6 +1818,15 @@ def self_test() -> list[str]:
             ("prose-review-judgment", "docs/course-prose-style.md", "Automated signals identify passages", "Scores decide every rewrite"),
             ("prose-locale-ownership", "docs/course-prose-style.md", "Locale ownership", "Translation rewrite"),
             ("github-pr-trigger", ".github/workflows/pages.yml", "  pull_request:\n", "  # pull_request removed\n"),
+            (
+                "github-pr-fail-fast-order",
+                ".github/workflows/pages.yml",
+                "      - name: Pull request submission contract\n",
+                "      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0\n"
+                "        with:\n"
+                "          node-version: \"24\"\n"
+                "      - name: Pull request submission contract\n",
+            ),
             ("pages-fresh-validation-report", "scripts/build/build_pages.sh", 'python3 "$T1/scripts/validation/validate_bundle.py" --scope ship', 'python3 "$T1/scripts/validation/missing_bundle_gate.py" --scope ship'),
             ("pages-report-reuse-audit", "scripts/build/build_pages.sh", 'validation_report_audit.py"', 'missing_report_audit.py"'),
             ("pages-report-reuse-immutable", "scripts/build/build_pages.sh", 'if [ "$REUSE_VALIDATION" = "1" ] && [ "$PULL_MATERIALS" != "0" ]; then', 'if [ "$REUSE_VALIDATION" = "2" ] && [ "$PULL_MATERIALS" != "0" ]; then'),
