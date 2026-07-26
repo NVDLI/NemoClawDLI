@@ -4,60 +4,62 @@
 
 | Start learning | Prepare the lab | Access models |
 | --- | --- | --- |
-| **[Open the course](https://nvdli.github.io/NemoClawDLI/nemoclaw/)** | **[Launch NemoClaw on Brev](https://brev.nvidia.com/launchable/deploy?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&ncid=ref-dli-759990)** | **[Open NVIDIA Build](https://build.nvidia.com/?ncid=ref-dli-146986)** |
+| **[Open the course][course]** | **[Launch NemoClaw on Brev][brev-launchable]** | **[Open NVIDIA Build][nvidia-build]** |
 | Work through the four modules. | Keep it running for the live-agent exercises. | Create an API key when prompted. |
+
+[course]: https://nvdli.github.io/NemoClawDLI/nemoclaw/
+[brev-launchable]: https://brev.nvidia.com/launchable/deploy?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&ncid=ref-dli-759990
+[nvidia-build]: https://build.nvidia.com/?ncid=ref-dli-146986
 
 [![Course deployment](https://github.com/NVDLI/NemoClawDLI/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/NVDLI/NemoClawDLI/actions/workflows/pages.yml?query=branch%3Amain)
 [![Code scanning](https://github.com/NVDLI/NemoClawDLI/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/NVDLI/NemoClawDLI/actions/workflows/codeql.yml?query=branch%3Amain)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-76B900)](LICENSE)
 
-The workflow indicators report the current `main` deployment and CodeQL results. The license indicator is grounded in this repository’s [`LICENSE`](LICENSE).
-
 ## About the course
 
-Modern agents connect a model to tools and memory, then work until a routing decision ends the task. This course builds those parts before introducing OpenClaw and Hermes.
+Modern agents are everywhere, and they’re conceptually simple: a model wired to tools, memory, and a routing decision that keeps running until the task is done. This course starts by building such a system from scratch, then connects those ideas to modern frameworks used by software engineers and non‑technical users alike. You’ll go from a single API call to agent coordination, grounded retrieval, deep planning, and safe deployment using NVIDIA OpenClaw and NemoClaw™.
 
-Editable browser exercises move from model calls to tools, multi-agent routing, retrieval, deep research, persistent skills, and sandbox policy. Later modules use NemoClaw to bootstrap a working agent and OpenShell to inspect what it may access.
+Every lesson is an editable browser exercise. Later modules use NemoClaw to bootstrap a working agent and OpenShell to inspect what it may access.
 
 > [!NOTE]
 > This repository releases the course and validation tools. NemoClaw and its runtime remain external dependencies.
 
 ## Course path
 
-### Build the agent loop
+### Module 1: build the agent loop
 
 ![Observations flow from an environment to an agent, and the agent sends actions back to the environment.](web/nemoclaw/assets/figures/01a-agent-environment.svg)
 
 Start with the observation-action loop. Add model calls, state, tools, and a clear stop condition.
 
-### Ground responses in evidence
+### Module 2: coordinate and ground the work
 
 ![A knowledge base is indexed offline, then a live query retrieves context for a grounded model response.](web/nemoclaw/assets/figures/02b-rag-1.svg)
 
-Add retrieval, explicit routing, parallel work, and deeper planning.
+Add explicit routing, parallel work, retrieval over your own sources, and deeper planning.
 
-### Constrain the running agent
+### Modules 3 and 4: run and constrain the agent
 
 ![Three overlapping circles show untrusted input, access to secrets, and an outbound communication channel.](web/nemoclaw/assets/figures/lethal-trifecta.svg)
 
-Connect the design to NemoClaw, then use OpenShell to constrain tools, files, and network access.
+Connect the design to NemoClaw, keep an agent running, then use OpenShell to constrain tools, files, and network access.
 
 ## What you will learn
 
-- Build an agent loop and identify its core components.
-- Implement reliable tool use and function calling.
-- Coordinate agents with structured routing patterns.
-- Use grounded retrieval and deeper planning.
-- Configure agent identity, persistent skills, and safer execution with NemoClaw and OpenShell.
+- Build a basic agent loop and identify its core components.
+- Implement reliable tool use and function calling within an agent system.
+- Design and coordinate multi-agent systems using structured routing patterns.
+- Utilize OpenShell to configure agent identities and ensure safe, sandboxed operations.
+- Deploy and manage autonomous agents while building persistent skill libraries.
 
 ## Take the course
 
-1. Open the **[GitHub Pages course](https://nvdli.github.io/NemoClawDLI/nemoclaw/)**.
-2. Start the **[NemoClaw Brev launchable](https://brev.nvidia.com/launchable/deploy?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&ncid=ref-dli-759990)** before the live-agent modules.
-3. Open **[NVIDIA Build](https://build.nvidia.com/?ncid=ref-dli-146986)** and create an API key when requested.
+1. Open the **[GitHub Pages course][course]** and work through Module 1.
+2. Start the **[NemoClaw Brev launchable][brev-launchable]** before Module 3, where the exercises drive a live agent.
+3. Open **[NVIDIA Build][nvidia-build]** and create an API key when a lesson asks for one.
 4. Run the supplied examples, inspect their behavior, and change one input at a time.
 
-The static browser site is available in **[English](https://nvdli.github.io/NemoClawDLI/nemoclaw/)**, **[Spanish](https://nvdli.github.io/NemoClawDLI/es/nemoclaw/)**, and **[Brazilian Portuguese](https://nvdli.github.io/NemoClawDLI/pt/nemoclaw/)**. Its canonical entrypoint is the [course source](web/nemoclaw/index.html).
+The static browser site is available in **[English][course]**, **[Spanish](https://nvdli.github.io/NemoClawDLI/es/nemoclaw/)**, and **[Brazilian Portuguese](https://nvdli.github.io/NemoClawDLI/pt/nemoclaw/)**. Its canonical entrypoint is the [course source](web/nemoclaw/index.html).
 
 ## Run the course locally
 
@@ -112,8 +114,6 @@ The [`Rapidly-Evolving Agentic Compliance Suite`](docs/agentic-compliance-suite.
 <summary><strong>Security, dependencies, and release integrity</strong></summary>
 
 The threat model lives in [`docs/security-design.md`](docs/security-design.md). The [`browser dependency inventory`](web/nemoclaw/dependencies.html), [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md), and [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) distinguish shipped code, tools, and sourced materials.
-
-Optional parameterized relay source is documented under [`scripts/cors-proxy/deployable/`](scripts/cors-proxy/deployable/SKILL.html). It is not part of the learner artifact and contains no deployed account, DNS, credential, or endpoint state.
 
 </details>
 

@@ -2,12 +2,13 @@
 # Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Require course attribution on learner-facing NVIDIA Build and Brev links.
+"""Require approved routes on learner-facing NVIDIA Build and Brev links.
 
 Captured reference packets under ``mats/`` are deliberately outside this audit: they
-preserve the URLs published by their original sources. The audit covers authored
-course pages, localized overlays, shared browser helpers, the standalone bundler,
-and, when requested, generated course artifacts.
+preserve the URLs published by their original sources. Third-party inventories are
+governed by ``scripts/compliance/source_gate.py`` instead. This audit covers authored
+course pages, localized overlays, shared browser helpers, the standalone bundler, the
+public README, and, when requested, generated course artifacts.
 """
 from __future__ import annotations
 
@@ -28,7 +29,13 @@ BREV_LAUNCH_URL = (
     "?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS"
     f"&ncid={BREV_NCID}"
 )
-URL_RE = re.compile(r"https://(?:build|brev)\.nvidia\.com[^\s\"'<>`\\)]*")
+# Include non-HTTPS and deceptive-host near matches so the audit can reject them
+# instead of silently treating them as unrelated text.
+URL_RE = re.compile(
+    r"(?:[A-Za-z][A-Za-z0-9+.-]*:)?//"
+    r"[^\s\"'<>`\\)]*(?:build|brev)\.nvidia\.com[^\s\"'<>`\\)]*",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -57,6 +64,7 @@ def source_files(root: Path = ROOT) -> list[Path]:
         files.update(locale_course.glob("*.html"))
         files.update((locale_course / "scripts").glob("*.js"))
     files.add(root / "scripts" / "build" / "bundle_standalone.py")
+    files.add(root / "README.md")
     return sorted(path for path in files if path.is_file())
 
 
@@ -68,15 +76,40 @@ def artifact_files(course_root: Path) -> list[Path]:
 
 def url_problem(raw_url: str) -> str | None:
     url = html.unescape(raw_url)
-    parsed = urlsplit(url)
+    try:
+        parsed = urlsplit(url)
+    except ValueError:
+        return "learner link is malformed"
     query = parse_qs(parsed.query, keep_blank_values=True)
+    if parsed.scheme.casefold() != "https":
+        return "learner link must use HTTPS"
+    if parsed.username is not None or parsed.password is not None:
+        return "learner link must not embed user information"
     if parsed.hostname == "build.nvidia.com":
         if query.get("ncid") != [BUILD_NCID]:
             return f"Build link must carry exactly ncid={BUILD_NCID}"
         return None
-    if parsed.hostname == "brev.nvidia.com" and url != BREV_LAUNCH_URL:
-        return "Brev link must use the attributed NemoClaw launchable URL"
-    return None
+    if parsed.hostname == "brev.nvidia.com":
+        if url != BREV_LAUNCH_URL:
+            return "Brev link must use the attributed NemoClaw launchable URL"
+        return None
+    return "link resembles an NVIDIA learner route but does not use the approved host"
+
+
+def safe_url_for_finding(raw_url: str) -> str:
+    """Retain route shape without echoing user information or query values."""
+    try:
+        parsed = urlsplit(html.unescape(raw_url))
+    except ValueError:
+        return "[malformed learner route]"
+    host = parsed.hostname or "[invalid-host]"
+    userinfo = "[redacted]@" if parsed.username is not None or parsed.password is not None else ""
+    shown = f"{parsed.scheme}://{userinfo}{host}{parsed.path}"
+    if parsed.query:
+        shown += "?[query-redacted]"
+    if parsed.fragment:
+        shown += "#[fragment-redacted]"
+    return shown
 
 
 def scan_text(path: str, text: str) -> list[Finding]:
@@ -86,7 +119,12 @@ def scan_text(path: str, text: str) -> list[Finding]:
         problem = url_problem(raw_url)
         if problem:
             findings.append(
-                Finding(path, text.count("\n", 0, match.start()) + 1, html.unescape(raw_url), problem)
+                Finding(
+                    path,
+                    text.count("\n", 0, match.start()) + 1,
+                    safe_url_for_finding(raw_url),
+                    problem,
+                )
             )
     return findings
 
@@ -117,19 +155,49 @@ def self_test() -> list[str]:
         ("unattributed Build home", "https://build.nvidia.com", True),
         ("unattributed Build deep link", "https://build.nvidia.com/blueprints", True),
         ("wrong Build attribution", "https://build.nvidia.com/?ncid=other", True),
+        ("HTTP Build downgrade", BUILD_HOME_URL.replace("https://", "http://"), True),
+        ("HTTP Brev downgrade", BREV_LAUNCH_URL.replace("https://", "http://"), True),
+        ("scheme-relative Build route", "//build.nvidia.com/", True),
+        ("FTP Build route", "ftp://build.nvidia.com/models", True),
         (
             "legacy Brev route",
             "https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS",
             True,
         ),
         ("generic Brev home", "https://brev.nvidia.com", True),
+        ("near-miss Build attribution", f"https://build.nvidia.com/?ncid={BUILD_NCID}0", True),
+        ("duplicated Build attribution", f"https://build.nvidia.com/?ncid={BUILD_NCID}&ncid=other", True),
+        ("deceptive Build host", f"https://build.nvidia.com.evil/?ncid={BUILD_NCID}", True),
+        ("deceptive Brev host", BREV_LAUNCH_URL.replace("brev.nvidia.com", "brev.nvidia.com.evil"), True),
+        ("Build route with user information", f"https://learner@build.nvidia.com/?ncid={BUILD_NCID}", True),
+        ("malformed learner route", "https://[build.nvidia.com", True),
+        ("plain host prose", "build.nvidia.com is the catalog host", False),
         ("unrelated host", "https://docs.nvidia.com/brev/cli/connectivity", False),
     )
     failures: list[str] = []
     for label, sample, should_fail in cases:
-        rejected = bool(scan_text("fixture.html", f'<a href="{sample}">link</a>'))
-        if rejected != should_fail:
-            failures.append(f"{label}: expected rejected={should_fail}, got {rejected}")
+        for fixture_path, fixture in (
+            ("fixture.html", f'<a href="{sample}">link</a>'),
+            ("fixture.md", f"Start here: [link]({sample})"),
+        ):
+            rejected = bool(scan_text(fixture_path, fixture))
+            if rejected != should_fail:
+                failures.append(
+                    f"{label} ({fixture_path}): expected rejected={should_fail}, got {rejected}",
+                )
+    credential_fixture = f"https://learner:do-not-echo@build.nvidia.com/?ncid={BUILD_NCID}"
+    credential_findings = scan_text("fixture.md", f"[link]({credential_fixture})")
+    if not credential_findings or any(
+        "do-not-echo" in finding.url for finding in credential_findings
+    ):
+        failures.append("learner-route finding does not redact embedded user information")
+    scanned = {path.as_posix() for path in source_files()}
+    if (ROOT / "README.md").as_posix() not in scanned:
+        failures.append("public README is not scanned")
+    # Detector behavior must not depend on a known filename. This covers renamed and
+    # newly introduced learner surfaces while source_files owns the selected release set.
+    if not scan_text("docs/learner-start.md", "https://build.nvidia.com/?ncid=near-match"):
+        failures.append("novel-path attribution mutation is accepted")
     return failures
 
 

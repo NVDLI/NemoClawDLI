@@ -378,6 +378,7 @@ MUTATION_IMPACTS: dict[tuple[str, ...], tuple[str, ...]] = {
     ),
     unit_test("external_link_attribution_audit"): (
         "scripts/validation/external_link_attribution_audit.py", "scripts/build/bundle_standalone.py",
+        "README.md",
         "web/*.html", "web/*.js", "web/nemoclaw/*.html", "web/nemoclaw/scripts/*.js",
         "web/nemoclaw/standalone/*.html", "web/nemoclaw/standalone/scripts/*.js",
         "i18n/*/web/*.html", "i18n/*/web/nemoclaw/*.html",
