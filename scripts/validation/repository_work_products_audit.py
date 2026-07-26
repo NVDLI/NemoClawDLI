@@ -84,6 +84,24 @@ README_LINKS = (
     "LICENSE",
     "THIRD-PARTY-NOTICES.md",
 )
+# The public entrypoint must offer the whole learner route, not only the repository tree.
+# external_link_attribution_audit.py owns the attributed NVIDIA forms; this audit owns the
+# active reference definitions and the complete learner route.
+README_LEARNER_ROUTES = {
+    "course": (
+        "published course site",
+        "https://nvdli.github.io/NemoClawDLI/nemoclaw/",
+    ),
+    "brev-launchable": (
+        "agent runtime launchable",
+        "https://brev.nvidia.com/launchable/deploy"
+        "?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&ncid=ref-dli-759990",
+    ),
+    "nvidia-build": (
+        "model access catalog",
+        "https://build.nvidia.com/?ncid=ref-dli-146986",
+    ),
+}
 PROSE_FILES = ("README.md", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "SUPPORT.md")
 PROSE_FILLER = (
     "it is important to note",
@@ -173,6 +191,41 @@ def _paragraphs(raw: str) -> list[str]:
     return blocks
 
 
+def _readme_reference_links(raw: str) -> tuple[dict[str, list[str]], set[str]]:
+    """Return active reference definitions and labels used by README text links."""
+    # A reference hidden in a comment or fenced example does not create a rendered link.
+    visible = re.sub(r"<!--.*?(?:--!?>|$)", "", raw, flags=re.DOTALL)
+    kept: list[str] = []
+    fence_char = ""
+    for line in visible.splitlines():
+        marker = re.match(r"^\s{0,3}(`{3,}|~{3,})", line)
+        if marker:
+            current_char = marker.group(1)[0]
+            if not fence_char:
+                fence_char = current_char
+            elif current_char == fence_char:
+                fence_char = ""
+            continue
+        if not fence_char:
+            kept.append(line)
+    visible = "\n".join(kept)
+    visible = re.sub(r"(`+)[^`\n]*\1", "", visible)
+
+    definitions: dict[str, list[str]] = {}
+    for match in re.finditer(
+        r"""(?im)^ {0,3}\[([a-z0-9-]+)\]:[ \t]*"""
+        r"""(?:<([^\s<>]+)>|([^\s<>]+))[ \t]*$""",
+        visible,
+    ):
+        label = match.group(1).casefold()
+        definitions.setdefault(label, []).append(match.group(2) or match.group(3))
+    used = {
+        match.group(1).casefold()
+        for match in re.finditer(r"(?<!!)\[[^\]\n]+\]\[([a-z0-9-]+)\]", visible, re.IGNORECASE)
+    }
+    return definitions, used
+
+
 def audit_entrypoint_and_prose(
     read: Callable[[str], str], paths: list[str]
 ) -> list[dict[str, str]]:
@@ -197,12 +250,21 @@ def audit_entrypoint_and_prose(
                 "readme-link", "README.md", f"missing canonical entrypoint link: {target}",
                 "link the owning public file instead of duplicating its procedure",
             ))
+    learner_definitions, learner_uses = _readme_reference_links(readme)
+    for label, (role, destination) in README_LEARNER_ROUTES.items():
+        if learner_definitions.get(label) != [destination] or label not in learner_uses:
+            out.append(finding(
+                "readme-learner-route", "README.md", f"missing learner destination: {role}",
+                "restore one exact, active reference definition and use it in a README text link",
+            ))
     for phrase in (
         "approved for public release",
         "static browser site",
         "untrusted proposal",
         "may approve its own protected merge or release",
         "does not replace required security, license, review, or release controls",
+        "NemoClaw and its runtime remain external dependencies",
+        "does not apply to the NemoClaw product",
     ):
         if phrase not in readme_compact:
             out.append(finding(
@@ -609,6 +671,37 @@ def self_test() -> list[str]:
         "README route",
     )
     replace("README.md", "untrusted proposal", "draft submission", "readme-boundary", "README trust boundary")
+    readme_raw = (ROOT / "README.md").read_text(encoding="utf-8")
+    for phrase, name in (
+        ("NemoClaw and its runtime remain external dependencies", "README runtime boundary"),
+        ("does not apply to the NemoClaw product", "README product boundary"),
+    ):
+        # The audit matches the compacted README, so the mutation must survive a rewrap too.
+        wrapped = r"\s+".join(re.escape(word) for word in phrase.split())
+        if phrase in re.sub(r"\s+", " ", readme_raw):
+            add(name, mutated(), "readme-boundary", overrides={
+                "README.md": re.sub(wrapped, "is released here", readme_raw),
+            })
+        else:
+            tests.append((name + " fixture missing", mutated(), {}, set(), set(), "fixture-missing"))
+    for label, (role, destination) in README_LEARNER_ROUTES.items():
+        add(f"README route {role}", mutated(), "readme-learner-route", overrides={
+            "README.md": readme_raw.replace(destination, "https://example.invalid/"),
+        })
+        add(f"README unused route {role}", mutated(), "readme-learner-route", overrides={
+            "README.md": readme_raw.replace(f"][{label}]", "](/wrong-route/)"),
+        })
+    course_definition = f"[course]: {README_LEARNER_ROUTES['course'][1]}"
+    add("README commented route", mutated(), "readme-learner-route", overrides={
+        "README.md": readme_raw.replace(
+            course_definition, f"<!-- {course_definition} -->",
+        ),
+    })
+    add("README duplicate route", mutated(), "readme-learner-route", overrides={
+        "README.md": readme_raw + "\n[course]: /wrong-course/\n",
+    })
+    add("README renamed away", mutated(), "required-file-missing", missing={"README.md"},
+        present={"README.renamed.md"})
     replace("docs/agentic-compliance-suite.md", "## The workflow", "## Sequence", "agentic-compliance-contract", "agent workflow")
     replace("docs/release_playbook.md", "signed-out browser", "ordinary browser", "github-entrypoint-setup", "anonymous entrypoint")
     raw = (ROOT / "README.md").read_text(encoding="utf-8")
