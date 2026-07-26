@@ -2,7 +2,7 @@
 
 `scripts/cors-proxy/cors-proxy-worker-build.js` and `scripts/cors-proxy/cors-proxy-worker-openclaw.js` are
 compact teaching references. `scripts/cors-proxy/deployable/` is the complete, parameterized
-Lambda, CloudFront, and generic infrastructure projection. Neither is evidence of a hosted deployment.
+Lambda, CloudFront, and Terraform projection. Neither is evidence of a hosted deployment.
 
 Properties retained in both representations:
 
@@ -12,5 +12,16 @@ Properties retained in both representations:
 - The launchable relay restricts upstream hosts to the two supported Brev host families, binds each
   access provider to its host family, strips caller-supplied provider credentials, and keeps page
   origin policy operator-owned.
+- Both references now replace the upstream CORS answer rather than adding to it. They drop an
+  upstream `Access-Control-Allow-Credentials` grant and `Set-Cookie`, vary on `Origin`, and drop a
+  redirect body length they no longer send. The projection enforces the same rules.
 - The deployable projection contains no account, state, DNS, credential, resource-name, or deployed
   endpoint values. A hosted change requires deployment-owner review and live evidence.
+
+Limits of the teaching references:
+
+- Neither worker authenticates its caller at the edge, emits request logs, or exposes operator
+  configuration. The projection adds a CloudFront shared-secret check, structured logging, and
+  environment-driven upstream and allowlist settings.
+- Neither worker is the source of a hosted relay. Reading one tells you the browser contract, not
+  what is deployed. Reproduce or review behavior against `scripts/cors-proxy/deployable/`.

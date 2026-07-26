@@ -755,14 +755,57 @@
       "parallel_safe": false
     },
     {
-      "id": "endpoint-registration-audit",
+      "id": "test-cors-proxy-projection",
       "tiers": [
         "fast",
         "ship"
       ],
       "order": {
         "fast": 33,
+        "ship": 51
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_cors_proxy_projection_audit"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/security/audit_cors_proxy_projection.py",
+        "tests/validation/test_cors_proxy_projection_audit.py",
+        "scripts/cors-proxy/deployable/*",
+        "scripts/cors-proxy/deployable/**/*"
+      ]
+    },
+    {
+      "id": "audit-cors-proxy-projection",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 34,
         "ship": 52
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/security/audit_cors_proxy_projection.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "endpoint-registration-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 35,
+        "ship": 54
       },
       "mode": "current-tree",
       "argv": [
@@ -778,8 +821,8 @@
         "ship"
       ],
       "order": {
-        "fast": 34,
-        "ship": 53
+        "fast": 36,
+        "ship": 55
       },
       "mode": "current-tree",
       "argv": [
@@ -796,8 +839,8 @@
         "ship"
       ],
       "order": {
-        "fast": 35,
-        "ship": 54
+        "fast": 37,
+        "ship": 56
       },
       "mode": "current-tree",
       "argv": [
@@ -813,8 +856,8 @@
         "ship"
       ],
       "order": {
-        "fast": 36,
-        "ship": 55
+        "fast": 38,
+        "ship": 57
       },
       "mode": "mutation",
       "argv": [
@@ -853,8 +896,8 @@
         "ship"
       ],
       "order": {
-        "fast": 37,
-        "ship": 56
+        "fast": 39,
+        "ship": 58
       },
       "mode": "current-tree",
       "argv": [
@@ -870,8 +913,8 @@
         "ship"
       ],
       "order": {
-        "fast": 38,
-        "ship": 57
+        "fast": 40,
+        "ship": 59
       },
       "mode": "mutation",
       "argv": [
@@ -898,8 +941,8 @@
         "ship"
       ],
       "order": {
-        "fast": 39,
-        "ship": 58
+        "fast": 41,
+        "ship": 60
       },
       "mode": "current-tree",
       "argv": [
@@ -915,8 +958,8 @@
         "ship"
       ],
       "order": {
-        "fast": 40,
-        "ship": 59
+        "fast": 42,
+        "ship": 61
       },
       "mode": "mutation",
       "argv": [
@@ -943,8 +986,8 @@
         "ship"
       ],
       "order": {
-        "fast": 41,
-        "ship": 60
+        "fast": 43,
+        "ship": 62
       },
       "mode": "mutation",
       "argv": [
@@ -967,8 +1010,8 @@
         "ship"
       ],
       "order": {
-        "fast": 42,
-        "ship": 61
+        "fast": 44,
+        "ship": 63
       },
       "mode": "current-tree",
       "argv": [
@@ -984,8 +1027,8 @@
         "ship"
       ],
       "order": {
-        "fast": 43,
-        "ship": 62
+        "fast": 45,
+        "ship": 64
       },
       "mode": "mutation",
       "argv": [
@@ -1017,8 +1060,8 @@
         "ship"
       ],
       "order": {
-        "fast": 44,
-        "ship": 63
+        "fast": 46,
+        "ship": 65
       },
       "mode": "mutation",
       "argv": [
@@ -1045,8 +1088,8 @@
         "ship"
       ],
       "order": {
-        "fast": 45,
-        "ship": 64
+        "fast": 47,
+        "ship": 66
       },
       "mode": "mutation",
       "argv": [
@@ -1073,8 +1116,8 @@
         "ship"
       ],
       "order": {
-        "fast": 46,
-        "ship": 65
+        "fast": 48,
+        "ship": 67
       },
       "mode": "mutation",
       "argv": [
@@ -1098,8 +1141,8 @@
         "ship"
       ],
       "order": {
-        "fast": 47,
-        "ship": 66
+        "fast": 49,
+        "ship": 68
       },
       "mode": "mutation",
       "argv": [
@@ -1123,7 +1166,7 @@
         "fast"
       ],
       "order": {
-        "fast": 48
+        "fast": 50
       },
       "mode": "mutation",
       "argv": [
@@ -1150,7 +1193,7 @@
         "fast"
       ],
       "order": {
-        "fast": 49
+        "fast": 51
       },
       "mode": "current-tree",
       "argv": [
@@ -1167,8 +1210,8 @@
         "ship"
       ],
       "order": {
-        "fast": 50,
-        "ship": 75
+        "fast": 52,
+        "ship": 77
       },
       "mode": "current-tree",
       "argv": [
@@ -1185,8 +1228,8 @@
         "ship"
       ],
       "order": {
-        "fast": 51,
-        "ship": 76
+        "fast": 53,
+        "ship": 78
       },
       "mode": "current-tree",
       "argv": [
@@ -1202,8 +1245,8 @@
         "ship"
       ],
       "order": {
-        "fast": 52,
-        "ship": 77
+        "fast": 54,
+        "ship": 79
       },
       "mode": "current-tree",
       "argv": [
@@ -1219,8 +1262,8 @@
         "ship"
       ],
       "order": {
-        "fast": 53,
-        "ship": 78
+        "fast": 55,
+        "ship": 80
       },
       "mode": "mutation",
       "argv": [
@@ -1248,8 +1291,8 @@
         "ship"
       ],
       "order": {
-        "fast": 54,
-        "ship": 79
+        "fast": 56,
+        "ship": 81
       },
       "mode": "mutation",
       "argv": [
@@ -1274,8 +1317,8 @@
         "ship"
       ],
       "order": {
-        "fast": 55,
-        "ship": 80
+        "fast": 57,
+        "ship": 82
       },
       "mode": "current-tree",
       "argv": [
@@ -1291,8 +1334,8 @@
         "ship"
       ],
       "order": {
-        "fast": 56,
-        "ship": 81
+        "fast": 58,
+        "ship": 83
       },
       "mode": "mutation",
       "argv": [
@@ -1317,8 +1360,8 @@
         "ship"
       ],
       "order": {
-        "fast": 57,
-        "ship": 83
+        "fast": 59,
+        "ship": 85
       },
       "mode": "current-tree",
       "argv": [
@@ -1334,8 +1377,8 @@
         "ship"
       ],
       "order": {
-        "fast": 66,
-        "ship": 90
+        "fast": 68,
+        "ship": 92
       },
       "mode": "current-tree",
       "argv": [
@@ -1351,7 +1394,7 @@
         "fast"
       ],
       "order": {
-        "fast": 67
+        "fast": 69
       },
       "mode": "current-tree",
       "argv": [
@@ -1641,7 +1684,7 @@
         "ship"
       ],
       "order": {
-        "fast": 64,
+        "fast": 66,
         "ship": 43
       },
       "mode": "mutation",
@@ -1668,7 +1711,7 @@
         "ship"
       ],
       "order": {
-        "fast": 65,
+        "fast": 67,
         "ship": 44
       },
       "mode": "mutation",
@@ -1832,7 +1875,7 @@
         "ship"
       ],
       "order": {
-        "ship": 51
+        "ship": 53
       },
       "mode": "mutation",
       "argv": [
@@ -1864,7 +1907,7 @@
         "ship"
       ],
       "order": {
-        "ship": 67
+        "ship": 69
       },
       "mode": "mutation",
       "argv": [
@@ -1891,7 +1934,7 @@
         "ship"
       ],
       "order": {
-        "ship": 68
+        "ship": 70
       },
       "mode": "mutation",
       "argv": [
@@ -1914,7 +1957,7 @@
         "ship"
       ],
       "order": {
-        "ship": 69
+        "ship": 71
       },
       "mode": "current-tree",
       "argv": [
@@ -1929,7 +1972,7 @@
         "ship"
       ],
       "order": {
-        "ship": 70
+        "ship": 72
       },
       "mode": "current-tree",
       "argv": [
@@ -1944,7 +1987,7 @@
         "ship"
       ],
       "order": {
-        "ship": 71
+        "ship": 73
       },
       "mode": "mutation",
       "argv": [
@@ -1966,7 +2009,7 @@
         "ship"
       ],
       "order": {
-        "ship": 72
+        "ship": 74
       },
       "mode": "current-tree",
       "argv": [
@@ -1981,7 +2024,7 @@
         "ship"
       ],
       "order": {
-        "ship": 73
+        "ship": 75
       },
       "mode": "mutation",
       "argv": [
@@ -2000,7 +2043,7 @@
         "ship"
       ],
       "order": {
-        "ship": 74
+        "ship": 76
       },
       "mode": "mutation",
       "argv": [
@@ -2021,7 +2064,7 @@
         "ship"
       ],
       "order": {
-        "ship": 91
+        "ship": 93
       },
       "mode": "current-tree",
       "argv": [
@@ -2044,7 +2087,7 @@
         "ship"
       ],
       "order": {
-        "ship": 82
+        "ship": 84
       },
       "mode": "current-tree",
       "argv": [
@@ -2065,8 +2108,8 @@
         "ship"
       ],
       "order": {
-        "fast": 58,
-        "ship": 84
+        "fast": 60,
+        "ship": 86
       },
       "mode": "mutation",
       "argv": [
@@ -2092,8 +2135,8 @@
         "ship"
       ],
       "order": {
-        "fast": 59,
-        "ship": 85
+        "fast": 61,
+        "ship": 87
       },
       "mode": "mutation",
       "argv": [
@@ -2120,8 +2163,8 @@
         "ship"
       ],
       "order": {
-        "fast": 60,
-        "ship": 86
+        "fast": 62,
+        "ship": 88
       },
       "mode": "current-tree",
       "argv": [
@@ -2137,8 +2180,8 @@
         "ship"
       ],
       "order": {
-        "fast": 61,
-        "ship": 87
+        "fast": 63,
+        "ship": 89
       },
       "mode": "mutation",
       "argv": [
@@ -2168,8 +2211,8 @@
         "ship"
       ],
       "order": {
-        "fast": 62,
-        "ship": 88
+        "fast": 64,
+        "ship": 90
       },
       "mode": "current-tree",
       "argv": [
@@ -2185,8 +2228,8 @@
         "ship"
       ],
       "order": {
-        "fast": 63,
-        "ship": 89
+        "fast": 65,
+        "ship": 91
       },
       "mode": "mutation",
       "argv": [

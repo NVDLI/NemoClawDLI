@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 const UPSTREAM_ORIGIN = 'https://build.nvidia.com';
+const MODEL_UPSTREAM_HOSTS = new Set(['integrate.api.nvidia.com', 'build.nvidia.com']);
 
 const ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'];
 const DEFAULT_ALLOWED_HEADERS = [
@@ -28,11 +29,17 @@ const HOP_BY_HOP_HEADERS = new Set([
 ]);
 const RETIRED_BILLING_HEADER = ['x-billing', 'source'].join('-');
 
+// CloudFront adds this operator secret so the Function URL can refuse direct
+// callers. It authenticates the edge to this relay only, so it must never
+// continue to an upstream origin.
+const EDGE_SECRET_HEADER = 'x-dli-cors-proxy-secret';
+
 const REQUEST_HEADERS_TO_STRIP = new Set([
   ...HOP_BY_HOP_HEADERS,
   'host',
   'content-length',
   'cookie',
+  EDGE_SECRET_HEADER,
   'cf-connecting-ip',
   'cf-ipcountry',
   'cf-ray',
@@ -97,7 +104,12 @@ export function getHostAllowlist() {
 // "nemoclaw-abc.brevlab.com" and the bare "brevlab.com"); otherwise it is an exact host.
 export function isHostAllowed(host, allowlist = getHostAllowlist()) {
   const h = String(host || '').toLowerCase();
-  if (!h || !/^[a-z0-9.-]+$/.test(h)) return false;        // reject ports, userinfo, junk
+  if (
+    !h || h.length > 253 ||
+    !h.split('.').every((label) =>
+      label.length > 0 && label.length <= 63 &&
+      /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(label))
+  ) return false;                                           // reject ports, userinfo, empty labels, junk
   return allowlist.some((entry) => entry.startsWith('.')
     ? (h === entry.slice(1) || h.endsWith(entry))
     : h === entry);
@@ -121,6 +133,15 @@ export function buildTargetUrl(rawPath = '/', rawQueryString = '') {
     return buildAllowlistedTargetUrl(rawPath, safeQueryString);
   }
   const upstream = new URL(getUpstreamOrigin());
+  if (
+    upstream.protocol !== 'https:' ||
+    !MODEL_UPSTREAM_HOSTS.has(upstream.hostname.toLowerCase()) ||
+    upstream.username || upstream.password || upstream.search || upstream.hash
+  ) {
+    const error = new Error('Model upstream origin is not approved.');
+    error.statusCode = 500;
+    throw error;
+  }
   const safePath = normalizePath(rawPath);
   upstream.pathname = joinPaths(upstream.pathname, safePath);
   upstream.search = safeQueryString ? `?${safeQueryString}` : '';
@@ -357,9 +378,13 @@ export function responseForProxyError(error, origin) {
 
 export function assertCloudFrontSecret(headers = {}) {
   const expected = process.env.CLOUDFRONT_SHARED_SECRET;
-  if (!expected) return;
+  if (!expected) {
+    const error = new Error('Relay edge secret is not configured');
+    error.statusCode = 500;
+    throw error;
+  }
   const source = normalizeHeaders(headers);
-  const actual = source['x-dli-cors-proxy-secret'];
+  const actual = source[EDGE_SECRET_HEADER];
   if (actual !== expected) {
     const error = new Error('Direct Lambda Function URL access is disabled');
     error.statusCode = 403;

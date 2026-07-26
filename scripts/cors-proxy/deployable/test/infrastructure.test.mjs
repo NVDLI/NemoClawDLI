@@ -8,6 +8,12 @@ import { renderInfrastructure } from '../scripts/render-infrastructure.mjs';
 
 const templateText = readFileSync(new URL('../infrastructure/template.json', import.meta.url), 'utf8');
 const functionCode = readFileSync(new URL('../src/openclaw-websocket-request.js', import.meta.url), 'utf8');
+const terraformText = [
+  'terraform.tf',
+  'variables.tf',
+  'main.tf',
+  'outputs.tf',
+].map((name) => readFileSync(new URL(`../infrastructure/${name}`, import.meta.url), 'utf8')).join('\n');
 const template = JSON.parse(renderInfrastructure(templateText, functionCode));
 const RETIRED_BILLING_HEADER = ['X-BILLING', 'SOURCE'].join('-');
 
@@ -31,6 +37,30 @@ test('both Lambda URLs stream and require distinct origin-only secrets', () => {
     .DistributionConfig.Origins[0].OriginCustomHeaders[0];
   assert.deepEqual(modelHeader.HeaderValue, { Ref: 'ModelRelaySharedSecret' });
   assert.deepEqual(runtimeHeader.HeaderValue, { Ref: 'RuntimeRelaySharedSecret' });
+});
+
+test('portable infrastructure keeps operator deployment choices parameterized', () => {
+  for (const name of [
+    'ProjectPrefix',
+    'LambdaArtifactBucket',
+    'LambdaArtifactKey',
+    'ModelRelaySharedSecret',
+    'RuntimeRelaySharedSecret',
+    'CachePolicyId',
+    'OriginRequestPolicyId',
+    'LogRetentionDays',
+    'CloudFrontPriceClass',
+  ]) {
+    assert.equal(template.Parameters[name].Default, undefined, `${name} must have no default`);
+  }
+  assert.deepEqual(
+    template.Resources.ModelDistribution.Properties.DistributionConfig.PriceClass,
+    { Ref: 'CloudFrontPriceClass' },
+  );
+  assert.deepEqual(
+    template.Resources.RuntimeDistribution.Properties.DistributionConfig.PriceClass,
+    { Ref: 'CloudFrontPriceClass' },
+  );
 });
 
 test('runtime HTTP forwarding remains constrained to both approved host families', () => {
@@ -73,4 +103,51 @@ test('template contains no operator account, bucket, DNS, or deployment value', 
   assert.doesNotMatch(templateText, /\bs3:\/\/[a-z0-9]/i);
   assert.doesNotMatch(templateText, /\b[a-z0-9-]+\.cloudfront\.net\b/i);
   assert.doesNotMatch(templateText, /\.experiments\.courses\.nvidia\.com\b/i);
+});
+
+test('Terraform provisions both streaming relays and direct-origin protection', () => {
+  assert.match(terraformText, /backend "s3" \{\}/);
+  assert.match(terraformText, /provider "aws"[\s\S]*region = var\.aws_region/);
+  assert.match(terraformText, /resource "aws_lambda_function" "model"/);
+  assert.match(terraformText, /resource "aws_lambda_function" "runtime"/);
+  assert.match(terraformText, /invoke_mode\s*=\s*"RESPONSE_STREAM"/);
+  assert.match(terraformText, /resource "aws_cloudfront_distribution" "model"/);
+  assert.match(terraformText, /resource "aws_cloudfront_distribution" "runtime"/);
+  assert.match(terraformText, /name\s*=\s*"x-dli-cors-proxy-secret"/);
+  assert.match(terraformText, /CLOUDFRONT_SHARED_SECRET\s*=\s*var\.model_relay_shared_secret/);
+  assert.match(terraformText, /CLOUDFRONT_SHARED_SECRET\s*=\s*var\.runtime_relay_shared_secret/);
+});
+
+test('Terraform routes both WebSocket paths through the reviewed edge function', () => {
+  assert.match(terraformText, /path_pattern\s*=\s*"\/https\/\*\/cli\/gateway"/);
+  assert.match(terraformText, /path_pattern\s*=\s*"\/https\/\*\/ws\/terminal"/);
+  assert.match(terraformText, /code\s*=\s*file\("\$\{path\.module\}\/\.\.\/src\/openclaw-websocket-request\.js"\)/);
+  assert.match(terraformText, /function_arn\s*=\s*aws_cloudfront_function\.runtime_websocket\.arn/);
+});
+
+test('Terraform keeps environment topology operator-supplied', () => {
+  for (const name of [
+    'aws_region',
+    'project_prefix',
+    'lambda_artifact_bucket',
+    'lambda_artifact_key',
+    'model_relay_shared_secret',
+    'runtime_relay_shared_secret',
+    'cache_policy_id',
+    'origin_request_policy_id',
+    'log_retention_days',
+    'cloudfront_price_class',
+    'model_dns_names',
+    'runtime_dns_names',
+    'model_acm_certificate_arn',
+    'runtime_acm_certificate_arn',
+    'resource_tags',
+  ]) {
+    const block = new RegExp(`variable "${name}" \\{([\\s\\S]*?)\\n\\}`, 'm').exec(terraformText);
+    assert.ok(block, `missing variable ${name}`);
+    assert.doesNotMatch(block[1], /\bdefault\s*=/, `${name} must have no default`);
+  }
+  assert.doesNotMatch(terraformText, /\barn:aws[^:]*:[^:]*:\d{12}:/);
+  assert.doesNotMatch(terraformText, /\b[a-z0-9-]+\.cloudfront\.net\b/i);
+  assert.doesNotMatch(terraformText, /\.experiments\.courses\.nvidia\.com\b/i);
 });

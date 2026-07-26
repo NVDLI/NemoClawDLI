@@ -2,10 +2,27 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Browser proxy contract for allowlisted NemoClaw launchables.
+//
+// Teaching reference. It shows the host allowlist, the provider-to-host binding,
+// and the WebSocket boundary. It is not the deployed relay: it has no edge
+// authentication, no request logging, and no operator configuration surface.
+// scripts/cors-proxy/deployable/src/ is the complete implementation.
 const WORKER_VERSION = "openclaw-cors-proxy/2026-07-09-access-providers";
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
-const REDIRECT_BODY_HEADERS = ["content-encoding", "content-language", "content-location", "content-type"];
+// Content-Length belongs in this list: a redirect downgraded to a bodyless GET
+// must not keep the length of the body it just dropped.
+const REDIRECT_BODY_HEADERS = ["content-encoding", "content-language", "content-location", "content-type", "content-length"];
 const COOKIE_VALUE = /^[\x21\x23-\x2B\x2D-\x3A\x3C-\x5B\x5D-\x7E]*$/;
+const UPSTREAM_CORS_HEADERS = [
+  "Access-Control-Allow-Origin",
+  "Access-Control-Allow-Methods",
+  "Access-Control-Allow-Headers",
+  "Access-Control-Allow-Credentials",
+  "Access-Control-Expose-Headers",
+  "Access-Control-Max-Age",
+  "Set-Cookie",
+  "Set-Cookie2",
+];
 
 async function fetchWithSameOriginRedirects(target, init, maxRedirects = 3) {
   let currentUrl = new URL(target);
@@ -37,7 +54,9 @@ export default {
       "Access-Control-Allow-Origin":  origin,
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
       "Access-Control-Allow-Headers": "Authorization, Content-Type, x-openclaw-session-key, Accept, CF-Access-Jwt-Assertion, X-OpenClaw-Access-Provider, X-OpenClaw-Access-Session",
+      "Access-Control-Expose-Headers": "Content-Type, Date, Cache-Control, x-request-id",
       "Access-Control-Max-Age":       "86400",
+      "Vary":                         "Origin",
     };
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: cors });
@@ -51,8 +70,11 @@ export default {
     const host = (rest.split("/")[0] || "").toLowerCase();
     // Restrict targets because requests carry an access session. Without this
     // allowlist, a caller could redirect that session to another host.
-    const cloudflareHost = /^[a-z0-9.-]+$/.test(host) && (host === "brevlab.com" || host.endsWith(".brevlab.com"));
-    const pomeriumHost = /^[a-z0-9.-]+$/.test(host) &&
+    const validHost = host.length <= 253 && host.split(".").every(label =>
+      label.length > 0 && label.length <= 63 &&
+      /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(label));
+    const cloudflareHost = validHost && (host === "brevlab.com" || host.endsWith(".brevlab.com"));
+    const pomeriumHost = validHost &&
       (host === "apps.run.brev.nvidia.com" || host.endsWith(".apps.run.brev.nvidia.com"));
     const hostOk = cloudflareHost || pomeriumHost;
     if (!hostOk) {
@@ -133,6 +155,9 @@ export default {
       return new Response(error.message || "Upstream redirect blocked.", { status: 502, headers: { "Content-Type": "text/plain", ...cors } });
     }
     const out = new Response(upstream.body, upstream);
+    // This relay owns the CORS answer. An upstream credential grant or cookie
+    // must not survive next to the reflected page origin.
+    for (const name of UPSTREAM_CORS_HEADERS) out.headers.delete(name);
     for (const [k, v] of Object.entries(cors)) out.headers.set(k, v);
     return out;
   },

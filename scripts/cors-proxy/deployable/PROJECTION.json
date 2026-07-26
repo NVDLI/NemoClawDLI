@@ -9,16 +9,24 @@
     "combine the two reviewed source revisions without repository history",
     "add Apache-2.0 source headers and public release beacons",
     "replace operator deployment values with required parameters",
-    "express the equivalent relay resources in a dependency-free generic infrastructure template"
+    "retain Terraform with a partial backend and operator-supplied region, DNS, certificates, resource names, artifacts, policies, and secrets",
+    "keep a dependency-free JSON projection of the same relay topology for review",
+    "keep the edge shared secret out of upstream requests, fail closed when it is unconfigured, and cover the handler entry point with tests"
   ],
   "source_location": "retained in the authorized release record",
   "files": {
-    ".gitignore": "caa304a90036ce75e28bef7528118875eb5b5a198f717d1ebc7ec2be40a36260",
-    "README.md": "832f1f09912432438fdc3b5c1eefdf4963c176bc0f847d29f21e587b8013d10d",
+    ".gitignore": "57226f05448904bbbc0522d88e8080830ad8478059bec377de6d582003e0c5df",
+    "README.md": "0f66f75a5ce2e50e59b7e32bd7d332c3fe49c3c3ba4644fa2fd19b7d124f3bb8",
     "SKILL.html": "b3af8b3cdee5173587c10644f2e26c3c10469f5a3a4afb39d1e75dcf8bc0dd08",
-    "infrastructure/SKILL.html": "af5956bd8b3f1d8bff19a977aed32194a5be9bed81887babd470ffa0418fe58d",
-    "infrastructure/parameters.example.json": "947e4289bf82c83ac8f5e99ef47d86183c0751bfbecef6b05214a4c21e091cc3",
-    "infrastructure/template.json": "ec519e6b8c6f6236e37b016c11af762e02b1c2dfba18ac28e2f0150e5d55ae9a",
+    "infrastructure/SKILL.html": "d3732719083ccbc0a71c29d1dfa788bfbe779579ea0560d0c110e1cb4ee1c18d",
+    "infrastructure/backend.hcl.example": "af005743c8b7e84c0a941299ff52f7c39629dc7dab2acd59790ba0c5d0744e86",
+    "infrastructure/main.tf": "b22b5173a07312dabcae75112481912725bb9d672fd1683edb035027edd28ea2",
+    "infrastructure/outputs.tf": "66c8cff1b29db15bdbb81e4c97ec50837feb06b4d26dc8008c85f48ec74a9e29",
+    "infrastructure/parameters.example.json": "6035dac61446e3faa50c1d8cc4fa18cd1d827a239d0f9962ef679c43506454f0",
+    "infrastructure/template.json": "9f1f7e2d17b4225417bfded4d449b2ef453a3e313877609e84f9f6d493a61201",
+    "infrastructure/terraform.tf": "ac36bccc1a8a81ec0eafa18704937fbf5813bd3cdd52bf2ae1ee54a0a7205164",
+    "infrastructure/terraform.tfvars.example": "9b7eb50838108aef09d3e486770e6c6efeb0fbb1dc5330251af5d8bd2b0ce6c1",
+    "infrastructure/variables.tf": "ea8ea68f9a1b7a0d26df8db06de4018b1555e4ccb04c3a8930a362a00fb80cc1",
     "package.json": "a2215d841b7a5fe71e0733573c7d882d4ea78ccec85f014f42bc7af6cf75590b",
     "scripts/SKILL.html": "033fd740c480fdb3cb99fad64ba01cfc515122bee2a401fe7c9dbd973a1dd63c",
     "scripts/local-stream-test.mjs": "ecc9e0e3ce7c24d3394333c319f96920b98ab264d94f39b84a2ed42489dcec01",
@@ -29,10 +37,11 @@
     "src/SKILL.html": "a6dfe44e9a0333a6d5301bb895a2cd8533c3d504e8e8b778d296a9ea2fa50cd9",
     "src/handler.mjs": "09fc02aeb9016a323877a446c4a62acb09774897744de79b7dfd05e66a632fc5",
     "src/openclaw-websocket-request.js": "02bf3cd00e7a1046ed3d3e662facb077fbe470be234d7a6b6d238f2945b0fbdd",
-    "src/proxy.mjs": "5b60ea3c3a0b6cc35ebb237c499754d1f445b212cd981def931b517f01875ee2",
-    "test/SKILL.html": "3979fdfedb76cd5d034d485a08fc93fa054307bf7eb54b0afea3a6385f67a227",
-    "test/infrastructure.test.mjs": "4a9497ec1b100f4d8306786e4d9588ff23282b5b817ce8adec78ab5ca1833110",
+    "src/proxy.mjs": "f8e29f5d5734809fb7a5a524063214517236491dc5736bd2627fced54becab64",
+    "test/SKILL.html": "cb772dfe80a0affd372e40ccb09ff71f95cd8504cd49e8ca9c07f4a7766c705c",
+    "test/handler.test.mjs": "1deea87d0dd6125ed0a3074566e42c760c8507b4acc4f6528e9034bcfc626e5e",
+    "test/infrastructure.test.mjs": "6c8e73da799bb262f4aa3d49e29cb442a6e5ad0fe7dbed908f046b006a7738b8",
     "test/openclaw-websocket-request.test.mjs": "ad555007360ba6f1df8414e9146dd2e30be1ce426563595e5eafd30102407cb3",
-    "test/proxy.test.mjs": "262e5b543b3a53da4707c0371f873fd8076b70f94f3cf49b9e761f39c4d4a421"
+    "test/proxy.test.mjs": "242b34f807a86f2bfad4ef5e21de0ec2e0abb5033291bec5c7aef7cc471eb1ab"
   }
 }

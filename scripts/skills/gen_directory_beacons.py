@@ -51,7 +51,7 @@ SUMMARIES = {
     "scripts/cors-proxy/deployable": "History-free, parameterized source for the optional Lambda and CloudFront browser relays. The course does not deploy or operate this stack.",
     "scripts/cors-proxy/deployable/scripts": "Packaging and operator-run smoke checks for the optional relay stack.",
     "scripts/cors-proxy/deployable/src": "Dependency-free Lambda and CloudFront request-routing implementation.",
-    "scripts/cors-proxy/deployable/infrastructure": "Generic operator-parameterized infrastructure template for both relay endpoints.",
+    "scripts/cors-proxy/deployable/infrastructure": "Operator-parameterized Terraform and reviewable JSON infrastructure for both relay endpoints.",
     "scripts/cors-proxy/deployable/test": "Node unit tests for request filtering, provider binding, redirects, CORS, streaming, and WebSocket routing.",
     "web/shared": "Pinned browser libraries and course-authored interface primitives shared without creating sibling-course dependencies.",
     "web/shared/vendor": "Byte-identical publisher browser assets with version, license, digest, and reviewed-copy evidence.",

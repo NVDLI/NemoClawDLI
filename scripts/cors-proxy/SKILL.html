@@ -24,7 +24,7 @@
 <script type="application/json" id="explorer-config">
 {
   "title": "CORS relay contracts",
-  "summary": "The compact workers explain the browser contract. The deployable child directory contains the parameterized Lambda, CloudFront, generic infrastructure-template, test, and smoke-test projection. This repository publishes source but does not operate a relay deployment.",
+  "summary": "The compact workers explain the browser contract. The deployable child directory contains the parameterized Lambda, CloudFront, Terraform, test, and smoke-test projection. This repository publishes source but does not operate a relay deployment.",
   "nav": {
     "home": "../../web/index.html",
     "up": {
@@ -37,13 +37,13 @@
       "path": "cors-proxy-worker-build.js",
       "role": "model relay reference",
       "desc": "Reference behavior for the iframe-host relay to build.nvidia.com. It reflects request origins for CORS and forwards X-BILLING-INVOKE-ORIGIN; the hosted endpoint is maintained separately.",
-      "bytes": 1933
+      "bytes": 3910
     },
     {
       "path": "cors-proxy-worker-openclaw.js",
       "role": "launchable relay reference",
       "desc": "Reference behavior for the NemoClaw launchable relay. It restricts upstream hosts to the approved Cloudflare Access and Pomerium Brev families and describes the required HTTP and WebSocket boundary.",
-      "bytes": 3481
+      "bytes": 9539
     }
   ],
   "tour": [
@@ -60,8 +60,8 @@
       "title": "Reference CORS behavior",
       "file": "cors-proxy-worker-build.js",
       "lines": [
-        17,
-        34
+        33,
+        49
       ],
       "note": "The reference reflects the request origin. The hosted deployment owns its origin policy."
     },
@@ -69,8 +69,8 @@
       "title": "Launchable host and provider check",
       "file": "cors-proxy-worker-openclaw.js",
       "lines": [
-        21,
-        28
+        70,
+        80
       ],
       "note": "The relay accepts only the approved Brev host families and rejects a provider that does not match its target host."
     },
@@ -78,8 +78,8 @@
       "title": "Access-session handling",
       "file": "cors-proxy-worker-openclaw.js",
       "lines": [
-        30,
-        40
+        84,
+        139
       ],
       "note": "Fetch callers provide neutral provider and session headers. Browser WebSocket callers use equivalent query fields because WebSocket constructors cannot set headers. The relay removes those fields and creates only CF_Authorization for Cloudflare Access or X-Pomerium-Authorization for Pomerium. WebSocket upgrades return the upstream 101 response directly and pin Origin to http://localhost:8088 for the OpenClaw gateway allowlist."
     }
@@ -103,7 +103,7 @@
 <nav class="skill-nav" aria-label="Skill navigation"><a href="../../web/index.html">Home</a><a href="../SKILL.html">scripts</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../SKILL.html">Repository map</a></nav>
 </header>
   <h1 id="skill-title">CORS relay contracts</h1>
-  <p>The compact workers define the browser contract expected from model and NemoClaw relays. The launchable relay binds each Cloudflare Access or Pomerium session to its matching Brev host family. The deployable projection supplies the full Lambda, CloudFront, generic infrastructure-template, smoke-test, and unit-test implementation without environment identifiers or provisioning dependencies.</p>
+  <p>The compact workers define the browser contract expected from model and NemoClaw relays. The launchable relay binds each Cloudflare Access or Pomerium session to its matching Brev host family. The deployable projection supplies the full Lambda, CloudFront, Terraform, smoke-test, and unit-test implementation without environment identifiers.</p>
   <div class="skill-note">Run commands from the repository root. This repository publishes optional middleware source; credentials, state, DNS, resource names, and operated deployments remain outside it.</div>
   <h2>Executable checks</h2>
   <div class="skill-cmds">

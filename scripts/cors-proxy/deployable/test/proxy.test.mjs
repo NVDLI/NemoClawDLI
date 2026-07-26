@@ -47,6 +47,19 @@ test('normalizePath strips absolute proxy URL tricks', () => {
   assert.equal(normalizePath('https://evil.example/path'), '/evil.example/path');
 });
 
+test('isHostAllowed rejects malformed DNS names within an allowed suffix', () => {
+  const allowlist = ['.brevlab.com', '.apps.run.brev.nvidia.com'];
+  for (const host of [
+    'double..dot.brevlab.com',
+    '-leading.brevlab.com',
+    'trailing-.brevlab.com',
+    `${'a'.repeat(64)}.brevlab.com`,
+  ]) {
+    assert.equal(isHostAllowed(host, allowlist), false, host);
+  }
+  assert.equal(isHostAllowed('valid-name.brevlab.com', allowlist), true);
+});
+
 test('corsHeaders allow arbitrary origins but do not allow credentials', () => {
   const headers = corsHeaders('https://course.example');
   assert.equal(headers['access-control-allow-origin'], 'https://course.example');
@@ -110,8 +123,12 @@ test('filteredRequestHeaders strips browser cookies and hop-by-hop headers', () 
     'X-Pomerium-Authorization': 'caller-controlled',
     'CF-Access-Client-Id': 'caller-id',
     'CF-Access-Client-Secret': 'caller-secret',
+    'X-DLI-Cors-Proxy-Secret': 'edge-only-secret',
+    'X-Forwarded-For': '203.0.113.7',
   });
   assert.equal(headers.get('host'), null);
+  assert.equal(headers.get('x-dli-cors-proxy-secret'), null);
+  assert.equal(headers.get('x-forwarded-for'), null);
   assert.equal(headers.get('cookie'), null);
   assert.equal(headers.get('connection'), null);
   assert.equal(headers.get('authorization'), 'Bearer ok');
@@ -359,6 +376,22 @@ test('single-host mode honors an UPSTREAM_ORIGIN override (nvidia-api endpoint)'
     const target = buildTargetUrl('/v1/chat/completions', 'stream=true');
     assert.equal(target.toString(), 'https://integrate.api.nvidia.com/v1/chat/completions?stream=true');
   });
+});
+
+test('single-host mode rejects unapproved or credential-bearing upstream configuration', () => {
+  for (const upstream of [
+    'http://build.nvidia.com',
+    'https://evil.example',
+    'https://user:password@build.nvidia.com',
+    'https://build.nvidia.com?redirect=evil',
+  ]) {
+    withEnv({ PROXY_MODE: undefined, UPSTREAM_ORIGIN: upstream }, () => {
+      assert.throws(
+        () => buildTargetUrl('/v1/chat/completions', ''),
+        /Model upstream origin is not approved/,
+      );
+    });
+  }
 });
 
 test('isHostAllowed: suffix and exact match, rejects off-list and malformed hosts', () => {

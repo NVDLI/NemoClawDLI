@@ -56,8 +56,12 @@
     },
     "LogRetentionDays": {
       "Type": "Number",
-      "Default": 14,
       "AllowedValues": [1, 3, 5, 7, 14, 30, 60, 90]
+    },
+    "CloudFrontPriceClass": {
+      "Type": "String",
+      "AllowedValues": ["PriceClass_100", "PriceClass_200", "PriceClass_All"],
+      "Description": "Operator-selected CloudFront price class."
     }
   },
   "Resources": {
@@ -227,7 +231,7 @@
           "Enabled": true,
           "HttpVersion": "http2and3",
           "IPV6Enabled": true,
-          "PriceClass": "PriceClass_100",
+          "PriceClass": {"Ref": "CloudFrontPriceClass"},
           "Origins": [{
             "Id": "model-lambda-url",
             "DomainName": {
@@ -263,7 +267,7 @@
           "Enabled": true,
           "HttpVersion": "http2and3",
           "IPV6Enabled": true,
-          "PriceClass": "PriceClass_100",
+          "PriceClass": {"Ref": "CloudFrontPriceClass"},
           "Origins": [
             {
               "Id": "runtime-lambda-url",

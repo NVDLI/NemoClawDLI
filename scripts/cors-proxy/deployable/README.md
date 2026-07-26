@@ -11,15 +11,17 @@ Operators own AWS accounts, state, DNS, certificates, resource names, credential
 deployment approval.
 
 The smaller workers in the parent directory remain teaching examples. This directory is the
-complete CloudFront, Lambda, generic infrastructure-template, packaging, smoke-test, and unit-test
-implementation.
+complete CloudFront, Lambda, Terraform, packaging, smoke-test, and unit-test implementation. A
+renderable JSON infrastructure template remains beside Terraform as a dependency-free review
+projection of the same topology.
 
 ## Security boundary
 
 The stack provides these controls:
 
 - response streaming through a Lambda Function URL;
-- a CloudFront-generated shared header that rejects direct Function URL requests;
+- a CloudFront-generated shared header that rejects direct Function URL requests and never
+  continues to an upstream origin;
 - a pinned model upstream and an explicit host allowlist for runtime traffic;
 - provider-to-host binding for Cloudflare Access and Pomerium browser sessions;
 - removal of browser cookies, upstream cookies, service-token headers, and session transport
@@ -36,14 +38,15 @@ committed.
 ## Requirements
 
 - Node.js 20 or newer
+- Terraform 1.10 or newer
 - AWS credentials supplied outside this repository
-- an operator-managed infrastructure deployment client
 
 Run the tests:
 
 ```bash
 npm test
 npm run render:infrastructure
+terraform -chdir=infrastructure fmt -check
 ```
 
 Package the Lambda:
@@ -54,18 +57,28 @@ Package the Lambda:
 
 ## Prepare an operator deployment
 
-Render the generic infrastructure template and package the Lambda:
+Package the Lambda, create ignored operator inputs from the examples, and initialize the partial
+Terraform backend:
 
 ```bash
 ./scripts/package-lambda.sh
-npm run render:infrastructure
+cp infrastructure/backend.hcl.example infrastructure/backend.hcl
+cp infrastructure/terraform.tfvars.example infrastructure/terraform.tfvars
+terraform -chdir=infrastructure init -backend-config=backend.hcl
+terraform -chdir=infrastructure validate
+terraform -chdir=infrastructure plan -var-file=terraform.tfvars
 ```
 
-Set `CORS_PROXY_INFRASTRUCTURE_OUTPUT` when the source tree is read-only or the reviewed artifact
-must be written to a separate staging directory.
+Replace every angle-bracket value before initialization. The partial backend deliberately contains
+no bucket, key, region, credentials, or locking topology. The operator supplies those values in
+the ignored `backend.hcl`. Region, resource prefix, artifact location, secrets, cache policies,
+log retention, price class, tags, DNS aliases, and certificates are required Terraform inputs.
+Public model origins and the two launchable host families are defaults because the relay enforces
+them as protocol facts.
 
-Upload the archive to an operator-owned artifact location. Then submit
-`build/infrastructure.json` with values matching `infrastructure/parameters.example.json`.
+Upload the archive to an operator-owned artifact location, then run the reviewed Terraform plan.
+Operators that need the portable review projection may run `npm run render:infrastructure`; set
+`CORS_PROXY_INFRASTRUCTURE_OUTPUT` when that JSON must be written outside the source tree.
 Account, artifact location, state, DNS, certificates, resource names, shared secrets, monitoring,
 and approval remain outside this repository. Pass the two shared secrets through an approved
 protected secret mechanism and review the complete change set before execution.
@@ -103,10 +116,15 @@ Run the same WebSocket smoke against `/ws/terminal` when validating the operator
 
 ## Projection record
 
-`PROJECTION.json` binds every file in this directory to a SHA-256 digest and records the reviewed
-source revision. An authorized maintainer refreshes the snapshot from an approved local checkout,
-removes environment-specific values, runs the middleware tests, updates the manifest, and submits
-the result through the normal Issue and pull-request flow.
+`PROJECTION.json` binds every projected source file in this directory to a SHA-256 digest and
+records the reviewed source revision. Ignored build, dependency, and operator-input paths are not
+source and cannot be expanded through `.gitignore`. An authorized maintainer refreshes the snapshot
+from an approved local checkout, removes environment-specific values, runs the middleware tests,
+updates the manifest, and submits the result through the normal Issue and pull-request flow.
+
+`projection_transformations` also records corrections made after review in this repository. Carry
+each one forward when re-projecting, or the next refresh reverts it. The current list covers the
+edge shared secret that must not continue upstream and the handler tests added here.
 
 After reviewing every projected change, refresh and immediately re-audit the file hashes:
 
@@ -116,3 +134,8 @@ python3 scripts/security/audit_cors_proxy_projection.py --refresh-manifest
 
 The public repository intentionally does not record a private source location. The authorized
 release record retains that acquisition evidence.
+
+## Rollback
+
+Remove this optional snapshot and restore the parent directory's teaching-only beacon. No course
+runtime endpoint changes are required because this repository never deploys or operates a relay.

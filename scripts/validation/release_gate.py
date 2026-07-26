@@ -76,6 +76,9 @@ SOURCE_LICENSE_CONTRACT_TESTS = py(
 PYODIDE_RUNTIME_SMOKE = ("bash", "scripts/runtime/run_node.sh", "scripts/pyodide/runtime_smoke.mjs", "--cdn")
 REACS_REGISTRY_TESTS = py("-m", "unittest", "-v", "tests.validation.test_reacs_registry")
 PRIVILEGED_COURSE_OPS_TESTS = py("-m", "unittest", "-v", "tests.validation.test_privileged_course_ops")
+CORS_PROXY_PROJECTION_TESTS = py(
+    "-m", "unittest", "-v", "tests.validation.test_cors_proxy_projection_audit",
+)
 LOCALE_CATALOG_TESTS = py("-m", "unittest", "-v", "tests.validation.test_locale_catalog")
 STANDARD_TEST_DISCOVERY = py("-m", "unittest", "discover", "-v", "-s", "tests/validation")
 
@@ -113,6 +116,8 @@ FAST_COMMANDS: tuple[tuple[str, ...], ...] = (
     py("scripts/build/project_source_tree.py", "--self-test"),
     py("scripts/build/project_source_tree.py", "--check-generated"),
     py("scripts/security/audit_iframe_proxy_opt_in.py"),
+    CORS_PROXY_PROJECTION_TESTS,
+    py("scripts/security/audit_cors_proxy_projection.py"),
     py("scripts/validation/endpoint_registration_audit.py"),
     ("bash", "scripts/runtime/run_node.sh", "scripts/validation/openclaw_connection_audit.mjs"),
     py("scripts/compliance/source_gate.py"),
@@ -209,6 +214,8 @@ SHIP_COMMANDS: tuple[tuple[str, ...], ...] = (
     ),
     py("scripts/security/audit_iframe_proxy_opt_in.py", "--self-test"),
     py("scripts/security/audit_iframe_proxy_opt_in.py"),
+    CORS_PROXY_PROJECTION_TESTS,
+    py("scripts/security/audit_cors_proxy_projection.py"),
     py("scripts/validation/endpoint_registration_audit.py", "--self-test"),
     py("scripts/validation/endpoint_registration_audit.py"),
     ("bash", "scripts/runtime/run_node.sh", "scripts/validation/openclaw_connection_audit.mjs"),
@@ -498,6 +505,11 @@ MUTATION_IMPACTS: dict[tuple[str, ...], tuple[str, ...]] = {
         "scripts/security/audit_iframe_proxy_opt_in.py", "scripts/cors-proxy/*",
         "web/nemoclaw/index.html", "web/nemoclaw/scripts/_keypanel.js",
         "web/nemoclaw/scripts/_shared.js",
+    ),
+    CORS_PROXY_PROJECTION_TESTS: (
+        "scripts/security/audit_cors_proxy_projection.py",
+        "tests/validation/test_cors_proxy_projection_audit.py",
+        "scripts/cors-proxy/deployable/*", "scripts/cors-proxy/deployable/**/*",
     ),
     py("scripts/validation/endpoint_registration_audit.py", "--self-test"): (
         "scripts/validation/endpoint_registration_audit.py", "web/nemoclaw/scripts/_shared.js",
