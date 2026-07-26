@@ -12,7 +12,7 @@ const code = Function('return `' + quoteTemplate(m[1]) + '`')();
 
 const logs = [];
 const storage = new Map([
-  ['nemoclaw_clawrawurl', 'https://nemoclaw-v6paslvp5.brevlab.com'],
+  ['nemoclaw_clawrawurl', 'https://nemoclaw-demo.brevlab.com'],
   ['nemoclaw_clawtoken', 'test-token'],
   ['nemoclaw_openclaw_access_provider_v1', 'cloudflare'],
   ['nemoclaw_openclaw_access_session_v1', 'test.jwt'],
@@ -66,7 +66,7 @@ await fn(state, helpers, helpers, console);
 
 if (opened.length !== 1) throw new Error(`expected one WebSocket, saw ${opened.length}`);
 if (tokenRefreshes !== 1) throw new Error(`expected one gateway-token bootstrap, saw ${tokenRefreshes}`);
-const expected = 'wss://nemoclaw-v6paslvp5.brevlab.com/cli/gateway';
+const expected = 'wss://nemoclaw-demo.brevlab.com/cli/gateway';
 if (opened[0] !== expected) throw new Error(`expected direct signed-in launchable ${expected}, got ${opened[0]}`);
 if (opened[0].includes('cf_access_jwt') || logs.some(x => x.includes('via hosted relay'))) {
   throw new Error('gateway connection exposed the access session through the hosted relay');

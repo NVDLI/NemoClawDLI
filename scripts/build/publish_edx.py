@@ -48,6 +48,10 @@ for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
         sys.path.insert(0, str(_p / "scripts")); break
 from _bootstrap import add_script_paths, find_repo_root
 
+ROOT = find_repo_root(Path(__file__).resolve())
+add_script_paths(ROOT / "scripts")
+import sensitive_content_audit  # noqa: E402
+
 BUCKET           = os.environ.get("DLI_PUBLISH_BUCKET", "").strip()
 # The course code comes from the environment; never hardcode one here.
 COURSE_CODE      = os.environ.get("DLI_COURSE_CODE", "").strip()
@@ -56,6 +60,16 @@ PUBLIC_URL       = os.environ.get("DLI_PUBLIC_ASSET_BASE_URL", "").strip().rstri
 
 DEFAULT_SRC = Path(__file__).resolve().parent.parent / "web" / "nemoclaw_standalone"
 ZIP_NAME    = "current-html-pages.zip"
+
+
+def _audit_publication_tree(root: Path) -> bool:
+    findings, _ = sensitive_content_audit.audit(root)
+    if not findings:
+        return True
+    for item in findings:
+        sys.stderr.write("  " + sensitive_content_audit.format_finding(item) + "\n")
+    sys.stderr.write("refusing publish: restricted or private operational content detected\n")
+    return False
 
 
 def _derive_prefix(src: Path) -> str:
@@ -134,6 +148,10 @@ def main() -> int:
     ap.add_argument("--no-zip", action="store_true",
                     help="Skip building & uploading current-html-pages.zip")
     args = ap.parse_args()
+    # This uploader writes world-readable objects, and a workstation may never have installed the
+    # hooks. Audit the complete source tree before either mode reports a plan or touches S3.
+    if not _audit_publication_tree(ROOT):
+        return 1
     if not BUCKET or not COURSE_CODE or not PUBLIC_URL.strip("/"):
         sys.stderr.write("set DLI_PUBLISH_BUCKET, DLI_PUBLIC_ASSET_BASE_URL, and DLI_COURSE_CODE before publishing\n")
         return 1
@@ -144,6 +162,8 @@ def main() -> int:
     if not src.is_dir():
         sys.stderr.write(f"source directory not found: {src}\n")
         sys.stderr.write("Run scripts/build/bundle_standalone.py first.\n")
+        return 1
+    if not _audit_publication_tree(src):
         return 1
 
     key_prefix = args.prefix or _derive_prefix(src)

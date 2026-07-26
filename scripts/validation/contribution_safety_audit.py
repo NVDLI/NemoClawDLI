@@ -82,6 +82,7 @@ CONTRACT_FILES = (
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/dependabot.yml",
     ".github/workflows/codeql.yml",
+    ".github/workflows/contribution-boundary.yml",
     ".github/workflows/dependency-review.yml",
     ".gitlab/merge_request_templates/Default.md",
     ".gitlab/issue_templates/COURSE_CONTENT.md",
@@ -94,7 +95,10 @@ CONTRACT_FILES = (
     ".gitlab/ci/core.yml",
     ".gitlab/ci/sca.yml",
     ".gitlab/ci/privileged.yml",
+    ".gitlab/ci/privileged-child.yml",
     "scripts/build/build_pages.sh",
+    "scripts/build/push_pages.sh",
+    "scripts/build/publish_edx.py",
     "scripts/build/install-hooks.sh",
     "scripts/build/build_branch_manifest.py",
     "scripts/build/package_release.py",
@@ -400,7 +404,10 @@ def audit_workflow_trust_boundaries(
                 "keep workflow-level permissions read-only and grant narrow authority to excluded jobs",
             ))
 
-        if workflow_has_trigger(raw, "pull_request_target"):
+        if (
+            workflow_has_trigger(raw, "pull_request_target")
+            and rel != ".github/workflows/contribution-boundary.yml"
+        ):
             out.append(finding(
                 "unsafe-pr-trigger", rel,
                 "pull_request_target can combine untrusted proposals with base-repository authority",
@@ -459,6 +466,101 @@ def audit_workflow_trust_boundaries(
                     f"pull-request job {name} renders the secrets context",
                     "never serialize secret contexts into a command or runner log",
                 ))
+    return out
+
+
+def audit_trusted_contribution_boundary(workflow: str) -> list[dict[str, str]]:
+    """Keep the sole pull_request_target workflow base-owned and candidate-inert."""
+    rel = ".github/workflows/contribution-boundary.yml"
+    out: list[dict[str, str]] = []
+    if (
+        not workflow_has_trigger(workflow, "pull_request_target")
+        or workflow_has_trigger(workflow, "pull_request")
+    ):
+        out.append(finding(
+            "github-base-boundary-trigger", rel,
+            "trusted contribution boundary is not exclusively pull_request_target",
+            "run the stable check from the trusted base branch with pull_request_target",
+        ))
+    if workflow_permission_entries(workflow, 0) != {"contents": "read"}:
+        out.append(finding(
+            "github-base-boundary-permissions", rel,
+            "trusted contribution boundary does not have an exact contents: read permission",
+            "grant only contents: read at workflow scope and no job-level authority",
+        ))
+    jobs = workflow_jobs(workflow)
+    if [name for name, _job in jobs] != ["scan-proposed-tree"]:
+        out.append(finding(
+            "github-base-boundary-job", rel,
+            "trusted contribution boundary must expose exactly one stable scan-proposed-tree job",
+            "keep one base-owned scan job so its required-status context remains stable",
+        ))
+        job = ""
+    else:
+        job = jobs[0][1]
+    require(
+        job, "    name: Trusted full-tree sensitive-content boundary", rel,
+        "github-base-boundary-check-name", out,
+        "retain the stable required-status check name",
+    )
+    checkout_steps = action_steps(job, "actions/checkout")
+    if (
+        len(checkout_steps) != 1
+        or "ref: ${{ github.event.pull_request.base.sha }}" not in checkout_steps[0]
+        or "persist-credentials: false" not in checkout_steps[0]
+    ):
+        out.append(finding(
+            "github-base-boundary-base-checkout", rel,
+            "trusted scanner does not check out exactly the base SHA with credentials disabled",
+            "check out only github.event.pull_request.base.sha and never the candidate head",
+        ))
+    uses = re.findall(r"(?m)^\s*-\s+(?:name:[^\n]*\n\s+)?uses:\s*([^\s]+)", job)
+    if len(uses) != 1 or not uses[0].startswith("actions/checkout@"):
+        out.append(finding(
+            "github-base-boundary-actions", rel,
+            "trusted scan loads an action other than the pinned base checkout",
+            "load no candidate or local actions; use only the pinned base checkout",
+        ))
+    if (
+        re.search(r"\$\{\{\s*secrets(?:\.|\[)", workflow)
+        or re.search(r"(?m)^\s*environment:\s*", job)
+        or any(
+            value == "write"
+            for value in (workflow_permission_entries(job, 4) or {}).values()
+        )
+    ):
+        out.append(finding(
+            "github-base-boundary-authority", rel,
+            "trusted scan can access secrets, an environment, or write authority",
+            "keep the contribution boundary secret-free, environment-free, and read-only",
+        ))
+    required = (
+        'git fetch --no-tags --depth=1 origin "refs/pull/${PR_NUMBER}/head"',
+        'test "$(git rev-parse FETCH_HEAD)" = "$CANDIDATE_SHA"',
+        'python3 scripts/validation/sensitive_content_audit.py --git-tree "$CANDIDATE_SHA"',
+    )
+    if not all(token in job for token in required):
+        out.append(finding(
+            "github-base-boundary-tree-scan", rel,
+            "trusted scan does not bind the event SHA to the fetched PR tree and base-owned scanner",
+            "fetch the PR ref as Git objects, compare its SHA, then pass it to the base scanner",
+        ))
+    elif not (job.index(required[0]) < job.index(required[1]) < job.index(required[2])):
+        out.append(finding(
+            "github-base-boundary-tree-scan", rel,
+            "trusted scan runs its tree boundary out of order",
+            "bind the fetched SHA before the base scanner reads the proposed tree",
+        ))
+    if re.search(
+        r"(?m)^\s*(?:git\s+(?:checkout|switch|worktree)|"
+        r"(?:bash|sh|python3?|node)\s+(?:/tmp|\$RUNNER_TEMP|candidate|proposed|head)[/\s])",
+        job,
+    ):
+        out.append(finding(
+            "github-base-boundary-candidate-execution", rel,
+            "trusted scan materializes or executes candidate-controlled paths",
+            "keep the proposed head in Git objects and invoke only base-owned scanner code",
+        ))
     return out
 
 
@@ -531,6 +633,9 @@ def audit_repo(
             for rel in CONTRACT_FILES}
     out.extend(audit_workflow_pins(root, overrides))
     out.extend(audit_workflow_trust_boundaries(root, overrides))
+    out.extend(audit_trusted_contribution_boundary(
+        docs[".github/workflows/contribution-boundary.yml"]
+    ))
     for rel in RETIRED_GUIDANCE:
         if (root / rel).exists():
             out.append(finding("retired-guidance", rel,
@@ -1527,6 +1632,39 @@ def audit_repo(
     require(prep, 'python3 "$RELEASE_REMINDER" --commit-range "$RANGE"',
             "scripts/git-hooks/pre-push", "prepush-release-reminder", out,
             "show operator-owned external release follow-ups before push")
+    # Hooks are opt-in and skippable, so every path that moves repository bytes outward carries
+    # the same audit directly. Each guard scans the complete tree, not a proposed range.
+    for rel, scope, token in (
+        (".github/workflows/pages.yml", workflow_job(pages, "build-and-verify"),
+         "run: python3 scripts/validation/sensitive_content_audit.py\n"),
+        (".github/workflows/pages.yml", workflow_job(pages, "build-and-verify"),
+         "python3 scripts/validation/sensitive_content_audit.py --root public"),
+        (".github/workflows/release.yml", workflow_job(release, "build-and-package"),
+         "run: python3 scripts/validation/sensitive_content_audit.py\n"),
+        (".github/workflows/release.yml", workflow_job(release, "build-and-package"),
+         "python3 scripts/validation/sensitive_content_audit.py --root public"),
+        ("scripts/build/push_pages.sh", docs["scripts/build/push_pages.sh"],
+         'if ! python3 "$T1/scripts/validation/sensitive_content_audit.py"; then'),
+        ("scripts/build/push_pages.sh", docs["scripts/build/push_pages.sh"],
+         'if ! python3 "$T1/scripts/validation/sensitive_content_audit.py" --root "$REPO/public"; then'),
+        ("scripts/build/publish_edx.py", docs["scripts/build/publish_edx.py"],
+         "_audit_publication_tree(ROOT)"),
+        ("scripts/build/publish_edx.py", docs["scripts/build/publish_edx.py"],
+         "_audit_publication_tree(src)"),
+        (".gitlab/ci/core.yml", docs[".gitlab/ci/core.yml"],
+         "sensitive_content_audit.py --root public"),
+        (".gitlab/ci/privileged-child.yml", docs[".gitlab/ci/privileged-child.yml"],
+         "sensitive_content_audit --root /tmp/validated-candidate"),
+        (".gitlab/ci/privileged-child.yml", docs[".gitlab/ci/privileged-child.yml"],
+         "sensitive_content_audit --root cdn/publication"),
+    ):
+        require(scope, token, rel, "publication-sensitive-guard", out,
+                f"audit the complete tree in {rel} so a skipped hook cannot publish restricted content")
+    require(re.sub(r"\s+", " ", docs["docs/release_playbook.md"]),
+            "Host webhook checks fire after a ref already exists on GitHub",
+            "docs/release_playbook.md", "publication-webhook-timing", out,
+            "state that host webhooks report after the fact while hooks and guards prevent, "
+            "and that required CI and ref rules remain the merge boundary")
     for rel in (".github/PULL_REQUEST_TEMPLATE.md", ".gitlab/merge_request_templates/Default.md"):
         require(docs[rel], "## External release follow-up", rel, "submission-release-reminder", out,
                 "retain the external release follow-up section in contribution templates")
@@ -1819,6 +1957,50 @@ def self_test() -> list[str]:
             ("prose-locale-ownership", "docs/course-prose-style.md", "Locale ownership", "Translation rewrite"),
             ("github-pr-trigger", ".github/workflows/pages.yml", "  pull_request:\n", "  # pull_request removed\n"),
             (
+                "github-base-boundary-trigger",
+                ".github/workflows/contribution-boundary.yml",
+                "  pull_request_target:\n",
+                "  pull_request:\n",
+            ),
+            (
+                "github-base-boundary-check-name",
+                ".github/workflows/contribution-boundary.yml",
+                "    name: Trusted full-tree sensitive-content boundary",
+                "    name: Candidate-controlled scan",
+            ),
+            (
+                "github-base-boundary-base-checkout",
+                ".github/workflows/contribution-boundary.yml",
+                "ref: ${{ github.event.pull_request.base.sha }}",
+                "ref: ${{ github.event.pull_request.head.sha }}",
+            ),
+            (
+                "github-base-boundary-tree-scan",
+                ".github/workflows/contribution-boundary.yml",
+                'test "$(git rev-parse FETCH_HEAD)" = "$CANDIDATE_SHA"',
+                'echo "$(git rev-parse FETCH_HEAD)" "$CANDIDATE_SHA"',
+            ),
+            (
+                "github-base-boundary-tree-scan",
+                ".github/workflows/contribution-boundary.yml",
+                'python3 scripts/validation/sensitive_content_audit.py --git-tree "$CANDIDATE_SHA"',
+                'python3 scripts/validation/sensitive_content_audit.py',
+            ),
+            (
+                "github-base-boundary-candidate-execution",
+                ".github/workflows/contribution-boundary.yml",
+                '          test "$(git rev-parse FETCH_HEAD)" = "$CANDIDATE_SHA"\n',
+                '          test "$(git rev-parse FETCH_HEAD)" = "$CANDIDATE_SHA"\n'
+                '          git checkout "$CANDIDATE_SHA"\n',
+            ),
+            (
+                "github-base-boundary-actions",
+                ".github/workflows/contribution-boundary.yml",
+                "    steps:\n",
+                "    steps:\n"
+                "      - uses: ./.github/actions/candidate-check\n",
+            ),
+            (
                 "github-pr-fail-fast-order",
                 ".github/workflows/pages.yml",
                 "      - name: Pull request submission contract\n",
@@ -1878,6 +2060,18 @@ def self_test() -> list[str]:
             ("release-build-epoch", "scripts/build/build_branch_manifest.py", 'os.environ.get("SOURCE_DATE_EPOCH")', 'os.environ.get("BUILD_TIME")'),
             ("publication-release-guard", ".github/workflows/release.yml", "contribution_safety_audit.py --require-publication-approved", "contribution_safety_audit.py"),
             ("publication-deploy-guard", ".github/workflows/pages.yml", "contribution_safety_audit.py --require-publication-approved", "contribution_safety_audit.py"),
+            ("publication-sensitive-guard", ".github/workflows/pages.yml", "      - name: Sensitive content boundary before the deployed artifact\n        run: python3 scripts/validation/sensitive_content_audit.py\n", ""),
+            ("publication-sensitive-guard", ".github/workflows/pages.yml", "      - name: Sensitive content boundary on the exact Pages artifact\n        run: python3 scripts/validation/sensitive_content_audit.py --root public\n", ""),
+            ("publication-sensitive-guard", ".github/workflows/release.yml", "      - name: Sensitive content boundary before the released artifact\n        run: python3 scripts/validation/sensitive_content_audit.py\n", ""),
+            ("publication-sensitive-guard", ".github/workflows/release.yml", "          python3 scripts/validation/sensitive_content_audit.py --root public\n", ""),
+            ("publication-sensitive-guard", "scripts/build/push_pages.sh", 'python3 "$T1/scripts/validation/sensitive_content_audit.py"', "true"),
+            ("publication-sensitive-guard", "scripts/build/push_pages.sh", 'sensitive_content_audit.py" --root "$REPO/public"', 'sensitive_content_audit.py" --help'),
+            ("publication-sensitive-guard", "scripts/build/publish_edx.py", "_audit_publication_tree(ROOT)", "True"),
+            ("publication-sensitive-guard", "scripts/build/publish_edx.py", "_audit_publication_tree(src)", "True"),
+            ("publication-sensitive-guard", ".gitlab/ci/core.yml", "      python3 scripts/validation/sensitive_content_audit.py --root public\n", ""),
+            ("publication-sensitive-guard", ".gitlab/ci/privileged-child.yml", "      python3 -m scripts.validation.sensitive_content_audit --root /tmp/validated-candidate\n", ""),
+            ("publication-sensitive-guard", ".gitlab/ci/privileged-child.yml", "      python3 -m scripts.validation.sensitive_content_audit --root cdn/publication\n", ""),
+            ("publication-webhook-timing", "docs/release_playbook.md", "Host webhook checks fire after a ref already exists on GitHub", "Host webhook checks prevent a bad ref"),
             ("github-reviewed-artifact-handoff", ".github/workflows/pages.yml", "needs: [build-and-verify, rebuild-for-comparison]", "needs: build-and-verify"),
             ("github-pr-browser-artifact", ".github/workflows/pages.yml", '--site-root "$RUNNER_TEMP/pull-request-public" --timeout-seconds 600', '--site-root web --timeout-seconds 600'),
             ("github-pages-browser-review", ".github/workflows/pages.yml", "runtime_integration_browser_audit.py --site-root public --timeout-ms 180000", "runtime_integration_browser_audit.py --site-root web --timeout-ms 180000"),

@@ -122,6 +122,8 @@ jobs:
           ref: ${{ inputs.tag }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Sensitive content boundary before the released artifact
+        run: python3 scripts/validation/sensitive_content_audit.py
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.11"
@@ -150,6 +152,7 @@ jobs:
           export BUILD_PAGES_LANGS=0
           export BUILD_PAGES_PULL_MATERIALS=0
           BUILD_PAGES_REUSE_VALIDATION=1 bash scripts/build/build_pages.sh public
+          python3 scripts/validation/sensitive_content_audit.py --root public
           mkdir -p release-assets release-evidence
           python3 scripts/validation/pages_artifact_integrity.py \
             --root public --expect-sha "$GITHUB_SHA" \

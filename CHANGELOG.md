@@ -5,6 +5,12 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Made an ephemeral launchable instance identifier uncommittable: the sensitive-content boundary now
+  rejects a provisioned instance ID in either supported host family from the tree, the index, and
+  proposed history, the remaining real identifier was replaced with synthetic fixtures, and every
+  repository-owned publication path carries the same audit directly so a skipped hook cannot publish.
+  A read-only trusted-base contribution check also scans proposed Git trees without checking out or
+  executing pull-request code.
 - Initial public release candidate.
 - No public version has been published.
 - Retired the repository-owned container/service stack in favor of pinned host-native validation tooling.
