@@ -14,6 +14,7 @@ import re
 import subprocess
 import sys
 import tempfile
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -39,6 +40,12 @@ IDENTIFIER_RES = (
     ),
     re.compile(r"\b(?P<prefix>[A-Z][A-Z0-9]{2,11})[\s:_-]+\d{4,}\b", re.I),
 )
+# Launchable host families supported by the course runtime. A provisioned instance publishes
+# itself as <label>-<instance-id>.<family>, so the identifier is ephemeral infrastructure that
+# must never be recorded. Fixtures keep the family and describe the instance with any segment
+# length other than the provisioned one.
+LAUNCHABLE_HOST_SUFFIXES = ("brevlab.com", "apps.run.brev.nvidia.com")
+INSTANCE_ID_RE = re.compile(r"[a-z0-9]{9}")
 DIRECT_PATTERNS = (
     ("private key material", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
     ("cloud access key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
@@ -72,8 +79,30 @@ class Policy:
     max_phrase_tokens: int
 
 
+def format_finding(item: Finding) -> str:
+    """Render an untrusted path without permitting log-control characters."""
+    return f"{json.dumps(item.path, ensure_ascii=True)}:{item.line}: {item.kind}"
+
+
 def digest(value: str) -> str:
     return hashlib.sha256(value.casefold().encode("utf-8")).hexdigest()
+
+
+def ephemeral_instance_host(host: str) -> bool:
+    """Report whether a launchable hostname carries a provisioned instance identifier.
+
+    The identifier is one alphanumeric segment of the launchable-specific prefix whose
+    length matches a provisioned instance. Matching on shape rather than on a known value
+    keeps discovery exhaustive: a new instance, a new label, and a deeper prefix all fail
+    without touching a denylist.
+    """
+    for suffix in LAUNCHABLE_HOST_SUFFIXES:
+        if not host.endswith("." + suffix):
+            continue
+        prefix = host[: -(len(suffix) + 1)]
+        if any(INSTANCE_ID_RE.fullmatch(segment) for segment in re.split(r"[.-]", prefix)):
+            return True
+    return False
 
 
 def isolated_git_env() -> dict[str, str]:
@@ -182,18 +211,54 @@ def staged_texts(root: Path = ROOT) -> list[tuple[str, str]]:
             check=False,
             capture_output=True,
         )
-        if shown.returncode or b"\0" in shown.stdout:
+        if shown.returncode:
             continue
         rows.append((rel, shown.stdout.decode("utf-8", errors="replace")))
     return rows
+
+
+def git_tree_texts(treeish: str, root: Path = ROOT) -> Iterator[tuple[str, str]]:
+    """Read every text blob from a Git tree without materializing candidate paths."""
+    if not re.fullmatch(r"[0-9a-f]{40}", treeish):
+        raise RuntimeError("git tree must be an exact lowercase 40-character commit SHA")
+    result = subprocess.run(
+        ["git", "ls-tree", "-r", "-z", "--full-tree", treeish],
+        cwd=root,
+        env=isolated_git_env(),
+        check=False,
+        capture_output=True,
+    )
+    if result.returncode:
+        raise RuntimeError(f"git ls-tree failed for {treeish[:12]}")
+    for item in result.stdout.split(b"\0"):
+        if not item:
+            continue
+        try:
+            metadata, raw_path = item.split(b"\t", 1)
+            _mode, kind, object_id = metadata.split()
+        except ValueError as exc:
+            raise RuntimeError("git ls-tree returned malformed candidate metadata") from exc
+        if kind != b"blob":
+            continue
+        shown = subprocess.run(
+            ["git", "cat-file", "blob", object_id.decode("ascii")],
+            cwd=root,
+            env=isolated_git_env(),
+            check=False,
+            capture_output=True,
+        )
+        if shown.returncode:
+            raise RuntimeError("git cat-file failed for a proposed tree blob")
+        yield (
+            os.fsdecode(raw_path),
+            shown.stdout.decode("utf-8", errors="replace"),
+        )
 
 
 def file_text(path: Path) -> str | None:
     try:
         raw = os.readlink(path).encode() if path.is_symlink() else path.read_bytes()
     except OSError:
-        return None
-    if b"\0" in raw:
         return None
     return raw.decode("utf-8", errors="replace")
 
@@ -219,6 +284,8 @@ def scan_text(path: str, text: str, policy: Policy) -> list[Finding]:
         suffixes = (".".join(labels[index:]) for index in range(max(1, len(labels) - 1)))
         if any(digest(suffix) in policy.hosts for suffix in suffixes):
             add(match.start(), "private service hostname")
+        if ephemeral_instance_host(host):
+            add(match.start(), "ephemeral infrastructure identifier")
     for kind, pattern in DIRECT_PATTERNS:
         for match in pattern.finditer(text):
             if kind == "corporate personal email" and match.group(0).casefold() in PUBLIC_ROLE_EMAILS:
@@ -279,6 +346,19 @@ def audit_staged(root: Path = ROOT, policy: Policy | None = None) -> tuple[list[
     return sorted(findings, key=lambda item: (item.path, item.line, item.kind)), len(rows)
 
 
+def audit_git_tree(
+    treeish: str, root: Path = ROOT, policy: Policy | None = None,
+) -> tuple[list[Finding], int]:
+    """Scan proposed Git objects with this trusted scanner, never candidate code."""
+    active = policy or load_policy()
+    findings: list[Finding] = []
+    scanned = 0
+    for path, text in git_tree_texts(treeish, root):
+        scanned += 1
+        findings.extend(scan_text(path, text, active))
+    return sorted(findings, key=lambda item: (item.path, item.line, item.kind)), scanned
+
+
 def audit_commit_range(commit_range: str, root: Path = ROOT, policy: Policy | None = None) -> tuple[list[Finding], int]:
     active = policy or load_policy()
     revs = subprocess.run(
@@ -323,6 +403,11 @@ def audit_commit_range(commit_range: str, root: Path = ROOT, policy: Policy | No
 
 def self_test() -> list[str]:
     policy = load_policy()
+    # Compose launchable samples from parts so this detector's own source stays clean under it.
+    relay_family, signed_in_family = LAUNCHABLE_HOST_SUFFIXES
+    instance = "a1b2c3d4e"
+    relay_host = "launchable-" + instance + "." + relay_family
+    signed_in_host = "launchable-" + instance + "." + signed_in_family
     examples = (
         ("year and serial", "C" + "VE-2026-12345", True),
         ("advisory groups", "G" + "HSA-2345-cfgh-jmpq", True),
@@ -349,8 +434,20 @@ def self_test() -> list[str]:
         ("public product host", "https://build.nvidia.com", False),
         ("placeholder query", "cf_access_jwt=...", False),
         ("generic policy prose", "Report security concerns through the private route.", False),
+        ("relay launchable instance", "https://" + relay_host + "/cli/gateway", True),
+        ("signed-in launchable instance", "wss://" + signed_in_host + "/ws/terminal", True),
+        ("nested launchable instance", "https://edge." + relay_host, True),
+        ("bare launchable instance host", signed_in_host, True),
+        ("short synthetic instance", "https://launchable-" + instance[:8] + "." + relay_family, False),
+        ("long synthetic instance", "https://launchable-" + instance + "5." + signed_in_family, False),
+        ("segmented synthetic instance", "https://launchable-test-fixture." + relay_family, False),
+        ("launchable family root", "https://" + relay_family + "/status", False),
+        ("unrelated nine-character host", "https://a1b2c3d4e.example.test/status", False),
     )
     failures: list[str] = []
+    rendered = format_finding(Finding("candidate\n::error::forged", 7, "fixture"))
+    if "\n" in rendered or "::error::" not in rendered:
+        failures.append("finding rendering: untrusted path was not escaped onto one log line")
     for label, sample, should_fail in examples:
         path = ".gitlab/CODEOWNERS" if label == "declared code owner" else "fixture.txt"
         rejected = bool(scan_text(path, sample, policy))
@@ -395,6 +492,73 @@ def self_test() -> list[str]:
         rows, _ = audit_commit_range(f"{base}..HEAD", root, policy)
         if not any(item.path.endswith(":tracked.txt") for item in rows):
             failures.append("commit range: removed intermediate detail was not rejected")
+
+        # A launchable instance must fail from a path no registry mentions, after a rename,
+        # from the index, and from proposed history that later deletes it.
+        added = "docs/runtime/notes/launchable.md"
+        (root / added).parent.mkdir(parents=True)
+        (root / added).write_text("App URL: https://" + relay_host + "\n", encoding="utf-8")
+        rows, _ = audit(root, policy, workers=1)
+        if not any(item.path == added for item in rows):
+            failures.append("novel nested path: launchable instance escaped full-tree discovery")
+        subprocess.run(["git", "add", added], cwd=root, env=env, check=True)
+        staged_rows, _ = audit_staged(root, policy)
+        if not any(item.path == added for item in staged_rows):
+            failures.append("staged index: proposed launchable instance was not rejected")
+        moved = "docs/runtime/relocated/launchable.md"
+        (root / moved).parent.mkdir(parents=True)
+        (root / added).rename(root / moved)
+        (root / moved).write_text("App URL: https://" + signed_in_host + "\n", encoding="utf-8")
+        rows, _ = audit(root, policy, workers=1)
+        if not any(item.path == moved for item in rows):
+            failures.append("renamed path: launchable instance escaped full-tree discovery")
+        subprocess.run(["git", "add", "-A"], cwd=root, env=env, check=True)
+        subprocess.run(
+            ["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.test", "commit", "-qm", "temporary launchable note", "-m", signoff],
+            cwd=root,
+            env=env,
+            check=True,
+        )
+        (root / moved).unlink()
+        subprocess.run(["git", "add", "-A"], cwd=root, env=env, check=True)
+        subprocess.run(
+            ["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.test", "commit", "-qm", "remove launchable note", "-m", signoff],
+            cwd=root,
+            env=env,
+            check=True,
+        )
+        rows, _ = audit_commit_range(f"{base}..HEAD", root, policy)
+        if not any(item.kind == "ephemeral infrastructure identifier" for item in rows):
+            failures.append("commit range: removed launchable instance was not rejected")
+
+        # A pull_request_target job invokes this already-loaded base scanner against Git objects.
+        # Candidate edits to its own workflow or scanner therefore remain inert untrusted bytes.
+        candidate_tamper = {
+            ".github/workflows/contribution-boundary.yml": "name: disabled candidate check\n",
+            "scripts/validation/sensitive_content_audit.py": "def audit(*_args): return [], 0\n",
+            "novel/deep/runtime/launchable.txt": "App URL: https://" + relay_host + "\n",
+        }
+        for rel, content in candidate_tamper.items():
+            path = root / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+        subprocess.run(["git", "add", "-A"], cwd=root, env=env, check=True)
+        subprocess.run(
+            ["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.test",
+             "commit", "-qm", "attempt to disable base scanner"],
+            cwd=root,
+            env=env,
+            check=True,
+        )
+        candidate_sha = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=root, env=env, check=True,
+            text=True, capture_output=True,
+        ).stdout.strip()
+        rows, _ = audit_git_tree(candidate_sha, root, policy)
+        if not any(item.path == "novel/deep/runtime/launchable.txt" for item in rows):
+            failures.append(
+                "trusted-base tree scan: candidate workflow and validator edits disabled novel-path discovery"
+            )
     with tempfile.TemporaryDirectory(prefix="sensitive-archive-") as temp_dir:
         archive = Path(temp_dir)
         (archive / "source.txt").write_text("B" + "DSA-2026-123456\n", encoding="utf-8")
@@ -402,9 +566,18 @@ def self_test() -> list[str]:
         (archive / "docs/validation/generated.txt").write_text(
             "B" + "DSA-2026-999999\n", encoding="utf-8"
         )
+        nested = "deploy/regions/edge/launchable.md"
+        (archive / nested).parent.mkdir(parents=True)
+        (archive / nested).write_text("App URL: https://" + relay_host + "\n", encoding="utf-8")
+        binary = "deploy/regions/edge/launchable.bin"
+        (archive / binary).write_bytes(b"\0fixture\0App URL: https://" + signed_in_host.encode())
         rows, scanned = audit(archive, policy, workers=1)
-        if scanned != 1 or not any(item.path == "source.txt" for item in rows):
+        if scanned != 3 or not any(item.path == "source.txt" for item in rows):
             failures.append("source-archive discovery: source content was not scanned exactly once")
+        if not any(item.path == nested for item in rows):
+            failures.append("source-archive discovery: novel nested launchable instance was missed")
+        if not any(item.path == binary for item in rows):
+            failures.append("source-archive discovery: NUL-wrapped launchable instance was missed")
     return failures
 
 
@@ -423,7 +596,7 @@ def emit(findings: list[Finding], label: str, scanned: int, report: str | None) 
     if findings:
         print(f"sensitive content audit: FAIL ({len(findings)})")
         for item in findings:
-            print(f"  {item.path}:{item.line}: {item.kind}")
+            print("  " + format_finding(item))
         print("Move private security details to the approved non-repository record and keep only generic controls here.")
         return 1
     print(f"sensitive content audit: OK ({label}; {scanned} inputs)")
@@ -434,6 +607,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--staged", action="store_true", help="scan exact file content staged in the Git index")
+    parser.add_argument(
+        "--git-tree", metavar="COMMIT_SHA",
+        help="scan every blob in an exact proposed Git tree without checking it out",
+    )
+    parser.add_argument(
+        "--root", type=Path, default=ROOT,
+        help="scan this complete source or publication tree instead of the repository root",
+    )
     parser.add_argument("--commit-range", metavar="BASE..HEAD")
     parser.add_argument("--submission-env", action="append", default=[], metavar="NAME")
     parser.add_argument("--report")
@@ -446,18 +627,22 @@ def main() -> int:
             for failure in failures:
                 print("  FAIL " + failure)
             return 1 if failures else 0
+        if args.git_tree:
+            findings, scanned = audit_git_tree(args.git_tree, args.root, policy)
+            return emit(findings, f"git tree {args.git_tree[:12]}", scanned, args.report)
         if args.commit_range:
-            findings, scanned = audit_commit_range(args.commit_range, policy=policy)
+            findings, scanned = audit_commit_range(args.commit_range, args.root, policy)
             return emit(findings, f"commit range {args.commit_range}", scanned, args.report)
         if args.staged:
-            findings, scanned = audit_staged(policy=policy)
+            findings, scanned = audit_staged(args.root, policy)
             return emit(findings, "staged index", scanned, args.report)
         if args.submission_env:
             text = "\n".join(os.environ.get(name, "") for name in args.submission_env)
             findings = scan_text("submission", text, policy)
             return emit(findings, "submission metadata", len(args.submission_env), args.report)
-        findings, scanned = audit(policy=policy)
-        return emit(findings, "working tree", scanned, args.report)
+        findings, scanned = audit(args.root, policy)
+        label = "working tree" if args.root == ROOT else f"tree {args.root}"
+        return emit(findings, label, scanned, args.report)
     except RuntimeError as exc:
         print(f"sensitive content audit: FAIL: {exc}")
         return 1

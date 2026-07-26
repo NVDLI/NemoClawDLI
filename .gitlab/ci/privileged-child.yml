@@ -170,11 +170,13 @@ cdn_prepare:
       python3 -m scripts.ci.assert_unprivileged_environment
       python3 -m scripts.validation.pages_artifact_integrity \
         --archive privileged/validated-candidate.tar.gz --extract-to /tmp/validated-candidate
+      python3 -m scripts.validation.sensitive_content_audit --root /tmp/validated-candidate
       mkdir -p cdn
       cp privileged/request.json cdn/request.json
       python3 -m scripts.ci.prepare_cdn_publication \
         --candidate /tmp/validated-candidate --request cdn/request.json \
         --output cdn/publication --plan cdn/publication-plan.json
+      python3 -m scripts.validation.sensitive_content_audit --root cdn/publication
   artifacts:
     name: "cdn-publication-$CI_COMMIT_SHORT_SHA"
     paths: [cdn/]

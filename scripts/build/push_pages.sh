@@ -39,6 +39,14 @@ esac
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 T1="$(cd "$HERE/.." && pwd)"
 
+# Publication is the last moment the repository controls its own bytes, and a workstation may
+# never have installed the hooks. Audit the complete source tree here so restricted details and
+# ephemeral infrastructure identifiers cannot reach the served site through this path.
+if ! python3 "$T1/scripts/validation/sensitive_content_audit.py"; then
+  echo "push_pages: REFUSING PUBLISH - restricted or private operational content detected." >&2
+  exit 1
+fi
+
 # Authenticate without logging the token. Prefer GITLAB_TOKEN; otherwise trust whatever
 # credentials the remote URL already carries. GitLab accepts the oauth2:<token> form.
 PUSH_REMOTE="$REMOTE"
@@ -73,6 +81,10 @@ fi
 git rm -rqf . >/dev/null 2>&1 || true
 rm -rf public .gitlab-ci.yml
 bash "$T1/scripts/build/build_pages.sh" "$REPO/public"
+if ! python3 "$T1/scripts/validation/sensitive_content_audit.py" --root "$REPO/public"; then
+  echo "push_pages: REFUSING PUBLISH - generated Pages content crossed the sensitive boundary." >&2
+  exit 1
+fi
 
 # 3. The dedicated project's entire pipeline: one `pages` job that serves the prebuilt
 #    site. GitLab serves the `public/` artifact of a job named `pages`.

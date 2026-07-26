@@ -30,7 +30,7 @@ try {
     return upstream;
   };
 
-  const req = new Request('https://openclaw-cors-proxy.test/https/nemoclaw-v6paslvp5.brevlab.com/cli/gateway?cf_access_jwt=test.jwt&keep=1', {
+  const req = new Request('https://openclaw-cors-proxy.test/https/nemoclaw-demo.brevlab.com/cli/gateway?cf_access_jwt=test.jwt&keep=1', {
     method: 'GET',
     headers: { Upgrade: 'websocket', Origin: 'https://course.example.test' },
   });
@@ -38,7 +38,7 @@ try {
   if (res.webSocket !== wsMarker) fail('worker did not return upstream WebSocket response directly');
   if (calls.length !== 1) fail(`expected one upstream fetch, saw ${calls.length}`);
   const call = calls[0];
-  if (call.target !== 'https://nemoclaw-v6paslvp5.brevlab.com/cli/gateway?keep=1') fail(`bad upstream target: ${call.target}`);
+  if (call.target !== 'https://nemoclaw-demo.brevlab.com/cli/gateway?keep=1') fail(`bad upstream target: ${call.target}`);
   if (call.headers.cookie !== 'CF_Authorization=test.jwt') fail(`missing CF_Authorization cookie: ${JSON.stringify(call.headers)}`);
   if (call.headers.origin !== 'http://localhost:8088') fail(`bad pinned Origin: ${call.headers.origin}`);
   if (call.redirect !== 'manual') fail(`WS fetch should use manual redirect, got ${call.redirect}`);

@@ -203,6 +203,23 @@ deployment environments before public intake. Fork jobs remain read-only and rec
 secrets. Keep private runtime names, credentials, internal topology, confidential findings,
 and restricted scanner output in approved internal systems.
 
+Host webhook checks fire after a ref already exists on GitHub, so an Actions run, a code-scanning
+result, or a secret-scanning alert reports a problem rather than preventing it, and push protection
+blocks only the patterns GitHub itself recognizes. Prevention for repository-defined classes such as
+restricted finding details and ephemeral infrastructure identifiers comes from the local hooks and
+from the direct `sensitive_content_audit.py` guard on every repository-owned publication path, which
+refuse an ordinary commit or publish before those bytes leave the workstation. Neither is a merge
+boundary: a hook can be skipped and a local guard can be edited, so required CI on the exact head
+plus branch and tag rules stay authoritative for what may merge or deploy.
+
+The stable `Trusted full-tree sensitive-content boundary` check runs through
+`pull_request_target`, so GitHub loads its workflow and scanner from the trusted base branch. It
+fetches the proposed head into the base repository's object database, verifies the event SHA, and
+scans every proposed blob without checking out the head or loading candidate actions. The job has
+only `contents: read`, receives no secrets, and cannot be disabled by a pull request that edits its
+own workflow or validator. After this contribution merges, make that stable check required on
+`main`; retain the ruleset's existing administrator bypass behavior.
+
 Before calling a pull request security-green, inspect the complete check-run set on its exact head.
 The repository-owned `analyze` jobs and SARIF policy do not replace GitHub's separate
 `github-advanced-security/CodeQL` result. Run

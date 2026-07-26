@@ -297,7 +297,7 @@ SUITE_META = [
      "Ideas remain easy to submit while code, merge, deploy, and release authority stay separated. Templates expose evidence and ownership; hooks refuse without mutating; pull-request CI is read-only; required checks and protected environments gate writes.",
      "scripts/validation/contribution_safety_audit.py", "audit_repo"),
     ("sensitive_content", "Sensitive content boundary", "required",
-     "Repository files, commit additions, and host-supplied submission metadata must not publish security-finding identifiers, exploit-specific notes, private service locations, corporate personal contacts, or concrete credentials. Private active-finding phrases are represented only by reviewed fingerprints.",
+     "Repository files, staged bytes, proposed Git trees, commit additions, and host-supplied submission metadata must not publish security-finding identifiers, exploit-specific notes, private service locations, ephemeral infrastructure identifiers such as a provisioned launchable instance, corporate personal contacts, or concrete credentials. Private active-finding phrases are represented only by reviewed fingerprints.",
      "scripts/validation/sensitive_content_audit.py", "audit"),
     ("helper_notebook", "Helper notebook contract", "required",
      "The runnable helper notebook must use the helper API exposed by its actual runtime surface. Static examples must not mix CanvasFlow-only and RunCell-only log helpers, because that ships a TypeError directly to students.",

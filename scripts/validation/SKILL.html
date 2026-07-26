@@ -132,7 +132,7 @@
     {
       "path": "sensitive_content_audit.py",
       "role": "sensitive contribution boundary",
-      "desc": "Rejects restricted finding identifiers and narratives, private service hosts, personal corporate addresses, concrete credentials, and matching commit history or submission metadata without echoing matched values."
+      "desc": "Rejects restricted finding identifiers and narratives, private service hosts, provisioned launchable instance identifiers in either supported host family, personal corporate addresses, concrete credentials, proposed Git trees, and matching commit history or submission metadata without echoing matched values."
     },
     {
       "path": "sensitive-content-policy.json",
@@ -443,7 +443,7 @@
     <a class="skill-link" href="validate_layout.py"><b>validate_layout.py</b><span>layout gate. Checks static links, the retired-runtime boundary, course assets, release scaffolding, and SKILL beacons.</span></a>
     <a class="skill-link" href="local_path_leak_audit.py"><b>local_path_leak_audit.py</b><span>contributor-local boundary. Rejects workstation paths and local identifiers in the current tree and every proposed commit.</span></a>
     <a class="skill-link" href="public_infrastructure_audit.py"><b>public_infrastructure_audit.py</b><span>Public infrastructure boundary. Exhaustively discovers source files and rejects concrete storage, account, hosted-zone, and generated distribution identifiers with no path exemptions.</span></a>
-    <a class="skill-link" href="sensitive_content_audit.py"><b>sensitive_content_audit.py</b><span>sensitive contribution boundary. Scans the tree, complete proposed history, and MR/PR metadata while reporting only category and location.</span></a>
+    <a class="skill-link" href="sensitive_content_audit.py"><b>sensitive_content_audit.py</b><span>sensitive contribution boundary. Scans the tree, staged bytes, proposed Git objects, complete proposed history, and MR/PR metadata for restricted details and provisioned launchable instance identifiers while reporting only category and location.</span></a>
     <a class="skill-link" href="sensitive-content-policy.json"><b>sensitive-content-policy.json</b><span>public fingerprint policy. Stores hashes only; private CI can add an overlay through an environment-provided file.</span></a>
     <a class="skill-link" href="release_change_reminder.py"><b>release_change_reminder.py</b><span>external release follow-up reminder. Converts changed paths into an operator checklist for authorized systems.</span></a>
     <a class="skill-link" href="grounding.py"><b>grounding.py</b><span>grounding sweep. Checks cited material association and source-grounding signals.</span></a>
