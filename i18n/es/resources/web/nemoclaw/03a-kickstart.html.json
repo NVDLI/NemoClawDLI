@@ -1,0 +1,1736 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "es-ES",
+  "template": "web/nemoclaw/03a-kickstart.html",
+  "media": [
+    "web/nemoclaw/assets/figures/03a-kickstart-1.svg"
+  ],
+  "values": {
+    "link.1511a6aba9a1": {
+      "type": "link",
+      "source": "<a href=\"https://docs.anthropic.com/en/docs/claude-code/overview\" target=\"_blank\" rel=\"noopener\">Anthropic,\n            <em>Claude Code</em> (docs)</a>. The directory-as-session pattern that the next page edits to change what\n          OpenClaw is.",
+      "value": "<a href=\"https://docs.anthropic.com/en/docs/claude-code/overview\" target=\"_blank\" rel=\"noopener\">Anthropic, <em>Claude Code</em> (docs)</a>. El patrón de directorio como sesión que la siguiente página aplica al editar la configuración de OpenClaw."
+    },
+    "link.1be52ce4d6ee": {
+      "type": "link",
+      "source": "Comprehensive list at <a href=\"04c-going-further.html#refs\">Going Further ·\n          References</a>.",
+      "value": "Lista completa en <a href=\"04c-going-further.html#refs\">Para ir más lejos · Referencias</a>."
+    },
+    "link.3ccc37a5756c": {
+      "type": "link",
+      "source": "\n        Modules 1 and 2 kept orchestration in the browser. A workflow ended when the page stopped\n        carrying its messages, intermediate results, or branch state. Module 3 moves the same agent patterns into a\n        <a href=\"https://brev.nvidia.com/launchable/deploy?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990\" target=\"_blank\" rel=\"noopener\">\n        NemoClaw Brev launchable</a>. OpenClaw preserves session history and a file-backed workspace\n        while continuing to expose tools; OpenShell limits what that running agent can reach. From the browser, you will compare\n        the stateless model API with the persistent OpenClaw gateway.\n      ",
+      "value": "En los Módulos 1 y 2, la orquestación permaneció en el navegador. Un flujo de trabajo terminaba cuando la página dejaba de transportar sus mensajes, resultados intermedios o el estado de sus ramas. El Módulo 3 lleva los mismos patrones de agentes a un <a href=\"https://brev.nvidia.com/launchable/deploy?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990\" target=\"_blank\" rel=\"noopener\">launchable de NemoClaw en Brev</a>. OpenClaw conserva el historial de la sesión y un workspace respaldado por archivos, sin dejar de ofrecer herramientas; OpenShell limita lo que ese agente en ejecución puede alcanzar. Desde el navegador, compararás la API de modelos sin estado con el gateway persistente de OpenClaw."
+    },
+    "link.545abef00491": {
+      "type": "link",
+      "source": "<a href=\"https://platform.openai.com/docs/api-reference/chat\" target=\"_blank\" rel=\"noopener\">OpenAI Chat\n            Completions API</a>. The wire format the model endpoint speaks, including the <code>finish_reason</code>\n          field this page surfaces.",
+      "value": "<a href=\"https://platform.openai.com/docs/api-reference/chat\" target=\"_blank\" rel=\"noopener\">OpenAI Chat Completions API</a>. El formato del endpoint del modelo, incluido el campo <code>finish_reason</code> que muestra esta página."
+    },
+    "link.547bfd828fe0": {
+      "type": "link",
+      "source": "<p><strong>What it is:</strong> The bearer key saved with the active model endpoint.\nNVIDIA API keys start with <code>nvapi-</code>.</p>\n<p><strong>How to get one:</strong> Sign in at <a href=\"${NVIDIA_BUILD_URL}\" target=\"_blank\" rel=\"noopener\">build.nvidia.com</a>\n→ API Keys → Generate Key.</p>\n<p><strong>Running locally:</strong> Same key works everywhere. Store it as an environment variable\n(<code>NVIDIA_API_KEY</code>) rather than pasting it into code.</p>",
+      "value": "<p><strong>Qué es:</strong> la clave bearer guardada con el endpoint activo.\nLas claves de la API de NVIDIA empiezan por <code>nvapi-</code>.</p>\n<p><strong>Cómo obtener una:</strong> inicia sesión en <a href=\"${NVIDIA_BUILD_URL}\" target=\"_blank\" rel=\"noopener\">build.nvidia.com</a>\ny elige API Keys → Generate Key.</p>\n<p><strong>Ejecución local:</strong> la misma clave funciona en todos los entornos. Guárdala en la variable de entorno\n<code>NVIDIA_API_KEY</code>, en lugar de pegarla en el código.</p>"
+    },
+    "link.5da9b25480f0": {
+      "type": "link",
+      "source": "Local deployments use the same gateway contract; follow the\n      <a href=\"https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986\"\n        target=\"_blank\" rel=\"noopener\">NemoClaw setup playbook</a>.\n    ",
+      "value": "Las implementaciones locales usan el mismo contrato del gateway; sigue el <a href=\"https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">playbook de configuración de NemoClaw</a>."
+    },
+    "link.6d40c8e77b7f": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2304.03442\" target=\"_blank\" rel=\"noopener\">Park et al., <em>Generative\n              Agents</em> (2023)</a>. Establishes server-side memory plus identity as durable runtime structure, the\n          model the session-key header implements.",
+      "value": "<a href=\"https://arxiv.org/abs/2304.03442\" target=\"_blank\" rel=\"noopener\">Park et al., <em>Generative\n              Agents</em> (2023)</a>. Presenta memoria e identidad mantenidas en el servidor como estructuras duraderas del runtime, patrón implementado aquí mediante la clave de sesión."
+    },
+    "link.7899e67407b3": {
+      "type": "link",
+      "source": "<strong>OpenClaw gateway.</strong> A <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API\" target=\"_blank\" rel=\"noopener\">WebSocket</a> at <code>/cli/gateway</code> carries <a href=\"https://www.jsonrpc.org/specification\" target=\"_blank\" rel=\"noopener\">JSON-RPC</a> events for the agent session.",
+      "value": "<strong>Gateway de OpenClaw.</strong> Un <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API\" target=\"_blank\" rel=\"noopener\">WebSocket</a> en <code>/cli/gateway</code> transporta eventos <a href=\"https://www.jsonrpc.org/specification\" target=\"_blank\" rel=\"noopener\">JSON-RPC</a> de la sesión del agente."
+    },
+    "link.a84b2dd7fa9b": {
+      "type": "link",
+      "source": "<a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NVIDIA build.nvidia.com</a>. The model API\n          behind the course proxy; paste your nvapi- key in the bearer field to authenticate.",
+      "value": "<a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NVIDIA build.nvidia.com</a>. La API de modelos que utiliza el proxy del curso; pega tu clave nvapi- en el campo de autenticación."
+    },
+    "link.b2f2fc6109e3": {
+      "type": "link",
+      "source": "<strong><a href=\"https://modelcontextprotocol.io/\" target=\"_blank\" rel=\"noopener\">Model Context Protocol (MCP)</a>.</strong> A common request format lets a runtime discover and call tools.",
+      "value": "<strong><a href=\"https://modelcontextprotocol.io/\" target=\"_blank\" rel=\"noopener\">Model Context Protocol (MCP)</a>.</strong> Un formato de solicitud común permite que un runtime descubra e invoque herramientas."
+    },
+    "rich.0e2fcec6f5fd": {
+      "type": "rich",
+      "source": "<p>This field is only for <strong>Cloudflare Access</strong>. Open that launchable, sign in, then copy the complete <code>CF_Authorization</code> value from DevTools → <strong>Application → Storage → Cookies</strong>.</p>\n<p>For <strong>Pomerium</strong>, the field is disabled. Open the launchable and sign in; its <code>HttpOnly</code> cookie stays in the browser and is never copied into course code or storage.</p>",
+      "value": "<p>Este campo es solo para <strong>Cloudflare Access</strong>. Abre ese launchable, inicia sesión y copia el valor completo de <code>CF_Authorization</code> desde DevTools → <strong>Application → Storage → Cookies</strong>.</p>\n<p>Para <strong>Pomerium</strong>, el campo queda desactivado. Abre el launchable e inicia sesión; su cookie <code>HttpOnly</code> permanece en el navegador y nunca se copia al código ni al almacenamiento del curso.</p>"
+    },
+    "rich.1260cedbb7fa": {
+      "type": "rich",
+      "source": "Each <code>⚙️</code> row is a tool call with its input arguments.",
+      "value": "Cada fila <code>⚙️</code> es una llamada a herramienta con sus argumentos de entrada."
+    },
+    "rich.182a0563107f": {
+      "type": "rich",
+      "source": "That token carries <code>operator.admin</code> scope, the same authority\n      the Control UI holds. With it you can:",
+      "value": "Ese token tiene asignado el alcance <code>operator.admin</code>, la misma autoridad que la interfaz de control. Con él puedes hacer lo siguiente:"
+    },
+    "rich.19b8581623ed": {
+      "type": "rich",
+      "source": "<code>\"configured\"</code> follows the relay toggle saved above. Cross-origin Brev uses the NVIDIA relay by default.",
+      "value": "<code>\"configured\"</code> sigue la opción de gateway guardada arriba. Brev entre orígenes usa el relay de NVIDIA de forma predeterminada."
+    },
+    "rich.1ff6a1374426": {
+      "type": "rich",
+      "source": "The JSON body carries <code>model</code> and <code>messages</code>.",
+      "value": "El cuerpo JSON transporta <code>model</code> y <code>messages</code>."
+    },
+    "rich.28538d8a6c36": {
+      "type": "rich",
+      "source": "\n      <strong>The session key is all the client sends to identify a conversation.</strong>\n      From that one string the gateway resolves the full session server-side before every\n      call, so the client never has to ship the transcript itself. Any two keys\n      that differ at all address two separate sessions even when the conversations behind\n      them hold identical content.\n    ",
+      "value": "<strong>La clave de sesión es la única identificación de la conversación enviada por el cliente.</strong> A partir de ella, el gateway recupera en el servidor toda la sesión antes de cada llamada; el cliente no necesita reenviar la transcripción. Dos claves diferentes siempre identifican sesiones separadas, aunque las conversaciones tengan contenido idéntico."
+    },
+    "rich.29e4641cbacb": {
+      "type": "rich",
+      "source": "<p><strong>What it is:</strong> The root URL of your NemoClaw launchable running OpenClaw inside OpenShell, with no trailing <code>/v1</code>.</p>\n<p><strong>How to find it:</strong> Copy the App URL from the Brev dashboard. Either supported launchable type works. For local OpenClaw, use <code>http://localhost:8088</code> or its exposed port and leave Access session empty.</p>",
+      "value": "<p><strong>Qué es:</strong> la URL raíz de tu launchable de NemoClaw, que ejecuta OpenClaw dentro de OpenShell, sin <code>/v1</code> al final.</p>\n<p><strong>Cómo encontrarla:</strong> copia la App URL del panel de Brev. Funcionan los dos tipos de launchable compatibles. Para OpenClaw local, usa <code>http://localhost:8088</code> o el puerto expuesto y deja vacía la Sesión de acceso.</p>"
+    },
+    "rich.2edde5d86458": {
+      "type": "rich",
+      "source": "\n      <p>Anyone who can read the launchable environment can read that token,\n        and a reader of the token is an operator with everything above. Module 4\n        turns this from a convenience into the central security question.</p>\n    ",
+      "value": "<p>Cualquiera que pueda leer el entorno del launchable también puede leer ese token; quien posea el token es un operador con todas las capacidades anteriores. El Módulo 4 convierte esta comodidad en la pregunta central de seguridad.</p>"
+    },
+    "rich.39f508e273fe": {
+      "type": "rich",
+      "source": "<code>\"direct\"</code> calls the launchable origin with <code>credentials:&nbsp;\"include\"</code>, relying on the matching launchable cookie your browser already holds.",
+      "value": "<code>\"direct\"</code> llama al origen del launchable con <code>credentials:&nbsp;\"include\"</code> y utiliza la cookie correspondiente que ya posee el navegador."
+    },
+    "rich.3ad92e720d94": {
+      "type": "rich",
+      "source": "An <code>Authorization</code> header names the caller.",
+      "value": "Un encabezado <code>Authorization</code> identifica al emisor."
+    },
+    "rich.3df2f5559fcf": {
+      "type": "rich",
+      "source": "<code>TRANSPORT</code> controls how the credential reaches the launchable:",
+      "value": "<code>TRANSPORT</code> controla cómo llegan las credenciales al launchable:"
+    },
+    "rich.3f6319effba0": {
+      "type": "rich",
+      "source": "The request line is a single <code>POST</code> to the completions route.",
+      "value": "La línea de solicitud es un único <code>POST</code> a la ruta de completions."
+    },
+    "rich.43335edc5e0a": {
+      "type": "rich",
+      "source": "Supported NemoClaw launchables normally report <code>tools.toolSearch=false</code>. A custom configuration can still enable it, so the health check reads the live value before Recover changes anything:",
+      "value": "Los launchables compatibles de NemoClaw suelen mostrar <code>tools.toolSearch=false</code>. Una configuración personalizada aún puede activarlo, por lo que la comprobación de estado lee el valor activo antes de que Recuperar cambie algo:"
+    },
+    "rich.4d542e1f5950": {
+      "type": "rich",
+      "source": "<p><strong>What it is:</strong> The model API base saved on the course home page.</p>\n<p><strong>How requests reach it:</strong> The default is <code>integrate.api.nvidia.com</code>.\nA presenter can select a compatible launchable once; every lesson and this probe reuse that value.\nIframe proxy mode remains available only for the default NVIDIA endpoint.</p>\n<p><strong>Active endpoint:</strong> <code>${MODEL_API_BASE_URL}</code>.</p>",
+      "value": "<p><strong>Qué es:</strong> la URL base de la API de modelos guardada en la página inicial.</p>\n<p><strong>Cómo llegan las solicitudes:</strong> el valor predeterminado es <code>integrate.api.nvidia.com</code>.\nEl instructor puede seleccionar una launchable compatible una sola vez; todas las lecciones y esta\nsonda reutilizan el valor. El proxy para iframe solo está disponible con el endpoint predeterminado.</p>\n<p><strong>Endpoint activo:</strong> <code>${MODEL_API_BASE_URL}</code>.</p>"
+    },
+    "rich.4d615187fe5c": {
+      "type": "rich",
+      "source": "<p><strong>Usually you can leave this blank.</strong> Run <strong>GET /api/agent</strong> below and the probe\nreads the gateway token out of <code>agent.dashboardUrl</code> and fills this field for you. For Pomerium, opening the launchable and signing in is enough. Cloudflare also needs its Access session below.</p>\n<p><strong>Manual fallback:</strong> If autofill doesn't fire, run <code>printenv OPENCLAW_GATEWAY_TOKEN</code> in your\nlaunchable terminal and paste the complete value here. Do not assume a fixed length or character set.</p>",
+      "value": "<p><strong>Normalmente puedes dejar este campo vacío.</strong> Ejecuta <strong>GET /api/agent</strong> debajo.\nLa sonda lee el token del gateway desde <code>agent.dashboardUrl</code> y completa el campo. Para Pomerium, basta con abrir el launchable e iniciar sesión. Cloudflare también necesita la Sesión de acceso de abajo.</p>\n<p><strong>Alternativa manual:</strong> si el campo no se completa, ejecuta\n<code>printenv OPENCLAW_GATEWAY_TOKEN</code> en la terminal del launchable y pega aquí el valor completo. No supongas\nuna longitud ni un conjunto de caracteres fijos.</p>"
+    },
+    "rich.4e8cf3cbc64a": {
+      "type": "rich",
+      "source": "\n      <strong>If the OpenClaw probe times out or returns a 502.</strong>\n      The agent harness likely has not finished booting, which usually means the\n      launchable started before OpenClaw finished loading its policy YAML. Wait\n      30 seconds and click Probe again. If it stays down, use the Recover cell in\n      the gateway section below before continuing.\n    ",
+      "value": "<strong>Si la sonda de OpenClaw agota el tiempo de espera o devuelve 502.</strong> Es probable que el runtime del agente aún esté arrancando: el launchable puede haberse iniciado antes de que OpenClaw terminara de cargar su política YAML. Espera 30 segundos y vuelve a ejecutar la sonda. Si sigue sin responder, usa la celda Recuperar en la sección del gateway antes de continuar."
+    },
+    "rich.4f2589a3d249": {
+      "type": "rich",
+      "source": "<strong>Different key:</strong> a clean start, nothing carried over.",
+      "value": "<strong>Una clave distinta:</strong> comienza desde cero, sin conservar nada."
+    },
+    "rich.550e27dcaea5": {
+      "type": "rich",
+      "source": "\n        <h3>Launch NemoClaw on Brev</h3>\n        <p>OpenClaw runs inside OpenShell and keeps agent identity, tools, and session memory. The\n          settings below accept either supported Brev host family and connect to\n          <code>/cli/gateway</code>.</p>\n        <p style=\"color:var(--tf);font-size:.8rem\">Credential: gateway token. Session:\n          <code>x-openclaw-session-key</code>.</p>\n      ",
+      "value": "\n        <h3>Inicia NemoClaw en Brev</h3>\n        <p>OpenClaw se ejecuta dentro de OpenShell y conserva la identidad del agente, sus herramientas y la memoria de sesión. La configuración inferior admite ambas familias de hosts de Brev compatibles y se conecta a <code>/cli/gateway</code>.</p>\n        <p style=\"color:var(--tf);font-size:.8rem\">Credencial: token del gateway. Sesión: <code>x-openclaw-session-key</code>.</p>\n      "
+    },
+    "rich.58c9a3916107": {
+      "type": "rich",
+      "source": "Every chat run self-checks: if one logs <code>⚠ DEGRADED</code>, come back up\n      here, run Recover, then retry.",
+      "value": "Cada ejecución de chat comprueba su estado. Si aparece <code>⚠ DEGRADED</code>, vuelve aquí, ejecuta Recuperar y repite el intento."
+    },
+    "rich.695769efb0e3": {
+      "type": "rich",
+      "source": "<code>cron.add</code> schedules work that runs without you.",
+      "value": "<code>cron.add</code> programa trabajo que se ejecuta sin tu intervención."
+    },
+    "rich.7077370f325d": {
+      "type": "rich",
+      "source": "\n      The model route is stateless and uses an <code>nvapi-</code> key. The NemoClaw route keeps a\n      running OpenClaw session inside OpenShell. Compare each route's URL, credential, and state below.\n    ",
+      "value": "La ruta del modelo no conserva estado y usa una clave <code>nvapi-</code>. La ruta de NemoClaw mantiene una sesión de OpenClaw dentro de OpenShell. Compara la URL, la credencial y el estado de cada una."
+    },
+    "rich.76ffcc5ed77c": {
+      "type": "rich",
+      "source": "<strong>REST (Representational State Transfer).</strong> One request carries all the info necessary to produces one response.",
+      "value": "<strong>REST (transferencia de estado representacional).</strong> Una solicitud contiene todo lo necesario para producir una respuesta."
+    },
+    "rich.77bacdc2413d": {
+      "type": "rich",
+      "source": "\n      Once the probe above is green, this artifact opens the same\n      <code>/cli/gateway</code> WebSocket and lets you chat with your live OpenClaw\n      agent. It streams the reply and shows a chip whenever the agent reaches for a\n      tool. Every reply you see here came back over that live gateway connection.\n    ",
+      "value": "Cuando la sonda anterior esté en verde, este artefacto abrirá el mismo WebSocket en <code>/cli/gateway</code> y te permitirá conversar con el agente OpenClaw activo. Transmitirá la respuesta y mostrará un indicador cada vez que el agente utilice una herramienta. Todas las respuestas que veas aquí se han recibido mediante esa conexión en vivo con el gateway."
+    },
+    "rich.7bbbef680f75": {
+      "type": "rich",
+      "source": "Connect the <span>NemoClaw</span> Stack",
+      "value": "Conecta el <span>stack de NemoClaw</span>"
+    },
+    "rich.84092d13842a": {
+      "type": "rich",
+      "source": "<strong>Same key, twice:</strong> the gateway rehydrates the first turn's\n        history before the second runs, so the agent answers from a conversation\n        your client never re-sent.",
+      "value": "<strong>La misma clave, dos veces:</strong> el gateway restaura el historial del primer turno antes de ejecutar el segundo, por lo que el agente responde a partir de una conversación que el cliente nunca volvió a enviar."
+    },
+    "rich.9ad96758189c": {
+      "type": "rich",
+      "source": "<p><strong>One shared setting:</strong> this defaults to the NVIDIA-hosted relay and persists for Modules 3a–4b. Presenters can also prefill it with <code>?openclaw_proxy_base=...</code> and enable or disable it with <code>?openclaw_proxy=1</code> or <code>0</code>.</p>",
+      "value": "<p><strong>Una configuración compartida:</strong> el valor predeterminado es el relay alojado por NVIDIA y persiste de los Módulos 3a a 4b. El instructor también puede rellenarlo con <code>?openclaw_proxy_base=...</code> y activarlo o desactivarlo con <code>?openclaw_proxy=1</code> o <code>0</code>.</p>"
+    },
+    "rich.a390ff174347": {
+      "type": "rich",
+      "source": "Every <code>chat.send</code> takes a <code>sessionKey</code>, and that key\n      decides what the turn remembers:",
+      "value": "Cada <code>chat.send</code> recibe una <code>sessionKey</code>, que determina lo que el turno recuerda:"
+    },
+    "rich.a4058a0ceeef": {
+      "type": "rich",
+      "source": "<code>models.list</code> enumerates every model the runtime serves.",
+      "value": "<code>models.list</code> enumera todos los modelos que ofrece el runtime."
+    },
+    "rich.b5f3cd2fe688": {
+      "type": "rich",
+      "source": "<strong>Clean up</strong> sweeps the throwaway sessions that pile up in the\n        Control UI as you experiment (including Step 2's per-run keys), keeping only\n        the Main Session.",
+      "value": "<strong>Limpiar sesiones</strong> elimina las sesiones desechables acumuladas durante las pruebas, incluidas las claves por ejecución del Paso 2, y conserva únicamente la sesión principal."
+    },
+    "rich.c311fc01830e": {
+      "type": "rich",
+      "source": "<strong>Clear</strong> wipes one session in a single call, so the next turn\n        starts from nothing. Every chat cell also carries a commented\n        <code>sessions.reset</code> line to start fresh in place.\n      ",
+      "value": "<strong>Limpiar</strong> borra una sesión con una sola llamada; el turno siguiente comienza sin historial. Cada celda de chat también contiene una línea <code>sessions.reset</code> comentada para reiniciar allí mismo."
+    },
+    "rich.c56480ed3b1d": {
+      "type": "rich",
+      "source": "<p>The shared NVIDIA relay is used for cross-origin <strong>Cloudflare Access</strong> launchables. Pomerium connects directly with the browser's signed-in session, even when this toggle remains enabled for Cloudflare compatibility.</p>",
+      "value": "<p>El relay compartido de NVIDIA se usa para launchables de <strong>Cloudflare Access</strong> entre orígenes. Pomerium se conecta directamente con la sesión autenticada del navegador, aunque esta opción siga activada para conservar la compatibilidad con Cloudflare.</p>"
+    },
+    "rich.c6b0f51572a9": {
+      "type": "rich",
+      "source": "\n      <p>The Control UI in your browser tab does not use a special private channel.\n        It talks to the agent over the same WebSocket at <code>/cli/gateway</code> that is\n        open to you, and the only credential it needs is the gateway token. The probe above\n        discovers that token for you, so you never paste it in. A\n        <code>GET /api/agent</code> returns it under the field <code>agent.dashboardUrl</code>,\n        a read that your launchable session authorises, so you can leave the\n        token field blank and let probing fill it in.</p>\n    ",
+      "value": "<p>La interfaz de control de la pestaña del navegador no utiliza un canal privado especial. Se comunica con el agente mediante el mismo WebSocket en <code>/cli/gateway</code> que puedes usar, y la única credencial necesaria es el token del gateway. La sonda descubre ese token para que no tengas que pegarlo. Una solicitud <code>GET /api/agent</code>, autorizada por tu sesión del launchable, lo devuelve en <code>agent.dashboardUrl</code>. Deja el campo vacío para que la sonda lo complete.</p>"
+    },
+    "rich.c895310c64f9": {
+      "type": "rich",
+      "source": "<strong>Recovery:</strong> run the health check. If <code>toolSearch</code> is on and the exec probe fails, Recover can turn it off with <code>config.patch</code>. Session clearing and restart remain opt-in.",
+      "value": "<strong>Recuperación:</strong> ejecuta la comprobación de estado. Si <code>toolSearch</code> está activado y falla la sonda de exec, Recuperar puede desactivarlo con <code>config.patch</code>. La limpieza de sesiones y el reinicio siguen siendo opcionales."
+    },
+    "rich.cd1aac7d381d": {
+      "type": "rich",
+      "source": "The exposed code makes the same request as the probe. It reuses the URL, token,\n      access provider, and session the probe saved. Edit <code>PATH</code>, <code>METHOD</code>,\n      and <code>BODY</code> to send other requests. The status, headers, and body come back\n      below.",
+      "value": "El código expuesto realiza la misma solicitud que la sonda. Reutiliza la URL, el token, el proveedor de acceso y la sesión que guardó la sonda. Edita <code>PATH</code>, <code>METHOD</code> y <code>BODY</code> para enviar otras solicitudes. El estado, los encabezados y el cuerpo aparecen debajo."
+    },
+    "rich.cddf5da4897a": {
+      "type": "rich",
+      "source": "<p><strong>Automatic</strong> chooses from the App URL. A <code>*.brevlab.com</code> launchable uses <strong>Cloudflare Access</strong> through the hosted relay. A <code>*.apps.run.brev.nvidia.com</code> launchable uses <strong>Pomerium</strong> directly through the signed-in browser.</p>",
+      "value": "<p><strong>Automático</strong> elige según la App URL. Un launchable <code>*.brevlab.com</code> usa <strong>Cloudflare Access</strong> mediante el relay alojado. Un launchable <code>*.apps.run.brev.nvidia.com</code> usa <strong>Pomerium</strong> directamente mediante el navegador autenticado.</p>"
+    },
+    "rich.d466179d9969": {
+      "type": "rich",
+      "source": "Each <code>✓</code>/<code>✗</code> row is that tool's result.",
+      "value": "Cada fila <code>✓</code>/<code>✗</code> es el resultado de esa herramienta."
+    },
+    "rich.d492f032408d": {
+      "type": "rich",
+      "source": "<strong>Symptom:</strong> you ask for a command, nothing comes back,\n        the run stalls, and then it times out.",
+      "value": "<strong>Síntoma:</strong> pides un comando, no llega ninguna respuesta, la ejecución se detiene y termina por agotar el tiempo de espera."
+    },
+    "rich.d93007b68909": {
+      "type": "rich",
+      "source": "Before committing to a model, measure it. The cells below pull matching\n      models from the catalog, stream a short prompt through each one, and\n      record each model's <em>time to first token</em> (TTFT) and time to\n      finish. The catalog-fetching cell starts open so the filter list is visible\n      before you run the benchmark.",
+      "value": "Antes de elegir un modelo, mide su comportamiento. Las celdas siguientes obtienen del catálogo los modelos coincidentes, transmiten el mismo prompt breve a cada uno y registran el <em>tiempo hasta el primer token</em> (TTFT, del inglés <i>Time to First Token</i>) y el tiempo total de cada modelo. La celda que consulta el catálogo comienza abierta para mostrar el filtro antes de ejecutar el benchmark."
+    },
+    "rich.de3dbde22a38": {
+      "type": "rich",
+      "source": "The channel that <em>is</em> open to you runs a different protocol, a\n      WebSocket at <code>/cli/gateway</code> speaking JSON-RPC.\n    ",
+      "value": "El canal que <em>sí está disponible</em> utiliza otro protocolo: un WebSocket en <code>/cli/gateway</code> que habla JSON-RPC."
+    },
+    "rich.e8a5c7f97701": {
+      "type": "rich",
+      "source": "<strong>Cause:</strong> toolSearch lets the model reach its tools by writing\n        code for a bridge (<code>tool_search_code</code> &middot; &ldquo;run bridge\n        code&rdquo;), and the model loops on that bridge instead of calling\n        <code>exec</code>.\n      ",
+      "value": "<strong>Causa:</strong> toolSearch permite que el modelo acceda a herramientas escribiendo código para un puente (<code>tool_search_code</code> &middot; &ldquo;run bridge code&rdquo;). El modelo débil puede quedar atrapado en ese puente en lugar de llamar <code>exec</code>."
+    },
+    "rich.eef3154c49c6": {
+      "type": "rich",
+      "source": "<code>chat.send</code> with a <code>sessionKey</code> drops a message\n        straight into the running agent's loop.",
+      "value": "<code>chat.send</code> con una <code>sessionKey</code> envía un mensaje directamente al bucle del agente en ejecución."
+    },
+    "rich.f5cbaf11b64b": {
+      "type": "rich",
+      "source": "\n        <h3>build.nvidia.com</h3>\n        <p>Call the Chat Completions API with an <code>nvapi-</code> key. Each POST carries its own\n          messages. No tool or session state is kept between calls.</p>\n        <p style=\"color:var(--tf);font-size:.8rem\">Credential: <code>nvapi-</code> key.</p>\n      ",
+      "value": "<h3>build.nvidia.com</h3> <p>Invoca la API de Chat Completions con una clave <code>nvapi-</code>. Cada POST incluye sus propios mensajes. No conserva herramientas ni estado de sesión entre llamadas.</p> <p style=\"color:var(--tf);font-size:.8rem\">Credencial: clave <code>nvapi-</code>.</p>"
+    },
+    "text.01a9ecdc3c66": {
+      "type": "text",
+      "source": "GET /v1/models",
+      "value": "GET /v1/models",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.043a718774c5": {
+      "type": "text",
+      "source": "s",
+      "value": "s",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.043cbf4d1dd6": {
+      "type": "text",
+      "source": " const PROMPT    = \"Explain step by step why the sky is blue.\";                // a reasoning task",
+      "value": " const PROMPT    = \"Explain step by step why the sky is blue.\";                // a reasoning task",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.04c57b9c3c59": {
+      "type": "text",
+      "source": "Gateway · WebSocket protocol, step by step",
+      "value": "Gateway · protocolo WebSocket paso a paso"
+    },
+    "text.04f8996da763": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.05529e9fe8b9": {
+      "type": "text",
+      "source": "HTTP ",
+      "value": "HTTP ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.05634343b15a": {
+      "type": "text",
+      "source": "🧹 cleared session memory: ",
+      "value": "🧹 memoria de sesión borrada: "
+    },
+    "text.061588cd5010": {
+      "type": "text",
+      "source": "Plant a fact, then ask it back",
+      "value": "Registra un dato y después solicítalo"
+    },
+    "text.083964cbf94d": {
+      "type": "text",
+      "source": "\n      Pomerium launchables keep their signed session in the browser. The course uses their direct\n      WebSockets and reads the two bootstrap endpoints through a fixed loopback request in that\n      authenticated terminal. Cloudflare Access launchables use the hosted relay and its explicit session field.\n      When the course is vendored inside the same NemoClaw launchable as its runtime,\n      direct mode is same-origin and the relay is not needed.\n    ",
+      "value": "\n      Los launchables con Pomerium conservan su sesión firmada en el navegador. El curso usa sus WebSockets\n      directos y lee los dos endpoints de inicialización mediante una solicitud fija al loopback desde esa\n      terminal autenticada. Los launchables con Cloudflare Access usan el relay alojado y su campo de sesión explícito.\n      Cuando el curso se incorpora al mismo launchable de NemoClaw que ejecuta el runtime,\n      el modo direct utiliza el mismo origen y no necesita el relay.\n    "
+    },
+    "text.09ec4a25924f": {
+      "type": "text",
+      "source": "The widgets below make a small request to each endpoint and show\n      what comes back. Green = ready.",
+      "value": "Los widgets siguientes envían una solicitud breve a cada endpoint y muestran la respuesta. Verde significa que está listo."
+    },
+    "text.0a07f6594619": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.0a07f6594619~1": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.0a63ba7f0e8a": {
+      "type": "text",
+      "source": "shell directly",
+      "value": "al shell directamente"
+    },
+    "text.0ad70dcd2cc5": {
+      "type": "text",
+      "source": "toolSearch is a conditional failure mode",
+      "value": "toolSearch es un modo de fallo condicional"
+    },
+    "text.0c2f123731e0": {
+      "type": "text",
+      "source": "OpenClaw implements that same route internally too, but a separately hosted course reaches it through the launchable access layer and relay rather than as an unauthenticated browser request.",
+      "value": "OpenClaw también implementa esa ruta internamente, pero un curso alojado por separado la alcanza mediante la capa de acceso del launchable y el relay, no como una solicitud de navegador sin autenticación."
+    },
+    "text.0cf99952cb0f": {
+      "type": "text",
+      "source": " e.g. { key: 'value' }",
+      "value": " e.g. { key: 'value' }",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.0f7c51aa455f": {
+      "type": "text",
+      "source": "the probe's request, as editable code",
+      "value": "La solicitud de la sonda como código editable"
+    },
+    "text.0f82aca66af9": {
+      "type": "text",
+      "source": "length",
+      "value": "length",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.10b414e45d15": {
+      "type": "text",
+      "source": " Try another prompt (uncomment one) to compare how the models behave on different work:",
+      "value": " Try another prompt (uncomment one) to compare how the models behave on different work:",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.1139259614b2": {
+      "type": "text",
+      "source": "the shell runs",
+      "value": "el shell se ejecuta"
+    },
+    "text.11af515f270c": {
+      "type": "text",
+      "source": "pomerium",
+      "value": "pomerium",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.11dfe8ab74b3": {
+      "type": "text",
+      "source": "one POST per turn",
+      "value": "un POST por turno"
+    },
+    "text.1315df573694": {
+      "type": "text",
+      "source": "(no answer: the model used all ",
+      "value": "(no answer: the model used all ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.138ad29fac60": {
+      "type": "text",
+      "source": " Stream one prompt through each selected model and measure first-token latency.",
+      "value": " Stream one prompt through each selected model and measure first-token latency.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.139a377f7ba2": {
+      "type": "text",
+      "source": "GET /api/agent",
+      "value": "GET /api/agent",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.14348f407a94": {
+      "type": "text",
+      "source": "turn 2 · ask it back (only the question is sent)",
+      "value": "turno 2 · vuelve a preguntarlo (solo se envía la pregunta)"
+    },
+    "text.14e30cd163c7": {
+      "type": "text",
+      "source": "GET",
+      "value": "GET",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.16e4ab430622": {
+      "type": "text",
+      "source": "← final chat frame",
+      "value": "← frame final del chat"
+    },
+    "text.17bb3d09d65c": {
+      "type": "text",
+      "source": "Read-only mirror of the saved chat route. Change it in Model route settings above; it never reads or writes NemoClaw launchable values.",
+      "value": "Reflejo de solo lectura de la ruta de chat guardada. Cámbiala en la configuración anterior; esta sonda nunca lee ni escribe valores del launchable de NemoClaw."
+    },
+    "text.17c76e3f9442": {
+      "type": "text",
+      "source": "Run 'Fetch matching models' first.",
+      "value": "Ejecuta primero «Obtener modelos coincidentes»."
+    },
+    "text.185a2bfff807": {
+      "type": "text",
+      "source": " Optional visibility: uncomment to inspect the complete timing records.",
+      "value": " Visibilidad opcional: descomenta para revisar todos los registros de tiempo."
+    },
+    "text.1c350d860826": {
+      "type": "text",
+      "source": "Clear the session memory",
+      "value": "Borra la memoria de la sesión"
+    },
+    "text.1d1a87bd09c0": {
+      "type": "text",
+      "source": " first token of ANY kind",
+      "value": " first token of ANY kind",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.1e83e51de641": {
+      "type": "text",
+      "source": " mean inter-token latency",
+      "value": " mean inter-token latency",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.1ec92a88001c": {
+      "type": "text",
+      "source": " Keep these; delete the rest. The default keeps only the Main Session.",
+      "value": " Keep these; delete the rest. The default keeps only the Main Session.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.1fad4f65a1f5": {
+      "type": "text",
+      "source": " session(s); keeping ",
+      "value": " session(s); keeping ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.201582247500": {
+      "type": "text",
+      "source": "configured",
+      "value": "configured",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.212380a52495": {
+      "type": "text",
+      "source": "The diagram separates three interfaces:",
+      "value": "El diagrama separa tres interfaces:"
+    },
+    "text.2144fd972dd6": {
+      "type": "text",
+      "source": "Call models.list and cron.list",
+      "value": "Llama a models.list y cron.list"
+    },
+    "text.21a83e53d7f0": {
+      "type": "text",
+      "source": " 'configured': saved relay toggle. 'direct': bypass the relay.",
+      "value": " 'configured': saved relay toggle. 'direct': bypass the relay.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.2274afbb1bb0": {
+      "type": "text",
+      "source": "Run the probe above first.",
+      "value": "Ejecuta primero la prueba anterior."
+    },
+    "text.2298879d8c60": {
+      "type": "text",
+      "source": " tok",
+      "value": " tok",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.2298879d8c60~1": {
+      "type": "text",
+      "source": " tok",
+      "value": " tok",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.22b0bf2e97c2": {
+      "type": "text",
+      "source": "The first cell below plants a fact and then asks for it back under the same key.\n      The agent answers from a turn your client never re-sent, because the gateway\n      rehydrated that history server-side. The other two cells let you manage the stored\n      state.",
+      "value": "La primera celda introduce un dato y después pide recuperarlo con la misma clave. El agente responde a partir de un turno que tu cliente nunca reenvió, porque el gateway reconstruyó ese historial en el servidor. Las otras dos celdas te permiten gestionar el estado almacenado:"
+    },
+    "text.230d8358dc8e": {
+      "type": "text",
+      "source": "body",
+      "value": "cuerpo"
+    },
+    "text.230d8358dc8e~1": {
+      "type": "text",
+      "source": "body",
+      "value": "body",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.25e417a76686": {
+      "type": "text",
+      "source": "Use your exec tool to run whoami and pwd, then report both results",
+      "value": "Usa la herramienta exec para ejecutar whoami y pwd y comunica ambos resultados"
+    },
+    "text.26d7c6fc8c61": {
+      "type": "text",
+      "source": "  [",
+      "value": "  [",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.2706c619fe73": {
+      "type": "text",
+      "source": "exec",
+      "value": "exec",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.2aacd67c0fa5": {
+      "type": "text",
+      "source": "Check before changing runtime settings",
+      "value": "Comprueba antes de cambiar el runtime"
+    },
+    "text.2b50d1ad6eb6": {
+      "type": "text",
+      "source": " helpers.log.json(\"all model IDs\", data.map(model => model.id));",
+      "value": " helpers.log.json(\"todos los modelos\", data.map(model => model.id));"
+    },
+    "text.2bf548d80560": {
+      "type": "text",
+      "source": "glm",
+      "value": "glm",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.2c40f2845cfc": {
+      "type": "text",
+      "source": " The panel is helpers.mountChatUI and it streams through helpers.openclawChat; open the helpers tab above to read either one's source.",
+      "value": " The panel is helpers.mountChatUI and it streams through helpers.openclawChat; open the helpers tab above to read either one's source.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.2da6eb7f8d23": {
+      "type": "text",
+      "source": "command output",
+      "value": "salida del comando"
+    },
+    "text.2e0ff22be30a": {
+      "type": "text",
+      "source": "art-",
+      "value": "art-",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.2f545492bf26": {
+      "type": "text",
+      "source": " @ ",
+      "value": " @ ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.2fd0e09f44c6": {
+      "type": "text",
+      "source": "Module 3b: OpenClaw →",
+      "value": "Módulo 3b: OpenClaw →"
+    },
+    "text.308d9f1495e1": {
+      "type": "text",
+      "source": "models fetch failed: HTTP ",
+      "value": "error al obtener los modelos: HTTP "
+    },
+    "text.34964df9ce71": {
+      "type": "text",
+      "source": "  🗑  ",
+      "value": "  🗑  ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.35217c2db25b": {
+      "type": "text",
+      "source": "AbortError",
+      "value": "AbortError",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.354dbe14bd0d": {
+      "type": "text",
+      "source": "healthy setting",
+      "value": "configuración saludable"
+    },
+    "text.35e5a9632e18": {
+      "type": "text",
+      "source": "Bearer ",
+      "value": "Bearer ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.35e5a9632e18~1": {
+      "type": "text",
+      "source": "Bearer ",
+      "value": "Bearer ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.35e5a9632e18~2": {
+      "type": "text",
+      "source": "Bearer ",
+      "value": "Bearer ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.371eb0c6f92c": {
+      "type": "text",
+      "source": "Use your exec tool to run ls -la /sandbox/.openclaw/workspace, then explain each file",
+      "value": "Usa la herramienta exec para ejecutar ls -la /sandbox/.openclaw/workspace y explica cada archivo"
+    },
+    "text.3784fc0b8af8": {
+      "type": "text",
+      "source": "tool_search_code",
+      "value": "tool_search_code",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.378f37b1fb33": {
+      "type": "text",
+      "source": "headers",
+      "value": "headers",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.3828ff48f1a6": {
+      "type": "text",
+      "source": "\\\\n── ranked by TTFT ──────────────────────────",
+      "value": "\\\\n── ordenados por TTFT ──────────────────────"
+    },
+    "text.3a53db8a2c8a": {
+      "type": "text",
+      "source": "abort",
+      "value": "abort",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.3a53db8a2c8a~1": {
+      "type": "text",
+      "source": "abort",
+      "value": "abort",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.3c27de069860": {
+      "type": "text",
+      "source": "Module 3 · Part A of 3 · live calls begin",
+      "value": "Módulo 3 · Parte A de 3"
+    },
+    "text.4004db613c6e": {
+      "type": "text",
+      "source": "✓ ",
+      "value": "✓ ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.402b9e6bf552": {
+      "type": "text",
+      "source": "Clean up old sessions",
+      "value": "Limpia las sesiones antiguas"
+    },
+    "text.404d5ff0859b": {
+      "type": "text",
+      "source": " so it does not keep running in the background…",
+      "value": " para que no continúe en segundo plano…"
+    },
+    "text.4063688957bf": {
+      "type": "text",
+      "source": "sessions.list",
+      "value": "sessions.list",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.42228a6e49b5": {
+      "type": "text",
+      "source": "exec never runs",
+      "value": "exec no se ejecuta"
+    },
+    "text.4285d23d69c3": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.432775ab95bc": {
+      "type": "text",
+      "source": "✗ ",
+      "value": "✗ ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.4407f524b044": {
+      "type": "text",
+      "source": " launchable origin, direct",
+      "value": " launchable origin, direct",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.45822f54a0d0": {
+      "type": "text",
+      "source": ": ",
+      "value": ": ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.4d7cbb57371a": {
+      "type": "text",
+      "source": " Server-sent events: one \"data: {json}\" line per chunk.",
+      "value": " Server-sent events: one \"data: {json}\" line per chunk.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.4eca6d76cb65": {
+      "type": "text",
+      "source": "model loops on the",
+      "value": "el modelo repite"
+    },
+    "text.4f5a2ada1166": {
+      "type": "text",
+      "source": " (",
+      "value": " (",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.4fc9ad13005f": {
+      "type": "text",
+      "source": "Connect the launchable in the probe above. This panel unlocks as soon as its URL and token are saved.",
+      "value": "Conecta el launchable en la sonda anterior. El panel se desbloquea cuando se guardan la URL y el token."
+    },
+    "text.511ff71910ce": {
+      "type": "text",
+      "source": "The same WebSocket at /cli/gateway that the Control UI uses is written out here as a challenge/response handshake, a JSON-RPC method call, and then a streaming chat turn.",
+      "value": "El mismo WebSocket en /cli/gateway que utiliza la interfaz de control aparece aquí como un intercambio de desafío y respuesta, una llamada a un método JSON-RPC y un turno de chat transmitido."
+    },
+    "text.516d931db26e": {
+      "type": "text",
+      "source": "Re-run the recall turn above and the planted code is gone.",
+      "value": "Vuelve a ejecutar el turno de recuerdo anterior para comprobar que el código introducido ya no aparece."
+    },
+    "text.5175a09aac75": {
+      "type": "text",
+      "source": "← Module 2c: Deep Agents",
+      "value": "← Módulo 2c: Agentes de investigación profunda"
+    },
+    "text.52946759d6f7": {
+      "type": "text",
+      "source": " Use the existing gateway socket to list models and scheduled jobs.",
+      "value": " Use the existing gateway socket to list models and scheduled jobs.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.5337ff8b7cd0": {
+      "type": "text",
+      "source": "Open a WebSocket to /cli/gateway, respond to the server's challenge frame with the operator.admin credential, then store a call() helper on state so subsequent nodes can send typed requests without repeating the handshake.",
+      "value": "Abre un WebSocket en /cli/gateway, responde al frame de desafío del servidor con la credencial operator.admin y guarda un helper call() en el estado. Los nodos siguientes podrán enviar solicitudes tipadas sin repetir el intercambio inicial."
+    },
+    "text.552e423045fc": {
+      "type": "text",
+      "source": "(none)",
+      "value": "(none)",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.56944f48d4a4": {
+      "type": "text",
+      "source": "⛔ aborting the run on ",
+      "value": "⛔ cancelando la ejecución de "
+    },
+    "text.5782b18687e6": {
+      "type": "text",
+      "source": "reply",
+      "value": "respuesta"
+    },
+    "text.588da4105320": {
+      "type": "text",
+      "source": " · ",
+      "value": " · ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.59a4a823640f": {
+      "type": "text",
+      "source": " role-only / empty keepalive delta",
+      "value": " role-only / empty keepalive delta",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.5a4c8eb4f8f0": {
+      "type": "text",
+      "source": "Run Connect first.",
+      "value": "Ejecuta Conectar primero."
+    },
+    "text.5b0d20d5935b": {
+      "type": "text",
+      "source": "sessions.reset",
+      "value": "sessions.reset",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.5b5be2bc6924": {
+      "type": "text",
+      "source": "List five prime numbers.",
+      "value": "List five prime numbers.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.5c32d8bae35b": {
+      "type": "text",
+      "source": "The two endpoints you work with from here",
+      "value": "Los dos endpoints que usarás a partir de ahora"
+    },
+    "text.5f4b71189dde": {
+      "type": "text",
+      "source": "   A tool is hung or the model is looping. The ⚙️ rows above show the exact tool + args it got stuck on.",
+      "value": "   Una herramienta dejó de responder o el modelo está atrapado en un bucle. Las filas ⚙️ anteriores muestran la herramienta y los argumentos exactos donde se detuvo."
+    },
+    "text.61145368eded": {
+      "type": "text",
+      "source": "CHECK THE LIVE VALUE BEFORE REPAIR",
+      "value": "COMPRUEBA EL VALOR ACTIVO ANTES DE REPARAR"
+    },
+    "text.613f89322c3e": {
+      "type": "text",
+      "source": "Check the model route saved above, its bearer key, public HTTPS tunnel, and served model ID.",
+      "value": "Comprueba la ruta del modelo guardada arriba, la clave bearer, el túnel HTTPS público y el ID del modelo servido."
+    },
+    "text.61bf18320777": {
+      "type": "text",
+      "source": "The model probe is a read-only mirror of the persistent chat route configured on the course home\n      page or in Module 1a. Change it here once; the benchmark and later lessons reuse that route. The\n      NemoClaw launchable settings below remain separate.",
+      "value": "La sonda del modelo es un reflejo de solo lectura de la ruta de chat persistente configurada al inicio\n      del curso o en el Módulo 1a. Cámbiala aquí una vez; el benchmark y las lecciones posteriores reutilizan\n      esa ruta. La configuración del launchable de NemoClaw que aparece abajo permanece separada."
+    },
+    "text.625f8ca31f09": {
+      "type": "text",
+      "source": "no output",
+      "value": "sin salida"
+    },
+    "text.63066c9c9477": {
+      "type": "text",
+      "source": "Remember this for later: my access code is BLUEJAY-7. Just acknowledge it in a few words.",
+      "value": "Remember this for later: my access code is BLUEJAY-7. Just acknowledge it in a few words.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.636646ce0490": {
+      "type": "text",
+      "source": "same-origin",
+      "value": "same-origin",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.64d4866d0eda": {
+      "type": "text",
+      "source": "raw cron.list",
+      "value": "datos sin procesar de cron.list"
+    },
+    "text.65dfeff77e65": {
+      "type": "text",
+      "source": "The model's reasoning is not forwarded by the gateway, so this input/output\n        trace is the deepest per-step view. When a run stalls with no result, the\n        📜 logs cell above tails the runtime instead.",
+      "value": "El razonamiento del modelo no se envía por el gateway, por lo que esta traza de entrada y salida ofrece la vista por pasos más detallada. Cuando una ejecución se detenga sin resultado, usa la celda de logs anterior para monitorizar el runtime."
+    },
+    "text.673e6a682440": {
+      "type": "text",
+      "source": "One agent call, expanded",
+      "value": "Una llamada al agente, expandida"
+    },
+    "text.67a5bdf2a82d": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents",
+      "value": "NVIDIA · Seguridad de agentes"
+    },
+    "text.680694f37af1": {
+      "type": "text",
+      "source": "rendered below. Edit the config and Run.",
+      "value": "artefacto renderizado abajo. Edita la configuración y vuelve a ejecutar."
+    },
+    "text.6878a9189424": {
+      "type": "text",
+      "source": "What tools can you call?",
+      "value": "¿Qué herramientas puedes llamar?"
+    },
+    "text.697af400d729": {
+      "type": "text",
+      "source": "Wipe a session's server-side history with one call. Run it on the memory session above, then re-run the recall turn: the planted code is gone, because the conversation the gateway held is gone. Change sessionKey to clear any session you like. This is the drop-in to copy anywhere you want a fresh start.",
+      "value": "Borra con una llamada el historial que conserva el servidor. Ejecútala sobre la sesión de memoria anterior y repite el turno de recuperación: el código registrado desapareció con la conversación guardada. Cambia sessionKey para borrar cualquier otra sesión. Puedes copiar esta operación donde necesites comenzar desde cero."
+    },
+    "text.69824d3b0e70": {
+      "type": "text",
+      "source": "References",
+      "value": "Referencias"
+    },
+    "text.69e50cf728b7": {
+      "type": "text",
+      "source": "  TTFT ",
+      "value": "  TTFT ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.6a6e1144f13b": {
+      "type": "text",
+      "source": "✗ no recall; confirm both turns used the same sessionKey",
+      "value": "✗ no recall; confirm both turns used the same sessionKey",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.6cf6d05b55a0": {
+      "type": "text",
+      "source": "plans, calls tools,",
+      "value": "planea, llama a herramientas"
+    },
+    "text.6d580547dc9c": {
+      "type": "text",
+      "source": "your code",
+      "value": "tu código"
+    },
+    "text.6fc6d4e9c4ab": {
+      "type": "text",
+      "source": " direct mode sends the launchable cookie held by this browser",
+      "value": " direct mode sends the launchable cookie held by this browser",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.7073e6d8763d": {
+      "type": "text",
+      "source": "[DONE]",
+      "value": "[DONE]",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.70ce88318f4e": {
+      "type": "text",
+      "source": " Optional visibility: uncomment to inspect every model ID before filtering.",
+      "value": " Visibilidad opcional: descomenta para revisar todos los identificadores antes del filtro."
+    },
+    "text.7107f6329249": {
+      "type": "text",
+      "source": "the loop runs here",
+      "value": "el bucle se ejecuta aquí"
+    },
+    "text.74ba5dd4ac22": {
+      "type": "text",
+      "source": " const PATH   = '/healthz';     // alternate read-only bootstrap endpoint",
+      "value": " const PATH   = '/healthz';     // alternate read-only bootstrap endpoint",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.74c1c9541ef8": {
+      "type": "text",
+      "source": "Fetch matching models",
+      "value": "Obtén los modelos coincidentes"
+    },
+    "text.77c5ab5fe82d": {
+      "type": "text",
+      "source": " streams the reply into the view and fires a chip per tool call.",
+      "value": " streams the reply into the view and fires a chip per tool call.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.77e3c35a8cc5": {
+      "type": "text",
+      "source": "Latency and time to first token across models",
+      "value": "Latencia y tiempo hasta el primer token por modelo"
+    },
+    "text.78dd25f01ac7": {
+      "type": "text",
+      "source": "The probe's request, as editable code",
+      "value": "La solicitud de la sonda como código editable"
+    },
+    "text.792d3afa2890": {
+      "type": "text",
+      "source": " ms; give up on a model with no first token by now (some are slow to start)",
+      "value": " ms; give up on a model with no first token by now (some are slow to start)",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.7b30f0e7342a": {
+      "type": "text",
+      "source": "raw output · ",
+      "value": "salida sin procesar · "
+    },
+    "text.7bd374b9cfef": {
+      "type": "text",
+      "source": " thinking)",
+      "value": " thinking)",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.7c2f1b8836ef": {
+      "type": "text",
+      "source": " first-token watchdog",
+      "value": " first-token watchdog",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.7c9bbe5ec9b3": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.7c9bbe5ec9b3~1": {
+      "type": "text",
+      "source": "tool",
+      "value": "herramienta"
+    },
+    "text.7cab103f26ec": {
+      "type": "text",
+      "source": " Time first-token latency and count both reasoning and answer tokens.",
+      "value": " Time first-token latency and count both reasoning and answer tokens.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.7e47dc8fc7f4": {
+      "type": "text",
+      "source": "turn 1 · plant a fact",
+      "value": "turno 1 · registrar un dato"
+    },
+    "text.7e4815e70c61": {
+      "type": "text",
+      "source": "A single POST drives a loop inside the gateway, where the session key carries memory forward to the next call.",
+      "value": "Un único POST activa un bucle dentro del gateway, donde la clave de sesión conserva la memoria para la llamada siguiente."
+    },
+    "text.80a589ac5e9c": {
+      "type": "text",
+      "source": "Need a value? Select the ? beside that field. Start with Base URL; GET /api/agent fills the bearer token.",
+      "value": "¿Necesitas un valor? Selecciona el ? junto al campo. Empieza por la URL base; GET /api/agent completa el token bearer."
+    },
+    "text.82f713a6ad06": {
+      "type": "text",
+      "source": "The healthy path uses exec directly. Recover changes toolSearch only when the live check finds it enabled.",
+      "value": "La ruta saludable usa exec directamente. Recuperar cambia toolSearch solo cuando la comprobación activa lo encuentra habilitado."
+    },
+    "text.843a61562402": {
+      "type": "text",
+      "source": "Send a chat message (streaming)",
+      "value": "Envía un mensaje de chat por streaming"
+    },
+    "text.844f786418f4": {
+      "type": "text",
+      "source": "models (",
+      "value": "models (",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.8452a47cea3c": {
+      "type": "text",
+      "source": "/models",
+      "value": "/models",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.85c2ca9907f1": {
+      "type": "text",
+      "source": "Send two turns under the same sessionKey. The second sends only a recall question; the gateway restores the first turn before the model runs. A different key addresses a separate history.",
+      "value": "Envía dos turnos con la misma sessionKey. El segundo contiene únicamente una pregunta de recuperación; el gateway restaura el primer turno antes de ejecutar el modelo. Una clave distinta identifica otro historial."
+    },
+    "text.85eb00994d09": {
+      "type": "text",
+      "source": "Content-Type",
+      "value": "Content-Type",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.85eb00994d09~1": {
+      "type": "text",
+      "source": "Content-Type",
+      "value": "Content-Type",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.898702fa218d": {
+      "type": "text",
+      "source": "the Try-it artifact, in code",
+      "value": "El artefacto de prueba, en código"
+    },
+    "text.8ca587036511": {
+      "type": "text",
+      "source": "ms/tok · ",
+      "value": "ms/tok · ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.8d03fec80e72": {
+      "type": "text",
+      "source": " tokens thinking; raise MAX_TOKENS)\\\\n\\\\n",
+      "value": " tokens thinking; raise MAX_TOKENS)\\\\n\\\\n",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.8dccf256f6d5": {
+      "type": "text",
+      "source": ". ",
+      "value": ". ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.8efce087c006": {
+      "type": "text",
+      "source": "Model route settings",
+      "value": "Configuración de la ruta del modelo"
+    },
+    "text.8f316ca2ce76": {
+      "type": "text",
+      "source": "found ",
+      "value": "found ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.917b41beeffe": {
+      "type": "text",
+      "source": "Try it · talk to your launchable",
+      "value": "Prueba · conversa con tu launchable"
+    },
+    "text.92f9a423aac1": {
+      "type": "text",
+      "source": "ms · ",
+      "value": "ms · ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.92f9a423aac1~1": {
+      "type": "text",
+      "source": "ms · ",
+      "value": "ms · ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.93497aab615d": {
+      "type": "text",
+      "source": "No models matched filter: ",
+      "value": "Ningún modelo coincide con el filtro: "
+    },
+    "text.94aee8a89fe5": {
+      "type": "text",
+      "source": "Step 3 · Memory lives in the session key",
+      "value": "Paso 3 · La memoria vive en la clave de la sesión"
+    },
+    "text.958c3877cbd2": {
+      "type": "text",
+      "source": "Try to curl https://example.com and tell me what happened",
+      "value": "Intenta ejecutar curl https://example.com y explica qué ocurrió"
+    },
+    "text.9679e6a35def": {
+      "type": "text",
+      "source": " stale session(s).",
+      "value": " stale session(s).",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.96d6746ee3ef": {
+      "type": "text",
+      "source": "application/json, text/html, */*",
+      "value": "application/json, text/html, */*",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.99e78bacf57a": {
+      "type": "text",
+      "source": "no first token in ",
+      "value": "no first token in ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.99f784fabe72": {
+      "type": "text",
+      "source": "/chat/completions",
+      "value": "/chat/completions",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.9a0c0d731083": {
+      "type": "text",
+      "source": "✓ cleared; that session now has no history.",
+      "value": "✓ cleared; that session now has no history.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.9aee6b1bcdf6": {
+      "type": "text",
+      "source": "POST",
+      "value": "POST",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.9aee6b1bcdf6~1": {
+      "type": "text",
+      "source": "POST",
+      "value": "POST",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.9af15a7dd9ed": {
+      "type": "text",
+      "source": "(empty response)",
+      "value": "(empty response)",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.9b71245153f9": {
+      "type": "text",
+      "source": "  ✗ ",
+      "value": "  ✗ ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.9c0648888eff": {
+      "type": "text",
+      "source": "✓ removed ",
+      "value": "✓ removed ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.9c4373945b48": {
+      "type": "text",
+      "source": "s · ~",
+      "value": "s · ~",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.9ce94a2e47c2": {
+      "type": "text",
+      "source": " Rank survivors by TTFT, the metric that matters when streaming to a user.",
+      "value": " Rank survivors by TTFT, the metric that matters when streaming to a user.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.9f15dc7d72da": {
+      "type": "text",
+      "source": "Run the Connect node first.",
+      "value": "Ejecuta primero el nodo Conectar."
+    },
+    "text.9f3d1e1accad": {
+      "type": "text",
+      "source": "sessions.delete",
+      "value": "sessions.delete",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.9fe101a0ec7e": {
+      "type": "text",
+      "source": "OpenClaw gateway",
+      "value": "Gateway OpenClaw"
+    },
+    "text.a01be2975b06": {
+      "type": "text",
+      "source": "Connect your launchable in the probe above, then say hi or ask the agent to run whoami and pwd with exec.",
+      "value": "Conecta tu launchable en el probe de arriba. Después, saluda o pide al agente que ejecute whoami y pwd con exec."
+    },
+    "text.a683c5c5349f": {
+      "type": "text",
+      "source": "n/a",
+      "value": "n/a",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.a683c5c5349f~1": {
+      "type": "text",
+      "source": "n/a",
+      "value": "n/a",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.a683c5c5349f~2": {
+      "type": "text",
+      "source": "n/a",
+      "value": "n/a",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.a683c5c5349f~3": {
+      "type": "text",
+      "source": "n/a",
+      "value": "n/a",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.a6e8d16c5bb8": {
+      "type": "text",
+      "source": " Fetch the model catalog and keep only the IDs this benchmark compares.",
+      "value": " Fetch the model catalog and keep only the IDs this benchmark compares.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.a884f2fbb9f7": {
+      "type": "text",
+      "source": "Probe OpenClaw (NemoClaw launchable)",
+      "value": "Sonda OpenClaw (NemoClaw launchable)"
+    },
+    "text.ab2faeea5cb3": {
+      "type": "text",
+      "source": "Step 1 · Probe the endpoints",
+      "value": "Paso 1 · Prueba los endpoints"
+    },
+    "text.abea8c9b2fde": {
+      "type": "text",
+      "source": "custom configuration",
+      "value": "configuración personalizada"
+    },
+    "text.ad6fc89ae222": {
+      "type": "text",
+      "source": "toolSearch ON",
+      "value": "toolSearch activado"
+    },
+    "text.adca42419506": {
+      "type": "text",
+      "source": "✗ sessions.reset returned an unexpected payload (see below).",
+      "value": "✗ sessions.reset returned an unexpected payload (see below).",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.af30a6c4064b": {
+      "type": "text",
+      "source": "Plant a fact and recall it under the same sessionKey, then clear that history and remove the throwaway sessions. The recall sends only the question; the gateway restores the earlier turn server-side.",
+      "value": "Registra un dato y recupéralo con la misma sessionKey; después, borra ese historial y elimina las sesiones desechables. La recuperación solo envía la pregunta nueva: el gateway restaura en el servidor el turno anterior."
+    },
+    "text.af71550d84e8": {
+      "type": "text",
+      "source": "Measure TTFT per model",
+      "value": "Mide el TTFT por modelo"
+    },
+    "text.b15c904fa412": {
+      "type": "text",
+      "source": "quick-3a-memory",
+      "value": "quick-3a-memory",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.b15c904fa412~1": {
+      "type": "text",
+      "source": "quick-3a-memory",
+      "value": "quick-3a-memory",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.b15c904fa412~2": {
+      "type": "text",
+      "source": "quick-3a-memory",
+      "value": "quick-3a-memory",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.b4843085c92d": {
+      "type": "text",
+      "source": "Access moves from stateless model HTTP, to server-side conversation state, to standard tool protocols, to the long-lived WebSocket that streams a live OpenClaw agent session.",
+      "value": "El acceso avanza desde los endpoints HTTP de modelos sin estado, pasando por el estado de conversación en el servidor y los protocolos estándar de herramientas, hasta el WebSocket persistente que transmite una sesión activa de OpenClaw."
+    },
+    "text.b6d954e82127": {
+      "type": "text",
+      "source": "✓ recalled across turns; the gateway rehydrated the planted fact server-side",
+      "value": "✓ recalled across turns; the gateway rehydrated the planted fact server-side",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.b6f7f0b96461": {
+      "type": "text",
+      "source": " …",
+      "value": " …",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.b8b00f380a83": {
+      "type": "text",
+      "source": "Connect NemoClaw · Securing Agents",
+      "value": "Conecta NemoClaw · Seguridad de agentes"
+    },
+    "text.bacb769b46f6": {
+      "type": "text",
+      "source": "application/json",
+      "value": "application/json",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.bacb769b46f6~1": {
+      "type": "text",
+      "source": "application/json",
+      "value": "application/json",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.bb3f116c30cb": {
+      "type": "text",
+      "source": "⚠ DEGRADED: started ",
+      "value": "⚠ DEGRADED: se iniciaron "
+    },
+    "text.bb46a1439146": {
+      "type": "text",
+      "source": "Expected JSON but received the OpenClaw Control page. The request reached the launchable root instead of this API path. Keep Base URL at the launchable origin and retry; this response is not a health result.",
+      "value": "Se esperaba JSON, pero se recibió la página OpenClaw Control. La solicitud llegó a la raíz del launchable en vez de esta ruta de API. Mantén la URL base en el origen del launchable y vuelve a intentarlo; esta respuesta no es un resultado de estado."
+    },
+    "text.bd8daef76c56": {
+      "type": "text",
+      "source": "model calls the",
+      "value": "el modelo llama"
+    },
+    "text.c0cbff04cc90": {
+      "type": "text",
+      "source": "include",
+      "value": "include",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.c1d4a863e736": {
+      "type": "text",
+      "source": "The model endpoint speaks the Chat Completions API, where a single POST\n      carries everything the call needs.",
+      "value": "El endpoint del modelo utiliza Chat Completions API, donde un solo POST contiene todo lo que la llamada necesita."
+    },
+    "text.c29b2291e8b8": {
+      "type": "text",
+      "source": " A model that never produced a token (ttft null) sorts last, not first.",
+      "value": " A model that never produced a token (ttft null) sorts last, not first.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.c381c101a6e5": {
+      "type": "text",
+      "source": " const PROMPT    = \"Write a haiku about GPUs, then one line on what it means.\"; // a longer generation",
+      "value": " const PROMPT    = \"Write a haiku about GPUs, then one line on what it means.\"; // a longer generation",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.c407eb742b66": {
+      "type": "text",
+      "source": " Cloudflare Access uses the configured hosted relay.",
+      "value": " Cloudflare Access uses the configured hosted relay.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.c5334811cd87": {
+      "type": "text",
+      "source": ", deleting ",
+      "value": ", deleting ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.c5416ff7a3eb": {
+      "type": "text",
+      "source": " reasoning models think first; too low and they never answer",
+      "value": " reasoning models think first; too low and they never answer",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.c5959f256e40": {
+      "type": "text",
+      "source": "Two JSON-RPC calls go through the open connection: models.list names every model the runtime serves, while cron.list reports the currently scheduled jobs.",
+      "value": "Dos llamadas JSON-RPC pasan por la conexión abierta: models.list enumera los modelos que ofrece el runtime y cron.list informa de las tareas programadas."
+    },
+    "text.c646af57cbb4": {
+      "type": "text",
+      "source": "What access code did I give you earlier? Reply with just the code.",
+      "value": "What access code did I give you earlier? Reply with just the code.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.c64aa81e2be0": {
+      "type": "text",
+      "source": "Run this short discovery request first. It lists models matching the editable prefix; code stays visible because changing that filter is the exercise.",
+      "value": "Ejecuta primero esta breve solicitud de descubrimiento. Enumera los modelos que coinciden con el filtro editable; el código permanece visible porque modificar ese filtro forma parte del ejercicio."
+    },
+    "text.c91ea01faa62": {
+      "type": "text",
+      "source": "X-OpenClaw-Access-Provider",
+      "value": "X-OpenClaw-Access-Provider",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.c95b3b01ea0e": {
+      "type": "text",
+      "source": "⚠ frame-handler error: ",
+      "value": "⚠ error al procesar un frame: "
+    },
+    "text.c9deefdcd523": {
+      "type": "text",
+      "source": " Pomerium keeps its HttpOnly cookie in the browser. Its authenticated terminal",
+      "value": " Pomerium keeps its HttpOnly cookie in the browser. Its authenticated terminal",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.caabb618fb03": {
+      "type": "text",
+      "source": "Open the gateway connection",
+      "value": "Abre la conexión del gateway"
+    },
+    "text.cc1c34e885db": {
+      "type": "text",
+      "source": "loops until it answers",
+      "value": "y repite hasta responder"
+    },
+    "text.cc2ba7f9b418": {
+      "type": "text",
+      "source": "models.list",
+      "value": "models.list",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.cd155903dfae": {
+      "type": "text",
+      "source": "120b",
+      "value": "120b",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.cd2f66ae6317": {
+      "type": "text",
+      "source": " The probe saved the launchable URL and selected access provider.",
+      "value": " The probe saved the launchable URL and selected access provider.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.cdb4ee2aea69": {
+      "type": "text",
+      "source": ".",
+      "value": ".",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.ce189dd0fa0a": {
+      "type": "text",
+      "source": " model(s) to bench:\\\\n  ",
+      "value": " model(s) to bench:\\\\n  ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.ce71b5b7b33b": {
+      "type": "text",
+      "source": " tok · ",
+      "value": " tok · ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.ce9dde73ce5a": {
+      "type": "text",
+      "source": "#kickstart-artifact",
+      "value": "#kickstart-artifact",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.cfa7b8a87b83": {
+      "type": "text",
+      "source": "sessions.reset response",
+      "value": "respuesta de sessions.reset"
+    },
+    "text.cfae0d4248f7": {
+      "type": "text",
+      "source": "]",
+      "value": "]",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.d0aafb4f0ebd": {
+      "type": "text",
+      "source": "Step 2 · The gateway",
+      "value": "Paso 2 · El gateway"
+    },
+    "text.d139302d30e7": {
+      "type": "text",
+      "source": "What model are you running on?",
+      "value": "¿Qué modelo estás usando?"
+    },
+    "text.d15690f08a57": {
+      "type": "text",
+      "source": "direct",
+      "value": "direct",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.d218956954fc": {
+      "type": "text",
+      "source": "raw models.list",
+      "value": "datos sin procesar de models.list"
+    },
+    "text.d245234894bb": {
+      "type": "text",
+      "source": "/api/agent",
+      "value": "/api/agent",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.d257e553fce9": {
+      "type": "text",
+      "source": " One call wipes the conversation the gateway holds for this key.",
+      "value": " One call wipes the conversation the gateway holds for this key.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.d32e4f05cb89": {
+      "type": "text",
+      "source": "\\\\n  ",
+      "value": "\\\\n  ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.d356dfadceeb": {
+      "type": "text",
+      "source": "\\\\ncron jobs: ",
+      "value": "\\\\ntareas cron: "
+    },
+    "text.d9627eb1cf41": {
+      "type": "text",
+      "source": " reads this fixed endpoint over launchable loopback, so no cookie enters course code.",
+      "value": " reads this fixed endpoint over launchable loopback, so no cookie enters course code.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.d9eab396e1e6": {
+      "type": "text",
+      "source": "Module 3b opens the files that shape each OpenClaw turn. Module 3c adds skills\n      and scheduled triggers, then Module 4 tests how OpenShell limits the actions those\n      persistent instructions can start.",
+      "value": "El Módulo 3b abre los archivos que configuran cada turno de OpenClaw. El Módulo 3c añade skills y activadores programados; después, el Módulo 4 comprueba cómo OpenShell limita las acciones que esas instrucciones persistentes pueden iniciar."
+    },
+    "text.db3326c7e968": {
+      "type": "text",
+      "source": "toolSearch OFF",
+      "value": "toolSearch desactivado"
+    },
+    "text.dbbe07bb4d13": {
+      "type": "text",
+      "source": "Read your SOUL.md and summarize who you are",
+      "value": "Lee tu SOUL.md y resume quién eres"
+    },
+    "text.dee9df394086": {
+      "type": "text",
+      "source": "   Run the 🩺 Health check (it flags toolSearch) + 🛠 Recover; for a deeper look, the 📜 logs cell tails the runtime.",
+      "value": "   Ejecuta la comprobación de estado, que detecta toolSearch, y después Recuperar. Para obtener más detalles, la celda de logs sigue el runtime."
+    },
+    "text.deefe080063c": {
+      "type": "text",
+      "source": " read-only bootstrap endpoint",
+      "value": " read-only bootstrap endpoint",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.e1517be14d06": {
+      "type": "text",
+      "source": "minimax",
+      "value": "minimax",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.e1db972d43a8": {
+      "type": "text",
+      "source": "Use the probe UI above for the normal path. This cell exposes its request so you can compare proxy and direct transport or inspect an unexpected response.",
+      "value": "Usa la interfaz de la sonda anterior en el recorrido habitual. Esta celda expone la solicitud para comparar el transporte mediante proxy con el directo o examinar una respuesta inesperada."
+    },
+    "text.e3ee9fe2c8e7": {
+      "type": "text",
+      "source": " · hit max_tokens",
+      "value": " · hit max_tokens",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.e46d6265a556": {
+      "type": "text",
+      "source": " helpers.log.json(\"timing rows\", results);",
+      "value": " helpers.log.json(\"mediciones\", results);"
+    },
+    "text.e4c98834f5e0": {
+      "type": "text",
+      "source": "code bridge",
+      "value": "el puente de código"
+    },
+    "text.e4f9c522e1c8": {
+      "type": "text",
+      "source": "kimi",
+      "value": "kimi",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.e5450cb6df67": {
+      "type": "text",
+      "source": "Call chat.send with a fresh sessionKey and stream tool frames until run-end. The fresh suffix keeps each demo clean and forces a new tool run. The default prompt executes a command; commented alternatives test simpler turns.",
+      "value": "Llama a chat.send con una sessionKey nueva y transmite los frames de herramientas hasta el final de la ejecución. El sufijo nuevo mantiene aislada cada demostración y fuerza otra ejecución de herramientas. El prompt predeterminado ejecuta un comando; las alternativas comentadas prueban turnos más sencillos."
+    },
+    "text.e5c6f2f2c093": {
+      "type": "text",
+      "source": "GET /healthz",
+      "value": "GET /healthz",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.e6e1d0a85eea": {
+      "type": "text",
+      "source": "Hello chat",
+      "value": "Chat breve"
+    },
+    "text.e7d8b0bf6e13": {
+      "type": "text",
+      "source": " tool call(s) but none returned a result or answer.",
+      "value": " llamadas a herramientas, pero ninguna devolvió un resultado o una respuesta."
+    },
+    "text.e805db86a2c2": {
+      "type": "text",
+      "source": "ms/tok",
+      "value": "ms/tok",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.e95a995dbbf3": {
+      "type": "text",
+      "source": "Every distinct sessionKey you use leaves a session behind, and they accumulate in the Control UI. This lists them all (paginated) and deletes the throwaway ones, keeping only the Main Session. Edit KEEP to change what survives, e.g. /:(main|quick-3c-skill)$/ to also keep a session you care about.",
+      "value": "Cada sessionKey distinta deja una sesión que se acumula en la interfaz de control. Esta celda recorre la lista paginada y elimina las sesiones desechables, conservando únicamente la sesión principal. Edita KEEP para cambiar cuáles perduran; por ejemplo, /:(main|quick-3c-skill)$/ también conserva una sesión que te interese."
+    },
+    "text.e971a93a70cd": {
+      "type": "text",
+      "source": "🧹 clearing session memory for ",
+      "value": "🧹 borrando la memoria de la sesión "
+    },
+    "text.eaf380e7f604": {
+      "type": "text",
+      "source": "What's next",
+      "value": "Qué sigue"
+    },
+    "text.eb5f1740bf5c": {
+      "type": "text",
+      "source": " Launch every model concurrently, then await them in catalog order, so the log prints in a stable order even though the requests overlap.",
+      "value": " Launch every model concurrently, then await them in catalog order, so the log prints in a stable order even though the requests overlap.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.ee01b21eb121": {
+      "type": "text",
+      "source": " This opens the same /cli/gateway WebSocket the probe above used; openclawChat",
+      "value": " This opens the same /cli/gateway WebSocket the probe above used; openclawChat",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.ef5e40048c83": {
+      "type": "text",
+      "source": " · first token ",
+      "value": " · primer token "
+    },
+    "text.ef81a38eeabb": {
+      "type": "text",
+      "source": " follows the saved relay toggle",
+      "value": " follows the saved relay toggle",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.efade7955dc6": {
+      "type": "text",
+      "source": "nothing to remove; already tidy.",
+      "value": "nothing to remove; already tidy.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.efe26056e35b": {
+      "type": "text",
+      "source": "ONE POST · A LOOP INSIDE THE GATEWAY",
+      "value": "UN POST · UN BUCLE DENTRO DEL GATEWAY"
+    },
+    "text.f03b4ef909e2": {
+      "type": "text",
+      "source": "With the runtime shaped, you can drop a message into the agent's loop. The three\n      cells below run in order so that the first ones connect and list models and crons\n      before a later cell sends a chat turn and the last one streams the trace back. Read\n      that trace row by row:",
+      "value": "Una vez preparado el runtime, puedes enviar un mensaje al bucle del agente. Ejecuta los tres nodos siguientes en orden: el primero conecta con el gateway; el segundo enumera modelos y tareas cron; el tercero envía un turno de chat y transmite la traza. Lee la traza fila por fila:"
+    },
+    "text.f3afa1250f53": {
+      "type": "text",
+      "source": " sessions.list is paginated, so walk every page before deleting anything.",
+      "value": " sessions.list is paginated, so walk every page before deleting anything.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.f46d84fc54b1": {
+      "type": "text",
+      "source": "notebook or browser",
+      "value": "cuaderno o navegador"
+    },
+    "text.f4bbd8dc0a3f": {
+      "type": "text",
+      "source": "):",
+      "value": "):",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.f57645630e62": {
+      "type": "text",
+      "source": "The sessionKey rehydrates history across turns",
+      "value": "La sessionKey rehidrata el historial entre turnos"
+    },
+    "text.f902306ae189": {
+      "type": "text",
+      "source": "X-OpenClaw-Access-Session",
+      "value": "X-OpenClaw-Access-Session",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.fa0bb0789945": {
+      "type": "text",
+      "source": "ms · total ",
+      "value": "ms · total ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.fb7f020e3043": {
+      "type": "text",
+      "source": "Probe active model endpoint",
+      "value": "Probar el endpoint activo del modelo"
+    },
+    "text.fd37b8febd57": {
+      "type": "text",
+      "source": "cron.list",
+      "value": "cron.list",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.ff72caa36dca": {
+      "type": "text",
+      "source": "data:",
+      "value": "data:",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.ff8972b1ceea": {
+      "type": "text",
+      "source": " Show the answer; if the model spent its whole budget thinking, show that instead.",
+      "value": " Show the answer; if the model spent its whole budget thinking, show that instead.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.ffa4e7430ea1": {
+      "type": "text",
+      "source": "No API key saved. Go to the course home and save the endpoint and key first.",
+      "value": "No hay una clave de API guardada. Ve a la página inicial del curso y guarda primero el endpoint y la clave."
+    }
+  }
+}

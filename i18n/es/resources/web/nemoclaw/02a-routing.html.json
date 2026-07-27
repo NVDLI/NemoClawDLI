@@ -1,0 +1,1597 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "es-ES",
+  "template": "web/nemoclaw/02a-routing.html",
+  "media": [
+    "web/nemoclaw/assets/figures/02a-routing-1.svg",
+    "web/nemoclaw/assets/figures/fig2_react.svg",
+    "web/nemoclaw/assets/figures/fig2_rewoo.svg"
+  ],
+  "values": {
+    "link.01e8e548013f": {
+      "type": "link",
+      "source": "\n    <a href=\"https://www.crewai.com/\" target=\"_blank\" rel=\"noopener\">CrewAI</a>,\n    <a href=\"https://www.langchain.com/\" target=\"_blank\" rel=\"noopener\">LangChain</a>, and\n    <a href=\"https://www.langchain.com/langgraph\" target=\"_blank\" rel=\"noopener\">LangGraph</a>\n    all expose this same factory under names that vary by framework, whether\n    <code>Agent</code> or <code>create_agent</code> or a role/goal dataclass.\n    The cell below builds two specialists from the same four parameters, an\n    arithmetic tutor and a translator that both run on one input with their replies\n    rendered side by side.\n  ",
+      "value": "\n <a href=\"https://www.crewai.com/\" target=\"_blank\" rel=\"noopener\">CrewAI</a>,\n <a href=\"https://www.langchain.com/\" target=\"_blank\" rel=\"noopener\">LangChain</a> y\n <a href=\"https://www.langchain.com/langgraph\" target=\"_blank\" rel=\"noopener\">LangGraph</a>\n exponen factorías similares con nombres que varían según el framework: <code>Agent</code>, <code>create_agent</code>\n o una clase de datos para el rol y el objetivo. La celda siguiente usa los mismos cuatro parámetros para construir\n un tutor de aritmética y un traductor. Ambos procesan la misma entrada y muestran sus respuestas en paralelo.\n "
+    },
+    "link.088977681e2f": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al., <em>ReWOO: Decoupling Reasoning from Observations</em> (2023)</a>. The planner / worker / solver decomposition this module's Workflow Agent implements.",
+      "value": "<a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al., <em>ReWOO: Decoupling Reasoning from Observations</em> (2023)</a>. Presenta la separación entre planificador, trabajador y solucionador que implementa el agente de flujo de trabajo de este módulo."
+    },
+    "link.139eba09e8b7": {
+      "type": "link",
+      "source": "\n        At each step the model reads the latest observation before it picks an action\n        and runs a tool, then sizes up whatever came back and chooses again. The agent\n        <em>reacts</em> to whatever the previous tool call returned, so the path\n        through the tools takes shape as it runs. That makes ReAct strong when the\n        path depends on intermediate results and weak when many steps could have\n        run at once.\n        <br><br>\n        Paper: <a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al., 2022</a>.\n      ",
+      "value": "\n En cada etapa, el modelo lee la observación más reciente antes de elegir una acción y usar una herramienta.\n Después evalúa el resultado y vuelve a decidir. El agente <em>reacciona</em> a cada llamada, por lo que el recorrido\n por las herramientas toma forma durante la ejecución. ReAct funciona bien cuando los pasos dependen de resultados\n intermedios, pero pierde eficiencia cuando varias etapas independientes podrían ejecutarse a la vez.\n <br><br>\n Artículo: <a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al., 2022</a>.\n "
+    },
+    "link.1be52ce4d6ee": {
+      "type": "link",
+      "source": "Comprehensive list at <a href=\"04c-going-further.html#refs\">Going Further · References</a>.",
+      "value": "Lista completa en <a href=\"04c-going-further.html#refs\">Para ir más lejos · Referencias</a>."
+    },
+    "link.3358ef3956ff": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2303.17651\" target=\"_blank\" rel=\"noopener\">Madaan et al., <em>Self-Refine: Iterative Refinement with Self-Feedback</em> (2023)</a>. The pattern behind iterative multi-pass research: an agent critiques its own output and re-runs until a quality threshold is met.",
+      "value": "<a href=\"https://arxiv.org/abs/2303.17651\" target=\"_blank\" rel=\"noopener\">Madaan et al., <em>Self-Refine: Iterative Refinement with Self-Feedback</em> (2023)</a>. Explica el patrón de investigación iterativa en varias pasadas: el agente critica su salida y repite hasta alcanzar un umbral de calidad."
+    },
+    "link.39f1ebc65c2a": {
+      "type": "link",
+      "source": "\n        The model writes the full plan upfront in one LLM call before any tool runs at\n        all. A deterministic executor then runs every tool that the plan named, often in\n        parallel, and a second LLM call reads what came back to synthesize the results.\n        Because the plan never sees a tool result, the model \"reasons without observation.\"\n        That makes ReWOO strong when the steps are independent and weak when later steps\n        need to react to earlier ones.\n        <br><br>\n        Paper: <a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al., 2023</a>.\n      ",
+      "value": "\n El modelo escribe el plan completo en una sola llamada antes de ejecutar cualquier herramienta. Un ejecutor\n determinista usa las herramientas indicadas, a menudo en paralelo, y una segunda llamada al modelo sintetiza\n los resultados. Como el plan no ve las respuestas de las herramientas, el modelo «razona sin observación».\n ReWOO funciona bien cuando las etapas son independientes, pero no cuando un paso posterior debe reaccionar\n al resultado de uno anterior.\n <br><br>\n Artículo: <a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al., 2023</a>.\n "
+    },
+    "link.4f07e539a6af": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2305.04091\" target=\"_blank\" rel=\"noopener\">Wang et al., <em>Plan-and-Solve Prompting</em> (2023)</a>. The simpler ancestor: a single LLM call writes a plan, the same LLM executes step-by-step. ReWOO splits planner from executor.",
+      "value": "<a href=\"https://arxiv.org/abs/2305.04091\" target=\"_blank\" rel=\"noopener\">Wang et al., <em>Plan-and-Solve Prompting</em> (2023)</a>. Antecedente más sencillo: una llamada escribe el plan y el mismo LLM lo ejecuta paso a paso. ReWOO separa planificación y ejecución."
+    },
+    "link.6c17d60c30cb": {
+      "type": "link",
+      "source": "<strong>Tools.</strong> The <a href=\"https://json-schema.org/\" target=\"_blank\" rel=\"noopener\">JSON-Schema</a>-described functions it can call, if any.",
+      "value": "<strong>Herramientas.</strong> Las funciones descritas mediante <a href=\"https://json-schema.org/\" target=\"_blank\" rel=\"noopener\">JSON Schema</a>, si las necesita."
+    },
+    "link.edf787ed5434": {
+      "type": "link",
+      "source": "\n    The cell below runs a ReWOO pipeline against the NVIDIA glossary, using\n    <code>helpers.webSearch</code> (the ranked glossary search you met in Module 1c) for every retrieval the plan calls for. The <a href=\"glossary.html\">glossary explorer</a> shows the full index this searches and lets you run any query the planner might emit:\n  ",
+      "value": "\n La celda siguiente ejecuta un pipeline ReWOO sobre el glosario de NVIDIA. Para cada consulta del plan usa\n <code>helpers.webSearch</code>, la búsqueda ordenada por relevancia que usaste en el Módulo 1c. El\n <a href=\"glossary.html\">explorador del glosario</a> muestra el índice completo y permite probar cualquier consulta que pueda emitir el planificador.\n "
+    },
+    "link.fa9d7cb28139": {
+      "type": "link",
+      "source": "The ReWOO pattern plans every tool call up front, runs them in parallel, then synthesizes in one final call. <a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al. (2023)</a>.",
+      "value": "ReWOO planifica las llamadas a herramientas, las ejecuta en paralelo y sintetiza los resultados en una llamada final. <a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al. (2023)</a>."
+    },
+    "link.fe4248389dbd": {
+      "type": "link",
+      "source": "<a href=\"https://www.langchain.com/langgraph\" target=\"_blank\" rel=\"noopener\">LangGraph</a>. The production framework that formalises the workflow / state-machine pattern this module sketches by hand.",
+      "value": "<a href=\"https://www.langchain.com/langgraph\" target=\"_blank\" rel=\"noopener\">LangGraph</a>. Framework de producción que formaliza el patrón de flujo de trabajo o máquina de estados que este módulo construye de forma explícita."
+    },
+    "placeholder.64118c0cac7a": {
+      "type": "placeholder",
+      "source": "### search \\${i + 1}: \"\\${s.query}\"\\\\n\\${helpers.formatSearchResults(s)}",
+      "value": "### search \\${i + 1}: \"\\${s.query}\"\\\\n\\${helpers.formatSearchResults(s)}",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "placeholder.8f06e2fc8b37": {
+      "type": "placeholder",
+      "source": "Topic: \\${state.plan.topic}\\\\n\\\\n\\${state.context}",
+      "value": "Topic: \\${state.plan.topic}\\\\n\\\\n\\${state.context}",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "placeholder.c10e712af077": {
+      "type": "placeholder",
+      "source": "Topic: \\${state.topic}\\\\n\\\\nSources:\\\\n\\${state.context}\\\\n\\\\nWrite your version.",
+      "value": "Topic: \\${state.topic}\\\\n\\\\nSources:\\\\n\\${state.context}\\\\n\\\\nWrite your version.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "rich.1a12441953a2": {
+      "type": "rich",
+      "source": "Output exactly two lines: 'FR: <french>' and 'BACK: <original-language>'.",
+      "value": "Output exactly two lines: 'FR: <french>' and 'BACK: <original-language>'.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "rich.242c5dc34093": {
+      "type": "rich",
+      "source": "<strong>Role.</strong> A short label, used for logs and routing.",
+      "value": "<strong>Rol.</strong> Una etiqueta breve para registros y enrutamiento."
+    },
+    "rich.50ba04ccb0aa": {
+      "type": "rich",
+      "source": "<strong>Context bloat is real.</strong> A single agent doing everything accumulates 10000-token context. Specialists stay focused on their slice.",
+      "value": "<strong>El contexto crece demasiado.</strong> Un agente que hace todo puede acumular un contexto de 10&nbsp;000 tokens. Los especialistas conservan solo la parte necesaria."
+    },
+    "rich.58a54f63f510": {
+      "type": "rich",
+      "source": "<strong>Parallelism is possible.</strong> Two workers run concurrently, where one agent could only run them in sequence. Three independent searches finish in the time of the slowest.",
+      "value": "<strong>Existe paralelismo.</strong> Dos tareas pueden ejecutarse a la vez, mientras que un solo agente las ejecutaría en secuencia. Tres búsquedas independientes en paralelo terminan en el tiempo de la más lenta."
+    },
+    "rich.79e7f0a66de9": {
+      "type": "rich",
+      "source": "<strong>Specialization matters.</strong> Different workstreams need different system prompts, tools, or models. One agent forced into both roles degrades both.",
+      "value": "<strong>La especialización importa.</strong> Distintos frentes necesitan prompts de sistema, herramientas o modelos diferentes. Obligar a un solo agente a cubrirlos puede perjudicar ambos."
+    },
+    "rich.82b2c51d66a4": {
+      "type": "rich",
+      "source": "\n    <code>Promise.all</code> is JavaScript's helper for starting several promises and waiting\n    until all of them finish. Here it is just the concurrency mechanism: it does not call\n    the model and it does not decide which searches to run.\n  ",
+      "value": "\n <code>Promise.all</code> permite iniciar varias tareas asíncronas en paralelo (promesas) de JavaScript y esperar a que todas terminen. Aquí solo\n aporta concurrencia: no llama al modelo ni decide qué búsquedas ejecutar.\n "
+    },
+    "rich.8b10c8770bc6": {
+      "type": "rich",
+      "source": "\n    <strong>The next two parts carry this composition idea forward.</strong> Part B\n    (Indices) points the same idea at corpora rather than at other agents so that a\n    knowledge layer becomes an agent wrapping a body of data behind a query interface.\n    Part C (Deep Agents) takes it further still, into a planner agent that dispatches\n    sub-agents in fresh contexts and persists their working state to a virtual filesystem.\n  ",
+      "value": "\n <strong>Las dos partes siguientes amplían esta idea de composición.</strong> La Parte B (Indexación) aplica el mismo\n principio a un <i>corpus</i> de información: una capa de conocimiento envuelve los datos tras una interfaz de consulta.\n La Parte C (Agentes profundos) presenta un agente planificador que delega trabajo en subagentes con contextos\n nuevos y conserva el estado en un sistema de archivos virtual.\n "
+    },
+    "rich.8b46273b0a2f": {
+      "type": "rich",
+      "source": "<strong>Synthesizer.</strong> A second LLM call reads every result and writes the brief, citing each search by index.",
+      "value": "<strong>Sintetizador.</strong> Una segunda llamada al LLM lee los resultados y redacta el informe, citando cada búsqueda por su índice."
+    },
+    "rich.90cf8f19cd7a": {
+      "type": "rich",
+      "source": "\n    <strong>The overhead tax in concrete terms.</strong>\n    Every agent boundary adds model-call latency and routing logic. It also creates another\n    source of malformed messages and replaces a readable timeline with a trajectory that\n    fans across workers.\n  ",
+      "value": "\n <strong>El coste de coordinación, en términos concretos.</strong>\n Cada interacción entre agentes añade latencia a las llamadas al modelo y lógica de enrutamiento. También introduce otra fuente de mensajes mal formados,\n además de sustituir una secuencia fácil de leer por un recorrido distribuido entre varios trabajadores.\n "
+    },
+    "rich.b485aaf225cf": {
+      "type": "rich",
+      "source": "<strong>Invoke contract.</strong> A consistent shape (<code>specialist.run(input)</code>) that returns the final reply.",
+      "value": "<strong>Contrato de invocación.</strong> Una interfaz uniforme, como <code>specialist.run(input)</code>, que devuelve la respuesta final."
+    },
+    "rich.b78f1a0b8a39": {
+      "type": "rich",
+      "source": "\n    <strong>In practice, you can have both.</strong>\n    Many real systems borrow from each approach at once. The tools a ReAct loop calls\n    might internally run a planned, ReWOO-style pipeline, and a planner that lays its\n    work out in advance still needs sub-agents to execute each step, which are usually\n    ReAct loops in their own right. Compose these software components wherever their\n    strengths fit, reserving a Workflow Agent for tasks that split into independent workstreams.\n  ",
+      "value": "\n <strong>En la práctica, puedes tener ambos.</strong>\n Muchos sistemas reales combinan ambos enfoques. Una herramienta invocada por un bucle ReAct puede ejecutar\n internamente un pipeline planificado al estilo ReWOO. A su vez, un planificador puede delegar cada etapa en\n subagentes que operan con sus propios bucles ReAct. Son componentes de software que pueden combinarse allí\n donde sus ventajas resulten útiles.\n "
+    },
+    "rich.c89d938f1d03": {
+      "type": "rich",
+      "source": "The <span>Workflow</span> Agent",
+      "value": "El agente de <span>flujo de trabajo</span>"
+    },
+    "rich.d728bd0d5ae9": {
+      "type": "rich",
+      "source": "<strong>Executor.</strong> Plain JavaScript. Every query runs concurrently via <code>Promise.all</code>, with no LLM calls at this stage.",
+      "value": "<strong>Ejecutor.</strong> JavaScript sin llamadas al modelo. <code>Promise.all</code> ejecuta todas las consultas de forma concurrente."
+    },
+    "rich.dcde6ae021af": {
+      "type": "rich",
+      "source": "<strong>Failure isolation helps.</strong> A crashed worker does not kill the whole task. The orchestrator retries, skips, or routes around it.",
+      "value": "<strong>Conviene aislar fallos.</strong> El fallo de una subtarea no tiene que detener toda la tarea. El orquestador puede reintentar, omitir la rama o elegir otra ruta."
+    },
+    "rich.dfb993bf67b0": {
+      "type": "rich",
+      "source": "<strong>System prompt.</strong> The behaviour contract: what it does, what it refuses, and how it phrases its replies.",
+      "value": "<strong>Prompt de sistema.</strong> El contrato de comportamiento: qué hace, qué rechaza y cómo redacta sus respuestas."
+    },
+    "rich.e622373c2f66": {
+      "type": "rich",
+      "source": "\n    Routing is a different shape of multi-agent in which a triage agent classifies the\n    input and hands it to one specialist. Because the classifier must emit one of a fixed\n    enum of categories, the output needs a tight contract. A <strong>fixed enum</strong>\n    is a closed list of allowed labels; if the model returns anything else, the router\n    should reject the route or retry under stricter instructions instead of guessing.\n    Each specialist downstream owns a narrow system prompt and does not need to see the\n    triage agent's reasoning.\n  ",
+      "value": "\n El enrutamiento es otra forma de componer agentes: un agente clasifica una entrada y la entrega a un especialista.\n Como el clasificador debe devolver una categoría de una enumeración fija, su salida necesita un contrato estricto.\n Una <strong>enumeración fija</strong> es una lista cerrada de etiquetas permitidas. Si el modelo devuelve otro valor,\n el router debe rechazarlo o reintentar con instrucciones más precisas, nunca adivinar. Cada especialista recibe un\n prompt de sistema acotado y no necesita conocer el razonamiento del clasificador.\n "
+    },
+    "rich.ee9574e0b7d0": {
+      "type": "rich",
+      "source": "<strong>Planner.</strong> One schema-bound LLM call emits a JSON list of 3-5 search queries.",
+      "value": "<strong>Planificador.</strong> Una llamada al LLM, restringida por un esquema, genera una lista JSON con entre tres y cinco consultas."
+    },
+    "rich.f27440ffd362": {
+      "type": "rich",
+      "source": "\n      A single ReAct loop handles most one-shot tasks, but harder problems sometimes need\n      structure that decides work before the next tool result arrives. A <strong>workflow\n      agent</strong> means an agent system where your harness controls a workflow: a graph\n      of model calls, deterministic code steps, tool calls, and specialist loops. This shape\n      helps when sub-tasks that run in parallel can share results, when a plan can be written\n      before tools run, or when routing should follow a rule instead of the last observation.\n    ",
+      "value": "\n Un solo agente ReAct resuelve la mayoría de tareas puntuales. Problemas más complejos, sin embargo,\n a veces necesitan una estructura que organice el trabajo antes de recibir el siguiente resultado de una herramienta.\n Un <strong>flujo de trabajo de agente</strong> es un sistema en el que el entorno de ejecución controla un flujo compuesto por\n llamadas al modelo, etapas de código determinista, llamadas a herramientas y bucles especializados. Esta estructura resulta\n útil cuando varias subtareas pueden ejecutarse en paralelo y compartir resultados, cuando conviene escribir un plan\n antes de usar las herramientas o cuando el enrutamiento debe seguir una regla en vez de una observación reciente.\n "
+    },
+    "rich.f740f53e7b4e": {
+      "type": "rich",
+      "source": "You are an arithmetic tutor. For any math question, show your work in one or two short steps and end with FINAL: <integer>. Refuse non-math questions politely.",
+      "value": "You are an arithmetic tutor. For any math question, show your work in one or two short steps and end with FINAL: <integer>. Refuse non-math questions politely.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.00f29ce34950": {
+      "type": "text",
+      "source": " Wrap replies before helpers.viz.sideBySide renders the two columns.",
+      "value": " Wrap replies before helpers.viz.sideBySide renders the two columns.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.0304523efff5": {
+      "type": "text",
+      "source": "goal",
+      "value": "goal",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.0304523efff5~1": {
+      "type": "text",
+      "source": "goal",
+      "value": "goal",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.043a718774c5": {
+      "type": "text",
+      "source": "s",
+      "value": "s",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.043a718774c5~1": {
+      "type": "text",
+      "source": "s",
+      "value": "s",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.043a718774c5~2": {
+      "type": "text",
+      "source": "s",
+      "value": "s",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.043a718774c5~3": {
+      "type": "text",
+      "source": "s",
+      "value": "s",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763~1": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763~2": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763~3": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763~4": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763~5": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763~6": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763~7": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.054e64f31c41": {
+      "type": "text",
+      "source": "Critic · what's missing",
+      "value": "Critic · what's missing",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.07193df400d4": {
+      "type": "text",
+      "source": "queries",
+      "value": "queries",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.07eecaaedc74": {
+      "type": "text",
+      "source": " planner/search data into a diagram spec so the page can show the pipeline beside the answer.",
+      "value": " planner/search data into a diagram spec so the page can show the pipeline beside the answer.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.0a19dd69165a": {
+      "type": "text",
+      "source": " Register the specialist prompts this router can choose.",
+      "value": " Register the specialist prompts this router can choose.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.0aff836eaef3": {
+      "type": "text",
+      "source": "Renders a Gantt bar chart showing each specialist's duration alongside the total wall-clock window. This makes the concurrency benefit concrete: the three bars fit inside a dashed window that is shorter than their combined length.",
+      "value": "El diagrama muestra la duración de cada especialista junto a la ventana total. Las tres barras caben dentro de un intervalo menor que la suma de sus duraciones, lo que hace visible el beneficio de la concurrencia."
+    },
+    "text.0b4bef8d3073": {
+      "type": "text",
+      "source": "I was double charged on my invoice",
+      "value": "Me han cobrado dos veces en la factura"
+    },
+    "text.0cb65a598936": {
+      "type": "text",
+      "source": "You are a help desk triage agent.",
+      "value": "You are a help desk triage agent.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.0e47a37afc94": {
+      "type": "text",
+      "source": "searches concurrently in",
+      "value": "searches concurrently in",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.0e97879787b6": {
+      "type": "text",
+      "source": "Three specialists · wall clock vs serial total",
+      "value": "Three specialists · wall clock vs serial total",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.0f916789d300": {
+      "type": "text",
+      "source": "triage",
+      "value": "triage",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.115f18ada0b3": {
+      "type": "text",
+      "source": "createSpecialist",
+      "value": "createSpecialist",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.12037d0ff65d": {
+      "type": "text",
+      "source": " state.topic = \"How should an agent decide whether to call a tool?\";",
+      "value": " state.topic = \"How should an agent decide whether to call a tool?\";",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.13b19e6c7c17": {
+      "type": "text",
+      "source": "Planner (LLM, JSON schema)",
+      "value": "Planificador (LLM, esquema JSON)"
+    },
+    "text.14821c3b8a10": {
+      "type": "text",
+      "source": " Reading guide: the first block is the actual synthesis call. The rest converts the",
+      "value": " Reading guide: the first block is the actual synthesis call. The rest converts the",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.14a36170f964": {
+      "type": "text",
+      "source": "ReWOO writes the full plan before any tool runs, executes the steps without re-asking the model, then synthesizes once.",
+      "value": "ReWOO escribe el plan completo, ejecuta sus etapas sin volver a consultar al modelo y sintetiza una sola vez."
+    },
+    "text.1605dd5aea92": {
+      "type": "text",
+      "source": "json_schema",
+      "value": "json_schema",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.1605dd5aea92~1": {
+      "type": "text",
+      "source": "json_schema",
+      "value": "json_schema",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.1631cc972051": {
+      "type": "text",
+      "source": " Send the prepared messages and stream the model response.",
+      "value": " Send the prepared messages and stream the model response.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.1631cc972051~1": {
+      "type": "text",
+      "source": " Send the prepared messages and stream the model response.",
+      "value": " Send the prepared messages and stream the model response.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.16fae6c83604": {
+      "type": "text",
+      "source": "Route a ticket to a specialist",
+      "value": "Enviar un ticket a un especialista"
+    },
+    "text.183c5b703ec7": {
+      "type": "text",
+      "source": "Simple · non-technical reader",
+      "value": "Simple · non-technical reader",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.1af2eebe6e52": {
+      "type": "text",
+      "source": " TODO: Try a billing or account-access ticket and watch the route change.",
+      "value": " TODO: Prueba un ticket de facturación o acceso y observa cómo cambia la ruta."
+    },
+    "text.1e039f8d613c": {
+      "type": "text",
+      "source": " TODO: Give both specialists a new translation-and-arithmetic request.",
+      "value": " TODO: Propón otra tarea que combine traducción y aritmética."
+    },
+    "text.1e89109d306a": {
+      "type": "text",
+      "source": "GOAL",
+      "value": "GOAL",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.1fbe05d6177d": {
+      "type": "text",
+      "source": "PLANNER",
+      "value": "PLANNER",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.220dc01cde8a": {
+      "type": "text",
+      "source": "The research goal that drives the entire pipeline. Edit it and rerun to see how the planner generates a different set of queries and the synthesizer produces a different brief.",
+      "value": "El objetivo que impulsa todo el pipeline. Edítalo y vuelve a ejecutar para observar cómo el planificador genera otras consultas y el sintetizador produce un informe distinto."
+    },
+    "text.22bca3061c25": {
+      "type": "text",
+      "source": "You are explaining to a non-technical reader. No jargon, one concrete analogy. 2-3 sentences.",
+      "value": "You are explaining to a non-technical reader. No jargon, one concrete analogy. 2-3 sentences.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.233adff3ede0": {
+      "type": "text",
+      "source": "Running a ReWOO pipeline against the NVIDIA glossary",
+      "value": "Ejecuta un pipeline ReWOO sobre el glosario de NVIDIA"
+    },
+    "text.2380b4d5d4d8": {
+      "type": "text",
+      "source": "Technical · ML engineer",
+      "value": "Technical · ML engineer",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.23d611a6f6f8": {
+      "type": "text",
+      "source": "topic",
+      "value": "topic",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.241932906782": {
+      "type": "text",
+      "source": "search",
+      "value": "search",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.244b84350614": {
+      "type": "text",
+      "source": "planner",
+      "value": "planner",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.244b84350614~1": {
+      "type": "text",
+      "source": "planner",
+      "value": "planner",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.244b84350614~2": {
+      "type": "text",
+      "source": "planner",
+      "value": "planner",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.245843abef9e": {
+      "type": "text",
+      "source": "[",
+      "value": "[",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.245843abef9e~1": {
+      "type": "text",
+      "source": "[",
+      "value": "[",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.2561e2e3272b": {
+      "type": "text",
+      "source": "Build specialists from a factory",
+      "value": "Construir especialistas a partir de una factoría"
+    },
+    "text.25b0f3fc616f": {
+      "type": "text",
+      "source": "Classify the ticket into one category: network, hardware, software, or account.",
+      "value": "Classify the ticket into one category: network, hardware, software, or account.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.26787dd2f72c": {
+      "type": "text",
+      "source": "hardware",
+      "value": "hardware",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.2714a4eb7a98": {
+      "type": "text",
+      "source": "search ",
+      "value": "search ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.2799534b4c4f": {
+      "type": "text",
+      "source": "Module 2b: The Index Agent →",
+      "value": "Módulo 2b: El agente de indexación →"
+    },
+    "text.28391d3bc64e": {
+      "type": "text",
+      "source": "of",
+      "value": "de"
+    },
+    "text.2958d416d08a": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.2958d416d08a~1": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.2d711642b726": {
+      "type": "text",
+      "source": "x",
+      "value": "x",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.3009be769fb8": {
+      "type": "text",
+      "source": "network",
+      "value": "network",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.306aec0937fe": {
+      "type": "text",
+      "source": "factory ready: createSpecialist({ role, systemPrompt, tools })",
+      "value": "fábrica lista: createSpecialist({ role, systemPrompt, tools })"
+    },
+    "text.3092a5f0dba0": {
+      "type": "text",
+      "source": "priority",
+      "value": "priority",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.30ecf49213fe": {
+      "type": "text",
+      "source": "ReAct (Reason + Act)",
+      "value": "ReAct (razonamiento + acción)"
+    },
+    "text.35390f5453e8": {
+      "type": "text",
+      "source": "software",
+      "value": "software",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.355a60db480c": {
+      "type": "text",
+      "source": "Module 2 · Part A of 3",
+      "value": "Módulo 2 · Parte A de 3"
+    },
+    "text.39617394a19c": {
+      "type": "text",
+      "source": " Draw worker, serial-total, wall-clock, and speedup bars from the same timings.",
+      "value": " Draw worker, serial-total, wall-clock, and speedup bars from the same timings.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.3c60b978597c": {
+      "type": "text",
+      "source": " returns a category word, then calls the matching specialist. Edit the routes and rerun.",
+      "value": " returns a category word, then calls the matching specialist. Edit the routes and rerun.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.3d0da3b142d1": {
+      "type": "text",
+      "source": "You are an account specialist. Answer login, profile, and security questions.",
+      "value": "You are an account specialist. Answer login, profile, and security questions.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.3d3d17f38da2": {
+      "type": "text",
+      "source": "The triage router has a fixed enum of categories. What should the\n        router do if the model emits a category that is not in the enum? Is the JSON\n        schema enough by itself, or do you also need application-side validation?",
+      "value": "El router usa una enumeración fija. ¿Qué debe hacer si el modelo devuelve una categoría no permitida? ¿Basta el esquema JSON o también necesitas validación en la aplicación?"
+    },
+    "text.3dd649e25c5a": {
+      "type": "text",
+      "source": " TODO: Ask a new topic and compare how each specialist frames it.",
+      "value": " TODO: Haz otra pregunta y compara cómo la enmarca cada especialista."
+    },
+    "text.3f95ac878eb2": {
+      "type": "text",
+      "source": "REACTIVE · STEP-BY-STEP",
+      "value": "REACTIVO · PASO A PASO"
+    },
+    "text.4128b8244171": {
+      "type": "text",
+      "source": " The N search queries become N tool nodes in one grid row; the planner fans out to each, each fans back into the synthesizer.",
+      "value": " The N search queries become N tool nodes in one grid row; the planner fans out to each, each fans back into the synthesizer.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.43113562c2e4": {
+      "type": "text",
+      "source": "#router-artifact",
+      "value": "#router-artifact",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.473287f8298d": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.473287f8298d~1": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.473287f8298d~2": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.473287f8298d~3": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.473287f8298d~4": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.49f5f0be58c8": {
+      "type": "text",
+      "source": "Assign priority and restate the problem in one line.",
+      "value": "Assign priority and restate the problem in one line.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.4b89d17886e1": {
+      "type": "text",
+      "source": " queries",
+      "value": " queries",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.4c7eb49524a4": {
+      "type": "text",
+      "source": "built 2 specialists ·",
+      "value": "2 especialistas creados ·"
+    },
+    "text.4d15db29714e": {
+      "type": "text",
+      "source": "You translate the user's input from any language into French,",
+      "value": "You translate the user's input from any language into French,",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.4f1c1bb6d7a3": {
+      "type": "text",
+      "source": "\n    Each of the four exercises above built a small agent by hand from the same few\n    pieces of boilerplate that production code should never have to retype for every new\n    specialist. Those pieces are a role label, a system prompt, a tool list, and an\n    invocation. The factory pattern parameterises those four moving parts, so you declare\n    specialists instead of writing them:\n  ",
+      "value": "\n Los cuatro ejercicios anteriores construyeron agentes sencillos con las mismas piezas que el código de producción\n no debería repetir para cada especialista: una etiqueta de rol, un prompt de sistema, una lista de herramientas y\n un contrato de invocación. Una factoría parametriza esas cuatro partes para que puedas declarar agentes especialistas en vez de reescribirlos:\n "
+    },
+    "text.502bdd68cc7e": {
+      "type": "text",
+      "source": " state.ticket = \"I was charged twice for the same subscription this month.\";",
+      "value": " state.ticket = \"I was charged twice for the same subscription this month.\";",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.50436a2b01d3": {
+      "type": "text",
+      "source": "I want a refund for last month's subscription",
+      "value": "Quiero el reembolso de la suscripción del mes pasado"
+    },
+    "text.5555b3120209": {
+      "type": "text",
+      "source": " Show structured search hits so [search N] citations can be checked.",
+      "value": " Show structured search hits so [search N] citations can be checked.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.555ec7a6a82b": {
+      "type": "text",
+      "source": " Share one search across specialists so their claims trace to the same sources.",
+      "value": " Share one search across specialists so their claims trace to the same sources.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.569738d708d1": {
+      "type": "text",
+      "source": " Fetch evidence the specialists will use for grounded answers.",
+      "value": " Fetch evidence the specialists will use for grounded answers.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.588da4105320": {
+      "type": "text",
+      "source": " · ",
+      "value": " · ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.5a0ebe52fcca": {
+      "type": "text",
+      "source": "Specialist (LLM)",
+      "value": "Especialista (LLM)"
+    },
+    "text.5c65f78e4eb1": {
+      "type": "text",
+      "source": "\n    Two LLM calls total, plus N parallel glossary searches. Edit the research goal and\n    watch the planner's query list change.\n  ",
+      "value": "\n En total: dos llamadas al LLM y N búsquedas paralelas en el glosario. Edita el objetivo y observa cómo cambia la lista de consultas.\n "
+    },
+    "text.5c97bdfd9e48": {
+      "type": "text",
+      "source": " Compare the routed work against a serial baseline.",
+      "value": " Compare the routed work against a serial baseline.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.5cd5f84e9aa2": {
+      "type": "text",
+      "source": "⚠ search service unreachable for",
+      "value": "⚠ servicio de búsqueda inaccesible para"
+    },
+    "text.5d5cf3c0b48d": {
+      "type": "text",
+      "source": "1 LLM call · reads all ",
+      "value": "1 LLM call · reads all ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.5d7d08b35871": {
+      "type": "text",
+      "source": "Three specialists · Promise.all",
+      "value": "Tres especialistas · Promise.all"
+    },
+    "text.5ff0f3bacd3b": {
+      "type": "text",
+      "source": "\n      The harness can scope a workflow around a model call, a deterministic step,\n      a specialist loop, or a group of parallel branches. At each boundary, it decides\n      what context crosses, what can branch, and which results feed the next pipeline\n      stage. Fan-out and fixed routing make that control visible without replacing the\n      ReAct loop from the previous page.\n    ",
+      "value": "\n El motor de ejecución puede delimitar un flujo de trabajo alrededor de una llamada al modelo, una etapa determinista,\n un bucle especializado o un conjunto de ramas paralelas. En cada caso decide qué contexto usar,\n qué trabajo puede ramificarse y qué resultados alimentan la siguiente etapa del flujo de trabajo. Esta sección usa <i>fan-out</i> (de uno a muchos) y enrutamiento fijo\n para demostrar el comportamiento sin cambiar el agente ReAct de la sección anterior.\n "
+    },
+    "text.60d1a2b5adcf": {
+      "type": "text",
+      "source": "The second model call, running under whichever specialist system prompt the router selected. Because each specialist prompt is narrow and category-specific, the model never has to hedge between support domains. It answers as if that is the only kind of problem it handles.",
+      "value": "La segunda llamada usa el prompt de sistema elegido por el router. Cada prompt cubre una sola categoría, por lo que el modelo responde dentro de ese dominio sin tener que decidir entre varios tipos de soporte."
+    },
+    "text.61c44a623fcf": {
+      "type": "text",
+      "source": " state.input = \"Translate 'the square root of one hundred forty-four' and solve it.\";",
+      "value": " state.input = \"Translate 'the square root of one hundred forty-four' and solve it.\";",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.61e606079cdf": {
+      "type": "text",
+      "source": " This is the Try-it artifact. Each turn is two calls: one classify call that",
+      "value": " This is the Try-it artifact. Each turn is two calls: one classify call that",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.61f640b4ff46": {
+      "type": "text",
+      "source": " Instantiate one specialist with its own role, prompt, and tools.",
+      "value": " Instantiate one specialist with its own role, prompt, and tools.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.62e1a2707bb3": {
+      "type": "text",
+      "source": "The support ticket the triage agent will classify. Edit it to try different problem types and watch the router pick a different specialist each time.",
+      "value": "El ticket que clasificará el agente de selección. Edítalo para probar distintos problemas y observa qué especialista elige el router."
+    },
+    "text.6336a21beff7": {
+      "type": "text",
+      "source": "input:",
+      "value": "input:",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.650f0800373b": {
+      "type": "text",
+      "source": "You are a research planner.",
+      "value": "You are a research planner.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.67a5bdf2a82d": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents",
+      "value": "NVIDIA · Seguridad de agentes"
+    },
+    "text.680694f37af1": {
+      "type": "text",
+      "source": "rendered below. Edit the config and Run.",
+      "value": "artefacto renderizado abajo. Edita la configuración y vuelve a ejecutar."
+    },
+    "text.6849f140c10c": {
+      "type": "text",
+      "source": " Call the model and time the routed response.",
+      "value": " Call the model and time the routed response.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.685c71f8146d": {
+      "type": "text",
+      "source": "The question that all three specialists will receive. Because every specialist reads the same input, you can compare their outputs directly and see how the system prompt alone shapes the response.",
+      "value": "La pregunta que recibirán los tres especialistas. Como todos leen la misma entrada, puedes comparar sus respuestas y aislar el efecto del prompt de sistema."
+    },
+    "text.69824d3b0e70": {
+      "type": "text",
+      "source": "References",
+      "value": "Referencias"
+    },
+    "text.6a0993355691": {
+      "type": "text",
+      "source": "Timing Gantt + speedup",
+      "value": "Diagrama de Gantt y aceleración"
+    },
+    "text.6ae72180788e": {
+      "type": "text",
+      "source": "\n    Ask a support question and the artifact classifies it into one category with a\n    single model call before it routes that ticket to the matching specialist's system\n    prompt and streams the answer back in that voice. It runs the same\n    classify-then-specialist pattern shown above. The categories here are a\n    customer-support set rather than the IT help-desk enum. Its four values are billing,\n    technical, account, and other. Only the category list changes when the domain\n    changes, while the routing mechanism underneath stays identical.\n  ",
+      "value": "\n Escribe una pregunta que requiere una respuesta especializada. El artefacto la clasifica con una llamada al modelo, dirige el ticket al prompt\n de sistema del especialista correspondiente y transmite su respuesta. Ejecuta el mismo patrón de clasificación y\n enrutamiento mostrado antes. Aquí las categorías cubren facturación, soporte técnico, cuenta y otros ámbitos\n de atención al cliente, en lugar de especialistas con numeración fija. Al cambiar de dominio solo cambia la lista de categorías; el mecanismo permanece igual.\n "
+    },
+    "text.6c1ff09db3a7": {
+      "type": "text",
+      "source": "low",
+      "value": "low",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.6c4124af1250": {
+      "type": "text",
+      "source": " hits",
+      "value": " hits",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.6e60e97688d3": {
+      "type": "text",
+      "source": " Build a node/edge spec from the plan the planner emitted, then let helpers.viz.diagram lay it out and theme it.",
+      "value": " Build a node/edge spec from the plan the planner emitted, then let helpers.viz.diagram lay it out and theme it.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.6ef7c9b15ecd": {
+      "type": "text",
+      "source": "high",
+      "value": "high",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.75d1a90c8570": {
+      "type": "text",
+      "source": "arithmetician",
+      "value": "arithmetician",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.761b7ad8ad43": {
+      "type": "text",
+      "source": "summary",
+      "value": "summary",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.7842309c9c36": {
+      "type": "text",
+      "source": "See the Gantt chart in the cell's log area: three bars (specialists) inside a dashed wall-clock window.",
+      "value": "See the Gantt chart in the cell's log area: three bars (specialists) inside a dashed wall-clock window.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.78d858c9dce6": {
+      "type": "text",
+      "source": "You are explaining to an ML engineer. Use precise terms (embedding, sinusoidal, rotary). 2-3 sentences.",
+      "value": "You are explaining to an ML engineer. Use precise terms (embedding, sinusoidal, rotary). 2-3 sentences.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.79372ec90883": {
+      "type": "text",
+      "source": "Decompose the goal into 3-5 short, complementary search queries over the NVIDIA glossary.",
+      "value": "Decompose the goal into 3-5 short, complementary search queries over the NVIDIA glossary.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.7a1d010e7657": {
+      "type": "text",
+      "source": "The factory function takes (role, systemPrompt, tools) and returns a callable specialist, and two specialists built from it run on the same input.",
+      "value": "La factoría recibe un rol, un prompt de sistema y herramientas, y devuelve un especialista con nombre. Dos instancias construidas con ella procesan la misma entrada."
+    },
+    "text.7a297aa8246b": {
+      "type": "text",
+      "source": "Translate 'thirty-seven times eleven' and then evaluate the arithmetic.",
+      "value": "Translate 'thirty-seven times eleven' and then evaluate the arithmetic.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.7bf868b18299": {
+      "type": "text",
+      "source": "You are a general assistant. Answer the question helpfully and briefly.",
+      "value": "You are a general assistant. Answer the question helpfully and briefly.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.7c9bbe5ec9b3": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.7ca6ccad02a4": {
+      "type": "text",
+      "source": "A plain JavaScript lookup with no model call. It reads the category field from the triage result and selects the matching specialist system prompt, which is the only thing that changes between specialists. Keeping this step code-only means it cannot hallucinate a route.",
+      "value": "Una consulta de JavaScript sin llamadas al modelo. Lee la categoría obtenida y selecciona el prompt de sistema correspondiente, la única pieza que cambia entre especialistas. Mantener esta etapa en código impide que el modelo invente una ruta."
+    },
+    "text.7cc78ea0b230": {
+      "type": "text",
+      "source": "ReAct interleaves a reasoning step with each tool call, reacting to every observation before deciding the next move.",
+      "value": "ReAct intercala razonamiento y llamadas a herramientas; cada observación informa la siguiente decisión."
+    },
+    "text.7d826b4fd46c": {
+      "type": "text",
+      "source": "You are a critic. Name one thing the sources leave out or oversimplify. 2-3 sentences.",
+      "value": "You are a critic. Name one thing the sources leave out or oversimplify. 2-3 sentences.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.7e45c0bb247a": {
+      "type": "text",
+      "source": "You are a network support specialist. Give 3-5 concise, numbered troubleshooting steps for the network issue.",
+      "value": "You are a network support specialist. Give 3-5 concise, numbered troubleshooting steps for the network issue.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.7e61847d61d6": {
+      "type": "text",
+      "source": "Topic",
+      "value": "Tema"
+    },
+    "text.801d27873126": {
+      "type": "text",
+      "source": "\n    That tax is fixed regardless of the task, so the question becomes whether the work\n    returns enough to cover it. A linear job that one prompt already handles will never\n    recoup the extra calls and the routing logic that they require. The split begins to\n    earn its keep only once the task itself carries the kind of structure that a single\n    loop has no choice but to flatten down into one timeline. Any one of the conditions\n    below makes the trade pay off.\n  ",
+      "value": "\n Ese coste existe para cualquier tarea. La pregunta es si dicha estructura aporta suficiente beneficio para\ncompensarlo. Para una tarea lineal que se pueda resolver con un solo prompt no compensará el coste de las llamadas y rutas adicionales.\n La división empieza a resultar útil cuando la propia tarea contiene una estructura difícil de resolver con un solo bucle. Cualquiera de estas condiciones puede inclinar la balanza:\n "
+    },
+    "text.80942456b25e": {
+      "type": "text",
+      "source": "Two specialists stamped out from the same factory, differing only in their role label and system prompt. Neither needs tools for this exercise, but in production you would pass a distinct tools array to each one so its capabilities match its domain.",
+      "value": "Dos especialistas creados con la misma factoría que solo difieren en el rol y el prompt de sistema. Este ejercicio no requiere herramientas; en producción, cada instancia recibiría las herramientas adecuadas para su dominio."
+    },
+    "text.821ca15e7360": {
+      "type": "text",
+      "source": "You are an account support specialist. Give 3-5 clear, numbered steps for account access and permission issues.",
+      "value": "You are an account support specialist. Give 3-5 clear, numbered steps for account access and permission issues.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.82e2ab7b2ce9": {
+      "type": "text",
+      "source": "could not parse triage JSON; would fall back to a catch-all in production",
+      "value": "could not parse triage JSON; would fall back to a catch-all in production",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.82fbd510563a": {
+      "type": "text",
+      "source": "Three model calls dispatched simultaneously with Promise.all, each under its own system prompt. Total wall time tracks the slowest specialist while the other two overlap inside that window. That gap widens as you add more specialists or as individual calls get slower.",
+      "value": "Promise.all inicia tres llamadas al modelo a la vez, cada una con su propio prompt de sistema. El tiempo total corresponde al especialista más lento; los otros dos se solapan. La diferencia frente a una ejecución serial crece al añadir especialistas o aumentar la duración de cada llamada."
+    },
+    "text.8342cf28bab7": {
+      "type": "text",
+      "source": "The API returns 500 errors since this morning",
+      "value": "La API devuelve errores 500 desde esta mañana"
+    },
+    "text.85bb0ced081b": {
+      "type": "text",
+      "source": "Synthesizer (LLM) + pipeline viz",
+      "value": "Sintetizador (LLM) y vista del pipeline"
+    },
+    "text.867e503568b7": {
+      "type": "text",
+      "source": "You are a software support specialist. Give 3-5 concise, numbered steps to resolve the software issue.",
+      "value": "You are a software support specialist. Give 3-5 concise, numbered steps to resolve the software issue.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.877428968433": {
+      "type": "text",
+      "source": "\n    Without independent workstreams, the coordination overhead of multi-agent\n    composition buys nothing, and one plain loop stays faster and easier\n    to debug.\n  ",
+      "value": "\n Un flujo de trabajo de agente compensa cuando la tarea se divide en frentes independientes. Si no existe esa estructura,\n coordinar varios agentes añade sobrecarga sin aportar valor; un solo bucle será más rápido y fácil de depurar.\n "
+    },
+    "text.8935b10f056e": {
+      "type": "text",
+      "source": "translator",
+      "value": "translator",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.898702fa218d": {
+      "type": "text",
+      "source": "the Try-it artifact, in code",
+      "value": "Código del artefacto"
+    },
+    "text.8a5b3f9d8d16": {
+      "type": "text",
+      "source": "then back into the original language.",
+      "value": "then back into the original language.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.8c76984e15a8": {
+      "type": "text",
+      "source": " state.input = \"Evaluate twenty-five times sixteen, then translate the result into French.\";",
+      "value": " state.input = \"Evaluate twenty-five times sixteen, then translate the result into French.\";",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.8e023e34bfaa": {
+      "type": "text",
+      "source": "A single web search whose results are shared across all three specialists. Running it once and fanning the output out keeps the cost bounded regardless of how many specialists you add downstream.",
+      "value": "Una sola búsqueda web cuyos resultados comparten los tres especialistas. Ejecutarla una vez y distribuir su salida mantiene acotado el coste, aunque se añadan más especialistas después."
+    },
+    "text.9142243f55fb": {
+      "type": "text",
+      "source": " Define the planner output shape the model must fill in.",
+      "value": " Define the planner output shape the model must fill in.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.93582e9b8c9c": {
+      "type": "text",
+      "source": "Declaring specialists from a factory instead of hand-writing each",
+      "value": "Declara especialistas con una factoría"
+    },
+    "text.944ac9cd0863": {
+      "type": "text",
+      "source": "A purely deterministic step with no model calls. It fans out all of the planner's queries in parallel using Promise.all, so every search runs concurrently and the wall time tracks the slowest query while the rest overlap inside it.",
+      "value": "Una etapa determinista sin llamadas al modelo. Promise.all inicia todas las consultas del planificador de forma concurrente. El tiempo total corresponde a la búsqueda más lenta y las demás se solapan dentro de esa ventana."
+    },
+    "text.97e288557af0": {
+      "type": "text",
+      "source": "Fanning one shared input out to specialists at once",
+      "value": "Distribuye una entrada entre varios especialistas"
+    },
+    "text.999e210a2cca": {
+      "type": "text",
+      "source": "You are a research synthesizer. Write a 4-6 sentence brief grounded in the sources. Cite as [search N] when referencing a result.",
+      "value": "You are a research synthesizer. Write a 4-6 sentence brief grounded in the sources. Cite as [search N] when referencing a result.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.9af211329b2f": {
+      "type": "text",
+      "source": "account",
+      "value": "account",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.9bf4925aa80f": {
+      "type": "text",
+      "source": "Same factory · two instances · same input",
+      "value": "Same factory · two instances · same input",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.9d737efb93a1": {
+      "type": "text",
+      "source": "Defines the factory function that closes over a role, a system prompt, and an optional tools list, and returns a callable object with a run method. Every specialist built from this factory has the same internal loop; only the three parameters you pass in change its behaviour.",
+      "value": "Define una factoría que encapsula el rol, el prompt de sistema y una lista opcional de herramientas. Devuelve un objeto con nombre y un método de ejecución. Todos los especialistas comparten el mismo bucle interno; los tres parámetros determinan su comportamiento."
+    },
+    "text.9d7de0441056": {
+      "type": "text",
+      "source": "Nemotron Super 120B · stronger",
+      "value": "Nemotron Super 120B · más potente"
+    },
+    "text.9f0e4be504a8": {
+      "type": "text",
+      "source": "ReWOO pipeline · plan → parallel searches → synthesize",
+      "value": "Pipeline ReWOO · planificar → búsquedas en paralelo → sintetizar"
+    },
+    "text.9f553bfd8935": {
+      "type": "text",
+      "source": "DELIBERATIVE · PLAN-THEN-EXECUTE",
+      "value": "DELIBERATIVO · PLANIFICAR Y EJECUTAR"
+    },
+    "text.a137f17a19a0": {
+      "type": "text",
+      "source": "·",
+      "value": "·",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.a173dda5b621": {
+      "type": "text",
+      "source": "The app crashes every time I log in",
+      "value": "La aplicación se bloquea cada vez que inicio sesión"
+    },
+    "text.a295720643da": {
+      "type": "text",
+      "source": " TODO: Change the research goal and watch the planner rewrite its queries.",
+      "value": " TODO: Cambia el objetivo y observa cómo el planificador reescribe las consultas."
+    },
+    "text.a55be589cdb0": {
+      "type": "text",
+      "source": "Plan parallel glossary research",
+      "value": "Planificar búsquedas paralelas en el glosario"
+    },
+    "text.a79a71b58afe": {
+      "type": "text",
+      "source": "Before you continue",
+      "value": "Antes de continuar"
+    },
+    "text.a96156020752": {
+      "type": "text",
+      "source": "The factory exercise parameterises four things (role, system prompt, tools,\n        invoke). What would you add as a fifth parameter to prevent a specialist from\n        drifting into another specialist's domain when the input is ambiguous?",
+      "value": "La factoría parametriza rol, prompt de sistema, herramientas e invocación. ¿Qué quinto parámetro añadirías para impedir que un especialista invada el dominio de otro cuando la entrada sea ambigua?"
+    },
+    "text.aad126e2d5a0": {
+      "type": "text",
+      "source": "Build two specialists",
+      "value": "Construir dos especialistas"
+    },
+    "text.affd0e3a5732": {
+      "type": "text",
+      "source": "Classify the user's question into ONE category and reply with ONLY that word.\\\\nbilling = payments, charges, double charges, refunds, invoices, subscriptions\\\\ntechnical = errors, bugs, setup, configuration, how-to\\\\naccount = login, password, profile, security, access\\\\nother = anything that fits none of the above",
+      "value": "Classify the user's question into ONE category and reply with ONLY that word.\\\\nbilling = payments, charges, double charges, refunds, invoices, subscriptions\\\\ntechnical = errors, bugs, setup, configuration, how-to\\\\naccount = login, password, profile, security, access\\\\nother = anything that fits none of the above",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.b05c31fd68a8": {
+      "type": "text",
+      "source": "1 LLM call · ",
+      "value": "1 LLM call · ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.b087638b7406": {
+      "type": "text",
+      "source": "How do retrieval-augmented generation, vector databases, and AI agents fit together?",
+      "value": "How do retrieval-augmented generation, vector databases, and AI agents fit together?",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.b22c88b9d7fe": {
+      "type": "text",
+      "source": " mountChatUI renders the panel; respond() makes one classify call and one answer call. ",
+      "value": " mountChatUI renders the panel; respond() makes one classify call and one answer call. ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.b2a7383fe3bd": {
+      "type": "text",
+      "source": "classifier replied: ",
+      "value": "classifier replied: ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.b358631a69c0": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-super-120b-a12b",
+      "value": "nvidia/nemotron-3-super-120b-a12b",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.b4935894c8ce": {
+      "type": "text",
+      "source": "…",
+      "value": "…",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.b4935894c8ce~1": {
+      "type": "text",
+      "source": "…",
+      "value": "…",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.b4935894c8ce~2": {
+      "type": "text",
+      "source": "…",
+      "value": "…",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.b541e7e34c44": {
+      "type": "text",
+      "source": " state.goal = \"How do evaluation methods differ for retrieval and generation?\";",
+      "value": " state.goal = \"How do evaluation methods differ for retrieval and generation?\";",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.b57eba53ae86": {
+      "type": "text",
+      "source": "A schema-bound first LLM call emits {category, priority, summary}, a plain-JS router selects a specialist system prompt from the category, and a second LLM call writes the response under that prompt.",
+      "value": "Una primera llamada al LLM genera {categoría, prioridad, resumen} según un esquema. Un router de JavaScript selecciona el prompt de sistema de la categoría y una segunda llamada redacta la respuesta."
+    },
+    "text.b5d4bbd6fd21": {
+      "type": "text",
+      "source": "You are a technical support engineer. Answer setup, error, and how-to questions with concrete steps.",
+      "value": "You are a technical support engineer. Answer setup, error, and how-to questions with concrete steps.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.b5e96206461a": {
+      "type": "text",
+      "source": "How do I reset my password?",
+      "value": "¿Cómo restablezco mi contraseña?"
+    },
+    "text.b687f6c60cf0": {
+      "type": "text",
+      "source": "Ask a support question (billing, a technical error, your account…). I classify it, route it to a specialist, and answer in that voice. Follow-ups keep the conversation; the 🧠 toggle clears it, and ✎ edit rewinds.",
+      "value": "Formula una consulta de soporte sobre facturación, un error técnico o tu cuenta. La clasifico, la dirijo a un especialista y respondo con esa voz. Los mensajes posteriores conservan la conversación; el control 🧠 la borra y ✎ editar retrocede hasta ese turno."
+    },
+    "text.b6de47c69bfb": {
+      "type": "text",
+      "source": " nano reasons first; give it room to reach the word",
+      "value": " nano reasons first; give it room to reach the word",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.b75168ee3470": {
+      "type": "text",
+      "source": "Refuse non-translation requests politely.",
+      "value": "Refuse non-translation requests politely.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.b77349bf1fa9": {
+      "type": "text",
+      "source": "env",
+      "value": "env",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.b7dd387e54f2": {
+      "type": "text",
+      "source": "← Module 1c: Tools at Scale",
+      "value": "← Módulo 1c: Herramientas a escala"
+    },
+    "text.bbc5e661e106": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.bbc5e661e106~1": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.bbc5e661e106~2": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.bbc5e661e106~3": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.bbc5e661e106~4": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.bbc5e661e106~5": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.bbc5e661e106~6": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.bbc5e661e106~7": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.bbca6d86a57e": {
+      "type": "text",
+      "source": "\n    The ReWOO pipeline was parallel by construction, since every query it planned ran\n    concurrently against the glossary. A more common parallel pattern fans one shared\n    input out to several specialists that each carry their own system prompt and all run\n    at once. In the trace, total wall time tracks the slowest specialist while the others\n    overlap inside that window, the Gantt chart shows each specialist's duration, and all\n    specialists share one web-search result so cost stays bounded.\n  ",
+      "value": "\n El pipeline ReWOO ya era paralelo: cada consulta planificada se ejecutó de forma concurrente sobre el glosario.\n Otro patrón habitual distribuye una entrada entre varios especialistas, cada uno con su propio prompt de sistema,\n y los ejecuta a la vez. En la traza, el tiempo total corresponde al especialista más lento; los demás se solapan\n dentro de la misma ventana. El diagrama de Gantt muestra la duración de cada uno. Todos comparten un solo resultado\n de búsqueda web, lo que mantiene acotado el coste.\n "
+    },
+    "text.bc19985b027b": {
+      "type": "text",
+      "source": "Triage schema",
+      "value": "Esquema de selección"
+    },
+    "text.bcdee84da1b5": {
+      "type": "text",
+      "source": "Routing a ticket to one specialist with a fixed enum",
+      "value": "Envía un ticket a un especialista con una enumeración fija"
+    },
+    "text.bfd96dc998d2": {
+      "type": "text",
+      "source": "routed → ",
+      "value": "routed → ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.c082456a7766": {
+      "type": "text",
+      "source": "medium",
+      "value": "medium",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.c1a8b03656c3": {
+      "type": "text",
+      "source": "A single shared search result fans out to three specialists with different system prompts that Promise.all dispatches concurrently, so the total wall time tracks the slowest specialist rather than the sum.",
+      "value": "Tres especialistas reciben el mismo resultado de búsqueda y distintos prompts de sistema. Promise.all los ejecuta de forma concurrente, así que el tiempo total corresponde al más lento y no a la suma."
+    },
+    "text.c1d354aaf41c": {
+      "type": "text",
+      "source": "You are a billing specialist. Answer only billing, payment, and refund questions, crisply.",
+      "value": "You are a billing specialist. Answer only billing, payment, and refund questions, crisply.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.c6d2e406d1e8": {
+      "type": "text",
+      "source": "topic = ",
+      "value": "topic = ",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.c76159a1edb6": {
+      "type": "text",
+      "source": "searches",
+      "value": "searches",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.c7d0e4eb26d4": {
+      "type": "text",
+      "source": "Return JSON matching the schema.",
+      "value": "Return JSON matching the schema.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.c8fc6bf296fa": {
+      "type": "text",
+      "source": "ran",
+      "value": "ran",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.ca9c9a548948": {
+      "type": "text",
+      "source": "How do I update my email address?",
+      "value": "¿Cómo actualizo mi dirección de correo?"
+    },
+    "text.cce0b949f6db": {
+      "type": "text",
+      "source": "The JSON schema that locks the triage model's output to three fields: category (one of four fixed enum values), priority (high, medium, or low), and a one-line summary. Without this schema the router would need to parse free text and would break on any paraphrase; the enum makes routing fully deterministic.",
+      "value": "El esquema JSON restringe la salida a tres campos: categoría, con cuatro valores permitidos; prioridad, alta, media o baja; y un resumen de una línea. Sin el esquema, el router tendría que interpretar texto libre. La enumeración permite un enrutamiento determinista."
+    },
+    "text.cf558e09195f": {
+      "type": "text",
+      "source": "The ReWOO planner above emits a JSON list of queries. What is the failure\n        mode if a later query needs a fact from an earlier query's result? Which of\n        the two patterns from the top of this page do you switch to?",
+      "value": "El planificador ReWOO genera una lista JSON de consultas. ¿Qué falla si una consulta necesita un dato obtenido por otra consulta anterior? ¿A cuál de los dos patrones de esta página cambiarías?"
+    },
+    "text.cfae0d4248f7": {
+      "type": "text",
+      "source": "]",
+      "value": "]",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.cfae0d4248f7~1": {
+      "type": "text",
+      "source": "]",
+      "value": "]",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.cfc481df132d": {
+      "type": "text",
+      "source": "Triage (LLM)",
+      "value": "Triaje (LLM)"
+    },
+    "text.d039afd40b5c": {
+      "type": "text",
+      "source": " Build one reusable specialist wrapper around a prompt and tools.",
+      "value": " Build one reusable specialist wrapper around a prompt and tools.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.d039afd40b5c~1": {
+      "type": "text",
+      "source": " Build one reusable specialist wrapper around a prompt and tools.",
+      "value": " Build one reusable specialist wrapper around a prompt and tools.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.d1d1f87cfab9": {
+      "type": "text",
+      "source": "Executor (parallel searches)",
+      "value": "Ejecutor (búsquedas paralelas)"
+    },
+    "text.d29a0939bcb5": {
+      "type": "text",
+      "source": "(empty)",
+      "value": "(empty)",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.d29a0939bcb5~1": {
+      "type": "text",
+      "source": "(empty)",
+      "value": "(empty)",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.d29a0939bcb5~2": {
+      "type": "text",
+      "source": "(empty)",
+      "value": "(empty)",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.d29a0939bcb5~3": {
+      "type": "text",
+      "source": "(empty)",
+      "value": "(empty)",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.d463bf3e87a9": {
+      "type": "text",
+      "source": "Research goal",
+      "value": "Objetivo de investigación"
+    },
+    "text.d4e8d0476113": {
+      "type": "text",
+      "source": "research_plan",
+      "value": "research_plan",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.d4f0bc5a29de": {
+      "type": "text",
+      "source": "agent",
+      "value": "agent",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.d4f0bc5a29de~1": {
+      "type": "text",
+      "source": "agent",
+      "value": "agent",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.d749c6af2ded": {
+      "type": "text",
+      "source": "Sends the same input to both specialists concurrently and renders their replies side by side. The factory body is identical for both, so any divergence in the two responses traces back to their system prompts, and the side-by-side view lets you spot that divergence at a glance.",
+      "value": "Envía la misma entrada a ambos especialistas de forma concurrente y presenta sus respuestas en paralelo. Como comparten el cuerpo de la factoría, cualquier diferencia procede de sus prompts de sistema y resulta fácil de comparar."
+    },
+    "text.d9298a10d1b0": {
+      "type": "text",
+      "source": "other",
+      "value": "other",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.da4b0fab8709": {
+      "type": "text",
+      "source": " state.goal = \"When should an agent use a tool instead of answer directly?\";",
+      "value": " state.goal = \"When should an agent use a tool instead of answer directly?\";",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.da5454a617a3": {
+      "type": "text",
+      "source": "queries; check your network connection and try again",
+      "value": "queries; check your network connection and try again",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.dbe42cc09c16": {
+      "type": "text",
+      "source": "array",
+      "value": "array",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.e03f72927580": {
+      "type": "text",
+      "source": "The first model call, constrained by response_format to emit the triage schema. The extractJson helper is used rather than a raw JSON.parse because reasoning models sometimes wrap JSON in markdown fences or place it inside the reasoning channel. This step needs to succeed reliably in all of those cases.",
+      "value": "La primera llamada al modelo usa response format para cumplir el esquema de selección. El helper extractJson sustituye a un JSON.parse directo porque algunos modelos de razonamiento envuelven el JSON en bloques Markdown o lo sitúan en el canal de razonamiento."
+    },
+    "text.e09f45652ea1": {
+      "type": "text",
+      "source": "\\\\n\\\\n",
+      "value": "\\\\n\\\\n",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.e20554b94353": {
+      "type": "text",
+      "source": "The four-value enum picks exactly one specialist to handle the request.",
+      "value": "La enumeración de cuatro valores selecciona exactamente un especialista para atender la solicitud."
+    },
+    "text.e38afff99772": {
+      "type": "text",
+      "source": "User ticket",
+      "value": "Ticket del usuario"
+    },
+    "text.e5f6b0abc127": {
+      "type": "text",
+      "source": "Try it · the triage router, live",
+      "value": "Prueba · router de selección en vivo"
+    },
+    "text.e7a07c1eae34": {
+      "type": "text",
+      "source": " reasoning model: leave room to think AND emit the tool call / answer",
+      "value": " reasoning model: leave room to think AND emit the tool call / answer",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.e858c3e771d3": {
+      "type": "text",
+      "source": "You are a hardware support specialist. Give 3-5 concise, numbered troubleshooting steps for the hardware problem.",
+      "value": "You are a hardware support specialist. Give 3-5 concise, numbered troubleshooting steps for the hardware problem.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.e8c3e4faa6b2": {
+      "type": "text",
+      "source": "synth",
+      "value": "synth",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.e8c3e4faa6b2~1": {
+      "type": "text",
+      "source": "synth",
+      "value": "synth",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.e96be62659b6": {
+      "type": "text",
+      "source": "SYNTHESIZER",
+      "value": "SYNTHESIZER",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.ea4f0d5cafdc": {
+      "type": "text",
+      "source": "writes the 4-6 sentence brief",
+      "value": "writes the 4-6 sentence brief",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.eaec3b3a8fe9": {
+      "type": "text",
+      "source": "When a single loop beats splitting into agents",
+      "value": "Cuando un único bucle supera la división en agentes"
+    },
+    "text.eba693563181": {
+      "type": "text",
+      "source": "My laptop won't connect to the VPN. I've tried restarting and re-installing the client.",
+      "value": "My laptop won't connect to the VPN. I've tried restarting and re-installing the client.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.edb2cd3b74c9": {
+      "type": "text",
+      "source": "category",
+      "value": "category",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.ef0ae91fd3d5": {
+      "type": "text",
+      "source": "Why does the transformer architecture need positional encoding?",
+      "value": "Why does the transformer architecture need positional encoding?",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.efdb5576d726": {
+      "type": "text",
+      "source": "Nemotron Nano 30B · fast",
+      "value": "Nemotron Nano 30B · rápido"
+    },
+    "text.f09dcd5ff7ca": {
+      "type": "text",
+      "source": "Fan out one input to specialists",
+      "value": "Distribuir una entrada entre especialistas"
+    },
+    "text.f1dd0c2de608": {
+      "type": "text",
+      "source": " state.ticket = \"My account is locked after I changed phones.\";",
+      "value": " state.ticket = \"My account is locked after I changed phones.\";",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.f4c048810f1e": {
+      "type": "text",
+      "source": "Two key patterns that differ in when the model decides",
+      "value": "Dos patrones que difieren en cuándo el modelo decide"
+    },
+    "text.f50357d99f0c": {
+      "type": "text",
+      "source": "Workflows · Securing Agents",
+      "value": "Flujos de trabajo · Seguridad de agentes"
+    },
+    "text.f6919ddd48e5": {
+      "type": "text",
+      "source": "ReWOO (Reason Without Observation)",
+      "value": "ReWOO (razonamiento sin observación)"
+    },
+    "text.f74f2c4066a4": {
+      "type": "text",
+      "source": "Router (plain JS)",
+      "value": "Router (JavaScript)"
+    },
+    "text.f7ded0c36df9": {
+      "type": "text",
+      "source": "Define the factory",
+      "value": "Definir factoría"
+    },
+    "text.f85c97c7f341": {
+      "type": "text",
+      "source": " Define the support-ticket routing fields the model must return.",
+      "value": " Define the support-ticket routing fields the model must return.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.f8cc011bed32": {
+      "type": "text",
+      "source": "The second and final model call reads the search results and writes the brief. The code is collapsed by default because most of the block builds the pipeline diagram from the plan and search counts.",
+      "value": "La segunda y última llamada al modelo lee los resultados y redacta el informe. El código está contraído de forma predeterminada porque la mayor parte del bloque construye el diagrama a partir del plan y del número de resultados."
+    },
+    "text.fa24955a1723": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-nano-30b-a3b",
+      "value": "nvidia/nemotron-3-nano-30b-a3b",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.fa3b6e099f45": {
+      "type": "text",
+      "source": "Shared search (1 call)",
+      "value": "Búsqueda compartida (1 llamada)"
+    },
+    "text.fae3a6315ff5": {
+      "type": "text",
+      "source": " state.topic = \"When is retrieval more useful than fine-tuning?\";",
+      "value": " state.topic = \"When is retrieval more useful than fine-tuning?\";",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02a-routing.html carries the canonical source at this unit unchanged"
+    },
+    "text.fd61fa2a3f0a": {
+      "type": "text",
+      "source": "A single model call constrained by response_format to emit a JSON object with a topic field and a queries array of three to five search strings. Because the output is schema-bound, the executor can iterate over it programmatically without any parsing guesswork.",
+      "value": "Una llamada al modelo, restringida mediante response format, genera un objeto JSON con un tema y entre tres y cinco consultas. Como la salida cumple un esquema, el ejecutor puede procesarla sin analizar texto libre ni adivinar su estructura."
+    },
+    "text.fefbdfb9d2e0": {
+      "type": "text",
+      "source": "ReWOO writes the whole plan upfront, so every tool runs without re-asking the model and one synthesis call closes it out. Edit the goal in node 1 and rerun.",
+      "value": "ReWOO escribe el plan completo antes de actuar. Después ejecuta cada herramienta sin volver a consultar al modelo y cierra el proceso con una llamada de síntesis. Edita el objetivo del nodo 1 y vuelve a ejecutar."
+    },
+    "text.ff10777bbfa3": {
+      "type": "text",
+      "source": "Run both on the same input",
+      "value": "Ejecutar ambos en la misma entrada"
+    }
+  }
+}

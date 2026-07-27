@@ -135,14 +135,17 @@ ok(openclawCli.includes('runtime.openclawGatewayWsUrl(connection.rawUrl, connect
   'OpenClaw CLI runtime bypasses shared gateway routing');
 ok(!openclawCli.includes('return u + "/cli/gateway"'),
   'OpenClaw CLI runtime rebuilt a direct gateway URL');
+// A locale page is the bytes the build publishes. When it ships from a key-based resource there is
+// no HTML file to read, so the caller renders the published pages and names their root here.
+const localeRoot = process.env.NEMOCLAW_LOCALE_PAGES || 'i18n';
 const cliPages = ['web/nemoclaw/04b-modern-clis.html'];
-for (const entry of fs.readdirSync('i18n', { withFileTypes: true })) {
+for (const entry of fs.readdirSync(localeRoot, { withFileTypes: true })) {
   if (!entry.isDirectory()) continue;
-  const metadataPath = path.join('i18n', entry.name, 'locale.json');
+  const metadataPath = path.join(localeRoot, entry.name, 'locale.json');
   ok(fs.existsSync(metadataPath), `${metadataPath}: every locale directory must declare locale.json`);
   const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
   ok(metadata.url_code === entry.name, `${metadataPath}: url_code must match its directory`);
-  cliPages.push(path.join('i18n', entry.name, 'web/nemoclaw/04b-modern-clis.html'));
+  cliPages.push(path.join(localeRoot, entry.name, 'web/nemoclaw/04b-modern-clis.html'));
 }
 for (const pagePath of cliPages) {
   const page = fs.readFileSync(pagePath, 'utf8');

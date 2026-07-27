@@ -43,6 +43,7 @@
     "scripts/validation/studio_responsive_audit.py",
     "scripts/validation/browser_security_boundary_audit.py",
     "scripts/validation/openclaw_fallback_audit.py",
+    "scripts/validation/with_locale_pages.py",
     "scripts/validation/gateway_token_audit.mjs",
     "scripts/validation/endpoint_registration_audit.py",
     "scripts/validation/openclaw_connection_audit.mjs",
@@ -247,7 +248,17 @@
     {
       "path": "localization_audit.py",
       "role": "same-branch localization gate",
-      "desc": "Required sparse-overlay, reviewed-hash, locale terminology, structure, and Studio audit. Reviewed-target locales also reject learner-facing runnable-code strings that remain identical to ordinary English source copy, including terse labels."
+      "desc": "Required sparse-overlay, reviewed-hash, locale terminology, structure, and Studio audit. Reviewed-target locales also reject learner-facing runnable-code strings that remain identical to ordinary English source copy, including terse labels. A read-only run also holds each locale's tracked drift manifest to the manifest the current scan derives, so a stale generated projection fails before the expensive gates."
+    },
+    {
+      "path": "locale_resource_audit.py",
+      "role": "key-based locale resource gate",
+      "desc": "Discovers locales, shared page templates, and resource files; rejects missing, unused, duplicate, mistyped, unreachable, unsafe, or fallback values; renders each page along the assembler’s own publication branch and holds the output to the reviewed-overlay quality bar; requires every same-locale wording divergence to be a recorded decision."
+    },
+    {
+      "path": "locale_resource_mutations.py",
+      "role": "locale resource mutation fixtures",
+      "desc": "Synthetic repository whose mutations cover a new page and locale, deleted or renamed keys, repeated-source occurrences, wrong types, unsafe markup, broken links, hidden fallback, recorded and unrecorded wording divergence, media overrides, and rendered-page drift for both publication branches."
     },
     {
       "path": "localization_runtime_audit.py",
@@ -283,6 +294,11 @@
       "path": "openclaw_fallback_audit.py",
       "role": "OpenClaw fallback audit",
       "desc": "Checks that credentialed OpenClaw tests fail fast, fallback guidance remains usable, and the probe statically clears stale HTML frames."
+    },
+    {
+      "path": "with_locale_pages.py",
+      "role": "rendered locale-page command wrapper",
+      "desc": "Materializes the exact resource- or overlay-backed locale pages a build publishes, then gives their temporary root to a non-Python validator."
     },
     {
       "path": "gateway_token_audit.mjs",
@@ -411,9 +427,9 @@
   <div class="skill-cmd"><b>Rendered page screenshots</b><code>python3 scripts/validation/cell_ui_runtime_audit.py --site-root /tmp/nemoclaw_visual_preview --page /nemoclaw/02b-rag.html --screenshots /tmp/nemoclaw_visual_audit</code></div>
   <div class="skill-cmd"><b>Studio interface</b><code>python3 scripts/validation/studio_interface_audit.py</code></div>
   <div class="skill-cmd"><b>OpenClaw fallback + static frame lifecycle</b><code>python3 scripts/validation/openclaw_fallback_audit.py</code></div>
-  <div class="skill-cmd"><b>Gateway/chat contract + detector</b><code>bash scripts/runtime/run_node.sh tests/runtime/test_embedded_validator_suites.mjs &amp;&amp; bash scripts/runtime/run_node.sh scripts/validation/gateway_token_audit.mjs</code></div>
+  <div class="skill-cmd"><b>Gateway/chat contract + detector</b><code>python3 scripts/validation/with_locale_pages.py -- bash scripts/runtime/run_node.sh tests/runtime/test_embedded_validator_suites.mjs &amp;&amp; python3 scripts/validation/with_locale_pages.py -- bash scripts/runtime/run_node.sh scripts/validation/gateway_token_audit.mjs</code></div>
   <div class="skill-cmd"><b>Endpoint registration ownership</b><code>python3 scripts/validation/endpoint_registration_audit.py &amp;&amp; python3 scripts/validation/endpoint_registration_audit.py --self-test</code></div>
-  <div class="skill-cmd"><b>OpenClaw connection routing</b><code>bash scripts/runtime/run_node.sh scripts/validation/openclaw_connection_audit.mjs</code></div>
+  <div class="skill-cmd"><b>OpenClaw connection routing</b><code>python3 scripts/validation/with_locale_pages.py -- bash scripts/runtime/run_node.sh scripts/validation/openclaw_connection_audit.mjs</code></div>
   <div class="skill-cmd"><b>OpenClaw connection browser</b><code>bash scripts/runtime/run_node.sh scripts/validation/openclaw_connection_browser_audit.mjs</code></div>
   <div class="skill-cmd"><b>OpenClaw frame browser lifecycle</b><code>python3 scripts/validation/openclaw_probe_frame_runtime_audit.py --site-root web</code></div>
   <div class="skill-cmd"><b>Pages branch availability</b><code>python3 scripts/validation/branch_preview_manifest_audit.py --self-test</code></div>
@@ -430,6 +446,7 @@
   <div class="skill-cmd"><b>Studio responsive</b><code>python3 scripts/validation/studio_responsive_audit.py</code></div>
   <div class="skill-cmd"><b>Authored browser boundaries</b><code>python3 scripts/validation/browser_security_boundary_audit.py --self-test &amp;&amp; python3 scripts/validation/browser_security_boundary_audit.py</code></div>
   <div class="skill-cmd"><b>Localization + mutations</b><code>python3 scripts/validation/localization_audit.py --self-test &amp;&amp; python3 scripts/validation/localization_audit.py</code></div>
+  <div class="skill-cmd"><b>Locale resources + mutations</b><code>python3 scripts/validation/locale_resource_audit.py --self-test &amp;&amp; python3 scripts/validation/locale_resource_audit.py</code></div>
   <div class="skill-cmd"><b>Localization browser</b><code>python3 scripts/validation/localization_runtime_audit.py --site-root /tmp/pt-localization-pages</code></div>
 </div>
   <h2>Linkage map</h2>
@@ -467,7 +484,8 @@
     <a class="skill-link" href="contribution_safety_audit.py"><b>contribution_safety_audit.py</b><span>required contribution-safety gate. Discovers every GitHub workflow and rejects unsafe fork triggers, secret-bearing PR jobs, broad write scopes, environment access, and persistent checkout credentials; also holds governance, DCO, submission evidence, hooks, and release authority together with mutation coverage.</span></a>
     <a class="skill-link" href="gitlab_ci_policy.py"><b>gitlab_ci_policy.py</b><span>GitLab CI structural gate. Keeps the root manifest inert, SCA self-contained and change-sensitive, scan commands locked, and workflow paths assigned to named owners.</span></a>
     <a class="skill-link" href="gitlab_governance_audit.py"><b>gitlab_governance_audit.py</b><span>read-only live-host gate. Reports whether GitLab protects main, release tags, production deploys and approvers, and the explicit human-review action while detecting one-operator deadlocks or authority widening.</span></a>
-    <a class="skill-link" href="localization_audit.py"><b>localization_audit.py</b><span>required locale gate. Rejects stale hashes, machine-contract drift, locale-specific prose artifacts, and untranslated runnable-code UI in reviewed-target locales, including short source-identical labels; mutation-tests the boundary and emits the Localization Studio manifest.</span></a>
+    <a class="skill-link" href="locale_resource_audit.py"><b>locale_resource_audit.py</b><span>required key-based locale resource gate. Discovers every locale, template, and resource file; fails on missing, unused, mistyped, unreachable, unsafe, or hidden-fallback values; renders the static page the way the assembler publishes it and requires every recorded same-locale wording divergence to still be real.</span></a>
+    <a class="skill-link" href="localization_audit.py"><b>localization_audit.py</b><span>required locale gate. Rejects stale hashes, machine-contract drift, locale-specific prose artifacts, and untranslated runnable-code UI in reviewed-target locales, including short source-identical labels; mutation-tests the boundary and emits the Localization Studio manifest, and in a read-only run reports a tracked manifest that no longer matches its inputs.</span></a>
     <a class="skill-link" href="localization_runtime_audit.py"><b>localization_runtime_audit.py</b><span>browser locale gate. Exercises language routing, fallback behavior, responsive controls, Spanish card-title navigation without nested anchors, localized shared-terminal prerequisites, translated SVG geometry, and Localization Studio frames.</span></a>
     <a class="skill-link" href="reference_graph.py"><b>reference_graph.py</b><span>reference graph. Audits cross-course reference coupling.</span></a>
     <a class="skill-link" href="studio_interface_audit.py"><b>studio_interface_audit.py</b><span>studio interface audit. Checks studio controls, local assets, static read-only mode, lab write mode, and documentation.</span></a>

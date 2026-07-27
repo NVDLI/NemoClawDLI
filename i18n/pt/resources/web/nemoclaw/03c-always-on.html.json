@@ -1,0 +1,1216 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "pt-BR",
+  "template": "web/nemoclaw/03c-always-on.html",
+  "media": [
+    "web/nemoclaw/assets/figures/03c-always-on-1.svg"
+  ],
+  "values": {
+    "link.0091943cf98e": {
+      "type": "link",
+      "source": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">Anthropic, <em>Agent Skills</em></a>. The production skill-folder layout this page's <code>skills/&lt;name&gt;.md</code> drop-in mirrors.",
+      "value": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">Anthropic, <em>Agent Skills</em></a>. A estrutura de pastas usada em produção e reproduzida aqui pela entrada <code>skills/&lt;name&gt;.md</code>."
+    },
+    "link.05beb079092b": {
+      "type": "link",
+      "source": "<a href=\"https://langchain-ai.github.io/langgraph/concepts/persistence/\" target=\"_blank\" rel=\"noopener\">LangGraph, <em>Persistence</em> (checkpointers)</a>. Checkpointed graphs as the same save-and-resume primitive in a different production shape.",
+      "value": "<a href=\"https://langchain-ai.github.io/langgraph/concepts/persistence/\" target=\"_blank\" rel=\"noopener\">LangGraph, <em>Persistence</em> (checkpointers)</a>. Grafos com checkpoints aplicam o mesmo recurso de salvar e retomar em outra arquitetura de produção."
+    },
+    "link.1be52ce4d6ee": {
+      "type": "link",
+      "source": "Comprehensive list at <a href=\"04c-going-further.html#refs\">Going Further · References</a>.",
+      "value": "Lista completa em <a href=\"04c-going-further.html#refs\">Próximos passos · Referências</a>."
+    },
+    "link.3312a49bb3b7": {
+      "type": "link",
+      "source": "\n    OpenClaw cron can bind a job to the\n    <a href=\"https://docs.openclaw.ai/cron-vs-heartbeat\" target=\"_blank\" rel=\"noopener\">main, isolated, current, or a named session</a>.\n    This course uses isolated cron runs so each demonstration starts clean. You run the skill\n    and the cron job on this page. Heartbeat and the sub-agent\n    <code>delegate()</code> call are covered here only as table entries;\n    no cell on this page fires them, so do not wait for one.\n  ",
+      "value": "O cron do OpenClaw pode vincular uma tarefa à <a href=\"https://docs.openclaw.ai/cron-vs-heartbeat\" target=\"_blank\" rel=\"noopener\">sessão principal, atual, isolada ou nomeada</a>. O curso usa execuções isoladas para que cada demonstração comece limpa. Nesta página, você executará a skill e a tarefa cron. Heartbeat e <code>delegate()</code> aparecem apenas para comparação; nenhuma célula os aciona."
+    },
+    "link.3802464628f8": {
+      "type": "link",
+      "source": "<a href=\"https://en.wikipedia.org/wiki/Cron\" target=\"_blank\" rel=\"noopener\">cron(8)</a>. The canonical reference for the scheduling primitive the cron drop-in borrows.",
+      "value": "<a href=\"https://en.wikipedia.org/wiki/Cron\" target=\"_blank\" rel=\"noopener\">cron(8)</a>. Referência canônica para o mecanismo de agendamento usado pela tarefa cron."
+    },
+    "link.3ed5860a7638": {
+      "type": "link",
+      "source": "\n    Public\n    <a href=\"https://github.com/NousResearch/hermes-agent\" target=\"_blank\" rel=\"noopener\">Hermes</a>\n    repository exposes the same broad capability categories: reusable skills, persistent\n    memory, scheduled work, and a messaging gateway. Its implementation and defaults differ\n    from OpenClaw, so compare the security boundary and session behavior rather than assuming\n    that matching feature names imply matching risk controls.\n  ",
+      "value": "O repositório público do <a href=\"https://github.com/NousResearch/hermes-agent\" target=\"_blank\" rel=\"noopener\">Hermes</a> expõe categorias semelhantes: skills reutilizáveis, memória persistente, tarefas agendadas e gateway de mensagens. A implementação e os padrões diferem dos adotados pelo OpenClaw. Compare os limites de segurança e o comportamento das sessões; nomes parecidos não garantem controles de risco equivalentes."
+    },
+    "link.5e103bc8aec7": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2305.16291\" target=\"_blank\" rel=\"noopener\">Wang et al., <em>Voyager: An Open-Ended Embodied Agent</em> (2023)</a>. The skill-library / memoised-trajectory mechanic this page builds on, demonstrated in a Minecraft agent.",
+      "value": "<a href=\"https://arxiv.org/abs/2305.16291\" target=\"_blank\" rel=\"noopener\">Wang et al., <em>Voyager: An Open-Ended Embodied Agent</em> (2023)</a>. Demonstra em Minecraft o mecanismo de biblioteca de skills e trajetórias reutilizáveis usado nesta página."
+    },
+    "link.61debfba3ff7": {
+      "type": "link",
+      "source": "<a href=\"https://hermes-agent.nousresearch.com/docs/user-guide/security/\" target=\"_blank\" rel=\"noopener\">Hermes Agent, <em>Security</em></a>. Pairing and allowlist behavior for messaging-gateway callers.",
+      "value": "<a href=\"https://hermes-agent.nousresearch.com/docs/user-guide/security/\" target=\"_blank\" rel=\"noopener\">Hermes Agent, <em>Security</em></a>. Comportamento de pareamento e listas de permissões para clientes do gateway de mensagens."
+    },
+    "link.6bfaa61838ef": {
+      "type": "link",
+      "source": "\n    <strong>Hermes gates its messaging surface.</strong> Its current\n    <a href=\"https://hermes-agent.nousresearch.com/docs/user-guide/security/\" target=\"_blank\" rel=\"noopener\">security guide</a>\n    documents pairing codes and platform or global user allowlists, with\n    <code>default: deny</code> when no allow rule matches. Those application controls decide who\n    may talk to the agent. An operating-system sandbox separately bounds what its tools can reach.\n  ",
+      "value": "<strong>O Hermes restringe sua superfície de mensagens.</strong> Seu <a href=\"https://hermes-agent.nousresearch.com/docs/user-guide/security/\" target=\"_blank\" rel=\"noopener\">guia de segurança</a> documenta códigos de pareamento e listas de permissões por plataforma ou usuário global. Quando nenhuma regra permite o acesso, aplica-se <code>default: deny</code>. Esses controles da aplicação decidem quem pode falar com o agente. Um sandbox do sistema operacional limita, separadamente, o que as ferramentas podem alcançar."
+    },
+    "link.74e63addb6df": {
+      "type": "link",
+      "source": "<a href=\"https://langchain-ai.github.io/langgraph/concepts/persistence/\" target=\"_blank\" rel=\"noopener\">LangGraph Persistence</a>. Checkpointed graphs as save-and-resume.",
+      "value": "<a href=\"https://langchain-ai.github.io/langgraph/concepts/persistence/\" target=\"_blank\" rel=\"noopener\">LangGraph Persistence</a>. Grafos com checkpoints para salvar e retomar execuções."
+    },
+    "link.a7f487335f4c": {
+      "type": "link",
+      "source": "<a href=\"https://github.com/NousResearch/hermes-agent\" target=\"_blank\" rel=\"noopener\">Hermes Agent</a>. Agent application with self-improving skills, persistent memory, cron, and a messaging gateway; NVIDIA's DGX Spark playbooks list Hermes and NemoClaw as separate setup paths.",
+      "value": "<a href=\"https://github.com/NousResearch/hermes-agent\" target=\"_blank\" rel=\"noopener\">Hermes Agent</a>. Aplicação de agentes com skills autoaprimoráveis, memória persistente, cron e gateway de mensagens; os playbooks da NVIDIA para DGX Spark apresentam Hermes e NemoClaw como configurações distintas."
+    },
+    "link.ccd55146aa60": {
+      "type": "link",
+      "source": "<a href=\"https://docs.openclaw.ai/cron-vs-heartbeat\" target=\"_blank\" rel=\"noopener\">OpenClaw, <em>Automation &amp; Tasks</em></a>. Current session and trigger semantics for cron, heartbeat, hooks, and background tasks.",
+      "value": "<a href=\"https://docs.openclaw.ai/cron-vs-heartbeat\" target=\"_blank\" rel=\"noopener\">OpenClaw, <em>Automation &amp; Tasks</em></a>. Semântica atual de sessões e gatilhos para cron, heartbeat, hooks e tarefas em segundo plano."
+    },
+    "link.ce49744af0d5": {
+      "type": "link",
+      "source": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">Anthropic, <em>Agent Skills</em></a>. The production skill-folder layout.",
+      "value": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">Anthropic, <em>Agent Skills</em></a>. A estrutura de pastas de skills usada em produção."
+    },
+    "link.e643d6b4c824": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2305.16291\" target=\"_blank\" rel=\"noopener\">Wang et al., <em>Voyager</em> (2023)</a>. The research origin, demonstrated in a Minecraft agent.",
+      "value": "<a href=\"https://arxiv.org/abs/2305.16291\" target=\"_blank\" rel=\"noopener\">Wang et al., <em>Voyager</em> (2023)</a>. A origem da pesquisa, demonstrada em um agente de Minecraft."
+    },
+    "link.f4c2f34199c4": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2304.03442\" target=\"_blank\" rel=\"noopener\">Park et al., <em>Generative Agents</em> (2023)</a>. Multi-day autonomous-agent simulation; the reflection and memory-consolidation patterns an always-on loop reuses.",
+      "value": "<a href=\"https://arxiv.org/abs/2304.03442\" target=\"_blank\" rel=\"noopener\">Park et al., <em>Generative Agents</em> (2023)</a>. Simulação de agentes autônomos durante vários dias, com padrões de reflexão e consolidação de memória reutilizados por agentes sempre ativos."
+    },
+    "link.fb4b5ca57979": {
+      "type": "link",
+      "source": "\n      Module 3b ran the agent when you sent a message. OpenClaw can also start work\n      from skills, heartbeats,\n      <a href=\"https://en.wikipedia.org/wiki/Cron\" target=\"_blank\" rel=\"noopener\">cron</a>\n      jobs, and sub-agents. Each path still enters the same agent loop and OpenShell\n      sandbox; the session, directive, and trigger determine what runs. You will install\n      a skill and observe a cron-fired write.\n    ",
+      "value": "No Módulo 3b, você acionou o agente enviando uma mensagem. O OpenClaw também inicia trabalhos por skills, heartbeats, tarefas <a href=\"https://en.wikipedia.org/wiki/Cron\" target=\"_blank\" rel=\"noopener\">cron</a> e subagentes. Todos esses caminhos chegam ao mesmo ciclo do agente e ao mesmo sandbox do OpenShell; sessão, diretiva e gatilho determinam o que será executado. Você instalará uma skill e observará uma gravação iniciada por cron."
+    },
+    "rich.0eef1cbc1306": {
+      "type": "rich",
+      "source": "inline string at <code>delegate()</code> time",
+      "value": "prompt passado a <code>delegate()</code>"
+    },
+    "rich.229fe069e4dc": {
+      "type": "rich",
+      "source": "A skill starts as a markdown file placed under <code>skills/</code>, usually with a\n     short front-matter or heading block that lets the runtime decide when to reveal it.\n     The agent does not load every instruction at once; it progressively discloses the\n     matching skill when the next turn asks for it. You do not restart it, redeploy it,\n     or touch the system prompt yourself.",
+      "value": "Uma skill começa como um arquivo Markdown em <code>skills/</code>, geralmente com um pequeno front matter ou cabeçalho que ajuda o runtime a decidir quando carregá-la. O agente não recebe todas as instruções de uma só vez: ele revela progressivamente a skill relevante quando a solicitação exige. Não é preciso reiniciar, reimplantar ou editar manualmente o prompt de sistema."
+    },
+    "rich.2b8de00d4ba0": {
+      "type": "rich",
+      "source": "Heartbeat <span style=\"color:var(--tf);font-weight:400;font-style:italic\">(concept only)</span>",
+      "value": "Heartbeat <span style=\"color:var(--tf);font-weight:400;font-style:italic\">(somente conceito)</span>"
+    },
+    "rich.2baab5567c2e": {
+      "type": "rich",
+      "source": "It installs a demo job that fires every minute and appends a line to\n        <code>MEMORY.md</code>.",
+      "value": "Instala uma tarefa de demonstração que dispara a cada minuto e adiciona uma linha a <code>MEMORY.md</code>."
+    },
+    "rich.38dcc796eece": {
+      "type": "rich",
+      "source": "\n    <p><strong>Same runtime as Kickstart.</strong> You are driving the same OpenClaw\n       agent you connected on the Kickstart page.</p>\n  ",
+      "value": "<p><strong>O mesmo runtime do Kickstart.</strong> Você controla o agente OpenClaw conectado na página Kickstart.</p>"
+    },
+    "rich.4bd435c75ac7": {
+      "type": "rich",
+      "source": "The next cell reads the tail of <code>MEMORY.md</code> off the sandbox, so\n        you see the line the cron-fired agent wrote while nothing was driving it.",
+      "value": "A célula seguinte lê o final de <code>MEMORY.md</code> no sandbox, mostrando a linha gravada pelo agente acionado por cron."
+    },
+    "rich.7b4bac4ca438": {
+      "type": "rich",
+      "source": "Scheduled jobs live on the gateway rather than behind an HTTP REST route, so the\n     same WebSocket connection the Control UI uses is also where you list and manage them\n     through the cron methods <code>cron.list</code> <code>cron.add</code> and\n     <code>cron.remove</code>. A cron job lets an always-on agent act with no human in\n     the loop because scheduled work fires on its own timer. The course runtime creates\n     an isolated session for this demonstration. OpenClaw can instead bind scheduled work\n     to another supported session mode when continuity is more important than isolation.",
+      "value": "As tarefas agendadas vivem no gateway, não atrás de uma rota HTTP REST. A mesma conexão WebSocket usada pela interface de controle permite listá-las e gerenciá-las com <code>cron.list</code>, <code>cron.add</code> e <code>cron.remove</code>. Uma tarefa cron permite que o agente atue sem uma pessoa no ciclo, pois seu próprio temporizador a dispara. Nesta demonstração, o runtime cria uma sessão isolada. Quando continuidade for mais importante que isolamento, o OpenClaw também pode vincular a tarefa a outro modo de sessão."
+    },
+    "rich.7bbd2a38941b": {
+      "type": "rich",
+      "source": "<code>workspace/skills/&lt;name&gt;.md</code>",
+      "value": "<code>workspace/skills/&lt;name&gt;.md</code>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "rich.8b88944cb07a": {
+      "type": "rich",
+      "source": "Sub-agent <span style=\"color:var(--tf);font-weight:400;font-style:italic\">(concept only)</span>",
+      "value": "Subagente <span style=\"color:var(--tf);font-weight:400;font-style:italic\">(somente conceito)</span>"
+    },
+    "rich.ad93e39f19e4": {
+      "type": "rich",
+      "source": "\n    <strong>Cron jobs run unattended.</strong> A scheduled directive\n    that asks the agent to \"send the daily report\" will fire whether\n    you are watching or not. The course selects an isolated session for\n    each fire, so a bug in one run cannot poison the next run's transcript.\n    Other cron configurations can retain or bind session context between fires.\n    Module 4a adds a kernel-level containment layer on\n    top of this. Every filesystem access and network connection the\n    cron-fired agent attempts passes through an explicit allow-list\n    before the syscall runs. A misbehaving scheduled job can then only\n    reach what the policy permits.\n  ",
+      "value": "<strong>Tarefas cron são executadas sem supervisão.</strong> Uma diretiva que manda “enviar o relatório diário” será acionada mesmo sem alguém observando. O curso usa uma sessão isolada por disparo, impedindo que um erro contamine a transcrição seguinte. Outras configurações podem manter ou vincular o contexto entre disparos. O Módulo 4a acrescenta contenção no nível do kernel: cada acesso a arquivos e conexão de rede passa por permissões explícitas antes da syscall. Assim, uma tarefa malcomportada só alcança o que a política permite."
+    },
+    "rich.aea1813d87bb": {
+      "type": "rich",
+      "source": "The <strong>trigger</strong> decides when a run starts.",
+      "value": "O <strong>gatilho</strong> determina quando a execução começa."
+    },
+    "rich.b6494b933012": {
+      "type": "rich",
+      "source": "The <strong>session</strong> sets whose context a run inherits.",
+      "value": "A <strong>sessão</strong> define qual contexto a execução herda."
+    },
+    "rich.be1429b4dcb8": {
+      "type": "rich",
+      "source": "The <strong>directive</strong> is the markdown file that tells the agent what to do.",
+      "value": "A <strong>diretiva</strong> é o arquivo Markdown ou prompt que instrui o agente."
+    },
+    "rich.c3333a5924c5": {
+      "type": "rich",
+      "source": "Skill <span style=\"color:var(--gs);font-weight:400;font-style:italic\">(run below)</span>",
+      "value": "Skill <span style=\"color:var(--gs);font-weight:400;font-style:italic\">(executada abaixo)</span>"
+    },
+    "rich.c89b7a662800": {
+      "type": "rich",
+      "source": "The <span>Always-On</span> Agent",
+      "value": "O agente <span>sempre ativo</span>"
+    },
+    "rich.cb7f93d66d47": {
+      "type": "rich",
+      "source": "Cron <span style=\"color:var(--gs);font-weight:400;font-style:italic\">(run below)</span>",
+      "value": "Cron <span style=\"color:var(--gs);font-weight:400;font-style:italic\">(executado abaixo)</span>"
+    },
+    "rich.f3f8fb3efecf": {
+      "type": "rich",
+      "source": "<code>HEARTBEAT.md</code>",
+      "value": "<code>HEARTBEAT.md</code>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "rich.ffdb41c88010": {
+      "type": "rich",
+      "source": "JSON drop-in <code>prompt</code> field",
+      "value": "campo <code>prompt</code>"
+    },
+    "text.00bbde564f6a": {
+      "type": "text",
+      "source": "echo '=== MEMORY.md (tail) ==='; tail -n 8 .openclaw/workspace/MEMORY.md 2>/dev/null || echo '(no MEMORY.md yet)'",
+      "value": "echo '=== MEMORY.md (tail) ==='; tail -n 8 .openclaw/workspace/MEMORY.md 2>/dev/null || echo '(no MEMORY.md yet)'",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.043a718774c5": {
+      "type": "text",
+      "source": "s",
+      "value": "s",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.0450f60529f3": {
+      "type": "text",
+      "source": "Install a skill, then trigger it",
+      "value": "Instale uma skill e acione-a"
+    },
+    "text.04afcc65e34c": {
+      "type": "text",
+      "source": "Always-On · Securing Agents",
+      "value": "Sempre ativo · Proteção de agentes"
+    },
+    "text.04d1047bd3b2": {
+      "type": "text",
+      "source": " This is the Try-it artifact. Paste an incident and the live agent picks up a",
+      "value": " This is the Try-it artifact. Paste an incident and the live agent picks up a",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.05634343b15a": {
+      "type": "text",
+      "source": "🧹 cleared session memory: ",
+      "value": "Memória da sessão limpa:"
+    },
+    "text.05b5b092b65b": {
+      "type": "text",
+      "source": "quick-3c-demo is already absent",
+      "value": "quick-3c-demo já está ausente"
+    },
+    "text.073c1634c496": {
+      "type": "text",
+      "source": "status",
+      "value": "status",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.08270e9d9759": {
+      "type": "text",
+      "source": "removed quick-3c-demo (",
+      "value": "removeu quick-3c-demo ("
+    },
+    "text.08dc692c5bff": {
+      "type": "text",
+      "source": "The last cell removes the job so nothing lingers.",
+      "value": "A última célula remove o trabalho para que nada perdure."
+    },
+    "text.0925ba1e2dec": {
+      "type": "text",
+      "source": "Directive lives in",
+      "value": "Local da diretiva"
+    },
+    "text.0a07f6594619": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.0a07f6594619~1": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.0a07f6594619~2": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.0b593b2990d3": {
+      "type": "text",
+      "source": "Turn 1 · install the skill",
+      "value": "Turno 1 · instalar a skill"
+    },
+    "text.0f56e9ba6c09": {
+      "type": "text",
+      "source": " Alternate mode: change AUTO_WATCH to true to poll for up to 90 seconds.",
+      "value": " Modo alternativo: mude AUTO_WATCH para true para consultar por até 90 segundos."
+    },
+    "text.10fd874b68da": {
+      "type": "text",
+      "source": "write",
+      "value": "escrever"
+    },
+    "text.11d0b394cff7": {
+      "type": "text",
+      "source": "NO HUMAN IN THE LOOP",
+      "value": "SEM UMA PESSOA NO CICLO"
+    },
+    "text.132ed326f2d3": {
+      "type": "text",
+      "source": "When the user asks about a production incident, or pastes a log line\nsuggesting one, do these things in order:\n\n1. Confirm the affected service and the time window.\n2. Open the runbook for that service from /sandbox/runbooks/.\n3. Suggest the smallest reversible mitigation; do not run it yourself.\n4. Ask the user before opening a Jira ticket.",
+      "value": "Quando o usuário perguntar sobre um incidente de produção ou enviar uma linha de log que sugira um incidente, siga esta ordem: 1. Confirme o serviço afetado e o intervalo de tempo. 2. Abra o runbook desse serviço em /sandbox/runbooks/. 3. Sugira a menor mitigação reversível; não a execute. 4. Peça autorização antes de abrir um ticket no Jira."
+    },
+    "text.16e4ab430622": {
+      "type": "text",
+      "source": "← final chat frame",
+      "value": "← quadro final do chat"
+    },
+    "text.16fae831674d": {
+      "type": "text",
+      "source": "No completed run was reported within 90s.",
+      "value": "Nenhuma execução concluída foi registrada em 90s."
+    },
+    "text.19bd8f28c63f": {
+      "type": "text",
+      "source": "skill steps echoed in the reply: ",
+      "value": "Etapas da skill encontradas na resposta: "
+    },
+    "text.1a2303ede074": {
+      "type": "text",
+      "source": "Connect",
+      "value": "Conectar"
+    },
+    "text.1a2303ede074~1": {
+      "type": "text",
+      "source": "Connect",
+      "value": "Conectar"
+    },
+    "text.1a7fe5e70bb5": {
+      "type": "text",
+      "source": "Call cron.remove with the server-assigned id from cron.add. If the page reloaded, recover that id by name before removing the job.",
+      "value": "Chame cron.remove com o id atribuído por cron.add. Se a página recarregou, recupere esse id pelo nome antes de remover a tarefa."
+    },
+    "text.1c69972915aa": {
+      "type": "text",
+      "source": " Check once by default so the lesson never traps you in a 90-second wait.",
+      "value": " Consulte uma vez por padrão para não bloquear a lição durante 90 segundos."
+    },
+    "text.1cec0fa1fffc": {
+      "type": "text",
+      "source": "* * * * *",
+      "value": "* * * * *",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.1d649f27527b": {
+      "type": "text",
+      "source": "cron.runs",
+      "value": "cron.runs",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.1d649f27527b~1": {
+      "type": "text",
+      "source": "cron.runs",
+      "value": "cron.runs",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.1e32847769dc": {
+      "type": "text",
+      "source": "jira",
+      "value": "jira",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.2063fe956de5": {
+      "type": "text",
+      "source": " · check ",
+      "value": " · consulta "
+    },
+    "text.218ff052b960": {
+      "type": "text",
+      "source": "No human prompted that write. The cron schedule drove it on its own, doing\n     real work on the agent's behalf while you were away.",
+      "value": "Nenhuma pessoa iniciou essa gravação. A agenda cron acionou o trabalho enquanto você não interagia com o agente."
+    },
+    "text.2861c8bf0af9": {
+      "type": "text",
+      "source": "Step 2 · Inspect your running agent",
+      "value": "Passo 2 · Inspecione seu agente em execução"
+    },
+    "text.29d6788145a1": {
+      "type": "text",
+      "source": "aria-live",
+      "value": "aria-live",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.2a6dfb45ef8c": {
+      "type": "text",
+      "source": "How would you triage a sudden latency spike?",
+      "value": "How would you triage a sudden latency spike?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.2c40f2845cfc": {
+      "type": "text",
+      "source": " The panel is helpers.mountChatUI and it streams through helpers.openclawChat; open the helpers tab above to read either one's source.",
+      "value": " The panel is helpers.mountChatUI and it streams through helpers.openclawChat; open the helpers tab above to read either one's source.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.2e0ff22be30a": {
+      "type": "text",
+      "source": "art-",
+      "value": "art-",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.2edc662499c4": {
+      "type": "text",
+      "source": "What skills are you configured with?",
+      "value": "What skills are you configured with?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.3042b7c86a98": {
+      "type": "text",
+      "source": "logs and artifacts",
+      "value": "logs e artefatos"
+    },
+    "text.3127c9f9a663": {
+      "type": "text",
+      "source": "then repeats",
+      "value": "depois repete"
+    },
+    "text.31a2b0e3d089": {
+      "type": "text",
+      "source": "reversible",
+      "value": "reversible",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.3316348dbadf": {
+      "type": "text",
+      "source": "read",
+      "value": "ler"
+    },
+    "text.349b6dcd7ce7": {
+      "type": "text",
+      "source": "# skills/triage-incident.md",
+      "value": "# skills/triage-incident.md",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.374e9a63460e": {
+      "type": "text",
+      "source": "cron.remove",
+      "value": "cron.remove",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.3aa19c4a4e98": {
+      "type": "text",
+      "source": "Ask the agent to write skills/triage-incident.md to its own workspace. The skill is a markdown recipe the agent reads automatically on the next turn, without any system-prompt change.",
+      "value": "Peça ao agente que grave skills/triage-incident.md no próprio workspace. A skill é uma receita em Markdown, carregada automaticamente no turno seguinte sem alterar o prompt de sistema."
+    },
+    "text.3ad54adb06f1": {
+      "type": "text",
+      "source": "Append one short line to MEMORY.md noting the current UTC minute, then exit.",
+      "value": "Adicione uma linha curta a MEMORY.md com o minuto UTC atual e encerre."
+    },
+    "text.3b2c44d4f70c": {
+      "type": "text",
+      "source": "The always-on loop",
+      "value": "O ciclo sempre ativo"
+    },
+    "text.3bac5905b6a8": {
+      "type": "text",
+      "source": "The same skills-as-memoised-trajectories pattern appears across the ecosystem\n     under other names and shapes:",
+      "value": "O mesmo padrão de skills como trajetórias memorizadas aparece no ecossistema sob outros nomes e formatos:"
+    },
+    "text.3c56eae7e1f4": {
+      "type": "text",
+      "source": "Connect OpenClaw in Module 3a, then run the cron setup nodes first.",
+      "value": "Conecte o OpenClaw no Módulo 3a e execute primeiro os nós de configuração do cron."
+    },
+    "text.3d45554c507b": {
+      "type": "text",
+      "source": "watching for a completed cron run · polling every 5s",
+      "value": "aguardando uma execução cron concluída · consulta a cada 5s"
+    },
+    "text.3d4fd0c2462e": {
+      "type": "text",
+      "source": "Gateway · cron management",
+      "value": "Gateway · Gerenciamento de cron"
+    },
+    "text.3ee87c37aacb": {
+      "type": "text",
+      "source": "cron.runs is unavailable; polling cron.list runtime state instead.",
+      "value": "cron.runs não está disponível; usando o estado de cron.list."
+    },
+    "text.3f267c2ab422": {
+      "type": "text",
+      "source": "confirm",
+      "value": "confirm",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.404d5ff0859b": {
+      "type": "text",
+      "source": " so it does not keep running in the background…",
+      "value": " para que ela não continue em segundo plano…"
+    },
+    "text.465b77719d41": {
+      "type": "text",
+      "source": "checkout-service is throwing 502s in us-east-1",
+      "value": "checkout-service is throwing 502s in us-east-1",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.4b168d88dc87": {
+      "type": "text",
+      "source": "role",
+      "value": "role",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.4bd714641363": {
+      "type": "text",
+      "source": "Connect your launchable in Module 3a first. This panel needs its URL and token.",
+      "value": "Primeiro conecte o launchable no Módulo 3a. Este painel precisa da URL e do token."
+    },
+    "text.4d84cb3e1046": {
+      "type": "text",
+      "source": "Where to take this",
+      "value": "Para onde levar isto"
+    },
+    "text.4dfb2f544ef6": {
+      "type": "text",
+      "source": "agentTurn",
+      "value": "agentTurn",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.4ec948a2c720": {
+      "type": "text",
+      "source": " matching skill mid-turn, the same machinery a heartbeat or cron fire uses.",
+      "value": " matching skill mid-turn, the same machinery a heartbeat or cron fire uses.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.4f5a2ada1166": {
+      "type": "text",
+      "source": " (",
+      "value": " (",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.51391bf0ab33": {
+      "type": "text",
+      "source": "wake",
+      "value": "acordar"
+    },
+    "text.51532eca537f": {
+      "type": "text",
+      "source": "Module 4a: OpenShell in NemoClaw →",
+      "value": "Módulo 4a: OpenShell em NemoClaw →"
+    },
+    "text.52187f63b6de": {
+      "type": "text",
+      "source": "checking cron run status once",
+      "value": "consultando uma vez o estado de cron"
+    },
+    "text.552e423045fc": {
+      "type": "text",
+      "source": "(none)",
+      "value": "(nenhuma)"
+    },
+    "text.55e52b3fd362": {
+      "type": "text",
+      "source": "installed ",
+      "value": "instalou "
+    },
+    "text.56944f48d4a4": {
+      "type": "text",
+      "source": "⛔ aborting the run on ",
+      "value": "□ abortando a execução "
+    },
+    "text.588da4105320": {
+      "type": "text",
+      "source": " · ",
+      "value": " · ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.58b309444f3e": {
+      "type": "text",
+      "source": "Step 1 · Add a Skill",
+      "value": "Passo 1 · Adicione uma skill"
+    },
+    "text.5a4c8eb4f8f0": {
+      "type": "text",
+      "source": "Run Connect first.",
+      "value": "Executar o Connect primeiro."
+    },
+    "text.5a4c8eb4f8f0~1": {
+      "type": "text",
+      "source": "Run Connect first.",
+      "value": "Execute Conectar primeiro."
+    },
+    "text.5a4c8eb4f8f0~2": {
+      "type": "text",
+      "source": "Run Connect first.",
+      "value": "Executar o Connect primeiro."
+    },
+    "text.5a4c8eb4f8f0~3": {
+      "type": "text",
+      "source": "Run Connect first.",
+      "value": "Execute Conectar primeiro."
+    },
+    "text.5b13b3747318": {
+      "type": "text",
+      "source": "openshell sandbox connect ",
+      "value": "openshell sandbox connect ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.5bdb477f4329": {
+      "type": "text",
+      "source": "workspace / logs",
+      "value": "workspace / logs",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.5cbd90513f75": {
+      "type": "text",
+      "source": " Use the gateway socket to list scheduled jobs without changing anything.",
+      "value": " Use the gateway socket to list scheduled jobs without changing anything.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.5d706be1abcb": {
+      "type": "text",
+      "source": "cron or heartbeat",
+      "value": "cron ou heartbeat"
+    },
+    "text.5dc5be4c91c9": {
+      "type": "text",
+      "source": "No new run yet. Re-run this node after the scheduled minute, or enable AUTO_WATCH.",
+      "value": "Ainda não há uma execução nova. Execute este nó após o minuto agendado ou ative AUTO_WATCH."
+    },
+    "text.5f4b71189dde": {
+      "type": "text",
+      "source": "   A tool is hung or the model is looping. The ⚙️ rows above show the exact tool + args it got stuck on.",
+      "value": "Uma ferramenta parou de responder ou o modelo ficou preso em um ciclo. As linhas acima mostram a ferramenta e os argumentos."
+    },
+    "text.5f72005e81c4": {
+      "type": "text",
+      "source": "schedule",
+      "value": "agendamento"
+    },
+    "text.601f06e314ca": {
+      "type": "text",
+      "source": "cron.add",
+      "value": "cron.add",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.62dd7cd9e6ae": {
+      "type": "text",
+      "source": "Connect on the Kickstart page, then send something that matches a skill, such as “checkout-service is throwing 502s in us-east-1, what do I do?”",
+      "value": "Conecte-se na página Kickstart e envie uma solicitação que possa acionar uma skill, como: “O checkout-service está retornando erros 502 em us-east-1. O que devo fazer?”"
+    },
+    "text.64371a28dc46": {
+      "type": "text",
+      "source": "Summarize what you would do if paged at 3am",
+      "value": "Summarize what you would do if paged at 3am",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.64d4866d0eda": {
+      "type": "text",
+      "source": "raw cron.list",
+      "value": "cron.list"
+    },
+    "text.64d4866d0eda~1": {
+      "type": "text",
+      "source": "raw cron.list",
+      "value": "cron.list"
+    },
+    "text.64d4866d0eda~2": {
+      "type": "text",
+      "source": "raw cron.list",
+      "value": "cron.list"
+    },
+    "text.651fb2fa70d0": {
+      "type": "text",
+      "source": " Edit the greeting, examples, or respond logic, then Run to re-render.",
+      "value": " Edit the greeting, examples, or respond logic, then Run to re-render.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.6678f8435c0b": {
+      "type": "text",
+      "source": "Remove the demo cron",
+      "value": "Remover a demonstração cron"
+    },
+    "text.67a5bdf2a82d": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents",
+      "value": "NVIDIA · Proteção de agentes"
+    },
+    "text.67ddaa5fe58b": {
+      "type": "text",
+      "source": "The widget below asks the agent to install that exact skill, then fires a\n     chat completion designed to match it. Matching is automatic. The agent\n     compares your request against the description of every skill in its workspace,\n     so your prompt never has to name the one you want. Watch the agent reach for the\n     new skill on its second turn.",
+      "value": "O widget abaixo pede ao agente que instale exatamente essa skill e envia uma mensagem criada para acioná-la. A correspondência é automática: o agente compara a solicitação com a descrição das skills no workspace. Seu prompt não precisa citar o nome da skill. Observe o agente carregá-la no segundo turno."
+    },
+    "text.680694f37af1": {
+      "type": "text",
+      "source": "rendered below. Edit the config and Run.",
+      "value": "Artefato exibido abaixo. Edite a configuração e execute novamente."
+    },
+    "text.6918acd830ff": {
+      "type": "text",
+      "source": "agent reply",
+      "value": "resposta do agente"
+    },
+    "text.6959b4159575": {
+      "type": "text",
+      "source": "Session",
+      "value": "Sessão"
+    },
+    "text.69824d3b0e70": {
+      "type": "text",
+      "source": "References",
+      "value": "Referências"
+    },
+    "text.6a0c735d09d6": {
+      "type": "text",
+      "source": "configured session",
+      "value": "sessão configurada"
+    },
+    "text.71f1393b546a": {
+      "type": "text",
+      "source": "Check run status, then read MEMORY.md",
+      "value": "Confira a execução e leia MEMORY.md"
+    },
+    "text.72c1e9a26b8f": {
+      "type": "text",
+      "source": "main session here",
+      "value": "sessão principal neste exemplo"
+    },
+    "text.737d627d1029": {
+      "type": "text",
+      "source": " helpers.log.json(\"cron observation\", observed);",
+      "value": " helpers.log.json(\"observação cron\", observed);"
+    },
+    "text.742fd75c704f": {
+      "type": "text",
+      "source": "raw cron.remove",
+      "value": "resposta de cron.remove"
+    },
+    "text.75246e7908b5": {
+      "type": "text",
+      "source": " WebSocket frames)",
+      "value": " quadros WebSocket)"
+    },
+    "text.78f9ac018e55": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.79f42a2505c9": {
+      "type": "text",
+      "source": "raw transcript (",
+      "value": "transcrição bruta ("
+    },
+    "text.7a6eb285461a": {
+      "type": "text",
+      "source": "Turn 2 · trigger it",
+      "value": "Turno 2 · acionar a skill"
+    },
+    "text.7c9bbe5ec9b3": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.7c9bbe5ec9b3~1": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.7e5f76c94a63": {
+      "type": "text",
+      "source": "UTC",
+      "value": "UTC",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.8470682eb4d6": {
+      "type": "text",
+      "source": " Optional visibility: uncomment to inspect the raw cron observation.",
+      "value": " Visibilidade opcional: remova o comentário para inspecionar a observação cron completa."
+    },
+    "text.88a7b1944d8e": {
+      "type": "text",
+      "source": "cron schedule, per-minute precision",
+      "value": "agenda cron, precisão de um minuto"
+    },
+    "text.88ba7f47fa0c": {
+      "type": "text",
+      "source": "How triggers choose context and instructions",
+      "value": "Como os gatilhos escolhem contexto e instruções"
+    },
+    "text.898702fa218d": {
+      "type": "text",
+      "source": "the Try-it artifact, in code",
+      "value": "o artefato Try-it, em código"
+    },
+    "text.8a83ac80811a": {
+      "type": "text",
+      "source": "not observed",
+      "value": "não observada"
+    },
+    "text.8b85dd3b89d3": {
+      "type": "text",
+      "source": "quick-3c-skill",
+      "value": "quick-3c-skill",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.8b9c643731c9": {
+      "type": "text",
+      "source": "Trigger",
+      "value": "Gatilho"
+    },
+    "text.8e0de681339e": {
+      "type": "text",
+      "source": "reading MEMORY.md from sandbox '",
+      "value": "Lendo MEMORY.md do sandbox '"
+    },
+    "text.8f1f2752d4c9": {
+      "type": "text",
+      "source": "Send an incident question that matches the skill's trigger conditions. The prompt doesn't name the skill; the agent matches it against the skill descriptions in its workspace.",
+      "value": "Envie uma pergunta de incidente que corresponda às condições de disparo do skill. O prompt não nomeia o skill; o agente corresponde com as descrições do skill em seu workspace."
+    },
+    "text.91aae794df4d": {
+      "type": "text",
+      "source": "List current crons",
+      "value": "Listar os crons atuais"
+    },
+    "text.91e9bacf28f6": {
+      "type": "text",
+      "source": " Inspect the latest reply for signs that the skill recipe shaped it.",
+      "value": " Inspect the latest reply for signs that the skill recipe shaped it.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.9297d8f48d42": {
+      "type": "text",
+      "source": "cron jobs remaining: ",
+      "value": "tarefas cron restantes: "
+    },
+    "text.92cc5cc5650a": {
+      "type": "text",
+      "source": "reuses the caller's",
+      "value": "reutiliza a sessão chamadora"
+    },
+    "text.9557eb114e8a": {
+      "type": "text",
+      "source": "\n    That is the same machinery a heartbeat or a cron fire would use, only driven by\n    your own message instead of by a timer.\n  ",
+      "value": "É o mesmo mecanismo usado por um heartbeat ou disparo cron, mas iniciado por sua mensagem em vez de um temporizador."
+    },
+    "text.9a801933a552": {
+      "type": "text",
+      "source": " (fires every minute)",
+      "value": " (executa a cada minuto)"
+    },
+    "text.9c045a2048b7": {
+      "type": "text",
+      "source": "Install a demo cron",
+      "value": "Instale uma demonstração cron"
+    },
+    "text.9c3a4a55111a": {
+      "type": "text",
+      "source": "not completed yet",
+      "value": "ainda não concluída"
+    },
+    "text.9c4373945b48": {
+      "type": "text",
+      "source": "s · ~",
+      "value": "s · ~",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.9ca21b949770": {
+      "type": "text",
+      "source": "Open the gateway WebSocket and authenticate.",
+      "value": "Abra o gateway WebSocket e autentique-se."
+    },
+    "text.9d8113609f46": {
+      "type": "text",
+      "source": "Did it follow the recipe?",
+      "value": "Seguiu a receita?"
+    },
+    "text.9f388b8826f4": {
+      "type": "text",
+      "source": " check",
+      "value": " consulta"
+    },
+    "text.a0e8ecd245c1": {
+      "type": "text",
+      "source": "quick-3c-demo",
+      "value": "quick-3c-demo",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.a0e8ecd245c1~1": {
+      "type": "text",
+      "source": "quick-3c-demo",
+      "value": "quick-3c-demo",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.a0e8ecd245c1~2": {
+      "type": "text",
+      "source": "quick-3c-demo",
+      "value": "quick-3c-demo",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.a4282e4b2298": {
+      "type": "text",
+      "source": " of ",
+      "value": " de "
+    },
+    "text.a7a61da92bf3": {
+      "type": "text",
+      "source": "Scan the agent's reply for the four steps in the skill: confirming scope, opening the runbook, proposing a reversible mitigation, pausing before Jira.",
+      "value": "Examine a resposta do agente para as quatro etapas do skill: confirmar o escopo, abrir o runbook, propor uma mitigação reversível, pausar antes de Jira."
+    },
+    "text.aa0d15b6637f": {
+      "type": "text",
+      "source": "Manage scheduled jobs over the gateway WebSocket: list, add, poll run history, compare MEMORY.md, and remove. The completed flow leaves visible evidence of an unattended write.",
+      "value": "Gerencie tarefas agendadas pelo WebSocket do gateway: liste, adicione, consulte o histórico de execuções, compare MEMORY.md e remova. O fluxo completo deixa uma evidência visível de gravação sem supervisão."
+    },
+    "text.ab2eb66448fc": {
+      "type": "text",
+      "source": "Module 3 · Part C of 3",
+      "value": "Módulo 3 · Parte C de 3"
+    },
+    "text.ae4393aca911": {
+      "type": "text",
+      "source": "Any harness that can write reusable instructions, schedule work, and accept remote\n     messages can persist a compromised directive beyond one conversation. Module 4 separates\n     those application controls from the sandbox controls that bound filesystem, process, and\n     network access.\n  ",
+      "value": "Qualquer harness capaz de gravar instruções reutilizáveis, agendar trabalhos e aceitar mensagens remotas pode manter uma diretiva comprometida além de uma conversa. O Módulo 4 separa esses controles da aplicação dos controles do sandbox que limitam arquivos, processos e rede."
+    },
+    "text.afed2f77cefe": {
+      "type": "text",
+      "source": "isolated",
+      "value": "isolated",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.b4ff3b8e5265": {
+      "type": "text",
+      "source": "It waits about seventy seconds so the job can cross a minute boundary and\n        run on its own.",
+      "value": "Aguarda cerca de setenta segundos para cruzar o próximo limite de minuto e executar sem intervenção."
+    },
+    "text.b55aff9f45b2": {
+      "type": "text",
+      "source": "model plans, calls tools",
+      "value": "modelo planeja e chama ferramentas"
+    },
+    "text.b70ae5753752": {
+      "type": "text",
+      "source": "Try it · trigger a skill in conversation",
+      "value": "Experimente · acionar um skill em conversação"
+    },
+    "text.b736dc17b7b5": {
+      "type": "text",
+      "source": "cron jobs now: ",
+      "value": "tarefas cron atuais: "
+    },
+    "text.b9a719abe442": {
+      "type": "text",
+      "source": "fires on a timer",
+      "value": "disparo por temporizador"
+    },
+    "text.ba5ec51d07a4": {
+      "type": "text",
+      "source": ")",
+      "value": ")",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.ba5ec51d07a4~1": {
+      "type": "text",
+      "source": ")",
+      "value": ")",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.badde3144c2f": {
+      "type": "text",
+      "source": "Call cron.list to see what is already scheduled. Each job carries a server-assigned id, a structured schedule, and a structured payload.",
+      "value": "Chame cron.list para ver o que já está agendado. Cada tarefa contém um id atribuído pelo servidor, uma agenda estruturada e um payload estruturado."
+    },
+    "text.bb3f116c30cb": {
+      "type": "text",
+      "source": "⚠ DEGRADED: started ",
+      "value": "□ DEGRADADO: "
+    },
+    "text.bbfc0a11d4b0": {
+      "type": "text",
+      "source": "cron.add returned no job id",
+      "value": "cron.add não retornou o id da tarefa"
+    },
+    "text.c112409bced9": {
+      "type": "text",
+      "source": "isolated here; fresh per fire",
+      "value": "isolada; uma sessão nova por disparo"
+    },
+    "text.c25f5a42d424": {
+      "type": "text",
+      "source": "parent agent decides mid-turn",
+      "value": "o agente pai decide durante o turno"
+    },
+    "text.c2c0dd8cc3e3": {
+      "type": "text",
+      "source": "\n    Chat with your live agent over the gateway. If you installed the\n    triage-incident skill in Step 1, paste an incident and watch the agent pick the\n    skill up mid-turn without you ever naming it.\n  ",
+      "value": "Converse com o agente pelo gateway. Se instalou a skill no Passo 1, envie um incidente e observe o agente escolhê-la durante o turno sem que você cite seu nome."
+    },
+    "text.c3398b6e7c81": {
+      "type": "text",
+      "source": "(no cron jobs installed)",
+      "value": "(sem trabalhos cron instalados)"
+    },
+    "text.c374eea599bb": {
+      "type": "text",
+      "source": "cron",
+      "value": "cron",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.c374eea599bb~1": {
+      "type": "text",
+      "source": "cron",
+      "value": "cron",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.c6bc2129d4f7": {
+      "type": "text",
+      "source": "Check cron once and return immediately. Re-run after the scheduled minute, or opt into the commented watch mode when you specifically want automatic polling.",
+      "value": "Consulte cron uma vez e termine imediatamente. Execute o nó novamente após o minuto agendado ou ative o modo de espera opcional."
+    },
+    "text.c94ba9f13391": {
+      "type": "text",
+      "source": "In one session the agent writes the skill to disk, answers a matching question, then checks its reply against the skill's recipe. It picks the skill up by reading its own workspace, finding it without any prompt from you.",
+      "value": "Em uma sessão, o agente grava a skill no disco e responde a uma solicitação correspondente. Depois, você compara a resposta com a receita. O agente encontra a skill ao ler o próprio workspace; sua solicitação não precisa citar o nome dela."
+    },
+    "text.c95b3b01ea0e": {
+      "type": "text",
+      "source": "⚠ frame-handler error: ",
+      "value": "Erro do manipulador de quadros:"
+    },
+    "text.c9bd9f04800b": {
+      "type": "text",
+      "source": " Install one short-lived demo cron job so the unattended path is visible.",
+      "value": " Install one short-lived demo cron job so the unattended path is visible.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.cad2a80df44e": {
+      "type": "text",
+      "source": "polite",
+      "value": "polite",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.ce71b5b7b33b": {
+      "type": "text",
+      "source": " tok · ",
+      "value": " tok · ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.cec0c36b6239": {
+      "type": "text",
+      "source": "gateway timer, ~30 min by default",
+      "value": "temporizador do gateway, cerca de 30 min por padrão"
+    },
+    "text.d6e0f32b212d": {
+      "type": "text",
+      "source": "The table shows the course configuration. Use the same three fields to classify other\n     trigger types; OpenClaw also exposes additional session modes.",
+      "value": "A tabela mostra a configuração do curso. Use os mesmos três campos para classificar outros tipos de gatilho; OpenClaw também expõe modos de sessão adicionais."
+    },
+    "text.d7d21c20fde8": {
+      "type": "text",
+      "source": "model picks it mid-turn when the directive matches the user's ask",
+      "value": "o modelo a escolhe durante o turno quando a diretiva corresponde à pergunta"
+    },
+    "text.dcd1d5223f73": {
+      "type": "text",
+      "source": "Name",
+      "value": "Nome"
+    },
+    "text.de115745db34": {
+      "type": "text",
+      "source": "my-assistant",
+      "value": "my-assistant",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.de235cc46ffa": {
+      "type": "text",
+      "source": "Walk me through your incident runbook",
+      "value": "Walk me through your incident runbook",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.de583190d4da": {
+      "type": "text",
+      "source": "Every mechanism on this page is described by the same three knobs:",
+      "value": "Cada mecanismo nesta página é definido pelos mesmos três parâmetros:"
+    },
+    "text.dee9df394086": {
+      "type": "text",
+      "source": "   Run the 🩺 Health check (it flags toolSearch) + 🛠 Recover; for a deeper look, the 📜 logs cell tails the runtime.",
+      "value": "Execute a verificação de integridade; se ela sinalizar toolSearch, use Recuperar. A célula de logs mostra mais detalhes do runtime."
+    },
+    "text.defac695e57e": {
+      "type": "text",
+      "source": "#alwayson-artifact",
+      "value": "#alwayson-artifact",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.e0239388d585": {
+      "type": "text",
+      "source": "(none this run)",
+      "value": "(nenhuma nesta execução)"
+    },
+    "text.e19bfda33e96": {
+      "type": "text",
+      "source": "The widget below walks the full lifecycle of a cron job:",
+      "value": "O widget abaixo caminha o ciclo de vida completo de uma tarefa cron:"
+    },
+    "text.e45e30665e96": {
+      "type": "text",
+      "source": " Remove the demo cron so the launchable does not keep running it.",
+      "value": " Remove the demo cron so the launchable does not keep running it.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.e6fbbdbff6d7": {
+      "type": "text",
+      "source": "✓ cron run reported · ",
+      "value": "✓ execução cron registrada · "
+    },
+    "text.e7d8b0bf6e13": {
+      "type": "text",
+      "source": " tool call(s) but none returned a result or answer.",
+      "value": " chamada(s) de ferramenta iniciada(s), mas nenhuma devolveu resultado ou resposta."
+    },
+    "text.e95a2edc459c": {
+      "type": "text",
+      "source": "runbook",
+      "value": "runbook",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.e9e5e8db1767": {
+      "type": "text",
+      "source": "Open a WebSocket to the gateway and authenticate. This flow stores its connection in state.call so the next three nodes can send chat turns without re-connecting.",
+      "value": "Abra um WebSocket para o gateway e autentique-se. O fluxo armazena a conexão em state.call para que os três nós seguintes enviem turnos de chat sem reconectar."
+    },
+    "text.ea0577a4abeb": {
+      "type": "text",
+      "source": "It connects and lists the crons already installed.",
+      "value": "Ele conecta e lista os crons já instalados."
+    },
+    "text.eb355ee8bd0a": {
+      "type": "text",
+      "source": "gateway loop",
+      "value": "loop de gateway"
+    },
+    "text.ecfab0951aeb": {
+      "type": "text",
+      "source": "What cron jobs do you have scheduled?",
+      "value": "What cron jobs do you have scheduled?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.ed5eb9a37e2d": {
+      "type": "text",
+      "source": "now",
+      "value": "now",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.ee1dd38122c8": {
+      "type": "text",
+      "source": " cron.list state is the compatibility fallback for older runtimes.",
+      "value": " O estado de cron.list é a alternativa compatível com runtimes anteriores."
+    },
+    "text.ef5e40048c83": {
+      "type": "text",
+      "source": " · first token ",
+      "value": " · primeiro token "
+    },
+    "text.f092e8cc73ba": {
+      "type": "text",
+      "source": "raw cron.add",
+      "value": "resposta de cron.add"
+    },
+    "text.f4c6436033d8": {
+      "type": "text",
+      "source": "' over the operator terminal …",
+      "value": "' pelo terminal do operador…"
+    },
+    "text.f612a61bab20": {
+      "type": "text",
+      "source": " your agent's name, from GET /api/agent on the Kickstart page",
+      "value": " nome do agente, obtido com GET /api/agent na página Kickstart"
+    },
+    "text.fa21f62f1f1f": {
+      "type": "text",
+      "source": " as ",
+      "value": " como "
+    },
+    "text.fb1086c1826b": {
+      "type": "text",
+      "source": "fresh, parent holds the handle",
+      "value": "sessão filha nova; o pai mantém a referência"
+    },
+    "text.fceccf80b82b": {
+      "type": "text",
+      "source": "Call cron.add with a name, structured schedule, isolated-session target, and agent-turn payload. The gateway assigns the id used for later removal.",
+      "value": "Chame cron.add com nome, agenda estruturada, sessão isolada e payload do turno do agente. O gateway atribui o id usado depois para remover a tarefa."
+    },
+    "text.fd37b8febd57": {
+      "type": "text",
+      "source": "cron.list",
+      "value": "cron.list",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.fd37b8febd57~1": {
+      "type": "text",
+      "source": "cron.list",
+      "value": "cron.list",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.fd37b8febd57~2": {
+      "type": "text",
+      "source": "cron.list",
+      "value": "cron.list",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.fd37b8febd57~3": {
+      "type": "text",
+      "source": "cron.list",
+      "value": "cron.list",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.fd37b8febd57~4": {
+      "type": "text",
+      "source": "cron.list",
+      "value": "cron.list",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.fd37b8febd57~5": {
+      "type": "text",
+      "source": "cron.list",
+      "value": "cron.list",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.fe1ee8635685": {
+      "type": "text",
+      "source": "MEMORY.md",
+      "value": "MEMORY.md",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03c-always-on.html carries the canonical source at this unit unchanged"
+    },
+    "text.ff095fb49905": {
+      "type": "text",
+      "source": "← Module 3b: OpenClaw",
+      "value": "← Módulo 3b: OpenClaw"
+    }
+  }
+}

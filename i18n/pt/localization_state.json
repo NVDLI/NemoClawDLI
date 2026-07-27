@@ -2,23 +2,7 @@
   "schema": "nemoclaw-localization-state/1",
   "locale": "pt-BR",
   "url_code": "pt",
-  "overlay_files": [
-    "web/courses.html",
-    "web/index.html",
-    "web/nemoclaw/01a-loop.html",
-    "web/nemoclaw/01b-react.html",
-    "web/nemoclaw/01c-tools.html",
-    "web/nemoclaw/02a-routing.html",
-    "web/nemoclaw/02b-rag.html",
-    "web/nemoclaw/02c-deep.html",
-    "web/nemoclaw/03a-kickstart.html",
-    "web/nemoclaw/03b-openclaw.html",
-    "web/nemoclaw/03c-always-on.html",
-    "web/nemoclaw/04a-safety.html",
-    "web/nemoclaw/04b-modern-clis.html",
-    "web/nemoclaw/04c-going-further.html",
-    "web/nemoclaw/index.html"
-  ],
+  "overlay_files": [],
   "asset_files": [
     "web/nemoclaw/assets/figures/01a-agent-environment.svg",
     "web/nemoclaw/assets/figures/01a-loop-1.svg",
@@ -46,6 +30,22 @@
     "web/nemoclaw/assets/figures/04a-safety-1.svg",
     "web/nemoclaw/assets/figures/lethal-trifecta.svg"
   ],
+  "shared_key_variants": {
+    "link.1be52ce4d6ee": "Reviewed Portuguese renders the 'Comprehensive list at ... Going Further · References' line as 'Lista abrangente em ... Ir Além' on 01b-react through 02c-deep and 'Lista completa em ... Próximos passos' on 03a-kickstart through 04a-safety, so the link text and the cited section name both differ.",
+    "text.140bedbf9c3f": "Reviewed Portuguese localizes the reader-facing 01a-loop 'none' label as 'nenhuma' while three protocol/status occurrences remain 'none'.",
+    "text.552e423045fc": "Reviewed Portuguese uses '(nenhum)' or '(nenhuma)' for reader-facing empty states while operational and compact trace occurrences retain '(none)'.",
+    "text.588da4105320": "Reviewed Portuguese moves 'labirinto' into one 01a-loop separator value so the shared ternary keeps Portuguese word order; the other separator occurrences remain punctuation only.",
+    "text.5a4c8eb4f8f0": "Reviewed Portuguese preserves the previously reviewed runnable variants 'Executar o Connect primeiro.' and 'Execute Conectar primeiro.' in their distinct contexts.",
+    "text.67a5bdf2a82d": "Reviewed Portuguese renders the 'NVIDIA · Securing Agents' brand line three ways: 'Proteção de Agentes' on 01a-loop and the course index, 'Segurança de Agentes' on 01b-react through 02c-deep, and 'Proteção de agentes' on the remaining six lessons. Term and capitalization are both a Portuguese terminology decision.",
+    "text.680694f37af1": "Reviewed Portuguese preserves three previously shipped rendered-artifact hints across the lesson cells, including 'rode (Run)', 'execute', and 'execute novamente' forms.",
+    "text.723234e1a9d3": "Reviewed Portuguese localizes the displayed glossary tool label once as 'busca_glossário' while six executable tool-name occurrences remain 'glossary_search'.",
+    "text.898702fa218d": "Reviewed Portuguese renders 'the Try-it artifact, in code' three ways: 'o artefato Experimente' on 01a-loop and 04b-modern-clis, 'o artefato de experimentação' on 02a-routing and 02b-rag, and the untranslated 'o artefato Try-it' on the three Module 3 pages.",
+    "text.a4282e4b2298": "Reviewed Portuguese retains the executable connector ' of ' on 02b-rag and localizes the reader-facing 03c-always-on occurrence as ' de '.",
+    "text.b2eef2ab0d7f": "Reviewed Portuguese spells out ' mensagens' on 01a-loop and retains the compact trace abbreviation ' msgs' on 02c-deep.",
+    "text.bef9d85df8ea": "'Selected: ' appears twice in web/index.html. The reviewed Portuguese overlay translates the language-picker occurrence as 'Selecionado: ' and leaves the second picker's occurrence in English, so the page ships both.",
+    "text.efefc15c24ee": "Reviewed Portuguese localizes one 04a-safety empty-output path as '(sem saída)' while the other 04a path and both 04b terminal paths retain '(no output)'.",
+    "text.f612a61bab20": "Reviewed Portuguese retains the English agent-name hint on 03b-openclaw and localizes the same source on 03c-always-on."
+  },
   "asset_reviews": {
     "web/nemoclaw/assets/figures/01a-agent-environment.svg": {
       "source_sha256": "a3560220e745b1b834e67f4ba41f1ded4c143f60541f4b7fee3601a684652bde",
@@ -164,87 +164,87 @@
     "web/index.html": {
       "source_sha256": "b8011b0798dbb57e9de56fc3b94ab42a270c579bd025b4c10f4a59e209048cfa",
       "target_sha256": "c29c9385ed874538ad8a5f543f1792966d77f7a73f055f44dabebb3d13739990",
-      "reviewed_on": "2026-07-23"
+      "reviewed_on": "2026-07-27"
     },
     "web/courses.html": {
       "source_sha256": "40badad44c7c40891d91fb3a078227812a1f5137fec19d8a2fb3e78383d69b4d",
       "target_sha256": "fdfa8c80d79fa60b36adff07c1d2654525c75e4e5aef79489a6484eac921bb95",
-      "reviewed_on": "2026-07-08"
+      "reviewed_on": "2026-07-27"
     },
     "web/nemoclaw/index.html": {
       "source_sha256": "0c52fbf8426bacee0f5ca23dcaea792aca57b3b7d15fb54e656488828f53fd6f",
       "target_sha256": "19072005a95409403b0f8146fa08a2c96fa3474f7e184c0b22840fd81b2f1645",
-      "reviewed_on": "2026-07-25"
+      "reviewed_on": "2026-07-27"
     },
     "web/nemoclaw/01a-loop.html": {
-      "source_sha256": "d6018226cb6fc4a2a34622de1e779c783b753a24a90b840c3486faf0bf143439",
-      "translation_sha256": "1d2d72954315d1b1a5ee63d90bc68b03e8adf83d74b6f02d26d5654eb2a02e28",
-      "target_sha256": "0ff8ad80965736b0936481582841d703d02ad8d2ad617990796d338dab2eafa7",
-      "reviewed_on": "2026-07-19"
+      "source_sha256": "6062f2d3682fef5b83db1d3b13038a80953bc1c88df272226ccaa0f3d90d46aa",
+      "translation_sha256": "01879ed7a6311d3ede554e357cf53b8e5903445cf62f6124a4f8c5e3b8da2be2",
+      "target_sha256": "2aea3931b364aaa244caca97ee6a92c22002f3bb75e57f7d5fd5fc96423fdeac",
+      "reviewed_on": "2026-07-27"
     },
     "web/nemoclaw/01b-react.html": {
       "source_sha256": "8d80a8385e64693488b407a8debd4b5b409562b836f6d463b4061df738b1af20",
       "translation_sha256": "4945fcb26ea53fa3a2e862f4ebc7254771f700e3f4816618753d4744d82ca833",
-      "target_sha256": "c362b4c15278b8fbf2c16ebccba73784edb068a7d386a2e9122b5dd0195a0383",
-      "reviewed_on": "2026-07-10"
+      "target_sha256": "8b0650b1470fa599d2b330f15eac00194afa3324725a5cd24e57a96a51aa9b6a",
+      "reviewed_on": "2026-07-27"
     },
     "web/nemoclaw/01c-tools.html": {
       "source_sha256": "bed25e5b2313726dafe2c1a4e85d3975e668217e388943b36e962986493acbf5",
       "translation_sha256": "f53edbbf1f114dcab60018b4362e23144869cc8d2531482de912a20da8960a46",
-      "target_sha256": "3bd4190132c66022c0849b35940a93615f288b129632ededcaeb778b0ba7d56e",
-      "reviewed_on": "2026-07-10"
+      "target_sha256": "a47aa0725db004cb55bdb9d13e591e04b9fc0d306f5e1e9952c9f0ee65980ee0",
+      "reviewed_on": "2026-07-27"
     },
     "web/nemoclaw/02a-routing.html": {
       "source_sha256": "518ec1ff0f4a2e8978e6639f973bf3242dcaa5a88634711f454d072d6cbd2a1f",
       "translation_sha256": "b21fcbcab8bd529a2056abe6e87236fa644997b100d1a3d65e1740088ad01f33",
-      "target_sha256": "48a60892bb18f38d2436991a4c1b917321e714c662fae4e7613f9abc104923f3",
-      "reviewed_on": "2026-07-10"
+      "target_sha256": "669eb85402ab076f6dbbc514d94cd67093d1b28ce0b3a5d588030b630634d825",
+      "reviewed_on": "2026-07-27"
     },
     "web/nemoclaw/02b-rag.html": {
       "source_sha256": "242f155c58d9e979bcdef69572f8f64eba89c91419de26feb03635b6b1418808",
       "translation_sha256": "99e766e67bada57a790c27b4091a77a3dec6c8be9685b44eb2539b03c0f205ce",
-      "target_sha256": "f39c39415d80058c79760cf4c6a5bf86cff67dd44ef43890d92773c4dd512a19",
-      "reviewed_on": "2026-07-10"
+      "target_sha256": "015c7b600aba6429b921f2e702bff9a05992a62a9b9486df822ad1c686d1c548",
+      "reviewed_on": "2026-07-27"
     },
     "web/nemoclaw/02c-deep.html": {
       "source_sha256": "9dbc4e4ff42b79d0cec1a583b108dafcc90cf98816b0fc404db1221d4cea4e81",
       "translation_sha256": "43ebaf225196a022d4be50dadef8b8e4bd75a973c6cf364773c3d9cb0abeec72",
-      "target_sha256": "4751d6b23aa8db5157738a2659c6626d279b2b2f46edd9ad6ac1d6ace322713f",
-      "reviewed_on": "2026-07-10"
+      "target_sha256": "3487d6ba01687768599c01cd3b6aca9b955a52d5c97d80a0e115633b9f21b053",
+      "reviewed_on": "2026-07-27"
     },
     "web/nemoclaw/03a-kickstart.html": {
       "source_sha256": "ace0fc1c03a97cbf91cdc4057fa06f89b2313dfa2ebc8c30115fa21590677a38",
-      "target_sha256": "d598de0b37ebfcdc1524efe350fe30d27738d1006d81574e3d1c774dc069fda2",
-      "reviewed_on": "2026-07-25"
+      "target_sha256": "7ad22fb525b485f883f19b21553a8c5ec5c991cce1d49b00ce7e461185d18fe4",
+      "reviewed_on": "2026-07-27"
     },
     "web/nemoclaw/03b-openclaw.html": {
       "source_sha256": "7b8b09466feafbdb1efead336f91aa1051e23a56681c7e6a7cce024219658f5e",
       "translation_sha256": "40cded47ddd5ca3a416268aa15df16dabc4e0af06fdf3e8a475cc3c5d801e3f0",
-      "target_sha256": "a3238ca372d747e670b06fcb18bc906070420815c7eef5365d9205b5955bbd1f",
-      "reviewed_on": "2026-07-10"
+      "target_sha256": "19754b680bcc547c3f4be8cc417cf9c77453994697e64d25c629f13407b43355",
+      "reviewed_on": "2026-07-27"
     },
     "web/nemoclaw/03c-always-on.html": {
       "source_sha256": "6d60628353f5ac971c1bb61dd4df5b2b257c33c80af3b963e92b372d7b55a530",
       "target_sha256": "1146f829df8feccd043783a4612e5540e5b3eb6e12520b5a1764e82f0f183828",
-      "reviewed_on": "2026-07-10"
+      "reviewed_on": "2026-07-27"
     },
     "web/nemoclaw/04a-safety.html": {
       "source_sha256": "878e1ed7df7f9ecc6c96c16a8a8eee3019dbb8d725f59a91d42f25f5577a395f",
       "translation_sha256": "fd95e699c9a0612b33e22fa095fb0e04c14c40415884c7058a474618edac404e",
-      "target_sha256": "328cc2f2e8a13ffad066663c6b5fb36d14e288eaef2a1bd59388d11ea1ad994b",
-      "reviewed_on": "2026-07-18"
+      "target_sha256": "a2c0ad74cdfab53e9ca6e2f4b5330b49f2908fe49fad4f9744cdd9ff18294a0b",
+      "reviewed_on": "2026-07-27"
     },
     "web/nemoclaw/04b-modern-clis.html": {
       "source_sha256": "009ea8eb2364c3692e70f21b7b5160ed619dec007611eabf329d73a245ffe2df",
       "translation_sha256": "81bfab39882f1d5cfde72a68df368bbd19dd02de03c51c4fcb73cf5741376f96",
-      "target_sha256": "e438c2809da58eb0e7febe035f71a3659eca9445a93aa230090b9d299add5f7c",
-      "reviewed_on": "2026-07-14"
+      "target_sha256": "7749afb7d26b7301ea5cb0a6c1afe022083fdd46539b58f725061f1dd78e4c5a",
+      "reviewed_on": "2026-07-27"
     },
     "web/nemoclaw/04c-going-further.html": {
       "source_sha256": "22f4d6b227d40ea7370409a2baa525946c92ccae0693be17c04958342648484a",
       "translation_sha256": "17f3c22d581635f1bc10dd37b1448ded324dffe75d8268ec443da79ce2a7e693",
       "target_sha256": "95568da645de1de960a47479d216a18cacea6fef1c737eeacf73f1b3cd01fb4e",
-      "reviewed_on": "2026-07-10"
+      "reviewed_on": "2026-07-27"
     }
   }
 }

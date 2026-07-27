@@ -1,0 +1,2334 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "pt-BR",
+  "template": "web/nemoclaw/02b-rag.html",
+  "media": [
+    "web/nemoclaw/assets/figures/02b-rag-1.svg",
+    "web/nemoclaw/assets/figures/02b-rag-2.svg",
+    "web/nemoclaw/assets/figures/02b-rag-3.svg",
+    "web/nemoclaw/assets/figures/02b-retrieval-boundaries.svg",
+    "web/nemoclaw/assets/figures/rag_arch_2021.svg"
+  ],
+  "values": {
+    "link.16cbfc35d20e": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2005.11401\" target=\"_blank\" rel=\"noopener\">Lewis et al., <em>Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</em> (NeurIPS 2020)</a>. The canonical retrieve-then-generate paper; the figure above is redrawn from it.",
+      "value": "<a href=\"https://arxiv.org/abs/2005.11401\" target=\"_blank\" rel=\"noopener\">Lewis et al., <em>Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</em> (NeurIPS 2020)</a>. O artigo canônico sobre recuperação seguida de geração; a figura acima foi redesenhada a partir dele."
+    },
+    "link.1be52ce4d6ee": {
+      "type": "link",
+      "source": "Comprehensive list at <a href=\"04c-going-further.html#refs\">Going Further · References</a>.",
+      "value": "Lista abrangente em <a href=\"04c-going-further.html#refs\">Ir Além · Referências</a>."
+    },
+    "link.216694a0d897": {
+      "type": "link",
+      "source": "\n    Top-K hands back only its three best matches, so the model summarizes those three chunks while staying completely\n    blind to the other nine hundred and ninety-seven passages in the corpus. GraphRAG\n    (<a href=\"https://arxiv.org/abs/2404.16130\" target=\"_blank\" rel=\"noopener\">Edge et al. 2024</a>)\n    changes the shape of that problem instead of raising K. It spends an LLM up front at indexing time to:\n  ",
+      "value": "\n O top-K devolve apenas as três melhores correspondências. O modelo resume esses três trechos enquanto permanece\n cego às outras novecentas e noventa e sete passagens no corpus. O GraphRAG\n (<a href=\"https://arxiv.org/abs/2404.16130\" target=\"_blank\" rel=\"noopener\">Edge et al. 2024</a>)\n altera a estrutura do problema, em vez de apenas aumentar K. Durante a indexação, ele usa um LLM para:\n "
+    },
+    "link.23685dbfb7f3": {
+      "type": "link",
+      "source": "detect the <a href=\"https://en.wikipedia.org/wiki/Community_structure\" target=\"_blank\" rel=\"noopener\">communities</a> in that graph, the clusters of densely connected entities;",
+      "value": "detectar as <a href=\"https://en.wikipedia.org/wiki/Community_structure\" target=\"_blank\" rel=\"noopener\">comunidades</a> nesse grafo, os clusters de entidades densamente conectadas;"
+    },
+    "link.38b8cbcb92dd": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/1702.08734\" target=\"_blank\" rel=\"noopener\">Johnson, Douze &amp; Jégou, <em>Billion-scale similarity search with GPUs</em> (FAISS, 2017)</a>. The vector-index data structure used by every \"vector database\" you have ever heard of.",
+      "value": "<a href=\"https://arxiv.org/abs/1702.08734\" target=\"_blank\" rel=\"noopener\">Johnson, Douze &amp; Jégou, <em>Billion-scale similarity search with GPUs</em> (FAISS, 2017)</a>. A estrutura de índice vetorial usada pelos bancos de dados vetoriais."
+    },
+    "link.4bee0291af08": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2004.04906\" target=\"_blank\" rel=\"noopener\">Karpukhin et al., <em>Dense Passage Retrieval</em> (EMNLP 2020)</a>. The dual-encoder formulation behind query / passage embedding asymmetry that the NVIDIA embed model enforces.",
+      "value": "<a href=\"https://arxiv.org/abs/2004.04906\" target=\"_blank\" rel=\"noopener\">Karpukhin et al., <em>Dense Passage Retrieval</em> (EMNLP 2020)</a>. A formulação de codificador duplo por trás da assimetria entre incorporações de consulta e passagem exigida pelo modelo da NVIDIA."
+    },
+    "link.86910e24719a": {
+      "type": "link",
+      "source": "\n        The original architecture, from <a href=\"https://arxiv.org/abs/2005.11401\" target=\"_blank\" rel=\"noopener\">Lewis et al. 2020</a>,\n        with the top-row backprop label that most systems built today leave out.\n      ",
+      "value": "\n A arquitetura original, de <a href=\"https://arxiv.org/abs/2005.11401\" target=\"_blank\" rel=\"noopener\">Lewis et al. 2020</a>,\n com o rótulo de retropropagação na linha superior que a maioria dos sistemas construídos hoje deixa de fora.\n "
+    },
+    "link.95575a1f2ff4": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2404.16130\" target=\"_blank\" rel=\"noopener\">Edge et al., <em>From Local to Global: A Graph RAG Approach to Query-Focused Summarization</em> (2024)</a>. Builds an LLM-derived knowledge graph and pre-summarizes its communities so global, corpus-wide questions can be answered; the pipeline figure above is redrawn from it.",
+      "value": "<a href=\"https://arxiv.org/abs/2404.16130\" target=\"_blank\" rel=\"noopener\">Edge et al., <em>From Local to Global: A Graph RAG Approach to Query-Focused Summarization</em> (2024)</a>. Constrói um grafo de conhecimento derivado de LLM e pré-resume suas comunidades para responder a perguntas globais sobre todo o corpus; a figura do pipeline acima foi redesenhada a partir dele."
+    },
+    "link.a1a58d785b3c": {
+      "type": "link",
+      "source": "\n      Course recreation of the two-stage pipeline shown in <a href=\"https://developer.nvidia.com/blog/rag-101-demystifying-retrieval-augmented-generation-pipelines/\" target=\"_blank\" rel=\"noopener\">Hayden Wolff, <em>RAG 101</em></a> (NVIDIA, 2023)\n      and <a href=\"https://developer.nvidia.com/blog/tips-for-building-a-rag-pipeline-with-nvidia-ai-langchain-ai-endpoints/\" target=\"_blank\" rel=\"noopener\">Amit Bleiweiss, <em>tips for building a RAG pipeline</em></a> (NVIDIA, 2024).\n    ",
+      "value": "\n Recriação para o curso do pipeline de duas etapas mostrado em <a href=\"https://developer.nvidia.com/blog/rag-101-demystifying-retrieval-augmented-generation-pipelines/\" target=\"_blank\" rel=\"noopener\">Hayden Wolff, <em>RAG 101</em></a> (NVIDIA, 2023)\n e <a href=\"https://developer.nvidia.com/blog/tips-for-building-a-rag-pipeline-with-nvidia-ai-langchain-ai-endpoints/\" target=\"_blank\" rel=\"noopener\">Amit Bleiweiss, <em>tips for building a RAG pipeline</em></a> (NVIDIA, 2024)."
+    },
+    "link.aa54758eba57": {
+      "type": "link",
+      "source": "\n    When\n    <a href=\"https://arxiv.org/abs/2005.11401\" target=\"_blank\" rel=\"noopener\">Lewis and colleagues</a> named\n    retrieval-augmented generation in 2020, it was not a model with a search box bolted on. The <strong>retriever and\n    the generator were trained together</strong> on the task they had to perform. Read the figure from left to\n    right before looking at the arrow across the top.\n  ",
+      "value": "\n Quando\n <a href=\"https://arxiv.org/abs/2005.11401\" target=\"_blank\" rel=\"noopener\">Lewis e colegas</a> nomearam\n a geração aumentada por recuperação em 2020, não era um modelo com uma caixa de pesquisa acoplada. O <strong>recuperador e o gerador foram treinados juntos</strong> na tarefa que tinham que realizar. Leia a figura da esquerda para a direita antes de olhar para a seta no topo.\n "
+    },
+    "link.b952cf87bb57": {
+      "type": "link",
+      "source": "Graph traversal (<a href=\"https://opencypher.org/\" target=\"_blank\" rel=\"noopener\">Cypher</a>, GraphQL, custom)",
+      "value": "Travessia de grafos (<a href=\"https://opencypher.org/\" target=\"_blank\" rel=\"noopener\">Cypher</a>, GraphQL, personalizado)"
+    },
+    "link.cb79e42b3237": {
+      "type": "link",
+      "source": "\n        The GraphRAG pipeline, redrawn from <a href=\"https://arxiv.org/abs/2404.16130\" target=\"_blank\" rel=\"noopener\">Edge et al. 2024</a>'s figure. The blue stages are built once, offline, and the green stages run on every question.\n      ",
+      "value": "\n O pipeline GraphRAG, redesenhado a partir da figura de <a href=\"https://arxiv.org/abs/2404.16130\" target=\"_blank\" rel=\"noopener\">Edge et al. 2024</a>. As etapas azuis são construídas uma vez, offline, e as etapas verdes são executadas em cada pergunta.\n "
+    },
+    "link.cdf062fffd4f": {
+      "type": "link",
+      "source": "\n    The \"retriever-as-tool\" shape you just wired scales straight to production.\n    Swapping the in-memory cosine function for a server-side FAISS+<a href=\"https://en.wikipedia.org/wiki/Okapi_BM25\" target=\"_blank\" rel=\"noopener\">BM25</a>+rerank pipeline\n    changes only the executor; the tool schema, the agent loop, and the final\n    answer step all stay identical.\n  ",
+      "value": "\n O padrão \"recuperador como ferramenta\" que você acabou de conectar escala diretamente para produção.\n Substituir a função de cosseno na memória por um pipeline de servidor FAISS+<a href=\"https://en.wikipedia.org/wiki/Okapi_BM25\" target=\"_blank\" rel=\"noopener\">BM25</a>+rerank\n altera apenas o executor; o esquema da ferramenta, o ciclo do agente e a etapa da resposta final permanecem idênticos.\n "
+    },
+    "link.d1534a401dc0": {
+      "type": "link",
+      "source": "\n    Every retriever on this page answers a <em>local</em> question whose answer sits in a handful of passages that Top-K\n    similarity can find for the model to read, the way asking what the contract says about termination or which paper\n    introduced <a href=\"https://arxiv.org/abs/2212.10496\" target=\"_blank\" rel=\"noopener\">HyDE</a> does. A whole different\n    class of question has no answer in any single passage at all. Ask what the main themes are across a thousand documents\n    and you find that the answer is too diffuse to live in any one passage and emerges only from the corpus taken as a whole.\n  ",
+      "value": "\n Cada recuperador nesta página responde a uma <em>pergunta local</em>, cuja resposta está em poucas passagens que a similaridade top-K\n consegue encontrar. O que um contrato diz sobre rescisão e qual artigo\n introduziu o <a href=\"https://arxiv.org/abs/2212.10496\" target=\"_blank\" rel=\"noopener\">HyDE</a> são perguntas desse tipo. Outra classe de pergunta não possui resposta em uma passagem isolada. Ao perguntar pelos principais temas de mil documentos,\n você descobre que a resposta é difusa demais para existir em um único trecho; ela emerge do corpus inteiro.\n "
+    },
+    "link.ddc6217b9a39": {
+      "type": "link",
+      "source": "\n    <p class=\"embedding-consequence\"><strong>Compare:</strong> <a href=\"https://en.wikipedia.org/wiki/Cosine_similarity\" target=\"_blank\" rel=\"noopener\">cosine similarity</a> over two vectors costs one dot product plus two magnitudes.</p>\n    <p class=\"embedding-consequence\"><strong>Store:</strong> a vector index organizes texts by their position in that space for efficient nearest-neighbour search.</p>\n  ",
+      "value": "\n    <p class=\"embedding-consequence\"><strong>Comparar:</strong> a <a href=\"https://en.wikipedia.org/wiki/Cosine_similarity\" target=\"_blank\" rel=\"noopener\">similaridade cosseno</a> entre dois vetores usa um produto escalar e duas magnitudes.</p>\n    <p class=\"embedding-consequence\"><strong>Armazenar:</strong> um índice vetorial organiza textos pela posição nesse espaço para buscar os vizinhos mais próximos com eficiência.</p>\n  "
+    },
+    "link.ee2ea807d684": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2212.10496\" target=\"_blank\" rel=\"noopener\">Gao et al., <em>HyDE: Precise Zero-Shot Dense Retrieval without Relevance Labels</em> (2022)</a>. Generates a hypothetical answer and embeds that instead of the question; a quick win for short or ambiguous queries.",
+      "value": "<a href=\"https://arxiv.org/abs/2212.10496\" target=\"_blank\" rel=\"noopener\">Gao et al., <em>HyDE: Precise Zero-Shot Dense Retrieval without Relevance Labels</em> (2022)</a>. Gera uma resposta hipotética e incorpora esse texto, em vez da pergunta; uma melhoria rápida para consultas curtas ou ambíguas."
+    },
+    "link.f1076151c0a9": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2010.06467\" target=\"_blank\" rel=\"noopener\">Lin et al., <em>Pretrained Transformers for Text Ranking</em> (2020)</a>. The reranker pattern that a production retrieval stack uses as its second stage.",
+      "value": "<a href=\"https://arxiv.org/abs/2010.06467\" target=\"_blank\" rel=\"noopener\">Lin et al., <em>Pretrained Transformers for Text Ranking</em> (2020)</a>. O padrão de reclassificação usado como segunda etapa em uma pilha de recuperação de produção."
+    },
+    "placeholder.1617a68ca57a": {
+      "type": "placeholder",
+      "source": "[\\${i+1}] (score \\${r.score.toFixed(3)}) \\${r.text}",
+      "value": "[\\${i+1}] (score \\${r.score.toFixed(3)}) \\${r.text}",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.00e79f376c26": {
+      "type": "rich",
+      "source": "<strong>Relational / graph</strong>",
+      "value": "<strong>Relacional / grafo</strong>"
+    },
+    "rich.0524da83434c": {
+      "type": "rich",
+      "source": "<strong>For an autonomous agent</strong>, the bundle is the working memory it carries across many turns. That memory stores the agent's constraints, prior decisions, partial results, tool surfaces, and operating rules.",
+      "value": "<strong>Para um agente autônomo</strong>, o pacote é a memória de trabalho que ele carrega em muitos turnos. Essa memória armazena as restrições do agente, decisões anteriores, resultados parciais, superfícies de ferramentas e regras de operação."
+    },
+    "rich.0a404c8d4e21": {
+      "type": "rich",
+      "source": "<strong>For an arbitrary Index Agent</strong>, the bundle returned by the agent may only house the retrieved context chunks along with their chunk sources, relevance scores, and possibly a summary. A separate internal bundle may be the flat live-request-processing pipeline from above, or a ReAct-style loop that iterates, judges retrieval relevance, and retries until it has accumulated enough context.",
+      "value": "<strong>Para um agente de índice arbitrário</strong>, o pacote retornado pode conter apenas os trechos recuperados, suas fontes, pontuações de relevância e talvez um resumo. Um pacote interno separado pode representar o pipeline linear de processamento em tempo de execução mostrado acima ou um ciclo no estilo ReAct, que avalia a relevância e tenta novamente até acumular contexto suficiente."
+    },
+    "rich.0abff7d3b699": {
+      "type": "rich",
+      "source": " · <span style=\"color:var(--gs,#aee23a)\">full parent returned to the LLM</span>",
+      "value": " · <span style=\"color:var(--gs,#aee23a)\">full parent returned to the LLM</span>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.117b2652871e": {
+      "type": "rich",
+      "source": "\n    The <strong>unstructured-prose</strong> example carries a corpus through retrieval and generation\n    to a grounded answer.\n  ",
+      "value": "\n Este módulo segue a forma <strong>de prosa não estruturada</strong> do corpus para a resposta e executa o fluxo básico de recuperação e geração para nossos propósitos de exemplo.\n "
+    },
+    "rich.12e5864355e5": {
+      "type": "rich",
+      "source": "<strong>Embed</strong> the query into a vector.",
+      "value": "<strong>Incorporar</strong> a consulta em um vetor."
+    },
+    "rich.222f9e7b5570": {
+      "type": "rich",
+      "source": "<div style=\"font-size:.84rem;color:var(--td,#c9c9c9);line-height:1.55;white-space:pre-wrap\">",
+      "value": "<div style=\"font-size:.84rem;color:var(--td,#c9c9c9);line-height:1.55;white-space:pre-wrap\">",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.2472de096f4d": {
+      "type": "rich",
+      "source": "<div style=\"margin:3px 0;padding:5px 8px;border-radius:5px;border:1px solid ",
+      "value": "<div style=\"margin:3px 0;padding:5px 8px;border-radius:5px;border:1px solid ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.265041977d1a": {
+      "type": "rich",
+      "source": "<strong>Concatenate</strong> those passages onto the prompt.",
+      "value": "<strong>Concatenar</strong> essas passagens ao prompt."
+    },
+    "rich.32482b8d4d0c": {
+      "type": "rich",
+      "source": "<strong>Relational / graph data.</strong> The agent calls a graph-traversal tool (Cypher, GraphQL, or custom) in place of a vector store. The bundle it gets back is a sub-graph whose explicit edges carry into the prompt, so the relationships between entities reach the model intact.",
+      "value": "<strong>Dados relacionais ou em grafo.</strong> Em vez de um armazenamento vetorial, o agente chama uma ferramenta de travessia de grafo escrita em Cypher, GraphQL ou linguagem personalizada. O pacote recebido é um subgrafo cujas arestas explícitas seguem para o prompt, preservando as relações entre entidades."
+    },
+    "rich.3bbba8e56dcc": {
+      "type": "rich",
+      "source": "<div style=\"display:flex;gap:12px;flex-wrap:wrap;margin-top:6px\">",
+      "value": "<div style=\"display:flex;gap:12px;flex-wrap:wrap;margin-top:6px\">",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.3ec45ef78546": {
+      "type": "rich",
+      "source": "<div style=\"font-weight:700;color:var(--td,#c9c9c9);font-size:.9rem\">",
+      "value": "<div style=\"font-weight:700;color:var(--td,#c9c9c9);font-size:.9rem\">",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.44495e89469c": {
+      "type": "rich",
+      "source": "\n    <p class=\"pipeline-stage\"><strong>Offline:</strong> build the index once by embedding every passage and storing it for fast lookup.</p>\n    <p class=\"pipeline-stage\"><strong>Live:</strong> embed the question, retrieve the top-K passages, and pass them to the model with the question.</p>\n  ",
+      "value": "\n    <p class=\"pipeline-stage\"><strong>Offline:</strong> construa o índice uma vez, incorporando cada passagem e armazenando-a para busca rápida.</p>\n    <p class=\"pipeline-stage\"><strong>Ao vivo:</strong> incorpore a pergunta, recupere as passagens top-K e entregue-as ao modelo junto com a pergunta.</p>\n  "
+    },
+    "rich.4a0f835daa61": {
+      "type": "rich",
+      "source": "<strong>Hierarchical docs</strong>",
+      "value": "<strong>Documentos hierárquicos</strong>"
+    },
+    "rich.4c58d1cefaaa": {
+      "type": "rich",
+      "source": "\n    Before picking a retrieval primitive, you should first define a <strong>bundle</strong>. The bundle is the\n    complete and bounded set of context that you intend your pipeline to pass around.\n  ",
+      "value": "\n Antes de escolher um primitivo de recuperação, defina um <strong>pacote</strong>: o conjunto completo e limitado de contexto que deve atravessar o pipeline."
+    },
+    "rich.4c947a6806cd": {
+      "type": "rich",
+      "source": "<div style=\"font-size:.74rem;color:var(--tf,#8a8a8a);margin:.1em 0 .7em\">",
+      "value": "<div style=\"font-size:.74rem;color:var(--tf,#8a8a8a);margin:.1em 0 .7em\">",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.4e9172f73824": {
+      "type": "rich",
+      "source": "Cosine in Part 4 scores any two vectors the same way regardless of which is the\n        query, yet the NVIDIA embed model used here takes <code>input_type</code> to\n        distinguish query from passage. What does that asymmetry buy you that pure cosine\n        could not?",
+      "value": "Na Parte 4, o cosseno pontua dois vetores da mesma maneira, independentemente de qual representa a consulta. Já o modelo de incorporação da NVIDIA usa <code>input_type</code> para distinguir consulta e passagem. O que essa assimetria oferece que o cosseno, sozinho, não poderia oferecer?"
+    },
+    "rich.51f0040c5876": {
+      "type": "rich",
+      "source": "\n    Both rest on a single primitive, the embedding model. This course routes embedding\n    calls through <code>helpers.embed</code>, which proxies to the hosted NVIDIA embedding endpoint\n    so everything runs in the browser without a lab path or local server.\n  ",
+      "value": "\n Ambos se baseiam em um único primitivo: o modelo de incorporação. Este curso encaminha as chamadas por <code>helpers.embed</code> ao endpoint de incorporação hospedado da NVIDIA,\n permitindo executar tudo no navegador sem depender de um ambiente de laboratório ou servidor local.\n "
+    },
+    "rich.637b12569477": {
+      "type": "rich",
+      "source": "<strong>Unstructured prose</strong>",
+      "value": "<strong>Prosa não estruturada</strong>"
+    },
+    "rich.745fec0fb34b": {
+      "type": "rich",
+      "source": "<strong>Search</strong> the passage index for the top-K nearest passages.",
+      "value": "<strong>Pesquisar</strong> o índice de passagens para as K passagens mais próximas."
+    },
+    "rich.752b0fa26b3a": {
+      "type": "rich",
+      "source": "\n    <strong>Embedding API contract.</strong>\n    <p>The embeddings endpoint takes a JSON request with three fields and returns one array of vectors:</p>\n    <ul>\n      <li><code>input</code> is the batch of texts to embed, typed <code>string[]</code>.</li>\n      <li><code>model</code> names the embedding model, typed <code>string</code>.</li>\n      <li><code>input_type</code> is either <code>\"query\"</code> or <code>\"passage\"</code>.</li>\n      <li>The response carries a <code>data</code> array whose entries each hold an <code>embedding</code> of <code>number[]</code>.</li>\n    </ul>\n    <p>The NVIDIA embed models assign the same text a different vector depending on the\n    <code>input_type</code> you pass. The training objective pulls a question\n    toward the passages that answer it rather than toward texts that merely\n    repeat its words, so a cosine score between two correctly typed inputs\n    tracks relevance well. Embedding a query with the\n    <code>\"passage\"</code> type or the reverse breaks the score function\n    silently and produces lower recall with no error message.</p>\n  ",
+      "value": "\n <strong>Contrato da API de Incorporações.</strong>\n <p>O endpoint de incorporações aceita uma solicitação JSON com três campos e retorna um array de vetores:</p>\n <ul>\n <li><code>input</code> é o lote de textos para incorporar, tipado <code>string[]</code>.</li>\n <li><code>model</code> nomeia o modelo de incorporação, tipado <code>string</code>.</li>\n <li><code>input_type</code> é <code>\"query\"</code> ou <code>\"passage\"</code>.</li>\n <li>A resposta carrega um array <code>data</code> cujas entradas cada uma contém uma <code>embedding</code> de <code>number[]</code>.</li>\n </ul>\n <p>Os modelos de incorporação da NVIDIA atribuem vetores diferentes ao mesmo texto conforme o\n <code>input_type</code> informado. O objetivo de treinamento aproxima uma pergunta\n em direção às passagens que a respondem em vez de em direção a textos que apenas\n repetem suas palavras. Assim, a pontuação cosseno entre entradas tipadas corretamente\n acompanha bem a relevância. Incorporar uma consulta como <code>\"passage\"</code>, ou uma passagem como \"query\", prejudica silenciosamente a pontuação\n e reduz a revocação sem emitir erro.\n </p>\n "
+    },
+    "rich.8031c498a438": {
+      "type": "rich",
+      "source": "<strong>Structured / governed tables.</strong> Not built in this course. The standard production pattern is a semantic layer sitting between the agent and the row-level data, exposing only the curated metrics the bundle requires.",
+      "value": "<strong>Tabelas estruturadas e governadas.</strong> Não são construídas neste curso. O padrão de produção usa uma camada semântica entre o agente e os dados no nível de linha, expondo apenas as métricas selecionadas exigidas pelo pacote."
+    },
+    "rich.83198eb03dd1": {
+      "type": "rich",
+      "source": "<div style=\"display:flex;gap:10px;flex-wrap:wrap;margin-top:6px\">",
+      "value": "<div style=\"display:flex;gap:10px;flex-wrap:wrap;margin-top:6px\">",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.871558310ab3": {
+      "type": "rich",
+      "source": "\n    A retrieval index on its own only answers when something queries it.\n    It becomes an <strong>Index Agent</strong> once you wrap it as a tool the\n    model can choose to call, letting the model decide when retrieval is worth\n    running. The cell below does it in five steps:\n  ",
+      "value": "\n Um índice de recuperação, isoladamente, só responde quando algo o consulta.\n Ele se torna um <strong>agente de índice</strong> quando é encapsulado como uma ferramenta que o modelo pode escolher chamar. Assim, o modelo decide quando vale a pena recuperar dados. A célula abaixo faz isso em cinco etapas:\n "
+    },
+    "rich.873cf201ef64": {
+      "type": "rich",
+      "source": "<table><tr><th>passage</th><th>cosine</th></tr>",
+      "value": "<table><tr><th>passage</th><th>cosine</th></tr>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.87cb960075cc": {
+      "type": "rich",
+      "source": "<div style=\"font-family:var(--mono,monospace);font-size:11px;color:",
+      "value": "<div style=\"font-family:var(--mono,monospace);font-size:11px;color:",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.89d20696074b": {
+      "type": "rich",
+      "source": "<div style=\"font-size:11px;color:var(--tf,#8a8a8a);margin-bottom:5px\">",
+      "value": "<div style=\"font-size:11px;color:var(--tf,#8a8a8a);margin-bottom:5px\">",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.8df46f664491": {
+      "type": "rich",
+      "source": "\n    The design lives in the arrow labelled \"End-to-End Backprop through q and p<sub>&theta;</sub>\". One\n    loss updated both halves at once. The query encoder learned which passages the generator could use, and the\n    generator learned to lean on retrieved evidence over its own memory.\n  ",
+      "value": "\n O design vive na seta rotulada como \"Retropropagação de Ponta a Ponta por q e p<sub>&theta;</sub>\". Uma perda atualizou ambas as metades de uma vez. O codificador de consulta aprendeu quais passagens o gerador poderia usar, e o gerador aprendeu a se apoiar em evidências recuperadas em vez da sua própria memória.\n "
+    },
+    "rich.8ecd9b2638a3": {
+      "type": "rich",
+      "source": "<div style=\"flex:1 1 320px;border:1px solid var(--bd,#2a2a2a);border-radius:8px;background:var(--e2,#1c1f24);padding:12px;max-height:340px;overflow:auto\">",
+      "value": "<div style=\"flex:1 1 320px;border:1px solid var(--bd,#2a2a2a);border-radius:8px;background:var(--e2,#1c1f24);padding:12px;max-height:340px;overflow:auto\">",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.91c3b6a59090": {
+      "type": "rich",
+      "source": "\n    The exercise below builds this with three parent docs, each split into short\n    sentence-chunks, and a query that returns the matching <em>parent</em>.\n  ",
+      "value": "\n O exercício abaixo usa três documentos pai, cada um dividido em trechos curtos, e uma consulta que retorna o <em>documento pai</em> correspondente.\n "
+    },
+    "rich.9524843c190d": {
+      "type": "rich",
+      "source": "<div style=\"font-weight:600;color:var(--tx,#e6edf3)\">",
+      "value": "<div style=\"font-weight:600;color:var(--tx,#e6edf3)\">",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.9eb42a50ff1a": {
+      "type": "rich",
+      "source": "The <span>Index</span> Agent",
+      "value": "O <span>Agente de Índice</span>"
+    },
+    "rich.a2f615532c7f": {
+      "type": "rich",
+      "source": "\n    <strong>Failure mode: stale embeddings.</strong>\n    <p>A vector index is a cache of an embedding model's outputs. Production systems\n    have to defend against a few specific failures:</p>\n    <ul style=\"margin:8px 0 0 22px\">\n      <li>Swap the embedding model and every cached vector becomes meaningless until you re-embed every passage.</li>\n      <li>The provider silently upgrades the model, and scores drift with no error raised.</li>\n      <li>Two services share an index but pin different model ids; the index returns nonsense to one of them.</li>\n    </ul>\n    <p>A reliable index pins the embedding model id alongside each cached vector\n    and refuses to mix versions. The canonical pin for this course is\n    <code>nvidia/llama-nemotron-embed-1b-v2</code>, served through the\n    course's hosted proxy at build.nvidia.com.</p>\n  ",
+      "value": "\n <strong>Modo de falha: embeddings desatualizados.</strong>\n <p>Um índice vetorial armazena em cache as saídas de um modelo de incorporação. Sistemas de produção precisam se proteger contra falhas específicas:</p>\n <ul style=\"margin:8px 0 0 22px\">\n <li>Ao trocar o modelo de incorporação, cada vetor em cache perde o significado até que todas as passagens sejam incorporadas novamente.</li>\n <li>Se o provedor atualizar o modelo silenciosamente, as pontuações podem mudar sem erro.</li>\n <li>Se dois serviços compartilharem um índice, mas fixarem IDs de modelo diferentes, o índice produzirá resultados inválidos para um deles.</li>\n </ul>\n <p>Um índice confiável registra o ID do modelo de incorporação ao lado de cada vetor em cache e se recusa a misturar versões. O modelo fixado neste curso é\n <code>nvidia/llama-nemotron-embed-1b-v2</code>, servido por meio do proxy hospedado do curso em build.nvidia.com.</p>\n "
+    },
+    "rich.a513fd73eeea": {
+      "type": "rich",
+      "source": "…</span></div></td><td style=\"font-family:var(--mono,monospace);color:var(--gs,#aee23a)\">",
+      "value": "…</span></div></td><td style=\"font-family:var(--mono,monospace);color:var(--gs,#aee23a)\">",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.bbab6401f6a8": {
+      "type": "rich",
+      "source": "px\"></div><span style=\"color:var(--td,#b0b0b0)\">",
+      "value": "px\"></div><span style=\"color:var(--td,#b0b0b0)\">",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.c4017e09d402": {
+      "type": "rich",
+      "source": "<strong>Generate</strong> an answer grounded in them.",
+      "value": "<strong>Gerar</strong> uma resposta fundamentada nelas."
+    },
+    "rich.c4a5900e5e9b": {
+      "type": "rich",
+      "source": "\n    <strong>The cost of the bolt-on.</strong> A retriever that never sees the generator's loss can only guess what the\n    generator needs, so retrieval quality is capped by how well the embedding model fits your data. Reranking, query\n    rewriting, and a fine-tuned embedder each buy back a little of what end-to-end training gave for free. A serious\n    retrieval stack keeps adding stages to recover the rest. Read the bolt-on as a pragmatic stand-in for a once-unified\n    system, and you can see where its ceiling sits and which knobs raise it.\n  ",
+      "value": "\n <strong>O custo do acoplamento.</strong> Um recuperador que nunca recebe o sinal de perda do gerador precisa inferir o que ele necessita. Por isso, a qualidade da recuperação depende de quanto o modelo de incorporação se ajusta aos dados. Reclassificação, reescrita de consultas e um modelo de incorporação ajustado recuperam parte do benefício antes obtido pelo treinamento de ponta a ponta. Uma pilha de recuperação robusta adiciona estágios para reduzir o restante da diferença. Encare o acoplamento como um substituto pragmático para um sistema antes unificado: isso revela seu limite e os controles capazes de elevá-lo.\n "
+    },
+    "rich.cd6aaa4d1e36": {
+      "type": "rich",
+      "source": "<tr><td><div style=\"display:flex;align-items:center;gap:8px\"><div style=\"background:var(--g,#76b900);height:10px;border-radius:3px;width:",
+      "value": "<tr><td><div style=\"display:flex;align-items:center;gap:8px\"><div style=\"background:var(--g,#76b900);height:10px;border-radius:3px;width:",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.d3695596e0f0": {
+      "type": "rich",
+      "source": "<div style=\"flex:1 1 280px;border:1px solid ",
+      "value": "<div style=\"flex:1 1 280px;border:1px solid ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.d4ef2af3f8b5": {
+      "type": "rich",
+      "source": "\n    The bundle principle is a planning discipline: <em>define the bundle before\n    you pick the database</em>. Picking a vector store first and hoping it covers\n    everything is the origin of most \"worked in demo but failed in production\"\n    stories. The four-shape taxonomy below checks whether your\n    candidate primitive can deliver the bundle for your task.\n  ",
+      "value": "\n O princípio do pacote é uma disciplina de planejamento: <em>defina o pacote antes de escolher o banco de dados</em>. Escolher primeiro um armazenamento de vetores e esperar que ele cubra tudo costuma produzir o resultado \"funcionou na demonstração, mas falhou em produção\". A taxonomia de quatro formas abaixo ajuda a verificar se o primitivo candidato consegue entregar o pacote exigido pela tarefa."
+    },
+    "rich.dc95ae0183d1": {
+      "type": "rich",
+      "source": "<strong>Structured / governed tables</strong>",
+      "value": "<strong>Tabelas estruturadas / governadas</strong>"
+    },
+    "rich.e0028d1232ac": {
+      "type": "rich",
+      "source": "<strong>Hierarchical docs.</strong> A chunker that preserves the heading hierarchy, plus atomic table extraction, parent pointers, and a dual index for structural and semantic search. You index the small child chunks for recall and fetch the enclosing parent on a hit, so the model reads the matched clause together with the section it belongs to.",
+      "value": "<strong>Documentos hierárquicos.</strong> Um segmentador preserva a hierarquia de títulos e combina extração de tabelas atômicas, ponteiros para o pai e um índice duplo para busca estrutural e semântica. Você indexa trechos filhos pequenos para obter boa revocação e recupera o pai correspondente, permitindo que o modelo leia a cláusula junto com sua seção."
+    },
+    "rich.e3730d43aaa8": {
+      "type": "rich",
+      "source": "<strong>For a simple single-turn question-answering system</strong>, the bundle can stay small: the user question, the few chunks retrieved to answer it, and the answer itself.",
+      "value": "<strong>Para um sistema de resposta a perguntas de um único turno simples</strong>, o pacote pode permanecer pequeno: a pergunta do usuário, os poucos pedaços recuperados para respondê-la e a resposta em si."
+    },
+    "rich.e6177d2839ed": {
+      "type": "rich",
+      "source": "A <code>retrieve(question, k)</code> tool is declared with a JSON schema.",
+      "value": "Uma ferramenta <code>retrieve(question, k)</code> é declarada com um esquema JSON."
+    },
+    "rich.e739ae251ccb": {
+      "type": "rich",
+      "source": "<div style=\"font-size:12px;color:var(--td,#b0b0b0)\">",
+      "value": "<div style=\"font-size:12px;color:var(--td,#b0b0b0)\">",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "rich.f6b6b70c423e": {
+      "type": "rich",
+      "source": "<strong>Page-image retrieval for figures and charts.</strong> A dual-vector setup that embeds the rendered page image alongside its text, so a query can also pull a figure or a slide when the answer lives there.",
+      "value": "<strong>Recuperação de imagens de página para figuras e gráficos.</strong> Uma configuração com dois espaços vetoriais incorpora a página renderizada e seu texto. Assim, a consulta também pode recuperar uma figura ou um slide quando a resposta estiver nesse conteúdo visual."
+    },
+    "text.00220ca39b2d": {
+      "type": "text",
+      "source": "Embeds every passage using the \\'passage\\' input type and stores each one as an object pairing the original text with its vector.",
+      "value": "Incorpora cada passagem usando o tipo de entrada 'passagem' e armazena cada uma como um objeto que emparelha o texto original com seu vetor."
+    },
+    "text.00a1f822545e": {
+      "type": "text",
+      "source": " the prebuilt index is valid only for this model",
+      "value": " the prebuilt index is valid only for this model",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.00eb8a07f818": {
+      "type": "text",
+      "source": "Why today's RAG drops the joint training",
+      "value": "Por que o RAG de hoje descarta o treinamento conjunto"
+    },
+    "text.02f1581e2a26": {
+      "type": "text",
+      "source": "The first LLM call, made with the retrieve tool exposed. When the response carries tool_calls, the model is asking your code to run retrieval and return the results. When finish_reason is \\'stop\\', the model judged retrieval unnecessary and answered directly.",
+      "value": "A primeira chamada do LLM, feita com a ferramenta de recuperação exposta. Quando a resposta carrega chamadas de ferramenta, o modelo está pedindo que o código execute a recuperação e retorne os resultados. Quando finish_reason é 'stop', o modelo julgou a recuperação desnecessária e respondeu diretamente."
+    },
+    "text.0417f7f4fc51": {
+      "type": "text",
+      "source": "NVIDIA Nemotron is a family of NVIDIA's open-weights reasoning models. Nano variants are small and fast; Super and Ultra are larger.",
+      "value": "NVIDIA Nemotron is a family of NVIDIA's open-weights reasoning models. Nano variants are small and fast; Super and Ultra are larger.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763~1": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763~2": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763~3": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763~4": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763~5": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.053dad0a3566": {
+      "type": "text",
+      "source": "Dense vector + cross-encoder rerank",
+      "value": "Vetor denso + reclassificação com cross-encoder"
+    },
+    "text.0886b0510756": {
+      "type": "text",
+      "source": "passage",
+      "value": "passage",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.0886b0510756~1": {
+      "type": "text",
+      "source": "passage",
+      "value": "passage",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.0886b0510756~2": {
+      "type": "text",
+      "source": "passage",
+      "value": "passage",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.0886b0510756~3": {
+      "type": "text",
+      "source": "passage",
+      "value": "passage",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.0886b0510756~4": {
+      "type": "text",
+      "source": "passage",
+      "value": "passage",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.0886b0510756~5": {
+      "type": "text",
+      "source": "passage",
+      "value": "passage",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.098650877e59": {
+      "type": "text",
+      "source": " GRAPHRAG summarizes each community (map), then answers from those",
+      "value": " GRAPHRAG summarizes each community (map), then answers from those",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.0a0971500e29": {
+      "type": "text",
+      "source": "\n    The version of RAG everyone runs today drops most of what the original design did, and knowing that reframes the\n    retriever you are about to wire in.\n  ",
+      "value": "\n A versão de RAG mais comum hoje descarta boa parte do design original. Entender essa diferença muda a forma de pensar sobre o recuperador que você está prestes a conectar.\n "
+    },
+    "text.0b315bd9bd2f": {
+      "type": "text",
+      "source": "Divide and conquer",
+      "value": "Divide and conquer",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.0b315bd9bd2f~1": {
+      "type": "text",
+      "source": "Divide and conquer",
+      "value": "Divide and conquer",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.0b477fabf91e": {
+      "type": "text",
+      "source": " passages for the LLM context",
+      "value": " passages for the LLM context",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.0b5f8a075002": {
+      "type": "text",
+      "source": "ReWOO (Reason Without Observation) is the alternative pattern. A planner LLM call writes the entire plan upfront as a list of tool calls. A deterministic executor then runs every tool, often in parallel. Finally a synthesizer LLM call reads all the gathered observations and writes the final answer. ReWOO trades adaptivity for parallelism: every tool call runs at once, but later steps cannot adjust based on earlier observations.",
+      "value": "ReWOO (Reason Without Observation) is the alternative pattern. A planner LLM call writes the entire plan upfront as a list of tool calls. A deterministic executor then runs every tool, often in parallel. Finally a synthesizer LLM call reads all the gathered observations and writes the final answer. ReWOO trades adaptivity for parallelism: every tool call runs at once, but later steps cannot adjust based on earlier observations.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.0c883d61a22a": {
+      "type": "text",
+      "source": "← Module 2a: Workflows",
+      "value": "← Módulo 2a: Workflows"
+    },
+    "text.0c97e48cc9eb": {
+      "type": "text",
+      "source": "When top-K is the wrong tool: GraphRAG and global questions",
+      "value": "Quando o top-K é a ferramenta errada: GraphRAG e perguntas globais"
+    },
+    "text.0dca5e040901": {
+      "type": "text",
+      "source": "Floyd-Warshall computes all-pairs shortest paths by considering each vertex as an intermediate step.",
+      "value": "Floyd-Warshall computes all-pairs shortest paths by considering each vertex as an intermediate step.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.0f4f93d0eb7e": {
+      "type": "text",
+      "source": "GraphRAG · map-reduce",
+      "value": "GraphRAG · map-reduce",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.100582a1acba": {
+      "type": "text",
+      "source": "The index build embeds every corpus passage once, while the live path embeds\n        each new question. Which changes require a full re-index, and which require\n        only one new query embedding?",
+      "value": "A construção do índice incorpora cada passagem do corpus uma vez, enquanto o caminho ao vivo incorpora cada nova pergunta. Quais mudanças exigem reindexar todo o corpus e quais exigem apenas uma nova incorporação da consulta?"
+    },
+    "text.11f2df007819": {
+      "type": "text",
+      "source": "Inspect one embedding",
+      "value": "Inspecione uma incorporação"
+    },
+    "text.14e4f7b49c92": {
+      "type": "text",
+      "source": "Wrapping the index as a tool the model decides to call",
+      "value": "Envolvendo o índice como uma ferramenta que o modelo decide chamar"
+    },
+    "text.156858a25720": {
+      "type": "text",
+      "source": "\n    A bare top-K Index Agent has a recall-precision trade-off no embedding model\n    solves. You must choose between short chunks and long documents:\n  ",
+      "value": "\n Um agente de índice top-K simples enfrenta uma troca entre revocação e precisão que nenhum modelo de incorporação elimina. Você deve escolher entre trechos curtos e documentos longos:\n "
+    },
+    "text.15c5d8dcc81c": {
+      "type": "text",
+      "source": " Try-it artifact: loads a PREBUILT vector index (corpus embedded offline by",
+      "value": " Try-it artifact: loads a PREBUILT vector index (corpus embedded offline by",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1631cc972051": {
+      "type": "text",
+      "source": " Send the prepared messages and stream the model response.",
+      "value": " Send the prepared messages and stream the model response.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.165821bb74c1": {
+      "type": "text",
+      "source": "\n    Practice settled on a simpler assembly. You take a model that already exists, freeze it, and put a retriever in\n    front of it so the prompt arrives pre-loaded with evidence and nothing is trained at all. The parts were built\n    separately and bolted together, and over time \"RAG\" came to mean that bolt-on rather than the jointly optimized\n    system the paper described.\n  ",
+      "value": "\n A prática convergiu para uma montagem mais simples: usar um modelo existente e congelado, colocar um recuperador à sua frente e enviar ao prompt as evidências recuperadas, sem novo treinamento. As partes são construídas separadamente e depois acopladas. Com o tempo, \"RAG\" passou a significar esse acoplamento, não o sistema otimizado em conjunto descrito no artigo.\n "
+    },
+    "text.17dc41954b1e": {
+      "type": "text",
+      "source": " disadvantage and the community pass should win.",
+      "value": " disadvantage and the community pass should win.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.18679f6482f8": {
+      "type": "text",
+      "source": "Where MCP fits in retrieval systems",
+      "value": "Onde o MCP se encaixa nos sistemas de recuperação"
+    },
+    "text.18c539566442": {
+      "type": "text",
+      "source": " A GLOBAL question: no single chunk states the answer, so top-K is at a",
+      "value": " A GLOBAL question: no single chunk states the answer, so top-K is at a",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1a5c1b1cd6ed": {
+      "type": "text",
+      "source": "model answered directly",
+      "value": "model answered directly",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1ae2bcbc6c0f": {
+      "type": "text",
+      "source": "] ",
+      "value": "] ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1ae2bcbc6c0f~1": {
+      "type": "text",
+      "source": "] ",
+      "value": "] ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1afcec989f62": {
+      "type": "text",
+      "source": "\n    A frozen model with a top-K retriever in\n    front answers local questions well and global ones not at all. Restructuring the\n    corpus into summarized communities buys the global answer, paid for by an\n    expensive indexing pass you run once.\n  ",
+      "value": "\n Um modelo congelado com um recuperador top-K à frente responde bem a perguntas locais, mas não a perguntas globais. Reestruturar o corpus em comunidades resumidas viabiliza a resposta global ao custo de uma etapa de indexação mais cara, executada uma única vez.\n "
+    },
+    "text.1c0af1397495": {
+      "type": "text",
+      "source": "Top-K always returns K passages, even when every score is weak. What signal\n        should the agent inspect before letting those passages enter the prompt?",
+      "value": "Top-K sempre retorna K passagens, mesmo quando todas as pontuações são fracas. Qual sinal o agente deve verificar antes de incluir essas passagens no prompt?"
+    },
+    "text.1d0cef6ddaf6": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-1b-v2",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1d0cef6ddaf6~1": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-1b-v2",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1d0cef6ddaf6~2": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-1b-v2",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1d0cef6ddaf6~3": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-1b-v2",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1d0cef6ddaf6~4": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-1b-v2",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1d0cef6ddaf6~5": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-1b-v2",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1d0cef6ddaf6~6": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-1b-v2",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1d0cef6ddaf6~7": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-1b-v2",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1d2f4b752096": {
+      "type": "text",
+      "source": " Score bars, ordered best-first.",
+      "value": " Score bars, ordered best-first.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1eaabb881331": {
+      "type": "text",
+      "source": " the example questions are prebuilt too, so they retrieve with no embed call; anything you type embeds live",
+      "value": " the example questions are prebuilt too, so they retrieve with no embed call; anything you type embeds live",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1eb7018a6bc2": {
+      "type": "text",
+      "source": "ReAct",
+      "value": "ReAct",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1f5087db919c": {
+      "type": "text",
+      "source": "question",
+      "value": "question",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1fb69c5b7407": {
+      "type": "text",
+      "source": "Function calling exposes JSON-schema'd tools to a model; the model emits structured requests rather than free text.",
+      "value": "Function calling exposes JSON-schema'd tools to a model; the model emits structured requests rather than free text.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.1fe76d6f9e6b": {
+      "type": "text",
+      "source": "</table>",
+      "value": "</table>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.20aef30180d2": {
+      "type": "text",
+      "source": "A second LLM call writes the final answer grounded in the retrieved passages.",
+      "value": "Uma segunda chamada de grande modelo de linguagem (LLM) escreve a resposta final fundamentada nas passagens recuperadas."
+    },
+    "text.21cf13ed85c3": {
+      "type": "text",
+      "source": "prebuilt index was built for ",
+      "value": "O índice pré-construído foi criado para"
+    },
+    "text.239d0ae13a4b": {
+      "type": "text",
+      "source": "Bellman-Ford finds shortest paths by relaxing every edge V-1 times, which also detects negative cycles.",
+      "value": "Bellman-Ford finds shortest paths by relaxing every edge V-1 times, which also detects negative cycles.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.23d5e5a6c7b6": {
+      "type": "text",
+      "source": "top-K versus GraphRAG, in code",
+      "value": "top-K versus GraphRAG, em código"
+    },
+    "text.24513194262b": {
+      "type": "text",
+      "source": " Two retrieval strategies, same corpus, same global question.",
+      "value": " Two retrieval strategies, same corpus, same global question.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.245843abef9e": {
+      "type": "text",
+      "source": "[",
+      "value": "[",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.245843abef9e~1": {
+      "type": "text",
+      "source": "[",
+      "value": "[",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.265629ecc0ac": {
+      "type": "text",
+      "source": "Embed query + top-K",
+      "value": "Incorporar consulta + top-K"
+    },
+    "text.275976081ce1": {
+      "type": "text",
+      "source": "react",
+      "value": "react",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.28a2800d7bf4": {
+      "type": "text",
+      "source": "\n    The cell below makes the difference concrete on a small corpus, and it\n    runs the real pipeline rather than playing back a script. It asks one global\n    question two ways: plain top-K retrieval, and GraphRAG's map-reduce over named\n    communities. Watch top-K answer from whichever chunks happen to match the\n    question's words while the community pass recovers the corpus-wide theme. Edit the\n    corpus, the communities, or the question and run it again.\n  ",
+      "value": "\n A célula abaixo torna a diferença concreta em um pequeno corpus e executa o pipeline real. Ela responde a uma pergunta global de duas maneiras: recuperação top-K simples e map-reduce do GraphRAG sobre comunidades nomeadas. Observe como o top-K usa apenas os trechos cujas palavras coincidem com a pergunta, enquanto o caminho por comunidades recupera o tema do corpus inteiro. Edite o corpus, as comunidades ou a pergunta e execute novamente.\n "
+    },
+    "text.28f79d5aba41": {
+      "type": "text",
+      "source": "\n    MCP gives a retrieval system one boundary for discovering and calling\n    external context sources. The agent still needs a runtime that decides when to\n    retrieve, validates the result, and composes it with the rest of the active\n    task state. Other boundaries can carry other parts of the same system:\n    skills package reusable capability instructions, A2A can route work to\n    remote specialists, and UI protocols can stream the generated state back to\n    an application.\n  ",
+      "value": "\n O MCP fornece a um sistema de recuperação uma fronteira para descobrir e chamar fontes de contexto externas. O agente ainda precisa de um runtime que decide quando recuperar, valida o resultado e compõe com o restante do estado da tarefa ativa. Outras fronteiras podem transportar outras partes do mesmo sistema: pacotes de habilidades, instruções de capacidade reutilizável, A2A pode encaminhar trabalho para especialistas remotos e protocolos de UI podem transmitir o estado gerado de volta para um aplicativo."
+    },
+    "text.2958d416d08a": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.2960581b8447": {
+      "type": "text",
+      "source": "\n    Index agents that manage other primitives largely take the same shape while varying the search/embed/verification logic, so don't feel intimidated to experiment with shapes that better fit your data.\n  ",
+      "value": "\n Agentes de índice que coordenam esses primitivos geralmente seguem a mesma estrutura e variam apenas a lógica de busca, incorporação e verificação. Experimente a forma que melhor corresponde aos seus dados.\n "
+    },
+    "text.2990ddd02365": {
+      "type": "text",
+      "source": "What is 12 times 8?",
+      "value": "What is 12 times 8?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.29daa3e18990": {
+      "type": "text",
+      "source": " edited passage(s); the rest load from the prebuilt index",
+      "value": " edited passage(s); the rest load from the prebuilt index",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.2b0f1982a37b": {
+      "type": "text",
+      "source": "The default model returns 2,048 values. Choose an example, then inspect its fixed length and near-1 normalized magnitude. Change EXAMPLE or add your own text.",
+      "value": "O modelo padrão retorna 2.048 valores. Escolha um exemplo e inspecione o comprimento fixo e a magnitude normalizada próxima de 1. Altere EXAMPLE ou adicione seu próprio texto."
+    },
+    "text.2b3957deb912": {
+      "type": "text",
+      "source": "Short chunks embed precisely (the vector represents a focused idea) but lack context (one sentence is rarely enough to answer with).",
+      "value": "Um trecho curto representa uma ideia focada, e o vetor resultante fica preciso. Falta-lhe contexto, e uma frase raramente basta para responder."
+    },
+    "text.2dba2454d800": {
+      "type": "text",
+      "source": "integer",
+      "value": "integer",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.30e19178dd66": {
+      "type": "text",
+      "source": "\n    With that ceiling in mind, here is the whole assembly. A retriever runs in front of the frozen model across two\n    separate timelines. One timeline builds the index ahead of time so the other can serve a live request against it.\n    The figure below traces both.\n  ",
+      "value": "\n Com esse limite em mente, observe a montagem completa. Um recuperador opera à frente do modelo congelado em duas linhas do tempo. Uma constrói o índice antecipadamente; a outra atende às solicitações em tempo de execução usando esse índice.\n A figura abaixo mostra as duas."
+    },
+    "text.31bb0d6ce485": {
+      "type": "text",
+      "source": "Long documents have context (every fact lands in its setting) but embed fuzzily (the vector is the average of many ideas).",
+      "value": "Documentos longos preservam o contexto, mas produzem incorporações difusas; o vetor representa a média de muitas ideias."
+    },
+    "text.33a8052041c4": {
+      "type": "text",
+      "source": "Tree index with parent pointers",
+      "value": "Índice de árvore com ponteiros de pai"
+    },
+    "text.33e0b0708ff9": {
+      "type": "text",
+      "source": "User query",
+      "value": "Consulta do usuário"
+    },
+    "text.33e0b0708ff9~1": {
+      "type": "text",
+      "source": "User query",
+      "value": "Consulta do usuário"
+    },
+    "text.33e0b0708ff9~2": {
+      "type": "text",
+      "source": "User query",
+      "value": "Consulta do usuário"
+    },
+    "text.33e9fbc0867b": {
+      "type": "text",
+      "source": " ── 3 · render both answers side by side ────────────────────────────────────────",
+      "value": " ── 3 · render both answers side by side ────────────────────────────────────────",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.3418072da751": {
+      "type": "text",
+      "source": "Parent documents",
+      "value": "Documentos pai"
+    },
+    "text.34234a98289b": {
+      "type": "text",
+      "source": "OpenShell limits an agent's filesystem and network access.",
+      "value": "OpenShell limits an agent's filesystem and network access.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.34ea6f3321e9": {
+      "type": "text",
+      "source": "What does this course's OpenShell sandbox block?",
+      "value": "What does this course's OpenShell sandbox block?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.35bf957e3770": {
+      "type": "text",
+      "source": "This course routes model and embedding calls to build.nvidia.com through a hosted Cloudflare worker proxy. No API key is required in the browser.",
+      "value": "This course routes model and embedding calls to build.nvidia.com through a hosted Cloudflare worker proxy. No API key is required in the browser.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.35ed572d2732": {
+      "type": "text",
+      "source": "Dynamic programming",
+      "value": "Dynamic programming",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.35ed572d2732~1": {
+      "type": "text",
+      "source": "Dynamic programming",
+      "value": "Dynamic programming",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.362e316fe0fc": {
+      "type": "text",
+      "source": "Retrieve tool spec",
+      "value": "Especificação da ferramenta de recuperação"
+    },
+    "text.3703a7655a85": {
+      "type": "text",
+      "source": "retrieved top 3 passages",
+      "value": "retrieved top 3 passages",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.37415bd67ea7": {
+      "type": "text",
+      "source": " Top-K never sees the labels; GraphRAG retrieves by them.",
+      "value": " Top-K never sees the labels; GraphRAG retrieves by them.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.3885ff5ae338": {
+      "type": "text",
+      "source": "&lt;",
+      "value": "&lt;",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.3885ff5ae338~1": {
+      "type": "text",
+      "source": "&lt;",
+      "value": "&lt;",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.3885ff5ae338~2": {
+      "type": "text",
+      "source": "&lt;",
+      "value": "&lt;",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.39ec0ac3c731": {
+      "type": "text",
+      "source": "A tool is structured output plus an executor: the model emits a tool_calls request, your code runs the function, and the result returns as a tool message.",
+      "value": "A tool is structured output plus an executor: the model emits a tool_calls request, your code runs the function, and the result returns as a tool message.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.3cc946dc3209": {
+      "type": "text",
+      "source": " Use the prebuilt corpus index, then embed only the live question each turn.",
+      "value": " Use the prebuilt corpus index, then embed only the live question each turn.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.3d89f896c158": {
+      "type": "text",
+      "source": "The transformer architecture replaced recurrent networks for sequence modeling because self-attention is parallelizable.",
+      "value": "The transformer architecture replaced recurrent networks for sequence modeling because self-attention is parallelizable.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.3ff719ffb0f7": {
+      "type": "text",
+      "source": "Three parent documents are each split into short sentence-chunks that get embedded and indexed, and a hit on any chunk returns the FULL parent document, so the precision of short chunks combines with the context of full docs.",
+      "value": "Três documentos pai são divididos em pedaços de frases curtas que são incorporados e indexados, e um acerto em qualquer pedaço retorna o DOCUMENTO PAI COMPLETO, então a precisão dos pedaços curtos combina com o contexto dos documentos completos."
+    },
+    "text.40be34d0f767": {
+      "type": "text",
+      "source": "What replaced recurrent neural networks for sequence modeling?",
+      "value": "What replaced recurrent neural networks for sequence modeling?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.4285d23d69c3": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.4285d23d69c3~1": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.4285d23d69c3~2": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.4285d23d69c3~3": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.4285d23d69c3~4": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.431924b96814": {
+      "type": "text",
+      "source": "Build an in-memory vector index",
+      "value": "Crie um índice de vetores na memória"
+    },
+    "text.4319a0d98186": {
+      "type": "text",
+      "source": "(the model did not produce a final answer; try Run again)",
+      "value": "(the model did not produce a final answer; try Run again)",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.44136fa355b3": {
+      "type": "text",
+      "source": "{}",
+      "value": "{}",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.45775e9b0dd7": {
+      "type": "text",
+      "source": " The panel calls helpers.embed(), ranks with helpers.cosineSim(), then answers.",
+      "value": " The panel calls helpers.embed(), ranks with helpers.cosineSim(), then answers.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.45822f54a0d0": {
+      "type": "text",
+      "source": ": ",
+      "value": ": ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.45f979562f03": {
+      "type": "text",
+      "source": "(model answered directly but produced no text; raise max_tokens)",
+      "value": "(model answered directly but produced no text; raise max_tokens)",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.462998b37bfa": {
+      "type": "text",
+      "source": " ── 2 · GRAPHRAG map-reduce ────────────────────────────────────────────────────",
+      "value": " ── 2 · GRAPHRAG map-reduce ────────────────────────────────────────────────────",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.46d5014c0f39": {
+      "type": "text",
+      "source": "\n    Ask a question. The artifact embeds it with the same endpoint from this page and\n    ranks a small built-in corpus by cosine similarity. The bars show every score. It\n    then answers from the top passages and cites them. Change the question and watch\n    the ranking shift.\n  ",
+      "value": "Faça uma pergunta. O artefato usa o mesmo endpoint desta página para incorporar a consulta e classificar, por similaridade cosseno, um pequeno corpus já incorporado. As barras mostram todas as pontuações. Em seguida, o modelo responde a partir das passagens mais relevantes e as cita. Altere a pergunta e observe a classificação mudar."
+    },
+    "text.46f70a7ed608": {
+      "type": "text",
+      "source": " Define the tool schema the model can choose from next.",
+      "value": " Define the tool schema the model can choose from next.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.473287f8298d": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.48f709e32856": {
+      "type": "text",
+      "source": "The agent receives the user's question. It chooses whether to call the tool.",
+      "value": "O agente recebe a pergunta do usuário. Ele escolhe se chamar a ferramenta."
+    },
+    "text.4a1b645a477d": {
+      "type": "text",
+      "source": "Semantic layer over the source of truth",
+      "value": "Camada semântica sobre a fonte de verdade"
+    },
+    "text.4a4abd94c3b1": {
+      "type": "text",
+      "source": " No tools here: the model must synthesize from retrieved passages.",
+      "value": " No tools here: the model must synthesize from retrieved passages.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.4af3a030788e": {
+      "type": "text",
+      "source": " Steer the synthesis call: answer from these passages, no more retrieval.",
+      "value": " Steer the synthesis call: answer from these passages, no more retrieval.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.4b9f6afbee64": {
+      "type": "text",
+      "source": "Three documents on different topics sit in the store, where the full document is what the LLM eventually reads.",
+      "value": "Três documentos sobre tópicos diferentes estão no repositório, onde o documento completo é o que o grande modelo de linguagem (LLM) eventualmente lê."
+    },
+    "text.4ca70ee1e93c": {
+      "type": "text",
+      "source": "Using only the retrieved passages above, write the final answer now. Do not retrieve again or output any tool-call syntax.",
+      "value": "Using only the retrieved passages above, write the final answer now. Do not retrieve again or output any tool-call syntax.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.4d36cc6e8c59": {
+      "type": "text",
+      "source": "Every request walks the same four steps:",
+      "value": "Cada solicitação percorre os mesmos quatro passos:"
+    },
+    "text.4e652ffada75": {
+      "type": "text",
+      "source": "Why use cosine similarity?",
+      "value": "Why use cosine similarity?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.4f8f774a130b": {
+      "type": "text",
+      "source": "Answer ONLY from these passages and cite them as [n]. If they do not cover the question, say so.\\\\n\\\\n",
+      "value": "Answer ONLY from these passages and cite them as [n]. If they do not cover the question, say so.\\\\n\\\\n",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.50f2a151d15e": {
+      "type": "text",
+      "source": "retrieve",
+      "value": "retrieve",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.50f7af3bd86f": {
+      "type": "text",
+      "source": " TODO: Try another query and watch which parent document ranks first.",
+      "value": " TODO: Experimente outra consulta e observe qual documento pai fica em primeiro."
+    },
+    "text.513f0e5ca93c": {
+      "type": "text",
+      "source": "\n      Data comes in several shapes, and each shape wants a different retrieval\n      strategy; matching the wrong one to your data is the most common reason an\n      Index Agent fails silently in production.\n    ",
+      "value": "\n Os dados assumem várias formas, e cada uma exige uma estratégia de recuperação diferente. Escolher uma estratégia incompatível com os dados é a causa mais comum de falhas silenciosas de um agente de índice em produção.\n "
+    },
+    "text.515c3775ac7b": {
+      "type": "text",
+      "source": " · score ",
+      "value": " · score ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.53141bafb422": {
+      "type": "text",
+      "source": "OpenClaw is an agent harness whose configuration is a folder of markdown files the harness folds into the system prompt every turn.",
+      "value": "OpenClaw is an agent harness whose configuration is a folder of markdown files the harness folds into the system prompt every turn.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.53e3b56fabc6": {
+      "type": "text",
+      "source": "Nemotron-3-Nano-30B-A3B is a text reasoning model with a hybrid mixture-of-experts architecture and 3 billion active parameters. Its Omni sibling, Nemotron-3-Nano-Omni-30B-A3B, is the multimodal variant that also reads images.",
+      "value": "Nemotron-3-Nano-30B-A3B is a text reasoning model with a hybrid mixture-of-experts architecture and 3 billion active parameters. Its Omni sibling, Nemotron-3-Nano-Omni-30B-A3B, is the multimodal variant that also reads images.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.542c61c43c3e": {
+      "type": "text",
+      "source": "\n    The retriever began as part of the model,\n    shaped by the task it had to perform, well before anyone described it as a search tool placed in front of one.\n  ",
+      "value": "\n O recuperador começou como parte do modelo,\n moldado pela tarefa que precisava realizar, muito antes de ser descrito como uma ferramenta de busca posicionada à frente de um modelo.\n "
+    },
+    "text.55b53787b3a8": {
+      "type": "text",
+      "source": "rewoo",
+      "value": "rewoo",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.5873062f8e05": {
+      "type": "text",
+      "source": "assets/rag_index.json",
+      "value": "assets/rag_index.json",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.588da4105320": {
+      "type": "text",
+      "source": " · ",
+      "value": " · ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.5a6b0548bd11": {
+      "type": "text",
+      "source": "Cosine similarity compares the angle between two vectors; it ignores magnitude and ranges -1 to 1.",
+      "value": "Cosine similarity compares the angle between two vectors; it ignores magnitude and ranges -1 to 1.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.5a9b2b05f501": {
+      "type": "text",
+      "source": "The embedding, the primitive everything else is built on",
+      "value": "A incorporação, o primitivo sobre o qual tudo o mais é construído"
+    },
+    "text.5baf6bfe2967": {
+      "type": "text",
+      "source": "\n    You just built the unstructured-prose lane from corpus to answer. The other three are named\n    here so you can recognise them in the wild and reach for the right primitive.\n    Each one has a well-worn production pattern, sketched below.\n  ",
+      "value": "\n Você acabou de construir o caminho da prosa não estruturada, do corpus à resposta. As outras três formas aparecem\n aqui para que você as reconheça em sistemas reais e escolha o primitivo correto.\n Cada uma delas tem um padrão de produção bem estabelecido, esboçado abaixo.\n "
+    },
+    "text.5d052c090744": {
+      "type": "text",
+      "source": "retrieved ",
+      "value": "recuperado"
+    },
+    "text.6079350a62cb": {
+      "type": "text",
+      "source": "Embeds the query with the 'query' input type, cosine-scores it against every passage, and returns the top three.",
+      "value": "Incorpora a consulta com o tipo de entrada 'consulta', calcula a pontuação do cosseno contra cada passagem e retorna as três principais."
+    },
+    "text.620b007c6ccc": {
+      "type": "text",
+      "source": "What model does this course use, and does it need an API key?",
+      "value": "What model does this course use, and does it need an API key?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.6243babeeebf": {
+      "type": "text",
+      "source": "Searching small chunks but returning the parent document",
+      "value": "Pesquisando pequenos pedaços, mas retornando o documento pai"
+    },
+    "text.638ee1c3bb31": {
+      "type": "text",
+      "source": " state.query = \"what is a reranker, and when is it worth the step?\";",
+      "value": " state.query = \"what is a reranker, and when is it worth the step?\";",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.64f210613579": {
+      "type": "text",
+      "source": "read the corpus and extract entities and the relationships between them into a knowledge graph;",
+      "value": "ler o corpus e extrair entidades e as relações entre elas em um grafo de conhecimento;"
+    },
+    "text.67a5bdf2a82d": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents",
+      "value": "NVIDIA · Segurança de Agentes"
+    },
+    "text.67ed8d69371b": {
+      "type": "text",
+      "source": "ReWOO writes a full plan upfront in one LLM call, then executes every tool deterministically, then synthesizes.",
+      "value": "ReWOO writes a full plan upfront in one LLM call, then executes every tool deterministically, then synthesizes.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.680694f37af1": {
+      "type": "text",
+      "source": "rendered below. Edit the config and Run.",
+      "value": "renderizado abaixo. Edite a configuração e execute."
+    },
+    "text.69824d3b0e70": {
+      "type": "text",
+      "source": "References",
+      "value": "Referências"
+    },
+    "text.6b9b39597546": {
+      "type": "text",
+      "source": "Greedy methods",
+      "value": "Greedy methods",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.6b9b39597546~1": {
+      "type": "text",
+      "source": "Greedy methods",
+      "value": "Greedy methods",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.6cb430033569": {
+      "type": "text",
+      "source": "Final answer (LLM #2)",
+      "value": "Resposta final (LLM #2)"
+    },
+    "text.6dd398e40c22": {
+      "type": "text",
+      "source": "Corpus",
+      "value": "Corpus",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.6e6d472ab259": {
+      "type": "text",
+      "source": "what is the difference between react and rewoo?",
+      "value": "what is the difference between react and rewoo?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.6fc569982867": {
+      "type": "text",
+      "source": "\n    A \"vector database\" dresses up a plain job the Index Agent\n    already does. It stores each passage beside its embedding and\n    returns the top-K closest passages to any query embedding by\n    cosine similarity. In the browser that fits in thirty lines\n    of JavaScript.\n  ",
+      "value": "\n Um \"banco de dados vetorial\" dá uma interface mais completa a uma tarefa simples. Ele armazena cada passagem ao lado de sua incorporação e retorna, por similaridade cosseno, as passagens mais próximas da incorporação da consulta. No navegador, o núcleo dessa operação cabe em trinta linhas de JavaScript.\n "
+    },
+    "text.6ff080db0edb": {
+      "type": "text",
+      "source": "Dijkstra grows shortest paths from a source by greedily picking the nearest unvisited vertex.",
+      "value": "Dijkstra grows shortest paths from a source by greedily picking the nearest unvisited vertex.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.71c29e77b49f": {
+      "type": "text",
+      "source": " corpus vectors come from the prebuilt index; only passages it does not cover (edits) embed live",
+      "value": " corpus vectors come from the prebuilt index; only passages it does not cover (edits) embed live",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.734ba5e44192": {
+      "type": "text",
+      "source": " Six algorithm docs in three \"community\" families.",
+      "value": " Six algorithm docs in three \"community\" families.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.73da1a41e9cc": {
+      "type": "text",
+      "source": "Cosine retrieve (+ pipeline viz)",
+      "value": "Recuperação cosseno (+ visualização de pipeline)"
+    },
+    "text.7541b8ba0eff": {
+      "type": "text",
+      "source": " ★ returned",
+      "value": " ★ returned",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.75603cd413b5": {
+      "type": "text",
+      "source": "The retrieve-then-generate pipeline you build",
+      "value": "O pipeline recuperar-e-gerar que você constrói"
+    },
+    "text.7664315c438e": {
+      "type": "text",
+      "source": "\n    Each data shape calls for its own retrieval primitive. Pick the\n    wrong lane and retrieval keeps returning results that look fine while\n    quietly missing what the query wanted, with no error to warn\n    you. The table below tells you which primitive each shape calls for.\n  ",
+      "value": "\n Cada forma de dados exige um primitivo de recuperação adequado. Escolha a linha errada, e o sistema continuará retornando resultados plausíveis enquanto deixa de encontrar o que a consulta realmente pede, sem emitir erro. A tabela abaixo relaciona cada forma ao primitivo correspondente.\n "
+    },
+    "text.77d57e39b407": {
+      "type": "text",
+      "source": "&gt;",
+      "value": "&gt;",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.7808b7b34374": {
+      "type": "text",
+      "source": " Strip stray tool-call markup from models that emit it as text.",
+      "value": " Strip stray tool-call markup from models that emit it as text.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.78f9ac018e55": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.79a305988ad6": {
+      "type": "text",
+      "source": " state.query = \"what does the openshell sandbox do?\";           // single-fact lookup",
+      "value": " state.query = \"what does the openshell sandbox do?\";           // single-fact lookup",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.7a36d9ada724": {
+      "type": "text",
+      "source": "community summaries:",
+      "value": "resumos de comunidades:"
+    },
+    "text.7a49102ba595": {
+      "type": "text",
+      "source": "The user's question, plus a system prompt that instructs the model to use the retrieve tool only when it needs specific facts it cannot answer confidently from training knowledge. With that instruction in place, the model weighs each turn and chooses whether to retrieve, instead of retrieving on every call.",
+      "value": "A pergunta do usuário, mais um prompt do sistema que instrui o modelo a usar a ferramenta de recuperação apenas quando precisar de fatos específicos que não possa responder com confiança a partir do conhecimento de treinamento. Com essa instrução no lugar, o modelo avalia cada turno e escolhe se deve recuperar, em vez de recuperar em cada chamada."
+    },
+    "text.7a8e35c31fa3": {
+      "type": "text",
+      "source": " REDUCE: answer from the community summaries only, never the raw chunks.",
+      "value": " REDUCE: answer from the community summaries only, never the raw chunks.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.7c0b40614fd5": {
+      "type": "text",
+      "source": "What does the OpenShell sandbox do?",
+      "value": "What does the OpenShell sandbox do?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.7c7759d50df3": {
+      "type": "text",
+      "source": "\n      Four system boundaries around a retrieval runtime: MCP for context ingress, A2A for task delivery, and skills/runtime/UX for capability flow.\n    ",
+      "value": "\n Quatro limites do sistema em torno de um runtime de recuperação: MCP para entrada de contexto, A2A para entrega de tarefas e habilidades/runtime/UX para fluxo de capacidade.\n "
+    },
+    "text.7c9bbe5ec9b3": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.7ca6b5e1360b": {
+      "type": "text",
+      "source": "Notice the global theme top-K misses but the community pass recovers.",
+      "value": "Observe o tema global que o top-K perde, mas a passagem da comunidade recupera."
+    },
+    "text.7df07d63ff23": {
+      "type": "text",
+      "source": "Number of passages to return; default 3.",
+      "value": "Number of passages to return; default 3.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.7f1eca81e30b": {
+      "type": "text",
+      "source": "An agent loop wraps a stateless model in a cycle: read the messages, decide, call a tool, append the result, repeat until finish_reason is stop.",
+      "value": "An agent loop wraps a stateless model in a cycle: read the messages, decide, call a tool, append the result, repeat until finish_reason is stop.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.7f84bc51b158": {
+      "type": "text",
+      "source": "Where RAG came from: one system, trained end to end",
+      "value": "De onde veio o RAG: um sistema, treinado de ponta a ponta"
+    },
+    "text.7f8ed0aa0804": {
+      "type": "text",
+      "source": "Web search in this course (helpers.webSearch) ranks a glossary of NVIDIA AI terms shipped with the course, searched directly in the browser with no key; a separate helpers.instantAnswer returns one term's definition when the query names it.",
+      "value": "Web search in this course (helpers.webSearch) ranks a glossary of NVIDIA AI terms shipped with the course, searched directly in the browser with no key; a separate helpers.instantAnswer returns one term's definition when the query names it.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.839f5ae41929": {
+      "type": "text",
+      "source": "How the other three shapes are built",
+      "value": "Como as outras três formas são construídas"
+    },
+    "text.8432d1782bf6": {
+      "type": "text",
+      "source": " a reasoning model thinks before it emits the tool call; 1500 can truncate mid-thought",
+      "value": " a reasoning model thinks before it emits the tool call; 1500 can truncate mid-thought",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.851566151152": {
+      "type": "text",
+      "source": "Build index (embed all)",
+      "value": "Construir índice (incorporar todos)"
+    },
+    "text.862310c6baa5": {
+      "type": "text",
+      "source": "</div></div>",
+      "value": "</div></div>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.86b447d33d53": {
+      "type": "text",
+      "source": "Naming the context bundle before you pick a store",
+      "value": "Definir o pacote de contexto antes de escolher o armazenamento"
+    },
+    "text.87d9d574ee46": {
+      "type": "text",
+      "source": "Hit on chunk → return parent (+ score viz)",
+      "value": "Acerto em pedaço → retornar pai (+ visualização de pontuação)"
+    },
+    "text.87fdbd28e56c": {
+      "type": "text",
+      "source": "Otherwise answer directly.",
+      "value": "Otherwise answer directly.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.898702fa218d": {
+      "type": "text",
+      "source": "the Try-it artifact, in code",
+      "value": "o artefato de experimentação, em código"
+    },
+    "text.8b953ae3f431": {
+      "type": "text",
+      "source": "Kruskal builds a minimum spanning tree by adding the cheapest safe edge while avoiding cycles.",
+      "value": "Kruskal builds a minimum spanning tree by adding the cheapest safe edge while avoiding cycles.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.8bf10672e1c8": {
+      "type": "text",
+      "source": "; embedding live instead.",
+      "value": "; embedding live instead.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.8d6b2611751e": {
+      "type": "text",
+      "source": "A tiny corpus is embedded once and held in memory. Each query is embedded and scored against every passage by cosine similarity, returning the top-K closest. This is the full production retrieval shape at toy scale, with every step visible.",
+      "value": "Um pequeno corpus é incorporado uma vez e mantido na memória. Cada consulta é incorporada e pontuada contra cada passagem por similaridade cosseno, retornando os K mais próximos. Este é o formato de recuperação de produção completo em escala de brinquedo, com cada etapa visível."
+    },
+    "text.8dcb4920882b": {
+      "type": "text",
+      "source": "Chunk cosine scores · ★ is the single hit",
+      "value": "Chunk cosine scores · ★ is the single hit",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.8e90b30fb1ea": {
+      "type": "text",
+      "source": "\n    The corpus is embedded offline and shipped beside the page as a prebuilt index so that only your question gets\n    embedded live. You are watching the indexing-versus-serving split from the diagram above run here. The example\n    questions even carry prebuilt vectors and retrieve before you add a key, while editing a passage re-embeds only that\n    one passage.\n  ",
+      "value": "O corpus é incorporado offline e distribuído com a página como um índice pré-construído; apenas sua pergunta é incorporada em tempo de execução. Isso torna concreta a divisão entre indexação e serviço mostrada no diagrama. As perguntas de exemplo carregam vetores prontos e recuperam resultados antes mesmo de você adicionar uma chave. Ao editar uma passagem, somente ela é incorporada novamente."
+    },
+    "text.8eb07d92065b": {
+      "type": "text",
+      "source": "Answer the question using ONLY these community summaries. Be concise.\\\\n\\\\n",
+      "value": "Answer the question using ONLY these community summaries. Be concise.\\\\n\\\\n",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.8ee12e2dd870": {
+      "type": "text",
+      "source": " The top chunk is the single hit; everything below it is the rest of the distribution.",
+      "value": " The top chunk is the single hit; everything below it is the rest of the distribution.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.909da67f371d": {
+      "type": "text",
+      "source": " (★) becomes the LLM context",
+      "value": " (★) becomes the LLM context",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.9106ca1e6122": {
+      "type": "text",
+      "source": " TODO: Choose a prompt that should retrieve, skip retrieval, or be ambiguous.",
+      "value": " TODO: Escolha uma pergunta que deva recuperar, ignorar a recuperação ou ser ambígua."
+    },
+    "text.921477718a8b": {
+      "type": "text",
+      "source": "Answer the question using ONLY the passages below. Be concise.\\\\n\\\\n",
+      "value": "Answer the question using ONLY the passages below. Be concise.\\\\n\\\\n",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.93d6ed427286": {
+      "type": "text",
+      "source": " state.query = \"how does chunking change what the model sees?\";",
+      "value": " state.query = \"how does chunking change what the model sees?\";",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.9465ea82e85e": {
+      "type": "text",
+      "source": "Try it · retrieval, live",
+      "value": "Tente · recuperação, ao vivo"
+    },
+    "text.949e028383d5": {
+      "type": "text",
+      "source": "Embed chunks",
+      "value": "Incorporar pedaços"
+    },
+    "text.94b3201bf9e7": {
+      "type": "text",
+      "source": "\n    The cell below builds an Index Agent over a\n    handful of documents and queries it. Edit the corpus and the\n    query, then watch which passages bubble to the top and why.\n  ",
+      "value": "\n A célula abaixo constrói um agente de índice sobre um punhado de documentos e o consulta. Edite o corpus e a consulta, então observe quais passagens surgem no topo e por quê.\n "
+    },
+    "text.951dcee3a7a4": {
+      "type": "text",
+      "source": "&",
+      "value": "&",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.96a4f1c854c2": {
+      "type": "text",
+      "source": "ReAct (Reason+Act) is the classic agent loop. The model is given the user's task plus a set of tools. At each iteration the model emits either a tool call request or a final answer. When a tool call is requested, the host code executes the tool, appends the result as an observation, and the model continues. The loop terminates when finish_reason is 'stop' and there are no tool_calls. The pattern's strength is that each step adapts to the previous step's observation; its weakness is sequential cost: N steps means N model calls in order.",
+      "value": "ReAct (Reason+Act) is the classic agent loop. The model is given the user's task plus a set of tools. At each iteration the model emits either a tool call request or a final answer. When a tool call is requested, the host code executes the tool, appends the result as an observation, and the model continues. The loop terminates when finish_reason is 'stop' and there are no tool_calls. The pattern's strength is that each step adapts to the previous step's observation; its weakness is sequential cost: N steps means N model calls in order.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.97c03c60ab6d": {
+      "type": "text",
+      "source": "An agent loop reads a finish_reason on every step; 'tool_calls' means the model wants you to run a function, 'stop' means done.",
+      "value": "An agent loop reads a finish_reason on every step; 'tool_calls' means the model wants you to run a function, 'stop' means done.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.97dcdbe9a1a3": {
+      "type": "text",
+      "source": " BASIC top-K embeds and cosine-ranks, then answers from the K best chunks.",
+      "value": " BASIC top-K embeds and cosine-ranks, then answers from the K best chunks.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.98b510f9299e": {
+      "type": "text",
+      "source": "What is a tool, mechanically?",
+      "value": "What is a tool, mechanically?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.98d4a912de71": {
+      "type": "text",
+      "source": " MAP: summarize each community's chunks into one community summary.",
+      "value": " MAP: summarize each community's chunks into one community summary.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.995f2db432f4": {
+      "type": "text",
+      "source": "What is retrieval-augmented generation?",
+      "value": "What is retrieval-augmented generation?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.99731fd0924d": {
+      "type": "text",
+      "source": "child chunk score; FULL parent body delivered to the LLM",
+      "value": "child chunk score; FULL parent body delivered to the LLM",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.99a3d05bfc4c": {
+      "type": "text",
+      "source": ", not ",
+      "value": ", not ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.9a87fac22929": {
+      "type": "text",
+      "source": "Vector databases store learned embeddings of text alongside the original passages, indexed for fast nearest-neighbour search.",
+      "value": "Vector databases store learned embeddings of text alongside the original passages, indexed for fast nearest-neighbour search.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.9ad53f579a74": {
+      "type": "text",
+      "source": "Embed every passage and store each one alongside its vector. The index is built once here and held in memory for the rest of the flow; every subsequent query reads from this same structure without re-embedding the corpus.",
+      "value": "Incorporar cada passagem e armazenar cada uma ao lado de seu vetor. O índice é construído uma vez aqui e mantido na memória para o restante do fluxo; cada consulta subsequente lê desta mesma estrutura sem re-incorporar o corpus."
+    },
+    "text.9c9de683cfac": {
+      "type": "text",
+      "source": "Plain JavaScript embeds the question, scores it against every indexed passage, and returns the top-K, while the score bars show the full distribution and which K passages make it into the LLM context.",
+      "value": "O JavaScript simples incorpora a pergunta, avalia-a em relação a cada passagem indexada e retorna as top-K, enquanto as barras de pontuação mostram a distribuição completa e quais K passagens são incluídas no contexto do grande modelo de linguagem (LLM)."
+    },
+    "text.9d7de0441056": {
+      "type": "text",
+      "source": "Nemotron Super 120B · stronger",
+      "value": "Nemotron Super 120B · mais forte"
+    },
+    "text.9ed1afdf4237": {
+      "type": "text",
+      "source": " chars",
+      "value": " chars",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.9fcaea94e452": {
+      "type": "text",
+      "source": "Split into child chunks",
+      "value": "Dividir em pedaços de filho"
+    },
+    "text.a063d09b4156": {
+      "type": "text",
+      "source": "Docs, articles, code comments, transcripts",
+      "value": "Documentos, artigos, comentários de código, transcrições"
+    },
+    "text.a115b633e46f": {
+      "type": "text",
+      "source": "</td></tr>",
+      "value": "</td></tr>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.a11e113fe1ae": {
+      "type": "text",
+      "source": "Merge sort splits the array in half, sorts each half, then merges the two sorted halves in linear time.",
+      "value": "Merge sort splits the array in half, sorts each half, then merges the two sorted halves in linear time.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.a1a033833dac": {
+      "type": "text",
+      "source": "Retrieve child chunks, return parent documents",
+      "value": "Recuperar pedaços de filho, retornar documentos pai"
+    },
+    "text.a30c3df26a31": {
+      "type": "text",
+      "source": " summaries (reduce). Edit anything below and Run to re-render.",
+      "value": " summaries (reduce). Edit anything below and Run to re-render.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.a39a7ffad4a3": {
+      "type": "text",
+      "source": "assistant",
+      "value": "assistant",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.a3e690053061": {
+      "type": "text",
+      "source": "rag",
+      "value": "rag",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.a3f811f5be63": {
+      "type": "text",
+      "source": "Expose retrieval as an agent tool",
+      "value": "Expor recuperação como ferramenta de agente"
+    },
+    "text.a4282e4b2298": {
+      "type": "text",
+      "source": " of ",
+      "value": " of ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.a42e803db4a2": {
+      "type": "text",
+      "source": "Right primitive",
+      "value": "Primitivo correto"
+    },
+    "text.a79a71b58afe": {
+      "type": "text",
+      "source": "Before you continue",
+      "value": "Antes de continuar"
+    },
+    "text.a89aed0f6cd4": {
+      "type": "text",
+      "source": " Try 0, 1, 2, or 3.",
+      "value": " Try 0, 1, 2, or 3.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.a8b771920b83": {
+      "type": "text",
+      "source": "query",
+      "value": "query",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.a8b771920b83~1": {
+      "type": "text",
+      "source": "query",
+      "value": "query",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.a8b771920b83~2": {
+      "type": "text",
+      "source": "query",
+      "value": "query",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.a8b771920b83~3": {
+      "type": "text",
+      "source": "query",
+      "value": "query",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.a8b771920b83~4": {
+      "type": "text",
+      "source": "query",
+      "value": "query",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.aa7aa58c8b92": {
+      "type": "text",
+      "source": ";border-radius:8px;padding:10px 12px\">",
+      "value": ";border-radius:8px;padding:10px 12px\">",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.aac32651b10f": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.aac32651b10f~1": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.aac32651b10f~2": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.aac32651b10f~3": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.aac32651b10f~4": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.aac32651b10f~5": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.aac32651b10f~6": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.aac32651b10f~7": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.aac32651b10f~8": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.aac32651b10f~9": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.ab2cd7748892": {
+      "type": "text",
+      "source": "\">",
+      "value": "\">",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.ab36f417fde3": {
+      "type": "text",
+      "source": "Retrieval-Augmented Generation (RAG) injects external knowledge into the model's context at inference time. A document corpus is embedded once and stored in a vector index. At query time the user's question is embedded and the top-K closest passages are retrieved. The retrieved passages are concatenated to the prompt and the model answers from that context. RAG sidesteps the model's training cutoff and lets you ground answers in private data without fine-tuning.",
+      "value": "Retrieval-Augmented Generation (RAG) injects external knowledge into the model's context at inference time. A document corpus is embedded once and stored in a vector index. At query time the user's question is embedded and the top-K closest passages are retrieved. The retrieved passages are concatenated to the prompt and the model answers from that context. RAG sidesteps the model's training cutoff and lets you ground answers in private data without fine-tuning.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.ab712b2af539": {
+      "type": "text",
+      "source": "Embeds every child chunk so they can be searched by cosine similarity. On a chunk match, the retriever hands the LLM the whole parent document that chunk came from, restoring the surrounding context.",
+      "value": "Incorpora todos os pedaços filhos para que possam ser pesquisados por similaridade cosseno. Em uma correspondência de pedaço, o recuperador fornece ao LLM todo o documento pai de onde veio o pedaço, restaurando o contexto circundante."
+    },
+    "text.abd19ab703e9": {
+      "type": "text",
+      "source": " Handle the tool-call result from the previous model turn.",
+      "value": " Handle the tool-call result from the previous model turn.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.abd19ab703e9~1": {
+      "type": "text",
+      "source": " Handle the tool-call result from the previous model turn.",
+      "value": " Handle the tool-call result from the previous model turn.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.ac4079778221": {
+      "type": "text",
+      "source": "Legal contracts, technical manuals, nested specs",
+      "value": "Contratos legais, manuais técnicos, especificações aninhadas"
+    },
+    "text.b07b3b504008": {
+      "type": "text",
+      "source": "Module 2 · Part B of 3",
+      "value": "Módulo 2 · Parte B de 3"
+    },
+    "text.b0f2eb4ac790": {
+      "type": "text",
+      "source": "Ask about anything from this course. I embed your question, rank a small corpus by cosine similarity, and answer from the best matches. Follow-ups keep the conversation (each still retrieves fresh); the 🧠 toggle clears it, and ✎ edit rewinds.",
+      "value": "Pergunte sobre qualquer coisa deste curso. Eu incorporo sua pergunta, classifico um pequeno corpus por similaridade cosseno e respondo a partir das melhores correspondências. Continuações mantêm a conversa (cada uma ainda recupera dados frescos); o toggle 🧠 limpa e ✎ edita desfaz."
+    },
+    "text.b20914c241e1": {
+      "type": "text",
+      "source": ":\\\\n",
+      "value": ":\\\\n",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.b2a332d18c75": {
+      "type": "text",
+      "source": "Cosine similarity between two embedding vectors measures their semantic closeness. Ranges -1 to 1; higher means more similar.",
+      "value": "Cosine similarity between two embedding vectors measures their semantic closeness. Ranges -1 to 1; higher means more similar.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.b2be121984c9": {
+      "type": "text",
+      "source": "#rag-artifact",
+      "value": "#rag-artifact",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.b358631a69c0": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-super-120b-a12b",
+      "value": "nvidia/nemotron-3-super-120b-a12b",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.b3853e8fd1e2": {
+      "type": "text",
+      "source": "ReAct interleaves reasoning steps with tool calls, deciding what to do next after each observation.",
+      "value": "ReAct interleaves reasoning steps with tool calls, deciding what to do next after each observation.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.b3a353ff9e82": {
+      "type": "text",
+      "source": "Basic RAG · top-",
+      "value": "Basic RAG · top-",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.b3e765e69e2c": {
+      "type": "text",
+      "source": "Agent decides",
+      "value": "Agente decide"
+    },
+    "text.b4935894c8ce": {
+      "type": "text",
+      "source": "…",
+      "value": "…",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.b52bddb1c539": {
+      "type": "text",
+      "source": "How does the ReAct loop work?",
+      "value": "How does the ReAct loop work?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.b71310f2e239": {
+      "type": "text",
+      "source": " state.query = \"how do RAG and a deep-research agent compare?\"; // spans several passages",
+      "value": " state.query = \"how do RAG and a deep-research agent compare?\"; // spans several passages",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.b8e18973998f": {
+      "type": "text",
+      "source": " Load the index once; recompute vectors if the embedding model changed.",
+      "value": " Load the index once; recompute vectors if the embedding model changed.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.b94f23605ff9": {
+      "type": "text",
+      "source": "A corpus is embedded once and held in an in-memory index.",
+      "value": "Um corpus é embedado uma vez e mantido em um índice na memória."
+    },
+    "text.bb514aacdd84": {
+      "type": "text",
+      "source": "\n      The Index Agent applies that workflow idea to outside knowledge with a\n      developer-defined pipeline. It embeds and indexes a corpus ahead of time, then\n      retrieves matching passages and generates an answer from a bounded context bundle.\n      The build follows that path for unstructured prose before wrapping retrieval as a\n      tool that a surrounding ReAct loop can call. The other data shapes get pointers to\n      where they go deeper.\n    ",
+      "value": "\n O Agente de Índice aplica essa ideia de workflow ao conhecimento externo com um pipeline definido pelo desenvolvedor. Ele incorpora e indexa um corpus antecipadamente, então recupera passagens correspondentes e gera uma resposta a partir de um pacote de contexto limitado.\n O exemplo percorre esse caminho para prosa não estruturada e depois encapsula a recuperação como uma ferramenta que um ciclo ReAct externo pode chamar. Para as outras formas de dados, a página indica os caminhos de aprofundamento.\n "
+    },
+    "text.bb8e44f7a01f": {
+      "type": "text",
+      "source": "Customer records, financial ledgers, HR tables",
+      "value": "Registros de clientes, livros-razão financeiros, tabelas de RH"
+    },
+    "text.bbc5e661e106": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.bbc5e661e106~1": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.bbc5e661e106~2": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.bbc5e661e106~3": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.bbc5e661e106~4": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.bc2766d76007": {
+      "type": "text",
+      "source": "ReWOO",
+      "value": "ReWOO",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.bc50dd2f789f": {
+      "type": "text",
+      "source": "The transformer architecture replaced recurrent neural networks for sequence modeling.",
+      "value": "The transformer architecture replaced recurrent neural networks for sequence modeling.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.bdf6e83f94a2": {
+      "type": "text",
+      "source": " + name + ",
+      "value": " + name + ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.bec8016ad3b1": {
+      "type": "text",
+      "source": "The question to retrieve against. Changing it changes which passages rank highest, because the query is embedded using the 'query' input type, which produces a vector that the model has trained to point toward relevant passages rather than toward identical text.",
+      "value": "A pergunta para recuperar contra. Alterá-la muda quais passagens têm o maior ranking, pois a consulta é incorporada usando o tipo de entrada 'consulta', que produz um vetor que o modelo foi treinado para apontar para passagens relevantes em vez de para texto idêntico."
+    },
+    "text.c02a921ea92f": {
+      "type": "text",
+      "source": "We embed and search the small child chunks, and each match hands its full parent document to the LLM.",
+      "value": "Incorporamos e pesquisamos os trechos filhos; cada correspondência entrega ao LLM o documento pai completo."
+    },
+    "text.c11f5c2264e1": {
+      "type": "text",
+      "source": "summarize each community on its own.",
+      "value": "resumir cada comunidade por si só."
+    },
+    "text.c18a40d6138a": {
+      "type": "text",
+      "source": "Org charts, code dependencies, knowledge graphs",
+      "value": "Quadros organizacionais, dependências de código, grafos de conhecimento"
+    },
+    "text.c4338984a8b3": {
+      "type": "text",
+      "source": "If yes, cosine retrieval runs over the index; the top-K passages are appended as a tool message.",
+      "value": "Se sim, a recuperação cosseno é executada sobre o índice; as principais passagens são anexadas como uma mensagem de ferramenta."
+    },
+    "text.c4d657ded2a6": {
+      "type": "text",
+      "source": "Module 2c: Deep Agents →",
+      "value": "Módulo 2c: Agentes Profundos →"
+    },
+    "text.c6781d412ba1": {
+      "type": "text",
+      "source": "A deep or research agent plans a task, spawns sub-agents in fresh contexts, and shares work through a virtual filesystem to avoid context overflow.",
+      "value": "A deep or research agent plans a task, spawns sub-agents in fresh contexts, and shares work through a virtual filesystem to avoid context overflow.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.c8b954aefb2c": {
+      "type": "text",
+      "source": "What is a deep research agent?",
+      "value": "What is a deep research agent?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.ca1748924abf": {
+      "type": "text",
+      "source": "ReAct interleaves reasoning and acting: the model thinks, optionally calls a tool, reads the observation, and re-plans before answering.",
+      "value": "ReAct interleaves reasoning and acting: the model thinks, optionally calls a tool, reads the observation, and re-plans before answering.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.ca2c4b34b51c": {
+      "type": "text",
+      "source": " top hit, then return that hit's parent document. The lower half renders the score bars and cards.",
+      "value": " top hit, then return that hit's parent document. The lower half renders the score bars and cards.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.cb6a27c76caa": {
+      "type": "text",
+      "source": "\">chunk ",
+      "value": "\">chunk ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.cb98b894bcb9": {
+      "type": "text",
+      "source": "summarize each community, then answer from the summaries",
+      "value": "summarize each community, then answer from the summaries",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.cc178fad1c17": {
+      "type": "text",
+      "source": "Takes the top chunk by cosine and returns its full parent document. The code is collapsed by default because the retrieval step is short and the rest builds score bars and hierarchy cards.",
+      "value": "Pega o pedaço superior por similaridade cosseno e retorna seu documento pai completo. O código está colapsado por padrão porque a etapa de recuperação é curta e o restante constrói barras de pontuação e cartões de hierarquia."
+    },
+    "text.cc6b69b40bf7": {
+      "type": "text",
+      "source": "&amp;",
+      "value": "&amp;",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.cc6b69b40bf7~1": {
+      "type": "text",
+      "source": "&amp;",
+      "value": "&amp;",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.cd9831650291": {
+      "type": "text",
+      "source": "Community \\\\",
+      "value": "Community \\\\",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.cde260851c07": {
+      "type": "text",
+      "source": "Declares the retrieve tool as a JSON schema the model can read. The model sees only the name, description, and parameter types. It has no visibility into the cosine implementation behind it. That separation matters: you can swap the retrieval backend later without changing any model-facing contract.",
+      "value": "Declara a ferramenta de recuperação como um esquema JSON que o modelo pode ler. O modelo vê apenas o nome, descrição e tipos de parâmetros. Ele não tem visibilidade para a implementação do cosseno por trás dele. Essa separação é importante: você pode trocar o backend de recuperação posteriormente sem alterar nenhum contrato voltado para o modelo."
+    },
+    "text.ce14c85536b0": {
+      "type": "text",
+      "source": "The question to look up. Use the user's exact phrasing.",
+      "value": "The question to look up. Use the user's exact phrasing.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.ce3157056248": {
+      "type": "text",
+      "source": " Every family rides in through its summary, so the answer covers all of them.",
+      "value": " Every family rides in through its summary, so the answer covers all of them.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.cfbd94d9e633": {
+      "type": "text",
+      "source": "Use the tool for specific facts you do not already know with high confidence.",
+      "value": "Use the tool for specific facts you do not already know with high confidence.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.d02bc3244bc2": {
+      "type": "text",
+      "source": "Summarize this group of related documents in one sentence, naming what they have in common.",
+      "value": "Summarize this group of related documents in one sentence, naming what they have in common.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.d30a316720f8": {
+      "type": "text",
+      "source": " TOP_K below is 2, so top-K reaches two families at most, never all three.",
+      "value": " TOP_K below is 2, so top-K reaches two families at most, never all three.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.d325b33be23d": {
+      "type": "text",
+      "source": "var(--gs,#aee23a)",
+      "value": "var(--gs,#aee23a)",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.d3cc46b3bfa5": {
+      "type": "text",
+      "source": " chunks · ",
+      "value": " chunks · ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.d515e3122b49": {
+      "type": "text",
+      "source": " the exact text handed to the model, in full",
+      "value": " the exact text handed to the model, in full",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.d6c0f715acbd": {
+      "type": "text",
+      "source": "Look up passages in the knowledge base that are likely relevant to a question.",
+      "value": "Look up passages in the knowledge base that are likely relevant to a question.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.d9c5795b6aab": {
+      "type": "text",
+      "source": "Explain cosine similarity in one sentence.",
+      "value": "Explain cosine similarity in one sentence.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.da4b8135bfe6": {
+      "type": "text",
+      "source": " Reading guide: the retrieval happens first: embed the query, score chunks, pick the",
+      "value": " Reading guide: the retrieval happens first: embed the query, score chunks, pick the",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.dabd3aff769f": {
+      "type": "text",
+      "source": "<",
+      "value": "<",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.db37352c20ec": {
+      "type": "text",
+      "source": "You are a helpful assistant with a knowledge base accessible via the retrieve tool.",
+      "value": "You are a helpful assistant with a knowledge base accessible via the retrieve tool.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.df6c7bc8ea1c": {
+      "type": "text",
+      "source": ";background:rgba(118,185,0,.12)",
+      "value": ";background:rgba(118,185,0,.12)",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.dff3393a1df0": {
+      "type": "text",
+      "source": " Seed the small dataset this retrieval example searches.",
+      "value": " Seed the small dataset this retrieval example searches.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.dff3393a1df0~1": {
+      "type": "text",
+      "source": " Seed the small dataset this retrieval example searches.",
+      "value": " Seed the small dataset this retrieval example searches.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.dff3393a1df0~2": {
+      "type": "text",
+      "source": " Seed the small dataset this retrieval example searches.",
+      "value": " Seed the small dataset this retrieval example searches.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.dff3393a1df0~3": {
+      "type": "text",
+      "source": " Seed the small dataset this retrieval example searches.",
+      "value": " Seed the small dataset this retrieval example searches.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.e0e492707f85": {
+      "type": "text",
+      "source": "Shape",
+      "value": "Forma"
+    },
+    "text.e1f22c3e171c": {
+      "type": "text",
+      "source": "var(--g,#76b900)",
+      "value": "var(--g,#76b900)",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.e1f22c3e171c~1": {
+      "type": "text",
+      "source": "var(--g,#76b900)",
+      "value": "var(--g,#76b900)",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.e5c8c0d79e65": {
+      "type": "text",
+      "source": "\n    Almost nobody trains RAG that way now for two practical reasons. You cannot\n    backpropagate into a frontier model you reach through an API, and even self-hosted\n    end-to-end retrieval training is expensive and easy to destabilize.\n  ",
+      "value": "\n Hoje, quase ninguém treina RAG dessa forma por duas razões práticas. Não é possível\n retropropagar por um modelo de fronteira acessado por API; mesmo quando auto-hospedado, o treinamento conjunto de recuperação e geração é caro e instável.\n "
+    },
+    "text.e68ee04dff59": {
+      "type": "text",
+      "source": "Examples",
+      "value": "Exemplos"
+    },
+    "text.e70bea0fa07c": {
+      "type": "text",
+      "source": "Retrieval-augmented generation embeds a query and the documents into the same vector space, retrieves the nearest chunks, and feeds them to the model as grounding.",
+      "value": "Retrieval-augmented generation embeds a query and the documents into the same vector space, retrieves the nearest chunks, and feeds them to the model as grounding.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.e76e551ac819": {
+      "type": "text",
+      "source": "var(--bd,#2a2a2a)",
+      "value": "var(--bd,#2a2a2a)",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.e76e551ac819~1": {
+      "type": "text",
+      "source": "var(--bd,#2a2a2a)",
+      "value": "var(--bd,#2a2a2a)",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.e76e5fae424b": {
+      "type": "text",
+      "source": "The question being asked, structured the same way as in the previous canvas. Edit it and re-run to see which parent document rises to the top.",
+      "value": "A pergunta sendo feita, estruturada da mesma forma que na tela anterior. Edite-a e execute novamente para ver qual documento pai sobe ao topo."
+    },
+    "text.e86dd77a7ee7": {
+      "type": "text",
+      "source": "- ",
+      "value": "- ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.e88247ba09bd": {
+      "type": "text",
+      "source": "A whole retriever in thirty lines of top-K cosine",
+      "value": "Um recuperador completo em trinta linhas de cosseno de top-K"
+    },
+    "text.e9fb5459d0c3": {
+      "type": "text",
+      "source": "\n    Each unstructured-prose Index Agent starts from the same\n    primitive. An embedding is a learned numerical address for a piece of text,\n    a fixed-length vector placed so that semantically similar\n    texts land near each other in vector space. Two practical\n    consequences follow:\n  ",
+      "value": "\n Cada agente de índice de prosa não estruturada começa do mesmo\n primitivo. Uma incorporação é uma representação numérica aprendida para um trecho de texto:\n um vetor de comprimento fixo, posicionado de modo que textos semanticamente semelhantes\n fiquem próximos no espaço vetorial. Disso decorrem duas consequências práticas:\n "
+    },
+    "text.ed178adb3fe1": {
+      "type": "text",
+      "source": "When does each retrieval pattern beat the other?",
+      "value": "When does each retrieval pattern beat the other?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.edaee9dbd099": {
+      "type": "text",
+      "source": "Cosine scores · top-",
+      "value": "Cosine scores · top-",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.eea86d867cd1": {
+      "type": "text",
+      "source": " chunks nearest the question",
+      "value": " chunks nearest the question",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.eea883905e50": {
+      "type": "text",
+      "source": "Quicksort partitions around a pivot, then recursively sorts the elements below and above it.",
+      "value": "Quicksort partitions around a pivot, then recursively sorts the elements below and above it.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.eec4aa9baed8": {
+      "type": "text",
+      "source": "A flaky pie crust needs cold butter and minimal mixing.",
+      "value": "A flaky pie crust needs cold butter and minimal mixing.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.efad0c93dc35": {
+      "type": "text",
+      "source": "OpenShell is the kernel-level sandbox around the agent: netns, Landlock, seccomp, and an OPA-evaluated proxy decide what each tool call may touch.",
+      "value": "OpenShell is the kernel-level sandbox around the agent: netns, Landlock, seccomp, and an OPA-evaluated proxy decide what each tool call may touch.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.efdb5576d726": {
+      "type": "text",
+      "source": "Nemotron Nano 30B · fast",
+      "value": "Nemotron Nano 30B · rápido"
+    },
+    "text.f111f989192f": {
+      "type": "text",
+      "source": "\n    The production pattern indexes at two levels. You embed the small chunks so retrieval stays\n    precise, and when one matches you return its parent document so the model still sees the full\n    context around it.\n  ",
+      "value": "\n O padrão de produção indexa em dois níveis. Você incorpora os trechos pequenos para manter a recuperação precisa e, quando um deles corresponde à consulta, retorna o documento pai para que o modelo veja o contexto completo.\n "
+    },
+    "text.f11515e06bd0": {
+      "type": "text",
+      "source": "top-K retrieved:",
+      "value": "recuperação top-K:"
+    },
+    "text.f137a1f1a27b": {
+      "type": "text",
+      "source": "Eight short passages on agent patterns, retrieval, and model APIs. The diversity is deliberate, and it makes it easy to see which passages a query pulls toward the top and which it leaves behind. Edit any passage and re-run to change what the index holds.",
+      "value": "Oito passagens curtas sobre padrões de agente, recuperação e APIs de modelo. A diversidade é deliberada e facilita ver quais passagens uma consulta puxa para o topo e quais deixa para trás. Edite qualquer passagem e execute novamente para alterar o que o índice contém."
+    },
+    "text.f2f48e5c3f42": {
+      "type": "text",
+      "source": "var(--tf,#8a8a8a)",
+      "value": "var(--tf,#8a8a8a)",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.f3f4e9b68112": {
+      "type": "text",
+      "source": "answer from the ",
+      "value": "answer from the ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.f59547246f42": {
+      "type": "text",
+      "source": " Render hierarchy as HTML cards. Search chunks, then return the winning chunk's parent document.",
+      "value": " Render hierarchy as HTML cards. Search chunks, then return the winning chunk's parent document.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.f77fb5fc13e8": {
+      "type": "text",
+      "source": "RAG",
+      "value": "Geração aumentada por recuperação (RAG)"
+    },
+    "text.f7b2ca1f417f": {
+      "type": "text",
+      "source": "The second LLM call, made after the tool message is appended. The model now has the original user question alongside the retrieved passages and can write a grounded answer rather than relying on its training knowledge alone.",
+      "value": "A segunda chamada do LLM, feita após a mensagem da ferramenta ser anexada. O modelo agora tem a pergunta original do usuário ao lado das passagens recuperadas e pode escrever uma resposta fundamentada, em vez de confiar apenas em seu conhecimento de treinamento."
+    },
+    "text.f8c38d7f6974": {
+      "type": "text",
+      "source": "The OpenAI Responses API stores conversation state server-side; subsequent calls reference a previous_response_id.",
+      "value": "The OpenAI Responses API stores conversation state server-side; subsequent calls reference a previous_response_id.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.f93f83c34fb5": {
+      "type": "text",
+      "source": "Matching a retrieval primitive to the shape of your data",
+      "value": "Associando um primitivo de recuperação à forma dos seus dados"
+    },
+    "text.fa24955a1723": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-nano-30b-a3b",
+      "value": "nvidia/nemotron-3-nano-30b-a3b",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.fb2e5d3daab2": {
+      "type": "text",
+      "source": "embedding ",
+      "value": "embedding ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.fbc225538534": {
+      "type": "text",
+      "source": "Cosine similarity scores two embedding vectors by the angle between them; closer to 1 means more semantically related.",
+      "value": "Cosine similarity scores two embedding vectors by the angle between them; closer to 1 means more semantically related.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.fbc35a2b0618": {
+      "type": "text",
+      "source": " Embed the text so similarity search can compare vectors.",
+      "value": " Embed the text so similarity search can compare vectors.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.fbc35a2b0618~1": {
+      "type": "text",
+      "source": " Embed the text so similarity search can compare vectors.",
+      "value": " Embed the text so similarity search can compare vectors.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.fbc35a2b0618~2": {
+      "type": "text",
+      "source": " Embed the text so similarity search can compare vectors.",
+      "value": " Embed the text so similarity search can compare vectors.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.fc6df38322ab": {
+      "type": "text",
+      "source": " TODO: Try another query and rerun to watch the ranking shift.",
+      "value": " TODO: Experimente outra consulta e observe a mudança da classificação."
+    },
+    "text.fcc193858da0": {
+      "type": "text",
+      "source": "\n    The rest of this page builds the live path one stage at a time.\n  ",
+      "value": "\n O restante desta página constrói o caminho ao vivo uma etapa de cada vez."
+    },
+    "text.fccbb5f1d1dc": {
+      "type": "text",
+      "source": "\n    The figure below separates those boundaries. Read it left to right to follow\n    MCP context ingress and A2A task delivery. Then read it bottom to top to follow\n    skill brokerage, runtime execution, and generated UX. Choose the boundary that\n    matches the bundle and the system state it must carry.\n  ",
+      "value": "\n A figura abaixo separa essas fronteiras. Leia da esquerda para a direita para acompanhar a entrada de contexto pelo MCP e a entrega de tarefas pelo A2A; leia de baixo para cima para acompanhar a oferta de capacidades por habilidades, a execução no runtime e a UX gerada."
+    },
+    "text.fcf2df19f943": {
+      "type": "text",
+      "source": "What are the main families of algorithms in this corpus, and how do they differ?",
+      "value": "What are the main families of algorithms in this corpus, and how do they differ?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.fd2881e0af43": {
+      "type": "text",
+      "source": "LangChain.js provides ChatOpenAI for chat completions and OpenAIEmbeddings for embeddings; both accept a custom baseURL.",
+      "value": "LangChain.js provides ChatOpenAI for chat completions and OpenAIEmbeddings for embeddings; both accept a custom baseURL.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.fd9be30c9959": {
+      "type": "text",
+      "source": "\n    A global question is then answered at query time, by summarizing across the relevant community summaries and\n    reducing those partial answers into one. The work is a map-reduce over structure rather than a lookup over similarity.\n  ",
+      "value": "\n No momento da consulta, o sistema responde à pergunta global resumindo as comunidades relevantes e\n reduzindo as respostas parciais a uma só. O trabalho é um map-reduce sobre estrutura, não uma busca por similaridade.\n "
+    },
+    "text.fdcd09131e3c": {
+      "type": "text",
+      "source": "The Index Agent · Securing Agents",
+      "value": "O Agente de Índice · Segurança de Agentes"
+    },
+    "text.fe4831a90334": {
+      "type": "text",
+      "source": "Split each parent document into sentence chunks and retain its parent ID. The narrower units improve search precision while preserving a route back to the full document.",
+      "value": "Divide cada documento pai em pedaços de frases e retém seu ID pai. As unidades mais estreitas melhoram a precisão da busca enquanto preservam uma rota de volta ao documento completo."
+    },
+    "text.febdd72fe2b4": {
+      "type": "text",
+      "source": "A corpus is indexed once and held in memory, then the question goes to a chat call with a retrieve tool exposed. The model decides whether to retrieve; if it does, cosine similarity returns the top passages and a second call writes the answer grounded in them.",
+      "value": "Um corpus é indexado uma vez e mantido na memória, então a pergunta vai para uma chamada de bate-papo com uma ferramenta de recuperação exposta. O modelo decide se deve recuperar; se fizer, a similaridade cosseno retorna as passagens superiores e uma segunda chamada escreve a resposta fundamentada nelas."
+    },
+    "text.ff7048a17528": {
+      "type": "text",
+      "source": " Basic top-K: embed, rank by cosine similarity, answer from the top chunks.",
+      "value": " Basic top-K: embed, rank by cosine similarity, answer from the top chunks.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.ff869a1b395b": {
+      "type": "text",
+      "source": "Corpus + index",
+      "value": "Corpus + índice"
+    }
+  }
+}

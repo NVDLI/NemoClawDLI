@@ -25,15 +25,27 @@ for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
         break
 from _bootstrap import find_repo_root
 from translate.code_localization import project_localized_code_templates
-from translate.locale_catalog import load_locale
+from translate.locale_catalog import LocaleSpec, load_locale
+from translate.locale_pages import resolve_overlay_page, resolve_resource_page
 from translate.locale_projection import project_locale_html
+from translate.locale_resources import (
+    applicable_media,
+    bounded_tree_path,
+    expected_resource_path,
+    json_resources,
+    load_resource,
+)
 from translate.localization_scope import translation_sha
 
 ROOT = find_repo_root(Path(__file__).resolve())
 
 
 def source_sha(path: Path) -> str:
-    raw = path.read_text(encoding="utf-8").replace("\r\n", "\n")
+    return text_sha(path.read_text(encoding="utf-8"))
+
+
+def text_sha(raw: str) -> str:
+    raw = raw.replace("\r\n", "\n")
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
@@ -42,6 +54,69 @@ def safe_relative(raw: str) -> Path:
     if path.is_absolute() or ".." in path.parts or not path.parts or path.parts[0] != "web":
         raise ValueError(f"unsafe overlay path: {raw}")
     return path
+
+
+def apply_resources(spec: LocaleSpec, out: Path, canonical_root: Path,
+                    shell_translations: dict[str, str]) -> list[str]:
+    """Render pages a locale keeps as key-based resources instead of a reviewed overlay file.
+
+    A reviewed overlay still wins while it exists, so a page migrates only once its overlay is
+    removed. Rendering happens here, before publication, so no page fetches translations at runtime.
+    """
+    rendered: list[str] = []
+    for path in json_resources(spec.locale_root):
+        resource = load_resource(path)
+        if resource.locale != spec.locale:
+            raise ValueError(
+                f"{path}: declares locale {resource.locale!r} inside {spec.locale!r}")
+        expected = expected_resource_path(spec.locale_root, resource.template)
+        if path != expected:
+            raise ValueError(f"{path}: resource for {resource.template} must live at {expected}")
+        # File presence, not review freshness, owns authority. A stale HTML overlay continues to
+        # fall back to canonical English until a maintainer deliberately removes the file.
+        if (spec.locale_root / resource.template).is_file():
+            continue
+        source = bounded_tree_path(canonical_root, resource.template)
+        if not source.is_file():
+            raise FileNotFoundError(f"locale resource names a missing template: {resource.template}")
+        source_raw = source.read_text(encoding="utf-8")
+        page = resolve_resource_page(
+            spec, resource, source_raw, shell_translations)
+        if page == source_raw:
+            # Match stale HTML-overlay behavior: keep canonical English in the copied tree.
+            continue
+        required_media = applicable_media(
+            resource.template, source_raw, spec.state.get("asset_files", []))
+        if tuple(sorted(resource.media)) != required_media:
+            raise ValueError(
+                f"{path}: media must list every reviewed localized asset used by "
+                f"{resource.template}; expected {list(required_media)}, got {list(resource.media)}"
+            )
+        reviewed_media = spec.state.get("asset_reviews", {})
+        for item in resource.media:
+            canonical_media = bounded_tree_path(canonical_root, item)
+            locale_media = bounded_tree_path(spec.locale_root, item)
+            if not canonical_media.is_file():
+                raise FileNotFoundError(f"{path}: canonical media is missing: {item}")
+            if not locale_media.is_file():
+                raise FileNotFoundError(f"{path}: localized media is missing: {item}")
+            if item not in reviewed_media:
+                raise ValueError(f"{path}: localized media has no asset review: {item}")
+            media_review = reviewed_media[item]
+            if media_review.get("source_sha256") != source_sha(canonical_media):
+                raise ValueError(
+                    f"{path}: localized media review is stale against canonical source: {item}")
+            if (
+                spec.profile.get("reviewed_target_hashes")
+                and media_review.get("target_sha256") != source_sha(locale_media)
+            ):
+                raise ValueError(
+                    f"{path}: localized media bytes do not match their accepted target: {item}")
+        destination = out / resource.template
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(page, encoding="utf-8")
+        rendered.append(resource.template)
+    return rendered
 
 
 def assemble(locale_root: Path, out: Path, canonical_root: Path = ROOT) -> list[str]:
@@ -59,10 +134,10 @@ def assemble(locale_root: Path, out: Path, canonical_root: Path = ROOT) -> list[
     shutil.copytree(canonical_root / "web", out / "web")
     applied: list[str] = []
     for rel in overlay_files + asset_files:
-        src = locale_root / rel
+        src = bounded_tree_path(locale_root, rel.as_posix())
         if not src.is_file():
             raise FileNotFoundError(f"declared locale overlay is missing: {src}")
-        canonical = canonical_root / rel
+        canonical = bounded_tree_path(canonical_root, rel.as_posix())
         review = (asset_reviews if rel in asset_files else reviews).get(rel.as_posix(), {})
         if not canonical.is_file():
             continue
@@ -72,14 +147,24 @@ def assemble(locale_root: Path, out: Path, canonical_root: Path = ROOT) -> list[
         reviewed_digest = review.get("translation_sha256") if scoped_html else review.get("source_sha256")
         if reviewed_digest != current_digest:
             continue
+        if (
+            spec.profile.get("reviewed_target_hashes")
+            and review.get("target_sha256") != source_sha(src)
+        ):
+            continue
         dst = out / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
-        if scoped_html:
-            dst.write_text(project_locale_html(canonical_raw, src.read_text(encoding="utf-8"), shell_translations),
-                           encoding="utf-8")
+        if rel.suffix == ".html":
+            page = resolve_overlay_page(
+                spec, rel.as_posix(), canonical_raw,
+                src.read_text(encoding="utf-8"), shell_translations)
+            if page == canonical_raw:
+                continue
+            dst.write_text(page, encoding="utf-8")
         else:
             shutil.copy2(src, dst)
         applied.append(rel.as_posix())
+    applied.extend(apply_resources(spec, out, canonical_root, shell_translations))
     browser_meta = out / "web" / "nemoclaw" / "assets" / "locale.json"
     browser_meta.parent.mkdir(parents=True, exist_ok=True)
     browser_meta.write_text(json.dumps(locale_meta, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -189,6 +274,70 @@ def self_test() -> list[str]:
         applied = assemble(locale, out, canonical)
         if svg_rel.as_posix() in applied or (out / svg_rel).read_text(encoding="utf-8") != svg_source.read_text(encoding="utf-8"):
             failures.append("stale localized SVG did not fall back to canonical source")
+        failures.extend(resource_self_test(canonical, locale, out))
+    return failures
+
+
+def resource_self_test(canonical: Path, locale: Path, out: Path) -> list[str]:
+    """Prove a page with no reviewed overlay still publishes from its key-based resource."""
+    from translate.locale_resources import template_units
+
+    failures: list[str] = []
+    rel = Path("web/nemoclaw/lesson.html")
+    (canonical / rel).write_text(
+        '<html lang="en"><body><p>Agent loop basics.</p></body></html>', encoding="utf-8")
+    template_raw = (canonical / rel).read_text(encoding="utf-8")
+    translated = "Bases do ciclo do agente."
+    values = {unit.key: {"type": unit.value_type, "source": unit.source, "value": translated}
+              for unit in template_units(template_raw)}
+    resource = locale / "resources" / f"{rel.as_posix()}.json"
+    resource.parent.mkdir(parents=True, exist_ok=True)
+    document = {"schema": "nemoclaw-locale-resource/1", "locale": "pt-BR",
+                "template": rel.as_posix(), "values": values}
+    resource.write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8")
+    state_path = locale / "localization_state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state.setdefault("reviews", {})[rel.as_posix()] = {
+        "source_sha256": text_sha(template_raw),
+    }
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+    applied = assemble(locale, out, canonical)
+    rendered = (out / rel).read_text(encoding="utf-8")
+    if rel.as_posix() not in applied or translated not in rendered or 'lang="pt-BR"' not in rendered:
+        failures.append("locale resource did not publish a rendered page")
+    original_document = json.loads(json.dumps(document))
+    first_entry = next(iter(document["values"].values()))
+    first_entry["value"] = '<em onmouseover="steal()">Bases do ciclo do agente.</em>'
+    resource.write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8")
+    try:
+        assemble(locale, out, canonical)
+        failures.append("unsafe locale resource value was published")
+    except ValueError:
+        pass
+    document = original_document
+    resource.write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8")
+    overlay = locale / rel
+    overlay.parent.mkdir(parents=True, exist_ok=True)
+    overlay.write_text('<html lang="pt-BR"><body><p>Tradução antiga.</p></body></html>',
+                       encoding="utf-8")
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state["overlay_files"].append(rel.as_posix())
+    state.get("reviews", {}).pop(rel.as_posix(), None)
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+    applied = assemble(locale, out, canonical)
+    if rel.as_posix() in applied or (out / rel).read_text(encoding="utf-8") != template_raw:
+        failures.append("existing stale HTML overlay did not keep its resource shadow-only")
+    overlay.unlink()
+    state["overlay_files"].remove(rel.as_posix())
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+    document["template"] = "web/nemoclaw/absent.html"
+    resource.write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8")
+    try:
+        assemble(locale, out, canonical)
+        failures.append("locale resource for a missing template was published")
+    except (FileNotFoundError, ValueError):
+        pass
+    resource.unlink()
     return failures
 
 

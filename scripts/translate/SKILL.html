@@ -21,6 +21,12 @@
     "scripts/translate/locale_catalog.py",
     "scripts/translate/code_localization.py",
     "scripts/translate/locale_projection.py",
+    "scripts/translate/locale_resources.py",
+    "scripts/translate/locale_resource_render.py",
+    "scripts/translate/migrate_locale_resource.py",
+    "scripts/translate/locale_pages.py",
+    "scripts/validation/locale_resource_audit.py",
+    "docs/locale_resource_migration.md",
     "scripts/translate/translate_svg_text.py",
     "scripts/validation/localization_audit.py",
     "scripts/build/assemble_locale_overlay.py",
@@ -51,7 +57,12 @@
         {"path": "../validation/localization_audit.py", "role": "required drift gate", "desc": "Missing/current/stale/blocked classification, machine-contract parity, locale checks, manifest generation, and mutation tests."},
         {"path": "../build/assemble_locale_overlay.py", "role": "build assembler", "desc": "Copies canonical web/ and applies reviewed prose, runnable-code language, and SVG text without forking runtime contracts."},
         {"path": "localization_scope.py", "role": "translation-body boundary", "desc": "Hashes the stable translatable body independently from presentation-shell wording."},
-        {"path": "locale_projection.py", "role": "structure projection", "desc": "Projects reviewed locale prose and translated shell prompts into the complete current canonical page structure."}
+        {"path": "locale_projection.py", "role": "structure projection", "desc": "Projects reviewed locale prose and translated shell prompts into the complete current canonical page structure."},
+        {"path": "locale_resources.py", "role": "key-based locale values", "desc": "Derives a key per translatable unit from the English source, types every value, and maps which templates consume it."},
+        {"path": "locale_resource_render.py", "role": "static page renderer", "desc": "Extracts a resource from a reviewed overlay and renders the self-contained localized page before publication."},
+        {"path": "migrate_locale_resource.py", "role": "page migration tool", "desc": "Records reviewed wording as a resource and checks a tracked resource against the overlay it came from."},
+        {"path": "locale_pages.py", "role": "published locale pages", "desc": "Resolves every localized page the build publishes, from a reviewed overlay or a key-based resource, for audits that must read published bytes."},
+        {"path": "../validation/locale_resource_audit.py", "role": "resource and rendered-page gate", "desc": "Discovers locales, templates, and resources; rejects missing, unused, mistyped, unsafe, or drifting values; renders and checks the page."}
       ]
     }
   ]
@@ -72,6 +83,8 @@
   <div class="skill-cmds">
     <div class="skill-cmd"><b>Publish-boundary mutations</b><code>python3 scripts/build/assemble_locale_overlay.py --self-test</code></div>
     <div class="skill-cmd"><b>Localization mutations</b><code>python3 scripts/validation/localization_audit.py --self-test</code></div>
+    <div class="skill-cmd"><b>Locale resource mutations</b><code>python3 scripts/validation/locale_resource_audit.py --self-test</code></div>
+    <div class="skill-cmd"><b>Resources and rendered pages</b><code>python3 scripts/validation/locale_resource_audit.py</code></div>
     <div class="skill-cmd"><b>All locale drift and language</b><code>python3 scripts/validation/localization_audit.py</code></div>
     <div class="skill-cmd"><b>Generate a measured draft</b><code>python3 scripts/translate/translate_html_segments.py web/nemoclaw/PAGE.html --usage-report /tmp/pt-usage.json</code></div>
   </div>
@@ -87,6 +100,7 @@
     <a class="skill-link" href="localization_scope.py"><b>Translation-body boundary</b>Hashes stable lesson prose separately from presentation-shell wording.</a>
     <a class="skill-link" href="code_localization.py"><b>Runnable-code language</b>Preserves localized learner output while blocking protocol and executable drift.</a>
     <a class="skill-link" href="locale_projection.py"><b>Structure projection</b>Restores every current learning block and inserts reviewed locale prose plus localized prompts.</a>
+    <a class="skill-link" href="../../docs/locale_resource_migration.md"><b>Key-based locale resources</b>Derived keys, typed values, rendered-page validation, and the page-by-page migration path.</a>
   </div>
 </section>
 <div id="explorer"></div><script src="../../web/_skill_explorer.js"></script></body>

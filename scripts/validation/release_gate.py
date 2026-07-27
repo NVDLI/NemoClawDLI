@@ -62,7 +62,14 @@ def cli_unit_test(name: str) -> tuple[str, ...]:
 
 
 HARNESS_CONTRACT = py("-m", "unittest", "-v", "tests.validation.test_test_harness_contract")
-NODE_VALIDATOR_TESTS = ("bash", "scripts/runtime/run_node.sh", "tests/runtime/test_embedded_validator_suites.mjs")
+NODE_VALIDATOR_TESTS = py(
+    "scripts/validation/with_locale_pages.py", "--",
+    "bash", "scripts/runtime/run_node.sh", "tests/runtime/test_embedded_validator_suites.mjs",
+)
+OPENCLAW_CONNECTION_AUDIT = py(
+    "scripts/validation/with_locale_pages.py", "--",
+    "bash", "scripts/runtime/run_node.sh", "scripts/validation/openclaw_connection_audit.mjs",
+)
 COLOR_THEME_TESTS = py("-m", "unittest", "-v", "tests.validation.test_color_theme")
 THEME_RUNTIME_CONTRACT_TESTS = py("-m", "unittest", "-v", "tests.validation.test_theme_runtime_contract")
 ARTIFACT_NAVIGATION_TESTS = py("-m", "unittest", "-v", "tests.validation.test_artifact_navigation_projection")
@@ -77,7 +84,28 @@ PYODIDE_RUNTIME_SMOKE = ("bash", "scripts/runtime/run_node.sh", "scripts/pyodide
 REACS_REGISTRY_TESTS = py("-m", "unittest", "-v", "tests.validation.test_reacs_registry")
 PRIVILEGED_COURSE_OPS_TESTS = py("-m", "unittest", "-v", "tests.validation.test_privileged_course_ops")
 LOCALE_CATALOG_TESTS = py("-m", "unittest", "-v", "tests.validation.test_locale_catalog")
+LOCALE_RESOURCE_TESTS = py("-m", "unittest", "-v", "tests.validation.test_locale_resource_audit")
 STANDARD_TEST_DISCOVERY = py("-m", "unittest", "discover", "-v", "-s", "tests/validation")
+# The resource gate renders pages, so it owns the renderer, the templates, and the locale inputs.
+LOCALE_RESOURCE_IMPACTS = (
+    "scripts/validation/locale_resource_audit.py", "scripts/validation/locale_resource_mutations.py",
+    "scripts/translate/locale_resources.py", "scripts/translate/locale_resource_render.py",
+    "scripts/translate/locale_pages.py",
+    "scripts/translate/migrate_locale_resource.py", "scripts/translate/locale_catalog.py",
+    "scripts/translate/locale_projection.py", "scripts/translate/code_localization.py",
+    "scripts/translate/translate_html_segments.py", "scripts/build/assemble_locale_overlay.py",
+    "scripts/validation/localization_audit.py", "scripts/validation/course_content_contract.py",
+    "tests/validation/test_locale_resource_audit.py",
+    "tests/validation/test_course_content_contract.py",
+    "docs/locale_resource_migration.md", "docs/release-test-plan.md",
+    "scripts/translate/README.md", "scripts/translate/SKILL.html",
+    "scripts/validation/SKILL.html",
+    "i18n/*/resources/**/*", "i18n/*/locale.json", "i18n/*/localization_state.json",
+    "scripts/translate/locales/*/profile.json", "scripts/translate/locales/*/shell_translations.json",
+    "web/*.html", "web/**/*.html",
+    # The tracked drift manifests are generated projections of this surface; a hand edit is drift.
+    "web/nemoclaw/assets/localization-*.json",
+)
 
 
 FAST_COMMANDS: tuple[tuple[str, ...], ...] = (
@@ -114,7 +142,7 @@ FAST_COMMANDS: tuple[tuple[str, ...], ...] = (
     py("scripts/build/project_source_tree.py", "--check-generated"),
     py("scripts/security/audit_iframe_proxy_opt_in.py"),
     py("scripts/validation/endpoint_registration_audit.py"),
-    ("bash", "scripts/runtime/run_node.sh", "scripts/validation/openclaw_connection_audit.mjs"),
+    OPENCLAW_CONNECTION_AUDIT,
     py("scripts/compliance/source_gate.py"),
     SOURCE_LICENSE_CONTRACT_TESTS,
     py("scripts/compliance/source_document_audit.py"),
@@ -146,6 +174,9 @@ FAST_COMMANDS: tuple[tuple[str, ...], ...] = (
     LOCALE_CATALOG_TESTS,
     py("scripts/build/assemble_locale_overlay.py", "--self-test"),
     py("scripts/validation/localization_audit.py", "--self-test"),
+    py("scripts/validation/locale_resource_audit.py", "--self-test"),
+    LOCALE_RESOURCE_TESTS,
+    py("scripts/validation/locale_resource_audit.py"),
     py("scripts/materials/build_rag_index.py", "--check"),
     py("scripts/validation/validate_bundle.py", "--scope", "ship", "--no-write"),
 )
@@ -199,6 +230,9 @@ SHIP_COMMANDS: tuple[tuple[str, ...], ...] = (
     NODE_VALIDATOR_TESTS,
     py("scripts/build/assemble_locale_overlay.py", "--self-test"),
     py("scripts/validation/localization_audit.py", "--self-test"),
+    py("scripts/validation/locale_resource_audit.py", "--self-test"),
+    LOCALE_RESOURCE_TESTS,
+    py("scripts/validation/locale_resource_audit.py"),
     FOYER_BRANCH_PATH_TESTS,
     CONTRIBUTION_LANGUAGE_OWNERSHIP_TESTS,
     py("scripts/validation/contribution_safety_audit.py", "--self-test"),
@@ -211,7 +245,7 @@ SHIP_COMMANDS: tuple[tuple[str, ...], ...] = (
     py("scripts/security/audit_iframe_proxy_opt_in.py"),
     py("scripts/validation/endpoint_registration_audit.py", "--self-test"),
     py("scripts/validation/endpoint_registration_audit.py"),
-    ("bash", "scripts/runtime/run_node.sh", "scripts/validation/openclaw_connection_audit.mjs"),
+    OPENCLAW_CONNECTION_AUDIT,
     py("scripts/compliance/source_gate.py"),
     SOURCE_LICENSE_CONTRACT_TESTS,
     py("scripts/compliance/source_document_audit.py"),
@@ -307,7 +341,9 @@ MUTATION_IMPACTS: dict[tuple[str, ...], tuple[str, ...]] = {
     unit_test("source_document_audit"): (
         "scripts/compliance/source_document_audit.py", "scripts/compliance/docs/document_sources.json",
         "THIRD_PARTY_LICENSES.md", "web/nemoclaw/*.html", "web/nemoclaw/mats/*",
-        "web/nemoclaw/assets/SKILL.html",
+        "web/nemoclaw/assets/SKILL.html", "scripts/translate/locale_catalog.py",
+        "scripts/translate/locale_pages.py", "scripts/translate/locale_resource_render.py",
+        "scripts/translate/locale_resources.py", "i18n/**/*",
     ),
     unit_test("pyodide_integration_audit"): (
         "scripts/pyodide/*", "tests/validation/test_embedded_validator_suites.py",
@@ -453,11 +489,14 @@ MUTATION_IMPACTS: dict[tuple[str, ...], tuple[str, ...]] = {
     ),
     NODE_VALIDATOR_TESTS: (
         "scripts/validation/gateway_token_audit.mjs", "scripts/validation/openclaw_fallback_audit.py",
-        "scripts/validation/openclaw_connection_audit.mjs", "scripts/runtime/test_page_runtime.js",
+        "scripts/validation/openclaw_connection_audit.mjs",
+        "scripts/validation/with_locale_pages.py", "scripts/translate/locale_pages.py",
+        "scripts/translate/locale_resource_render.py", "scripts/translate/locale_resources.py",
+        "scripts/runtime/test_page_runtime.js",
         "scripts/runtime/browser_runtime_test.sh", "scripts/runtime/host_browser.py", "web/nemoclaw/scripts/_connection.js",
         "web/nemoclaw/scripts/_openclaw.js", "web/nemoclaw/scripts/_openshell.js",
         "web/nemoclaw/scripts/_shared.js", "web/nemoclaw/03a-kickstart.html", "web/nemoclaw/04b-modern-clis.html",
-        "i18n/*/locale.json", "i18n/*/web/nemoclaw/03*.html",
+        "i18n/*/locale.json", "i18n/*/resources/**/*", "i18n/*/web/nemoclaw/03*.html",
         "i18n/*/web/nemoclaw/04b-modern-clis.html", "scripts/translate/locale_catalog.py",
         "scripts/runtime/engine.js", "scripts/runtime/link_projection.py", "scripts/runtime/run_engine.sh",
         "scripts/runtime/run_node.sh",
@@ -472,11 +511,18 @@ MUTATION_IMPACTS: dict[tuple[str, ...], tuple[str, ...]] = {
         "scripts/validation/localization_audit.py", "scripts/translate/locale_catalog.py",
         "scripts/translate/locales/*",
         "scripts/translate/code_localization.py", "scripts/translate/locale_projection.py",
+        # The segment extractor decides what counts as reader text, so every locale prose rule
+        # this suite owns changes meaning when it changes.
+        "scripts/translate/translate_html_segments.py",
+        "scripts/translate/localization_scope.py",
+        "scripts/translate/locale_pages.py",
         "scripts/build/assemble_locale_overlay.py", "i18n/*/locale.json",
         "i18n/*/localization_state.json",
         "web/nemoclaw/scripts/_keypanel.js", "web/nemoclaw/scripts/_locale.js",
         "web/nemoclaw/scripts/_shared.js",
     ),
+    py("scripts/validation/locale_resource_audit.py", "--self-test"): LOCALE_RESOURCE_IMPACTS,
+    LOCALE_RESOURCE_TESTS: LOCALE_RESOURCE_IMPACTS,
     py("scripts/validation/contribution_safety_audit.py", "--self-test"): (
         ".github/*", ".github/**/*", ".gitlab-ci.yml", ".gitlab/*", ".gitlab/**/*",
         "AGENTS.md", "CONTRIBUTING.md", "DCO.md", "LICENSE", "RELEASE_STATUS.json",
@@ -489,7 +535,7 @@ MUTATION_IMPACTS: dict[tuple[str, ...], tuple[str, ...]] = {
     CONTRIBUTION_LANGUAGE_OWNERSHIP_TESTS: (
         "scripts/validation/contribution_safety_audit.py",
         "tests/validation/test_contribution_language_ownership.py",
-        "web/nemoclaw/*", "i18n/*/web/nemoclaw/*",
+        "web/nemoclaw/*", "i18n/*/web/nemoclaw/*", "i18n/*/resources/**/*.html.json",
     ),
     FOYER_BRANCH_PATH_TESTS: (
         "tests/validation/test_foyer_branch_paths.py",
@@ -506,8 +552,10 @@ MUTATION_IMPACTS: dict[tuple[str, ...], tuple[str, ...]] = {
         "web/nemoclaw/scripts/_openclaw.js", "web/nemoclaw/03a-kickstart.html",
         "web/_skill_explorer.js", "scripts/cors-proxy/SKILL.html",
         "scripts/runtime/test_page_runtime.js", "scripts/validation/runtime_integration_browser_audit.py",
-        "scripts/translate/locale_catalog.py", "i18n/*/locale.json",
-        "i18n/*/localization_state.json", "i18n/*/web/nemoclaw/03a-kickstart.html",
+        "scripts/translate/locale_catalog.py", "scripts/translate/locale_pages.py",
+        "scripts/translate/locale_resource_render.py", "scripts/translate/locale_resources.py",
+        "i18n/*/locale.json", "i18n/*/localization_state.json",
+        "i18n/*/web/nemoclaw/*.html", "i18n/*/resources/**/*",
     ),
     unit_test("course_dependency_integrity"): (
         "scripts/validation/course_dependency_integrity.py", "scripts/browser-vendor/*",

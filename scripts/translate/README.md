@@ -1,6 +1,7 @@
 # Same-branch localization
 
-Translations live beside English on the same branch as sparse overlays under `i18n/<url-code>/`.
+Translations live beside English on the same branch under `i18n/<url-code>/`, today as typed
+key-based resources and, when a page needs one, as a reviewed HTML overlay.
 Current locale profiles include Brazilian Portuguese (`pt-BR`, URL code `pt`) and neutral technical
 Spanish (`es-ES`, URL code `es`). Each locale owns its terminology, rhythm, and calque rules.
 `locale_catalog.py` discovers every directory under `i18n/` and rejects missing metadata, conflicting
@@ -14,12 +15,12 @@ and a language build cannot replace current code with a copied JavaScript or ass
 
 `web/` remains canonical for page structure and executable logic, and it is the only home for
 standalone runtime modules, styles, data, machine-contract pages, and untranslated pages.
-Each `i18n/<code>/localization_state.json` allow-lists localized HTML and reviewed SVGs whose embedded text
-differs by language. Other assets stay canonical.
-During a build, `assemble_locale_overlay.py` copies canonical `web/` and applies only those declared
-files. The audit requires equivalent HTML, executable structure, identifiers, routes, and protocol
-literals. Reviewed prompts, logs, errors, and comments inside runnable cells remain localized.
-Everything else is inherited verbatim.
+Each `i18n/<code>/localization_state.json` allow-lists any localized HTML and the reviewed SVGs whose
+embedded text differs by language. Other assets stay canonical.
+During a build, `assemble_locale_overlay.py` copies canonical `web/`, applies those declared files,
+and renders every page that publishes from a key-based resource. The audit requires equivalent HTML,
+executable structure, identifiers, routes, and protocol literals. Reviewed prompts, logs, errors, and
+comments inside runnable cells remain localized. Everything else is inherited verbatim.
 
 Do not copy runtime files into `i18n/`. If a localized page needs different behavior, make the
 canonical runtime locale-aware and test both languages. Localized SVGs are the narrow asset
@@ -106,6 +107,26 @@ were explicitly included in the requested scope.
 Open `/nemoclaw/localization.html` in the built site. Filters expose current, stale, blocked,
 needs-review, and missing pages. Each row shows source/review/target hashes and the acceptance command.
 
+## Key-based locale resources
+
+Every translated page carries its wording in `i18n/<code>/resources/<template>.json`: one typed value
+per translatable unit, addressed by a key derived from the English source. The renderer rebuilds a
+self-contained static page from the canonical template plus that resource before publication, so a
+reader never fetches a translation at runtime.
+
+This is now the publication path for both locales. `overlay_files` is empty in each
+`localization_state.json` and no reviewed localized HTML remains under `i18n/`; a reviewed overlay
+would still win if one were restored, which is how rollback works. The format, the typed value
+rules, the recorded same-locale divergences, and the page-by-page migration and rollback steps live
+in [`docs/locale_resource_migration.md`](../../docs/locale_resource_migration.md).
+
+```bash
+python3 scripts/translate/migrate_locale_resource.py --locale es-ES --template PAGE.html
+python3 scripts/translate/migrate_locale_resource.py --locale es-ES --template PAGE.html --check
+python3 scripts/validation/locale_resource_audit.py
+python3 scripts/validation/locale_resource_audit.py --self-test
+```
+
 ## Files
 
 - `locales/pt-BR/profile.json`: public terminology sources and machine-readable language rules.
@@ -117,6 +138,11 @@ needs-review, and missing pages. Each row shows source/review/target hashes and 
 - `locales/pt-BR/svg_translations.json`: reviewed, provider-free SVG translation map.
 - `locales/es-ES/svg_translations.json`: reviewed, provider-free Spanish SVG translation map.
 - `locale_catalog.py`: required discovery and cross-file identity contract for every locale.
+- `locale_resources.py`: derived keys, typed locale values, discovery, and the consumer map.
+- `locale_resource_render.py`: overlay extraction and self-contained static page rendering.
+- `migrate_locale_resource.py`: derive a resource from a reviewed overlay, or check one against it.
+- `locale_pages.py`: the one source for the localized pages a build publishes, overlay or resource.
+- `scripts/validation/locale_resource_audit.py`: required resource and rendered-page gate.
 - `scripts/validation/localization_audit.py`: required drift and language gate with mutation tests.
 - `scripts/build/assemble_locale_overlay.py`: deterministic canonical-plus-prose assembly.
 - `web/nemoclaw/localization.html`: same-branch comparison Studio.

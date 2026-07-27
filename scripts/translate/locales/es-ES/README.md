@@ -29,8 +29,11 @@ certificar naturalidad. Lea cada bloque completo en Localization Studio antes de
 ## Autoridad editorial del responsable de estilo
 
 Las correcciones del responsable de estilo del idioma gobiernan la voz, el ritmo y el vocabulario.
-El blob de `i18n/es/web/nemoclaw/01a-loop.html` está fijado en `profile.json` y se conserva sin
-cambios al revisar el resto del curso. No acorte, neutralice, corrija ni reescriba esas decisiones.
+La prosa de `web/nemoclaw/01a-loop.html`, hoy alojada en
+`i18n/es/resources/web/nemoclaw/01a-loop.html.json`, está fijada en `profile.json` mediante su
+SHA-256 editorial y se conserva sin cambios al revisar el resto del curso. El recurso se renderiza
+antes de comparar ese hash, así que la fijación sigue midiendo la página publicada, no el formato
+del archivo. No acorte, neutralice, corrija ni reescriba esas decisiones.
 Una corrección requiere un seguimiento firmado por el responsable de estilo y una actualización
 deliberada del commit de origen y del SHA-256 fijado; un agente no realiza esa actualización.
 

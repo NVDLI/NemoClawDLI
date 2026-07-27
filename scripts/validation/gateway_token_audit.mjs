@@ -5,8 +5,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+// A locale page is the bytes the build publishes. When it ships from a key-based resource there is
+// no HTML file to read, so the caller renders the published pages and names their root here.
+const LOCALE_ROOT = process.env.NEMOCLAW_LOCALE_PAGES || 'i18n';
+
 function discoverLocaleCourses() {
-  const root = 'i18n';
+  const root = LOCALE_ROOT;
   if (!fs.existsSync(root)) return [];
   const seen = new Set();
   return fs.readdirSync(root, { withFileTypes: true })
