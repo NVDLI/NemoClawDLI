@@ -36,6 +36,7 @@
     "scripts/validation/learner_flow_runtime_audit.py",
     "scripts/validation/runtime_integration_browser_audit.py",
     "scripts/validation/contribution_safety_audit.py",
+    "scripts/validation/agent_transparency_audit.py",
     "scripts/validation/gitlab_ci_policy.py",
     "scripts/validation/gitlab_governance_audit.py",
     "scripts/validation/studio_interface_audit.py",
@@ -236,6 +237,11 @@
       "desc": "Required audit and mutation suite for release-candidate status, governance state, DCO commit signoff, conduct/support/ownership policy, immutable action pins, locked workflow installs, discovery-first fork and token boundaries across every GitHub workflow, private security routing, structured submissions, and gated deploy/release authority."
     },
     {
+      "path": "agent_transparency_audit.py",
+      "role": "agent publication authority gate",
+      "desc": "Discovers GitHub bot publishers and rejects excess permissions, protected-ref writes, force pushes, token disclosure, unverified commits, and unbounded public lifecycle data."
+    },
+    {
       "path": "gitlab_ci_policy.py",
       "role": "GitLab CI structural policy",
       "desc": "Mutation-tested gate for the inert root manifest, isolated core and SCA modules, narrow scanner triggers, locked scan commands, and named ownership of workflow trust boundaries."
@@ -413,6 +419,7 @@
   <div class="skill-cmd"><b>Learner-flow browser lifecycle</b><code>python3 scripts/validation/learner_flow_runtime_audit.py --site-root web</code></div>
   <div class="skill-cmd"><b>Runtime integration browser lifecycle</b><code>python3 scripts/validation/runtime_integration_browser_audit.py --site-root web</code></div>
   <div class="skill-cmd"><b>Contribution safety + detector</b><code>python3 scripts/validation/contribution_safety_audit.py &amp;&amp; python3 scripts/validation/contribution_safety_audit.py --self-test</code></div>
+  <div class="skill-cmd"><b>Agent publication authority + detector</b><code>python3 scripts/validation/agent_transparency_audit.py &amp;&amp; python3 scripts/validation/agent_transparency_audit.py --self-test</code></div>
   <div class="skill-cmd"><b>GitLab CI structure + detector</b><code>python3 scripts/validation/gitlab_ci_policy.py --self-test &amp;&amp; python3 scripts/validation/gitlab_ci_policy.py</code></div>
   <div class="skill-cmd"><b>Live GitLab authority</b><code>python3 scripts/validation/gitlab_governance_audit.py --self-test &amp;&amp; python3 scripts/validation/gitlab_governance_audit.py --project "$CI_PROJECT_ID"</code></div>
   <div class="skill-cmd"><b>Code hygiene</b><code>python3 scripts/validation/code_hygiene.py --self-test &amp;&amp; python3 scripts/validation/code_hygiene.py</code></div>
@@ -482,6 +489,7 @@
     <a class="skill-link" href="learner_flow_runtime_audit.py"><b>learner_flow_runtime_audit.py</b><span>learner-flow browser gate. Exercises Guided code collapse/local reveal, authored defaults, saved depth, section overrides, reload/print, narrow keyboard behavior, prerequisites, and cell lifecycle transitions.</span></a>
     <a class="skill-link" href="runtime_integration_browser_audit.py"><b>runtime_integration_browser_audit.py</b><span>runtime integration browser gate. Executes model-route persistence, SKILL explorer reuse, typed 3a probes, the agent bundle, cron lifecycle, and live-policy state transition in Chromium.</span></a>
     <a class="skill-link" href="contribution_safety_audit.py"><b>contribution_safety_audit.py</b><span>required contribution-safety gate. Discovers every GitHub workflow and rejects unsafe fork triggers, secret-bearing PR jobs, broad write scopes, environment access, and persistent checkout credentials; also holds governance, DCO, submission evidence, hooks, and release authority together with mutation coverage.</span></a>
+    <a class="skill-link" href="agent_transparency_audit.py"><b>agent_transparency_audit.py</b><span>Agent publication authority gate. Discovers GitHub bot publishers and rejects excess permissions, protected-ref writes, force pushes, token disclosure, unverified commits, and unbounded public lifecycle data.</span></a>
     <a class="skill-link" href="gitlab_ci_policy.py"><b>gitlab_ci_policy.py</b><span>GitLab CI structural gate. Keeps the root manifest inert, SCA self-contained and change-sensitive, scan commands locked, and workflow paths assigned to named owners.</span></a>
     <a class="skill-link" href="gitlab_governance_audit.py"><b>gitlab_governance_audit.py</b><span>read-only live-host gate. Reports whether GitLab protects main, release tags, production deploys and approvers, and the explicit human-review action while detecting one-operator deadlocks or authority widening.</span></a>
     <a class="skill-link" href="locale_resource_audit.py"><b>locale_resource_audit.py</b><span>required key-based locale resource gate. Discovers every locale, template, and resource file; fails on missing, unused, mistyped, unreachable, unsafe, or hidden-fallback values; renders the static page the way the assembler publishes it and requires every recorded same-locale wording divergence to still be real.</span></a>

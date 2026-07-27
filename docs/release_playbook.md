@@ -81,6 +81,11 @@ and nearest directory beacon.
 [`agentic-compliance-suite.md`](agentic-compliance-suite.md) explains why those discovery layers,
 deterministic checks, evidence, and protected decisions remain separate.
 
+An automated devbox contributor may use the narrowly scoped GitHub bot described in
+[`agent-github-bot.md`](agent-github-bot.md). The bot is a feature-branch push and bounded-status
+identity only. It receives no ruleset, protected-ref, environment, merge, approval, workflow, or
+release bypass. A human remains the commit author, DCO signer, and accountable maintainer.
+
 ## Maintainer operating plan
 
 This playbook is the maintainer entry point. Detailed procedures remain with their executable or
@@ -184,9 +189,10 @@ community intake:
 - Create an active branch ruleset for `main` and `release/*`. Require a pull request, one approval,
   dismissal of stale approvals, approval of the most recent push by someone else, resolved review
   threads, and the strict `test` status from the `pages` workflow. Block deletion and force pushes.
-  Give no person an always-bypass lane; if automation needs bypass, scope it to a named GitHub App.
+  Give no person or bot an always-bypass lane.
 - Create an active tag ruleset for `v*`. Restrict tag creation, update, and deletion to the release
-  manager or release App. A workflow consumes an existing protected tag; it does not mint one.
+  manager or release automation identity. A workflow consumes an existing protected tag; it does
+  not mint one.
 - Use GitHub Actions environments for public Pages. Use required reviewers for production and concurrency so only one deploy runs at a time.
 - Configure both `github-pages` and `github-release` with required reviewers, prevent self-review,
   disallow administrator bypass, and restrict deployment branches or tags. Review environment and

@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/NVDLI/NemoClawDLI/blob/main/scripts/ci/agent-transparency.schema.json",
+  "title": "NemoClawDLI public agent lifecycle event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "sequence",
+    "time",
+    "repository",
+    "issue",
+    "pull_request",
+    "branch",
+    "head_sha",
+    "attempt",
+    "phase",
+    "state",
+    "summary",
+    "next",
+    "blocker",
+    "evidence"
+  ],
+  "properties": {
+    "schema": {
+      "const": "nemoclaw-agent-event/1"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "repository": {
+      "const": "NVDLI/NemoClawDLI"
+    },
+    "issue": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "pull_request": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "branch": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 127
+    },
+    "head_sha": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "phase": {
+      "enum": [
+        "implementation",
+        "focused-preflight",
+        "fast-gate",
+        "exact-diff-review",
+        "ship-gate",
+        "browser",
+        "pages-artifact",
+        "signed-pr",
+        "pr-checks",
+        "merge",
+        "production"
+      ]
+    },
+    "state": {
+      "enum": [
+        "queued",
+        "in_progress",
+        "pass",
+        "fail",
+        "blocked",
+        "cancelled"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240
+    },
+    "next": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 240
+    },
+    "blocker": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 400
+    },
+    "evidence": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "label",
+          "state",
+          "url"
+        ],
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "state": {
+            "enum": [
+              "queued",
+              "in_progress",
+              "pass",
+              "fail",
+              "blocked",
+              "cancelled"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https://github\\.com/"
+          }
+        }
+      }
+    }
+  }
+}

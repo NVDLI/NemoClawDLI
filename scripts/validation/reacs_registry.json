@@ -1332,7 +1332,7 @@
       "parallel_safe": false
     },
     {
-      "id": "check-rag-index",
+      "id": "test-github-agent-bridge",
       "tiers": [
         "fast",
         "ship"
@@ -1340,6 +1340,50 @@
       "order": {
         "fast": 69,
         "ship": 93
+      },
+      "mode": "mutation",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.validation.test_github_agent_bridge"
+      ],
+      "parallel_safe": true,
+      "impacts": [
+        "scripts/ci/*.py",
+        "scripts/ci/*.json",
+        "scripts/validation/agent_transparency_audit.py",
+        "tests/validation/test_github_agent_bridge.py",
+        "docs/agent-github-bot.md"
+      ]
+    },
+    {
+      "id": "agent-transparency-audit",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 70,
+        "ship": 94
+      },
+      "mode": "current-tree",
+      "argv": [
+        "{python}",
+        "scripts/validation/agent_transparency_audit.py"
+      ],
+      "parallel_safe": false
+    },
+    {
+      "id": "check-rag-index",
+      "tiers": [
+        "fast",
+        "ship"
+      ],
+      "order": {
+        "fast": 71,
+        "ship": 95
       },
       "mode": "current-tree",
       "argv": [
@@ -1355,7 +1399,7 @@
         "fast"
       ],
       "order": {
-        "fast": 70
+        "fast": 72
       },
       "mode": "current-tree",
       "argv": [
@@ -2164,7 +2208,7 @@
         "ship"
       ],
       "order": {
-        "ship": 94
+        "ship": 96
       },
       "mode": "current-tree",
       "argv": [

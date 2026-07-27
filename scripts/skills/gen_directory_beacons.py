@@ -47,7 +47,7 @@ SUMMARIES = {
     "web/nemoclaw/mats/glossary_raw/images": "Images retained with the versioned glossary source material.",
     "web/nemoclaw/vendor": "Pinned same-origin browser dependencies, generated metadata, and license evidence.",
     "web/nemoclaw/vendor/licenses": "Exact license texts shipped for pinned browser dependencies.",
-    "scripts/ci": "Fixed-vocabulary internal GitLab operations for exact artifact retrieval, secret-isolated live review, language-selective publication planning, and the root-installed devbox publisher.",
+    "scripts/ci": "Bounded CI and devbox operators for exact artifacts, secret-isolated review, publication planning, and repository-scoped GitHub agent status.",
     "scripts/cors-proxy/deployable": "History-free, parameterized source for the optional Lambda and CloudFront browser relays. The course does not deploy or operate this stack.",
     "scripts/cors-proxy/deployable/scripts": "Packaging and operator-run smoke checks for the optional relay stack.",
     "scripts/cors-proxy/deployable/src": "Dependency-free Lambda and CloudFront request-routing implementation.",
@@ -71,7 +71,8 @@ GUIDANCE = {
       <li><strong>Exercise or publish:</strong> a separate secret-free job builds the pinned browser runtime without opening candidate content. Candidate browsers run without protected variables. Live probes receive only environment-scoped file secrets. CDN preparation has no AWS authority; the root-installed devbox publisher accepts only its hash plan.</li>
     </ol>
     <p><a href="../../docs/pages_deploy.md">Open the exact <code>glab</code> branch/language commands and runner provisioning steps.</a></p>
-    <p>These operations stay inside GitLab, so public GitHub receives the source and ordinary validation but no trigger, secret, protected environment, devbox runner, or AWS authority.</p>
+    <p>Protected delivery operations stay inside GitLab. The optional GitHub bot bridge publishes only a bounded lifecycle Check and one updated issue or pull-request comment. It receives no protected environment, deployment, devbox, or AWS authority.</p>
+    <p><a href="../../docs/agent-github-bot.md">Review the bot account boundary, event schema, public-data rules, and devbox setup.</a></p>
   </section>''',
     "scripts/cors-proxy/deployable": '''
   <section aria-labelledby="projection-flow"><h2 id="projection-flow">Verify before use</h2>

@@ -5,6 +5,9 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Added a least-privilege GitHub bot bridge for agent-authenticated feature-branch pushes and
+  public-safe progress checks and comments. Human authorship, DCO sign-off, review, merge, and
+  deployment authority remain separate.
 - Made an ephemeral launchable instance identifier uncommittable: the sensitive-content boundary now
   rejects a provisioned instance ID in either supported host family from the tree, the index, and
   proposed history, the remaining real identifier was replaced with synthetic fixtures, and every
