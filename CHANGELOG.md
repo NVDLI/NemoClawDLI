@@ -10,7 +10,10 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
   proposed history, the remaining real identifier was replaced with synthetic fixtures, and every
   repository-owned publication path carries the same audit directly so a skipped hook cannot publish.
   A read-only trusted-base contribution check also scans proposed Git trees without checking out or
-  executing pull-request code.
+  executing pull-request code. The artifact boundary now resolves a projected `source/` route back
+  to the repository file it copies only when their full bytes exactly match, the projection refuses
+  to let two sources claim one route, and the pull-request job audits its own built artifact so an
+  artifact-only route cannot fail for the first time inside the production deploy.
 - Initial public release candidate.
 - No public version has been published.
 - Retired the repository-owned container/service stack in favor of pinned host-native validation tooling.

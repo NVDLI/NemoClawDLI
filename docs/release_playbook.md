@@ -215,9 +215,12 @@ plus branch and tag rules stay authoritative for what may merge or deploy.
 The stable `Trusted full-tree sensitive-content boundary` check runs through
 `pull_request_target`, so GitHub loads its workflow and scanner from the trusted base branch. It
 fetches the proposed head into the base repository's object database, verifies the event SHA, and
-scans every proposed blob without checking out the head or loading candidate actions. The job has
-only `contents: read`, receives no secrets, and cannot be disabled by a pull request that edits its
-own workflow or validator. After this contribution merges, make that stable check required on
+scans every proposed blob without checking out the head or loading candidate actions. Because the
+trusted checkout persists no credential, that object read authenticates from the job's own
+`contents: read` token through env-only Git configuration, so the credential never reaches a
+command line, a runner log, a persisted Git configuration, or the scanner step. The job holds no
+repository secret and cannot be disabled by a pull request that edits its own workflow or
+validator. After this contribution merges, make that stable check required on
 `main`; retain the ruleset's existing administrator bypass behavior.
 
 Before calling a pull request security-green, inspect the complete check-run set on its exact head.

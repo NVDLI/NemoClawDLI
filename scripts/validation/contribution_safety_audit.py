@@ -9,6 +9,7 @@ import argparse
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -267,11 +268,28 @@ def workflow_jobs(workflow: str) -> list[tuple[str, str]]:
 
 def workflow_steps(job: str) -> list[str]:
     """Discover every top-level step in one GitHub Actions job."""
-    starts = list(re.finditer(r"(?m)^      - (?:name:|uses:|run:)\s*", job))
+    # A step may lead with any key, so anchoring on name/uses/run alone hides a step that
+    # opens with env:, id:, or if: and leaves its run body unreviewed. Only "      - " can
+    # begin a step, so matching whatever key follows it stays exact.
+    starts = list(re.finditer(r"(?m)^      - [A-Za-z0-9_-]+:\s*", job))
     return [
         job[match.start() : starts[index + 1].start() if index + 1 < len(starts) else len(job)]
         for index, match in enumerate(starts)
     ]
+
+
+def step_sections(step: str) -> dict[str, str]:
+    """Split one job step into its own mapping keys and their block bodies."""
+    sections: dict[str, str] = {}
+    key = ""
+    for line in step.splitlines(keepends=True):
+        header = re.match(r"(?:      - |        )([A-Za-z0-9_-]+):(.*)\n?$", line)
+        if header:
+            key = header.group(1)
+            sections[key] = header.group(2) + "\n"
+        elif key:
+            sections[key] += line
+    return sections
 
 
 def action_steps(job: str, action: str) -> list[str]:
@@ -377,6 +395,173 @@ def unhardened_checkout_lines(workflow: str) -> list[int]:
     return failures
 
 
+# Every checkout is required to persist no credential, so any Git command that contacts a
+# remote needs one of its own or it prompts for a username and fails the run.
+REMOTE_GIT_OPERATIONS = frozenset({"fetch", "pull", "clone", "ls-remote", "push"})
+GIT_GLOBAL_OPTIONS_WITH_VALUE = frozenset({
+    "-C",
+    "-c",
+    "--config-env",
+    "--exec-path",
+    "--git-dir",
+    "--namespace",
+    "--super-prefix",
+    "--work-tree",
+})
+SHELL_CONTROL_PREFIXES = frozenset({"!", "(", "{", "do", "elif", "if", "then", "until", "while"})
+SHELL_WRAPPERS = frozenset({"bash", "dash", "sh", "zsh"})
+ENV_OPTIONS_WITH_VALUE = frozenset({"-C", "-S", "-u", "--chdir", "--split-string", "--unset"})
+SHELL_ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=.*", re.S)
+GITHUB_TOKEN_VALUE = re.compile(r"^\s*\$\{\{\s*github\.token\s*\}\}\s*$")
+# A credential belongs in step env only: a command line reaches argv and the runner log, and
+# Git config outlives the single read it was meant to authorize.
+CREDENTIAL_EXPOSURE = re.compile(
+    r"\$\{\{\s*(?:github\.token|secrets(?:\.|\[))"
+    r"|https://[^\s/@]*:[^\s/@]*@"
+    r"|\bgit[^\n;&|]*\bconfig\b[^\n]*(?:extraheader|credential)",
+    re.I,
+)
+
+
+def step_env_entries(section: str) -> dict[str, str]:
+    """Read scalar names from one step-local env mapping."""
+    entries: dict[str, str] = {}
+    for line in section.splitlines():
+        match = re.fullmatch(r"\s+([A-Za-z_][A-Za-z0-9_]*):\s*(.*?)\s*", line)
+        if match:
+            entries[match.group(1)] = match.group(2)
+    return entries
+
+
+def strip_yaml_quotes(value: str) -> str:
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+        return value[1:-1]
+    return value
+
+
+def step_git_credential(section: str) -> tuple[bool, frozenset[str]]:
+    """Prove that one step wires github.token into an ephemeral Git credential helper."""
+    entries = step_env_entries(section)
+    token_names = frozenset(
+        name for name, value in entries.items() if GITHUB_TOKEN_VALUE.fullmatch(value)
+    )
+    prompt = strip_yaml_quotes(entries.get("GIT_TERMINAL_PROMPT", ""))
+    raw_count = strip_yaml_quotes(entries.get("GIT_CONFIG_COUNT", ""))
+    if (
+        not token_names
+        or prompt != "0"
+        or not re.fullmatch(r"(?:[1-9]|[12][0-9]|3[0-2])", raw_count)
+    ):
+        return False, token_names
+    for index in range(int(raw_count)):
+        key = strip_yaml_quotes(entries.get(f"GIT_CONFIG_KEY_{index}", ""))
+        helper = strip_yaml_quotes(entries.get(f"GIT_CONFIG_VALUE_{index}", ""))
+        if key != "credential.helper" or "username=x-access-token" not in helper:
+            continue
+        for name in token_names:
+            if re.search(rf"password=\$(?:{re.escape(name)}\b|\{{{re.escape(name)}\}})", helper):
+                return True, token_names
+    return False, token_names
+
+
+def body_uses_env_name(body: str, names: frozenset[str]) -> bool:
+    return any(
+        re.search(rf"\$(?:{re.escape(name)}\b|\{{{re.escape(name)}(?:[^A-Za-z0-9_]|$))", body)
+        for name in names
+    )
+
+
+def shell_command_words(body: str) -> list[list[str]]:
+    """Tokenize bounded shell command segments without a backtracking command regex."""
+    normalized = body.replace("\\\n", " ")
+    commands: list[list[str]] = []
+    for segment in re.split(r"[;&|\n]+", normalized):
+        try:
+            words = shlex.split(segment, comments=False, posix=True)
+        except ValueError:
+            continue
+        if words:
+            commands.append(words)
+    return commands
+
+
+def command_contacts_git_remote(words: list[str]) -> bool:
+    """Recognize a Git network operation after common wrappers and global options."""
+    index = 0
+    while index < len(words):
+        word = words[index]
+        name = Path(word).name
+        if word in SHELL_CONTROL_PREFIXES or SHELL_ASSIGNMENT.fullmatch(word):
+            index += 1
+            continue
+        if name in {"builtin", "command", "nohup", "time"}:
+            index += 1
+            while index < len(words) and words[index].startswith("-"):
+                index += 1
+            continue
+        if name == "env":
+            index += 1
+            while index < len(words):
+                option = words[index]
+                if option == "--":
+                    index += 1
+                    break
+                if SHELL_ASSIGNMENT.fullmatch(option):
+                    index += 1
+                    continue
+                if not option.startswith("-"):
+                    break
+                key = option.split("=", 1)[0]
+                index += 1
+                if key in {"-S", "--split-string"}:
+                    if "=" in option:
+                        split_value = option.split("=", 1)[1]
+                    elif index < len(words):
+                        split_value = words[index]
+                        index += 1
+                    else:
+                        return False
+                    try:
+                        expanded = shlex.split(split_value, comments=False, posix=True)
+                    except ValueError:
+                        return False
+                    return command_contacts_git_remote(expanded + words[index:])
+                if key in ENV_OPTIONS_WITH_VALUE and "=" not in option:
+                    index += 1
+            continue
+        break
+    if index < len(words) and Path(words[index]).name in SHELL_WRAPPERS:
+        shell_words = words[index + 1:]
+        for position, word in enumerate(shell_words):
+            if (
+                (word == "-c" or re.fullmatch(r"-[A-Za-z]*c[A-Za-z]*", word))
+                and position + 1 < len(shell_words)
+            ):
+                return body_contacts_git_remote(shell_words[position + 1])
+        return False
+    if index < len(words) and Path(words[index]).name == "eval":
+        return body_contacts_git_remote(" ".join(words[index + 1:]))
+    if index >= len(words) or Path(words[index]).name != "git":
+        return False
+    index += 1
+    while index < len(words) and words[index].startswith("-"):
+        option = words[index].split("=", 1)[0]
+        index += 1
+        if option in GIT_GLOBAL_OPTIONS_WITH_VALUE and "=" not in words[index - 1]:
+            index += 1
+    if index >= len(words) or words[index] not in REMOTE_GIT_OPERATIONS:
+        return False
+    return not any(word in {"-h", "--help"} for word in words[index + 1:])
+
+
+def body_contacts_git_remote(body: str) -> bool:
+    commands = shell_command_words(body)
+    if any(command_contacts_git_remote(words) for words in commands):
+        return True
+    nested = re.findall(r"\$\(([^()]*)\)|`([^`]*)`", body, re.S)
+    return any(body_contacts_git_remote(left or right) for left, right in nested)
+
+
 def audit_workflow_trust_boundaries(
     root: Path, text_overrides: dict[str, str] | None = None,
 ) -> list[dict[str, str]]:
@@ -429,6 +614,30 @@ def audit_workflow_trust_boundaries(
                 + ", ".join(str(line) for line in unhardened),
                 "set persist-credentials: false on every checkout step",
             ))
+        # No checkout in any workflow persists a credential, so a remote Git read anywhere
+        # carries its own or the runner prompts for a username and the job dies. Require that
+        # credential in the reading step's own env, and keep every credential out of argv and
+        # out of Git config. This applies to each trigger, not only pull requests.
+        for _job_name, job in workflow_jobs(raw):
+            for step in workflow_steps(job):
+                sections = step_sections(step)
+                body = sections.get("run", "")
+                authenticated, token_names = step_git_credential(sections.get("env", ""))
+                if CREDENTIAL_EXPOSURE.search(body) or body_uses_env_name(body, token_names):
+                    out.append(finding(
+                        "workflow-credential-exposure", rel,
+                        "a step puts a workflow credential on a command line or into Git config",
+                        "pass the credential only through step env so it never reaches argv, "
+                        "a runner log, or a persisted Git configuration",
+                    ))
+                if body_contacts_git_remote(body) and not authenticated:
+                    out.append(finding(
+                        "workflow-credential-free-remote-read", rel,
+                        "a step contacts a Git remote without an env-only credential helper "
+                        "bound to github.token",
+                        "authenticate the remote read through an ephemeral credential.helper "
+                        "in that step's env, because no checkout in this workflow persists one",
+                    ))
         if not pull_request:
             continue
         for name, job in workflow_jobs(raw):
@@ -561,6 +770,52 @@ def audit_trusted_contribution_boundary(workflow: str) -> list[dict[str, str]]:
             "trusted scan materializes or executes candidate-controlled paths",
             "keep the proposed head in Git objects and invoke only base-owned scanner code",
         ))
+    # The base checkout persists no credential, so the candidate object read carries its own
+    # read-only token. Require that token, and require it to stay in step env: a token on a
+    # command line reaches argv and the runner log, and one written into Git config outlives
+    # the fetch inside a workspace that later handles candidate-controlled bytes.
+    steps = workflow_steps(job)
+    sections = [step_sections(step) for step in steps]
+    fetch_sections = [
+        section for step, section in zip(steps, sections) if required[0] in step
+    ]
+    fetch_authenticated = (
+        len(fetch_sections) == 1
+        and step_git_credential(fetch_sections[0].get("env", ""))[0]
+    )
+    if not fetch_authenticated:
+        out.append(finding(
+            "github-base-boundary-candidate-fetch-auth", rel,
+            "the candidate object fetch lacks an env-only helper bound to the read-only job token",
+            "authenticate exactly the refs/pull fetch through an ephemeral credential.helper "
+            "bound to github.token in that step's env",
+        ))
+    for step, section in zip(steps, sections):
+        body = section.get("run", "")
+        _authenticated, token_names = step_git_credential(section.get("env", ""))
+        if (
+            CREDENTIAL_EXPOSURE.search(body)
+            or body_uses_env_name(body, token_names)
+        ):
+            out.append(finding(
+                "github-base-boundary-credential-exposure", rel,
+                "the boundary job puts its fetch credential on a command line or into Git config",
+                "pass the read-only token only through step env so it never reaches argv, "
+                "a runner log, or a persisted Git configuration",
+            ))
+            break
+        if required[2] in step and (
+            token_names
+            or any(name.startswith("GIT_CONFIG_") for name in step_env_entries(
+                section.get("env", "")
+            ))
+        ):
+            out.append(finding(
+                "github-base-boundary-credential-exposure", rel,
+                "the base-owned scanner step inherits the candidate-fetch credential",
+                "scope the read-only token to the fetch step so the scan runs without it",
+            ))
+            break
     return out
 
 
@@ -764,6 +1019,9 @@ def audit_repo(
         require(docs[rel], "localized learner prose changed", rel,
                 "localization-ownership-template", out,
                 "ask who reviewed localized prose and where the contributor is credited")
+        require(docs[rel], "CI and repository automation", rel,
+                "automation-surface-template", out,
+                "give workflow and repository-control changes an explicit surface")
         require(docs[rel], "review text is not a compensating control", rel,
                 "submission-risk-decision", out,
                 "require the exact artifact-bound decision fields when unresolved risk is accepted")
@@ -968,6 +1226,31 @@ def audit_repo(
             "github-pr-browser-artifact", ".github/workflows/pages.yml",
             "pull requests do not render the complete generated Pages artifact in the GitHub browser runtime",
             "build the pull-request artifact after the ship gate and run the exhaustive renderer without deployment authority",
+        ))
+    pr_artifact_audit = (
+        'sensitive_content_audit.py --root "$RUNNER_TEMP/pull-request-public" '
+        "--publication-source-root ."
+    )
+    if len(pr_browser_steps) == 1:
+        step = pr_browser_steps[0]
+        build_offset = step.find('build_pages.sh "$RUNNER_TEMP/pull-request-public"')
+        audit_offset = step.find(pr_artifact_audit)
+        browser_offset = step.find("skill_renderer_runtime_audit.py")
+        if (
+            audit_offset < 0
+            or not build_offset < audit_offset < browser_offset
+        ):
+            out.append(finding(
+                "github-pr-sensitive-artifact", ".github/workflows/pages.yml",
+                "the pull-request browser job does not audit its built Pages artifact",
+                "audit the complete pull-request artifact against exact source bytes "
+                "after the build and before browser traversal",
+            ))
+    else:
+        out.append(finding(
+            "github-pr-sensitive-artifact", ".github/workflows/pages.yml",
+            "the pull-request browser job does not expose one artifact step to audit",
+            "build and sensitive-content audit the pull-request artifact before browser traversal",
         ))
     for job_name in ("build-and-verify", "rebuild-for-comparison"):
         block = workflow_job(pages, job_name)
@@ -1638,25 +1921,29 @@ def audit_repo(
         (".github/workflows/pages.yml", workflow_job(pages, "build-and-verify"),
          "run: python3 scripts/validation/sensitive_content_audit.py\n"),
         (".github/workflows/pages.yml", workflow_job(pages, "build-and-verify"),
-         "python3 scripts/validation/sensitive_content_audit.py --root public"),
+         "python3 scripts/validation/sensitive_content_audit.py --root public "
+         "--publication-source-root ."),
         (".github/workflows/release.yml", workflow_job(release, "build-and-package"),
          "run: python3 scripts/validation/sensitive_content_audit.py\n"),
         (".github/workflows/release.yml", workflow_job(release, "build-and-package"),
-         "python3 scripts/validation/sensitive_content_audit.py --root public"),
+         "python3 scripts/validation/sensitive_content_audit.py \\\n"
+         "            --root public --publication-source-root ."),
         ("scripts/build/push_pages.sh", docs["scripts/build/push_pages.sh"],
          'if ! python3 "$T1/scripts/validation/sensitive_content_audit.py"; then'),
         ("scripts/build/push_pages.sh", docs["scripts/build/push_pages.sh"],
-         'if ! python3 "$T1/scripts/validation/sensitive_content_audit.py" --root "$REPO/public"; then'),
+         'if ! python3 "$T1/scripts/validation/sensitive_content_audit.py" \\\n'
+         '    --root "$REPO/public" --publication-source-root "$T1"; then'),
         ("scripts/build/publish_edx.py", docs["scripts/build/publish_edx.py"],
          "_audit_publication_tree(ROOT)"),
         ("scripts/build/publish_edx.py", docs["scripts/build/publish_edx.py"],
          "_audit_publication_tree(src)"),
         (".gitlab/ci/core.yml", docs[".gitlab/ci/core.yml"],
-         "sensitive_content_audit.py --root public"),
+         "sensitive_content_audit.py --root public --publication-source-root ."),
         (".gitlab/ci/privileged-child.yml", docs[".gitlab/ci/privileged-child.yml"],
-         "sensitive_content_audit --root /tmp/validated-candidate"),
+         "sensitive_content_audit --root /tmp/validated-candidate "
+         "--publication-source-root ."),
         (".gitlab/ci/privileged-child.yml", docs[".gitlab/ci/privileged-child.yml"],
-         "sensitive_content_audit --root cdn/publication"),
+         "sensitive_content_audit --root cdn/publication --publication-source-root ."),
     ):
         require(scope, token, rel, "publication-sensitive-guard", out,
                 f"audit the complete tree in {rel} so a skipped hook cannot publish restricted content")
@@ -1759,7 +2046,11 @@ def audit_submission(body: str) -> list[dict[str, str]]:
                 "use Closes #N when the issue is fully satisfied, or add a substantive "
                 "## Remaining issue work section",
             ))
-    if not re.search(r"(?im)^- \[[xX]\] `?(?:web/|i18n/|scripts/|docs/|materials)", body or ""):
+    if not re.search(
+        r"(?im)^- \[[xX]\] (?:`?(?:web/|i18n/|scripts/|docs/|materials)|"
+        r"CI and repository automation)",
+        body or "",
+    ):
         out.append(finding("submission-surface", "submission", "no changed surface is checked",
                            "check every touched surface in ## Surfaces touched"))
     if not re.search(r"(?im)\b(?:PASS|FAIL|BLOCKED)\b", body or ""):
@@ -1987,6 +2278,61 @@ def self_test() -> list[str]:
                 'python3 scripts/validation/sensitive_content_audit.py',
             ),
             (
+                "github-base-boundary-candidate-fetch-auth",
+                ".github/workflows/contribution-boundary.yml",
+                "          CANDIDATE_READ_TOKEN: ${{ github.token }}\n",
+                "",
+            ),
+            (
+                "github-base-boundary-candidate-fetch-auth",
+                ".github/workflows/contribution-boundary.yml",
+                "CANDIDATE_READ_TOKEN: ${{ github.token }}",
+                'CANDIDATE_READ_TOKEN: ""',
+            ),
+            (
+                "github-base-boundary-candidate-fetch-auth",
+                ".github/workflows/contribution-boundary.yml",
+                "GIT_CONFIG_KEY_0: credential.helper",
+                "GIT_CONFIG_KEY_0: core.askPass",
+            ),
+            (
+                "github-base-boundary-candidate-fetch-auth",
+                ".github/workflows/contribution-boundary.yml",
+                "CANDIDATE_READ_TOKEN: ${{ github.token }}",
+                "CANDIDATE_READ_TOKEN: ${{ secrets.CANDIDATE_READ_TOKEN }}",
+            ),
+            (
+                "github-base-boundary-credential-exposure",
+                ".github/workflows/contribution-boundary.yml",
+                '          git fetch --no-tags --depth=1 origin "refs/pull/${PR_NUMBER}/head"\n',
+                '          git config --local http.https://github.com/.extraheader \\\n'
+                '            "AUTHORIZATION: basic ${{ github.token }}"\n'
+                '          git fetch --no-tags --depth=1 origin "refs/pull/${PR_NUMBER}/head"\n',
+            ),
+            (
+                "github-base-boundary-credential-exposure",
+                ".github/workflows/contribution-boundary.yml",
+                '          git fetch --no-tags --depth=1 origin "refs/pull/${PR_NUMBER}/head"\n',
+                '          git fetch --no-tags --depth=1 origin "refs/pull/${PR_NUMBER}/head"\n'
+                "          git fetch --no-tags --depth=1 \\\n"
+                '            "https://x-access-token:$CANDIDATE_READ_TOKEN@github.com/$GITHUB_REPOSITORY" \\\n'
+                '            "refs/pull/${PR_NUMBER}/head"\n',
+            ),
+            (
+                "github-base-boundary-credential-exposure",
+                ".github/workflows/contribution-boundary.yml",
+                "          CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}\n",
+                "          CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}\n"
+                "          CANDIDATE_READ_TOKEN: ${{ github.token }}\n",
+            ),
+            (
+                "github-base-boundary-credential-exposure",
+                ".github/workflows/contribution-boundary.yml",
+                '          git fetch --no-tags --depth=1 origin "refs/pull/${PR_NUMBER}/head"\n',
+                '          test -n "$CANDIDATE_READ_TOKEN"\n'
+                '          git fetch --no-tags --depth=1 origin "refs/pull/${PR_NUMBER}/head"\n',
+            ),
+            (
                 "github-base-boundary-candidate-execution",
                 ".github/workflows/contribution-boundary.yml",
                 '          test "$(git rev-parse FETCH_HEAD)" = "$CANDIDATE_SHA"\n',
@@ -2054,6 +2400,8 @@ def self_test() -> list[str]:
             ("release-draft", ".github/workflows/release.yml", "--draft --verify-tag", "--verify-tag"),
             ("release-annotated-tag", ".github/workflows/release.yml", 'git cat-file -t "refs/tags/$RELEASE_TAG"', 'git cat-file -t "$RELEASE_TAG^{commit}"'),
             ("release-artifact-set", ".github/workflows/release.yml", "test -f release-assets/release-manifest.json", "test -f release-assets/manifest.json"),
+            ("workflow-credential-free-remote-read", ".github/workflows/release.yml", "RELEASE_READ_TOKEN: ${{ github.token }}", 'RELEASE_READ_TOKEN: ""'),
+            ("workflow-credential-free-remote-read", ".github/workflows/release.yml", "GIT_CONFIG_KEY_0: credential.helper", "GIT_CONFIG_KEY_0: core.askPass"),
             ("release-package-contract", "scripts/build/package_release.py", "mtime=0", "mtime=None"),
             ("release-malware-evidence-contract", "scripts/build/package_release.py", '"malware_scan_required"', '"scan_optional"'),
             ("release-malware-evidence-doc", "docs/release_artifacts.md", "required-before-publication", "optional-after-publication"),
@@ -2061,19 +2409,25 @@ def self_test() -> list[str]:
             ("publication-release-guard", ".github/workflows/release.yml", "contribution_safety_audit.py --require-publication-approved", "contribution_safety_audit.py"),
             ("publication-deploy-guard", ".github/workflows/pages.yml", "contribution_safety_audit.py --require-publication-approved", "contribution_safety_audit.py"),
             ("publication-sensitive-guard", ".github/workflows/pages.yml", "      - name: Sensitive content boundary before the deployed artifact\n        run: python3 scripts/validation/sensitive_content_audit.py\n", ""),
-            ("publication-sensitive-guard", ".github/workflows/pages.yml", "      - name: Sensitive content boundary on the exact Pages artifact\n        run: python3 scripts/validation/sensitive_content_audit.py --root public\n", ""),
+            ("publication-sensitive-guard", ".github/workflows/pages.yml", "      - name: Sensitive content boundary on the exact Pages artifact\n        run: python3 scripts/validation/sensitive_content_audit.py --root public --publication-source-root .\n", ""),
             ("publication-sensitive-guard", ".github/workflows/release.yml", "      - name: Sensitive content boundary before the released artifact\n        run: python3 scripts/validation/sensitive_content_audit.py\n", ""),
-            ("publication-sensitive-guard", ".github/workflows/release.yml", "          python3 scripts/validation/sensitive_content_audit.py --root public\n", ""),
+            ("publication-sensitive-guard", ".github/workflows/release.yml", "          python3 scripts/validation/sensitive_content_audit.py \\\n            --root public --publication-source-root .\n", ""),
             ("publication-sensitive-guard", "scripts/build/push_pages.sh", 'python3 "$T1/scripts/validation/sensitive_content_audit.py"', "true"),
-            ("publication-sensitive-guard", "scripts/build/push_pages.sh", 'sensitive_content_audit.py" --root "$REPO/public"', 'sensitive_content_audit.py" --help'),
+            ("publication-sensitive-guard", "scripts/build/push_pages.sh", 'sensitive_content_audit.py" \\\n    --root "$REPO/public" --publication-source-root "$T1"', 'sensitive_content_audit.py" --help'),
             ("publication-sensitive-guard", "scripts/build/publish_edx.py", "_audit_publication_tree(ROOT)", "True"),
             ("publication-sensitive-guard", "scripts/build/publish_edx.py", "_audit_publication_tree(src)", "True"),
-            ("publication-sensitive-guard", ".gitlab/ci/core.yml", "      python3 scripts/validation/sensitive_content_audit.py --root public\n", ""),
-            ("publication-sensitive-guard", ".gitlab/ci/privileged-child.yml", "      python3 -m scripts.validation.sensitive_content_audit --root /tmp/validated-candidate\n", ""),
-            ("publication-sensitive-guard", ".gitlab/ci/privileged-child.yml", "      python3 -m scripts.validation.sensitive_content_audit --root cdn/publication\n", ""),
+            ("publication-sensitive-guard", ".gitlab/ci/core.yml", "      python3 scripts/validation/sensitive_content_audit.py --root public --publication-source-root .\n", ""),
+            ("publication-sensitive-guard", ".gitlab/ci/privileged-child.yml", "      python3 -m scripts.validation.sensitive_content_audit --root /tmp/validated-candidate --publication-source-root .\n", ""),
+            ("publication-sensitive-guard", ".gitlab/ci/privileged-child.yml", "      python3 -m scripts.validation.sensitive_content_audit --root cdn/publication --publication-source-root .\n", ""),
             ("publication-webhook-timing", "docs/release_playbook.md", "Host webhook checks fire after a ref already exists on GitHub", "Host webhook checks prevent a bad ref"),
             ("github-reviewed-artifact-handoff", ".github/workflows/pages.yml", "needs: [build-and-verify, rebuild-for-comparison]", "needs: build-and-verify"),
             ("github-pr-browser-artifact", ".github/workflows/pages.yml", '--site-root "$RUNNER_TEMP/pull-request-public" --timeout-seconds 600', '--site-root web --timeout-seconds 600'),
+            (
+                "github-pr-sensitive-artifact",
+                ".github/workflows/pages.yml",
+                '          python3 scripts/validation/sensitive_content_audit.py --root "$RUNNER_TEMP/pull-request-public" --publication-source-root .\n',
+                "",
+            ),
             ("github-pages-browser-review", ".github/workflows/pages.yml", "runtime_integration_browser_audit.py --site-root public --timeout-ms 180000", "runtime_integration_browser_audit.py --site-root web --timeout-ms 180000"),
             ("github-pages-artifact-integrity", ".github/workflows/pages.yml", "--write-manifest public/pages-sha256.txt", "--write-manifest web/pages-sha256.txt"),
             (
@@ -2121,6 +2475,8 @@ def self_test() -> list[str]:
             ("submission-template", ".github/PULL_REQUEST_TEMPLATE.md", "## Blast radius checked", "## Scope notes"),
             ("stacked-submission-template", ".gitlab/merge_request_templates/Default.md", "host-generated squash", "automatic integration"),
             ("localization-ownership-template", ".github/PULL_REQUEST_TEMPLATE.md", "localized learner prose changed", "translation files changed"),
+            ("automation-surface-template", ".github/PULL_REQUEST_TEMPLATE.md", "CI and repository automation", "workflow changes"),
+            ("automation-surface-template", ".gitlab/merge_request_templates/Default.md", "CI and repository automation", "workflow changes"),
             ("gitlab-description-window", ".gitlab/merge_request_templates/Default.md", "## Validation evidence", "x" * 2700 + "\n## Validation evidence"),
             ("mutating-prepush", "scripts/git-hooks/pre-push", "REFUSING PUSH - origin/main is", "git pull --rebase origin main # REFUSING PUSH - origin/main is"),
             ("fetch-fail-open", "scripts/git-hooks/pre-push", "if ! git fetch origin main --quiet; then", "git fetch origin main --quiet || exit 0\n    if false; then"),
@@ -2313,12 +2669,152 @@ def self_test() -> list[str]:
                 "  with:",
                 "    persist-credentials: false",
             ))),
+            # A credential-free workspace cannot read a remote. These shapes are the transport
+            # failure itself and the two ways of "fixing" it that leak the credential instead.
+            ("workflow-credential-free-remote-read", added_workflow_source(
+                step_lines=("- run: git fetch --no-tags --depth=1 origin main",),
+            )),
+            ("workflow-credential-free-remote-read", added_workflow_source(
+                ("on:", "  workflow_dispatch:"),
+                step_lines=(
+                    "- env:",
+                    "    PR_NUMBER: ${{ github.event.pull_request.number }}",
+                    "  run: |",
+                    "    git fetch --no-tags --depth=1 origin"
+                    ' "refs/pull/${PR_NUMBER}/head"',
+                ),
+            )),
+            ("workflow-credential-free-remote-read", added_workflow_source(
+                step_lines=("- run: git ls-remote origin main",),
+            )),
+            ("workflow-credential-free-remote-read", added_workflow_source(
+                step_lines=("- run: git -C . fetch --no-tags origin main",),
+            )),
+            ("workflow-credential-free-remote-read", added_workflow_source(
+                step_lines=(
+                    "- run: env TRACE_NETWORK=1 git -c http.version=HTTP/1.1"
+                    " fetch --no-tags origin main",
+                ),
+            )),
+            ("workflow-credential-free-remote-read", added_workflow_source(
+                step_lines=(
+                    "- run: TRACE_NETWORK=1 git fetch --no-tags origin main",
+                ),
+            )),
+            ("workflow-credential-free-remote-read", added_workflow_source(
+                step_lines=(
+                    "- run: |",
+                    "    if ! git fetch --no-tags origin main; then",
+                    "      exit 1",
+                    "    fi",
+                ),
+            )),
+            ("workflow-credential-free-remote-read", added_workflow_source(
+                step_lines=(
+                    "- run: bash -lc 'git fetch --no-tags origin main'",
+                ),
+            )),
+            ("workflow-credential-free-remote-read", added_workflow_source(
+                step_lines=(
+                    "- run: result=$(git ls-remote origin main)",
+                ),
+            )),
+            ("workflow-credential-free-remote-read", added_workflow_source(
+                step_lines=(
+                    "- run: env -S 'TRACE_NETWORK=1 git fetch --no-tags origin main'",
+                ),
+            )),
+            ("workflow-credential-free-remote-read", added_workflow_source(
+                ("on:", "  workflow_dispatch:"),
+                step_lines=(
+                    "- env:",
+                    "    UNUSED_TOKEN: ${{ github.token }}",
+                    "  run: git fetch --no-tags --depth=1 origin main",
+                ),
+            )),
+            ("workflow-credential-free-remote-read", added_workflow_source(
+                ("on:", "  workflow_dispatch:"),
+                step_lines=(
+                    "- env:",
+                    '    GIT_TERMINAL_PROMPT: "0"',
+                    '    GIT_CONFIG_COUNT: "1"',
+                    "    GIT_CONFIG_KEY_0: credential.helper",
+                    "    GIT_CONFIG_VALUE_0: '!f() { echo username=x-access-token;"
+                    ' echo "password=$READ_TOKEN"; }; f\'',
+                    "    READ_TOKEN: ${{ secrets.READ_TOKEN }}",
+                    "  run: git fetch --no-tags --depth=1 origin main",
+                ),
+            )),
+            ("workflow-credential-exposure", added_workflow_source(
+                step_lines=(
+                    "- run: |",
+                    "    git config --local http.https://github.com/.extraheader \\",
+                    '      "AUTHORIZATION: basic ${{ github.token }}"',
+                    "    git fetch --no-tags --depth=1 origin main",
+                ),
+            )),
+            ("workflow-credential-exposure", added_workflow_source(
+                step_lines=(
+                    "- env:",
+                    "    READ_TOKEN: ${{ github.token }}",
+                    "  run: |",
+                    "    git fetch --no-tags --depth=1 \\",
+                    '      "https://x-access-token:$READ_TOKEN@github.com/$GITHUB_REPOSITORY"'
+                    " main",
+                ),
+            )),
+            ("workflow-credential-exposure", added_workflow_source(
+                ("on:", "  workflow_dispatch:"),
+                step_lines=(
+                    "- env:",
+                    '    GIT_TERMINAL_PROMPT: "0"',
+                    '    GIT_CONFIG_COUNT: "1"',
+                    "    GIT_CONFIG_KEY_0: credential.helper",
+                    "    GIT_CONFIG_VALUE_0: '!f() { echo username=x-access-token;"
+                    ' echo "password=$READ_TOKEN"; }; f\'',
+                    "    READ_TOKEN: ${{ github.token }}",
+                    "  run: |",
+                    '    test -n "$READ_TOKEN"',
+                    "    git fetch --no-tags --depth=1 origin main",
+                ),
+            )),
         )
         for expected, source in workflow_mutations:
             added_workflow.write_text(source, encoding="utf-8")
             codes = {item["code"] for item in audit_repo(fixture)}
             if expected not in codes:
                 failures.append(f"added workflow mutation escaped detector: {expected}")
+
+        # Positive control: the repaired transport shape must be accepted, so the two credential
+        # codes above cannot be passing by firing on every remote read.
+        added_workflow.write_text(added_workflow_source(
+            ("on:", "  workflow_dispatch:"),
+            step_lines=(
+                "- env:",
+                '    GIT_TERMINAL_PROMPT: "0"',
+                '    GIT_CONFIG_COUNT: "1"',
+                "    GIT_CONFIG_KEY_0: credential.helper",
+                "    GIT_CONFIG_VALUE_0: '!f() { echo username=x-access-token;"
+                ' echo "password=$READ_TOKEN"; }; f\'',
+                "    READ_TOKEN: ${{ github.token }}",
+                "  run: git fetch --no-tags --depth=1 origin main",
+            ),
+        ), encoding="utf-8")
+        accepted = {item["code"] for item in audit_repo(fixture)}
+        for code in ("workflow-credential-free-remote-read", "workflow-credential-exposure"):
+            if code in accepted:
+                failures.append(f"authenticated env-only remote read rejected: {code}")
+        for label, command in (
+            ("quoted prose", "echo 'git fetch origin main'"),
+            ("help only", "git fetch --help"),
+        ):
+            added_workflow.write_text(added_workflow_source(
+                ("on:", "  workflow_dispatch:"),
+                step_lines=(f"- run: {command}",),
+            ), encoding="utf-8")
+            codes = {item["code"] for item in audit_repo(fixture)}
+            if "workflow-credential-free-remote-read" in codes:
+                failures.append(f"non-network Git near-miss rejected: {label}")
         added_workflow.unlink()
 
         retired = fixture / "QUALITY_DIRECTIVES.md"
@@ -2357,6 +2853,16 @@ def self_test() -> list[str]:
     localized = good.replace("- [x] `scripts/`", "- [x] `i18n/`")
     if audit_submission(localized):
         failures.append("valid localization submission fixture rejected")
+    automation = good.replace("- [x] `scripts/`", "- [x] CI and repository automation")
+    if audit_submission(automation):
+        failures.append("valid automation submission fixture rejected")
+    if "submission-surface" not in {
+        item["code"] for item in audit_submission(
+            automation.replace("- [x] CI and repository automation",
+                               "- [ ] CI and repository automation")
+        )
+    }:
+        failures.append("unchecked automation surface escaped submission audit")
     if audit_publication_approval(ROOT):
         failures.append("approved release unexpectedly failed the external publication guard")
     partial = good.replace("Closes #12", "Addresses #12").replace(

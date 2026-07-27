@@ -183,6 +183,15 @@ def project(root: Path, output: Path) -> tuple[int, list[str]]:
     ]
     files = source_files(root, output)
     file_set = set(files)
+    claimed: dict[Path, Path] = {}
+    for relative in files:
+        target = projected_path(relative)
+        owner = claimed.setdefault(target, relative)
+        if owner != relative:
+            # One artifact route must copy exactly one source file. A collision would both
+            # overwrite reviewed bytes and hand a second file the policy identity that
+            # scripts/validation/sensitive_content_audit.py resolves from that route.
+            findings.append(f"two sources claim one artifact route: {owner} and {relative} -> {target}")
     for relative in files:
         source = root / relative
         target = output / projected_path(relative)
@@ -295,6 +304,27 @@ class ProjectionTests(unittest.TestCase):
             self.assertEqual((second_count, second_findings), (1, []))
             self.assertEqual((output / "SKILL.html").read_text(encoding="utf-8"), "<p>source</p>")
             self.assertFalse((output / output.name).exists())
+
+    def test_a_second_source_cannot_claim_a_public_route(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "repo"
+            output = Path(temp) / "artifact"
+            root.mkdir()
+            subprocess.run(["git", "init", "-q", str(root)], check=True)
+            for relative, body in (
+                (Path(".gitlab/CODEOWNERS"), "/scripts/ @owner\n"),
+                (Path("source/gitlab/CODEOWNERS"), "/scripts/ @impostor\n"),
+            ):
+                (root / relative).parent.mkdir(parents=True, exist_ok=True)
+                (root / relative).write_text(body, encoding="utf-8")
+            subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
+
+            _count, findings = project(root, output)
+
+            self.assertTrue(
+                any("two sources claim one artifact route" in item for item in findings),
+                findings,
+            )
 
     def test_artifact_root_cannot_contain_source_root(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
