@@ -42,10 +42,20 @@ PROTECTED_WRITERS = {
     "nemoclaw_openclaw_access_session_v1": {CONNECTION},
     "nemoclaw_openclaw_proxy_base_v1": {CONNECTION},
     "nemoclaw_openclaw_proxy_enabled_v1": {CONNECTION},
+    "nemoclaw_openclaw_ws_relay_enabled_v1": {CONNECTION},
 }
 
-MODEL_QUERY_KEYS = ("base_url", "model_base_url", "model", "embedding_base_url", "embedding_model")
-OPENCLAW_QUERY_KEYS = ("openclaw_url", "openclaw_proxy_base", "openclaw_proxy", "openclaw_access_provider")
+RETIRED_PRESENTER_QUERY_KEYS = (
+    "base_url",
+    "model_base_url",
+    "model",
+    "embedding_base_url",
+    "embedding_model",
+    "openclaw_url",
+    "openclaw_access_provider",
+    "openclaw_proxy_base",
+    "openclaw_proxy",
+)
 
 ENDPOINT_PAGE = "web/nemoclaw/03a-kickstart.html"
 UNOWNED_PARTS = {"vendor", "mats", "assets", "standalone"}
@@ -112,16 +122,15 @@ def audit(overrides: dict[str, str] | None = None) -> list[str]:
     if len({re.search(r'"([^"\n]+)"', token).group(1) for token in storage_contract}) != len(storage_contract):
         findings.append("model and embedding storage registrations are not distinct")
 
-    for key in MODEL_QUERY_KEYS:
-        if f'.get("{key}")' not in shared:
-            findings.append(f"model registry does not own query parameter: {key}")
-        if f'.get("{key}")' in connection:
-            findings.append(f"OpenClaw registry reads model query parameter: {key}")
-    for key in OPENCLAW_QUERY_KEYS:
-        if f'params.get("{key}")' not in connection:
-            findings.append(f"OpenClaw registry does not own query parameter: {key}")
-        if f'.get("{key}")' in shared:
-            findings.append(f"model registry reads OpenClaw query parameter: {key}")
+    for key in RETIRED_PRESENTER_QUERY_KEYS:
+        getter = re.compile(rf"\.get\(\s*(['\"]){re.escape(key)}\1\s*\)")
+        if getter.search(shared):
+            findings.append(f"model registry still accepts retired presenter query parameter: {key}")
+        if getter.search(connection):
+            findings.append(f"OpenClaw registry still accepts retired presenter query parameter: {key}")
+        for rel in endpoint_pages():
+            if re.search(rf"[?&]\s*{re.escape(key)}\s*=", text(rel, overrides), re.I):
+                findings.append(f"{rel}: advertises retired presenter query parameter: {key}")
 
     if 'sessionStorage.setItem("__nv_slim_cfg_v1"' in runtime:
         findings.append("runtime harness bypasses the model registry with a private config cache write")
@@ -156,6 +165,8 @@ def audit(overrides: dict[str, str] | None = None) -> list[str]:
         'export const OPENCLAW_ACCESS_SESSION_KEY = "nemoclaw_openclaw_access_session_v1"',
         "export function getOpenClawConnection()",
         "export function setOpenClawConnection({ rawUrl, token, accessProvider, accessSession, accessJwt } = {})",
+        "OpenClaw launchables use the approved NVIDIA DLI relay",
+        "new URL(DEFAULT_OPENCLAW_PROXY_BASE)",
     )
     for token in connection_contract:
         if token not in connection:
@@ -218,6 +229,7 @@ def self_test() -> list[str]:
     en = text(pages[0], {})
     localized = text(pages[1], {})
     openclaw = (ROOT / OPENCLAW).read_text(encoding="utf-8")
+    connection = (ROOT / CONNECTION).read_text(encoding="utf-8")
     shared = (ROOT / SHARED).read_text(encoding="utf-8")
     explorer = (ROOT / EXPLORER).read_text(encoding="utf-8")
     browser_integration = (ROOT / BROWSER_INTEGRATION).read_text(encoding="utf-8")
@@ -228,9 +240,15 @@ def self_test() -> list[str]:
         ("probe JSON guard removed", {pages[0]: en.replace(', expectJson: true', '', 1)}, "JSON/path guard"),
         ("model route panel removed", {pages[1]: localized.replace('id="model-route-settings"', 'id="removed-model-route-settings"', 1)}, "model route source"),
         ("page writes launchable registration", {pages[0]: en + '\n<script>localStorage.setItem("nemoclaw_clawrawurl", "bad")</script>\n'}, "writes protected endpoint"),
+        ("page writes WebSocket relay preference", {pages[0]: en + '\n<script>localStorage.setItem("nemoclaw_openclaw_ws_relay_enabled_v1", "1")</script>\n'}, "writes protected endpoint"),
         ("embedding conflated with chat", {SHARED: shared.replace('const EMBEDDING_API_BASE_URL_KEY = "nemoclaw_embedding_api_base_url_v1"', 'const EMBEDDING_API_BASE_URL_KEY = "nemoclaw_model_api_base_url_v1"', 1)}, "registry contract"),
         ("explorer bypasses course model registry", {EXPLORER: explorer.replace("return shared.chat({", "return fetch(self.cfg.proxy, {", 1)}, "SKILL explorer bypasses"),
         ("explorer browser handoff removed", {BROWSER_INTEGRATION: browser_integration.replace("SKILL explorer model registry handoff failed", "browser handoff removed", 1)}, "browser integration audit"),
+        ("retired model query restored", {SHARED: shared.replace("export function getModelApiBaseUrl()", 'const legacyModel = new URLSearchParams(location.search).get("base_url");\n\nexport function getModelApiBaseUrl()', 1)}, "retired presenter query parameter"),
+        ("retired OpenClaw query restored", {CONNECTION: connection.replace("export function getOpenClawProxyConfig()", 'const legacyLaunchable = new URLSearchParams(location.search).get("openclaw_url");\n\nexport function getOpenClawProxyConfig()', 1)}, "retired presenter query parameter"),
+        ("learner advertises retired model query", {pages[0]: en + "\n<p>?model=provider/model</p>\n"}, "advertises retired presenter query parameter"),
+        ("learner advertises retired relay query", {pages[0]: en + "\n<p>?openclaw_proxy_base=https://relay.example</p>\n"}, "advertises retired presenter query parameter"),
+        ("arbitrary OpenClaw relay restored", {CONNECTION: connection.replace("new URL(DEFAULT_OPENCLAW_PROXY_BASE)", "new URL(config.base)", 1)}, "registry contract"),
     )
     for label, overrides, expected in cases:
         if not any(expected in finding for finding in audit(overrides)):

@@ -2,7 +2,7 @@
 # Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Audit OpenClaw fail-fast, Brev backup, and probe-frame cleanup contracts."""
+"""Audit OpenClaw fail-fast, provider routing, and probe-frame cleanup contracts."""
 from __future__ import annotations
 
 import os
@@ -40,9 +40,11 @@ FILES = {
 }
 
 REQUIRED = {
-    "kickstart": ["Cloudflare Access", "Pomerium", "CF_Authorization", "HttpOnly"],
-    "openclaw_js": ["Cloudflare Access", "Pomerium", "X-OpenClaw-Access-Session", "${fallback}${hint}", "openclawGatewayWsUrl", "getOpenClawProxyConfig", "proxyControls", "hideHtmlFrame", ".claw-html-frame[hidden]"],
-    "connection_js": ["DEFAULT_OPENCLAW_PROXY_BASE", "OPENCLAW_PROXY_BASE_KEY", "OPENCLAW_PROXY_ENABLED_KEY", "OPENCLAW_ACCESS_PROVIDER_KEY", "OPENCLAW_ACCESS_SESSION_KEY", "openclaw_access_provider", "migrateOpenClawConnectionStorage", "workers\\.dev", "openclawWebSocketUrl"],
+    "kickstart": ["Cloudflare Access", "Pomerium", "CF_Authorization", "HttpOnly", "helpers.openclawBootstrapRequest(PATH"],
+    # Provider-neutral relay headers remain part of the separately deployable
+    # relay contract. Course Pomerium routes stay direct and cannot reach them.
+    "openclaw_js": ["Cloudflare Access", "Pomerium", "X-OpenClaw-Access-Session", "CF-Access-Jwt-Assertion", "${fallback}${hint}", "openclawGatewayWsUrl", "openclawBootstrapRequest", "getOpenClawProxyConfig", "getOpenClawWsRelayEnabled", "proxyControls", "hideHtmlFrame", ".claw-html-frame[hidden]"],
+    "connection_js": ["DEFAULT_OPENCLAW_PROXY_BASE", "OPENCLAW_PROXY_BASE_KEY", "OPENCLAW_PROXY_ENABLED_KEY", "OPENCLAW_WS_RELAY_ENABLED_KEY", "OPENCLAW_ACCESS_PROVIDER_KEY", "OPENCLAW_ACCESS_SESSION_KEY", "openclaw_access_provider", "migrateOpenClawConnectionStorage", "workers\\.dev", "new URL(DEFAULT_OPENCLAW_PROXY_BASE)", "openclawWebSocketUrl"],
     "cors_worker": ["CF_Authorization", "X-Pomerium-Authorization", "X-OpenClaw-Access-Provider", "access_session", "targetSearch.delete", "upstream.webSocket", "Origin", "http://localhost:8088"],
     "runtime_js": ["OPENCLAW_BACKUP_HINT", "OPENCLAW_CORS_PROXY_BASE", "preflightOpenClaw", "resolveOpenClawToken", "OPENCLAW_TOKEN: discovered", "shared.setOpenClawConnection({ rawUrl: u, token: t, accessProvider: provider, accessSession: session })", "RESULT: FAIL (OpenClaw gateway activity missing", "gatewayMissing) ? 1 : 0", "'/health'"],
     "runtime_sh": ["CLAW_ACCESS_PROVIDER", "CLAW_ACCESS_SESSION", "OPENCLAW_CORS_PROXY_BASE"],
@@ -51,9 +53,12 @@ REQUIRED = {
     "validation_skill": ["openclaw_fallback_audit.py", "OpenClaw fallback"],
     "worker_ws_audit": ["openclaw worker ws audit", "CF_Authorization", "x-pomerium-authorization", "synthesized a Cookie header", "http://localhost:8088", "upstream WebSocket response directly"],
     "gateway_token_audit": ["gateway token audit", "gatewayTokenFromAgentMetadata", "gatewayTokenFromDashboardUrl", "--self-test"],
-    "gw_transport_audit": ["gw connect transport audit", "expected direct signed-in launchable", "cf_access_jwt"],
+    # Bind to the transport facts the audit must still assert (relay route, gateway path,
+    # direct sender-bound gateway route, not to its failure prose, so rewording a
+    # message cannot block the ship while dropping the contract still does.
+    "gw_transport_audit": ["gw connect transport audit", "/cli/gateway", "sender-bound Cloudflare route", "direct browser credential boundary"],
     "gw_recover_compile_audit": ["gw recover compile audit", "private _uniqueId"],
-    "connection_audit": ["openclaw connection audit", "retired relay", "same-origin vendored course", "terminal helper", "04b-modern-clis.html"],
+    "connection_audit": ["openclaw connection audit", "retired relay", "same-origin co-located launchable", "terminal helper", "04b-modern-clis.html"],
 }
 
 
@@ -162,7 +167,7 @@ def audit() -> list[str]:
         if "replace(//" in decoded:
             findings.append("GW_CONNECT template decodes to invalid regex/comment syntax; avoid slash regex literals inside stringified cells")
         if "helpers.openclawGatewayWsUrl(rawUrl, accessSession, null, null, accessProvider)" not in decoded:
-            findings.append("GW_CONNECT must call the shared configurable gateway router")
+            findings.append("GW_CONNECT must call the shared provider-aware gateway router")
         if "const openclawGatewayWsUrl" in decoded:
             findings.append("GW_CONNECT duplicates the shared gateway router")
         if "_uniqueId(" in decoded:

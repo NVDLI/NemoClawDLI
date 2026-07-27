@@ -6,8 +6,7 @@ import {
   DEFAULT_MODEL, DEFAULT_MODEL_API_BASE_URL, browserChatFetch, chat,
   getEmbeddingApiBaseUrl, getEmbeddingKey, getEmbeddingModelId, getKey, getModelApiBaseUrl, getModelId,
   hasKey, normalizeModelApiBaseUrl, normalizeModelId, setEmbeddingApiBaseUrl, setEmbeddingKey,
-  setEmbeddingModelId, setKey, setModelApiBaseUrl, setModelId, suggestedEmbeddingApiBaseUrl,
-  suggestedEmbeddingModelId, suggestedModelApiBaseUrl, suggestedModelId, updateKeyPill,
+  setEmbeddingModelId, setKey, setModelApiBaseUrl, setModelId, updateKeyPill,
   iframeProxyModeEnabled, setIframeProxyMode,
 } from "./_shared.js";
 
@@ -31,10 +30,10 @@ export function mountKeyPanel(container, opts = {}) {
   function _draw() {
     const keySaved = hasKey();
     _setState(keySaved ? "ready" : "empty");
-    const modelApiBaseUrl = keySaved ? getModelApiBaseUrl() : suggestedModelApiBaseUrl();
-    const modelId = keySaved ? getModelId() : suggestedModelId();
-    const embeddingApiBaseUrl = keySaved ? getEmbeddingApiBaseUrl() : suggestedEmbeddingApiBaseUrl();
-    const embeddingModelId = keySaved ? getEmbeddingModelId() : suggestedEmbeddingModelId();
+    const modelApiBaseUrl = getModelApiBaseUrl();
+    const modelId = getModelId();
+    const embeddingApiBaseUrl = getEmbeddingApiBaseUrl();
+    const embeddingModelId = getEmbeddingModelId();
     const customEndpoint = modelApiBaseUrl !== DEFAULT_MODEL_API_BASE_URL;
     const filePreview = globalThis.location?.protocol === "file:";
     const proxyChecked = !customEndpoint && iframeProxyModeEnabled();
@@ -71,7 +70,7 @@ export function mountKeyPanel(container, opts = {}) {
         <input type="text" class="model-id" value="${_attr(modelId)}"
                placeholder="model/provider-id" autocomplete="off" spellcheck="false"/>
         <label>Chat API bearer key (NVIDIA keys start with <code>nvapi-</code>)</label>
-        <input type="password" class="model-api-key" placeholder="nvapi-&hellip; or EMPTY" autocomplete="off" spellcheck="false"/>
+        <input type="password" class="model-api-key" placeholder="nvapi-&hellip;" autocomplete="off" spellcheck="false"/>
         <label class="iframe-proxy-toggle-row">
           <input type="checkbox" class="iframe-proxy-toggle" ${proxyChecked ? "checked" : ""} ${filePreview ? "disabled" : ""}/>
           ${filePreview ? "Local file preview uses the NVIDIA DLI browser relay" : "Use the NVIDIA DLI browser relay"}
@@ -92,9 +91,7 @@ export function mountKeyPanel(container, opts = {}) {
         <div class="status"></div>
         <p style="margin:.8em 0 0;font-size:.8rem;color:var(--tf,#8a8a8a)">
           No key yet? <a href="${BUILD_SIGNUP_URL}" target="_blank" rel="noopener">Sign up at build.nvidia.com &rarr;</a>
-          Brev fallback: expose port 5000 with Using Tunnels, make the tunnel public, then paste its /v1 URL, key EMPTY, and served model ID. A private tunnel cannot accept cross-origin course requests. Do not paste the Jupyter /lab URL or localhost.
-          <a href="https://docs.nvidia.com/brev/cli/connectivity" target="_blank" rel="noopener">Open Brev connectivity steps &rarr;</a>
-          A presenter can prefill ?base_url=...&amp;model=.... This tab reuses the keys across lessons and discards them when it closes.
+          then open API Keys and generate one. This tab reuses the keys across lessons and discards them when it closes.
         </p>
       </div>`;
       const input = el.querySelector(".model-api-key");
@@ -163,7 +160,7 @@ export function mountKeyPanel(container, opts = {}) {
             let payload;
             try { payload = await response.json(); }
             catch (_) {
-              throw new Error("Model discovery did not return JSON. Confirm the Brev tunnel is public, then try again");
+              throw new Error("Model discovery did not return JSON. Confirm this endpoint serves the OpenAI-compatible /models route, then try again");
             }
             const models = (payload.data || []).map(item => item?.id).filter(Boolean);
             if (!models.length) throw new Error("model discovery returned no model IDs");

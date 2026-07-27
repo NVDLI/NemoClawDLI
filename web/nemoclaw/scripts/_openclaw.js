@@ -6,18 +6,19 @@
 // Also openclawChat, GW_CONNECT, and the recover flow.
 
 import { updateClawPill, escHtml, _escAttr, mountCanvasFlow } from "./_shared.js";
+import { localizeCourseUiText } from "./_locale.js";
 import {
-  DEFAULT_OPENCLAW_PROXY_BASE, accessProviderForOpenClawUrl, getOpenClawConnection, getOpenClawProxyConfig, migrateOpenClawConnectionStorage,
+  DEFAULT_OPENCLAW_PROXY_BASE, accessProviderForOpenClawUrl, getOpenClawConnection, getOpenClawProxyConfig, getOpenClawWsRelayEnabled, migrateOpenClawConnectionStorage,
   normalizeOpenClawLaunchableUrl, normalizeOpenClawProxyBase, openclawHttpUrl,
-  openclawWebSocketUrl, setOpenClawConnection, setOpenClawProxyConfig,
+  openclawWebSocketUrl, setOpenClawConnection, setOpenClawProxyConfig, setOpenClawWsRelayEnabled,
 } from "./_connection.js";
 import { openclawLoopbackProbe } from "./_openshell.js";
 import { filterOpenClawRuntimeNoise, filterOpenClawRuntimeValue, openclawMessageText, openclawResultText } from "./_runtime_text.js";
 
 export {
-  DEFAULT_OPENCLAW_PROXY_BASE, accessProviderForOpenClawUrl, getOpenClawConnection, getOpenClawProxyConfig, migrateOpenClawConnectionStorage,
+  DEFAULT_OPENCLAW_PROXY_BASE, accessProviderForOpenClawUrl, getOpenClawConnection, getOpenClawProxyConfig, getOpenClawWsRelayEnabled, migrateOpenClawConnectionStorage,
   normalizeOpenClawLaunchableUrl, normalizeOpenClawProxyBase, openclawHttpUrl,
-  openclawWebSocketUrl, setOpenClawConnection, setOpenClawProxyConfig,
+  openclawWebSocketUrl, setOpenClawConnection, setOpenClawProxyConfig, setOpenClawWsRelayEnabled,
 };
 export { filterOpenClawRuntimeNoise, filterOpenClawRuntimeValue, openclawMessageText, openclawResultText };
 
@@ -30,18 +31,21 @@ function _uniqueId(prefix = "") {
 }
 
 export function openclawGatewayWsUrl(rawUrl, accessSession = "", proxyBase = null, proxyEnabled = null, accessProvider = "auto") {
-  const config = proxyBase === null
-    ? getOpenClawProxyConfig()
-    : { base: normalizeOpenClawProxyBase(proxyBase), enabled: proxyEnabled !== false };
-  // Brev establishes its access cookie when the learner opens the launchable.
-  // Connect WebSockets directly so that signed-in session authenticates the socket.
-  // Keep the relay for HTTP bootstrap reads such as /api/agent.
+  // Both supported launchables keep WebSocket authentication in the browser that
+  // signed in. The relay route remains available only when a caller explicitly
+  // opts in; HTTP metadata bootstrap continues to use the approved relay.
   let provider = "auto";
   try { provider = accessProviderForOpenClawUrl(rawUrl, accessProvider); }
   catch (_) { /* openclawWebSocketUrl below returns the authoritative error */ }
-  if (provider === "cloudflare" || provider === "pomerium") {
+  const relayEnabled = proxyEnabled === true ||
+    (proxyEnabled === null && getOpenClawWsRelayEnabled());
+  if (provider === "pomerium" || !relayEnabled) {
     return openclawWebSocketUrl(rawUrl, "/cli/gateway", "", { enabled: false, base: "" }, accessProvider);
   }
+  const config = {
+    base: normalizeOpenClawProxyBase(proxyBase || DEFAULT_OPENCLAW_PROXY_BASE),
+    enabled: true,
+  };
   return openclawWebSocketUrl(rawUrl, "/cli/gateway", accessSession, config, accessProvider);
 }
 
@@ -55,6 +59,65 @@ export function gatewayTokenFromAgentMetadata(payload) {
   } catch (_) {
     return null;
   }
+}
+
+const OPENCLAW_BOOTSTRAP_PATHS = new Set(["/api/agent", "/healthz"]);
+
+export async function openclawBootstrapRequest(path = "/api/agent", { signal = null } = {}) {
+  /* @doc <code>helpers.openclawBootstrapRequest(path)</code> ::
+       Read <code>/api/agent</code> or <code>/healthz</code> through the provider selected
+       from the normalized Module 3a connection. Pomerium uses its authenticated direct
+       terminal; cross-origin Cloudflare uses the approved relay and tab-scoped
+       <code>CF_Authorization</code> assertion. Returns response metadata plus parsed JSON
+       when available without exposing either access credential. */
+  const actionPath = String(path || "");
+  if (!OPENCLAW_BOOTSTRAP_PATHS.has(actionPath)) {
+    throw new Error("OpenClaw bootstrap requests are limited to /api/agent and /healthz");
+  }
+  const connection = getOpenClawConnection();
+  const rawUrl = String(connection.rawUrl || "").replace(/\/+$/, "");
+  if (!rawUrl) throw new Error("Set the launchable URL in the Module 3a probe first.");
+  const provider = accessProviderForOpenClawUrl(rawUrl, connection.accessProvider);
+  if (provider === "pomerium") {
+    const result = await openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal });
+    return {
+      ...result,
+      headers: {},
+      displayUrl: rawUrl + actionPath,
+    };
+  }
+
+  const route = openclawHttpUrl(rawUrl, actionPath);
+  const headers = { Accept: "application/json, text/plain, */*" };
+  if (route.viaProxy && connection.accessSession) {
+    if (provider !== "cloudflare") {
+      throw new Error("Choose the access provider that matches this launchable.");
+    }
+    headers["CF-Access-Jwt-Assertion"] = connection.accessSession;
+  }
+  // /api/agent discovers the gateway token. A stale token from another
+  // launchable must not prevent that replacement.
+  if (actionPath !== "/api/agent" && connection.token) {
+    headers.Authorization = "Bearer " + connection.token;
+  }
+  const response = await fetch(route.url, {
+    headers,
+    credentials: route.viaProxy ? "same-origin" : "include",
+    signal,
+  });
+  const body = await response.text();
+  let json = null;
+  try { json = JSON.parse(body); } catch (_) {}
+  return {
+    ok: response.ok,
+    status: response.status,
+    statusText: response.statusText,
+    body,
+    json,
+    headers: Object.fromEntries(response.headers),
+    transport: route.viaProxy ? "approved-cloudflare-relay" : "direct-browser",
+    displayUrl: route.displayUrl,
+  };
 }
 
 let _verifiedGatewayToken = { rawUrl: "", token: "", verifiedAt: 0, metadataMatches: null };
@@ -75,22 +138,8 @@ export async function refreshOpenClawGatewayToken({ signal = null, maxAgeMs = 30
 
   let metadataToken = "";
   try {
-    if (connection.resolvedAccessProvider === "pomerium") {
-      const probe = await openclawLoopbackProbe("/api/agent", { baseUrl: rawUrl, signal });
-      metadataToken = gatewayTokenFromAgentMetadata(probe.json) || "";
-    } else {
-      const route = openclawHttpUrl(rawUrl, "/api/agent");
-      const headers = { Accept: "application/json" };
-      if (route.viaProxy && connection.accessSession) {
-        headers["CF-Access-Jwt-Assertion"] = connection.accessSession;
-      }
-      const response = await fetch(route.url, {
-        headers,
-        credentials: route.viaProxy ? "same-origin" : "include",
-        signal,
-      });
-      if (response.ok) metadataToken = gatewayTokenFromAgentMetadata(await response.json()) || "";
-    }
+    const probe = await openclawBootstrapRequest("/api/agent", { signal });
+    if (probe.ok) metadataToken = gatewayTokenFromAgentMetadata(probe.json) || "";
   } catch (_) { /* fall back to the tab's last discovered token below */ }
 
   const token = metadataToken || connection.token;
@@ -430,8 +479,18 @@ export function mountEndpointProbe(targetSel, opts = {}) {
   const savedAccessSession = isOpenClaw && opts.cfAccess
     ? openClawConnection.accessSession
     : "";
-  const proxyControls = isOpenClaw && opts.cfAccess && opts.proxyControls !== false;
+  // Relay routing is provider-owned. Keep these controls available only to the explicit
+  // boundary fixture that proves legacy overrides are rejected.
+  const proxyControls = isOpenClaw && opts.cfAccess && opts.proxyControls === true;
   const savedProxy = isOpenClaw ? getOpenClawProxyConfig() : { enabled: false, base: "" };
+  const wsRelayControls = isOpenClaw && opts.cfAccess && opts.wsRelayControls === true;
+  const savedWsRelayEnabled = wsRelayControls && getOpenClawWsRelayEnabled();
+  const wsRelayLabel = localizeCourseUiText("Gateway recovery");
+  const wsRelayText = localizeCourseUiText("Retry Cloudflare WebSockets through the hosted relay");
+  const wsRelayAvailableHint = localizeCourseUiText(
+    "Use only when a direct Cloudflare gateway or terminal socket fails.");
+  const wsRelayUnavailableHint = localizeCourseUiText(
+    "The recovery relay applies only to Cloudflare Access launchables.");
 
   // Label helper. A key with fieldHelp content renders a toggle button.
   // A key without it renders a plain label. Both match the .claw-lf sizing exactly.
@@ -454,7 +513,7 @@ export function mountEndpointProbe(targetSel, opts = {}) {
       <div class="claw-row">
         ${_lbl("url", "Base URL")}
         <input class="claw-input claw-url" type="text" spellcheck="false" autocapitalize="off"
-               placeholder="https://your-tunnel.example.com" value="${_escAttr(savedUrl)}"
+               placeholder="https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com" value="${_escAttr(savedUrl)}"
                ${opts.readOnly ? 'readonly aria-readonly="true"' : ""}/>
       </div>
       ${_hlp("url")}
@@ -483,6 +542,13 @@ export function mountEndpointProbe(targetSel, opts = {}) {
         <button type="button" class="claw-btn alt claw-eye claw-eye-session" title="Show session" aria-label="Show or hide access session">👁</button>
       </div>
       ${_hlp("accessSession")}` : ""}
+      ${wsRelayControls ? `
+      <div class="claw-row claw-ws-relay-row">
+        ${_lbl("wsRelay", escHtml(wsRelayLabel))}
+        <label class="claw-proxy-toggle"><input class="claw-ws-relay-enabled" type="checkbox" ${savedWsRelayEnabled ? "checked" : ""}/>
+          ${escHtml(wsRelayText)}</label>
+      </div>
+      ${_hlp("wsRelay")}` : ""}
       ${proxyControls ? `
       <div class="claw-row claw-proxy-row">
         ${_lbl("proxy", "Hosted relay")}
@@ -571,6 +637,7 @@ export function mountEndpointProbe(targetSel, opts = {}) {
   const eyeSessionBtn = opts.cfAccess ? target.querySelector(".claw-eye-session") : null;
   const proxyEnabledInp = proxyControls ? target.querySelector(".claw-proxy-enabled") : null;
   const proxyBaseInp = proxyControls ? target.querySelector(".claw-proxy-base") : null;
+  const wsRelayEnabledInp = wsRelayControls ? target.querySelector(".claw-ws-relay-enabled") : null;
   if (eyeSessionBtn && accessSessionInp) {
     eyeSessionBtn.addEventListener("click", () => {
       const showing = accessSessionInp.type !== "password";
@@ -585,8 +652,8 @@ export function mountEndpointProbe(targetSel, opts = {}) {
       provider = accessProviderForOpenClawUrl(urlInp.value, accessProviderInp?.value || "auto");
       accessProviderInp?.setCustomValidity("");
     } catch (e) {
-      accessProviderInp?.setCustomValidity(e.message);
-      accessSessionInp.placeholder = "provider does not match this launchable URL";
+      const message = localizeCourseUiText(e.message);
+      accessProviderInp?.setCustomValidity(message);
       return;
     }
     const pomerium = provider === "pomerium";
@@ -599,6 +666,12 @@ export function mountEndpointProbe(targetSel, opts = {}) {
       : provider === "cloudflare"
         ? "paste the CF_Authorization cookie value"
         : "choose a provider or enter a launchable URL";
+    if (wsRelayEnabledInp) {
+      wsRelayEnabledInp.disabled = provider !== "cloudflare";
+      wsRelayEnabledInp.title = provider === "cloudflare"
+        ? wsRelayAvailableHint
+        : wsRelayUnavailableHint;
+    }
   }
   if (accessSessionInp) {
     accessSessionInp.addEventListener("input", () => {
@@ -632,7 +705,7 @@ export function mountEndpointProbe(targetSel, opts = {}) {
       });
       accessProviderInp?.setCustomValidity("");
     } catch (e) {
-      accessProviderInp?.setCustomValidity(e.message);
+      accessProviderInp?.setCustomValidity(localizeCourseUiText(e.message));
       return;
     }
     if (!opts.syncCanvas) return;
@@ -676,6 +749,11 @@ export function mountEndpointProbe(targetSel, opts = {}) {
     };
     proxyEnabledInp.addEventListener("change", saveProxy);
     proxyBaseInp.addEventListener("change", saveProxy);
+  }
+  if (wsRelayEnabledInp) {
+    wsRelayEnabledInp.addEventListener("change", () => {
+      setOpenClawWsRelayEnabled(wsRelayEnabledInp.checked);
+    });
   }
   // Initialise canvas keys on page load with whatever is already stored.
   _refreshAccessSessionPlaceholder();
@@ -741,7 +819,7 @@ export function mountEndpointProbe(targetSel, opts = {}) {
     }
     let accessProvider;
     try { accessProvider = accessProviderForOpenClawUrl(base, accessProviderInp?.value || "auto"); }
-    catch (e) { setOutput(e.message, "err"); return; }
+    catch (e) { setOutput(localizeCourseUiText(e.message), "err"); return; }
     const accessSession = accessSessionInp ? accessSessionInp.value.trim() : "";
     const headers = { "Accept": "application/json, text/html, */*" };
     // /api/agent discovers this token. Do not let a token retained from a
@@ -842,8 +920,8 @@ export function mountEndpointProbe(targetSel, opts = {}) {
           }
           printed = JSON.stringify(j, null, 2);
           // Auto-fill the bearer token from agent.dashboardUrl in the /api/agent response.
-          // Cloudflare uses its tab-scoped relay session; Pomerium uses the authenticated
-          // direct terminal socket.
+          // Cloudflare metadata uses its tab-scoped relay session; Pomerium metadata
+          // uses the authenticated direct terminal socket. Their WebSockets stay direct.
           if (opts.autofillToken && r.ok && j) {
             try {
               const found = opts.autofillToken(j);
@@ -865,12 +943,12 @@ export function mountEndpointProbe(targetSel, opts = {}) {
     } catch (e) {
       const dt = Math.round(performance.now() - t0);
       if (!isOpenClaw) {
-        const hint = opts.failureHint || "Check the saved model route, bearer key, served model ID, and public HTTPS tunnel.";
+        const hint = opts.failureHint || "Check the saved model route, its bearer key, and the served model ID.";
         setOutput(`✗ network error after ${dt}ms\n   ${String(e?.message || e)}\n\n${hint}`, "err");
         return;
       }
       const fallback = /EPERM|Failed to fetch|NetworkError|Load failed|ECONN|ERR_CONNECTION|timed out|502|503/i.test(e?.message || "")
-        ? "\nBackup: if local OpenClaw failed to start or logs EPERM, enter a Brev launchable URL. For Pomerium, open that launchable and sign in in this browser. Cloudflare launchables still use the relay session field.\n"
+        ? "\nBackup: if local OpenClaw failed to start or logs EPERM, enter a Brev launchable URL and sign in to it in this browser. Cloudflare metadata also needs the matching relay session field.\n"
         : "";
       const hint = "Possible causes:\n" +
         "• OpenClaw did not start cleanly. Local EPERM means use a Brev launchable.\n" +
@@ -900,6 +978,7 @@ export function mountEndpointProbe(targetSel, opts = {}) {
   return {
     getUrl:   () => _normalizeBaseUrl(urlInp.value),
     getToken: () => tokenInp.value.trim(),
+    getWsRelayEnabled: () => getOpenClawWsRelayEnabled(),
     run:      runAction,
   };
 }
@@ -913,7 +992,7 @@ export function mountModelEndpointProbe(targetSel, opts = {}) {
     ...opts,
     connectionKind: "model",
     readOnly: true,
-    tokenPlaceholder: opts.tokenPlaceholder || "nvapi-… or EMPTY",
+    tokenPlaceholder: opts.tokenPlaceholder || "nvapi-…",
   });
 }
 

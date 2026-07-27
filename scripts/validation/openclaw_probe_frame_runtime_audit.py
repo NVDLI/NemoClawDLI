@@ -105,12 +105,14 @@ function fail(message) { throw new Error(message); }
       throw new Error('retired worker survived localStorage migration');
     proxyToggle.checked = false;
     proxyToggle.dispatchEvent(new Event('change'));
-    if (localStorage.getItem('nemoclaw_clawurl') !== 'https://nemoclaw-test123.brevlab.com')
-      throw new Error('relay toggle off did not select direct route');
+    if (!(localStorage.getItem('nemoclaw_clawurl') || '').startsWith(approved + '/https/nemoclaw-test123.brevlab.com') ||
+        !proxyInput.validationMessage)
+      throw new Error('relay toggle bypassed the approved Cloudflare route');
     proxyToggle.checked = true;
     proxyToggle.dispatchEvent(new Event('change'));
-    if (!(localStorage.getItem('nemoclaw_clawurl') || '').startsWith(approved + '/https/nemoclaw-test123.brevlab.com'))
-      throw new Error('relay toggle on did not restore NVIDIA route');
+    if (!(localStorage.getItem('nemoclaw_clawurl') || '').startsWith(approved + '/https/nemoclaw-test123.brevlab.com') ||
+        proxyInput.validationMessage)
+      throw new Error('approved relay state did not recover after a rejected override');
     const connection = {
       raw: localStorage.getItem('nemoclaw_clawrawurl'),
       effective: localStorage.getItem('nemoclaw_clawurl'),

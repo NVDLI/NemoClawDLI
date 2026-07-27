@@ -54,6 +54,9 @@ import { mountLearningView } from "./_learning.js";
 export { mountLearningView };
 import { mountCourseAssistant, mountCourseLicenseNote } from "./_course_assistant.js";
 export { mountCourseAssistant, mountCourseLicenseNote };
+// The model route and the launchable route are separate registrations. This import keeps the
+// launchable host list in _connection.js rather than restating it in the model normalizer.
+import { isOpenClawLaunchableHost } from "./_connection.js";
 
 const LAB_MODEL     = DEFAULT_MODEL; // legacy helper default; getConfig().model is the active course default
 const CONFIG_KEY    = "__nv_slim_cfg_v1";
@@ -81,10 +84,15 @@ export function normalizeModelApiBaseUrl(raw) {
   if (url.protocol !== "https:" && !localHttp) throw new Error("Model API base URL must use HTTPS");
   const pageLocation = globalThis.location;
   if (localHttp && pageLocation?.protocol === "https:" && !["localhost", "127.0.0.1"].includes(pageLocation.hostname)) {
-    throw new Error("localhost points to this browser, not the Brev VM. Expose port 5000 with Brev Using Tunnels and paste its HTTPS URL ending in /v1");
+    throw new Error("localhost points to this browser, not a remote host. Enter the HTTPS model API base URL ending in /v1");
+  }
+  // A NemoClaw launchable serves the OpenClaw gateway, not an OpenAI-compatible model API.
+  // Reject it here so the chat route cannot be pointed at the launchable by mistake.
+  if (isOpenClawLaunchableHost(url.hostname)) {
+    throw new Error("A NemoClaw launchable is not a model API. Connect it in Module 3a and keep this route on a model endpoint such as " + DEFAULT_MODEL_API_BASE_URL);
   }
   if (/\.brevlab\.com$/i.test(url.hostname) && /^\/lab(?:\/|$)/.test(url.pathname)) {
-    throw new Error("A Brev Jupyter /lab URL is not a model API. Expose port 5000 with Brev Using Tunnels and paste its HTTPS URL ending in /v1");
+    throw new Error("A Brev Jupyter /lab URL is not a model API. Enter the HTTPS model API base URL ending in /v1");
   }
   if (url.username || url.password || url.search || url.hash) {
     throw new Error("Model API base URL cannot include credentials, query parameters, or a fragment");
@@ -97,35 +105,6 @@ export function normalizeModelId(raw, fallback = DEFAULT_MODEL) {
   if (!model) return fallback;
   if (/\s/.test(model) || model.length > 240) throw new Error("Model ID must be one non-empty value without spaces");
   return model;
-}
-
-export function suggestedModelApiBaseUrl() {
-  try {
-    const params = new URLSearchParams(location.search || "");
-    const raw = params.get("model_base_url") || params.get("base_url");
-    return raw ? normalizeModelApiBaseUrl(raw) : getModelApiBaseUrl();
-  } catch (_) { return getModelApiBaseUrl(); }
-}
-
-export function suggestedModelId() {
-  try {
-    const raw = new URLSearchParams(location.search || "").get("model");
-    return raw ? normalizeModelId(raw) : getModelId();
-  } catch (_) { return getModelId(); }
-}
-
-export function suggestedEmbeddingApiBaseUrl() {
-  try {
-    const raw = new URLSearchParams(location.search || "").get("embedding_base_url");
-    return raw ? normalizeModelApiBaseUrl(raw) : getEmbeddingApiBaseUrl();
-  } catch (_) { return getEmbeddingApiBaseUrl(); }
-}
-
-export function suggestedEmbeddingModelId() {
-  try {
-    const raw = new URLSearchParams(location.search || "").get("embedding_model");
-    return raw ? normalizeModelId(raw, DEFAULT_EMBEDDING_MODEL) : getEmbeddingModelId();
-  } catch (_) { return getEmbeddingModelId(); }
 }
 
 export function getModelApiBaseUrl() {
@@ -228,7 +207,7 @@ export function defaultIframeProxyModeForLocation(locationLike) {
 export async function getConfig() {
   /* @doc <code>helpers.getConfig()</code> ::
        Returns the active chat config <code>{ mode, url, model, needsKey, iframeProxy }</code>.
-       A presenter can save one compatible chat endpoint and model on the course home page.
+       A learner can save one compatible chat endpoint and model on the course home page.
        Embeddings retain their own route. The published course origins and local file previews
        default to the bounded NVIDIA DLI relay; other origins stay direct, and a custom chat
        endpoint always bypasses the relay. */
@@ -259,7 +238,7 @@ export async function getConfig() {
 export async function getEmbeddingConfig() {
   /* @doc <code>helpers.getEmbeddingConfig()</code> ::
        Returns the persistent embedding <code>{ url, model }</code> route. It defaults to NVIDIA's
-       hosted API and does not change when a presenter selects a Brev chat endpoint. */
+       hosted API and does not change when a learner selects another chat endpoint. */
   return {
     mode: "direct",
     url: getEmbeddingApiBaseUrl(),
@@ -400,7 +379,7 @@ async function fetchRetry(url, opts = {}, { retries = 2, backoffMs = 250, timeou
 }
 export { fetchRetry };
 
-// Headers shared by model requests. NVIDIA routes receive course attribution; a presenter-selected
+// Headers shared by model requests. NVIDIA routes receive course attribution; a learner-selected
 // compatible endpoint receives only standard content and authorization headers.
 export function _apiHeaders(cfg, keyOverride = null) {
   const h = { "Content-Type": "application/json" };
@@ -666,7 +645,7 @@ export const VIZ_BUILDERS = makeViz(() => {});
 export const HELPER_FNS = {
   chat, chatStream, webSearch, instantAnswer, formatSearchResults,
   embed, cosineSim, fetchRetry, delay, getConfig, getKey, getModelApiBaseUrl, setModelApiBaseUrl, isDefaultModelApiBaseUrl, terminal, openclawLoopbackProbe,
-  coursePage, coursePages, contextWindow, estimateTokens, browserChatFetch, diagramSVG, ganttBarsSVG, mountFigures, openFigureLightbox, wireFigureZoom, mountChatUI, mountAgentChat, mountConsole, mountOpenClawCli, mountKeyPanel, mountModelEndpointProbe, openclawChat, openclawGatewayWsUrl, refreshOpenClawGatewayToken, getOpenClawConnection, setOpenClawConnection, getOpenClawProxyConfig, setOpenClawProxyConfig,
+  coursePage, coursePages, contextWindow, estimateTokens, browserChatFetch, diagramSVG, ganttBarsSVG, mountFigures, openFigureLightbox, wireFigureZoom, mountChatUI, mountAgentChat, mountConsole, mountOpenClawCli, mountKeyPanel, mountModelEndpointProbe, openclawBootstrapRequest, openclawChat, openclawGatewayWsUrl, refreshOpenClawGatewayToken, getOpenClawConnection, setOpenClawConnection,
   filterOpenClawRuntimeNoise, filterOpenClawRuntimeValue, openclawMessageText, openclawResultText,
   evalSandboxNetwork, evalSandboxFs, sandboxExec, policyGet, mountPolicyMap,
 };
@@ -1045,13 +1024,13 @@ export { mountKeyPanel };
 // Re-exported here so the helper registry/menu and existing page imports are unchanged.
 import {
   gatewayTokenFromAgentMetadata, getOpenClawConnection, getOpenClawProxyConfig, mountClawGateway, mountClawProbe,
-  mountEndpointProbe, mountModelEndpointProbe, openclawChat, openclawGatewayWsUrl, refreshOpenClawGatewayToken,
+  mountEndpointProbe, mountModelEndpointProbe, openclawBootstrapRequest, openclawChat, openclawGatewayWsUrl, refreshOpenClawGatewayToken,
   filterOpenClawRuntimeNoise, filterOpenClawRuntimeValue, openclawMessageText, openclawResultText,
   setOpenClawConnection, setOpenClawProxyConfig, GW_CONNECT, mountGwRecover,
 } from "./_openclaw.js";
 export {
   gatewayTokenFromAgentMetadata, getOpenClawConnection, getOpenClawProxyConfig, mountClawGateway, mountClawProbe,
-  mountEndpointProbe, mountModelEndpointProbe, openclawChat, openclawGatewayWsUrl, refreshOpenClawGatewayToken,
+  mountEndpointProbe, mountModelEndpointProbe, openclawBootstrapRequest, openclawChat, openclawGatewayWsUrl, refreshOpenClawGatewayToken,
   filterOpenClawRuntimeNoise, filterOpenClawRuntimeValue, openclawMessageText, openclawResultText,
   setOpenClawConnection, setOpenClawProxyConfig, GW_CONNECT, mountGwRecover,
 };

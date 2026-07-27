@@ -5,7 +5,10 @@
 // Holds the launchable PTY terminal, the sandbox-policy.rego port, the exec bridge, and the policy map.
 // Browser globals only; _shared.js re-exports these so a page can import from either module.
 
-import { accessProviderForOpenClawUrl, getOpenClawConnection, openclawWebSocketUrl } from "./_connection.js";
+import {
+  accessProviderForOpenClawUrl, getOpenClawConnection, getOpenClawProxyConfig,
+  getOpenClawWsRelayEnabled, openclawWebSocketUrl,
+} from "./_connection.js";
 import { filterOpenClawRuntimeNoise } from "./_runtime_text.js";
 
 const POLICY_YAML_MODULE_URL = "../vendor/js-yaml-5.2.2.esm.min.js";
@@ -15,16 +18,17 @@ const POMERIUM_LOOPBACK_PROBES = Object.freeze({
 });
 
 // PTY helper: `bash` opens the host; `openshell sandbox connect <agent>` enters the agent.
-// Pomerium uses its direct PTY. Cloudflare tries direct first, then the configured relay.
-// Direct access uses the cookie established when the learner opens the launchable.
-export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000, openMs = 12000, onChunk = null, baseUrl = null, signal = null } = {}) {
+// Both supported providers use the signed-in browser's direct PTY by default.
+// An explicit relayWebSocket opt-in retains the approved Cloudflare relay route.
+export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000, openMs = 12000, onChunk = null, baseUrl = null, signal = null, relayWebSocket = null } = {}) {
   /* @doc <code>helpers.terminal(cmd, {send, idleMs, totalMs, openMs, onChunk})</code> ::
        Open a PTY over your launchable's <code>/ws/terminal</code> WebSocket and run
        <code>cmd</code>. Use <code>"bash"</code> for the VM shell, or <code>"openshell sandbox
        connect &lt;agent&gt;"</code> to drop inside the kernel-sandboxed agent.
        <code>send</code> is an array of shell lines typed into the PTY in order (each gets
-       Enter). Cross-origin Brev terminals try the launchable's authenticated direct PTY, then the
-       configured relay; same-origin/local sessions connect directly. Returns <code>{ output, raw, frames, exitCode }</code> (<code>output</code>
+       Enter). WebSockets stay in the signed-in browser unless
+       <code>relayWebSocket: true</code> explicitly selects the retained Cloudflare relay.
+       Returns <code>{ output, raw, frames, exitCode }</code> (<code>output</code>
        is ANSI-stripped; <code>exitCode</code> is the command's PTY exit status, or null if none
        arrived). Reads the launchable URL from the OpenClaw probe. Launchable only.
   */
@@ -33,12 +37,16 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
   if (!rawUrl) throw new Error("No launchable URL set. Connect on the Kickstart page (Module 3a) first, or pass { baseUrl }.");
   const accessProvider = connection.accessProvider;
   const accessSession = connection.accessSession;
-  const terminalPath = "/ws/terminal?cmd=" + encodeURIComponent(cmd);
-  const routed = openclawWebSocketUrl(rawUrl, "/ws/terminal?cmd=" + encodeURIComponent(cmd), accessSession, undefined, accessProvider);
-  const direct = routed.viaProxy
-    ? openclawWebSocketUrl(rawUrl, terminalPath, "", { enabled: false, base: "" })
-    : routed;
-  const wsUrls = direct.url && direct.url !== routed.url ? [direct.url, routed.url] : [routed.url];
+  const relayEnabled = relayWebSocket === true ||
+    (relayWebSocket === null && getOpenClawWsRelayEnabled());
+  const routed = openclawWebSocketUrl(
+    rawUrl,
+    "/ws/terminal?cmd=" + encodeURIComponent(cmd),
+    relayEnabled ? accessSession : "",
+    relayEnabled ? getOpenClawProxyConfig() : { enabled: false, base: "" },
+    accessProvider,
+  );
+  const wsUrls = [routed.url];
   let launchableOrigin = rawUrl;
   try { launchableOrigin = new URL(rawUrl).origin; } catch (_) {}
   // Drop xterm control sequences so the returned text reads like a transcript.
@@ -49,7 +57,7 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
   const terminalOpenError = () => {
     const accessHint = routed.viaProxy
       ? (accessSession
-          ? "Both the direct socket and hosted relay failed. Open the launchable, then paste a fresh matching access session in Module 3a."
+          ? "The hosted relay failed. Open the launchable, then paste a fresh matching access session in Module 3a."
           : "The hosted relay has no Cloudflare Access session. Open the launchable, then paste a fresh CF_Authorization value in Module 3a.")
       : "Reopen the launchable and verify that its terminal route is running.";
     const error = new Error(
@@ -91,9 +99,7 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
       try { socket = new WebSocket(wsUrls[routeIndex]); }
       catch (_) { return openNext(); }
       ws = socket;
-      // Direct and relay are independent handshakes. Do not let a slow direct failure consume
-      // the relay's open window; totalMs remains the overall bound for the complete terminal call.
-      const budget = wsUrls.length > 1 && routeIndex === 0 ? Math.min(8000, openMs) : openMs;
+      const budget = openMs;
       openT = setTimeout(() => {
         if (finished || opened || socket !== ws) return;
         try { socket.close(); } catch (_) {}

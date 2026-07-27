@@ -67,6 +67,39 @@
       font-size: .82em;
     }
 
+    details.recovery-note {
+      margin: 1em 0 1.6em;
+      border: 1px solid var(--bd);
+      border-radius: var(--r);
+      background: var(--e1);
+    }
+
+    details.recovery-note > summary {
+      cursor: pointer;
+      padding: 11px 14px;
+      color: var(--gs);
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: .86rem;
+    }
+
+    details.recovery-note > summary:hover {
+      background: var(--e2);
+    }
+
+    details.recovery-note > summary::marker {
+      color: var(--gs);
+    }
+
+    details.recovery-note > :not(summary) {
+      margin-left: 14px;
+      margin-right: 14px;
+    }
+
+    details.recovery-note > ol {
+      padding-left: 22px;
+    }
+
     figure.lp-video {
       margin: 1.4em 0;
     }
@@ -121,7 +154,7 @@
       <p class="lead">
         Modules 1 and 2 kept orchestration in the browser. A workflow ended when the page stopped
         carrying its messages, intermediate results, or branch state. Module 3 moves the same agent patterns into a
-        <a href="https://brev.nvidia.com/launchable/deploy?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990" target="_blank" rel="noopener">
+        <a href="https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990" target="_blank" rel="noopener">
         NemoClaw Brev launchable</a>. OpenClaw preserves session history and a file-backed workspace
         while continuing to expose tools; OpenShell limits what that running agent can reach. From the browser, you will compare
         the stateless model API with the persistent OpenClaw gateway.
@@ -172,20 +205,59 @@
         <p style="color:var(--tf);font-size:.8rem">Credential: <code>nvapi-</code> key.</p>
       </a>
       <a class="url-card"
-        href="https://brev.nvidia.com/launchable/deploy?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990"
+        href="https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990"
         target="_blank" rel="noopener">
         <h3>Launch NemoClaw on Brev</h3>
         <p>OpenClaw runs inside OpenShell and keeps agent identity, tools, and session memory. The
           settings below accept either supported Brev host family and connect to
           <code>/cli/gateway</code>.</p>
-        <p style="color:var(--tf);font-size:.8rem">Credential: gateway token. Session:
-          <code>x-openclaw-session-key</code>.</p>
+        <p style="color:var(--tf);font-size:.8rem">Gateway credential: gateway token.
+          Launchable access: Pomerium browser session or <code>CF_Authorization</code>.</p>
       </a>
     </div>
     <p>Local deployments use the same gateway contract; follow the
       <a href="https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986"
         target="_blank" rel="noopener">NemoClaw setup playbook</a>.
     </p>
+
+    <h2>Start the launchable</h2>
+    <ol>
+      <li>Open the
+        <a href="https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990"
+          target="_blank" rel="noopener">NemoClaw launchable</a> and sign in.</li>
+      <li>Open <code>&lt;launchable&gt;/dashboard</code>.</li>
+      <li>Find the running <code>my-assistant</code> card and select <strong>Chat with Agent</strong>.</li>
+      <li>Return here and probe. This page reads the gateway token from authenticated agent
+        metadata, so the normal path does not require you to paste it.</li>
+    </ol>
+    <p>Your launchable answers on one of two account-specific hostnames. Both are supported, and the
+      probe selects the matching access provider from the hostname:</p>
+    <ul>
+      <li><code>https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com</code> uses Pomerium. Its
+        signed-in browser session authenticates direct requests, so the Access session field stays
+        empty.</li>
+      <li><code>https://nemoclaw-&lt;id&gt;.brevlab.com</code> uses Cloudflare Access. Its matching
+        <code>CF_Authorization</code> session authenticates metadata through the approved relay.
+        Gateway and terminal WebSockets stay in the signed-in browser.</li>
+    </ul>
+
+    <details class="recovery-note">
+      <summary>If the Control UI reports that the gateway needs a token or password</summary>
+      <p>The four steps above prepare this page to discover its credential from authenticated
+        metadata. Reach for the steps below only when the Control UI reports that the gateway is
+        reachable but still requires authentication.</p>
+      <ol>
+        <li>Run <code>openclaw dashboard --no-open</code> and read the configured gateway credential
+          it prints.</li>
+        <li>If no gateway token exists yet, generate one on the gateway host with
+          <code>openclaw doctor --generate-gateway-token</code>.</li>
+        <li>Update the credential in the Control UI, then reconnect.</li>
+      </ol>
+      <p>The gateway token and the launchable access session authorize different things. The
+        gateway token authorizes JSON-RPC calls on <code>/cli/gateway</code>. The access session, a
+        Pomerium browser cookie or a <code>CF_Authorization</code> value, authorizes reaching the
+        launchable at all. Replacing one never repairs a failure in the other.</p>
+    </details>
 
     <h2>Step 1 · Probe the endpoints</h2>
     <p>The widgets below make a small request to each endpoint and show
@@ -218,21 +290,15 @@
     </div>
 
     <h3>The probe's request, as editable code</h3>
-    <p>The exposed code makes the same request as the probe. It reuses the URL, token,
-      access provider, and session the probe saved. Edit <code>PATH</code>, <code>METHOD</code>,
-      and <code>BODY</code> to send other requests. The status, headers, and body come back
-      below.</p>
-    <p><code>TRANSPORT</code> controls how the credential reaches the launchable:</p>
-    <ul>
-      <li><code>"configured"</code> follows the relay toggle saved above. Cross-origin Brev uses the NVIDIA relay by default.</li>
-      <li><code>"direct"</code> calls the launchable origin with <code>credentials:&nbsp;"include"</code>, relying on the matching launchable cookie your browser already holds.</li>
-    </ul>
+    <p>The probe and exposed code share the normalized launchable connection and provider
+      decision. The exposed helper prints the returned status, headers, and body.
+      Change <code>PATH</code> between <code>/api/agent</code> and <code>/healthz</code> to
+      inspect either bootstrap response.</p>
     <p>
-      Pomerium launchables keep their signed session in the browser. The course uses their direct
-      WebSockets and reads the two bootstrap endpoints through a fixed loopback request in that
-      authenticated terminal. Cloudflare Access launchables use the hosted relay and its explicit session field.
-      When the course is vendored inside the same NemoClaw launchable as its runtime,
-      direct mode is same-origin and the relay is not needed.
+      Pomerium reads bootstrap metadata through its authenticated terminal loopback.
+      Cloudflare Access reads metadata through the approved relay with the matching
+      <code>CF_Authorization</code> session. Both providers keep gateway and terminal
+      WebSockets in the browser that signed in to the launchable.
     </p>
 
     <div id="claw-raw-cell"></div>
@@ -246,7 +312,9 @@
       <li>The JSON body carries <code>model</code> and <code>messages</code>.</li>
       <li>An <code>Authorization</code> header names the caller.</li>
     </ul>
-    <p>OpenClaw implements that same route internally too, but a separately hosted course reaches it through the launchable access layer and relay rather than as an unauthenticated browser request.</p>
+    <p>OpenClaw implements that same route internally too. A separately hosted course reads its
+      metadata through the launchable access layer, then opens authenticated WebSockets directly
+      from the signed-in browser.</p>
     <p>The channel that <em>is</em> open to you runs a different protocol, a
       WebSocket at <code>/cli/gateway</code> speaking JSON-RPC.
     </p>
@@ -254,11 +322,11 @@
     <div class="callout">
       <p>The Control UI in your browser tab does not use a special private channel.
         It talks to the agent over the same WebSocket at <code>/cli/gateway</code> that is
-        open to you, and the only credential it needs is the gateway token. The probe above
-        discovers that token for you, so you never paste it in. A
+        open to you. After the browser authenticates to the launchable with its access session,
+        the Control UI authenticates gateway calls with the gateway token. A
         <code>GET /api/agent</code> returns it under the field <code>agent.dashboardUrl</code>,
-        a read that your launchable session authorises, so you can leave the
-        token field blank and let probing fill it in.</p>
+        a read that your launchable session authorises. Leave the token field blank and
+        let the probe fill it in.</p>
     </div>
 
     <p>That token carries <code>operator.admin</code> scope, the same authority
@@ -484,11 +552,11 @@ helpers.log("rendered below. Edit the config and Run.");
       defaultUrl: MODEL_API_BASE_URL,
       defaultToken: getKey() || "",
       credentials: modelRequestCredentials(MODEL_API_BASE_URL),
-      failureHint: "Check the model route saved above, its bearer key, public HTTPS tunnel, and served model ID.",
+      failureHint: "Check the model route saved above, its bearer key, and the served model ID.",
       fieldHelp: {
         url: `<p><strong>What it is:</strong> The model API base saved on the course home page.</p>
 <p><strong>How requests reach it:</strong> The default is <code>integrate.api.nvidia.com</code>.
-A presenter can select a compatible launchable once; every lesson and this probe reuse that value.
+You can select a compatible model endpoint once; every lesson and this probe reuse that value.
 Iframe proxy mode remains available only for the default NVIDIA endpoint.</p>
 <p><strong>Active endpoint:</strong> <code>${MODEL_API_BASE_URL}</code>.</p>`,
 
@@ -679,9 +747,9 @@ return { ranked: ok.map(r => r.model), errors: results.filter(r => r.err).length
       intro: "",
       defaultUrl: "",
       defaultToken: "",
-      proxyControls: true,
       syncCanvas: true,
       cfAccess: true,
+      wsRelayControls: true,
       unexpectedHtmlHint: "Expected JSON but received the OpenClaw Control page. The request reached the launchable root instead of this API path. Keep Base URL at the launchable origin and retry; this response is not a health result.",
       helpHint: "Need a value? Select the ? beside that field. Start with Base URL; GET /api/agent fills the bearer token.",
 
@@ -689,18 +757,19 @@ return { ranked: ok.map(r => r.model), errors: results.filter(r => r.err).length
       autofillToken: gatewayTokenFromAgentMetadata,
       fieldHelp: {
         url: `<p><strong>What it is:</strong> The root URL of your NemoClaw launchable running OpenClaw inside OpenShell, with no trailing <code>/v1</code>.</p>
-<p><strong>How to find it:</strong> Copy the App URL from the Brev dashboard. Either supported launchable type works. For local OpenClaw, use <code>http://localhost:8088</code> or its exposed port and leave Access session empty.</p>`,
+<p><strong>How to find it:</strong> Copy the App URL from the Brev dashboard. Both supported forms work: <code>https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com</code> and <code>https://nemoclaw-&lt;id&gt;.brevlab.com</code>. For local OpenClaw, use <code>http://localhost:8088</code> or its exposed port and leave Access session empty.</p>`,
 
         token: `<p><strong>Usually you can leave this blank.</strong> Run <strong>GET /api/agent</strong> below and the probe
 reads the gateway token out of <code>agent.dashboardUrl</code> and fills this field for you. For Pomerium, opening the launchable and signing in is enough. Cloudflare also needs its Access session below.</p>
-<p><strong>Manual fallback:</strong> If autofill doesn't fire, run <code>printenv OPENCLAW_GATEWAY_TOKEN</code> in your
-launchable terminal and paste the complete value here. Do not assume a fixed length or character set.</p>`,
+<p><strong>Manual fallback:</strong> If autofill doesn't fire, run <code>openclaw dashboard --no-open</code> in your
+launchable terminal and paste the complete gateway credential it prints. If no gateway token exists yet, generate one on
+the gateway host with <code>openclaw doctor --generate-gateway-token</code>. Do not assume a fixed length or character set,
+and do not paste an access session here; that is a separate credential.</p>`,
 
-        accessProvider: `<p><strong>Automatic</strong> chooses from the App URL. A <code>*.brevlab.com</code> launchable uses <strong>Cloudflare Access</strong> through the hosted relay. A <code>*.apps.run.brev.nvidia.com</code> launchable uses <strong>Pomerium</strong> directly through the signed-in browser.</p>`,
+        accessProvider: `<p><strong>Automatic</strong> chooses from the App URL. Cloudflare Access uses the approved relay for metadata; Pomerium reads metadata through its terminal loopback. Both providers keep gateway and terminal WebSockets in the signed-in browser.</p>`,
         accessSession: `<p>This field is only for <strong>Cloudflare Access</strong>. Open that launchable, sign in, then copy the complete <code>CF_Authorization</code> value from DevTools → <strong>Application → Storage → Cookies</strong>.</p>
 <p>For <strong>Pomerium</strong>, the field is disabled. Open the launchable and sign in; its <code>HttpOnly</code> cookie stays in the browser and is never copied into course code or storage.</p>`,
-        proxy: `<p>The shared NVIDIA relay is used for cross-origin <strong>Cloudflare Access</strong> launchables. Pomerium connects directly with the browser's signed-in session, even when this toggle remains enabled for Cloudflare compatibility.</p>`,
-        proxyBase: `<p><strong>One shared setting:</strong> this defaults to the NVIDIA-hosted relay and persists for Modules 3a–4b. Presenters can also prefill it with <code>?openclaw_proxy_base=...</code> and enable or disable it with <code>?openclaw_proxy=1</code> or <code>0</code>.</p>`,
+        wsRelay: `<p>Leave this off while the direct gateway and terminal sockets work. If a Cloudflare WebSocket fails before its challenge, turn it on and retry through the approved relay. Pomerium remains direct.</p>`,
       },
 
       actions: [
@@ -713,54 +782,22 @@ launchable terminal and paste the complete value here. Do not assume a fixed len
     mountRunCell("#claw-raw-cell", {
       label: "the probe's request, as editable code",
       openCode: true,
-      intro: "Use the probe UI above for the normal path. This cell exposes its request so you can compare proxy and direct transport or inspect an unexpected response.",
+      intro: "Use the probe UI above for the normal path. This cell uses the same saved provider decision and exposes the bootstrap response for inspection.",
       autorun: false,
-      code: `// The probe saved the launchable URL and selected access provider.
-const connection = helpers.getOpenClawConnection();
-const configured = connection.effectiveUrl; // follows the saved relay toggle
-const url   = connection.rawUrl;             // launchable origin, direct
-const token = connection.token;
-const provider = connection.resolvedAccessProvider;
-const session  = connection.accessSession;
-if (!url) return helpers.log('Run the probe above first.');
+      code: `// The shared helper reads the normalized Module 3a connection and selects transport.
+const PATH = '/api/agent';  // read-only token-discovery endpoint
+// const PATH = '/healthz'; // alternate read-only bootstrap endpoint
 
-const METHOD    = 'GET';
-const PATH      = '/api/agent';   // read-only bootstrap endpoint
-// const PATH   = '/healthz';     // alternate read-only bootstrap endpoint
-const BODY      = null;           // e.g. { key: 'value' }
-const TRANSPORT = 'configured';   // 'configured': saved relay toggle. 'direct': bypass the relay.
-
-// Pomerium keeps its HttpOnly cookie in the browser. Its authenticated terminal
-// reads this fixed endpoint over launchable loopback, so no cookie enters course code.
-if (provider === 'pomerium') {
-  const result = await helpers.openclawLoopbackProbe(PATH, { baseUrl: url, signal: helpers.signal });
-  helpers.log.kv({ status: result.status + ' ' + result.statusText, transport: result.transport });
-  helpers.log.details('body', result.body);
-  return result.json ?? result.body;
-}
-
-// Cloudflare Access uses the configured hosted relay.
-const direct  = TRANSPORT === 'direct';
-const target  = direct ? url : (configured || url);
-const viaRelay = !direct && target !== url;
-const headers = { Accept: 'application/json, text/html, */*' };
-if (token)            headers.Authorization = 'Bearer ' + token;
-if (viaRelay && session) {
-  headers['X-OpenClaw-Access-Provider'] = provider;
-  headers['X-OpenClaw-Access-Session'] = session;
-}
-if (BODY)             headers['Content-Type'] = 'application/json';
-
-const res = await helpers.fetch(target + PATH, {
-  method: METHOD,
-  headers,
-  body: BODY ? JSON.stringify(BODY) : null,
-  credentials: direct ? 'include' : 'same-origin',   // direct mode sends the launchable cookie held by this browser
+const result = await helpers.openclawBootstrapRequest(PATH, {
+  signal: helpers.signal,
 });
-
-helpers.log.kv({ status: res.status + ' ' + res.statusText, type: res.type });
-helpers.log.details('headers', Object.fromEntries(res.headers));
-helpers.log.details('body', await res.text());
+helpers.log.kv({
+  status: result.status + ' ' + result.statusText,
+  transport: result.transport,
+});
+helpers.log.details('response headers', result.headers);
+helpers.log.details('body', result.body);
+return result.json ?? result.body;
 `,
     });
 

@@ -66,8 +66,9 @@ function readAll(overrides = {}) {
 function functionSource(source, declaration) {
   const start = source.indexOf(declaration);
   if (start < 0) return null;
-  const brace = source.indexOf('{', start);
-  if (brace < 0) return null;
+  const signature = source.slice(start).match(/\)\s*\{/);
+  if (!signature) return null;
+  const brace = start + signature.index + signature[0].lastIndexOf('{');
   let depth = 0;
   for (let i = brace; i < source.length; i++) {
     if (source[i] === '{') depth++;
@@ -120,23 +121,43 @@ function audit(overrides = {}) {
     if (/token=\(\[a-f0-9\]/i.test(source)) {
       findings.push(`${key}: hex-only gateway-token parser returned`);
     }
-    if (!source.includes('proxyControls: true') || source.includes('proxyBase: "https://openclaw-cors-proxy.')) {
-      findings.push(`${key}: OpenClaw probe does not use shared configurable relay controls`);
+    if (!source.includes('helpers.openclawBootstrapRequest(PATH')
+        || source.includes('const TRANSPORT =')
+        || source.includes('X-OpenClaw-Access-Session')
+        || source.includes('CF-Access-Jwt-Assertion')) {
+      findings.push(`${key}: learner bootstrap probe duplicates or bypasses shared provider routing`);
     }
   }
 
   if (!files.connection.includes('DEFAULT_OPENCLAW_PROXY_BASE')
       || !files.connection.includes('OPENCLAW_PROXY_ENABLED_KEY')
-      || !files.connection.includes('migrateOpenClawConnectionStorage')) {
-    findings.push('shared OpenClaw connection module lacks default, toggle, or migration contract');
+      || !files.connection.includes('OPENCLAW_WS_RELAY_ENABLED_KEY')
+      || !files.connection.includes('getOpenClawWsRelayEnabled')
+      || !files.connection.includes('migrateOpenClawConnectionStorage')
+      || !files.connection.includes('new URL(DEFAULT_OPENCLAW_PROXY_BASE)')
+      || /\.get\("openclaw_(?:url|access_provider|proxy|proxy_base)"\)/.test(files.connection)
+      || files.connection.includes('new URL(config.base)')
+      || !files.connection.includes('upstream.origin !== loc.origin')) {
+    findings.push('shared OpenClaw connection module lacks relay-backed metadata and explicit WebSocket-relay opt-in');
   }
-  if (!files.openshell.includes('openclawWebSocketUrl(rawUrl, "/ws/terminal?cmd="')) {
+  if (!files.openshell.includes('openclawWebSocketUrl(')
+      || !files.openshell.includes('"/ws/terminal?cmd=" + encodeURIComponent(cmd)')) {
     findings.push('terminal WebSocket bypasses shared OpenClaw routing');
   }
-  if (!files.openshell.includes('[direct.url, routed.url]')
-      || !files.openshell.includes('{ enabled: false, base: "" }')) {
-    findings.push('terminal WebSocket lacks authenticated direct-first routing with relay fallback');
+  if (!files.openshell.includes('const wsUrls = [routed.url]')
+      || !files.openshell.includes('getOpenClawWsRelayEnabled()')
+      || !files.openshell.includes('{ enabled: false, base: "" }')
+      || files.openshell.includes('[direct.url, routed.url]')) {
+    findings.push('terminal WebSocket does not use the one provider-selected route');
   }
+  const gatewayRouter = functionSource(files.helper, 'export function openclawGatewayWsUrl');
+  if (!gatewayRouter?.includes('getOpenClawWsRelayEnabled()')
+      || !/\bproxyEnabled\s*===\s*true\b/.test(gatewayRouter)
+      || !/if\s*\(\s*provider\s*===\s*["']pomerium["']\s*\|\|\s*!\s*relayEnabled\s*\)/.test(gatewayRouter)
+      || !/openclawWebSocketUrl\s*\(\s*rawUrl\s*,\s*["']\/cli\/gateway["']\s*,\s*accessSession\s*,\s*config\s*,\s*accessProvider\s*\)/.test(gatewayRouter)) {
+    findings.push('gateway WebSocket does not default sender-bound while retaining explicit Cloudflare relay opt-in');
+  }
+  const bootstrap = functionSource(files.helper, 'export async function openclawBootstrapRequest');
   if (!files.runtimeText.includes('/proc\\/self\\/oom_score_adj')
       || !files.runtimeText.includes('filterOpenClawRuntimeNoise')
       || !files.runtimeText.includes('export function filterOpenClawRuntimeValue(')
@@ -151,7 +172,10 @@ function audit(overrides = {}) {
   }
   if (!files.helper.includes('export async function refreshOpenClawGatewayToken(')
       || !files.helper.includes('const refreshed = await refreshOpenClawGatewayToken({ signal });')
-      || !files.helper.includes('const refreshedGateway = await helpers.refreshOpenClawGatewayToken({ signal: helpers.signal });')) {
+      || !files.helper.includes('const refreshedGateway = await helpers.refreshOpenClawGatewayToken({ signal: helpers.signal });')
+      || !bootstrap
+      || !files.helper.includes('await openclawBootstrapRequest("/api/agent"')
+      || !bootstrap.includes('headers["CF-Access-Jwt-Assertion"] = connection.accessSession;')) {
     findings.push('gateway entry points do not bootstrap the current token from /api/agent before connecting');
   }
   if (!files.openshell.includes('filterOpenClawRuntimeNoise')
@@ -191,7 +215,8 @@ function audit(overrides = {}) {
   }
 
   if (!files.shared.includes('gatewayTokenFromAgentMetadata')
-      || !files.shared.includes('refreshOpenClawGatewayToken')) {
+      || !files.shared.includes('refreshOpenClawGatewayToken')
+      || !files.shared.includes('openclawBootstrapRequest')) {
     findings.push('shared runtime does not re-export the gateway token bootstrap helpers');
   }
   if (!files.runtime.includes('openClawHttpUrl')) {
@@ -262,13 +287,20 @@ function selfTest() {
       'localized wiring',
       { [localized]: base[localized].replace('autofillToken: gatewayTokenFromAgentMetadata', 'autofillToken: null') },
     ]] : []),
-    ['shared relay controls', { en: base.en.replace('proxyControls: true', 'proxyControls: false') }],
-    ['terminal relay', { openshell: base.openshell.replace('openclawWebSocketUrl(rawUrl, "/ws/terminal?cmd="', 'directTerminalUrl(rawUrl, "/ws/terminal?cmd="') }],
-    ['terminal direct fallback', { openshell: base.openshell.replace('[direct.url, routed.url]', '[routed.url]') }],
+    ['learner bootstrap helper', { en: base.en.replace('helpers.openclawBootstrapRequest(PATH', 'helpers.fetchOpenClawDirect(PATH') }],
+    ['learner transport branch', { en: base.en.replace("const PATH = '/api/agent';", "const TRANSPORT = 'direct';\nconst PATH = '/api/agent';") }],
+    ['approved relay construction', { connection: base.connection.replace('new URL(DEFAULT_OPENCLAW_PROXY_BASE)', 'new URL(config.base)') }],
+    ['retired presenter query', { connection: base.connection.replace('export function getOpenClawProxyConfig()', 'const legacyRelay = new URLSearchParams(location.search).get("openclaw_proxy");\n\nexport function getOpenClawProxyConfig()') }],
+    ['same-origin Cloudflare exception', { connection: base.connection.replace('return !loc || upstream.origin !== loc.origin;', 'return true;') }],
+    ['terminal relay', { openshell: base.openshell.replace('openclawWebSocketUrl(', 'directTerminalUrl(', 1) }],
+    ['terminal provider route', { openshell: base.openshell.replace('[routed.url]', '[rawUrl + "/ws/terminal"]') }],
+    ['gateway direct default', { helper: base.helper.replace('if (provider === "pomerium" || !relayEnabled)', 'if (provider === "pomerium")') }],
+    ['gateway relay opt-in', { helper: base.helper.replace('proxyEnabled === true', 'proxyEnabled !== false') }],
     ['downstream gateway', { cliRuntime: base.cliRuntime.replace('runtime.openclawGatewayWsUrl(connection.rawUrl, connection.accessSession, null, null, connection.accessProvider).url', 'connection.rawUrl + "/cli/gateway"') }],
     ['downstream page boundary', { en4b: base.en4b.replace('helpers.mountOpenClawCli("#agent-chat")', 'mountDirectCli("#agent-chat")') }],
     ['shared export', { shared: base.shared.replaceAll('gatewayTokenFromAgentMetadata', 'removedGatewayTokenParser') }],
     ['automatic token bootstrap', { helper: base.helper.replaceAll('refreshOpenClawGatewayToken({ signal', 'removedGatewayTokenRefresh({ signal') }],
+    ['bootstrap assertion header', { helper: base.helper.replace('headers["CF-Access-Jwt-Assertion"] = connection.accessSession;', 'headers["X-Removed-Assertion"] = connection.accessSession;') }],
     ['harness relay', { runtime: base.runtime.replaceAll('openclaw-cors-proxy.experiments.courses.nvidia.com', 'relay.invalid') }],
     ['focused browser check', { runtime: base.runtime.replace("args.includes('--gateway-only')", 'false') }],
     ['cron cleanup', { runtime: base.runtime.replace("output.cleanupId = ''", "output.cleanupId = id") }],
