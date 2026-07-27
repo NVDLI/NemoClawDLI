@@ -177,6 +177,8 @@ FAST_COMMANDS: tuple[tuple[str, ...], ...] = (
     py("scripts/validation/locale_resource_audit.py", "--self-test"),
     LOCALE_RESOURCE_TESTS,
     py("scripts/validation/locale_resource_audit.py"),
+    py("-m", "unittest", "-v", "tests.validation.test_github_agent_bridge"),
+    py("scripts/validation/agent_transparency_audit.py"),
     py("scripts/materials/build_rag_index.py", "--check"),
     py("scripts/validation/validate_bundle.py", "--scope", "ship", "--no-write"),
 )
@@ -282,6 +284,8 @@ SHIP_COMMANDS: tuple[tuple[str, ...], ...] = (
     py("scripts/validation/browser_security_boundary_audit.py", "--self-test"),
     py("scripts/validation/browser_security_boundary_audit.py"),
     LOCALE_CATALOG_TESTS,
+    py("-m", "unittest", "-v", "tests.validation.test_github_agent_bridge"),
+    py("scripts/validation/agent_transparency_audit.py"),
     py("scripts/materials/build_rag_index.py", "--check"),
     py("scripts/validation/validate_bundle.py", "--scope", "ship"),
 )
@@ -304,6 +308,11 @@ MUTATION_IMPACTS: dict[tuple[str, ...], tuple[str, ...]] = {
         "scripts/validation/reacs_registry.json", "scripts/validation/reacs_registry.py",
         "scripts/validation/release_gate.py", "tests/validation/test_reacs_registry.py",
         ".gitlab-ci.yml", ".gitlab/ci/*", ".github/workflows/*",
+    ),
+    py("-m", "unittest", "-v", "tests.validation.test_github_agent_bridge"): (
+        "scripts/ci/*.py", "scripts/ci/*.json",
+        "scripts/validation/agent_transparency_audit.py",
+        "tests/validation/test_github_agent_bridge.py", "docs/agent-github-bot.md",
     ),
     py("scripts/validation/container_boundary_audit.py", "--self-test"): (
         "scripts/validation/container_boundary_audit.py", "scripts/validation/release_gate.py",

@@ -11,14 +11,14 @@
   "node_type": "directory-explorer",
   "title": "scripts/ci",
   "source_dir": "scripts/ci/",
-  "summary": "Fixed-vocabulary internal GitLab operations for exact artifact retrieval, secret-isolated live review, language-selective publication planning, and the root-installed devbox publisher.",
+  "summary": "Bounded CI and devbox operators for exact artifacts, secret-isolated review, publication planning, and repository-scoped GitHub agent status.",
   "explorer": "../../web/_skill_explorer.js"
 }
 </script>
 <script type="application/json" id="explorer-config">
 {
   "title": "scripts/ci",
-  "summary": "Fixed-vocabulary internal GitLab operations for exact artifact retrieval, secret-isolated live review, language-selective publication planning, and the root-installed devbox publisher.",
+  "summary": "Bounded CI and devbox operators for exact artifacts, secret-isolated review, publication planning, and repository-scoped GitHub agent status.",
   "ties": [
     "build"
   ],
@@ -30,6 +30,11 @@
     }
   },
   "files": [
+    {
+      "path": "agent-transparency.schema.json",
+      "role": "structured data",
+      "desc": "Structured data in scripts/ci/."
+    },
     {
       "path": "assert_unprivileged_environment.py",
       "role": "Python source",
@@ -47,6 +52,11 @@
     },
     {
       "path": "fetch_validated_candidate.py",
+      "role": "Python source",
+      "desc": "Python source in scripts/ci/."
+    },
+    {
+      "path": "github_agent_bridge.py",
       "role": "Python source",
       "desc": "Python source in scripts/ci/."
     },
@@ -90,7 +100,7 @@
   <nav aria-label="Skill navigation"><a href="../../web/index.html">Course home</a> · <a href="../SKILL.html">Parent contract</a> · <a data-skill-nav="map" href="../../SKILL.html">Repository map</a></nav>
   </header>
   <h1 id="skill-title">scripts/ci</h1>
-  <p>Fixed-vocabulary internal GitLab operations for exact artifact retrieval, secret-isolated live review, language-selective publication planning, and the root-installed devbox publisher.</p>
+  <p>Bounded CI and devbox operators for exact artifacts, secret-isolated review, publication planning, and repository-scoped GitHub agent status.</p>
 
   <section aria-labelledby="operator-flow"><h2 id="operator-flow">Operator flow</h2>
     <ol>
@@ -99,14 +109,17 @@
       <li><strong>Exercise or publish:</strong> a separate secret-free job builds the pinned browser runtime without opening candidate content. Candidate browsers run without protected variables. Live probes receive only environment-scoped file secrets. CDN preparation has no AWS authority; the root-installed devbox publisher accepts only its hash plan.</li>
     </ol>
     <p><a href="../../docs/pages_deploy.md">Open the exact <code>glab</code> branch/language commands and runner provisioning steps.</a></p>
-    <p>These operations stay inside GitLab, so public GitHub receives the source and ordinary validation but no trigger, secret, protected environment, devbox runner, or AWS authority.</p>
+    <p>Protected delivery operations stay inside GitLab. The optional GitHub bot bridge publishes only a bounded lifecycle Check and one updated issue or pull-request comment. It receives no protected environment, deployment, devbox, or AWS authority.</p>
+    <p><a href="../../docs/agent-github-bot.md">Review the bot account boundary, event schema, public-data rules, and devbox setup.</a></p>
   </section>
   <div class="skill-columns">
     <section><h2>Files</h2><ul>
+      <li><a href="agent-transparency.schema.json"><code>agent-transparency.schema.json</code></a></li>
       <li><a href="assert_unprivileged_environment.py"><code>assert_unprivileged_environment.py</code></a></li>
       <li><a href="devbox_cdn_publisher.py"><code>devbox_cdn_publisher.py</code></a></li>
       <li><a href="extract_trusted_archive.py"><code>extract_trusted_archive.py</code></a></li>
       <li><a href="fetch_validated_candidate.py"><code>fetch_validated_candidate.py</code></a></li>
+      <li><a href="github_agent_bridge.py"><code>github_agent_bridge.py</code></a></li>
       <li><a href="install_devbox_publisher.sh"><code>install_devbox_publisher.sh</code></a></li>
       <li><a href="live_interface_review.py"><code>live_interface_review.py</code></a></li>
       <li><a href="prepare_cdn_publication.py"><code>prepare_cdn_publication.py</code></a></li>
