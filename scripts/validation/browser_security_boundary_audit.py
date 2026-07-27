@@ -12,6 +12,7 @@ bytes are governed separately by the exact-hash SARIF disposition policy.
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import tempfile
@@ -22,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[2]
 TEXT_SUFFIXES = {".html", ".js", ".mjs"}
 AUTHORED_ROOTS = ("web", "scripts", "i18n")
 PUBLISHER_TREES = ("/vendor/", "/mats/")
+CODEQL_POLICY = "scripts/security/codeql-vendor-dispositions.json"
 
 BOUNDARIES: tuple[tuple[str, str, str], ...] = (
     ("web/nemoclaw/scripts/_course_assistant.js", 'sandbox="allow-scripts"',
@@ -148,9 +150,27 @@ def authored_sources(root: Path, overrides: dict[str, str] | None = None) -> lis
     return sorted(paths)
 
 
+def reviewed_tab_storage(root: Path) -> set[tuple[str, str]]:
+    """Return exact authored session-storage sinks approved by the SARIF policy."""
+    try:
+        policy = json.loads((root / CODEQL_POLICY).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return set()
+    reviewed: set[tuple[str, str]] = set()
+    for control in policy.get("authored_controls", []):
+        if control.get("decision") != "explicit-user-tab-credential-boundary":
+            continue
+        artifact = str(control.get("artifact", "")).replace("\\", "/").lstrip("./")
+        for finding in control.get("source_findings", []):
+            if finding.get("rule") == "js/clear-text-storage-of-sensitive-data":
+                reviewed.add((artifact, str(finding.get("source_line", "")).strip()))
+    return reviewed
+
+
 def audit(root: Path = ROOT, overrides: dict[str, str] | None = None) -> list[str]:
     overrides = overrides or {}
     findings: list[str] = []
+    reviewed_storage = reviewed_tab_storage(root)
 
     def text(rel: str) -> str:
         if rel in overrides:
@@ -188,6 +208,17 @@ def audit(root: Path = ROOT, overrides: dict[str, str] | None = None) -> list[st
             findings.append(
                 f"{rel}:{line}: sensitive browser value {match.group(1)!r} must not enter persistent localStorage"
             )
+        for match in re.finditer(
+            r"""sessionStorage\.setItem\(\s*(?P<key>["'][^"']*(?:nvapi|token|secret|authorization|credential)[^"']*["']|[A-Za-z_$][\w$]*(?:API_KEY|TOKEN|SECRET|AUTHORIZATION|CREDENTIAL)[\w$]*)\s*,\s*(?P<value>[^"'`\s][^,\n)]*)""",
+            source,
+            re.I,
+        ):
+            line = source[:match.start()].count("\n") + 1
+            source_line = source.splitlines()[line - 1].strip()
+            if (rel, source_line) not in reviewed_storage:
+                findings.append(
+                    f"{rel}:{line}: direct sensitive sessionStorage write requires an exact reviewed tab-storage boundary"
+                )
         if rel == "web/_skill_explorer.js":
             for match in re.finditer(
                 r"""\.href\s*=\s*(?:it\.href|x\.href|home|nav\.(?:up|map)\.href)\b""",
@@ -266,6 +297,16 @@ def self_test(root: Path = ROOT) -> list[str]:
     })
     if not any(proposed in finding and "removing origin isolation" in finding for finding in findings):
         failures.append("mutation was not detected: newly proposed browser source")
+
+    proposed_storage = "scripts/runtime/proposed-live-harness.js"
+    findings = audit(root, {
+        proposed_storage: 'sessionStorage.setItem("token", accessToken);\n',
+    })
+    if not any(
+        proposed_storage in finding and "reviewed tab-storage boundary" in finding
+        for finding in findings
+    ):
+        failures.append("mutation was not detected: newly proposed sensitive session storage")
 
     with tempfile.TemporaryDirectory(prefix="reacs-browser-discovery-") as temp:
         candidate_root = Path(temp)

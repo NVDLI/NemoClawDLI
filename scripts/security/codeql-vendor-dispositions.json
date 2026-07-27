@@ -102,27 +102,6 @@
         }
       ],
       "scope": "The learner explicitly supplies model credentials, which remain tab-scoped, are never persisted in localStorage, and are discarded on tab close or explicit clear."
-    },
-    {
-      "fingerprints": [
-        "ed7637f0d5001db656769e4162f3e4f98d83b6905f9f9ae0017da02d78fbefff"
-      ],
-      "artifact": "scripts/runtime/test_page_runtime.js",
-      "artifact_sha256": "459812305cefeb9012157e13cf0ee6b8ed7a2c5c99e573692020fa167cb5f9b5",
-      "decision": "explicit-user-tab-credential-boundary",
-      "owner": "course-maintainers",
-      "expires": "2026-10-24",
-      "controls": [
-        {
-          "path": "scripts/validation/browser_security_boundary_audit.py",
-          "contains": "sensitive browser value"
-        },
-        {
-          "path": "docs/security-design.md",
-          "contains": "browser storage is not a vault"
-        }
-      ],
-      "scope": "The optional live browser harness projects an operator-provided model credential into tab-scoped sessionStorage only for the isolated test page and never writes it to repository artifacts or persistent browser storage."
     }
   ],
   "artifacts": [
