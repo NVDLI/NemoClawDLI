@@ -21,14 +21,23 @@ jobs:
           ref: ${{ github.event.pull_request.base.sha }}
           fetch-depth: 1
           persist-credentials: false
-      - name: Scan the proposed tree as inert Git objects
+      - name: Fetch the proposed tree as inert Git objects
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+          GIT_TERMINAL_PROMPT: "0"
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: credential.helper
+          GIT_CONFIG_VALUE_0: '!f() { echo username=x-access-token; echo "password=$CANDIDATE_READ_TOKEN"; }; f'
+          CANDIDATE_READ_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]
-          [[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
           git fetch --no-tags --depth=1 origin "refs/pull/${PR_NUMBER}/head"
+      - name: Scan the proposed tree as inert Git objects
+        env:
+          CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          [[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
           test "$(git rev-parse FETCH_HEAD)" = "$CANDIDATE_SHA"
           python3 scripts/validation/sensitive_content_audit.py --git-tree "$CANDIDATE_SHA"
