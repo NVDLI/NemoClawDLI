@@ -40,6 +40,12 @@ GitLab Pages does not preserve HTML responses under dot-prefixed directories byt
 above and rewrites local HTML and JSON evidence links before the exhaustive browser, artifact,
 and deployed-byte checks run.
 The source files remain at their normal repository paths; only the static projection changes.
+Two sources may never claim one artifact route. A path-scoped policy decision resolves a `source/`
+route back to the repository file it copies only when the artifact file's full bytes exactly match
+that source file. Otherwise a reviewed file that satisfies the sensitive-content boundary in the
+source tree could fail it for the first time inside the production deploy, under a spelling no
+pre-merge check ever scanned. The pull-request job audits its own built artifact under that same
+boundary for the same reason.
 
 The course pages inline their own CSS and JS and use relative links, so the course directory works
 from a Pages subpath. Live model calls use the student's own NVIDIA key and call NVIDIA model

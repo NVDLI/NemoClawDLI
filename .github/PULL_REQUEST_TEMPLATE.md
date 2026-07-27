@@ -18,6 +18,7 @@ Closes #
 - [ ] `web/`
 - [ ] `i18n/`
 - [ ] `scripts/`
+- [ ] CI and repository automation
 - [ ] `docs/`
 - [ ] `materials/source governance`
 

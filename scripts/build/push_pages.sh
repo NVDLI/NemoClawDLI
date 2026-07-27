@@ -81,7 +81,8 @@ fi
 git rm -rqf . >/dev/null 2>&1 || true
 rm -rf public .gitlab-ci.yml
 bash "$T1/scripts/build/build_pages.sh" "$REPO/public"
-if ! python3 "$T1/scripts/validation/sensitive_content_audit.py" --root "$REPO/public"; then
+if ! python3 "$T1/scripts/validation/sensitive_content_audit.py" \
+    --root "$REPO/public" --publication-source-root "$T1"; then
   echo "push_pages: REFUSING PUBLISH - generated Pages content crossed the sensitive boundary." >&2
   exit 1
 fi

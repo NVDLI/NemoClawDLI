@@ -11,14 +11,14 @@
   "node_type": "directory-explorer",
   "title": ".github/workflows",
   "source_dir": ".github/workflows/",
-  "summary": "Pinned GitHub Actions workflows for trusted-base contribution scanning, validation, dependency review, Pages, and protected releases. Every added .yml or .yaml workflow is checked for read-only defaults, fork-safe jobs, isolated write authority, and non-persistent checkout credentials. The pull_request_target boundary reads candidate Git objects with base-owned scanner code and never checks out the proposed head. CodeQL applies the repository's source-bound SARIF policy; release readiness separately requires GitHub's host-owned CodeQL check and pull-request alert state.",
+  "summary": "Pinned GitHub Actions workflows for trusted-base contribution scanning, validation, dependency review, Pages, and protected releases. Every added .yml or .yaml workflow is checked for read-only defaults, fork-safe jobs, isolated write authority, and non-persistent checkout credentials. No checkout persists a credential, so a step that contacts a Git remote authenticates from the read-only job token in its own env. An env-only credential never reaches argv or a stored Git configuration. The pull_request_target boundary reads candidate Git objects with base-owned scanner code and never checks out the proposed head. CodeQL applies the repository's source-bound SARIF policy; release readiness separately requires GitHub's host-owned CodeQL check and pull-request alert state.",
   "explorer": "../../web/_skill_explorer.js"
 }
 </script>
 <script type="application/json" id="explorer-config">
 {
   "title": ".github/workflows",
-  "summary": "Pinned GitHub Actions workflows for trusted-base contribution scanning, validation, dependency review, Pages, and protected releases. Every added .yml or .yaml workflow is checked for read-only defaults, fork-safe jobs, isolated write authority, and non-persistent checkout credentials. The pull_request_target boundary reads candidate Git objects with base-owned scanner code and never checks out the proposed head. CodeQL applies the repository's source-bound SARIF policy; release readiness separately requires GitHub's host-owned CodeQL check and pull-request alert state.",
+  "summary": "Pinned GitHub Actions workflows for trusted-base contribution scanning, validation, dependency review, Pages, and protected releases. Every added .yml or .yaml workflow is checked for read-only defaults, fork-safe jobs, isolated write authority, and non-persistent checkout credentials. No checkout persists a credential, so a step that contacts a Git remote authenticates from the read-only job token in its own env. An env-only credential never reaches argv or a stored Git configuration. The pull_request_target boundary reads candidate Git objects with base-owned scanner code and never checks out the proposed head. CodeQL applies the repository's source-bound SARIF policy; release readiness separately requires GitHub's host-owned CodeQL check and pull-request alert state.",
   "ties": [
     "build"
   ],
@@ -70,7 +70,7 @@
   <nav aria-label="Skill navigation"><a href="../../web/index.html">Course home</a> · <a href="../SKILL.html">Parent contract</a> · <a data-skill-nav="map" href="../../SKILL.html">Repository map</a></nav>
   </header>
   <h1 id="skill-title">.github/workflows</h1>
-  <p>Pinned GitHub Actions workflows for trusted-base contribution scanning, validation, dependency review, Pages, and protected releases. Every added .yml or .yaml workflow is checked for read-only defaults, fork-safe jobs, isolated write authority, and non-persistent checkout credentials. The pull_request_target boundary reads candidate Git objects with base-owned scanner code and never checks out the proposed head. CodeQL applies the repository&#x27;s source-bound SARIF policy; release readiness separately requires GitHub&#x27;s host-owned CodeQL check and pull-request alert state.</p>
+  <p>Pinned GitHub Actions workflows for trusted-base contribution scanning, validation, dependency review, Pages, and protected releases. Every added .yml or .yaml workflow is checked for read-only defaults, fork-safe jobs, isolated write authority, and non-persistent checkout credentials. No checkout persists a credential, so a step that contacts a Git remote authenticates from the read-only job token in its own env. An env-only credential never reaches argv or a stored Git configuration. The pull_request_target boundary reads candidate Git objects with base-owned scanner code and never checks out the proposed head. CodeQL applies the repository&#x27;s source-bound SARIF policy; release readiness separately requires GitHub&#x27;s host-owned CodeQL check and pull-request alert state.</p>
   <div class="skill-columns">
     <section><h2>Files</h2><ul>
       <li><a href="codeql.yml"><code>codeql.yml</code></a></li>

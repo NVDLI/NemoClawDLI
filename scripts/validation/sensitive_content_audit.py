@@ -62,6 +62,15 @@ PATH_PHRASE_ALLOWANCES = {
     # scoped to CODEOWNERS; the same identity stays blocked in prose, code, and metadata.
     ".gitlab/CODEOWNERS": frozenset({"v" + "kudlay"}),
 }
+# Publication artifacts republish source-control metadata directories at routes a static host
+# will serve, so the same reviewed bytes arrive under a second spelling. A path-scoped policy
+# decision must resolve that spelling back to the repository file it copies; otherwise a file
+# that passes every pre-merge check fails only inside the deploy. This is the exact inverse of
+# PUBLIC_SOURCE_PREFIXES in scripts/build/project_source_tree.py, and self_test proves it.
+PUBLICATION_PATH_PREFIXES = {
+    "source/github": ".github",
+    "source/gitlab": ".gitlab",
+}
 
 
 @dataclass(frozen=True)
@@ -103,6 +112,58 @@ def ephemeral_instance_host(host: str) -> bool:
         if any(INSTANCE_ID_RE.fullmatch(segment) for segment in re.split(r"[.-]", prefix)):
             return True
     return False
+
+
+def projected_policy_candidates(path: str) -> Iterator[tuple[str, str]]:
+    """Yield (artifact route, repository path) pairs for projected source routes.
+
+    A Pages preview may nest a complete artifact below a branch slug, so the route can
+    start at any path segment. This function only describes possible mappings. It grants
+    no allowance; ``audit`` separately proves source ownership and byte identity.
+    """
+    parts = path.split("/")
+    for projected, source in PUBLICATION_PATH_PREFIXES.items():
+        route_parts = projected.split("/")
+        width = len(route_parts)
+        for index in range(len(parts) - width + 1):
+            if parts[index:index + width] != route_parts:
+                continue
+            tail = parts[index + width:]
+            artifact_route = "/".join(parts[index:])
+            repository_path = "/".join((source, *tail))
+            yield artifact_route, repository_path
+
+
+def publication_policy_path(
+    path: str,
+    artifact_file: Path,
+    source_root: Path,
+    source_paths: frozenset[str],
+) -> str:
+    """Return an allowed source identity only for a proven projected copy.
+
+    The projected bytes must exactly equal a regular repository source file, and no
+    candidate source path may also claim the artifact route. Route spelling alone is
+    never evidence: source-tree, staged, history, and Git-object scans do not call this.
+    """
+    if artifact_file.is_symlink():
+        return path
+    for artifact_route, repository_path in projected_policy_candidates(path):
+        if repository_path not in PATH_PHRASE_ALLOWANCES:
+            continue
+        if path in source_paths or artifact_route in source_paths:
+            continue
+        if repository_path not in source_paths:
+            continue
+        source_file = source_root / repository_path
+        if not source_file.is_file() or source_file.is_symlink():
+            continue
+        try:
+            if artifact_file.read_bytes() == source_file.read_bytes():
+                return repository_path
+        except OSError:
+            continue
+    return path
 
 
 def isolated_git_env() -> dict[str, str]:
@@ -263,7 +324,13 @@ def file_text(path: Path) -> str | None:
     return raw.decode("utf-8", errors="replace")
 
 
-def scan_text(path: str, text: str, policy: Policy) -> list[Finding]:
+def scan_text(
+    path: str,
+    text: str,
+    policy: Policy,
+    *,
+    policy_path: str | None = None,
+) -> list[Finding]:
     findings: list[Finding] = []
     seen: set[tuple[int, str]] = set()
 
@@ -291,25 +358,25 @@ def scan_text(path: str, text: str, policy: Policy) -> list[Finding]:
             if kind == "corporate personal email" and match.group(0).casefold() in PUBLIC_ROLE_EMAILS:
                 continue
             add(match.start(), kind)
+    allowed = PATH_PHRASE_ALLOWANCES.get(policy_path or path, frozenset())
     offset = 0
     for line in text.splitlines(keepends=True):
         tokens = [(match.group(0).casefold(), match.start()) for match in TOKEN_RE.finditer(line)]
         for start in range(len(tokens)):
             for size in range(1, min(policy.max_phrase_tokens, len(tokens) - start) + 1):
                 phrase = " ".join(token for token, _ in tokens[start:start + size])
-                if (phrase not in PATH_PHRASE_ALLOWANCES.get(path, frozenset())
-                        and digest(phrase) in policy.phrases):
+                if phrase not in allowed and digest(phrase) in policy.phrases:
                     add(offset + tokens[start][1], "restricted active-finding detail")
         offset += len(line)
     return findings
 
 
-def _scan_repository_path(item: tuple[Path, str, Policy]) -> tuple[list[Finding], int]:
-    path, rel, policy = item
+def _scan_repository_path(item: tuple[Path, str, str, Policy]) -> tuple[list[Finding], int]:
+    path, rel, policy_path, policy = item
     text = file_text(path)
     if text is None:
         return [], 0
-    return scan_text(rel, text, policy), 1
+    return scan_text(rel, text, policy, policy_path=policy_path), 1
 
 
 def audit(
@@ -317,15 +384,35 @@ def audit(
     policy: Policy | None = None,
     *,
     workers: int | None = None,
+    publication_source_root: Path | None = None,
 ) -> tuple[list[Finding], int]:
     active = policy or load_policy()
     findings: list[Finding] = []
     scanned = 0
+    root = root.resolve()
     paths = repository_files(root)
+    source_root: Path | None = None
+    source_paths: frozenset[str] = frozenset()
+    if publication_source_root is not None:
+        source_root = publication_source_root.resolve()
+        if source_root == root:
+            raise RuntimeError("publication source root must differ from the artifact root")
+        source_paths = frozenset(
+            path.relative_to(source_root).as_posix()
+            for path in repository_files(source_root)
+        )
     if workers is None:
         raw_workers = os.environ.get("SENSITIVE_AUDIT_WORKERS", "")
         workers = int(raw_workers) if raw_workers.isdigit() else min(4, os.cpu_count() or 1)
-    work = [(path, path.relative_to(root).as_posix(), active) for path in paths]
+    work = []
+    for path in paths:
+        rel = path.relative_to(root).as_posix()
+        policy_path = (
+            publication_policy_path(rel, path, source_root, source_paths)
+            if source_root is not None
+            else rel
+        )
+        work.append((path, rel, policy_path, active))
     if workers > 1 and len(work) >= 32:
         with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as pool:
             for rows, count in pool.map(_scan_repository_path, work, chunksize=8):
@@ -454,6 +541,48 @@ def self_test() -> list[str]:
         if rejected != should_fail:
             failures.append(f"{label}: expected rejected={should_fail}, got {rejected}")
 
+    # Route spelling alone grants nothing. Direct text scans model source, staged,
+    # history, and Git-object inputs, all of which keep lookalike paths strict.
+    owner_line = "/scripts/ @" + "v" + "kudlay"
+    projected_examples = (
+        ("unproven published ownership route", "source/gitlab/CODEOWNERS", owner_line, True),
+        ("repository ownership path", ".gitlab/CODEOWNERS", owner_line, False),
+        ("published sibling file", "source/gitlab/ci/core.yml", owner_line, True),
+        ("published workflow route", "source/github/workflows/pages.yml", owner_line, True),
+        ("nested lookalike route", "docs/source/gitlab/CODEOWNERS", owner_line, True),
+        ("adjacent lookalike route", "source/gitlabx/CODEOWNERS", owner_line, True),
+        ("unprojected same-name file", "CODEOWNERS", owner_line, True),
+        # The allowance covers one ownership token, never the rest of the policy.
+        ("launchable instance on the published route", "source/gitlab/CODEOWNERS",
+         "# see https://" + relay_host + "/status", True),
+        ("restricted identifier on the published route", "source/gitlab/CODEOWNERS",
+         "# tracked as C" + "VE-2026-12345", True),
+    )
+    for label, path, sample, should_fail in projected_examples:
+        rejected = bool(scan_text(path, sample, policy))
+        if rejected != should_fail:
+            failures.append(f"{label}: expected rejected={should_fail}, got {rejected}")
+
+    # The de-projection must stay the exact inverse of the build-side projection, so a new
+    # public route cannot silently reintroduce this post-merge-only failure.
+    try:
+        build_scripts = str(ROOT / "scripts" / "build")
+        if build_scripts not in sys.path:
+            sys.path.insert(0, build_scripts)
+        import project_source_tree
+    except ImportError as exc:  # pragma: no cover - a missing projector is itself a failure
+        failures.append(f"publication route agreement: cannot read the projection owner ({exc})")
+    else:
+        declared = {
+            target.as_posix(): source
+            for source, target in project_source_tree.PUBLIC_SOURCE_PREFIXES.items()
+        }
+        if declared != PUBLICATION_PATH_PREFIXES:
+            failures.append(
+                "publication route agreement: projected routes and audited routes disagree "
+                f"({sorted(declared.items())} vs {sorted(PUBLICATION_PATH_PREFIXES.items())})"
+            )
+
     with tempfile.TemporaryDirectory(prefix="sensitive-content-audit-") as temp_dir:
         root = Path(temp_dir)
         env = isolated_git_env()
@@ -536,6 +665,7 @@ def self_test() -> list[str]:
         candidate_tamper = {
             ".github/workflows/contribution-boundary.yml": "name: disabled candidate check\n",
             "scripts/validation/sensitive_content_audit.py": "def audit(*_args): return [], 0\n",
+            "source/gitlab/CODEOWNERS": owner_line + "\n",
             "novel/deep/runtime/launchable.txt": "App URL: https://" + relay_host + "\n",
         }
         for rel, content in candidate_tamper.items():
@@ -559,6 +689,10 @@ def self_test() -> list[str]:
             failures.append(
                 "trusted-base tree scan: candidate workflow and validator edits disabled novel-path discovery"
             )
+        if not any(item.path == "source/gitlab/CODEOWNERS" for item in rows):
+            failures.append(
+                "trusted-base tree scan: projected-path lookalike inherited a publication allowance"
+            )
     with tempfile.TemporaryDirectory(prefix="sensitive-archive-") as temp_dir:
         archive = Path(temp_dir)
         (archive / "source.txt").write_text("B" + "DSA-2026-123456\n", encoding="utf-8")
@@ -578,6 +712,60 @@ def self_test() -> list[str]:
             failures.append("source-archive discovery: novel nested launchable instance was missed")
         if not any(item.path == binary for item in rows):
             failures.append("source-archive discovery: NUL-wrapped launchable instance was missed")
+
+    # A Pages or release artifact may inherit a source path allowance only when its
+    # regular-file bytes exactly match the repository file that the route claims to copy.
+    with tempfile.TemporaryDirectory(prefix="sensitive-publication-") as temp_dir:
+        fixture_root = Path(temp_dir)
+        source = fixture_root / "source-tree"
+        artifact = fixture_root / "artifact"
+        source.mkdir()
+        owner_line = "/scripts/ @" + "v" + "kudlay" + "\n"
+        source_owner = source / ".gitlab" / "CODEOWNERS"
+        source_owner.parent.mkdir(parents=True)
+        source_owner.write_text("# ownership\n" + owner_line, encoding="utf-8")
+        published = {
+            "source/gitlab/CODEOWNERS": "# ownership\n" + owner_line,
+            "source/gitlab/ci/core.yml": "# owner: " + owner_line,
+            "source/github/workflows/pages.yml": "name: pages\n",
+            "web/nemoclaw/notes/launchable.md": "App URL: https://" + relay_host + "\n",
+        }
+        for rel, content in published.items():
+            path = artifact / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+        rows, _ = audit(
+            artifact, policy, workers=1, publication_source_root=source,
+        )
+        rejected_paths = {item.path for item in rows}
+        if "source/gitlab/CODEOWNERS" in rejected_paths:
+            failures.append(
+                "publication tree: exact projected ownership copy was not recognized"
+            )
+        for rel in ("source/gitlab/ci/core.yml", "web/nemoclaw/notes/launchable.md"):
+            if rel not in rejected_paths:
+                failures.append(f"publication tree: {rel} escaped the artifact boundary")
+
+        projected_owner = artifact / "source" / "gitlab" / "CODEOWNERS"
+        projected_owner.write_text("# modified artifact\n" + owner_line, encoding="utf-8")
+        rows, _ = audit(
+            artifact, policy, workers=1, publication_source_root=source,
+        )
+        if not any(item.path == "source/gitlab/CODEOWNERS" for item in rows):
+            failures.append("publication tree: modified projected bytes inherited the source allowance")
+
+        projected_owner.write_bytes(source_owner.read_bytes())
+        lookalike = source / "source" / "gitlab" / "CODEOWNERS"
+        lookalike.parent.mkdir(parents=True)
+        lookalike.write_bytes(source_owner.read_bytes())
+        rows, _ = audit(source, policy, workers=1)
+        if not any(item.path == "source/gitlab/CODEOWNERS" for item in rows):
+            failures.append("source tree: projected-path lookalike inherited the source allowance")
+        rows, _ = audit(
+            artifact, policy, workers=1, publication_source_root=source,
+        )
+        if not any(item.path == "source/gitlab/CODEOWNERS" for item in rows):
+            failures.append("publication tree: colliding source lookalike inherited the source allowance")
     return failures
 
 
@@ -615,12 +803,22 @@ def main() -> int:
         "--root", type=Path, default=ROOT,
         help="scan this complete source or publication tree instead of the repository root",
     )
+    parser.add_argument(
+        "--publication-source-root", type=Path,
+        help="for a publication artifact, prove projected path allowances against this source tree",
+    )
     parser.add_argument("--commit-range", metavar="BASE..HEAD")
     parser.add_argument("--submission-env", action="append", default=[], metavar="NAME")
     parser.add_argument("--report")
     args = parser.parse_args()
     try:
         policy = load_policy()
+        if args.publication_source_root and (
+            args.git_tree or args.commit_range or args.staged or args.submission_env
+        ):
+            raise RuntimeError(
+                "--publication-source-root applies only to a complete publication-tree audit"
+            )
         if args.self_test:
             failures = self_test()
             print("sensitive content self-test: " + ("FAIL" if failures else "PASS"))
@@ -640,7 +838,11 @@ def main() -> int:
             text = "\n".join(os.environ.get(name, "") for name in args.submission_env)
             findings = scan_text("submission", text, policy)
             return emit(findings, "submission metadata", len(args.submission_env), args.report)
-        findings, scanned = audit(args.root, policy)
+        findings, scanned = audit(
+            args.root,
+            policy,
+            publication_source_root=args.publication_source_root,
+        )
         label = "working tree" if args.root == ROOT else f"tree {args.root}"
         return emit(findings, label, scanned, args.report)
     except RuntimeError as exc:

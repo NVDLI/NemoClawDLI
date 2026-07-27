@@ -25,7 +25,7 @@ include:
 SCA_JOBS = ("security_browser_sca", "security_sca", "security_python_sca")
 PRIVILEGED_DIGESTS = {
     ".gitlab/ci/privileged.yml": "1b143eb94e21e2f2f5e68e8496146fc926bc6bbb86ccb237cfbe9e7baca7c9e0",
-    ".gitlab/ci/privileged-child.yml": "d15916c30f431350350a789295320c9608a31cf7cb0a10e56bb6240f502ee93f",
+    ".gitlab/ci/privileged-child.yml": "74b074a473f5fa3c81f4f96af250f458639064a55c2d08b95628c77b96834624",
 }
 OWNER_PATHS = (
     "/.gitlab-ci.yml",
@@ -237,8 +237,10 @@ def audit(root: Path = ROOT) -> list[dict[str, str]]:
         "-m scripts.ci.trusted_gitlab_context",
         "-m scripts.ci.live_interface_review", "--assert-capabilities /tmp/validated-candidate",
         "-m scripts.ci.prepare_cdn_publication",
-        "-m scripts.validation.sensitive_content_audit --root /tmp/validated-candidate",
-        "-m scripts.validation.sensitive_content_audit --root cdn/publication",
+        "-m scripts.validation.sensitive_content_audit --root /tmp/validated-candidate "
+        "--publication-source-root .",
+        "-m scripts.validation.sensitive_content_audit --root cdn/publication "
+        "--publication-source-root .",
         "tags: [dli-cdn-publisher]", 'GIT_STRATEGY: "none"',
         "resource_group: dli-cdn-production", "environment:\n    name: dli-cdn-production",
         "/opt/dli-course-publisher/publish", "unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN",
@@ -340,7 +342,8 @@ def audit(root: Path = ROOT) -> list[dict[str, str]]:
     require(core, 'validator_specialization_audit.py --commit-range', "specialization-range-not-gated",
             ".gitlab/ci/core.yml", out,
             "reject course-specific validator literals across the complete merge-request history")
-    require(core, "sensitive_content_audit.py --root public", "pages-sensitive-boundary",
+    require(core, "sensitive_content_audit.py --root public --publication-source-root .",
+            "pages-sensitive-boundary",
             ".gitlab/ci/core.yml", out,
             "scan the exact assembled GitLab Pages artifact before its publication handoff")
     require(release_gate, 'unit_test("artifact_link_audit")', "artifact-policy-not-gated",
@@ -385,10 +388,12 @@ def self_test() -> list[str]:
         ("privileged-ci-bytes", ".gitlab/ci/privileged-child.yml", "cdn_publish:\n", 'cdn_publish:\n\n"cdn_publish":\n  script: [\"id\"]\n'),
         ("privileged-ci-bytes", ".gitlab/ci/privileged-child.yml", "tags: [dli-cdn-publisher]", "tags: [pages]"),
         ("privileged-boundary", ".gitlab/ci/privileged-child.yml",
-         "-m scripts.validation.sensitive_content_audit --root /tmp/validated-candidate",
+         "-m scripts.validation.sensitive_content_audit --root /tmp/validated-candidate "
+         "--publication-source-root .",
          "-m scripts.validation.sensitive_content_audit --help"),
         ("privileged-boundary", ".gitlab/ci/privileged-child.yml",
-         "-m scripts.validation.sensitive_content_audit --root cdn/publication",
+         "-m scripts.validation.sensitive_content_audit --root cdn/publication "
+         "--publication-source-root .",
          "-m scripts.validation.sensitive_content_audit --help"),
         ("privileged-direct-python", ".gitlab/ci/privileged-child.yml",
          "python3 -m scripts.ci.privileged_request", "python3 scripts/ci/privileged_request.py"),
@@ -403,7 +408,7 @@ def self_test() -> list[str]:
          "validator_specialization_audit.py --commit-range",
          "validator_specialization_audit.py --json"),
         ("pages-sensitive-boundary", ".gitlab/ci/core.yml",
-         "sensitive_content_audit.py --root public",
+         "sensitive_content_audit.py --root public --publication-source-root .",
          "sensitive_content_audit.py --help"),
         ("artifact-policy-not-gated", "scripts/validation/release_gate.py", 'unit_test("artifact_link_audit")',
          'unit_test("repository_sync_audit")'),

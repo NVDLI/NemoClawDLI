@@ -331,7 +331,7 @@ pages:
         test -f public/branches.json
         test -f public/languages.json
       fi
-      python3 scripts/validation/sensitive_content_audit.py --root public
+      python3 scripts/validation/sensitive_content_audit.py --root public --publication-source-root .
       # This GitLab instance reports CI_PAGES_URL with http:// even though the
       # review surface is HTTPS. Publish the canonical URL through dotenv so
       # the MR environment button never relies on an HTTP redirect.

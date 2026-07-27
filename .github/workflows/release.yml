@@ -47,6 +47,14 @@ jobs:
       - name: Verify protected release input
         env:
           RELEASE_TAG: ${{ inputs.tag }}
+          # The checkout persists no credential, so the origin/main containment read needs one
+          # of its own. The token is the job's read-only GITHUB_TOKEN, and env-only Git config
+          # keeps it out of .git/config, out of argv, and out of every later step.
+          GIT_TERMINAL_PROMPT: "0"
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: credential.helper
+          GIT_CONFIG_VALUE_0: '!f() { echo username=x-access-token; echo "password=$RELEASE_READ_TOKEN"; }; f'
+          RELEASE_READ_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           python3 -c 'import re,sys; tag=sys.argv[1]; ok=re.fullmatch(r"v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:[-+][0-9A-Za-z.-]+)?", tag); sys.exit(0 if ok else 1)' "$RELEASE_TAG" || { echo "refusing release: tag must match semantic vMAJOR.MINOR.PATCH" >&2; exit 1; }
@@ -152,7 +160,8 @@ jobs:
           export BUILD_PAGES_LANGS=0
           export BUILD_PAGES_PULL_MATERIALS=0
           BUILD_PAGES_REUSE_VALIDATION=1 bash scripts/build/build_pages.sh public
-          python3 scripts/validation/sensitive_content_audit.py --root public
+          python3 scripts/validation/sensitive_content_audit.py \
+            --root public --publication-source-root .
           mkdir -p release-assets release-evidence
           python3 scripts/validation/pages_artifact_integrity.py \
             --root public --expect-sha "$GITHUB_SHA" \
