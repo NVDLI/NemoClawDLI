@@ -8,7 +8,7 @@
 | Work through the four modules. | Keep it running for the live-agent exercises. | Create an API key when prompted. |
 
 [course]: https://nvdli.github.io/NemoClawDLI/nemoclaw/
-[brev-launchable]: https://brev.nvidia.com/launchable/deploy?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&ncid=ref-dli-759990
+[brev-launchable]: https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&ncid=ref-dli-759990
 [nvidia-build]: https://build.nvidia.com/?ncid=ref-dli-146986
 
 [![Course deployment](https://github.com/NVDLI/NemoClawDLI/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/NVDLI/NemoClawDLI/actions/workflows/pages.yml?query=branch%3Amain)

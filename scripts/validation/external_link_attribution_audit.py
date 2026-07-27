@@ -25,15 +25,24 @@ BUILD_NCID = "ref-dli-146986"
 BREV_NCID = "ref-dli-759990"
 BUILD_HOME_URL = f"https://build.nvidia.com/?ncid={BUILD_NCID}"
 BREV_LAUNCH_URL = (
-    "https://brev.nvidia.com/launchable/deploy"
+    "https://brev.nvidia.com/launchable/deploy/now"
     "?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS"
     f"&ncid={BREV_NCID}"
+)
+# Account-specific launchable hostnames are runtime addresses the learner reads from their
+# own Brev dashboard, not attributed marketing routes, so they carry no ncid. Anchoring the
+# suffix keeps a deceptive lookalike such as ``*.apps.run.brev.nvidia.com.evil`` rejected.
+LAUNCHABLE_HOST_RE = re.compile(
+    r"^nemoclaw-(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|<id>)"
+    r"\.(?:apps\.run\.brev\.nvidia\.com|brevlab\.com)$",
+    re.IGNORECASE,
 )
 # Include non-HTTPS and deceptive-host near matches so the audit can reject them
 # instead of silently treating them as unrelated text.
 URL_RE = re.compile(
     r"(?:[A-Za-z][A-Za-z0-9+.-]*:)?//"
-    r"[^\s\"'<>`\\)]*(?:build|brev)\.nvidia\.com[^\s\"'<>`\\)]*",
+    r"[^\s\"'<>`\\)]*(?:(?:build|brev)\.nvidia\.com|brevlab\.com)"
+    r"[^\s\"'<>`\\)]*",
     re.IGNORECASE,
 )
 
@@ -85,6 +94,12 @@ def url_problem(raw_url: str) -> str | None:
         return "learner link must use HTTPS"
     if parsed.username is not None or parsed.password is not None:
         return "learner link must not embed user information"
+    if parsed.hostname and LAUNCHABLE_HOST_RE.match(parsed.hostname):
+        if query or parsed.fragment:
+            return "launchable host reference must not carry query parameters or a fragment"
+        if re.match(r"^/v1(?:/|$)", parsed.path, re.IGNORECASE):
+            return "NemoClaw launchable must not be presented as a model API"
+        return None
     if parsed.hostname == "build.nvidia.com":
         if query.get("ncid") != [BUILD_NCID]:
             return f"Build link must carry exactly ncid={BUILD_NCID}"
@@ -160,11 +175,29 @@ def self_test() -> list[str]:
         ("scheme-relative Build route", "//build.nvidia.com/", True),
         ("FTP Build route", "ftp://build.nvidia.com/models", True),
         (
-            "legacy Brev route",
+            "unattributed Brev route",
             "https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS",
             True,
         ),
+        (
+            "superseded non-/now Brev route",
+            BREV_LAUNCH_URL.replace("/launchable/deploy/now", "/launchable/deploy"),
+            True,
+        ),
         ("generic Brev home", "https://brev.nvidia.com", True),
+        ("Pomerium launchable host", "https://nemoclaw-abc123.apps.run.brev.nvidia.com", False),
+        ("Pomerium launchable dashboard", "https://nemoclaw-abc123.apps.run.brev.nvidia.com/dashboard", False),
+        ("Cloudflare launchable host", "https://nemoclaw-abc123.brevlab.com", False),
+        # Course pages document the account-specific host with an HTML-escaped placeholder.
+        ("escaped launchable placeholder", "https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com", False),
+        ("launchable presented as model API", "https://nemoclaw-abc123.brevlab.com/v1", True),
+        ("launchable model catalog path", "https://nemoclaw-abc123.apps.run.brev.nvidia.com/v1/models", True),
+        ("HTTP launchable downgrade", "http://nemoclaw-abc123.apps.run.brev.nvidia.com", True),
+        ("unsupported generic Brev app", "https://other-abc123.brevlab.com", True),
+        ("unsupported bare Brev app", "https://brevlab.com", True),
+        ("deceptive launchable host", "https://nemoclaw-abc123.apps.run.brev.nvidia.com.evil/", True),
+        ("launchable host with query", "https://nemoclaw-abc123.apps.run.brev.nvidia.com/?token=leak", True),
+        ("launchable host with fragment", "https://nemoclaw-abc123.brevlab.com/#token=leak", True),
         ("near-miss Build attribution", f"https://build.nvidia.com/?ncid={BUILD_NCID}0", True),
         ("duplicated Build attribution", f"https://build.nvidia.com/?ncid={BUILD_NCID}&ncid=other", True),
         ("deceptive Build host", f"https://build.nvidia.com.evil/?ncid={BUILD_NCID}", True),

@@ -119,40 +119,46 @@ async function open(browser, pageName, init) {
     await page.close();
   }
 
-  // A failed direct Brev socket must not consume the relay's own open window.
+  // A cross-origin Cloudflare terminal opens one sender-bound direct route and gives it
+  // the whole configured open window. The copied relay session is not placed in its URL.
   {
     const { page, errors } = await open(browser, '01b-react.html');
-    results.terminalFallbackBudget = await page.evaluate(async () => {
-      const connection = await import('./scripts/_connection.js?terminal-fallback-audit=' + Date.now());
-      const openshell = await import('./scripts/_openshell.js?terminal-fallback-audit=' + Date.now());
+    results.terminalDirectRoute = await page.evaluate(async () => {
+      const connection = await import('./scripts/_connection.js?terminal-relay-audit=' + Date.now());
+      const openshell = await import('./scripts/_openshell.js?terminal-relay-audit=' + Date.now());
       connection.setOpenClawConnection({
-        rawUrl: 'https://terminal-audit.brevlab.com', token: 'test-token', accessJwt: 'test-cf-jwt',
+        rawUrl: 'https://nemoclaw-terminal-audit.brevlab.com', token: 'test-token',
+        accessProvider: 'cloudflare', accessSession: 'test-cf-session',
       });
       const RealWebSocket = window.WebSocket;
-      let sockets = 0;
-      class DirectThenRelaySocket {
-        constructor() {
-          this.index = ++sockets;
-          if (this.index === 2) setTimeout(() => this.onopen?.(), 15);
+      const urls = [];
+      // Open late in the configured window: a route that only receives a shortened
+      // budget cannot settle in time, so the full-budget contract is observable.
+      class LateOpeningSocket {
+        constructor(url) {
+          urls.push(url);
+          setTimeout(() => this.onopen?.(), 60);
         }
         close() {}
         send() {}
       }
-      window.WebSocket = DirectThenRelaySocket;
+      window.WebSocket = LateOpeningSocket;
       let result = null, error = null;
       try {
-        result = await openshell.terminal('bash', { openMs: 20, totalMs: 80, idleMs: 5 });
+        result = await openshell.terminal('bash', { openMs: 400, totalMs: 900, idleMs: 5 });
       } catch (caught) {
         error = caught.message;
       }
       window.WebSocket = RealWebSocket;
-      return { sockets, result, error };
+      return { urls, result, error };
     });
-    if (results.terminalFallbackBudget.sockets !== 2 || results.terminalFallbackBudget.error ||
-        !results.terminalFallbackBudget.result) {
-      fail('terminal relay open-budget contract failed: ' + JSON.stringify(results.terminalFallbackBudget));
+    if (results.terminalDirectRoute.urls.length !== 1 ||
+        results.terminalDirectRoute.urls[0] !==
+          'wss://nemoclaw-terminal-audit.brevlab.com/ws/terminal?cmd=bash' ||
+        results.terminalDirectRoute.error || !results.terminalDirectRoute.result) {
+      fail('terminal sender-bound direct route failed: ' + JSON.stringify(results.terminalDirectRoute));
     }
-    if (errors.length) fail('terminal relay browser errors: ' + JSON.stringify(errors));
+    if (errors.length) fail('terminal direct-route browser errors: ' + JSON.stringify(errors));
     await page.close();
   }
 
@@ -225,7 +231,7 @@ async function open(browser, pageName, init) {
       };
     });
     await page.locator('#key-panel .model-api-base-url').fill('https://sglang.example.test/v1');
-    await page.locator('#key-panel .model-api-key').fill('EMPTY');
+    await page.locator('#key-panel .model-api-key').fill('test-model-key');
     await page.locator('#key-panel .btn').click();
     await page.locator('#key-panel .key-panel-saved').waitFor({ state: 'visible', timeout: timeoutMs });
     results.modelRoutes = await page.evaluate(async () => {
@@ -240,7 +246,7 @@ async function open(browser, pageName, init) {
       const defaultEmbedding = await shared.getEmbeddingConfig();
       shared.setEmbeddingApiBaseUrl('https://embedding.example.test/v1');
       shared.setEmbeddingModelId('embedding/provider-model');
-      shared.setEmbeddingKey('EMPTY-EMBEDDING');
+      shared.setEmbeddingKey('test-embedding-key');
       await rag.embed('custom embedding route', { model: 'nvidia/llama-nemotron-embed-1b-v2' });
       let jupyterError = '';
       try { shared.normalizeModelApiBaseUrl('https://jupyter-example.brevlab.com/lab'); }
@@ -274,7 +280,7 @@ async function open(browser, pageName, init) {
         embedding.headers['x-billing-invoke-origin'] !== 'dli-nemoclaw-web' ||
         retiredBillingHeader in embedding.headers ||
         !customEmbedding || customEmbedding.credentials !== 'include' ||
-        customEmbedding.headers.authorization !== 'Bearer EMPTY-EMBEDDING' ||
+        customEmbedding.headers.authorization !== 'Bearer test-embedding-key' ||
         JSON.parse(customEmbedding.body).model !== 'embedding/provider-model' ||
         'x-billing-invoke-origin' in customEmbedding.headers ||
         retiredBillingHeader in customEmbedding.headers) {
@@ -354,7 +360,7 @@ async function open(browser, pageName, init) {
     await page.addInitScript(() => {
       localStorage.setItem('nemoclaw_model_api_base_url_v1', 'https://skill-model.example.test/v1');
       localStorage.setItem('nemoclaw_model_id_v1', 'model/skill-registry');
-      sessionStorage.setItem('nvapi', 'EMPTY');
+      sessionStorage.setItem('nvapi', 'test-model-key');
     });
     const fixtureUrl = `http://127.0.0.1:${port}/endpoint-registry-fixture.html`;
     const skillExplorerPath = fs.existsSync(path.join(root, '_skill_explorer.js'))
@@ -396,7 +402,7 @@ async function open(browser, pageName, init) {
     results.skillExplorer = { request, answer: await page.locator('.sx-answer').innerText(), errors };
     if (!request || request.url !== 'https://skill-model.example.test/v1/chat/completions' ||
         request.model !== 'model/skill-registry' || request.messageCount !== 2 ||
-        request.headers.authorization !== 'Bearer EMPTY' ||
+        request.headers.authorization !== 'Bearer test-model-key' ||
         'x-billing-invoke-origin' in request.headers || retiredBillingHeader in request.headers ||
         results.skillExplorer.answer !== 'registry-ok') {
       fail('SKILL explorer model registry handoff failed: ' + JSON.stringify(results.skillExplorer));
@@ -436,7 +442,7 @@ async function open(browser, pageName, init) {
         if (window.top !== window) return;
         localStorage.setItem('nemoclaw_model_api_base_url_v1', 'https://model-runtime-audit.brevlab.com/v1');
         localStorage.setItem('nemoclaw_model_id_v1', 'model/runtime-audit');
-        sessionStorage.setItem('nvapi', 'EMPTY');
+        sessionStorage.setItem('nvapi', 'test-model-key');
         localStorage.setItem('nemoclaw_clawrawurl', 'https://nemoclaw-runtime-audit.brevlab.com');
       } catch (_) {}
     });
@@ -461,18 +467,27 @@ async function open(browser, pageName, init) {
         agent: { dashboardUrl: '/#token=AbCd_ef-0123456789.uvwxyz~token' },
       }), { status: 200, headers: { 'content-type': 'application/json' } });
       const probe = mod.mountClawProbe(host, {
-        defaultUrl: 'https://launchable.brevlab.com',
+        defaultUrl: 'https://nemoclaw-launchable.brevlab.com',
         defaultToken: '',
         syncCanvas: true,
         cfAccess: true,
+        wsRelayControls: true,
         helpHint: 'Select the ? for help.',
-        fieldHelp: { url: '<p>URL</p>', token: '<p>token</p>', cfJwt: '<p>JWT</p>' },
+        fieldHelp: {
+          url: '<p>URL</p>',
+          token: '<p>token</p>',
+          accessProvider: '<p>provider</p>',
+          accessSession: '<p>session</p>',
+          wsRelay: '<p>recovery</p>',
+        },
         autofillToken: mod.gatewayTokenFromAgentMetadata,
         actions: [],
       });
       const accessSession = host.querySelector('.claw-access-session');
+      const wsRelay = host.querySelector('.claw-ws-relay-enabled');
       accessSession.value = 'synthetic-access-value';
       accessSession.dispatchEvent(new Event('input', { bubbles: true }));
+      wsRelay.click();
       await probe.run({ path: '/api/agent', method: 'GET' });
       window.fetch = realFetch;
       return {
@@ -482,15 +497,16 @@ async function open(browser, pageName, init) {
         url: localStorage.getItem('nemoclaw_clawrawurl'),
         token: sessionStorage.getItem('nemoclaw_clawtoken'),
         access: sessionStorage.getItem('nemoclaw_openclaw_access_session_v1'),
+        wsRelay: probe.getWsRelayEnabled(),
       };
     });
-    if (!results.probe.visibleHint || results.probe.helpMarks !== 6 ||
+    if (!results.probe.visibleHint || results.probe.helpMarks !== 5 ||
         results.probe.registered.model !== 'https://model-runtime-audit.brevlab.com/v1' ||
         results.probe.registered.launchable !== 'https://nemoclaw-runtime-audit.brevlab.com' ||
         !results.probe.registered.modelReadOnly || !results.probe.registered.modelSourceVisible ||
-        results.probe.url !== 'https://launchable.brevlab.com' ||
+        results.probe.url !== 'https://nemoclaw-launchable.brevlab.com' ||
         results.probe.token !== 'AbCd_ef-0123456789.uvwxyz~token' ||
-        results.probe.access !== 'synthetic-access-value') {
+        results.probe.access !== 'synthetic-access-value' || !results.probe.wsRelay) {
       fail('probe handoff failed: ' + JSON.stringify(results.probe));
     }
     if (errors.length) fail('3a browser errors: ' + JSON.stringify(errors));

@@ -71,6 +71,283 @@ RUNTIME_MODULES = (
 )
 
 
+# Endpoint guidance the course does not support. Each rule matches the shape of the claim
+# rather than one sentence, so a reworded, relocated, or translated restatement is still
+# rejected. The scan runs over every discovered learner surface, so a newly added or renamed
+# page inherits the rule without a registry edit.
+UNSUPPORTED_ENDPOINT_GUIDANCE = (
+    (
+        re.compile(
+            r"(?:open|use|connect(?:\s+to)?|expos\w*|forward\w*|publish\w*|serve\w*"
+            r"|abre?|usa|use|conect\w*|expon\w*|encaminh\w*|public\w*|sirv\w*)"
+            r"[^.\n]{0,40}(?:port|porta|puerto)\s*(?:number|número|número|[:=#])?\s*"
+            r"\d{2,5}\b",
+            re.I,
+        ),
+        "port-based endpoint guidance: the course has no such model endpoint",
+    ),
+    (
+        re.compile(r"https?://[^\s\"'<>`\\)]{1,180}:\d{2,5}/v1(?:\b|/)", re.I),
+        "port-based /v1 model URL guidance: the course has no such model endpoint",
+    ),
+    (
+        re.compile(r"\busing\s+tunnels\b", re.I),
+        "Brev Using Tunnels guidance: that model endpoint is not part of this course",
+    ),
+    (
+        # EMPTY stays case-sensitive: it was a literal credential value, and lowercase
+        # "empty" is ordinary prose about a blank field.
+        re.compile(
+            r"(?i:key|token|bearer|chave|clave)[^.\n]{0,32}\bEMPTY\b"
+            r"|\bEMPTY\b[^.\n]{0,32}(?i:key|token|bearer|chave|clave)",
+        ),
+        "EMPTY bearer-key guidance: every supported model route needs a real key",
+    ),
+    (
+        re.compile(
+            r"[?&]\s*(?:base_url|model_base_url|model|embedding_base_url|embedding_model)\s*=",
+            re.I,
+        ),
+        "presenter model query-string prefill guidance is no longer offered",
+    ),
+    (
+        re.compile(
+            r"[?&]\s*openclaw_(?:url|access_provider|proxy|proxy_base)\s*=",
+            re.I,
+        ),
+        "presenter OpenClaw query-string prefill guidance is no longer offered",
+    ),
+)
+# Course pages may still name the launchable host families; they must name the supported ones.
+SUPPORTED_LAUNCHABLE_HOST_SUFFIXES = ("apps.run.brev.nvidia.com", "brevlab.com")
+# Key acquisition stays factual and points at NVIDIA Build. external_link_attribution_audit.py
+# owns the attribution query; this rule only keeps the route present.
+BUILD_SIGNUP_HOST = 'BUILD_SIGNUP_URL = "https://build.nvidia.com/'
+# Learner code must reach the launchable through the shared routing module rather than
+# assembling its own socket URL, so the provider decision cannot diverge per page.
+HAND_BUILT_WEBSOCKET_RE = re.compile(
+    r"""(?:["'`]wss?://)|(?:new\s+WebSocket\s*\([^;\n]*(?:cli/gateway|ws/terminal))"""
+    r"""|(?:\+\s*["'`]/(?:cli/gateway|ws/terminal))""",
+    re.I,
+)
+SHARED_LAUNCHABLE_SOCKET_OWNERS = {
+    "web/nemoclaw/scripts/_connection.js",
+    "web/nemoclaw/scripts/_openclaw.js",
+    "web/nemoclaw/scripts/_openshell.js",
+}
+
+
+def learner_surface_files(root: Path) -> list[Path]:
+    """Every authored learner surface, discovered from the locale roots rather than listed."""
+    files: list[Path] = []
+    for _locale, course in locale_course_roots(root):
+        if not course.is_dir():
+            continue
+        files.extend(sorted(course.glob("*.html")))
+        files.extend(sorted((course / "scripts").glob("*.js")))
+    return files
+
+
+def javascript_function(source: str, declaration: str) -> str:
+    """Return one brace-balanced JavaScript function declaration."""
+    start = source.find(declaration)
+    if start < 0:
+        return ""
+    signature_end = re.search(r"\)\s*\{", source[start:])
+    if signature_end is None:
+        return ""
+    brace = start + signature_end.end() - 1
+    depth = 0
+    for index in range(brace, len(source)):
+        if source[index] == "{":
+            depth += 1
+        elif source[index] == "}":
+            depth -= 1
+            if depth == 0:
+                return source[start:index + 1]
+    return ""
+
+
+def locale_resource_surfaces(root: Path) -> dict[str, str]:
+    """Return learner-visible values from every discovered key-based locale resource."""
+    surfaces: dict[str, str] = {}
+    for spec in discover_locales(root):
+        resource_root = spec.locale_root / "resources"
+        for path in sorted(resource_root.rglob("*.json")):
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if data.get("schema") != "nemoclaw-locale-resource/1":
+                continue
+            values = data.get("values")
+            if not isinstance(values, dict):
+                continue
+            surfaces[path.relative_to(root).as_posix()] = "\n".join(
+                str(unit.get("value", ""))
+                for unit in values.values()
+                if isinstance(unit, dict)
+            )
+    return surfaces
+
+
+def audit_unsupported_endpoint_guidance(surfaces: dict[str, str]) -> list[str]:
+    """Reject unsupported endpoint guidance anywhere on a learner surface."""
+    findings: list[str] = []
+    for name, text in sorted(surfaces.items()):
+        for pattern, reason in UNSUPPORTED_ENDPOINT_GUIDANCE:
+            match = pattern.search(text)
+            if match:
+                line = text.count("\n", 0, match.start()) + 1
+                findings.append(f"{name}:{line} restates {reason}")
+    return findings
+
+
+def audit_launchable_transport(surfaces: dict[str, str], connection: str, shared: str,
+                               openclaw: str, openshell: str) -> list[str]:
+    """Keep gateway and terminal sockets on one normalized state and provider decision."""
+    findings: list[str] = []
+    for name, text in sorted(surfaces.items()):
+        if name in SHARED_LAUNCHABLE_SOCKET_OWNERS:
+            continue
+        match = HAND_BUILT_WEBSOCKET_RE.search(text)
+        if match:
+            line = text.count("\n", 0, match.start()) + 1
+            findings.append(
+                f"{name}:{line} builds a launchable socket URL instead of using shared routing"
+            )
+            continue
+        if "new WebSocket" in text and (
+            "/cli/gateway" in text or "/ws/terminal" in text
+        ):
+            line = text.count("\n", 0, text.find("new WebSocket")) + 1
+            findings.append(
+                f"{name}:{line} separates launchable socket assembly from its shared router"
+            )
+    _need(findings, all(
+        f'"{suffix}"' in connection or f"'{suffix}'" in connection or suffix in connection
+        for suffix in SUPPORTED_LAUNCHABLE_HOST_SUFFIXES
+    ), "shared routing must recognize both supported launchable host families")
+    _need(findings, "export function isOpenClawLaunchableHost" in connection,
+          "the supported launchable host families need one exported predicate")
+    _need(findings, "new URL(DEFAULT_OPENCLAW_PROXY_BASE)" in connection and
+          re.search(r'\.get\(\s*["\']openclaw_proxy(?:_base)?["\']\s*\)', connection) is None and
+          "new URL(config.base)" not in connection and
+          "upstream.origin !== loc.origin" in connection,
+          "cross-origin Cloudflare metadata must use only the approved non-bypassable relay")
+    _need(findings, "OPENCLAW_WS_RELAY_ENABLED_KEY" in connection and
+          "export function getOpenClawWsRelayEnabled" in connection and
+          "export function setOpenClawWsRelayEnabled" in connection and
+          "config?.enabled === false" in connection,
+          "WebSocket routing must default direct and retain an explicit relay opt-in")
+    _need(findings,
+          'localizeCourseUiText("Gateway recovery")' in openclaw and
+          'localizeCourseUiText("Retry Cloudflare WebSockets through the hosted relay")' in openclaw and
+          'localizeCourseUiText(e.message)' in openclaw,
+          "launchable recovery and routing errors must use the reviewed runtime locale map")
+    _need(findings, "if (isOpenClawLaunchableHost(url.hostname))" in shared,
+          "the model route must reject a launchable through the shared host predicate")
+    _need(findings, "openclawBootstrapRequest" in shared,
+          "learner cells need the shared provider-aware bootstrap helper")
+    bootstrap = javascript_function(openclaw, "export async function openclawBootstrapRequest")
+    _need(findings, bootstrap and
+          "OPENCLAW_BOOTSTRAP_PATHS" in openclaw and
+          "openclawLoopbackProbe" in bootstrap and
+          'headers["CF-Access-Jwt-Assertion"] = connection.accessSession;' in bootstrap,
+          "bootstrap discovery must share the normalized Pomerium/Cloudflare provider decision")
+    for name, text in sorted(surfaces.items()):
+        if not name.endswith("/03a-kickstart.html"):
+            continue
+        _need(findings, "helpers.openclawBootstrapRequest(PATH" in text and
+              "const TRANSPORT =" not in text and
+              "X-OpenClaw-Access-Session" not in text and
+              "CF-Access-Jwt-Assertion" not in text,
+              f"{name}: learner bootstrap code must delegate provider routing to the shared helper")
+        _need(findings, "wsRelayControls: true" in text and
+              ".claw-ws-relay-enabled" in openclaw,
+              f"{name}: Cloudflare WebSocket recovery must be reachable from the launchable probe")
+    # Both socket families resolve the same provider decision from the same saved state.
+    for source, label in ((openclaw, "gateway"), (openshell, "terminal")):
+        _need(findings, "getOpenClawConnection()" in source,
+              f"{label} sockets must read the shared normalized connection state")
+        _need(findings, "openclawWebSocketUrl(" in source,
+              f"{label} sockets must derive their URL from shared launchable routing")
+    _need(findings, "accessProviderForOpenClawUrl(" in connection and
+          "accessProviderForOpenClawUrl(" in openclaw and
+          "accessProviderForOpenClawUrl(" in openshell,
+          "gateway, terminal, and routing must share one access-provider decision")
+    gateway_start = openclaw.find("export function openclawGatewayWsUrl")
+    gateway_end = openclaw.find("export function gatewayTokenFromAgentMetadata", gateway_start)
+    gateway_router = openclaw[gateway_start:gateway_end] if gateway_start >= 0 and gateway_end > gateway_start else ""
+    _need(findings, re.search(
+              r"if\s*\(\s*provider\s*===\s*['\"]pomerium['\"]\s*\|\|\s*!\s*relayEnabled\s*\)",
+              gateway_router,
+          ) is not None and
+          re.search(r"\bproxyEnabled\s*===\s*true\b", gateway_router) is not None and
+          "getOpenClawWsRelayEnabled()" in gateway_router and
+          re.search(
+              r"openclawWebSocketUrl\s*\(\s*rawUrl\s*,\s*['\"]/cli/gateway['\"]\s*,"
+              r"\s*accessSession\s*,\s*config\s*,\s*accessProvider\s*\)",
+              gateway_router,
+          ) is not None,
+          "gateway sockets must default sender-bound and retain explicit Cloudflare relay opt-in")
+    _need(findings, "const wsUrls = [routed.url]" in openshell and
+          "getOpenClawWsRelayEnabled()" in openshell and
+          '{ enabled: false, base: "" }' in openshell and
+          "[direct.url, routed.url]" not in openshell,
+          "terminal sockets must use the same provider-selected route as the gateway")
+    return findings
+
+
+def audit_launchable_learning_path(pages: dict[str, str]) -> list[str]:
+    """Keep the normal launch path before a collapsed, exceptional recovery route."""
+    findings: list[str] = []
+    required_normal = (
+        "launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990",
+        "&lt;launchable&gt;/dashboard",
+        "my-assistant",
+        "Chat with Agent",
+        "https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com",
+        "https://nemoclaw-&lt;id&gt;.brevlab.com",
+        "CF_Authorization",
+    )
+    required_recovery = (
+        "openclaw dashboard --no-open",
+        "openclaw doctor --generate-gateway-token",
+        "/cli/gateway",
+    )
+    for locale in runtime_page_locales(pages):
+        name = f"{locale}-03a"
+        text = pages[name]
+        for token in required_normal:
+            _need(findings, token in text, f"{name}: normal launch path is missing {token}")
+        _need(findings, "x-openclaw-session-key" not in text,
+              f"{name}: generic relay-session guidance conflates gateway and launchable credentials")
+        _need(findings, re.search(
+            r"(?:only\s+credential|única\s+credencial|único\s+credencial)"
+            r"[^.\n]{0,80}(?:gateway\s+token|token\s+(?:del|do)\s+gateway)",
+            text,
+            re.I,
+        ) is None, f"{name}: gateway-token guidance erases the launchable access boundary")
+        recovery = re.search(
+            r'<details\s+class="recovery-note"(?![^>]*\bopen\b)[^>]*>(.*?)</details>',
+            text,
+            re.S | re.I,
+        )
+        _need(findings, recovery is not None,
+              f"{name}: exceptional Control UI recovery must be a collapsed disclosure")
+        if recovery is None:
+            continue
+        _need(findings, all(0 <= text.find(token) < recovery.start()
+              for token in required_normal),
+              f"{name}: normal launch and discovery path must appear before recovery")
+        recovery_text = recovery.group(1)
+        for token in required_recovery:
+            _need(findings, token in recovery_text,
+                  f"{name}: Control UI recovery is missing {token}")
+        _need(findings, "CF_Authorization" in recovery_text and
+              re.search(r"Pomerium", recovery_text, re.I) is not None,
+              f"{name}: recovery must distinguish gateway credentials from both access sessions")
+    return findings
+
+
 def locale_course_roots(root: Path) -> list[tuple[str, Path]]:
     """Return canonical English plus every metadata-declared locale course root."""
     return [
@@ -481,11 +758,9 @@ def audit_model_routes(shared: str, keypanel: str, rag: str, chat: str, openclaw
         'const EMBEDDING_API_BASE_URL_KEY = "nemoclaw_embedding_api_base_url_v1"': "embedding endpoint needs storage independent from chat",
         'const EMBEDDING_MODEL_ID_KEY = "nemoclaw_embedding_model_id_v1"': "embedding model needs storage independent from chat",
         'const EMBEDDING_API_KEY = "nemoclaw_embedding_api_key_v1"': "embedding credential needs storage independent from chat",
-        '.get("model")': "presenter links must prefill the chat model with the chat endpoint",
-        '.get("embedding_base_url")': "presenter links must support an independent embedding endpoint",
-        '.get("embedding_model")': "presenter links must support an independent embedding model",
-        'A Brev Jupyter /lab URL is not a model API': "Brev setup must reject the Jupyter page as a model endpoint",
-        'localhost points to this browser, not the Brev VM': "Brev setup must reject VM-localhost from hosted course pages",
+        "isOpenClawLaunchableHost(url.hostname)": "the model route must reject a NemoClaw launchable as a model endpoint",
+        'A Brev Jupyter /lab URL is not a model API. Enter the HTTPS model API base URL ending in /v1': "the model route must reject a Jupyter page without restoring tunnel guidance",
+        'localhost points to this browser': "the model route must reject browser-localhost from hosted course pages",
         'return isDefaultModelApiBaseUrl(url) ? "same-origin" : "include"': "custom model routes need credentialed cross-origin requests",
         'const useModel = isDefaultModelApiBaseUrl(cfg.url) ? (model || cfg.model) : cfg.model': "custom chat routes must override lesson-specific hosted model IDs",
         'credentials: modelRequestCredentials(url)': "browser SDK calls must reuse custom-route credentials",
@@ -505,11 +780,8 @@ def audit_model_routes(shared: str, keypanel: str, rag: str, chat: str, openclaw
         'class="embedding-api-key"': "setup needs an independently editable embedding credential",
         'endpoint + "/models"': "custom chat setup must discover the served model before saving",
         'embeddingEndpoint + "/models"': "custom embedding setup must discover the served model before saving",
-        'models.length === 1': "single-model launchables must auto-select their served model",
-        'expose port 5000': "Brev setup must name the service port and tunnel boundary",
-        'make the tunnel public': "Brev setup must prevent private-tunnel CORS failures",
-        'Do not paste the Jupyter /lab URL or localhost': "Brev setup must distinguish browser and VM addresses",
-        'https://docs.nvidia.com/brev/cli/connectivity': "Brev setup must link the public tunnel instructions",
+        'models.length === 1': "single-model endpoints must auto-select their served model",
+        BUILD_SIGNUP_HOST: "key setup must link NVIDIA Build key acquisition",
     }
     for token, message in key_contract.items():
         _need(findings, token in keypanel, message)
@@ -561,10 +833,10 @@ def audit_runtime_integrations(
     terminal_contract = {
         'function settle()': "operator terminal must settle socket, timers, and abort listener through one path",
         'function fail(error)': "operator terminal must reject through the shared settlement path",
-        'const wsUrls = direct.url && direct.url !== routed.url ? [direct.url, routed.url] : [routed.url]': "cross-origin terminal must try the authenticated direct PTY before its relay fallback",
+        'const wsUrls = [routed.url]': "terminal must use the shared provider-selected WebSocket route",
         'if (candidate >= wsUrls.length) return fail(terminalOpenError());': "operator terminal must fail once after exhausting connection routes",
         'else { ws = null; openNext(); }': "operator terminal close-before-open must advance or settle instead of leaving timers alive",
-        'const budget = wsUrls.length > 1 && routeIndex === 0 ? Math.min(8000, openMs) : openMs;': "operator terminal relay must receive its own full open timeout",
+        'const budget = openMs;': "operator terminal route must receive the configured open timeout",
         'error.code = "TERMINAL_OPEN_TIMEOUT"': "operator terminal open failures need a stable machine-readable code",
     }
     for token, message in terminal_contract.items():
@@ -1050,9 +1322,19 @@ def audit_assistant_artifact_harness(runtime: str, wrapper: str, docs: str, skil
         "const terminalContract = args.includes('--terminal-contract')": "operator terminal needs an explicit live relay contract mode",
         "output.terminalOpen = transcript.frames > 0": "live terminal contract must require a non-empty PTY transcript",
         "id: 'browser-cron-runs', method: 'cron.runs'": "live cron contract must verify the run-history RPC used by Module 3c",
+        "const response = await mod.openclawBootstrapRequest('/api/agent')": "live launchable checks must exercise the course bootstrap transport instead of duplicating its credential routing",
+        "const gateway = mod.openclawGatewayWsUrl(clawUrl, accessSession, proxyBase, false, accessProvider)": "live launchable checks must exercise the sender-bound WebSocket default",
     }
     for token, message in contract.items():
         _need(findings, token in runtime, f"scripts/runtime/test_page_runtime.js: {message}")
+    pomerium_token_bootstrap = javascript_function(runtime, "async function resolveOpenClawToken")
+    pomerium_preflight = javascript_function(runtime, "async function preflightOpenClaw")
+    _need(findings,
+          "if (CLAW_ACCESS_PROVIDER === 'pomerium') return;" in pomerium_token_bootstrap and
+          "if (CLAW_ACCESS_PROVIDER === 'pomerium') return;" in pomerium_preflight and
+          "X-OpenClaw-Access-Provider" not in runtime and
+          "X-OpenClaw-Access-Session" not in runtime,
+          "scripts/runtime/test_page_runtime.js: sender-bound Pomerium sessions must never enter the Cloudflare relay-header path")
     _need(findings, runtime.count("Build a runnable") >= 3,
           "scripts/runtime/test_page_runtime.js: live artifact mode must cover a diagram, dashboard, and quiz")
     _need(findings, '--assistant-artifacts) assistant_artifacts=1' in wrapper and
@@ -1124,6 +1406,20 @@ def audit_tree(root: Path = ROOT) -> list[str]:
         (root / "web/nemoclaw/scripts/_chat.js").read_text(encoding="utf-8"),
         runtime_pages,
     ))
+    findings.extend(audit_launchable_learning_path(runtime_pages))
+    authored_surfaces = {
+        str(path.relative_to(root)): path.read_text(encoding="utf-8")
+        for path in learner_surface_files(root)
+    }
+    guidance_surfaces = {**authored_surfaces, **locale_resource_surfaces(root)}
+    findings.extend(audit_unsupported_endpoint_guidance(guidance_surfaces))
+    findings.extend(audit_launchable_transport(
+        authored_surfaces,
+        (root / "web/nemoclaw/scripts/_connection.js").read_text(encoding="utf-8"),
+        (root / "web/nemoclaw/scripts/_shared.js").read_text(encoding="utf-8"),
+        (root / "web/nemoclaw/scripts/_openclaw.js").read_text(encoding="utf-8"),
+        (root / "web/nemoclaw/scripts/_openshell.js").read_text(encoding="utf-8"),
+    ))
     findings.extend(audit_deep_research_artifact(
         (root / "web/nemoclaw/02c-deep.html").read_text(encoding="utf-8"),
     ))
@@ -1154,6 +1450,12 @@ def audit_tree(root: Path = ROOT) -> list[str]:
 def self_test() -> list[str]:
     """Mutation tests prove each high-risk rule detects the regression it names."""
     misses: list[str] = []
+    extracted = javascript_function(
+        "export async function sample(path, { signal = null } = {}) { return { ok: true }; }",
+        "export async function sample",
+    )
+    if "return { ok: true };" not in extracted:
+        misses.append("JavaScript function extraction stopped at a destructured parameter")
     expected_course = ROOT / "web/nemoclaw"
     if expected_course not in course_dirs():
         misses.append("course discovery did not find the current web course beacon")
@@ -1318,6 +1620,9 @@ def self_test() -> list[str]:
         ("hosted terminal docs removed", assistant_runtime, runtime_wrapper, runtime_docs.replace('--gateway-only --terminal-contract', '--gateway-only', 1), runtime_skill, "operator-terminal reproduction"),
         ("hosted terminal skill removed", assistant_runtime, runtime_wrapper, runtime_docs, runtime_skill.replace('Hosted operator terminal', 'Hosted shell', 1), "hosted terminal validation"),
         ("cron run-history check removed", assistant_runtime.replace("id: 'browser-cron-runs', method: 'cron.runs'", "id: 'browser-cron-remove', method: 'cron.remove'", 1), runtime_wrapper, runtime_docs, runtime_skill, "run-history RPC"),
+        ("launchable bootstrap helper bypassed", assistant_runtime.replace("const response = await mod.openclawBootstrapRequest('/api/agent')", "const response = await fetch(clawUrl + '/api/agent')", 1), runtime_wrapper, runtime_docs, runtime_skill, "course bootstrap transport"),
+        ("launchable WebSocket relay forced", assistant_runtime.replace("const gateway = mod.openclawGatewayWsUrl(clawUrl, accessSession, proxyBase, false, accessProvider)", "const gateway = mod.openclawGatewayWsUrl(clawUrl, accessSession, proxyBase, true, accessProvider)", 1), runtime_wrapper, runtime_docs, runtime_skill, "sender-bound WebSocket default"),
+        ("Pomerium token bootstrap relayed", assistant_runtime.replace("if (CLAW_ACCESS_PROVIDER === 'pomerium') return;", "if (CLAW_ACCESS_PROVIDER === 'cloudflare') return;", 1), runtime_wrapper, runtime_docs, runtime_skill, "sender-bound Pomerium sessions"),
     ]
     for label, mutated_runtime, mutated_wrapper, mutated_docs, mutated_skill, expected in assistant_harness_cases:
         if not any(expected in finding for finding in audit_assistant_artifact_harness(mutated_runtime, mutated_wrapper, mutated_docs, mutated_skill)):
@@ -1346,9 +1651,9 @@ def self_test() -> list[str]:
     helper_registry_cases = [
         (
             "registered helper removed",
-            shared.replace(", terminal, openclawLoopbackProbe,", ", terminal,", 1),
+            shared.replace(", mountModelEndpointProbe, openclawBootstrapRequest,", ", mountModelEndpointProbe,", 1),
             runtime_pages,
-            "helpers.openclawLoopbackProbe",
+            "helpers.openclawBootstrapRequest",
         ),
         (
             "unknown lesson helper added",
@@ -1383,8 +1688,8 @@ def self_test() -> list[str]:
         ("swallowed policy parser error", openclaw, openshell.replace("parseError", "ignoredParserError"), runtime_chat, runtime_pages, "expose parser errors"),
         ("remote shared LangChain", openclaw, openshell, runtime_chat.replace('../vendor/langchain-1.4.7.esm.js', 'https://cdn.invalid/langchain.js', 1), runtime_pages, "same-origin bundle"),
         ("terminal timeout bypasses settlement", openclaw, openshell.replace('if (candidate >= wsUrls.length) return fail(terminalOpenError());', 'if (candidate >= wsUrls.length) return reject(terminalOpenError());', 1), runtime_chat, runtime_pages, "must fail once"),
-        ("terminal direct fallback removed", openclaw, openshell.replace('[direct.url, routed.url]', '[routed.url]', 1), runtime_chat, runtime_pages, "authenticated direct PTY"),
-        ("terminal relay budget reused", openclaw, openshell.replace('Math.min(8000, openMs) : openMs', 'Math.min(8000, openMs) : 1', 1), runtime_chat, runtime_pages, "own full open timeout"),
+        ("terminal provider route bypassed", openclaw, openshell.replace('[routed.url]', '[rawUrl + "/ws/terminal"]', 1), runtime_chat, runtime_pages, "provider-selected WebSocket route"),
+        ("terminal open budget shortened", openclaw, openshell.replace('const budget = openMs;', 'const budget = 1;', 1), runtime_chat, runtime_pages, "configured open timeout"),
     ]
     for label, mutated_openclaw, mutated_openshell, mutated_chat, mutated_pages, expected in integration_cases:
         if not any(expected in finding for finding in audit_runtime_integrations(
@@ -1512,6 +1817,186 @@ def self_test() -> list[str]:
     if not any("scripts/git-hooks/pre-push" in finding for finding in audit_workflow_wiring(
             gitlab, github, release_gate, broken_pre_push, bundle)):
         misses.append("detector missed missing canonical pre-push learner-flow wiring")
+
+    if audit_launchable_learning_path(runtime_pages):
+        misses.append("launchable learning-path contract fails on the current tree")
+    launch_page_mutations = (
+        ("normal dashboard step", "&lt;launchable&gt;/dashboard", "&lt;launchable&gt;/overview"),
+        ("running assistant card", "my-assistant", "some-agent"),
+        ("normal token discovery", "Chat with Agent", "Open Agent"),
+        ("Cloudflare hostname family", "https://nemoclaw-&lt;id&gt;.brevlab.com",
+         "https://other-&lt;id&gt;.brevlab.com"),
+        ("recovery disclosure", '<details class="recovery-note">',
+         '<details class="recovery-note" open>'),
+        ("credential recovery command", "openclaw dashboard --no-open",
+         "printenv OPENCLAW_GATEWAY_TOKEN"),
+        ("token generation command", "openclaw doctor --generate-gateway-token",
+         "openclaw doctor"),
+        ("credential distinction", "Pomerium browser cookie", "browser access cookie"),
+        ("generic relay session conflation", "Gateway credential: gateway token.",
+         "Gateway credential: gateway token. Session: <code>x-openclaw-session-key</code>."),
+        ("only-credential conflation", "After the browser authenticates to the launchable with its access session,",
+         "The only credential is the gateway token. After the browser authenticates to the launchable with its access session,"),
+    )
+    for label, old, new in launch_page_mutations:
+        mutated_pages = dict(runtime_pages)
+        mutated_pages["en-03a"] = mutated_pages["en-03a"].replace(old, new, 1)
+        if not audit_launchable_learning_path(mutated_pages):
+            misses.append(f"detector missed {label} mutation")
+
+    # Unsupported endpoint guidance must be rejected by shape, on any learner surface,
+    # including files this audit has never been told about by name.
+    guidance_mutations = [
+        ("port-tunnel guidance", "Expose port 5000 with Using Tunnels and paste its /v1 URL."),
+        ("reworded port guidance", "Forward the port 8000 of your VM, then paste that URL."),
+        ("open-port guidance", "Open port 5000, then use the endpoint."),
+        ("connect-to-port guidance", "Connect to port 5000 for the model API."),
+        ("port-bearing v1 URL", "Use https://model.example.test:5000/v1 for the model API."),
+        ("Portuguese port guidance", "Exponha a porta 5000 e cole a URL /v1 do túnel."),
+        ("Spanish port guidance", "Exponga el puerto 5000 y pegue la URL /v1 del túnel."),
+        ("Using Tunnels guidance", "Open the Using Tunnels panel, then make the tunnel public."),
+        ("EMPTY key guidance", "Paste the served model ID and the bearer key EMPTY."),
+        ("reversed EMPTY guidance", "EMPTY works as the API key for that endpoint."),
+        ("presenter prefill guidance", "A presenter can prefill ?base_url=...&model=... here."),
+        ("model-only prefill guidance", "Append ?model=provider/model to the course URL."),
+        ("ampersand prefill guidance", "Append &model_base_url=https://example.test/v1 to the link."),
+        ("embedding prefill guidance", "Append ?embedding_model=provider/embed to the link."),
+        ("OpenClaw URL prefill guidance", "Append ?openclaw_url=https://example.test to the link."),
+        ("OpenClaw provider prefill guidance", "Append &openclaw_access_provider=cloudflare to the link."),
+        ("OpenClaw relay prefill guidance", "Append ?openclaw_proxy_base=https://relay.example to the link."),
+        ("OpenClaw relay toggle guidance", "Append &openclaw_proxy=0 to bypass the relay."),
+    ]
+    resource_surfaces = locale_resource_surfaces(ROOT)
+    if not resource_surfaces:
+        misses.append("unsupported endpoint guidance has no discovered locale resources")
+    locale_resource = sorted(resource_surfaces)[0] if resource_surfaces else "i18n/missing/resources/page.json"
+    for label, sample in guidance_mutations:
+        mutations = {
+            "web/nemoclaw/scripts/_keypanel.js": f"<p>{sample}</p>",
+            locale_resource: resource_surfaces.get(locale_resource, "") + f"\n<p>{sample}</p>",
+        }
+        for surface, text in mutations.items():
+            if not audit_unsupported_endpoint_guidance({surface: text}):
+                misses.append(f"detector missed {label} on {surface}")
+    benign = {
+        "web/nemoclaw/04a-safety.html": "A denied egress reports tunnel failed with code=000.",
+        "web/nemoclaw/scripts/_keypanel.js": '_setState(keySaved ? "ready" : "empty");',
+        "web/nemoclaw/03a-kickstart.html": "The approved relay follows the launchable provider.",
+    }
+    for surface, text in benign.items():
+        if audit_unsupported_endpoint_guidance({surface: text}):
+            misses.append(f"detector rejected supported prose in {surface}")
+
+    connection = (ROOT / "web/nemoclaw/scripts/_connection.js").read_text(encoding="utf-8")
+    shared_src = (ROOT / "web/nemoclaw/scripts/_shared.js").read_text(encoding="utf-8")
+    openclaw_src = (ROOT / "web/nemoclaw/scripts/_openclaw.js").read_text(encoding="utf-8")
+    openshell = (ROOT / "web/nemoclaw/scripts/_openshell.js").read_text(encoding="utf-8")
+    surfaces = {
+        str(path.relative_to(ROOT)): path.read_text(encoding="utf-8")
+        for path in learner_surface_files(ROOT)
+    }
+    if audit_launchable_transport(surfaces, connection, shared_src, openclaw_src, openshell):
+        misses.append("launchable transport contract fails on the current tree")
+    transport_mutations = [
+        ("hand-built gateway socket on a renamed page",
+         {**surfaces, "i18n/de/web/nemoclaw/09z-new-page.html": 'const ws = new WebSocket(url + "/cli/gateway");'},
+         connection, shared_src, openclaw_src, openshell, "shared routing"),
+        ("hand-built terminal socket on a renamed page",
+         {**surfaces, "web/nemoclaw/09z-new-page.html": 'new WebSocket(`${base}/ws/terminal?cmd=bash`)'},
+         connection, shared_src, openclaw_src, openshell, "shared routing"),
+        ("literal wss URL on a renamed page",
+         {**surfaces, "web/nemoclaw/09z-new-page.html": 'new WebSocket("wss://nemoclaw-x.brevlab.com/cli/gateway")'},
+         connection, shared_src, openclaw_src, openshell, "shared routing"),
+        ("indirect gateway socket assembly on a renamed page",
+         {**surfaces, "web/nemoclaw/09z-new-page.html":
+          'const gatewayPath = "/cli/gateway";\nconst socketUrl = base + gatewayPath;\nnew WebSocket(socketUrl);'},
+         connection, shared_src, openclaw_src, openshell, "separates launchable socket assembly"),
+        ("indirect terminal socket assembly on a renamed locale page",
+         {**surfaces, "i18n/de/web/nemoclaw/09z-new-page.html":
+          'const terminalPath = "/ws/terminal?cmd=bash";\nconst socketUrl = makeUrl(terminalPath);\nnew WebSocket(socketUrl);'},
+         connection, shared_src, openclaw_src, openshell, "separates launchable socket assembly"),
+        ("dropped Pomerium host family", surfaces,
+         connection.replace("apps.run.brev.nvidia.com", "apps.run.example.invalid"),
+         shared_src, openclaw_src, openshell, "both supported launchable host families"),
+        ("dropped launchable host predicate", surfaces,
+         connection.replace("export function isOpenClawLaunchableHost", "function isOpenClawLaunchableHost", 1),
+         shared_src, openclaw_src, openshell, "one exported predicate"),
+        ("model route bypasses launchable predicate", surfaces, connection,
+         shared_src.replace("if (isOpenClawLaunchableHost(url.hostname))",
+                            "if (isAnyHttpsHost(url.hostname))", 1),
+         openclaw_src, openshell, "model route must reject"),
+        ("arbitrary relay restored", surfaces,
+         connection.replace("new URL(DEFAULT_OPENCLAW_PROXY_BASE)", "new URL(config.base)", 1),
+         shared_src, openclaw_src, openshell, "approved non-bypassable relay"),
+        ("retired relay query restored", surfaces,
+         connection.replace("export function getOpenClawProxyConfig()",
+                            'const legacyRelay = new URLSearchParams(location.search).get("openclaw_proxy");\n\nexport function getOpenClawProxyConfig()', 1),
+         shared_src, openclaw_src, openshell, "approved non-bypassable relay"),
+        ("same-origin exception removed", surfaces,
+         connection.replace("return !loc || upstream.origin !== loc.origin;", "return true;", 1),
+         shared_src, openclaw_src, openshell, "approved non-bypassable relay"),
+        ("WebSocket direct default removed", surfaces,
+         connection.replace("config?.enabled === false", "false", 1),
+         shared_src, openclaw_src, openshell, "default direct"),
+        ("WebSocket relay opt-in storage removed", surfaces,
+         connection.replace("export function getOpenClawWsRelayEnabled", "function getOpenClawWsRelayEnabled", 1),
+         shared_src, openclaw_src, openshell, "explicit relay opt-in"),
+        ("WebSocket recovery runtime localization removed", surfaces, connection, shared_src,
+         openclaw_src.replace('localizeCourseUiText("Gateway recovery")', '"Gateway recovery"', 1),
+         openshell, "reviewed runtime locale map"),
+        ("bootstrap assertion header removed", surfaces, connection, shared_src,
+         openclaw_src.replace(
+             'headers["CF-Access-Jwt-Assertion"] = connection.accessSession;',
+             'headers["X-Removed-Assertion"] = connection.accessSession;',
+             1,
+         ),
+         openshell, "bootstrap discovery"),
+        ("learner WebSocket recovery removed",
+         {**surfaces, "web/nemoclaw/03a-kickstart.html":
+          surfaces["web/nemoclaw/03a-kickstart.html"].replace("wsRelayControls: true", "wsRelayControls: false", 1)},
+         connection, shared_src, openclaw_src, openshell, "recovery must be reachable"),
+        ("learner probe duplicates provider routing",
+         {**surfaces, "web/nemoclaw/03a-kickstart.html":
+          surfaces["web/nemoclaw/03a-kickstart.html"].replace(
+              "const PATH = '/api/agent';", "const TRANSPORT = 'direct';\nconst PATH = '/api/agent';", 1)},
+         connection, shared_src, openclaw_src, openshell, "learner bootstrap code"),
+        # A published locale page has no HTML file of its own; it renders from a key-based
+        # resource onto this template. Derive the locale fixture from the canonical page so the
+        # mutation still proves the detector reads a localized 03a surface at any locale path.
+        ("learner probe drops shared bootstrap helper on a locale page",
+         {**surfaces, "i18n/de/web/nemoclaw/03a-kickstart.html":
+          surfaces["web/nemoclaw/03a-kickstart.html"].replace(
+              "helpers.openclawBootstrapRequest(PATH", "helpers.fetchOpenClawDirect(PATH", 1)},
+         connection, shared_src, openclaw_src, openshell, "learner bootstrap code"),
+        ("gateway leaves the shared connection state", surfaces, connection,
+         shared_src, openclaw_src.replace("getOpenClawConnection()", "readLegacyConnection()"), openshell,
+         "gateway sockets must read the shared normalized connection state"),
+        ("terminal leaves shared routing", surfaces, connection, shared_src,
+         openclaw_src, openshell.replace("openclawWebSocketUrl(", "buildTerminalUrl("),
+         "terminal sockets must derive their URL from shared launchable routing"),
+        ("terminal drops the shared provider decision", surfaces, connection, shared_src,
+         openclaw_src, openshell.replace("accessProviderForOpenClawUrl(", "guessProvider("),
+         "one access-provider decision"),
+        ("gateway drops the shared provider decision", surfaces, connection,
+         shared_src, openclaw_src.replace("accessProviderForOpenClawUrl(", "guessProvider("), openshell,
+         "one access-provider decision"),
+        ("gateway loses direct default", surfaces, connection, shared_src,
+         openclaw_src.replace('if (provider === "pomerium" || !relayEnabled)', 'if (provider === "pomerium")', 1),
+         openshell, "default sender-bound"),
+        ("gateway loses relay opt-in", surfaces, connection, shared_src,
+         openclaw_src.replace("proxyEnabled === true", "proxyEnabled !== false", 1),
+         openshell, "explicit Cloudflare relay opt-in"),
+        ("terminal restores direct-first bypass", surfaces, connection, shared_src, openclaw_src,
+         openshell.replace("[routed.url]", "[direct.url, routed.url]", 1),
+         "same provider-selected route"),
+    ]
+    for (label, mutated_surfaces, mutated_connection, mutated_shared,
+         mutated_openclaw, mutated_openshell, expected) in transport_mutations:
+        results = audit_launchable_transport(
+            mutated_surfaces, mutated_connection, mutated_shared, mutated_openclaw, mutated_openshell
+        )
+        if not any(expected in finding for finding in results):
+            misses.append(f"detector missed {label}")
     return misses
 
 

@@ -6,8 +6,8 @@
 
 This is a narrow source audit. It does not contact the hosted service; it checks
 that the published course defaults are origin-bound, every other course origin
-stays direct, the learner can override that default, and custom endpoints never
-enter the relay.
+stays direct, and custom endpoints never enter the model relay. OpenClaw's
+provider-selected relay is separately fixed to the operated course endpoint.
 """
 from __future__ import annotations
 
@@ -32,8 +32,11 @@ CHECKS = [
     (
         "runtime supports independent chat and embedding routes",
         "web/nemoclaw/scripts/_shared.js",
-        ["DEFAULT_MODEL_API_BASE_URL", "MODEL_API_BASE_URL_KEY", "EMBEDDING_API_BASE_URL_KEY", "normalizeModelApiBaseUrl", "getModelApiBaseUrl", "getEmbeddingApiBaseUrl", "export function setModelApiBaseUrl(raw)", "export function setEmbeddingApiBaseUrl(raw)", 'params.get("base_url")', '.get("embedding_base_url")'],
-        [r"function\s+suggestedModelApiBaseUrl[\s\S]{0,500}localStorage\.setItem"],
+        ["DEFAULT_MODEL_API_BASE_URL", "MODEL_API_BASE_URL_KEY", "EMBEDDING_API_BASE_URL_KEY", "normalizeModelApiBaseUrl", "getModelApiBaseUrl", "getEmbeddingApiBaseUrl", "export function setModelApiBaseUrl(raw)", "export function setEmbeddingApiBaseUrl(raw)"],
+        [
+            r"function\s+suggestedModelApiBaseUrl",
+            r'\.get\("(?:base_url|model_base_url|model|embedding_base_url|embedding_model)"\)',
+        ],
     ),
     (
         "runtime exports iframe opt-in controls",
@@ -94,23 +97,40 @@ CHECKS = [
         [r"_pomerium=", r"env\.CF_ACCESS_CLIENT"],
     ),
     (
-        "OpenClaw relay is centralized, persistent, and optional",
+        "OpenClaw relay is centralized, approved, and non-bypassable",
         "web/nemoclaw/scripts/_connection.js",
-        [OPENCLAW_PROXY, "OPENCLAW_PROXY_BASE_KEY", "OPENCLAW_PROXY_ENABLED_KEY", 'params.get("openclaw_proxy")', 'params.get("openclaw_proxy_base")', "migrateOpenClawConnectionStorage", "shouldProxyOpenClaw", "upstream.origin !== loc.origin"],
-        [],
+        [OPENCLAW_PROXY, "DEFAULT_OPENCLAW_PROXY_BASE", "OPENCLAW_PROXY_BASE_KEY", "OPENCLAW_PROXY_ENABLED_KEY", "migrateOpenClawConnectionStorage", "OpenClaw launchables use the approved NVIDIA DLI relay", "OpenClaw launchables use the approved NVIDIA DLI relay; it cannot be disabled.", "shouldProxyOpenClaw", "new URL(DEFAULT_OPENCLAW_PROXY_BASE)", "upstream.origin !== loc.origin"],
+        [
+            r'\.get\("openclaw_(?:url|access_provider|proxy|proxy_base)"\)',
+            r"new URL\(config\.base\)",
+            r"!config\.enabled",
+        ],
     ),
     (
-        "OpenClaw probe exposes shared relay controls",
+        "OpenClaw lesson delegates transport to the provider-aware helper",
         "web/nemoclaw/03a-kickstart.html",
-        ["proxyControls: true", "?openclaw_proxy_base=...", "?openclaw_proxy=1", "TRANSPORT = 'configured'"],
-        [r'proxyBase\s*:\s*"https://openclaw-cors-proxy'],
+        ["helpers.openclawBootstrapRequest(PATH", "signal"],
+        [r"\bTRANSPORT\b", r"proxyControls\s*:\s*true", r"X-OpenClaw-Access-Session", r"CF-Access-Jwt-Assertion"],
     ),
     (
-        "OpenShell terminal reuses OpenClaw routing with authenticated direct fallback",
+        "OpenShell terminal defaults direct and retains one explicit relay opt-in",
         "web/nemoclaw/scripts/_openshell.js",
-        ['getOpenClawConnection', 'openclawWebSocketUrl(rawUrl, "/ws/terminal?cmd="',
-         '{ enabled: false, base: "" }', '[direct.url, routed.url]'],
-        [r'rawUrl\.replace\(\^https[\s\S]{0,120}/ws/terminal'],
+        [
+            "getOpenClawWsRelayEnabled",
+            "accessProviderForOpenClawUrl(rawUrl,",
+            "relayWebSocket === true",
+            "relayWebSocket === null && getOpenClawWsRelayEnabled()",
+            'openclawWebSocketUrl(',
+            '"/ws/terminal?cmd=" + encodeURIComponent(cmd)',
+            'relayEnabled ? getOpenClawProxyConfig() : { enabled: false, base: "" }',
+            "const wsUrls = [routed.url]",
+        ],
+        # The terminal must not rebuild a socket URL from the raw launchable or
+        # keep a second fallback candidate outside the shared routing helper.
+        [
+            r'\.replace\(\s*/\^https?[\s\S]{0,160}/ws/terminal',
+            r"\bdirect\.url\b",
+        ],
     ),
 ]
 
@@ -252,6 +272,7 @@ def self_test() -> list[str]:
     cases = (
         ("saved chat endpoint", "web/nemoclaw/scripts/_shared.js", "export function setModelApiBaseUrl(raw)", "function removedModelSetter(raw)"),
         ("saved embedding endpoint", "web/nemoclaw/scripts/_shared.js", "export function setEmbeddingApiBaseUrl(raw)", "function removedEmbeddingSetter(raw)"),
+        ("retired model query prefill", "web/nemoclaw/scripts/_shared.js", "export function getModelApiBaseUrl()", 'const legacyModel = new URLSearchParams(location.search).get("base_url");\n\nexport function getModelApiBaseUrl()'),
         ("explicit setup field", "web/nemoclaw/scripts/_keypanel.js", '<input type="url" class="model-api-base-url"', '<input type="url" class="removed-endpoint-field"'),
         ("custom endpoint bypasses iframe relay", "web/nemoclaw/scripts/_keypanel.js", "setIframeProxyMode(defaultEndpoint &&", "setIframeProxyMode(true &&"),
         ("bounded CDN relay default", "web/nemoclaw/scripts/_shared.js", '"https://cdn.dli.learn.nvidia.com"', '"https://example.com"'),
@@ -262,19 +283,37 @@ def self_test() -> list[str]:
         ("OpenClaw excludes model billing attribution", "scripts/cors-proxy/cors-proxy-worker-openclaw.js", "x-openclaw-session-key, Accept", "x-openclaw-session-key, X-BILLING-INVOKE-ORIGIN, Accept"),
         ("OpenClaw Pomerium header", "scripts/cors-proxy/cors-proxy-worker-openclaw.js", 'fwdHeaders.set("X-Pomerium-Authorization", accessSession)', 'fwdHeaders.set("Cookie", "_pomerium=" + accessSession)'),
         ("OpenClaw provider declaration", "scripts/cors-proxy/cors-proxy-worker-openclaw.js", "Neutral access sessions require an explicit access provider.", "Neutral access sessions may omit a provider."),
-        ("OpenClaw relay toggle", "web/nemoclaw/scripts/_connection.js", 'params.get("openclaw_proxy")', 'params.get("removed_openclaw_proxy")'),
-        ("OpenClaw same-origin bypass", "web/nemoclaw/scripts/_connection.js", "upstream.origin !== loc.origin", "true"),
-        ("OpenClaw probe controls", "web/nemoclaw/03a-kickstart.html", "proxyControls: true", "proxyControls: false"),
-        ("OpenShell shared routing", "web/nemoclaw/scripts/_openshell.js", 'openclawWebSocketUrl(rawUrl, "/ws/terminal?cmd="', 'removedWebSocketRouter(rawUrl, "/ws/terminal?cmd="'),
-        ("OpenShell direct terminal fallback", "web/nemoclaw/scripts/_openshell.js", '[direct.url, routed.url]', '[routed.url]'),
+        ("OpenClaw approved relay allowlist", "web/nemoclaw/scripts/_connection.js", "new URL(DEFAULT_OPENCLAW_PROXY_BASE)", "new URL(config.base)"),
+        ("OpenClaw relay cannot be disabled", "web/nemoclaw/scripts/_connection.js", 'throw new Error("OpenClaw launchables use the approved NVIDIA DLI relay; it cannot be disabled.");', "return { enabled: false, base: DEFAULT_OPENCLAW_PROXY_BASE };"),
+        ("OpenClaw retired presenter query", "web/nemoclaw/scripts/_connection.js", "export function getOpenClawProxyConfig()", 'const legacyProxy = new URLSearchParams(location.search).get("openclaw_proxy");\n\nexport function getOpenClawProxyConfig()'),
+        ("OpenClaw same-origin exception", "web/nemoclaw/scripts/_connection.js", "return !loc || upstream.origin !== loc.origin;", "return true;"),
+        ("OpenClaw lesson helper", "web/nemoclaw/03a-kickstart.html", "helpers.openclawBootstrapRequest(PATH", "helpers.fetchOpenClawDirect(PATH"),
+        ("OpenClaw lesson restores transport branch", "web/nemoclaw/03a-kickstart.html", "const PATH = '/api/agent';", "const TRANSPORT = 'direct';\nconst PATH = '/api/agent';"),
+        ("OpenShell shared routing", "web/nemoclaw/scripts/_openshell.js", "openclawWebSocketUrl(", "removedWebSocketRouter("),
+        ("OpenShell drops the shared provider decision", "web/nemoclaw/scripts/_openshell.js", "accessProviderForOpenClawUrl(rawUrl,", "guessTerminalProvider(rawUrl,"),
+        ("OpenShell drops the saved relay opt-in", "web/nemoclaw/scripts/_openshell.js", "relayWebSocket === null && getOpenClawWsRelayEnabled()", "relayWebSocket === null"),
+        ("OpenShell forces the relay", "web/nemoclaw/scripts/_openshell.js", 'relayEnabled ? getOpenClawProxyConfig() : { enabled: false, base: "" }', "getOpenClawProxyConfig()"),
+        ("OpenShell disables explicit relay selection", "web/nemoclaw/scripts/_openshell.js", "relayWebSocket === true", "relayWebSocket === false"),
+        ("OpenShell deletes its single terminal route", "web/nemoclaw/scripts/_openshell.js", "const wsUrls = [routed.url];", ""),
+        ("OpenShell renames its single terminal route", "web/nemoclaw/scripts/_openshell.js", "const wsUrls = [routed.url]", "const terminalRoutes = [routed.url]"),
+        ("OpenShell restores the direct-first fallback", "web/nemoclaw/scripts/_openshell.js", "const wsUrls = [routed.url]", "const wsUrls = [direct.url, routed.url]"),
+        ("OpenShell appends a direct fallback candidate", "web/nemoclaw/scripts/_openshell.js", "const wsUrls = [routed.url]", "const wsUrls = [routed.url, direct.url]"),
+        ("OpenShell rebuilds a socket URL from the raw launchable", "web/nemoclaw/scripts/_openshell.js", "let launchableOrigin = rawUrl;", 'const bypass = rawUrl.replace(/^https/, "wss") + "/ws/terminal?cmd=" + encodeURIComponent(cmd);\n  let launchableOrigin = rawUrl;'),
     )
+    # Every mutation must produce a finding the unmutated tree does not already have. A stale
+    # mutation string then fails as an escape instead of riding an unrelated failure, and a
+    # detector that no longer matches its own source cannot report PASS.
+    baseline = source_findings(scan_retired=False)
+    failures.extend(f"unmutated source already fails: {item}" for item in baseline)
     for label, rel, old, new in cases:
-        if not source_findings(replacements={rel: (old, new)}, scan_retired=False):
+        mutated = source_findings(replacements={rel: (old, new)}, scan_retired=False)
+        if not [item for item in mutated if item not in baseline]:
             failures.append(f"mutation escaped: {label}")
     legacy_mutation = {
         "web/nemoclaw/scripts/_shared.js": ("X-BILLING-INVOKE-ORIGIN", LEGACY_BILLING_HEADER),
     }
-    if not source_findings(replacements=legacy_mutation):
+    tracked_baseline = source_findings()
+    if not [item for item in source_findings(replacements=legacy_mutation) if item not in tracked_baseline]:
         failures.append("mutation escaped: retired billing header")
     return failures
 

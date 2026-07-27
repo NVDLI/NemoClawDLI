@@ -94,7 +94,7 @@ README_LEARNER_ROUTES = {
     ),
     "brev-launchable": (
         "agent runtime launchable",
-        "https://brev.nvidia.com/launchable/deploy"
+        "https://brev.nvidia.com/launchable/deploy/now"
         "?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&ncid=ref-dli-759990",
     ),
     "nvidia-build": (

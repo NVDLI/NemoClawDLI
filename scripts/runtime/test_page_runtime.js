@@ -133,8 +133,7 @@ async function resolveOpenClawToken() {
     const resp = await fetch(openClawHttpUrl('/api/agent'), {
       headers: {
         Accept: 'application/json, text/plain, */*',
-        'X-OpenClaw-Access-Provider': CLAW_ACCESS_PROVIDER,
-        'X-OpenClaw-Access-Session': CLAW_ACCESS_SESSION,
+        'CF-Access-Jwt-Assertion': CLAW_ACCESS_SESSION,
       },
       signal: timeout.signal,
     });
@@ -160,8 +159,7 @@ async function preflightOpenClaw() {
   if (!(CLAW_URL && CLAW_TOKEN)) return;
   const headers = { Accept: 'application/json, text/plain, */*', Authorization: `Bearer ${CLAW_TOKEN}` };
   if (CLAW_ACCESS_SESSION) {
-    headers['X-OpenClaw-Access-Provider'] = CLAW_ACCESS_PROVIDER;
-    headers['X-OpenClaw-Access-Session'] = CLAW_ACCESS_SESSION;
+    headers['CF-Access-Jwt-Assertion'] = CLAW_ACCESS_SESSION;
   }
   const targets = ['/health', '/healthz', '/api/agent'];
   const attempts = [];
@@ -513,29 +511,12 @@ function findChrome() {
       try {
         const mod = await import(new URL('./scripts/_shared.js', location.href).href);
         mod.setOpenClawConnection({ rawUrl: clawUrl, accessProvider, accessSession });
-        const gateway = mod.openclawGatewayWsUrl(clawUrl, accessSession, proxyBase, true, accessProvider);
+        const gateway = mod.openclawGatewayWsUrl(clawUrl, accessSession, proxyBase, false, accessProvider);
         output.viaProxy = gateway.viaProxy;
-        let metadata;
-        if (accessProvider === 'pomerium') {
-          const response = await mod.openclawLoopbackProbe('/api/agent', { baseUrl: clawUrl });
-          output.httpStatus = response.status;
-          metadata = response.json;
-        } else {
-          if (!gateway.viaProxy) throw new Error('Cloudflare course helper did not select hosted relay');
-          const upstream = new URL(clawUrl);
-          const proxy = new URL(proxyBase);
-          proxy.pathname = `/https/${upstream.host}${upstream.pathname.replace(/\/+$/, '')}/api/agent`;
-          const response = await fetch(proxy, {
-            headers: {
-              Accept: 'application/json',
-              'X-OpenClaw-Access-Provider': accessProvider,
-              'X-OpenClaw-Access-Session': accessSession,
-            },
-          });
-          output.httpStatus = response.status;
-          if (!response.ok) throw new Error(`agent metadata returned HTTP ${response.status}`);
-          metadata = await response.json();
-        }
+        const response = await mod.openclawBootstrapRequest('/api/agent');
+        output.httpStatus = response.status;
+        if (!response.ok) throw new Error(`agent metadata returned HTTP ${response.status}`);
+        const metadata = response.json;
         const token = mod.gatewayTokenFromAgentMetadata(metadata);
         output.token = !!token;
         if (!token) throw new Error('agent metadata omitted a gateway token');
@@ -653,8 +634,7 @@ function findChrome() {
       return output;
     }, { clawUrl: CLAW_URL, accessProvider: CLAW_ACCESS_PROVIDER, accessSession: CLAW_ACCESS_SESSION, proxyBase: OPENCLAW_CORS_PROXY_BASE, cronContract, terminalContract, chatContract });
     console.log('GATEWAY_CHECK:', JSON.stringify(result));
-    const expectedProxy = CLAW_ACCESS_PROVIDER === 'cloudflare';
-    const passed = result.httpStatus === 200 && result.token && result.viaProxy === expectedProxy
+    const passed = result.httpStatus === 200 && result.token && !result.viaProxy
       && result.challenge && result.connect && result.rpc && !result.error
       && (!cronContract || (result.cronAdd && result.cronRuns && result.cronRemove && !result.cleanupId))
       && (!terminalContract || (result.terminalOpen && result.terminalFrames > 0))

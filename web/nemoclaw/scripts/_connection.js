@@ -6,13 +6,13 @@
 export const DEFAULT_OPENCLAW_PROXY_BASE = "https://openclaw-cors-proxy.experiments.courses.nvidia.com";
 export const OPENCLAW_PROXY_BASE_KEY = "nemoclaw_openclaw_proxy_base_v1";
 export const OPENCLAW_PROXY_ENABLED_KEY = "nemoclaw_openclaw_proxy_enabled_v1";
+export const OPENCLAW_WS_RELAY_ENABLED_KEY = "nemoclaw_openclaw_ws_relay_enabled_v1";
 export const OPENCLAW_URL_KEY = "nemoclaw_clawurl";
 export const OPENCLAW_RAW_URL_KEY = "nemoclaw_clawrawurl";
 export const OPENCLAW_TOKEN_KEY = "nemoclaw_clawtoken";
 export const OPENCLAW_ACCESS_JWT_KEY = "nemoclaw_clawcfjwt";
 export const OPENCLAW_ACCESS_PROVIDER_KEY = "nemoclaw_openclaw_access_provider_v1";
 export const OPENCLAW_ACCESS_SESSION_KEY = "nemoclaw_openclaw_access_session_v1";
-let querySynced = false;
 
 function storage() {
   try { return globalThis.localStorage || null; }
@@ -35,9 +35,19 @@ function isPersonalWorkerHost(hostname) {
   return /(?:^|\.)workers\.dev$/i.test(String(hostname || ""));
 }
 
-function isBrevHost(hostname) {
-  return /(?:^|\.)brevlab\.com$/i.test(String(hostname || "")) ||
-    /(?:^|\.)apps\.run\.brev\.nvidia\.com$/i.test(String(hostname || ""));
+function isBrevLaunchableFamily(hostname) {
+  const host = String(hostname || "").toLowerCase();
+  return host.endsWith(".brevlab.com") || host.endsWith(".apps.run.brev.nvidia.com");
+}
+
+// The two supported account-specific launchable hostname families:
+// https://nemoclaw-<id>.apps.run.brev.nvidia.com and https://nemoclaw-<id>.brevlab.com.
+// Every consumer that must recognize a launchable reads this one predicate instead of
+// repeating the host list.
+export function isOpenClawLaunchableHost(hostname) {
+  const host = String(hostname || "");
+  return /^nemoclaw-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.brevlab\.com$/i.test(host) ||
+    /^nemoclaw-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.apps\.run\.brev\.nvidia\.com$/i.test(host);
 }
 
 export function accessProviderForOpenClawUrl(rawUrl, selected = "auto") {
@@ -48,11 +58,12 @@ export function accessProviderForOpenClawUrl(rawUrl, selected = "auto") {
   let host = "";
   try { host = new URL(normalizeOpenClawLaunchableUrl(rawUrl), pageBase()).hostname; }
   catch (_) { return choice; }
-  const inferred = /(?:^|\.)apps\.run\.brev\.nvidia\.com$/i.test(host)
-    ? "pomerium"
-    : /(?:^|\.)brevlab\.com$/i.test(host)
-      ? "cloudflare"
-      : "auto";
+  if (isBrevLaunchableFamily(host) && !isOpenClawLaunchableHost(host)) {
+    throw new Error("Use the NemoClaw App URL: https://nemoclaw-<id>.brevlab.com or https://nemoclaw-<id>.apps.run.brev.nvidia.com");
+  }
+  const inferred = isOpenClawLaunchableHost(host)
+    ? (host.toLowerCase().endsWith(".apps.run.brev.nvidia.com") ? "pomerium" : "cloudflare")
+    : "auto";
   if (choice !== "auto" && inferred !== "auto" && choice !== inferred) {
     throw new Error("Selected access provider does not match the launchable URL");
   }
@@ -67,13 +78,14 @@ export function normalizeOpenClawProxyBase(raw) {
   const text = String(raw || "").trim();
   if (!text) return "";
   const url = new URL(text);
-  const localHttp = url.protocol === "http:" && ["localhost", "127.0.0.1", "::1"].includes(url.hostname);
-  if (url.protocol !== "https:" && !localHttp) throw new Error("OpenClaw relay URL must use HTTPS");
-  if (isPersonalWorkerHost(url.hostname)) throw new Error("Personal worker relays are not allowed");
   if (url.username || url.password || url.search || url.hash) {
     throw new Error("OpenClaw relay URL cannot include credentials, query parameters, or a fragment");
   }
-  return url.href.replace(/\/+$/, "");
+  const normalized = url.href.replace(/\/+$/, "");
+  if (normalized !== DEFAULT_OPENCLAW_PROXY_BASE) {
+    throw new Error("OpenClaw launchables use the approved NVIDIA DLI relay");
+  }
+  return normalized;
 }
 
 export function normalizeOpenClawLaunchableUrl(raw) {
@@ -86,12 +98,12 @@ export function normalizeOpenClawLaunchableUrl(raw) {
   // Earlier builds stored the effective relay URL instead of the launchable URL.
   // Recover only an HTTPS Brev target; never retain an outer personal worker host.
   const match = outer.pathname.match(/^\/https\/([^/]+)(\/.*)?$/i);
-  if (match && isBrevHost(match[1].split(":")[0])) {
+  if (match && isOpenClawLaunchableHost(match[1].split(":")[0])) {
     return new URL("https://" + match[1]).origin;
   }
   if (isPersonalWorkerHost(outer.hostname)) return "";
   outer.hash = "";
-  if (isBrevHost(outer.hostname)) {
+  if (isOpenClawLaunchableHost(outer.hostname)) {
     outer.search = "";
     outer.pathname = "";
     return outer.origin;
@@ -99,92 +111,52 @@ export function normalizeOpenClawLaunchableUrl(raw) {
   return /^[a-z][a-z0-9+.-]*:/i.test(text) ? outer.href.replace(/\/+$/, "") : text;
 }
 
-function syncConfigFromQuery() {
-  if (querySynced) return;
-  const target = storage();
-  const loc = browserLocation();
-  if (!target || !loc) return;
-  querySynced = true;
-  try {
-    const secrets = secretStorage();
-    const params = new URLSearchParams(loc.search || "");
-    const enabled = params.get("openclaw_proxy");
-    if (["1", "true", "on", "relay", "auto"].includes(String(enabled).toLowerCase())) {
-      target.setItem(OPENCLAW_PROXY_ENABLED_KEY, "1");
-    } else if (["0", "false", "off", "direct"].includes(String(enabled).toLowerCase())) {
-      target.setItem(OPENCLAW_PROXY_ENABLED_KEY, "0");
-    }
-    const proxyBase = params.get("openclaw_proxy_base");
-    if (proxyBase) target.setItem(OPENCLAW_PROXY_BASE_KEY, normalizeOpenClawProxyBase(proxyBase));
-    const launchable = params.get("openclaw_url");
-    if (launchable) {
-      const clean = normalizeOpenClawLaunchableUrl(launchable);
-      if (clean) {
-        const previous = normalizeOpenClawLaunchableUrl(
-          target.getItem(OPENCLAW_RAW_URL_KEY) || target.getItem(OPENCLAW_URL_KEY) || "",
-        );
-        if (clean !== previous) {
-          secrets?.removeItem(OPENCLAW_TOKEN_KEY);
-          secrets?.removeItem(OPENCLAW_ACCESS_SESSION_KEY);
-          secrets?.removeItem(OPENCLAW_ACCESS_JWT_KEY);
-          // Remove credentials written by course builds that predated the
-          // tab-scoped storage contract.
-          target.removeItem(OPENCLAW_TOKEN_KEY);
-          target.removeItem(OPENCLAW_ACCESS_SESSION_KEY);
-          target.removeItem(OPENCLAW_ACCESS_JWT_KEY);
-        }
-        target.setItem(OPENCLAW_RAW_URL_KEY, clean);
-      }
-    }
-    const provider = params.get("openclaw_access_provider");
-    if (provider) {
-      accessProviderForOpenClawUrl("", provider);
-      target.setItem(OPENCLAW_ACCESS_PROVIDER_KEY, provider.toLowerCase());
-    }
-  } catch (_) { /* invalid presenter hints must not corrupt saved connection state */ }
-}
-
 export function getOpenClawProxyConfig() {
-  syncConfigFromQuery();
-  const target = storage();
-  let base = DEFAULT_OPENCLAW_PROXY_BASE;
-  let enabled = true;
-  try {
-    const stored = target?.getItem(OPENCLAW_PROXY_BASE_KEY);
-    if (stored) base = normalizeOpenClawProxyBase(stored) || DEFAULT_OPENCLAW_PROXY_BASE;
-    enabled = target?.getItem(OPENCLAW_PROXY_ENABLED_KEY) !== "0";
-  } catch (_) {
-    try { target?.removeItem(OPENCLAW_PROXY_BASE_KEY); } catch (_) {}
-  }
-  return { enabled, base };
+  return { enabled: true, base: DEFAULT_OPENCLAW_PROXY_BASE };
 }
 
 export function setOpenClawProxyConfig({ enabled, base } = {}) {
+  // Retained only so boundary tests and older integrations fail closed. It is
+  // deliberately absent from the learner helper registry.
   const target = storage();
-  const current = getOpenClawProxyConfig();
-  const next = {
-    enabled: enabled === undefined ? current.enabled : !!enabled,
-    base: base === undefined ? current.base : (normalizeOpenClawProxyBase(base) || DEFAULT_OPENCLAW_PROXY_BASE),
-  };
+  if (enabled === false) throw new Error("OpenClaw launchables use the approved NVIDIA DLI relay; it cannot be disabled.");
+  if (base !== undefined && String(base || "").trim()) normalizeOpenClawProxyBase(base);
   try {
-    target?.setItem(OPENCLAW_PROXY_ENABLED_KEY, next.enabled ? "1" : "0");
-    if (next.base === DEFAULT_OPENCLAW_PROXY_BASE) target?.removeItem(OPENCLAW_PROXY_BASE_KEY);
-    else target?.setItem(OPENCLAW_PROXY_BASE_KEY, next.base);
+    target?.removeItem(OPENCLAW_PROXY_BASE_KEY);
+    target?.removeItem(OPENCLAW_PROXY_ENABLED_KEY);
   } catch (_) {}
-  return next;
+  return { enabled: true, base: DEFAULT_OPENCLAW_PROXY_BASE };
+}
+
+export function getOpenClawWsRelayEnabled() {
+  try { return storage()?.getItem(OPENCLAW_WS_RELAY_ENABLED_KEY) === "1"; }
+  catch (_) { return false; }
+}
+
+export function setOpenClawWsRelayEnabled(enabled = false) {
+  const target = storage();
+  try {
+    if (enabled) target?.setItem(OPENCLAW_WS_RELAY_ENABLED_KEY, "1");
+    else target?.removeItem(OPENCLAW_WS_RELAY_ENABLED_KEY);
+  } catch (_) {}
+  return Boolean(enabled);
 }
 
 export function shouldProxyOpenClaw(rawUrl, config = getOpenClawProxyConfig()) {
   const clean = normalizeOpenClawLaunchableUrl(rawUrl);
-  if (!clean || !config.enabled || !config.base) return false;
+  if (!clean) return false;
   let upstream;
   try { upstream = new URL(clean, pageBase()); }
   catch (_) { return false; }
-  if (!isBrevHost(upstream.hostname)) return false;
+  if (!isOpenClawLaunchableHost(upstream.hostname)) return false;
+  if (config?.enabled === false) return false;
   // Pomerium browser sessions are intentionally sender-bound. Keep the
   // HttpOnly cookie between the learner's browser and the launchable instead
   // of replaying it through the hosted relay.
   if (accessProviderForOpenClawUrl(clean) === "pomerium") return false;
+  // A course served by the same launchable origin already has the browser's
+  // authenticated session and does not send that session through an external relay.
+  // Public course origins use the matching Cloudflare assertion through the approved relay.
   const loc = browserLocation();
   return !loc || upstream.origin !== loc.origin;
 }
@@ -204,7 +176,9 @@ export function openclawHttpUrl(rawUrl, pathAndQuery = "", config = getOpenClawP
     return { url: direct, displayUrl: direct, viaProxy: false, directUrl: direct, directDisplayUrl: direct };
   }
   const upstream = new URL(direct, pageBase());
-  const proxied = new URL(config.base);
+  // When a caller explicitly selects relay transport, only the repository-approved
+  // origin is allowed. A disabled config selects a direct, credential-free browser route.
+  const proxied = new URL(DEFAULT_OPENCLAW_PROXY_BASE);
   const proxyPath = proxied.pathname.replace(/\/+$/, "");
   const upstreamPath = String(pathAndQuery || "") ? upstream.pathname : "";
   proxied.pathname = proxyPath + "/https/" + upstream.host + upstreamPath;
@@ -245,9 +219,12 @@ export function openclawWebSocketUrl(rawUrl, pathAndQuery = "/cli/gateway", acce
 }
 
 export function migrateOpenClawConnectionStorage() {
-  syncConfigFromQuery();
   const target = storage();
   if (!target) return { rawUrl: "", migrated: false };
+  // Retired relay overrides are cleaned once during state migration. Route
+  // construction remains a pure read and cannot write storage as a side effect.
+  target.removeItem(OPENCLAW_PROXY_BASE_KEY);
+  target.removeItem(OPENCLAW_PROXY_ENABLED_KEY);
   const beforeRaw = target.getItem(OPENCLAW_RAW_URL_KEY) || "";
   const beforeEffective = target.getItem(OPENCLAW_URL_KEY) || "";
   const clean = normalizeOpenClawLaunchableUrl(beforeRaw) || normalizeOpenClawLaunchableUrl(beforeEffective);

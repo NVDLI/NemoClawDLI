@@ -67,6 +67,12 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 - Two English UI fragments on the Spanish `04a-safety` page that the former extractor missed are
   now explicit `untranslated` entries, preserving the reviewed wording while exposing the remaining
   language-review work instead of silently treating it as translated.
+- Replaced the fabricated Module 3a gateway-token recovery with the supported
+  `openclaw dashboard --no-open` and `openclaw doctor --generate-gateway-token` path, separated the
+  gateway token from the launchable access session, retired the presenter relay overrides in favor
+  of provider-selected transport, and corrected the Brev launchable link to its `deploy/now` form.
+- Thanks to Claude Opus 5 for independently reviewing the Spanish and Brazilian Portuguese Module
+  3a launchable and gateway-credential updates.
 
 At release time, move accepted entries under the immutable version tag and keep the remaining work
 under `Unreleased`.

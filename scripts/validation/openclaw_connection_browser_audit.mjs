@@ -52,9 +52,11 @@ try {
     try {
       if (window.top !== window) return;
       const retired = 'https://retired-personal-relay.' + 'workers.dev/https/nemoclaw-test123.brevlab.com';
-      localStorage.setItem('nemoclaw_model_api_base_url_v1', 'https://model-test123.brevlab.com/v1');
+      // A launchable host is not a valid model route, so the independence fixture uses a
+      // neutral custom endpoint.
+      localStorage.setItem('nemoclaw_model_api_base_url_v1', 'https://model-test123.example.test/v1');
       localStorage.setItem('nemoclaw_model_id_v1', 'model/test-123');
-      sessionStorage.setItem('nvapi', 'EMPTY');
+      sessionStorage.setItem('nvapi', 'test-model-key');
       localStorage.removeItem('nemoclaw_clawrawurl');
       localStorage.setItem('nemoclaw_clawurl', retired);
       window.__terminalUrls = [];
@@ -155,57 +157,75 @@ try {
   await page.goto(`http://127.0.0.1:${port}/nemoclaw/03a-kickstart.html`, { waitUntil: 'networkidle' });
   await page.waitForSelector('#probe-llm .claw-url');
   await page.waitForSelector('#probe-claw .claw-url');
-  const result = await page.evaluate(() => {
+  const result = await page.evaluate(async () => {
     const approved = 'https://openclaw-cors-proxy.experiments.courses.nvidia.com';
     const modelHost = document.querySelector('#probe-llm');
     const host = document.querySelector('#probe-claw');
     const modelUrl = modelHost.querySelector('.claw-url');
     const modelToken = modelHost.querySelector('.claw-token');
     const modelKind = modelHost.querySelector('.claw-probe')?.dataset.connectionKind;
-    if (modelUrl.value !== 'https://model-test123.brevlab.com/v1') throw new Error('model endpoint was contaminated by launchable state: ' + modelUrl.value);
+    if (modelUrl.value !== 'https://model-test123.example.test/v1') throw new Error('model endpoint was contaminated by launchable state: ' + modelUrl.value);
     if (!modelUrl.readOnly || !modelToken.readOnly || modelKind !== 'model') throw new Error('model endpoint probe is not an explicit read-only model mirror');
     const visibleModelRoutes = (document.querySelector('#model-route-settings')?.textContent || '')
-      .match(/https:\/\/model-test123\.brevlab\.com\/v1/g) || [];
+      .match(/https:\/\/model-test123\.example\.test\/v1/g) || [];
     if (visibleModelRoutes.length !== 1 || visibleModelRoutes[0] !== modelUrl.value) throw new Error('model route source is not visible above the probe');
     if (Object.keys(localStorage).some(key => key.startsWith('nemoclaw_clawurl:https_model'))) throw new Error('model probe wrote an OpenClaw-scoped URL');
 
     const url = host.querySelector('.claw-url');
-    const toggle = host.querySelector('.claw-proxy-enabled');
-    const relay = host.querySelector('.claw-proxy-base');
     const provider = host.querySelector('.claw-access-provider');
     const session = host.querySelector('.claw-access-session');
+    if (host.querySelector('.claw-proxy-enabled') || host.querySelector('.claw-proxy-base')) {
+      throw new Error('learner probe exposed a relay override');
+    }
+    const wsRelay = host.querySelector('.claw-ws-relay-enabled');
+    if (!wsRelay || wsRelay.checked) {
+      throw new Error('learner probe lacks an off-by-default WebSocket recovery control');
+    }
     const state = () => ({
       model: modelUrl.value,
       input: url.value,
       raw: localStorage.getItem('nemoclaw_clawrawurl'),
       effective: localStorage.getItem('nemoclaw_clawurl'),
-      enabled: toggle.checked,
-      relay: relay.value,
       provider: provider.value,
       sessionPlaceholder: session.placeholder,
     });
     const migrated = state();
     if (migrated.input !== 'https://nemoclaw-test123.brevlab.com') throw new Error('visible URL was not healed');
     if (migrated.raw !== migrated.input) throw new Error('raw saved URL was not healed');
-    if (!migrated.enabled || migrated.relay !== approved) throw new Error('approved relay is not the visible default');
     if (migrated.provider !== 'auto' || !/CF_Authorization/.test(migrated.sessionPlaceholder)) throw new Error('Cloudflare launchable was not inferred from the URL');
     if (migrated.effective !== approved + '/https/nemoclaw-test123.brevlab.com') throw new Error('effective URL did not migrate');
     if (migrated.effective.includes('workers.dev')) throw new Error('retired worker survived migration');
 
-    toggle.checked = false;
-    toggle.dispatchEvent(new Event('change'));
-    const direct = state();
-    if (direct.effective !== direct.raw || !relay.disabled) throw new Error('relay off did not select direct mode: ' + JSON.stringify(direct));
-
-    toggle.checked = true;
-    toggle.dispatchEvent(new Event('change'));
-    const restored = state();
-    if (restored.effective !== approved + '/https/nemoclaw-test123.brevlab.com' || relay.disabled) throw new Error('relay on did not restore approved route: ' + JSON.stringify(restored));
+    const connection = await import('/nemoclaw/scripts/_connection.js?relay-boundary=' + Date.now());
+    let disableRejected = false;
+    try { connection.setOpenClawProxyConfig({ enabled: false }); }
+    catch (_) { disableRejected = true; }
+    let overrideRejected = false;
+    try { connection.setOpenClawProxyConfig({ base: 'https://relay.example.test' }); }
+    catch (_) { overrideRejected = true; }
+    const protectedState = state();
+    if (!disableRejected || !overrideRejected ||
+        protectedState.effective !== approved + '/https/nemoclaw-test123.brevlab.com') {
+      throw new Error('approved relay boundary was bypassed: ' + JSON.stringify({ disableRejected, overrideRejected, protectedState }));
+    }
+    if (connection.getOpenClawWsRelayEnabled()) {
+      throw new Error('WebSocket relay did not default off');
+    }
+    wsRelay.click();
+    if (!connection.getOpenClawWsRelayEnabled()) {
+      throw new Error('learner WebSocket relay opt-in was not retained');
+    }
+    const relayedGateway = (await import('/nemoclaw/scripts/_openclaw.js?relay-ui=' + Date.now()))
+      .openclawGatewayWsUrl(url.value, 'test-access-session', null, null, 'cloudflare');
+    if (!relayedGateway.viaProxy || !relayedGateway.url.includes('cf_access_jwt=')) {
+      throw new Error('learner recovery control did not select the approved Cloudflare relay');
+    }
+    connection.setOpenClawWsRelayEnabled(false);
     session.value = 'test-access-session';
     session.dispatchEvent(new Event('input'));
     host.querySelector('.claw-token').value = 'retained-gateway-token';
     host.querySelector('.claw-token').dispatchEvent(new Event('input'));
-    return { migrated, direct, restored };
+    return { migrated, disableRejected, overrideRejected, protectedState };
   });
   result.autoBootstrap = await page.evaluate(async () => {
     const mod = await import('/nemoclaw/scripts/_openclaw.js?auto-bootstrap=' + Date.now());
@@ -253,6 +273,19 @@ try {
     `GET /api/agent did not update the bearer token: ${JSON.stringify(result.probeActions)}`);
   ok(!result.probeActions.visibleHtmlFrame && /dashboardUrl/.test(result.probeActions.output),
     `API probe rendered HTML instead of JSON status: ${JSON.stringify(result.probeActions)}`);
+  // Gateway sockets accumulate across the whole page session, and each provider phase
+  // has its own correct route. Close one phase before opening the next so a later
+  // assertion cannot be satisfied by an earlier phase's socket, or fail because of it.
+  result.cloudflareGatewayUrls = await page.evaluate(() => {
+    const seen = window.__gatewayUrls.slice();
+    window.__gatewayUrls = [];
+    return seen;
+  });
+  ok(result.cloudflareGatewayUrls.length > 0 &&
+     result.cloudflareGatewayUrls.every(url =>
+       /^wss:\/\/nemoclaw-test123\.brevlab\.com\/cli\/gateway$/.test(url)) &&
+     result.cloudflareGatewayUrls.every(url => !/access_session|cf_access_jwt|_pomerium/.test(url)),
+    `Cloudflare gateway sockets did not keep authentication sender-bound: ${JSON.stringify(result.cloudflareGatewayUrls)}`);
   result.pomerium = await page.evaluate(() => {
     const host = document.querySelector('#probe-claw');
     const url = host.querySelector('.claw-url');
@@ -286,13 +319,22 @@ try {
   await page.waitForFunction(() => /"status":\s*"ok"/.test(document.querySelector('#probe-claw .claw-out')?.textContent || ''));
   await page.getByRole('button', { name: 'GET /api/agent', exact: true }).click();
   await page.waitForFunction(() => document.querySelector('#probe-claw .claw-token')?.value === 'pomerium-probe-token_456');
-  result.pomeriumTransport = await page.evaluate(() => ({
-    urls: window.__terminalUrls.slice(),
-    token: document.querySelector('#probe-claw .claw-token')?.value,
-    savedToken: sessionStorage.getItem('nemoclaw_clawtoken'),
-    localToken: localStorage.getItem('nemoclaw_clawtoken'),
-    output: document.querySelector('#probe-claw .claw-out')?.textContent || '',
-  }));
+  result.pomeriumTransport = await page.evaluate(() => {
+    const gatewayUrls = window.__gatewayUrls.slice();
+    window.__gatewayUrls = [];
+    return {
+      urls: window.__terminalUrls.slice(),
+      gatewayUrls,
+      token: document.querySelector('#probe-claw .claw-token')?.value,
+      savedToken: sessionStorage.getItem('nemoclaw_clawtoken'),
+      localToken: localStorage.getItem('nemoclaw_clawtoken'),
+      output: document.querySelector('#probe-claw .claw-out')?.textContent || '',
+    };
+  });
+  ok(result.pomeriumTransport.gatewayUrls.length > 0 &&
+     result.pomeriumTransport.gatewayUrls.every(url =>
+       /^wss:\/\/nemoclaw-test123\.apps\.run\.brev\.nvidia\.com\/cli\/gateway$/.test(url)),
+    `Pomerium gateway sockets did not stay direct and credential-free: ${JSON.stringify(result.pomeriumTransport.gatewayUrls)}`);
   ok(result.pomeriumTransport.urls.length === 2 &&
      result.pomeriumTransport.urls.every(url => url.startsWith('wss://nemoclaw-test123.apps.run.brev.nvidia.com/ws/terminal?cmd=')) &&
      result.pomeriumTransport.urls.every(url => !/openclaw-cors-proxy|access_session|cf_access_jwt/.test(url)) &&
@@ -301,10 +343,37 @@ try {
      !result.pomeriumTransport.localToken &&
      /direct browser session/.test(result.pomeriumTransport.output),
     `Pomerium bootstrap did not stay on the direct terminal: ${JSON.stringify(result.pomeriumTransport)}`);
+  // The model route and the launchable route stay separate registrations: a launchable host
+  // is not an OpenAI-compatible model API, so the model normalizer must refuse both families.
+  result.modelRouteBoundary = await page.evaluate(async () => {
+    const shared = await import('/nemoclaw/scripts/_shared.js?model-boundary=' + Date.now());
+    const attempt = value => {
+      try { return { url: shared.normalizeModelApiBaseUrl(value), error: '' }; }
+      catch (error) { return { url: '', error: String(error.message || error) }; }
+    };
+    return {
+      pomerium: attempt('https://nemoclaw-test123.apps.run.brev.nvidia.com/v1'),
+      cloudflare: attempt('https://nemoclaw-test123.brevlab.com/v1'),
+      supported: attempt('https://integrate.api.nvidia.com/v1'),
+      custom: attempt('https://model-test123.example.test/v1'),
+    };
+  });
+  ok(/launchable is not a model API/.test(result.modelRouteBoundary.pomerium.error) &&
+     /launchable is not a model API/.test(result.modelRouteBoundary.cloudflare.error) &&
+     !/port|tunnel|EMPTY/i.test(result.modelRouteBoundary.cloudflare.error) &&
+     result.modelRouteBoundary.supported.url === 'https://integrate.api.nvidia.com/v1' &&
+     result.modelRouteBoundary.custom.url === 'https://model-test123.example.test/v1',
+    `model route did not reject launchable hosts cleanly: ${JSON.stringify(result.modelRouteBoundary)}`);
   result.chatContract = await page.evaluate(async () => {
     const mod = await import('/nemoclaw/scripts/_openclaw.js?chat-contract=' + Date.now());
     const connection = await import('/nemoclaw/scripts/_connection.js?chat-contract=' + Date.now());
-    connection.setOpenClawConnection({ rawUrl: 'https://nemoclaw-test123.brevlab.com', token: 'test-token' });
+    connection.setOpenClawConnection({
+      rawUrl: 'https://nemoclaw-test123.brevlab.com',
+      token: 'test-token',
+      accessProvider: 'cloudflare',
+      accessSession: 'chat-test-cf-session',
+    });
+    window.__gatewayUrls = [];
     const run = async (message, session) => {
       const tokens = [], tools = [];
       const view = {
@@ -345,9 +414,10 @@ try {
      !/\(no answer\)/.test(result.chatContract.empty.tokens),
     `empty gateway turn retained the no-answer dead end: ${JSON.stringify(result.chatContract.empty)}`);
   ok(result.chatContract.gatewayUrls.length > 0 &&
-     result.chatContract.gatewayUrls.every(url => /^wss:\/\/nemoclaw-test123(?:\.brevlab\.com|\.apps\.run\.brev\.nvidia\.com)\/cli\/gateway$/.test(url)) &&
-     result.chatContract.gatewayUrls.every(url => !/openclaw-cors-proxy|cf_access_jwt|access_session/.test(url)),
-    `gateway sockets did not stay direct and credential-free: ${JSON.stringify(result.chatContract.gatewayUrls)}`);
+     result.chatContract.gatewayUrls.every(url =>
+       /^wss:\/\/nemoclaw-test123\.brevlab\.com\/cli\/gateway$/.test(url)) &&
+     result.chatContract.gatewayUrls.every(url => !/access_session|cf_access_jwt|_pomerium/.test(url)),
+    `Cloudflare chat sockets did not keep authentication sender-bound: ${JSON.stringify(result.chatContract.gatewayUrls)}`);
   ok(!errors.length, `page errors: ${JSON.stringify(errors)}`);
   if (screenshot) {
     await page.locator('#model-route-settings').scrollIntoViewIfNeeded();

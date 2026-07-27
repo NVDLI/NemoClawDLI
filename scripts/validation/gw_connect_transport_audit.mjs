@@ -57,7 +57,15 @@ const helpers = {
   refreshOpenClawGatewayToken: async () => { tokenRefreshes++; return { token: 'test-token', source: 'metadata' }; },
   getOpenClawConnection: () => connection.getOpenClawConnection(),
   openclawGatewayWsUrl: (raw, session, proxyBase, proxyEnabled, provider) =>
-    connection.openclawWebSocketUrl(raw, '/cli/gateway', '', { enabled: false, base: '' }, provider),
+    connection.openclawWebSocketUrl(
+      raw,
+      '/cli/gateway',
+      proxyEnabled === true ? session : '',
+      proxyEnabled === true
+        ? { enabled: true, base: proxyBase || 'https://openclaw-cors-proxy.experiments.courses.nvidia.com' }
+        : { enabled: false, base: '' },
+      provider,
+    ),
   signal: null,
 };
 const state = {};
@@ -67,8 +75,8 @@ await fn(state, helpers, helpers, console);
 if (opened.length !== 1) throw new Error(`expected one WebSocket, saw ${opened.length}`);
 if (tokenRefreshes !== 1) throw new Error(`expected one gateway-token bootstrap, saw ${tokenRefreshes}`);
 const expected = 'wss://nemoclaw-demo.brevlab.com/cli/gateway';
-if (opened[0] !== expected) throw new Error(`expected direct signed-in launchable ${expected}, got ${opened[0]}`);
-if (opened[0].includes('cf_access_jwt') || logs.some(x => x.includes('via hosted relay'))) {
-  throw new Error('gateway connection exposed the access session through the hosted relay');
+if (opened[0] !== expected) throw new Error(`expected sender-bound Cloudflare route ${expected}, got ${opened[0]}`);
+if (logs.some(x => x.includes('via hosted relay')) || /access_session|cf_access_jwt/.test(opened[0])) {
+  throw new Error('gateway connection did not preserve the direct browser credential boundary');
 }
 console.log('gw connect transport audit: ok');
