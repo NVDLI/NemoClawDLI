@@ -331,7 +331,7 @@ function findChrome() {
 
   // The web course is remote-service-only. Published course origins and local previews use the
   // bounded browser relay for the default endpoint; custom endpoints remain direct.
-  await page.addInitScript(({ apiKey, apiUrl, useIframeProxy }) => {
+  await page.addInitScript(({ apiUrl, useIframeProxy }) => {
     try {
       const defaultUrl = "https://integrate.api.nvidia.com/v1";
       if (apiUrl === defaultUrl) {
@@ -344,15 +344,19 @@ function findChrome() {
       localStorage.removeItem("nemoclaw_model_id_v1");
       sessionStorage.removeItem("__nv_slim_cfg_v1");
       if (useIframeProxy) localStorage.setItem("nemoclaw_iframe_proxy_opt_in", "1");
-      if (apiKey) sessionStorage.setItem("nvapi", apiKey);
     } catch (_) {}
   }, {
-    apiKey: NVIDIA_API_KEY,
     apiUrl: DIRECT_API_URL,
     useIframeProxy: assistantArtifacts && ['127.0.0.1', 'localhost'].includes(new URL(url).hostname) && DIRECT_API_URL === 'https://integrate.api.nvidia.com/v1',
   });
 
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
+  if (NVIDIA_API_KEY) {
+    await page.evaluate(async apiKey => {
+      const runtime = await import(new URL("./scripts/_shared.js", document.baseURI).href);
+      runtime.setKey(apiKey);
+    }, NVIDIA_API_KEY);
+  }
   await page.waitForTimeout(2000);
   // Render checks include foyer manifest probes. Let those finite HEAD requests settle before
   // closing Chromium; otherwise Playwright reports the close itself as net::ERR_ABORTED.
