@@ -2081,10 +2081,19 @@ def audit_language_ownership(
     """Require public credit and explicit review for learner-prose localization changes."""
     out: list[dict[str, str]] = []
     prose_candidates = learner_prose_paths if learner_prose_paths is not None else set(changed_paths)
-    locale_pages = [path for path in prose_candidates if re.fullmatch(
-        r"i18n/[^/]+/web/nemoclaw/[0-9]{2}[a-z]-[^/]+\.html", path)]
-    canonical_pages = [path for path in prose_candidates if re.fullmatch(
-        r"web/nemoclaw/[0-9]{2}[a-z]-[^/]+\.html", path)]
+    locale_pages = [
+        path for path in prose_candidates
+        if LOCALE_HTML_PAGE_RE.fullmatch(path) or LOCALE_RESOURCE_PAGE_RE.fullmatch(path)
+    ]
+    canonical_pages = {
+        path for path in prose_candidates if CANONICAL_RESOURCE_PAGE_RE.fullmatch(path)
+    }
+    canonical_pages.update(
+        match.group("template")
+        for path in locale_pages
+        if (match := LOCALE_RESOURCE_PAGE_RE.fullmatch(path))
+        and match.group("template") in prose_candidates
+    )
     if not locale_pages:
         return out
 
@@ -2151,6 +2160,37 @@ def learner_text(raw: str) -> str:
     return " ".join(" ".join(parser.parts).split())
 
 
+LOCALE_HTML_PAGE_RE = re.compile(
+    r"i18n/[^/]+/web/nemoclaw/[0-9]{2}[a-z]-[^/]+\.html")
+LOCALE_RESOURCE_PAGE_RE = re.compile(
+    r"i18n/[^/]+/resources/(?P<template>web/(?:nemoclaw/)?[^/]+\.html)\.json")
+CANONICAL_RESOURCE_PAGE_RE = re.compile(
+    r"web/(?:nemoclaw/)?[^/]+\.html")
+
+
+def resource_learner_text(raw: str) -> str:
+    """Return learner-visible values from one typed locale resource.
+
+    Transport-only markup changes remain outside prose ownership just as they do for authored HTML.
+    Invalid resource bytes fail closed in ``changed_learner_prose_paths``.
+    """
+    document = json.loads(raw)
+    values = document.get("values")
+    if not isinstance(values, dict):
+        raise ValueError("locale resource values must be an object")
+    parts: list[str] = []
+    for key in sorted(values):
+        entry = values[key]
+        if not isinstance(entry, dict) or not isinstance(entry.get("value"), str):
+            raise ValueError(f"locale resource entry {key!r} has no string value")
+        parts.append(learner_text(entry["value"]))
+    return " ".join(" ".join(parts).split())
+
+
+def _learner_blob_text(path: str, raw: str) -> str:
+    return resource_learner_text(raw) if LOCALE_RESOURCE_PAGE_RE.fullmatch(path) else learner_text(raw)
+
+
 def changed_learner_prose_paths(
     rev_range: str, changed_paths: list[str], root: Path = ROOT,
 ) -> set[str]:
@@ -2162,8 +2202,12 @@ def changed_learner_prose_paths(
     Missing or unreadable blobs fail closed as prose changes.
     """
     endpoints = re.fullmatch(r"(.+?)\.{2,3}(.+)", rev_range)
-    candidates = [path for path in changed_paths if re.fullmatch(
-        r"(?:i18n/[^/]+/)?web/nemoclaw/[0-9]{2}[a-z]-[^/]+\.html", path)]
+    candidates = [
+        path for path in changed_paths
+        if CANONICAL_RESOURCE_PAGE_RE.fullmatch(path)
+        or LOCALE_HTML_PAGE_RE.fullmatch(path)
+        or LOCALE_RESOURCE_PAGE_RE.fullmatch(path)
+    ]
     if not endpoints:
         return set(candidates)
     base, head = endpoints.groups()
@@ -2179,8 +2223,14 @@ def changed_learner_prose_paths(
                 changed.add(path)
                 break
             blobs.append(result.stdout)
-        if len(blobs) == 2 and learner_text(blobs[0]) != learner_text(blobs[1]):
-            changed.add(path)
+        if len(blobs) == 2:
+            try:
+                before, after = (_learner_blob_text(path, raw) for raw in blobs)
+            except (json.JSONDecodeError, TypeError, ValueError):
+                changed.add(path)
+                continue
+            if before != after:
+                changed.add(path)
     return changed
 
 

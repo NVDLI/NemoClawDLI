@@ -23,6 +23,15 @@ class CourseContentContractTests(unittest.TestCase):
     def test_current_authored_tree_has_no_retired_runtime_references(self) -> None:
         self.assertEqual([], course_content_contract.obsolete_runtime_references())
 
+    def test_resource_rendered_locale_page_is_not_skipped(self) -> None:
+        relative = "i18n/xx/web/nemoclaw/lesson.html"
+        self.assertEqual(
+            [relative],
+            course_content_contract.obsolete_runtime_references({
+                relative: "<p>Route through the lab proxy.</p>",
+            }),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -9,6 +9,7 @@ and prose validators cannot infer from first principles.
 """
 from __future__ import annotations
 
+import functools
 import json
 import re
 import sys
@@ -21,6 +22,7 @@ for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
         sys.path.insert(0, str(_p / "scripts"))
         break
 from _bootstrap import find_repo_root
+from translate.locale_pages import course_pages
 
 ROOT = find_repo_root(Path(__file__).resolve())
 COURSE = ROOT / "web" / "nemoclaw"
@@ -46,19 +48,25 @@ def _json_script(text: str, script_id: str) -> dict:
     return json.loads(m.group(1)) if m else {}
 
 
+@functools.lru_cache(maxsize=1)
+def _course_language_pages() -> dict[str, str]:
+    """Return canonical and localized course pages as publication renders them."""
+    pages = {
+        path.relative_to(ROOT).as_posix(): path.read_text(
+            encoding="utf-8", errors="replace")
+        for path in sorted(COURSE.glob("*.html"))
+    }
+    pages.update(course_pages(ROOT, "nemoclaw"))
+    return pages
+
+
 def _literal_remote_image_uses() -> dict[str, list[str]]:
     """Discover literal remote image mounts across every course-language page."""
-    roots = [COURSE]
-    roots.extend(sorted(ROOT.glob("i18n/*/web/nemoclaw")))
     uses: dict[str, list[str]] = {}
     pattern = re.compile(r'<img\b[^>]*\bsrc=["\'](https://[^"\']+)["\']', re.I)
-    for course_root in roots:
-        if not course_root.is_dir():
-            continue
-        for page in sorted(course_root.glob("*.html")):
-            relative = page.relative_to(ROOT).as_posix()
-            for image_url in pattern.findall(page.read_text(encoding="utf-8", errors="replace")):
-                uses.setdefault(unescape(image_url), []).append(relative)
+    for relative, raw in sorted(_course_language_pages().items()):
+        for image_url in pattern.findall(raw):
+            uses.setdefault(unescape(image_url), []).append(relative)
     return uses
 
 
@@ -70,7 +78,9 @@ def _remote_image_filename(image_url: str) -> str:
     return Path(urlparse(source).path).name
 
 
-def obsolete_runtime_references() -> list[str]:
+def obsolete_runtime_references(
+    locale_pages: dict[str, str] | None = None,
+) -> list[str]:
     """Find retired course-runtime names in every authored course or material file."""
     roots = [COURSE, ROOT / "scripts" / "materials"]
     roots.extend(sorted(ROOT.glob("i18n/*/web/nemoclaw")))
@@ -90,6 +100,13 @@ def obsolete_runtime_references() -> list[str]:
             visited.add(path)
             if OBSOLETE_RUNTIME_RE.search(path.read_text(encoding="utf-8", errors="replace")):
                 findings.append(path.relative_to(ROOT).as_posix())
+    published = _course_language_pages() if locale_pages is None else locale_pages
+    for relative, raw in sorted(published.items()):
+        path = ROOT / relative
+        if path in visited:
+            continue
+        if OBSOLETE_RUNTIME_RE.search(raw):
+            findings.append(relative)
     return sorted(findings)
 
 
@@ -231,9 +248,8 @@ def run(verbose: bool = True) -> list[tuple[str, str]]:
         if not str(file_name).startswith("figures/") or not used_by.endswith(".html"):
             continue
         page_rel = f"web/nemoclaw/{used_by}"
-        try:
-            page = _read(page_rel)
-        except FileNotFoundError:
+        page = _course_language_pages().get(page_rel)
+        if page is None:
             findings.append(("web/nemoclaw/assets/SKILL.html", f"asset provenance used_by page missing for {file_name}: {used_by}"))
             continue
         if file_name not in page:
@@ -254,7 +270,7 @@ def run(verbose: bool = True) -> list[tuple[str, str]]:
             continue
         source_url = str(remote_rows[image_url].get("source_url", ""))
         for page_rel in pages:
-            page = _read(page_rel)
+            page = _course_language_pages()[page_rel]
             figure_match = re.search(
                 r"<figure\b[^>]*>.*?<img\b[^>]*\bsrc=[\"']"
                 + re.escape(image_url)

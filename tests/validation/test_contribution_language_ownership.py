@@ -13,11 +13,13 @@ from scripts.validation.contribution_safety_audit import (
     audit_language_ownership,
     changed_learner_prose_paths,
     learner_text,
+    resource_learner_text,
 )
 
 
 class ContributionLanguageOwnershipTests(unittest.TestCase):
     locale_page = "i18n/es/web/nemoclaw/01a-loop.html"
+    locale_resource = "i18n/es/resources/web/nemoclaw/01a-loop.html.json"
     canonical_page = "web/nemoclaw/01a-loop.html"
 
     def test_transport_attributes_are_not_learner_prose(self) -> None:
@@ -33,6 +35,16 @@ class ContributionLanguageOwnershipTests(unittest.TestCase):
         ):
             with self.subTest(changed=changed):
                 self.assertNotEqual(learner_text(baseline), learner_text(changed))
+
+    def test_resource_classifier_uses_visible_values_not_transport_markup(self) -> None:
+        before = (
+            '{"values":{"link":{"type":"link","source":"source",'
+            '"value":"<a href=\\"old.html\\">Volver</a>"}}}'
+        )
+        route_only = before.replace("old.html", "new.html")
+        prose = route_only.replace("Volver", "Volver al curso")
+        self.assertEqual(resource_learner_text(before), resource_learner_text(route_only))
+        self.assertNotEqual(resource_learner_text(route_only), resource_learner_text(prose))
 
     def test_git_range_classifies_content_instead_of_the_file_extension(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -70,9 +82,57 @@ class ContributionLanguageOwnershipTests(unittest.TestCase):
                 ),
             )
 
+    def test_git_range_classifies_typed_resource_values(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.git(root, "init", "-q")
+            self.git(root, "config", "user.name", "Test Author")
+            self.git(root, "config", "user.email", "test@example.com")
+            resource = root / self.locale_resource
+            resource.parent.mkdir(parents=True)
+            before = (
+                '{"values":{"link":{"type":"link","source":"source",'
+                '"value":"<a href=\\"old.html\\">Volver</a>"}}}\n'
+            )
+            resource.write_text(before, encoding="utf-8")
+            self.git(root, "add", ".")
+            self.git(root, "commit", "-qm", "base")
+            base = self.git(root, "rev-parse", "HEAD").stdout.strip()
+
+            resource.write_text(before.replace("old.html", "new.html"), encoding="utf-8")
+            self.git(root, "commit", "-qam", "route only")
+            route_head = self.git(root, "rev-parse", "HEAD").stdout.strip()
+            self.assertEqual(
+                set(),
+                changed_learner_prose_paths(
+                    f"{base}..{route_head}", [self.locale_resource], root,
+                ),
+            )
+
+            resource.write_text(
+                before.replace("old.html", "new.html").replace("Volver", "Volver al curso"),
+                encoding="utf-8",
+            )
+            self.git(root, "commit", "-qam", "prose")
+            prose_head = self.git(root, "rev-parse", "HEAD").stdout.strip()
+            self.assertEqual(
+                {self.locale_resource},
+                changed_learner_prose_paths(
+                    f"{route_head}..{prose_head}", [self.locale_resource], root,
+                ),
+            )
+
     def test_ownership_gate_still_blocks_actual_uncredited_prose(self) -> None:
         pages = [self.locale_page, self.canonical_page]
         self.assertEqual([], audit_language_ownership(pages, "", ["route"], set()))
+        codes = {
+            item["code"]
+            for item in audit_language_ownership(pages, "", ["prose"], set(pages))
+        }
+        self.assertEqual({"contributor-credit", "mixed-language-ownership"}, codes)
+
+    def test_resource_prose_uses_the_same_language_ownership_gate(self) -> None:
+        pages = [self.locale_resource, self.canonical_page]
         codes = {
             item["code"]
             for item in audit_language_ownership(pages, "", ["prose"], set(pages))

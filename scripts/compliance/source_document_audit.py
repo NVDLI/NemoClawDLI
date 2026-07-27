@@ -21,6 +21,11 @@ from pathlib import Path
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
+for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
+    if (_p / "scripts" / "_bootstrap.py").exists():
+        sys.path.insert(0, str(_p / "scripts"))
+        break
+from translate.locale_catalog import discover_locales  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 INVENTORY = ROOT / "scripts/compliance/docs/document_sources.json"
@@ -110,11 +115,42 @@ def arxiv_citations() -> dict[str, list[str]]:
     return {paper_id: sorted(paths) for paper_id, paths in sorted(citations.items())}
 
 
-def page_arxiv_ids(directory: Path) -> set[str]:
+def published_locale_pages() -> dict[str, str]:
+    """Return every localized page the build publishes, keyed by repository-relative path.
+
+    A locale page ships either from a reviewed HTML overlay or from a key-based resource. Globbing
+    the locale tree would only see the first kind, so a migrated page would silently drop out of
+    both the projected-citation check and the repository-item evidence.
+    """
+    from translate.locale_pages import published_pages
+
+    return published_pages(ROOT)
+
+
+def page_arxiv_ids(pages: dict[str, str]) -> set[str]:
     paper_ids: set[str] = set()
-    for path in directory.glob("*.html"):
-        paper_ids.update(ARXIV_RE.findall(path.read_text(encoding="utf-8", errors="replace")))
+    for text in pages.values():
+        paper_ids.update(ARXIV_RE.findall(text))
     return paper_ids
+
+
+def directory_pages(directory: Path) -> dict[str, str]:
+    return {
+        path.relative_to(ROOT).as_posix(): path.read_text(encoding="utf-8", errors="replace")
+        for path in directory.glob("*.html")
+    }
+
+
+def projected_page_sets(published: dict[str, str]) -> list[tuple[str, dict[str, str]]]:
+    """Return each projection of the canonical course, whatever representation publishes it."""
+    projections = [("web/nemoclaw/standalone", directory_pages(ROOT / "web/nemoclaw/standalone"))]
+    for spec in discover_locales(ROOT):
+        prefix = spec.course_root.relative_to(ROOT).as_posix() + "/"
+        projections.append((prefix.rstrip("/"), {
+            rel: text for rel, text in published.items()
+            if rel.startswith(prefix) and rel.count("/") == prefix.count("/")
+        }))
+    return projections
 
 
 def projection_findings(label: str, canonical: set[str], projected: set[str]) -> list[str]:
@@ -347,14 +383,10 @@ def audit(data: dict | None = None) -> list[str]:
     if data.get("schema") != "document-source-evidence/1.0":
         findings.append("document source inventory schema is missing or unsupported")
     citations = arxiv_citations()
-    canonical_page_ids = page_arxiv_ids(ROOT / "web/nemoclaw")
-    for projection in (
-        "web/nemoclaw/standalone",
-        "i18n/es/web/nemoclaw",
-        "i18n/pt/web/nemoclaw",
-    ):
-        projected_ids = page_arxiv_ids(ROOT / projection)
-        findings.extend(projection_findings(projection, canonical_page_ids, projected_ids))
+    published = published_locale_pages()
+    canonical_page_ids = page_arxiv_ids(directory_pages(ROOT / "web/nemoclaw"))
+    for label, pages in projected_page_sets(published):
+        findings.extend(projection_findings(label, canonical_page_ids, page_arxiv_ids(pages)))
     papers = data.get("arxiv_papers", [])
     by_id = {item.get("arxiv_id"): item for item in papers if isinstance(item, dict)}
     if set(by_id) != set(citations):
@@ -394,7 +426,9 @@ def audit(data: dict | None = None) -> list[str]:
         elif asset_url:
             findings.append(f"NVIDIA document has an asset URL without remote-display use: {source_url}")
         for path in item.get("repository_items", []):
-            if not (ROOT / path).exists():
+            # A localized page is evidence when the build publishes it, whether it ships from a
+            # reviewed HTML overlay or from a key-based locale resource.
+            if path not in published and not (ROOT / path).exists():
                 findings.append(f"NVIDIA document references missing repository item: {path}")
             covered_items.add(path)
     expected_items = {

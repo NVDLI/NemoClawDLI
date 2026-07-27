@@ -1,0 +1,1229 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "pt-BR",
+  "template": "web/nemoclaw/01b-react.html",
+  "media": [
+    "web/nemoclaw/assets/figures/01b-react-1.svg",
+    "web/nemoclaw/assets/figures/01b-react-2.svg",
+    "web/nemoclaw/assets/figures/01b-react-3.svg",
+    "web/nemoclaw/assets/figures/01b-react-4.svg"
+  ],
+  "values": {
+    "link.0bbec6a67870": {
+      "type": "link",
+      "source": "\n    <strong>The cell produces an artifact.</strong> When you run it, you get a working\n    chat panel rather than a wall of logs, rendered from the agent's own code, that you\n    can hold a conversation with. The word itself is older than its current use, since\n    build pipelines and machine-learning training runs have produced \"artifacts\" and\n    \"model artifacts\" for years. Anthropic's recent <a href=\"https://support.claude.com/en/articles/14729249-use-live-artifacts-in-claude-cowork\" target=\"_blank\" rel=\"noopener\">live artifacts</a>\n    sharpened the idea for agents, where an artifact becomes a persistent, interactive\n    HTML surface that the agent builds and that you keep using long after the reply which\n    produced it. The panel below builds one on a small scale, and an agent that can hand\n    back a full interface rather than plain text is a thread that runs through the rest of\n    this course.\n  ",
+      "value": "\n <strong>A célula produz um artefato.</strong> Quando você executa, obtém um painel de chat funcional em vez de uma parede de logs, renderizado a partir do próprio código do agente, com o qual você pode manter uma conversa. A palavra em si é mais antiga do que seu uso atual, pois pipelines de build e execuções de treinamento de machine learning produziram \"artefatos\" e \"artefatos de modelo\" por anos. O recente <a href=\"https://support.claude.com/en/articles/14729249-use-live-artifacts-in-claude-cowork\" target=\"_blank\" rel=\"noopener\">artefato ao vivo</a> da Anthropic aprimorou a ideia para agentes, onde um artefato se torna uma superfície HTML interativa persistente que o agente constrói e que você continua usando muito tempo após a resposta que o produziu. O painel abaixo constrói um em pequena escala, e um agente que pode fornecer uma interface completa em vez de texto simples é uma linha de raciocínio que perpassa o restante deste curso.\n "
+    },
+    "link.18fdb5153bc7": {
+      "type": "link",
+      "source": "\n    Zoom in on the agent and you find the decomposition\n    <a href=\"https://lilianweng.github.io/posts/2023-06-23-agent/\" target=\"_blank\" rel=\"noopener\">Lilian Weng drew in\n    2023</a>. A language model sits at the center. Around it sit <strong>memory</strong>, <strong>planning</strong>, <strong>tools</strong>,\n    and the <strong>actions</strong> that reach the world.\n  ",
+      "value": "\n Amplie o agente e você encontrará a decomposição\n <a href=\"https://lilianweng.github.io/posts/2023-06-23-agent/\" target=\"_blank\" rel=\"noopener\">que Lilian Weng apresentou em\n 2023</a>. Um grande modelo de linguagem está no centro. Ao redor dele estão <strong>memória</strong>, <strong>planejamento</strong>, <strong>ferramentas</strong>\n e as <strong>ações</strong> que interagem com o mundo.\n "
+    },
+    "link.1be52ce4d6ee": {
+      "type": "link",
+      "source": "Comprehensive list at <a href=\"04c-going-further.html#refs\">Going Further · References</a>.",
+      "value": "Lista abrangente em <a href=\"04c-going-further.html#refs\">Ir Além · Referências</a>."
+    },
+    "link.2b13321bec07": {
+      "type": "link",
+      "source": "Redrawn from <a href=\"https://arxiv.org/abs/2307.03172\" target=\"_blank\" rel=\"noopener\">Liu et al. (2023)</a>. As the loop appends turns, the answer you need drifts into the weak middle.",
+      "value": "Recriado a partir de <a href=\"https://arxiv.org/abs/2307.03172\" target=\"_blank\" rel=\"noopener\">Liu et al. (2023)</a>. À medida que o ciclo anexa turnos, a resposta que você precisa se afasta para o meio fraco."
+    },
+    "link.3535ae0b5666": {
+      "type": "link",
+      "source": "<a href=\"https://lilianweng.github.io/posts/2023-06-23-agent/\" target=\"_blank\" rel=\"noopener\">Lilian Weng, <em>LLM Powered Autonomous Agents</em> (2023)</a>. The decomposition the figure above adapts: a language model as the agent's core controller, surrounded by memory, planning, and tool use.",
+      "value": "<a href=\"https://lilianweng.github.io/posts/2023-06-23-agent/\" target=\"_blank\" rel=\"noopener\">Lilian Weng, <em>LLM Powered Autonomous Agents</em> (2023)</a>. A decomposição que a figura acima adapta: um modelo de linguagem como o controlador central do agente, cercado por memória, planejamento e uso de ferramentas."
+    },
+    "link.36832d4704f6": {
+      "type": "link",
+      "source": "After <a href=\"https://lilianweng.github.io/posts/2023-06-23-agent/\" target=\"_blank\" rel=\"noopener\">Lilian Weng (2023)</a>: the model is the agent's core controller, with memory, planning, tools, and action wired around it.",
+      "value": "Depois de <a href=\"https://lilianweng.github.io/posts/2023-06-23-agent/\" target=\"_blank\" rel=\"noopener\">Lilian Weng (2023)</a>: o modelo é o controlador central do agente, com memória, planejamento, ferramentas e ação conectados ao redor dele."
+    },
+    "link.52c80043ccc5": {
+      "type": "link",
+      "source": "\n      An agent built on a language model runs the same perceive-reason-act\n      loop as anything else, with one detail that gives the pattern its name:\n      the model reasons in words between the actions it takes.\n      <a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al. (2022)</a>\n      called this <strong>ReAct</strong>, for reasoning and acting. They found that\n      interleaving short reasoning traces with tool use handles many tasks more\n      reliably than planning everything first or acting with no reasoning step.\n    ",
+      "value": "\n Um agente baseado em um grande modelo de linguagem executa o mesmo ciclo perceber-raciocinar-agir\n que qualquer outra coisa, com um detalhe que dá nome ao padrão:\n o modelo raciocina em palavras entre as ações que ele toma.\n <a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al. (2022)</a>\n chamou isso de <strong>ReAct</strong>, de raciocinar e agir. Os autores descobriram que\n intercalar traços de raciocínio curtos com o uso de ferramentas lida com muitas tarefas de forma mais\n confiável do que planejar tudo primeiro ou agir sem um passo de raciocínio.\n "
+    },
+    "link.64ae525d2a06": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2201.11903\" target=\"_blank\" rel=\"noopener\">Wei et al., <em>Chain-of-Thought Prompting</em> (2022)</a>. The \"reason\" half of ReAct; what the model is doing inside <code>reasoning_content</code> when it deliberates before acting.",
+      "value": "<a href=\"https://arxiv.org/abs/2201.11903\" target=\"_blank\" rel=\"noopener\">Wei et al., <em>Chain-of-Thought Prompting</em> (2022)</a>. A metade \"raciocínio\" do ReAct; o que o modelo está fazendo dentro de <code>reasoning_content</code> quando ele delibera antes de agir."
+    },
+    "link.6726ddaf5bfd": {
+      "type": "link",
+      "source": "\n    The loop above hard-wires one tiny tool. LangChain's <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n    generalizes the same machinery to support more tools, standard interfaces, and observability integrations. An instance of this class is wired below to a single tool,\n    <code>read_course_page</code>, which hands the agent any page of this course as markdown. The model decides which pages to read for your question, so give it a try.\n  ",
+      "value": "\n O ciclo acima fixa diretamente uma pequena ferramenta. O <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n da LangChain generaliza a mesma maquinaria para suportar mais ferramentas, interfaces padrão e integrações de observabilidade. Uma instância desta classe é conectada abaixo a uma única ferramenta,\n <code>read_course_page</code>, que fornece ao agente qualquer página deste curso como markdown. O modelo decide quais páginas ler para responder à sua pergunta; experimente.\n "
+    },
+    "link.7abcb40c63bb": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al., <em>ReAct: Synergizing Reasoning and Acting in Language Models</em> (2022)</a>. The original alternating thought / action / observation pattern; the figure above is redrawn from this paper.",
+      "value": "<a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al., <em>ReAct: Synergizing Reasoning and Acting in Language Models</em> (2022)</a>. O padrão original de pensamento alternado / ação / observação; a figura acima é redesenhada a partir deste artigo."
+    },
+    "link.9b74219a361f": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer</em> (2023)</a>. Covered again in 1c's references; revisit here for the underlying mechanism the ReAct loop exploits.",
+      "value": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer</em> (2023)</a>. Coberto novamente nas referências do 1c; revista aqui para o mecanismo subjacente que o ciclo do ReAct explora."
+    },
+    "link.a733bbaab3fa": {
+      "type": "link",
+      "source": "\n    This issue becomes more likely as the context grows. <strong>Context rot</strong> is the\n    tendency for contradictions, stale observations, and poor conventions to accumulate in the\n    prompt history until the model's next decision gets worse. The effect also has a positional\n    component: <a href=\"https://arxiv.org/abs/2307.03172\" target=\"_blank\" rel=\"noopener\">Liu et al. (2023)</a>\n    showed that models can underuse information buried in the middle of a long context. The further an\n    important signal drifts from the current turn, the easier it is for the loop to ignore or contradict it.\n  ",
+      "value": "\n Este problema se torna mais provável à medida que o contexto cresce. <strong>Degradação do contexto</strong> é a\n tendência de contradições, observações desatualizadas e convenções pobres se acumularem no\n histórico do prompt até prejudicar a próxima decisão do modelo. O efeito também tem um componente posicional:\n <a href=\"https://arxiv.org/abs/2307.03172\" target=\"_blank\" rel=\"noopener\">Liu et al. (2023)</a>\n mostraram que os modelos podem subutilizar informações enterradas no meio de um contexto longo. Quanto mais um\n sinal importante se afasta do turno atual, mais fácil é para o ciclo ignorá-lo ou contradizê-lo.\n "
+    },
+    "link.a904f9e69da1": {
+      "type": "link",
+      "source": "\n      This loop is the foundation that most general-purpose agent frameworks\n      are built on, LangChain's <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n      among them, and the rest of this module works up to it.\n    ",
+      "value": "\n Esse ciclo é a base sobre a qual a maioria dos frameworks de agentes de propósito geral\n é construída, incluindo o <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n da LangChain, e o restante desse módulo trabalha em direção a ele.\n "
+    },
+    "link.e672069b0c2f": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al., <em>ReWOO: Decoupling Reasoning from Observations</em> (2023)</a>. A deliberate contrast to ReAct: the model writes the whole plan up front and a separate executor runs it without re-querying the model between steps. Comparing the two reveals the trade-off between reactive replanning and pre-committed execution.",
+      "value": "<a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al., <em>ReWOO: Decoupling Reasoning from Observations</em> (2023)</a>. Um contraste deliberado com o ReAct: o modelo escreve todo o plano antecipadamente e um executor separado o executa sem reconsultar o modelo entre as etapas. Comparar os dois revela a troca entre replanejamento reativo e execução pré-comprometida."
+    },
+    "placeholder.429081bf9e49": {
+      "type": "placeholder",
+      "source": "── step \\${step} ──────────────────────",
+      "value": "── step \\${step} ──────────────────────",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "placeholder.de34a1db7cea": {
+      "type": "placeholder",
+      "source": "(tool \"\\${name}\" not found)",
+      "value": "(tool \"\\${name}\" not found)",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "rich.0a886834e9f1": {
+      "type": "rich",
+      "source": "\n    Every chat-completions response carries a <code>finish_reason</code>\n    field that tells you why the model stopped generating. Inside an agent\n    loop, this is the only signal you need to decide what to do next:\n    run a tool, return the answer to the user, or handle an error. Before reading\n    what its values mean, make two calls and watch the field change.\n  ",
+      "value": "\n Todas as respostas de chat-completions carregam um campo <code>finish_reason</code>\n que informa por que o modelo parou de gerar. Dentro de um ciclo de agente,\n este é o único sinal de que você precisa para decidir o que fazer em seguida:\n executar uma ferramenta, retornar a resposta ao usuário ou lidar com um erro. Antes de ler\n o que seus valores significam, faça duas chamadas e observe o campo mudar.\n "
+    },
+    "rich.1cbfc5ef05f8": {
+      "type": "rich",
+      "source": "<code>\"stop\"</code> means the model has written its final answer and the loop can return <code>content</code> to the user.",
+      "value": "<code>\"stop\"</code> significa que o modelo escreveu sua resposta final e o ciclo pode retornar <code>content</code> ao usuário."
+    },
+    "rich.23b34d2bdc7f": {
+      "type": "rich",
+      "source": "<strong>Memory</strong> is the <code>messages[]</code> array.",
+      "value": "<strong>Memória</strong> é o array <code>messages[]</code>."
+    },
+    "rich.32ec8d5bb853": {
+      "type": "rich",
+      "source": "\n    The first call answered on its own and came back <code>\"stop\"</code>. The second was\n    offered a tool and asked for something training data cannot supply, so instead of stopping\n    it came back <code>\"tool_calls\"</code>, handing your code the name of the function to run.\n    Those two values cover the common branching. The rest signal trouble that routes the loop\n    into a fallback harness, where the agent might retry the call or hand the conversation off\n    to a human.\n  ",
+      "value": "\n A primeira chamada respondeu sozinha e retornou <code>\"stop\"</code>. A segunda recebeu\n uma ferramenta e uma pergunta que os dados de treinamento não podem responder. Em vez de parar,\n ela retornou <code>\"tool_calls\"</code>, entregando ao código o nome da função a executar.\n Esses dois valores cobrem a ramificação comum. O restante sinaliza problemas que roteiam o ciclo\n para um fluxo de fallback do harness, no qual o agente pode tentar novamente a chamada ou passar a conversa para\n um humano.\n "
+    },
+    "rich.37cadcb11b30": {
+      "type": "rich",
+      "source": "<strong>Force the model to call the tool even when it does not need to.</strong>\n        Try a question the tool genuinely cannot answer (\"capital of France?\")\n        and watch <code>finish_reason</code> on step 1. Was it\n        <code>\"stop\"</code> or <code>\"tool_calls\"</code>? Now edit the system\n        prompt to <em>require</em> a tool call before answering (\"You must\n        always call get_current_time once, then answer.\"). Does the model\n        comply? What does that tell you about how strongly the system prompt\n        steers a model that has training-data confidence in another\n        direction?",
+      "value": "<strong>Force o modelo a chamar a ferramenta mesmo quando não precisa.</strong>\n Tente uma pergunta que a ferramenta genuinamente não possa responder (\"capital da França?\")\n e observe <code>finish_reason</code> na etapa 1. Foi\n <code>\"stop\"</code> ou <code>\"tool_calls\"</code>? Agora edite o prompt do sistema\n para <em>exigir</em> uma chamada de ferramenta antes de responder (\"Você deve\n sempre chamar get_current_time uma vez, então responder.\"). O modelo\n atende? O que isso revela sobre o quanto o prompt do sistema consegue\n direcionar um modelo que confia em seus dados de treinamento para outra\n resposta?"
+    },
+    "rich.55b8f317ac62": {
+      "type": "rich",
+      "source": "<code>\"tool_calls\"</code> means the model is asking your code to run a named function and append the result before calling back.",
+      "value": "<code>\"tool_calls\"</code> significa que o modelo está pedindo ao seu código para executar uma função nomeada e anexar o resultado antes de chamar novamente."
+    },
+    "rich.5786f2c7058f": {
+      "type": "rich",
+      "source": "The <span>ReAct</span> Loop",
+      "value": "O ciclo <span>ReAct</span>"
+    },
+    "rich.5bfe55cf1c3c": {
+      "type": "rich",
+      "source": "the model returning the wrong <code>finish_reason</code>,",
+      "value": "o modelo retornando o <code>finish_reason</code> errado,"
+    },
+    "rich.5dd2af0f718f": {
+      "type": "rich",
+      "source": "\n    As an exercise, we can try to create a simple loop from scratch.\n    All we need is a single tool named <code>get_current_time</code> plus one system prompt\n    and one <code>while</code> loop. Run it with \"What time is it in UTC?\" to start, and see what else you can ask:\n  ",
+      "value": "\n Como um exercício, podemos tentar criar um ciclo simples do agente a partir do zero.\n Tudo o que precisamos é de uma única ferramenta chamada <code>get_current_time</code> mais um prompt do sistema\n e um ciclo <code>while</code>. Execute-o com \"Que horas são em UTC?\" para começar e veja o que mais você pode perguntar:\n "
+    },
+    "rich.84d160e88d5a": {
+      "type": "rich",
+      "source": "<code>\"length\"</code> means the token budget ran out before the answer finished.",
+      "value": "<code>\"length\"</code> significa que o orçamento de tokens esgotou antes que a resposta terminasse."
+    },
+    "rich.914091fc2532": {
+      "type": "rich",
+      "source": "<strong>Count the steps on a genuinely tool-needing question.</strong>\n        \"How many minutes until 17:00 UTC?\" takes more than one tool call.\n        Run it a few times. Did the model call\n        <code>get_current_time</code> once, twice, or three times? Why\n        would a model re-call a tool whose output it already has,\n        and how would you discourage that in the system prompt?",
+      "value": "<strong>Conte as etapas em uma pergunta que realmente precisa de uma ferramenta.</strong>\n \"Quantos minutos até 17:00 UTC?\" leva mais de uma chamada de ferramenta.\n Execute algumas vezes. O modelo chamou\n <code>get_current_time</code> uma vez, duas vezes ou três vezes? Por que\n um modelo rechamaria uma ferramenta cuja saída ele já tem,\n e como você desencorajaria isso no prompt do sistema?"
+    },
+    "rich.9cf78b159479": {
+      "type": "rich",
+      "source": "\n    The flow is short: the model asks for the tool, the executor appends the timestamp as a\n    <code>tool</code>-role message, the model reads that timestamp, and the loop exits when\n    <code>finish_reason</code> reads <code>\"stop\"</code>.\n  ",
+      "value": "\n O fluxo é curto: o modelo solicita a ferramenta, o aplicativo executor anexa a marca de tempo como uma\n mensagem com o papel <code>tool</code>, o modelo lê essa marca de tempo e o ciclo termina quando\n <code>finish_reason</code> lê <code>\"stop\"</code>.\n "
+    },
+    "rich.a5ec72e450db": {
+      "type": "rich",
+      "source": "\n      A <strong>tool</strong> is code your harness can run for the model: a named function\n      with a description, an input schema, and a return value. A <strong>tool call</strong>\n      is the model's structured request for that code. The harness parses the request,\n      runs the function, appends the result, and calls the model again.\n    ",
+      "value": "\n Uma <strong>ferramenta</strong> é um trecho de código que o harness de execução pode executar para o modelo: uma função nomeada\n com uma descrição, um esquema de entrada e um valor de retorno. Uma <strong>chamada de ferramenta</strong>\n é a solicitação estruturada do modelo para esse código. O harness de execução analisa a solicitação,\n executa a função, anexa o resultado e chama o modelo novamente.\n "
+    },
+    "rich.a672cf1d58db": {
+      "type": "rich",
+      "source": "\n    <strong>The modules are independent.</strong> You can replace the model or the tools\n    or the router on its own, and as long as each one still honors the contract the\n    others expect of it, the rest of the loop keeps working.\n  ",
+      "value": "\n <strong>Os módulos são independentes.</strong> Você pode substituir o modelo ou as ferramentas\n ou o roteador por conta própria, e desde que cada um ainda honre o contrato que os outros esperam dele, o resto do ciclo do agente continua funcionando.\n "
+    },
+    "rich.ac8be9f59109": {
+      "type": "rich",
+      "source": "<strong>Tools</strong> are the functions your harness exposes.",
+      "value": "<strong>Ferramentas</strong> são as funções que o harness de execução expõe."
+    },
+    "rich.bd05de694d36": {
+      "type": "rich",
+      "source": "<code>\"content_filter\"</code> means a safety classifier stopped the output.",
+      "value": "<code>\"content_filter\"</code> significa que um classificador de segurança parou a saída."
+    },
+    "rich.d43436ee347a": {
+      "type": "rich",
+      "source": "<strong>Action</strong> is the tool call the harness executes.",
+      "value": "<strong>Ação</strong> é a chamada de ferramenta que o harness de execução executa."
+    },
+    "rich.d7a22d027748": {
+      "type": "rich",
+      "source": "\n    <strong>What just happened inside the messages array.</strong><br>\n    The loop pushed four things into <code>state.messages</code>: <ul><li>the system\n    prompt (turn 0),</li><li>the user question (turn 1),</li><li>an assistant message with a\n    <code>tool_calls</code> field (turn 2, the request),</li><li>and a\n    <code>tool</code>-role message holding the function's return value (turn\n    3).</li></ul> The second LLM call read all four of those including the new tool result and\n    wrote the final answer. The growing array is the only \"memory\" this\n    agent has. If you saved that array to disk and reloaded it next week, the\n    model would resume the conversation without noticing the gap.\n  ",
+      "value": "\n <strong>O que acabou de acontecer dentro do array de mensagens.</strong><br>\n O ciclo adicionou quatro itens a <code>state.messages</code>: <ul><li>o prompt do sistema (turno 0),</li><li>a pergunta do usuário (turno 1),</li><li>uma mensagem de assistente com um\n campo <code>tool_calls</code> (turno 2, a solicitação),</li><li>e uma\n mensagem com o papel <code>tool</code> que contém o valor de retorno da função (turno\n 3).</li></ul> A segunda chamada do LLM leu todas as quatro, incluindo o novo resultado da ferramenta, e\n escreveu a resposta final. O array crescente é a única \"memória\" que este\n agente tem. Se você salvar esse array em disco e recarregá-lo na semana seguinte, o\n modelo retomará a conversa sem notar a lacuna.\n "
+    },
+    "rich.dab40f3dcbce": {
+      "type": "rich",
+      "source": "\n    Run the cell to build the panel, then chat with it. Pin one or more with\n    the <b>Pages</b> chips to ground every answer in them, or pin nothing and let the\n    agent choose what to read. The reply renders as markdown, with a chip for each source\n    the agent read so you can expand it to see the text it pulled back. Alongside the answer,\n    you also get the reasoning trace and the token usage. It remembers the conversation per chat.\n    Edit the cell and rerun to rebuild the artifact.\n  ",
+      "value": "\n Execute a célula para construir o painel e converse com ele. Fixe uma ou mais páginas com os chips <b>Páginas</b> para fundamentar cada resposta nelas, ou não fixe nenhuma e deixe o agente escolher o que ler. A resposta é renderizada como markdown, com um chip para cada fonte consultada; expanda-o para ver o texto recuperado. Você também recebe o rastreamento do raciocínio e o uso de tokens. O painel preserva a conversa. Edite a célula e execute novamente para reconstruir o artefato.\n "
+    },
+    "rich.feee3c133cfe": {
+      "type": "rich",
+      "source": "<strong>Planning</strong> is the <code>finish_reason</code> router.",
+      "value": "<strong>Planejamento</strong> é o roteador <code>finish_reason</code>."
+    },
+    "text.00b025711499": {
+      "type": "text",
+      "source": "(nothing)",
+      "value": "(nothing)",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.026e6c091cf3": {
+      "type": "text",
+      "source": "✓ final answer:",
+      "value": "✓ resposta final:"
+    },
+    "text.0476c71c00aa": {
+      "type": "text",
+      "source": "The ReAct Loop · Securing Agents",
+      "value": "O Ciclo ReAct · Segurança de Agentes"
+    },
+    "text.04f8996da763": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763~1": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763~2": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.04f8996da763~3": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.050e1935bf8a": {
+      "type": "text",
+      "source": " advertised context window per model",
+      "value": " advertised context window per model",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.0a07f6594619": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.0ab6e677de64": {
+      "type": "text",
+      "source": "Pinned page (",
+      "value": "Pinned page (",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.0bbebf6e464f": {
+      "type": "text",
+      "source": "get_current_time",
+      "value": "get_current_time",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.0bbebf6e464f~1": {
+      "type": "text",
+      "source": "get_current_time",
+      "value": "get_current_time",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.0bbebf6e464f~2": {
+      "type": "text",
+      "source": "get_current_time",
+      "value": "get_current_time",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.0bbebf6e464f~3": {
+      "type": "text",
+      "source": "get_current_time",
+      "value": "get_current_time",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.0e836f28df3b": {
+      "type": "text",
+      "source": "I have a meeting tomorrow morning at 10am in France. How many hours do I have to prepare?",
+      "value": "I have a meeting tomorrow morning at 10am in France. How many hours do I have to prepare?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.0fe9c7c06710": {
+      "type": "text",
+      "source": "You are a helpful assistant. Use the tools available ",
+      "value": "You are a helpful assistant. Use the tools available ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.111835f7941f": {
+      "type": "text",
+      "source": "This cell renders a working chat panel from LangChain's off-the-shelf createReactAgent loop, ",
+      "value": "Essa célula renderiza um painel de chat funcional a partir do ciclo do agente createReactAgent pronto para uso da LangChain,"
+    },
+    "text.1397e960f2a1": {
+      "type": "text",
+      "source": "\n    That independence also matters for how you read agent code you didn't\n    write. Whatever framework wraps it, any LLM-based agent must contain these\n    four pieces, and when something breaks the cause is usually in one of them:\n  ",
+      "value": "\n Essa independência também importa para como você lê o código de um agente que você não\n escreveu. Qualquer que seja o framework que o envolva, qualquer agente baseado em LLM deve conter essas\n quatro peças, e quando algo quebra a causa é geralmente uma delas:\n "
+    },
+    "text.140c64b7ccdf": {
+      "type": "text",
+      "source": "\n    None of that lives inside the model. It is the harness you build around a single\n    text-in, text-out call.\n  ",
+      "value": "\n Nenhum desses componentes vive dentro do modelo. Eles fazem parte do harness de execução construído em torno de uma única chamada de texto para texto.\n "
+    },
+    "text.150461710ba8": {
+      "type": "text",
+      "source": "pages as the question needs, one reason/read step at a time, then answer. For a ",
+      "value": "pages as the question needs, one reason/read step at a time, then answer. For a ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.1603672b492c": {
+      "type": "text",
+      "source": "Module 1 · Part B of 3",
+      "value": "Módulo 1 · Parte B de 3"
+    },
+    "text.161660030aa6": {
+      "type": "text",
+      "source": "→",
+      "value": "→",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.183e9eb41c65": {
+      "type": "text",
+      "source": "The loop is unchanged. With a language model in the reasoning step, the agent reads tool results and acts by calling tools.",
+      "value": "O ciclo permanece o mesmo. Com um grande modelo de linguagem na etapa de raciocínio, o agente lê os resultados e age chamando ferramentas."
+    },
+    "text.1b12f21798d2": {
+      "type": "text",
+      "source": " Bound the loop so a confused agent cannot spin forever.",
+      "value": " Bound the loop so a confused agent cannot spin forever.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.1c1a24c5dd90": {
+      "type": "text",
+      "source": "'overview' page first. Name the page id(s) you used.\\\\n\\\\nPages:\\\\n",
+      "value": "'overview' page first. Name the page id(s) you used.\\\\n\\\\nPages:\\\\n",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.1ce7ab6e32fb": {
+      "type": "text",
+      "source": "\n    This course's minimal agent fills each slot with the simplest thing that works:\n  ",
+      "value": "\n O agente mínimo deste curso preenche cada componente com a solução mais simples que funciona:\n "
+    },
+    "text.214538c1cbac": {
+      "type": "text",
+      "source": "The user node sets the prompt and system instructions; the tool node registers the function. ",
+      "value": "O nó do usuário define o prompt e as instruções do sistema; o nó da ferramenta registra a função."
+    },
+    "text.218cffe87fd7": {
+      "type": "text",
+      "source": "Registers get_current_time as the one tool and wires a JavaScript executor to run it. ",
+      "value": "Registra get_current_time como a única ferramenta e conecta um executor JavaScript para executá-la."
+    },
+    "text.21b6ab9e7a81": {
+      "type": "text",
+      "source": "· tool_calls:",
+      "value": "· tool_calls:",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.2298879d8c60": {
+      "type": "text",
+      "source": " tok",
+      "value": " tok",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.22e27b314a6b": {
+      "type": "text",
+      "source": "Think, act, observe, repeat. The turn exits the moment finish_reason is \"stop\".",
+      "value": "Pense, aja, observe, repita. O ciclo termina quando finish_reason é \"stop\"."
+    },
+    "text.245786979100": {
+      "type": "text",
+      "source": "The model only names the call; your code does the work.",
+      "value": "O modelo apenas informa o nome da chamada; o código realiza o trabalho."
+    },
+    "text.263eb2e3d503": {
+      "type": "text",
+      "source": " \"stop\" means the answer is ready and the loop can exit",
+      "value": " \"stop\" means the answer is ready and the loop can exit",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.2744773dba26": {
+      "type": "text",
+      "source": " The model cannot run the tool itself; this preview asks your code to run it.",
+      "value": " The model cannot run the tool itself; this preview asks your code to run it.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.288ec2e40f38": {
+      "type": "text",
+      "source": " state.userPrompt   = \"What time is it in UTC?\";",
+      "value": " state.userPrompt   = \"What time is it in UTC?\";",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.28ecba64c585": {
+      "type": "text",
+      "source": "← Module 1a: The Agent",
+      "value": "← Módulo 1a: O Agente"
+    },
+    "text.2958d416d08a": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.2958d416d08a~1": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.2bcdea9e3abf": {
+      "type": "text",
+      "source": "which page, e.g. 01b-react",
+      "value": "which page, e.g. 01b-react",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.2cfc66a4bac0": {
+      "type": "text",
+      "source": " stops or asks for the tool on these same two questions.",
+      "value": " stops or asks for the tool on these same two questions.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.2d08f3745b34": {
+      "type": "text",
+      "source": " Suppress raw tokens so only the curated trace appears.",
+      "value": " Suppress raw tokens so only the curated trace appears.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.3203b6e01a14": {
+      "type": "text",
+      "source": "Returns the current UTC time.",
+      "value": "Returns the current UTC time.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.3396288947a0": {
+      "type": "text",
+      "source": "you read with read_course_page; if the pages do not cover it, say so. Read as many ",
+      "value": "you read with read_course_page; if the pages do not cover it, say so. Read as many ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.33b3b8031352": {
+      "type": "text",
+      "source": ".chatui-tool-body",
+      "value": ".chatui-tool-body",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.34612a45e6ff": {
+      "type": "text",
+      "source": "Prompt ~",
+      "value": "Prompt ~",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.363d049490fc": {
+      "type": "text",
+      "source": "finish_reason:",
+      "value": "finish_reason:",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.363d049490fc~1": {
+      "type": "text",
+      "source": "finish_reason:",
+      "value": "finish_reason:",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.363d049490fc~2": {
+      "type": "text",
+      "source": "finish_reason:",
+      "value": "finish_reason:",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.36d507134134": {
+      "type": "text",
+      "source": " Optional visibility: uncomment to inspect the complete first response.",
+      "value": " Visibilidade opcional: remova o comentário para inspecionar a primeira resposta completa."
+    },
+    "text.3a417d05647e": {
+      "type": "text",
+      "source": "You are a teaching assistant for this agents course. Ground every answer in pages ",
+      "value": "You are a teaching assistant for this agents course. Ground every answer in pages ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.3eb40a91e88a": {
+      "type": "text",
+      "source": " same loop with a different model.",
+      "value": " same loop with a different model.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.40f3d65d3288": {
+      "type": "text",
+      "source": "Build the artifact · createReactAgent → a live chat panel",
+      "value": "Construir o artefato · createReactAgent → um painel de chat ao vivo"
+    },
+    "text.41f9644e92f9": {
+      "type": "text",
+      "source": "Context rot: why a longer loop reads worse",
+      "value": "Degradação do contexto: por que um ciclo mais longo lê pior"
+    },
+    "text.420312f26fff": {
+      "type": "text",
+      "source": "read_course_page …",
+      "value": "read_course_page …",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.421eeed28885": {
+      "type": "text",
+      "source": "\n    In modern ReAct, a short router reads that field. If the model asked for a tool, the router\n    runs your function, appends the result, and calls the model again. If the model stopped, the\n    router returns the answer.\n  ",
+      "value": "\n No ReAct moderno, um roteador curto lê esse campo. Se o modelo pediu uma ferramenta, o roteador\n executa a sua função, anexa o resultado e chama o modelo novamente. Se o modelo parou, o\n roteador retorna a resposta.\n "
+    },
+    "text.4285d23d69c3": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.44b7b4576467": {
+      "type": "text",
+      "source": " Render each event as it streams; key tool chips by tool-call id.",
+      "value": " Render each event as it streams; key tool chips by tool-call id.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.45c61df0a145": {
+      "type": "text",
+      "source": " tool CALL: each new call (tc.id present) PUSHES a fresh chip; arg deltas (no id) extend the call currently open at that index.",
+      "value": " tool CALL: each new call (tc.id present) PUSHES a fresh chip; arg deltas (no id) extend the call currently open at that index.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.46b6d96f4ead": {
+      "type": "text",
+      "source": "react-artifact",
+      "value": "react-artifact",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.46f70a7ed608": {
+      "type": "text",
+      "source": " Define the tool schema the model can choose from next.",
+      "value": " Define the tool schema the model can choose from next.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.473287f8298d": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.4adb8d2f78d4": {
+      "type": "text",
+      "source": "until finish_reason is 'stop'. Every step is logged, so you can see what the model decided.",
+      "value": "até finish_reason ser 'stop'. Cada etapa é registrada para mostrar a decisão do modelo."
+    },
+    "text.4f9bdbf133c6": {
+      "type": "text",
+      "source": " MODEL is the swappable brain in the reasoning slot. Change it and rerun to drive the",
+      "value": " MODEL is the swappable brain in the reasoning slot. Change it and rerun to drive the",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.515a5a5545d2": {
+      "type": "text",
+      "source": " state.userPrompt   = \"What is the capital of France?\";",
+      "value": " state.userPrompt   = \"What is the capital of France?\";",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.54505802a8ec": {
+      "type": "text",
+      "source": "Edit the agent, the tool, or the prompt and rerun to rebuild the panel.",
+      "value": "Edit the agent, the tool, or the prompt and rerun to rebuild the panel.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.5502f2a766fc": {
+      "type": "text",
+      "source": "User input",
+      "value": "Entrada do usuário"
+    },
+    "text.576f5af82d14": {
+      "type": "text",
+      "source": "\n    Each of those costs something in latency or fidelity or complexity, and each is worth weighing against the task at hand.\n  ",
+      "value": "\n Cada mitigação tem custos de latência, fidelidade ou complexidade e deve ser avaliada diante da tarefa em questão.\n "
+    },
+    "text.5777416ae489": {
+      "type": "text",
+      "source": ", \\\\",
+      "value": ", \\\\",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.5846418c93e3": {
+      "type": "text",
+      "source": "Artifact mounted below. Edit this cell and rerun to rebuild it.",
+      "value": "Artifact mounted below. Edit this cell and rerun to rebuild it.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.588da4105320": {
+      "type": "text",
+      "source": " · ",
+      "value": " · ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.58f9aa84895a": {
+      "type": "text",
+      "source": "):\\\\n\\\\n",
+      "value": "):\\\\n\\\\n",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.5a44317dda81": {
+      "type": "text",
+      "source": " Save the system prompt that frames the agent loop.",
+      "value": " Save the system prompt that frames the agent loop.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.607847030c7d": {
+      "type": "text",
+      "source": " or \"nvidia/nemotron-3-super-120b-a12b\" for a stronger brain",
+      "value": " or \"nvidia/nemotron-3-super-120b-a12b\" for a stronger brain",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.607847030c7d~1": {
+      "type": "text",
+      "source": " or \"nvidia/nemotron-3-super-120b-a12b\" for a stronger brain",
+      "value": " or \"nvidia/nemotron-3-super-120b-a12b\" for a stronger brain",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.60902ba79bb1": {
+      "type": "text",
+      "source": "✓ artifact mounted below. Scroll down and chat with it.",
+      "value": "✓ artefato montado abaixo. Role a página para baixo e converse com ele."
+    },
+    "text.614983743131": {
+      "type": "text",
+      "source": " window ~",
+      "value": " window ~",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.64945d606a53": {
+      "type": "text",
+      "source": "⚠ step cap reached",
+      "value": "⚠ limite de etapas atingido"
+    },
+    "text.6569018015a4": {
+      "type": "text",
+      "source": "No API key yet. Add your nvapi- key on the course home, then rerun.",
+      "value": "Nenhuma chave de API ainda. Adicione sua chave nvapi- na página inicial do curso e execute novamente."
+    },
+    "text.6573068d613f": {
+      "type": "text",
+      "source": ". Unpin a page.",
+      "value": ". Unpin a page.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.65e4e49e5ed8": {
+      "type": "text",
+      "source": "Read a page of THIS course and return its text as markdown.",
+      "value": "Read a page of THIS course and return its text as markdown.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.67a5bdf2a82d": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents",
+      "value": "NVIDIA · Segurança de Agentes"
+    },
+    "text.68e84543a986": {
+      "type": "text",
+      "source": "when the user asks for something you cannot answer from training data alone.",
+      "value": "when the user asks for something you cannot answer from training data alone.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.69824d3b0e70": {
+      "type": "text",
+      "source": "References",
+      "value": "Referências"
+    },
+    "text.6a0c24f0658f": {
+      "type": "text",
+      "source": " One createReactAgent per model; each keeps its own MemorySaver for multi-turn.",
+      "value": " One createReactAgent per model; each keeps its own MemorySaver for multi-turn.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.6a6932bb5404": {
+      "type": "text",
+      "source": "✗",
+      "value": "✗",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.6a6eb0c995bc": {
+      "type": "text",
+      "source": " \"tool_calls\" means the model is asking you to run a function",
+      "value": " \"tool_calls\" means the model is asking you to run a function",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.6c45cb72a36e": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.6e58c818e00c": {
+      "type": "text",
+      "source": "How does the OpenShell sandbox contain an agent?",
+      "value": "How does the OpenShell sandbox contain an agent?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.6e690c6bbc15": {
+      "type": "text",
+      "source": " Pin each selected page in full so the chip reflects the actual context.",
+      "value": " Pin each selected page in full so the chip reflects the actual context.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.6ec7ac216303": {
+      "type": "text",
+      "source": " Call 1 · no tools offered. The model can answer, so it stops on its own.",
+      "value": " Call 1 · no tools offered. The model can answer, so it stops on its own.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.6f0f40ccc264": {
+      "type": "text",
+      "source": "Compare two calls to the same model. The first answers directly; the second requests a tool that your code must run. Watch finish_reason change between them. This tool is a preview of the complete loop below.",
+      "value": "Compare duas chamadas ao mesmo modelo. A primeira responde diretamente; a segunda solicita uma ferramenta que o seu código deve executar. Observe como finish_reason muda entre elas. Essa ferramenta é uma prévia do ciclo completo abaixo."
+    },
+    "text.761b7ad8ad43": {
+      "type": "text",
+      "source": "summary",
+      "value": "summary",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.7826f650e26e": {
+      "type": "text",
+      "source": "Sets the system prompt and the user question. Swap in 'What is the capital of France?' ",
+      "value": "Define o prompt do sistema e a pergunta do usuário. Substitua por 'Qual é a capital da França?'"
+    },
+    "text.78f9ac018e55": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.78f9ac018e55~1": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.7ac1012b98c8": {
+      "type": "text",
+      "source": "the tool executor handing back an unexpected value,",
+      "value": "o executor de ferramentas devolvendo um valor inesperado,"
+    },
+    "text.7c9bbe5ec9b3": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.7f55b8a3a9c4": {
+      "type": "text",
+      "source": "What time is it right now in UTC?",
+      "value": "What time is it right now in UTC?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.8060fc09ef01": {
+      "type": "text",
+      "source": " MODEL is the swappable brain. Change it and rerun to see whether a stronger model",
+      "value": " MODEL is the swappable brain. Change it and rerun to see whether a stronger model",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.850d8ef32ee1": {
+      "type": "text",
+      "source": " Backstop for runaway tool loops during the demo.",
+      "value": " Backstop for runaway tool loops during the demo.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.860e46c3ac56": {
+      "type": "text",
+      "source": "When should I route to specialists instead of one agent?",
+      "value": "When should I route to specialists instead of one agent?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.87d11c51b789": {
+      "type": "text",
+      "source": "ReAct loop",
+      "value": "Ciclo ReAct"
+    },
+    "text.8aca1d215520": {
+      "type": "text",
+      "source": "read_course_page",
+      "value": "read_course_page",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.8b7b657e4f3d": {
+      "type": "text",
+      "source": "finish_reason · the one field the loop reads to decide what to do next",
+      "value": "finish_reason · o único campo que o ciclo lê para decidir o que fazer em seguida"
+    },
+    "text.8bb8efa7cdc7": {
+      "type": "text",
+      "source": " token usage rolls up across the ReAct loop's LLM calls",
+      "value": " token usage rolls up across the ReAct loop's LLM calls",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.8e398181480a": {
+      "type": "text",
+      "source": "Add your nvapi- key on the course home, then rerun.",
+      "value": "Add your nvapi- key on the course home, then rerun.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.8e78720c3bde": {
+      "type": "text",
+      "source": "The one field that tells the loop what to do next",
+      "value": "O único campo que informa ao ciclo o que fazer em seguida"
+    },
+    "text.8ef829c1a7ee": {
+      "type": "text",
+      "source": "(reading)",
+      "value": "(reading)",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.94e16b93ac9d": {
+      "type": "text",
+      "source": " tok > ",
+      "value": " tok > ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.99e67b933e08": {
+      "type": "text",
+      "source": " The artifact is a live chat panel, not a transcript dump.",
+      "value": " The artifact is a live chat panel, not a transcript dump.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.9bb0026a8b4b": {
+      "type": "text",
+      "source": "Tool spec",
+      "value": "Especificação da ferramenta"
+    },
+    "text.9bb0d2e378d1": {
+      "type": "text",
+      "source": "tool ran:",
+      "value": "ferramenta executada:"
+    },
+    "text.9cc45829f103": {
+      "type": "text",
+      "source": "plan before the loop accumulates observations,",
+      "value": "planeje antes que o ciclo acumule observações,"
+    },
+    "text.9d7de0441056": {
+      "type": "text",
+      "source": "Nemotron Super 120B · stronger",
+      "value": "Nemotron Super 120B · mais forte"
+    },
+    "text.a15a0063f6b5": {
+      "type": "text",
+      "source": "Walk me from the basic loop to an always-on agent",
+      "value": "Walk me from the basic loop to an always-on agent",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.a39a7ffad4a3": {
+      "type": "text",
+      "source": "assistant",
+      "value": "assistant",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.a44de5d26beb": {
+      "type": "text",
+      "source": "Summarize the whole course",
+      "value": "Summarize the whole course",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.a66f9c25a653": {
+      "type": "text",
+      "source": " includes \"overview\" (the course home)",
+      "value": " includes \"overview\" (the course home)",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.a79a71b58afe": {
+      "type": "text",
+      "source": "Before you continue",
+      "value": "Antes de continuar"
+    },
+    "text.a7b02983d661": {
+      "type": "text",
+      "source": "🔧",
+      "value": "🔧",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.a9ae4dae36e8": {
+      "type": "text",
+      "source": "Runs the ReAct cycle: call the model, check finish_reason, run any requested tools, append ",
+      "value": "Executa o ciclo ReAct: chama o modelo, verifica finish_reason, executa as ferramentas solicitadas, anexa"
+    },
+    "text.aa85ebc76614": {
+      "type": "text",
+      "source": " reasoning models think first; leave room past reasoning_content",
+      "value": " reasoning models think first; leave room past reasoning_content",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.aa9c9c97480a": {
+      "type": "text",
+      "source": "(used its whole budget thinking; raise max_tokens)",
+      "value": "(used its whole budget thinking; raise max_tokens)",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.acb2d99e0997": {
+      "type": "text",
+      "source": "is 'stop', not 'tool_calls'.",
+      "value": "is 'stop', not 'tool_calls'.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.ace774147c7e": {
+      "type": "text",
+      "source": "The complete ReAct loop, built from scratch",
+      "value": "O ciclo ReAct completo, construído do zero"
+    },
+    "text.afecd703e78d": {
+      "type": "text",
+      "source": "Edit MODEL at the top to swap the brain.",
+      "value": "Edit MODEL at the top to swap the brain.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.b073f0668d17": {
+      "type": "text",
+      "source": "delegate sub-tasks so each sub-agent works on a short context,",
+      "value": "delegue subtarefas para que cada subagente trabalhe em um contexto curto,"
+    },
+    "text.b2487c6516b5": {
+      "type": "text",
+      "source": "What is the ReAct loop?",
+      "value": "What is the ReAct loop?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.b358631a69c0": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-super-120b-a12b",
+      "value": "nvidia/nemotron-3-super-120b-a12b",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.b392ab14c45e": {
+      "type": "text",
+      "source": "and the model answers from training data, so no tool call fires and step 1's finish_reason ",
+      "value": "and the model answers from training data, so no tool call fires and step 1's finish_reason ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.b3d417190c5a": {
+      "type": "text",
+      "source": "no-key-needed",
+      "value": "no-key-needed",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.b4a87ca7c1f5": {
+      "type": "text",
+      "source": "loading LangChain ...",
+      "value": "Carregando LangChain..."
+    },
+    "text.b6e64b0566a3": {
+      "type": "text",
+      "source": "call 1 · no tools offered",
+      "value": "chamada 1 · nenhuma ferramenta oferecida"
+    },
+    "text.baf1ab983463": {
+      "type": "text",
+      "source": "The pieces an LLM agent is built from",
+      "value": "As peças de um agente de LLM"
+    },
+    "text.bbc5e661e106": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.bbc5e661e106~1": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.bbc5e661e106~2": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.bdceb56fdbc1": {
+      "type": "text",
+      "source": " Context-budget check: warn (don't silently clip) if the prompt overflows.",
+      "value": " Context-budget check: warn (don't silently clip) if the prompt overflows.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.be53d4baf16a": {
+      "type": "text",
+      "source": "Ask me anything about the course. I read the relevant pages before I answer.",
+      "value": "Pergunte-me qualquer coisa sobre o curso. Eu leio as páginas relevantes antes de responder."
+    },
+    "text.bea4b81e4d85": {
+      "type": "text",
+      "source": "rather than printing a log. Its one tool is read_course_page; its memory is MemorySaver. ",
+      "value": "rather than printing a log. Its one tool is read_course_page; its memory is MemorySaver. ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.c0f625cb51db": {
+      "type": "text",
+      "source": "Common mitigations keep each decision close to the evidence it needs:",
+      "value": "Mitigações comuns mantêm cada decisão próxima às evidências de que precisa:"
+    },
+    "text.c16e4e4407c5": {
+      "type": "text",
+      "source": "./vendor/langchain-1.4.7.esm.js",
+      "value": "./vendor/langchain-1.4.7.esm.js",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.c3b7187e7262": {
+      "type": "text",
+      "source": " log.details(\"call 1 raw response\", r1);",
+      "value": " log.details(\"resposta 1 bruta\", r1);"
+    },
+    "text.c618570e5e70": {
+      "type": "text",
+      "source": "🔧 read page · ",
+      "value": "🔧 read page · ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.ca00fccfb408": {
+      "type": "text",
+      "source": "error",
+      "value": "error",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.ca32d7f2daac": {
+      "type": "text",
+      "source": " Call 2 · offer one tool and ask for something the model cannot know from training data.",
+      "value": " Call 2 · offer one tool and ask for something the model cannot know from training data.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.ccc143876d1c": {
+      "type": "text",
+      "source": " Running this cell renders a live chat panel into #react-artifact below.",
+      "value": " Running this cell renders a live chat panel into #react-artifact below.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.cebbe96b0c74": {
+      "type": "text",
+      "source": "Compare RAG and deep-agent patterns",
+      "value": "Compare RAG and deep-agent patterns",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.d0487bcfb6fc": {
+      "type": "text",
+      "source": " Tool results get their own chip, including failed reads.",
+      "value": " Tool results get their own chip, including failed reads.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.d06de1005fcb": {
+      "type": "text",
+      "source": "\n    The four-piece frame gives you a checklist that applies regardless of how the\n    surrounding code is organized.\n  ",
+      "value": "\n A estrutura de quatro peças fornece uma lista de verificação que se aplica independentemente de como o código circundante é organizado.\n "
+    },
+    "text.d2270e91a061": {
+      "type": "text",
+      "source": "or the router misreading the signal.",
+      "value": "ou o roteador lendo o sinal de forma errada."
+    },
+    "text.d3150495ce4f": {
+      "type": "text",
+      "source": " - ",
+      "value": " - ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.d33d4eac7a21": {
+      "type": "text",
+      "source": "pinned ",
+      "value": "pinned ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.d3cb9f426bf2": {
+      "type": "text",
+      "source": "Building the loop from scratch with one tool",
+      "value": "Construindo o ciclo do agente a partir do zero com uma ferramenta"
+    },
+    "text.d4f0bc5a29de": {
+      "type": "text",
+      "source": "agent",
+      "value": "agent",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.d4f0bc5a29de~1": {
+      "type": "text",
+      "source": "agent",
+      "value": "agent",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.d56573cb0730": {
+      "type": "text",
+      "source": "it asked you to run:",
+      "value": "ela solicitou que você executasse:"
+    },
+    "text.d9bda0c06ee1": {
+      "type": "text",
+      "source": "The same loop, prebuilt and pointed at this course",
+      "value": "O mesmo ciclo, pré-construído e apontado para este curso"
+    },
+    "text.d9eb253e0698": {
+      "type": "text",
+      "source": "err",
+      "value": "err",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.de92d152d782": {
+      "type": "text",
+      "source": " UTC",
+      "value": " UTC",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.dea54a34ef28": {
+      "type": "text",
+      "source": "a missing turn in the messages array,",
+      "value": "uma mensagem ausente no array,"
+    },
+    "text.e0603c499aae": {
+      "type": "text",
+      "source": "http",
+      "value": "http",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.e164e98682cd": {
+      "type": "text",
+      "source": "course-wide question (\\\\",
+      "value": "course-wide question (\\\\",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.e3ec162f8c8a": {
+      "type": "text",
+      "source": "call 2 · one tool offered, on a question training data cannot answer",
+      "value": "chamada 2 · uma ferramenta oferecida, em uma pergunta que os dados de treinamento não podem responder"
+    },
+    "text.e632b7095b0b": {
+      "type": "text",
+      "source": "T",
+      "value": "T",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.e7c2cf88bdec": {
+      "type": "text",
+      "source": "Each question is answerable by editing inputs in the canvas above and rerunning.",
+      "value": "Cada pergunta pode ser respondida editando as entradas no canvas acima e executando novamente."
+    },
+    "text.e85366647d21": {
+      "type": "text",
+      "source": "\n    The arrangement is strong because the model is never bound to the plan it\n    started with. Whenever a tool returns something it did not expect, that result\n    joins the next round of reasoning, and the model can reconsider where it stands\n    before deciding what to do next.\n  ",
+      "value": "\n Esse arranjo funciona bem porque o modelo nunca fica preso ao plano inicial. Quando uma ferramenta retorna algo inesperado, o resultado entra na próxima rodada de raciocínio, e o modelo pode reavaliar a situação antes de decidir o que fazer.\n "
+    },
+    "text.ee39d2bf0ba3": {
+      "type": "text",
+      "source": "the results as observations, then loop. It exits when finish_reason is 'stop'. ",
+      "value": "the results as observations, then loop. It exits when finish_reason is 'stop'. ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.efdb5576d726": {
+      "type": "text",
+      "source": "Nemotron Nano 30B · fast",
+      "value": "Nemotron Nano 30B · rápido"
+    },
+    "text.f0953ecb0cd8": {
+      "type": "text",
+      "source": "), read the ",
+      "value": "), read the ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.f354e2a19c96": {
+      "type": "text",
+      "source": " Show answer tokens from the agent node; tool output stays in tool chips.",
+      "value": " Show answer tokens from the agent node; tool output stays in tool chips.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.f39b5d45344a": {
+      "type": "text",
+      "source": " reasoning trace (nemotron streams it on additional_kwargs.reasoning_content)",
+      "value": " reasoning trace (nemotron streams it on additional_kwargs.reasoning_content)",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.f447a0edc143": {
+      "type": "text",
+      "source": "Returns the current UTC time as 'YYYY-MM-DD HH:MM:SS UTC'.",
+      "value": "Returns the current UTC time as 'YYYY-MM-DD HH:MM:SS UTC'.",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.f5cccfb73751": {
+      "type": "text",
+      "source": "messages",
+      "value": "messages",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.f8e308dfc942": {
+      "type": "text",
+      "source": "In one sentence, what is an agent's ReAct loop?",
+      "value": "In one sentence, what is an agent's ReAct loop?",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.f9a9b6db6982": {
+      "type": "text",
+      "source": "Module 1c: Tools at Scale →",
+      "value": "Módulo 1c: Ferramentas em Escala →"
+    },
+    "text.f9cb28d5e202": {
+      "type": "text",
+      "source": "or summarize earlier turns before they become a liability.",
+      "value": "ou resuma turnos anteriores antes que eles se tornem um passivo."
+    },
+    "text.f9d35d43770d": {
+      "type": "text",
+      "source": "tools",
+      "value": "tools",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.fa24955a1723": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-nano-30b-a3b",
+      "value": "nvidia/nemotron-3-nano-30b-a3b",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.fa24955a1723~1": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-nano-30b-a3b",
+      "value": "nvidia/nemotron-3-nano-30b-a3b",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.fa24955a1723~2": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-nano-30b-a3b",
+      "value": "nvidia/nemotron-3-nano-30b-a3b",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.fbb90b8dc62c": {
+      "type": "text",
+      "source": "The loop calls the model, runs any requested tools, appends the observations, and repeats ",
+      "value": "O ciclo chama o modelo, executa as ferramentas solicitadas, acrescenta as observações e se repete "
+    }
+  }
+}

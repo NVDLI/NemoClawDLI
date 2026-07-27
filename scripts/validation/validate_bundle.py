@@ -737,6 +737,10 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
             localization_manifest[spec.locale] = locale_manifest
             if write:
                 la.write_manifest(TASK1, spec.profile, locale_manifest)
+            else:
+                # A writing run refreshes the tracked projection, so only a read-only run can
+                # report that the committed manifest no longer matches its inputs.
+                localization_find.extend(la.manifest_drift(TASK1, spec.profile, locale_manifest))
     except Exception as e:
         localization_find = [{"code": "audit-error", "path": "i18n",
                               "detail": f"localization audit error: {e}"}]

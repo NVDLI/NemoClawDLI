@@ -67,4 +67,6 @@ usefulness.
 Canonical English prose does not control a translation's wording. When the meaning remains stable,
 reviewers may accept a new source hash while keeping localized HTML byte-identical. Actual locale
 wording changes require a language reviewer. They also require the contribution credit defined in
-[`CONTRIBUTING.md`](../CONTRIBUTING.md).
+[`CONTRIBUTING.md`](../CONTRIBUTING.md). The same ownership holds when a page's wording lives in a
+key-based locale resource rather than a reviewed HTML overlay; see
+[`locale_resource_migration.md`](locale_resource_migration.md).

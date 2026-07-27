@@ -5,18 +5,21 @@
 """Audit OpenClaw fail-fast, Brev backup, and probe-frame cleanup contracts."""
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
     if (_p / "scripts" / "_bootstrap.py").exists():
         sys.path.insert(0, str(_p / "scripts"))
         break
-from _bootstrap import find_repo_root
+from _bootstrap import add_script_paths, find_repo_root
 
 ROOT = find_repo_root(Path(__file__).resolve())
+add_script_paths(ROOT / "scripts")
 NODE_RUNNER = ROOT / "scripts" / "runtime" / "run_node.sh"
 
 FILES = {
@@ -167,13 +170,22 @@ def audit() -> list[str]:
     if not NODE_RUNNER.is_file():
         findings.append("scripts/runtime/run_node.sh is missing")
     else:
-        for script_key in ("worker_ws_audit", "gateway_token_audit", "gw_transport_audit", "gw_recover_compile_audit", "connection_audit"):
-            script = FILES[script_key].relative_to(ROOT)
-            proc = subprocess.run([str(NODE_RUNNER), str(script)], cwd=ROOT,
-                                  text=True, capture_output=True)
-            if proc.returncode != 0:
-                detail = (proc.stdout + proc.stderr).strip().replace("\n", " | ")
-                findings.append(f"{FILES[script_key].name} failed: {detail}")
+        # A Node audit cannot render a key-based locale resource, so hand it the published bytes.
+        with tempfile.TemporaryDirectory(prefix="locale-pages-") as staged:
+            environment = dict(os.environ)
+            try:
+                from translate.locale_pages import materialize
+
+                environment["NEMOCLAW_LOCALE_PAGES"] = str(materialize(ROOT, Path(staged)))
+            except Exception as error:  # noqa: BLE001 - reported, not raised, like every finding
+                findings.append(f"locale page rendering failed: {error}")
+            for script_key in ("worker_ws_audit", "gateway_token_audit", "gw_transport_audit", "gw_recover_compile_audit", "connection_audit"):
+                script = FILES[script_key].relative_to(ROOT)
+                proc = subprocess.run([str(NODE_RUNNER), str(script)], cwd=ROOT,
+                                      text=True, capture_output=True, env=environment)
+                if proc.returncode != 0:
+                    detail = (proc.stdout + proc.stderr).strip().replace("\n", " | ")
+                    findings.append(f"{FILES[script_key].name} failed: {detail}")
     return findings
 
 

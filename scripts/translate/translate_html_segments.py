@@ -39,9 +39,16 @@ SKIP_TEXT = {"script", "style", "pre", "code", "svg", "noscript"}
 ATTRS = {"alt", "aria-label", "placeholder", "title"}
 BLOCK_TAGS = {"p", "li", "h1", "h2", "h3", "h4", "figcaption", "button", "option", "label", "summary", "td", "th", "a"}
 BLOCK_DIV_CLASSES = {"callout", "step", "sys-desc", "num", "eyebrow"}
-UI_FIELD_RE = re.compile(r'\b(?:label|intro|title|summary|greeting|disabledMsg|kicker|socket)\s*:\s*(["\'])(.*?)(?<!\\)\1', re.S)
+UI_FIELD_RE = re.compile(
+    r'\b(?:label|intro|title|summary|greeting|disabledMsg|kicker|socket'
+    r'|[A-Za-z_$][\w$]*[Hh]int)\s*:\s*(["\'])(.*?)(?<!\\)\1', re.S)
 UI_LINES_RE = re.compile(r'\blines\s*:\s*\[(.*?)\]', re.S)
-UI_HELP_RE = re.compile(r'\b(?:url|token|cfJwt)\s*:\s*`(.*?)`', re.S)
+# Help-panel bodies are named by the field they document, so a name allowlist silently drops any
+# new field. Take every template-literal object value instead; runnable `code` bodies are excluded
+# by name here and by the code-range guard below.
+UI_HELP_RE = re.compile(r'\b(?!code\b)[A-Za-z_$][\w$]*\s*:\s*`(.*?)`', re.S)
+# Learner-visible DOM text assigned from JavaScript rather than declared in an object literal.
+UI_ASSIGN_RE = re.compile(r'\.(?:textContent|innerText)\s*=\s*([^\n;]*);', re.S)
 UI_TERNARY_RE = re.compile(r'\b(?:greeting|disabledMsg)\s*:\s*([^\n]+)')
 JS_STRING_RE = re.compile(r'(["\'])(.*?)(?<!\\)\1', re.S)
 UI_CALL_RE = re.compile(r'\b(?:helpers\.log|log(?:\.h|\.details|\.html)?|info|show)\s*\((.*?)\)\s*;', re.S)
@@ -194,6 +201,57 @@ def useful(text: str) -> bool:
     return True
 
 
+CODE_FIELD_RE = re.compile(r'\bcode\s*:\s*')
+_STRING_DELIMITERS = "\"'`"
+
+
+def code_value_ranges(body: str) -> list[tuple[int, int]]:
+    """Return the span of every runnable ``code:`` value, however that value is written.
+
+    A runnable cell body is not always one template literal: it can be a helper call that carries
+    literals of its own. Matching only the literal shape leaves those inner strings looking like
+    learner-facing prose, which would offer executable code for translation.
+    """
+    ranges: list[tuple[int, int]] = []
+    for match in CODE_FIELD_RE.finditer(body):
+        # A runnable body can mention ``code:`` in its own text. Never restart a span inside one.
+        if any(begin <= match.start() < end for begin, end in ranges):
+            continue
+        start = match.end()
+        depth = 0
+        index = start
+        quote: str | None = None
+        while index < len(body):
+            char = body[index]
+            if quote:
+                if char == "\\":
+                    index += 2
+                    continue
+                if char == quote:
+                    quote = None
+            elif body.startswith("//", index):
+                newline = body.find("\n", index)
+                index = len(body) if newline < 0 else newline
+                continue
+            elif body.startswith("/*", index):
+                close = body.find("*/", index + 2)
+                index = len(body) if close < 0 else close + 2
+                continue
+            elif char in _STRING_DELIMITERS:
+                quote = char
+            elif char in "([{":
+                depth += 1
+            elif char in ")]}":
+                if depth == 0:
+                    break
+                depth -= 1
+            elif char == "," and depth == 0:
+                break
+            index += 1
+        ranges.append((start, index))
+    return ranges
+
+
 def script_segments(raw: str) -> list[Segment]:
     out: list[Segment] = []
     for script in raw_text_blocks_strict(raw, "script"):
@@ -201,8 +259,7 @@ def script_segments(raw: str) -> list[Segment]:
         if "src" in script.attributes or "application/json" in script.attributes.get("type", "").casefold():
             continue
         body_start = script.body_start
-        code_ranges = [(match.start(1), match.end(1))
-                       for match in re.finditer(r'\bcode\s*:\s*(?:(?:[A-Za-z_$][\w$]*(?:\.[\w$]+)*)\s*\+\s*)*`((?:\\.|[^`\\])*)`', body, re.S)]
+        code_ranges = code_value_ranges(body)
 
         def inside_code(position: int) -> bool:
             return any(start <= position < end for start, end in code_ranges)
@@ -251,6 +308,15 @@ def script_segments(raw: str) -> list[Segment]:
                 if useful(text):
                     start = body_start + field.start(1) + match.start(2)
                     out.append(Segment(start, body_start + field.start(1) + match.end(2), text, "script-ui"))
+        for assignment in UI_ASSIGN_RE.finditer(body):
+            if inside_code(assignment.start(1)):
+                continue
+            for match in JS_STRING_RE.finditer(assignment.group(1)):
+                text = match.group(2)
+                if useful(text):
+                    start = body_start + assignment.start(1) + match.start(2)
+                    out.append(Segment(start, body_start + assignment.start(1) + match.end(2),
+                                       text, "script-ui"))
     return out
 
 

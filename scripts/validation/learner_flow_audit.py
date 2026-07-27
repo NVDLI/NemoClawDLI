@@ -79,14 +79,33 @@ def locale_course_roots(root: Path) -> list[tuple[str, Path]]:
     ]
 
 
+LESSON_PAGE_RE = re.compile(r"/0[0-9][a-z]-[^/]+\.html$")
+
+
+def localized_lesson_pages(root: Path) -> dict[str, str]:
+    """Return every published localized lesson page, keyed by repository-relative path."""
+    from translate.locale_pages import published_pages
+
+    return {rel: raw for rel, raw in published_pages(root).items()
+            if LESSON_PAGE_RE.search("/" + rel)}
+
+
 def load_runtime_pages(root: Path) -> dict[str, str]:
+    # A locale page is the bytes the build publishes. Reading the locale tree directly would only
+    # find pages that still ship from a reviewed HTML overlay and would silently skip the rest.
+    from translate.locale_pages import published_pages
+
+    localized = published_pages(root)
     pages: dict[str, str] = {}
     for locale, prefix in locale_course_roots(root):
         for module in RUNTIME_MODULES:
             page = prefix / f"{module}.html"
-            if not page.is_file():
+            raw = localized.get(page.relative_to(root).as_posix())
+            if raw is None and page.is_file():
+                raw = page.read_text(encoding="utf-8")
+            if raw is None:
                 raise FileNotFoundError(f"{page}: runtime-contract page is missing")
-            pages[f"{locale}-{module[:3]}"] = page.read_text(encoding="utf-8")
+            pages[f"{locale}-{module[:3]}"] = raw
     return pages
 
 
@@ -1085,8 +1104,7 @@ def audit_tree(root: Path = ROOT) -> list[str]:
         for page in sorted((root / "web/nemoclaw").glob("0*.html"))
     }
     helper_pages.update({
-        str(page.relative_to(root)): page.read_text(encoding="utf-8")
-        for page in sorted((root / "i18n").glob("*/web/*/0*.html"))
+        rel: raw for rel, raw in sorted(localized_lesson_pages(root).items())
     })
     findings.extend(audit_cell_helper_registry(
         (root / "web/nemoclaw/scripts/_shared.js").read_text(encoding="utf-8"),
@@ -1119,8 +1137,8 @@ def audit_tree(root: Path = ROOT) -> list[str]:
             findings.extend(audit_lesson(page, text))
             findings.extend(audit_learning_lesson(page, text))
             findings.extend(audit_reference_disclosures(page, text))
-    for page in sorted((root / "i18n").glob("*/web/*/0*.html")):
-        findings.extend(audit_reference_disclosures(page, page.read_text(encoding="utf-8")))
+    for rel, raw in sorted(localized_lesson_pages(root).items()):
+        findings.extend(audit_reference_disclosures(root / rel, raw))
     home = (root / "web/nemoclaw/index.html").read_text(encoding="utf-8")
     findings.extend(audit_home(home))
     findings.extend(audit_workflow_wiring(

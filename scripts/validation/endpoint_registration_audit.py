@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import argparse
+import functools
 import re
 import sys
 from pathlib import Path
@@ -15,6 +16,7 @@ for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
         sys.path.insert(0, str(_p / "scripts"))
         break
 from translate.locale_catalog import discover_locales
+from translate.locale_pages import course_pages
 
 ROOT = Path(__file__).resolve().parents[2]
 SHARED = "web/nemoclaw/scripts/_shared.js"
@@ -45,32 +47,47 @@ PROTECTED_WRITERS = {
 MODEL_QUERY_KEYS = ("base_url", "model_base_url", "model", "embedding_base_url", "embedding_model")
 OPENCLAW_QUERY_KEYS = ("openclaw_url", "openclaw_proxy_base", "openclaw_proxy", "openclaw_access_provider")
 
+ENDPOINT_PAGE = "web/nemoclaw/03a-kickstart.html"
+UNOWNED_PARTS = {"vendor", "mats", "assets", "standalone"}
 
-def source_files() -> list[Path]:
-    files: list[Path] = []
+
+@functools.lru_cache(maxsize=1)
+def published_locale_pages() -> dict[str, str]:
+    """Return the localized course pages the build publishes, keyed by repository-relative path.
+
+    A locale page ships either from a reviewed HTML overlay or from a key-based resource, so the
+    locale tree alone no longer holds every page. Resolving publication the way the assembler does
+    keeps a migrated page under the same registration contract as one that still has an HTML file.
+    """
+    return course_pages(ROOT, "nemoclaw")
+
+
+def source_files() -> list[str]:
+    """Return the repository-relative sources whose endpoint registrations this audit owns."""
+    files = {RUNTIME_HARNESS, EXPLORER}
     bases = [ROOT / "web/nemoclaw", *(spec.course_root for spec in discover_locales(ROOT))]
     for base in bases:
         for path in base.rglob("*"):
-            if path.suffix not in {".js", ".mjs", ".html"}:
-                continue
-            if {"vendor", "mats", "assets", "standalone"}.intersection(path.parts):
-                continue
-            files.append(path)
-    files.append(ROOT / RUNTIME_HARNESS)
-    files.append(ROOT / EXPLORER)
-    return sorted(set(files))
+            if path.suffix in {".js", ".mjs", ".html"}:
+                files.add(path.relative_to(ROOT).as_posix())
+    files.update(published_locale_pages())
+    return sorted(rel for rel in files if not UNOWNED_PARTS.intersection(Path(rel).parts))
 
 
 def endpoint_pages() -> list[str]:
     return [
-        "web/nemoclaw/03a-kickstart.html",
-        *(f"i18n/{spec.url_code}/web/nemoclaw/03a-kickstart.html"
-          for spec in discover_locales(ROOT)),
+        ENDPOINT_PAGE,
+        *(f"i18n/{spec.url_code}/{ENDPOINT_PAGE}" for spec in discover_locales(ROOT)),
     ]
 
 
 def text(rel: str, overrides: dict[str, str]) -> str:
-    return overrides.get(rel, (ROOT / rel).read_text(encoding="utf-8"))
+    if rel in overrides:
+        return overrides[rel]
+    published = published_locale_pages()
+    if rel in published:
+        return published[rel]
+    return (ROOT / rel).read_text(encoding="utf-8")
 
 
 def audit(overrides: dict[str, str] | None = None) -> list[str]:
@@ -158,6 +175,9 @@ def audit(overrides: dict[str, str] | None = None) -> list[str]:
         findings.append("OpenClaw probe normalizes a combined URL and drops /healthz or /api/agent")
 
     for rel in endpoint_pages():
+        if rel not in overrides and rel not in published_locale_pages() and not (ROOT / rel).is_file():
+            findings.append(f"{rel}: no endpoint registration page is published for this locale")
+            continue
         page = text(rel, overrides)
         if 'mountModelEndpointProbe("#probe-llm"' not in page:
             findings.append(f"{rel}: model endpoint is not mounted through its typed probe")
@@ -175,8 +195,7 @@ def audit(overrides: dict[str, str] | None = None) -> list[str]:
     direct_write = re.compile(
         r"(?:localStorage|sessionStorage)\.(?:setItem|removeItem)\(\s*(['\"])([^'\"]+)\1"
     )
-    for path in source_files():
-        rel = path.relative_to(ROOT).as_posix()
+    for rel in source_files():
         body = text(rel, overrides)
         if rel != CONNECTION:
             for key in ("nemoclaw_clawurl", "nemoclaw_clawrawurl", "nemoclaw_clawtoken", "nemoclaw_clawcfjwt"):
@@ -196,8 +215,8 @@ def self_test() -> list[str]:
     if audit():
         return ["baseline endpoint registration audit does not pass"]
     pages = endpoint_pages()
-    en = (ROOT / pages[0]).read_text(encoding="utf-8")
-    localized = (ROOT / pages[1]).read_text(encoding="utf-8")
+    en = text(pages[0], {})
+    localized = text(pages[1], {})
     openclaw = (ROOT / OPENCLAW).read_text(encoding="utf-8")
     shared = (ROOT / SHARED).read_text(encoding="utf-8")
     explorer = (ROOT / EXPLORER).read_text(encoding="utf-8")

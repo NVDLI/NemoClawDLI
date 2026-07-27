@@ -430,30 +430,34 @@ def prompt_experiment_code_findings(code: str) -> list[str]:
 
 
 def audit_prompt_experiments():
-    """Audit the issue-scoped prompt cells in every reviewed language overlay."""
+    """Audit the issue-scoped prompt cells in the canonical course and every published locale."""
+    from translate.locale_pages import course_pages
+
     findings = []
-    roots = (
-        TASK1 / "web" / "nemoclaw",
-        TASK1 / "i18n" / "es" / "web" / "nemoclaw",
-        TASK1 / "i18n" / "pt" / "web" / "nemoclaw",
-    )
-    for root in roots:
-        for filename, expected in PROMPT_PAGE_COUNTS.items():
-            path = root / filename
-            text = path.read_text(errors="ignore")
-            rel = str(path.relative_to(TASK1))
-            if PROMPT_BANNED_NARRATION.lower() in text.lower():
-                findings.append((rel, "mechanical student-editable prompt/input narration remains"))
-            prompt_cells = []
-            for match in CODE.finditer(text):
-                code = match.group(1)
-                if PROMPT_ASSIGNMENT_RE.search(code):
-                    prompt_cells.append(match)
-                    line_no = text[:match.start()].count("\n") + 1
-                    for message in prompt_experiment_code_findings(code):
-                        findings.append((rel, f"line {line_no}: {message}"))
-            if len(prompt_cells) != expected:
-                findings.append((rel, f"found {len(prompt_cells)} prompt-input cells; expected {expected}"))
+    # Locales are discovered, and each locale page is the bytes the build publishes, whether they
+    # come from a reviewed HTML overlay or a key-based resource.
+    sources = {
+        f"web/nemoclaw/{name}": (TASK1 / "web" / "nemoclaw" / name).read_text(errors="ignore")
+        for name in PROMPT_PAGE_COUNTS
+    }
+    sources.update(course_pages(TASK1, "nemoclaw"))
+    for rel, text in sorted(sources.items()):
+        filename = rel.rsplit("/", 1)[-1]
+        expected = PROMPT_PAGE_COUNTS.get(filename)
+        if expected is None:
+            continue
+        if PROMPT_BANNED_NARRATION.lower() in text.lower():
+            findings.append((rel, "mechanical student-editable prompt/input narration remains"))
+        prompt_cells = []
+        for match in CODE.finditer(text):
+            code = match.group(1)
+            if PROMPT_ASSIGNMENT_RE.search(code):
+                prompt_cells.append(match)
+                line_no = text[:match.start()].count("\n") + 1
+                for message in prompt_experiment_code_findings(code):
+                    findings.append((rel, f"line {line_no}: {message}"))
+        if len(prompt_cells) != expected:
+            findings.append((rel, f"found {len(prompt_cells)} prompt-input cells; expected {expected}"))
     return findings
 
 

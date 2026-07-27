@@ -28,6 +28,13 @@ from runtime.html_document import raw_text_blocks
 from translate.code_localization import code_contract_literals, code_templates, js_shape
 from translate.locale_catalog import LocaleCatalogError, discover_locales, locale_by_tag
 from translate.locale_projection import project_locale_html
+from translate.locale_resource_render import render_overlay
+from translate.locale_resources import (
+    LocaleResourceError,
+    expected_resource_path,
+    json_resources,
+    load_resource,
+)
 from translate.localization_scope import editorial_sha, translation_canonical, translation_sha
 from translate.translate_html_segments import extract_segments, protected_tokens
 from translate.translate_svg_text import extract_svg_segments
@@ -161,6 +168,45 @@ class ReaderText(HTMLParser):
             self.parts.append(data.strip())
 
 
+class ProsePunctuation(HTMLParser):
+    """Reader text kept adjacent, with each protected span collapsed to one sentinel.
+
+    ``ReaderText`` joins parts with spaces, which detaches a closing `?` from the `code` span it
+    ends. Punctuation balance needs the original adjacency, so this parser preserves it and marks
+    a skipped span with a non-space sentinel instead of dropping it.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.depth = 0
+        self.parts: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag.lower() in SKIP_TEXT:
+            if not self.depth:
+                self.parts.append(PROTECTED_SENTINEL)
+            self.depth += 1
+        elif not self.depth:
+            for key, value in attrs:
+                if key.lower() in {"alt", "aria-label", "placeholder", "title"} and value:
+                    self.parts.append(f" {value} ")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag.lower() in SKIP_TEXT and self.depth:
+            self.depth -= 1
+
+    def handle_data(self, data: str) -> None:
+        if not self.depth:
+            self.parts.append(data)
+
+
+def prose_punctuation_markup(raw: str) -> str:
+    """Return the reader's prose from an HTML document, preserving punctuation adjacency."""
+    parser = ProsePunctuation()
+    parser.feed(raw)
+    return re.sub(r"\s+", " ", "".join(parser.parts)).strip()
+
+
 class TagSkeleton(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
@@ -242,6 +288,24 @@ def editorial_pattern_quality(text: str, profile: dict) -> list[dict[str, str]]:
     return out
 
 
+CLOSING_QUESTION_RE = re.compile(r"(?<=\S)\?")
+CLOSING_EXCLAMATION_RE = re.compile(r"(?<=\S)!")
+PROTECTED_SPAN_RE = re.compile(r"<(code|kbd)\b[^>]*>.*?</\1\s*>", re.I | re.S)
+INLINE_MARKUP_RE = re.compile(r"<[^>]+>")
+PROTECTED_SENTINEL = "§"
+
+
+def prose_punctuation_text(raw: str) -> str:
+    """Return prose whose punctuation belongs to the language, not to code or markup.
+
+    A protected `code` or `kbd` span carries executable text: the `?` opening a URL query string
+    is not a Spanish question. Collapse each span to one non-space sentinel rather than deleting
+    it, and drop the remaining inline tags without inserting whitespace, so a closing mark stays
+    attached to the word or span it ends.
+    """
+    return INLINE_MARKUP_RE.sub("", PROTECTED_SPAN_RE.sub(PROTECTED_SENTINEL, raw))
+
+
 def orthography_quality(text: str, profile: dict, *, balance_text: str | None = None) -> list[dict[str, str]]:
     """Reject locale-wide punctuation artifacts without interpreting HTML layout."""
     rules = profile.get("orthography_rules", {})
@@ -251,11 +315,24 @@ def orthography_quality(text: str, profile: dict, *, balance_text: str | None = 
         out.append({"code": "locale-punctuation-spacing",
                     "detail": "unexpected space before punctuation in learner-facing prose"})
     if rules.get("require_balanced_opening_punctuation"):
-        punctuation = text if balance_text is None else balance_text
-        if punctuation.count("?") != punctuation.count("¿"):
+        # A closing mark attaches to the word or protected span it ends. A whitespace-isolated `?`
+        # or `!` names the on-screen glyph ("select the ? beside that field") and opens no
+        # sentence, so counting it would demand an opening mark that would be wrong on the page.
+        punctuation = prose_punctuation_text(text if balance_text is None else balance_text)
+        attached_questions = len(CLOSING_QUESTION_RE.findall(punctuation))
+        all_questions = punctuation.count("?")
+        opening_questions = punctuation.count("¿")
+        # A runnable UI sentence can be assembled from "¿... " + value + "?". The closing mark is
+        # whitespace-isolated in static extraction even though it closes the question at runtime.
+        # Pair isolated marks only with otherwise-unmatched openings; a standalone on-screen "?"
+        # glyph remains neutral.
+        if not attached_questions <= opening_questions <= all_questions:
             out.append({"code": "locale-question-punctuation",
                         "detail": "Spanish question marks are missing or have unmatched opening punctuation"})
-        if punctuation.count("!") != punctuation.count("¡"):
+        attached_exclamations = len(CLOSING_EXCLAMATION_RE.findall(punctuation))
+        all_exclamations = punctuation.count("!")
+        opening_exclamations = punctuation.count("¡")
+        if not attached_exclamations <= opening_exclamations <= all_exclamations:
             out.append({"code": "locale-exclamation-punctuation",
                         "detail": "Spanish exclamation marks are missing or have unmatched opening punctuation"})
     return out
@@ -572,8 +649,31 @@ def interface_findings(root: Path) -> list[dict[str, str]]:
     return out
 
 
+def _remove_reviewed_untranslated(text: str, values: tuple[str, ...]) -> str:
+    """Remove explicit resource fallbacks from language-residue checks only."""
+    candidates: set[str] = set()
+    for value in values:
+        plain = html.unescape(re.sub(r"<[^>]+>", "", value)).replace("\\n", " ")
+        candidates.update((
+            plain.strip(),
+            re.sub(r"\s+", " ", plain).strip(),
+        ))
+    # Granular runnable-copy resources legitimately contain tiny strings such as "s", "no", or
+    # punctuation. A raw str.replace would erase those characters inside translated prose and
+    # manufacture language, punctuation, and density failures. Remove only whole reviewed spans.
+    for candidate in sorted(candidates, key=len, reverse=True):
+        if candidate and any(char.isalpha() for char in candidate):
+            text = re.sub(
+                rf"(?<!\w){re.escape(candidate)}(?!\w)",
+                "",
+                text,
+            )
+    return text
+
+
 def page_quality(source_raw: str, target_raw: str, profile: dict, *, skill: bool = False,
-                 enforce_editorial_patterns: bool = True) -> list[dict[str, str]]:
+                 enforce_editorial_patterns: bool = True,
+                 reviewed_untranslated: tuple[str, ...] = ()) -> list[dict[str, str]]:
     out: list[dict[str, str]] = []
     if 'data-localization-scope="en-shell"' in source_raw:
         try:
@@ -612,6 +712,10 @@ def page_quality(source_raw: str, target_raw: str, profile: dict, *, skill: bool
     ui_text = scripted_ui_text(target_raw)
     source_runnable_ui = set(runnable_code_ui_strings(source_raw))
     runnable_ui = runnable_code_ui_strings(target_raw)
+    reviewed_runnable_ui = {
+        re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", value))).strip()
+        for value in reviewed_untranslated
+    }
     localized_runtime_refs = {
         html.unescape(re.sub(r"<[^>]+>", "", value)).strip()
         for value in re.findall(r"<(?:em|code)\b[^>]*>.*?</(?:em|code)>", target_raw, re.I | re.S)
@@ -631,14 +735,25 @@ def page_quality(source_raw: str, target_raw: str, profile: dict, *, skill: bool
         for item in target_segments
         if item.kind in {"block", "text", "attribute", "script-ui"}
     )
-    for _, title in citation_titles(target_raw):
-        visible = visible.replace(html.unescape(re.sub(r"<[^>]+>", "", title)), "")
     source_reference_titles = set(reference_citation_titles(source_raw))
     target_reference_titles = set(reference_citation_titles(target_raw))
-    for _, title in source_reference_titles & target_reference_titles:
+    # A cited title stays canonical English by contract, so its wording and its punctuation both
+    # belong to the citation rather than to the locale. Every reader-text rule reads the same
+    # removal list; a rule that skipped it would report the citation as a locale defect.
+    canonical_titles = [
+        html.unescape(re.sub(r"<[^>]+>", "", title)) for _, title in citation_titles(target_raw)
+    ]
+    canonical_titles.extend(title for _, title in source_reference_titles & target_reference_titles)
+    canonical_titles.extend(profile.get("canonical_english_titles", []))
+    for title in canonical_titles:
         visible = visible.replace(title, "")
-    for title in profile.get("canonical_english_titles", []):
-        visible = visible.replace(title, "")
+    # A resource fallback is never implicit: the typed entry must carry a reviewed reason. Keep
+    # every structural, token, link, code, and non-residue locale-quality check on the rendered
+    # page, but do not rediscover that same declared English copy as hidden language residue.
+    # Remove canonical citation titles first: a short reviewed code term such as "RAG" must not
+    # alter the title before the citation exception can recognize it.
+    visible = _remove_reviewed_untranslated(visible, reviewed_untranslated)
+    ui_text = _remove_reviewed_untranslated(ui_text, reviewed_untranslated)
     for marker in profile.get("english_sentence_markers", []):
         if marker in visible:
             out.append({"code": "untranslated-english", "detail": f"reader text still contains {marker!r}"})
@@ -670,7 +785,11 @@ def page_quality(source_raw: str, target_raw: str, profile: dict, *, skill: bool
     if enforce_editorial_patterns:
         out.extend(editorial_pattern_quality(voice_text, profile))
         out.extend(voice_quality(voice_text, profile))
-        out.extend(orthography_quality(voice_text, profile, balance_text=visible))
+        balance = prose_punctuation_markup(target_raw) + " " + ui_text
+        balance = _remove_reviewed_untranslated(balance, reviewed_untranslated)
+        for title in canonical_titles:
+            balance = balance.replace(title, "")
+        out.extend(orthography_quality(voice_text, profile, balance_text=balance))
         out.extend(mixed_language_quality(visible, profile))
         out.extend(foreign_language_quality(visible, profile))
         out.extend(repetition_quality(repetition_text, profile))
@@ -688,7 +807,9 @@ def page_quality(source_raw: str, target_raw: str, profile: dict, *, skill: bool
             english_cues = {word.lower() for word in profile.get("english_function_words", [])}
             has_english_cue = any(word.lower() in english_cues for word in words)
             code_shaped = bool(re.search(r"(?:\w\.){1,}|->|--|[<>{}=]", plain_value))
-            if (value in source_runnable_ui and plain_value.strip() not in localized_runtime_refs
+            if (value in source_runnable_ui
+                    and re.sub(r"\s+", " ", plain_value).strip() not in reviewed_runnable_ui
+                    and plain_value.strip() not in localized_runtime_refs
                     and not unfinished_markup and len(words) >= 2
                     and any(word[:1].islower() for word in words)
                     and (has_english_cue or not code_shaped)):
@@ -698,7 +819,8 @@ def page_quality(source_raw: str, target_raw: str, profile: dict, *, skill: bool
 
 
 def scan(root: Path, locale: str) -> tuple[list[dict[str, str]], dict]:
-    _, locale_root, _, profile, state = locale_paths(root, locale)
+    spec = locale_by_tag(root, locale)
+    locale_root, profile, state = spec.locale_root, dict(spec.profile), spec.state
     svg_map = root / "scripts" / "translate" / "locales" / locale / "svg_translations.json"
     profile["_svg_translations"] = json.loads(svg_map.read_text(encoding="utf-8")) if svg_map.is_file() else {}
     shell_map = root / "scripts" / "translate" / "locales" / locale / "shell_translations.json"
@@ -716,6 +838,31 @@ def scan(root: Path, locale: str) -> tuple[list[dict[str, str]], dict]:
         if path.is_file() and path.name != "SKILL.html"
     }
     findings: list[dict[str, str]] = interface_findings(root) if (root / "web/nemoclaw/localization.html").exists() else []
+    resources: dict[str, object] = {}
+    try:
+        resource_paths = json_resources(locale_root)
+    except LocaleResourceError as exc:
+        resource_paths = []
+        findings.append({"code": "resource-discovery", "path": "resources", "detail": str(exc)})
+    for resource_path in resource_paths:
+        try:
+            resource = load_resource(resource_path)
+            if resource.locale != spec.locale:
+                raise LocaleResourceError(
+                    f"declares locale {resource.locale!r} inside {spec.locale!r}")
+            if resource_path != expected_resource_path(locale_root, resource.template):
+                raise LocaleResourceError(
+                    f"resource for {resource.template} is not at its derived path")
+            if resource.template in resources:
+                raise LocaleResourceError(
+                    f"duplicate resource for template {resource.template}")
+            resources[resource.template] = resource
+        except LocaleResourceError as exc:
+            findings.append({
+                "code": "resource-target",
+                "path": resource_path.relative_to(root).as_posix(),
+                "detail": str(exc),
+            })
     for path in sorted(actual - declared_all):
         findings.append({"code": "overlay-extra", "path": path,
                          "detail": "not declared as localized prose; code/assets and fallback pages belong to canonical web/"})
@@ -735,27 +882,45 @@ def scan(root: Path, locale: str) -> tuple[list[dict[str, str]], dict]:
     review_protocol = profile.get("review_protocol", {})
     style_reference = review_protocol.get("style_reference")
     if style_reference:
-        if style_reference not in declared:
+        if style_reference not in declared and style_reference not in resources:
             findings.append({"code": "style-reference-boundary", "path": style_reference,
-                             "detail": "locale style reference must be a declared reviewed overlay"})
+                             "detail": "locale style reference must be a reviewed overlay or resource"})
         elif not reviews.get(style_reference, {}).get("target_sha256"):
             findings.append({"code": "style-reference-review", "path": style_reference,
                              "detail": "locale style reference needs an accepted target hash"})
         expected_style_sha = review_protocol.get("style_reference_editorial_sha256", "")
         origin_commit = review_protocol.get("style_reference_origin_commit", "")
         style_target = locale_root / style_reference
+        style_raw = ""
+        if style_target.is_file():
+            style_raw = style_target.read_text(encoding="utf-8")
+        elif style_reference in resources:
+            style_source = root / style_reference
+            if style_source.is_file():
+                try:
+                    style_raw = render_overlay(
+                        style_source.read_text(encoding="utf-8"),
+                        resources[style_reference].values,
+                        spec.html_lang,
+                    )
+                except LocaleResourceError as exc:
+                    findings.append({
+                        "code": "style-reference-resource",
+                        "path": style_reference,
+                        "detail": f"cannot render locale style reference: {exc}",
+                    })
         if not re.fullmatch(r"[0-9a-f]{64}", expected_style_sha):
             findings.append({"code": "style-reference-pin", "path": style_reference,
                              "detail": "locale style reference needs a full pinned SHA-256"})
-        elif style_target.is_file() and editorial_sha(style_target.read_text(encoding="utf-8")) != expected_style_sha:
+        elif style_raw and editorial_sha(style_raw) != expected_style_sha:
             findings.append({"code": "style-reference-drift", "path": style_reference,
                              "detail": "locale style reference prose differs from the style PIC's editorial pin"})
         if not re.fullmatch(r"[0-9a-f]{40}", origin_commit):
             findings.append({"code": "style-reference-origin", "path": style_reference,
                              "detail": "locale style reference needs the full originating commit id"})
-    for path in sorted(set(reviews) - declared):
+    for path in sorted(set(reviews) - declared - set(resources)):
         findings.append({"code": "review-orphan", "path": path,
-                         "detail": "review entry is not present in overlay_files"})
+                         "detail": "review entry has neither a declared HTML overlay nor a locale resource"})
     for path in sorted(set(asset_reviews) - declared_assets):
         findings.append({"code": "asset-review-orphan", "path": path,
                          "detail": "asset review entry is not present in asset_files"})
@@ -766,9 +931,30 @@ def scan(root: Path, locale: str) -> tuple[list[dict[str, str]], dict]:
         source_raw = source.read_text(encoding="utf-8")
         scoped = 'data-localization-scope="en-shell"' in source_raw
         source_digest = translation_sha(source_raw) if scoped else sha(source_raw)
+        representation = "html-overlay"
         target_raw = target.read_text(encoding="utf-8") if target.is_file() and (
             target.name != "SKILL.html" or rel in declared
         ) else ""
+        resource = resources.get(rel)
+        reviewed_untranslated: tuple[str, ...] = ()
+        if not target_raw and resource is not None:
+            representation = "locale-resource"
+            try:
+                target_raw = render_overlay(source_raw, resource.values, spec.html_lang)
+                reviewed_untranslated = tuple(
+                    entry["value"]
+                    for entry in resource.values.values()
+                    if isinstance(entry.get("untranslated"), str)
+                )
+            except LocaleResourceError as exc:
+                findings.append({
+                    "code": "resource-target",
+                    "path": rel,
+                    "detail": f"locale={spec.locale}; correction=repair the resource values: {exc}",
+                })
+                target_raw = ""
+        elif not target_raw:
+            representation = "canonical-fallback"
         review = reviews.get(rel) or {}
         reviewed_digest = review.get("translation_sha256") if scoped else review.get("source_sha256")
         target_digest = sha(target_raw) if target_raw else None
@@ -780,6 +966,7 @@ def scan(root: Path, locale: str) -> tuple[list[dict[str, str]], dict]:
             profile,
             skill=source.name == "SKILL.html",
             enforce_editorial_patterns=rel != style_reference,
+            reviewed_untranslated=reviewed_untranslated,
         ) if target_raw else []
         if not target_raw:
             status = "missing"
@@ -811,6 +998,7 @@ def scan(root: Path, locale: str) -> tuple[list[dict[str, str]], dict]:
             "reviewed_source_sha256": reviewed_digest,
             "target_sha256": target_digest,
             "reviewed_target_sha256": reviewed_target,
+            "target_representation": representation,
             "status": status,
             "quality": quality,
         })
@@ -882,14 +1070,92 @@ def scan(root: Path, locale: str) -> tuple[list[dict[str, str]], dict]:
     return findings, manifest
 
 
+def manifest_path(root: Path, profile: dict) -> Path:
+    return root / "web" / "nemoclaw" / "assets" / f"localization-{profile['url_code']}.json"
+
+
+def manifest_bytes(manifest: dict) -> str:
+    return json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
+
+
 def write_manifest(root: Path, profile: dict, manifest: dict) -> Path:
-    path = root / "web" / "nemoclaw" / "assets" / f"localization-{profile['url_code']}.json"
-    path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path = manifest_path(root, profile)
+    path.write_text(manifest_bytes(manifest), encoding="utf-8")
     return path
 
 
+def manifest_drift(root: Path, profile: dict, manifest: dict) -> list[dict[str, str]]:
+    """Compare the tracked drift manifest with the manifest this scan just derived.
+
+    The manifest is a generated projection, so a scan that rewrites it always passes. Without
+    this comparison a change to the manifest schema or to any input it reads only surfaces when
+    a build diffs its tracked source, long after the cheap checks have finished.
+    """
+    path = manifest_path(root, profile)
+    rel = path.relative_to(root).as_posix()
+    fix = f"regenerate with: python3 scripts/validation/localization_audit.py --locale {profile['locale']}"
+    if not path.is_file():
+        return [{"code": "manifest-projection-missing", "path": rel,
+                 "detail": f"locale={profile['locale']}; correction={fix}"}]
+    try:
+        tracked = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return [{"code": "manifest-projection-unreadable", "path": rel,
+                 "detail": f"locale={profile['locale']}; {exc}; correction={fix}"}]
+    if tracked != manifest:
+        return [{"code": "manifest-projection-stale", "path": rel,
+                 "detail": f"locale={profile['locale']}; tracked projection does not match this "
+                           f"scan; correction={fix}"}]
+    if path.read_text(encoding="utf-8") != manifest_bytes(manifest):
+        return [{"code": "manifest-projection-format", "path": rel,
+                 "detail": f"locale={profile['locale']}; tracked projection carries the right "
+                           f"values in the wrong bytes; correction={fix}"}]
+    return []
+
+
+def _other_value(value: object) -> object:
+    """A value of the same shape that no correct projection can also hold."""
+    if isinstance(value, bool) or value is None:
+        return not value
+    if isinstance(value, (int, float)):
+        return value + 1
+    if isinstance(value, str):
+        return value + "-drifted"
+    if isinstance(value, list):
+        return value + ["drifted"]
+    if isinstance(value, dict):
+        return {**value, "drifted": True}
+    return "drifted"
+
+
+def manifest_projection_mutations(manifest: dict) -> list[tuple[str, dict]]:
+    """Structural mutations of a manifest, derived from the document rather than named fields.
+
+    A field added to the projection later, such as a new per-page attribute, joins this matrix
+    without a validator edit, so the freshness check cannot silently stop covering it.
+    """
+    mutations: list[tuple[str, dict]] = []
+    for key in manifest:
+        mutations.append((f"drop top-level {key}", {k: v for k, v in manifest.items() if k != key}))
+        mutations.append((f"alter top-level {key}", {**manifest, key: _other_value(manifest[key])}))
+    for key, value in manifest.items():
+        if isinstance(value, list) and value:
+            mutations.append((f"drop first {key} row", {**manifest, key: value[1:]}))
+            mutations.append((f"duplicate first {key} row", {**manifest, key: [value[0], *value]}))
+        if not (isinstance(value, list) and value and isinstance(value[0], dict)):
+            continue
+        for field in value[0]:
+            dropped = [{k: v for k, v in value[0].items() if k != field}, *value[1:]]
+            mutations.append((f"drop {key}[0].{field}", {**manifest, key: dropped}))
+            altered = [{**value[0], field: _other_value(value[0][field])}, *value[1:]]
+            mutations.append((f"alter {key}[0].{field}", {**manifest, key: altered}))
+    return mutations
+
+
 def accept(root: Path, locale: str, paths: list[str]) -> list[str]:
-    _, locale_root, state_path, profile, state = locale_paths(root, locale)
+    spec = locale_by_tag(root, locale)
+    locale_root, state_path, profile, state = (
+        spec.locale_root, spec.state_path, dict(spec.profile), spec.state)
     svg_map = root / "scripts" / "translate" / "locales" / locale / "svg_translations.json"
     profile["_svg_translations"] = json.loads(svg_map.read_text(encoding="utf-8")) if svg_map.is_file() else {}
     shell_map = root / "scripts" / "translate" / "locales" / locale / "shell_translations.json"
@@ -899,11 +1165,26 @@ def accept(root: Path, locale: str, paths: list[str]) -> list[str]:
     asset_reviews = state.setdefault("asset_reviews", {})
     for rel in paths:
         source, target = root / rel, locale_root / rel
-        if not source.is_file() or not target.is_file():
-            errors.append(f"{rel}: source or localized target missing")
+        if not source.is_file():
+            errors.append(f"{rel}: canonical source missing")
             continue
         source_raw = source.read_text(encoding="utf-8")
-        target_raw = target.read_text(encoding="utf-8")
+        if target.is_file():
+            target_raw = target.read_text(encoding="utf-8")
+        elif source.suffix == ".html":
+            resource_path = expected_resource_path(locale_root, rel)
+            try:
+                resource = load_resource(resource_path)
+                if resource.locale != spec.locale or resource.template != rel:
+                    raise LocaleResourceError(
+                        f"resource identity does not match locale={spec.locale}, template={rel}")
+                target_raw = render_overlay(source_raw, resource.values, spec.html_lang)
+            except LocaleResourceError as exc:
+                errors.append(f"{rel}: localized HTML target missing and resource is invalid: {exc}")
+                continue
+        else:
+            errors.append(f"{rel}: localized target missing")
+            continue
         style_reference = profile.get("review_protocol", {}).get("style_reference")
         quality = (svg_quality(source_raw, target_raw, profile) if source.suffix == ".svg" else
                    page_quality(source_raw, target_raw, profile, skill=source.name == "SKILL.html",
@@ -926,6 +1207,34 @@ def accept(root: Path, locale: str, paths: list[str]) -> list[str]:
     if not errors:
         state_path.write_text(json.dumps(state, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return errors
+
+
+def _manifest_projection_failures(root: Path, profile: dict, manifest: dict) -> list[str]:
+    """Every way a tracked drift manifest can go stale must reach the projection detector."""
+    failures: list[str] = []
+    path = manifest_path(root, profile)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    codes = {item["code"] for item in manifest_drift(root, profile, manifest)}
+    if "manifest-projection-missing" not in codes:
+        failures.append("absent tracked drift manifest escaped the projection detector")
+    write_manifest(root, profile, manifest)
+    if manifest_drift(root, profile, manifest):
+        failures.append("freshly written drift manifest was reported as stale")
+    path.write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+    if "manifest-projection-format" not in {
+            item["code"] for item in manifest_drift(root, profile, manifest)}:
+        failures.append("reformatted drift manifest escaped the projection detector")
+    path.write_text("{not json", encoding="utf-8")
+    if "manifest-projection-unreadable" not in {
+            item["code"] for item in manifest_drift(root, profile, manifest)}:
+        failures.append("corrupt drift manifest escaped the projection detector")
+    for name, mutated in manifest_projection_mutations(manifest):
+        path.write_text(manifest_bytes(mutated), encoding="utf-8")
+        if "manifest-projection-stale" not in {
+                item["code"] for item in manifest_drift(root, profile, manifest)}:
+            failures.append(f"stale drift manifest escaped the projection detector: {name}")
+    write_manifest(root, profile, manifest)
+    return failures
 
 
 def self_test() -> list[str]:
@@ -966,9 +1275,10 @@ def self_test() -> list[str]:
                  "overlay_files": ["web/nemoclaw/index.html"],
                  "reviews": {"web/nemoclaw/index.html": {"source_sha256": sha(source_raw)}}}
         (root / "i18n/pt/localization_state.json").write_text(json.dumps(state))
-        base, _ = scan(root, "pt-BR")
+        base, base_manifest = scan(root, "pt-BR")
         if base:
             failures.append(f"clean fixture rejected: {base}")
+        failures.extend(_manifest_projection_failures(root, profile, base_manifest))
         profile["review_protocol"] = {"style_reference": "web/nemoclaw/missing-style-reference.html"}
         (profile_dir / "profile.json").write_text(json.dumps(profile))
         style_findings, _ = scan(root, "pt-BR")
@@ -1120,6 +1430,24 @@ def self_test() -> list[str]:
                 item["code"] for item in page_quality(
                     source_raw, punctuation_target, punctuation_profile)}:
             failures.append("missing Spanish opening-question punctuation escaped detector")
+        exclamation_target = target_raw.replace(
+            "Início do curso", "Ejecuta la celda ahora!")
+        if "locale-exclamation-punctuation" not in {
+                item["code"] for item in page_quality(
+                    source_raw, exclamation_target, punctuation_profile)}:
+            failures.append("missing Spanish opening-exclamation punctuation escaped detector")
+        glyph_target = target_raw.replace(
+            "Início do curso", "¿Necesitas un valor? Selecciona el ? junto al campo")
+        if {"locale-question-punctuation", "locale-exclamation-punctuation"} & {
+                item["code"] for item in page_quality(
+                    source_raw, glyph_target, punctuation_profile)}:
+            failures.append("a named on-screen ? glyph was misread as an unbalanced question")
+        unbalanced_glyph_target = target_raw.replace(
+            "Início do curso", "Selecciona el ? junto al campo. Qué cambia después?")
+        if "locale-question-punctuation" not in {
+                item["code"] for item in page_quality(
+                    source_raw, unbalanced_glyph_target, punctuation_profile)}:
+            failures.append("an unbalanced question beside a ? glyph escaped detector")
         repeat_profile = {**profile, "reject_accidental_repetition": True}
         repeat_target = target_raw.replace(
             "Início do curso", "Separa la aplicación de la aplicación de políticas")

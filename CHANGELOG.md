@@ -44,6 +44,29 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
   launchable and REST explanations in English, Spanish, and Brazilian Portuguese.
 - Thanks to Vadim Kudlay for reviewing the Module 3a English, Spanish, and Portuguese copy and
   figure-fit corrections.
+- Moved every translated page to key-based locale resources: typed per-locale JSON values addressed
+  by keys derived from the English source, a renderer that builds self-contained static pages before
+  publication, and a discovery-first gate that validates the rendered page rather than the JSON
+  alone. All fifteen Spanish and fifteen Brazilian Portuguese pages now publish from a resource and
+  their duplicated localized HTML is deleted; `overlay_files` is empty in both locales. Twenty-six
+  of the thirty pages publish byte-identical output. The Spanish `03a-kickstart` and `03c-always-on`
+  pages regain the `<!DOCTYPE html>` their hand-canonicalized overlays had dropped, which takes them
+  out of browser quirks mode without changing any translated wording; Portuguese `03a-kickstart`
+  adopts two shared-template blank-line placements. Spanish `04b-modern-clis` restores three
+  translated `<comando>` tokens to the executable `agent <command>` placeholder. Runnable resources
+  now store only comment and string copy: delimiters, regex literals, calls, identifiers, operators,
+  and control flow remain authored once in the template. A read-only localization run also holds
+  each locale's tracked drift manifest to the manifest its current inputs derive, so
+  a generated projection left behind by a schema or input change fails in the fast gate instead of
+  at the end of a build. Thanks to Lisa Guo for proposing the approach.
+- Widened learner-facing text extraction so reviewed copy can no longer sit outside the translatable
+  surface: `*Hint` fields, `fieldHelp` panel bodies, and `.textContent` assignments are covered, two
+  name allowlists are gone, and a span scanner keeps runnable `code:` bodies out of translation.
+  Spanish question and exclamation balance now ignores a named on-screen `?` glyph and the `?` that
+  opens a URL query inside a `code` span, while an unbalanced Spanish question still fails.
+- Two English UI fragments on the Spanish `04a-safety` page that the former extractor missed are
+  now explicit `untranslated` entries, preserving the reviewed wording while exposing the remaining
+  language-review work instead of silently treating it as translated.
 
 At release time, move accepted entries under the immutable version tag and keep the remaining work
 under `Unreleased`.
