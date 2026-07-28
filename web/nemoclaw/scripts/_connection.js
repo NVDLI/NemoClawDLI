@@ -152,12 +152,13 @@ export function shouldProxyOpenClaw(rawUrl, config = getOpenClawProxyConfig(), a
   if (config?.enabled === false) return false;
   // A course served by the same launchable origin already has the browser's
   // authenticated session and does not send that session through an external relay.
-  // Cloudflare uses the approved relay from a separately hosted course. Pomerium keeps
-  // its HttpOnly session sender-bound and reaches bootstrap endpoints through the
-  // authenticated direct terminal.
+  // Public course origins use a manually supplied, tab-scoped access session through
+  // the approved relay. Pomerium stays direct until that fallback is actually supplied.
   const loc = browserLocation();
   if (loc && upstream.origin === loc.origin) return false;
-  if (accessProviderForOpenClawUrl(clean) === "pomerium") return false;
+  if (accessProviderForOpenClawUrl(clean) === "pomerium") {
+    return Boolean(String(accessSession || "").trim());
+  }
   return true;
 }
 
@@ -212,6 +213,11 @@ export function openclawWebSocketUrl(rawUrl, pathAndQuery = "/cli/gateway", acce
     if (provider === "cloudflare") {
       // Cloudflare's relay contract uses this query name.
       url.searchParams.set("cf_access_jwt", String(accessSession).trim());
+    } else {
+      // A manually supplied Pomerium session uses the provider-bound relay.
+      // Directly detected browser sessions never reach this branch.
+      url.searchParams.set("access_provider", provider);
+      url.searchParams.set("access_session", String(accessSession).trim());
     }
   }
   const display = new URL(url.href);
@@ -275,7 +281,6 @@ export function setOpenClawConnection({ rawUrl, token, accessProvider, accessSes
     ? (originChanged ? "" : legacySession)
     : String(suppliedSession || "").trim();
   const resolvedAccessProvider = accessProviderForOpenClawUrl(clean, nextAccessProvider);
-  if (resolvedAccessProvider === "pomerium") nextAccessSession = "";
   if (!target) return {
     rawUrl: clean,
     effectiveUrl: openclawHttpUrl(
@@ -326,21 +331,14 @@ export function getOpenClawConnection() {
   const legacyToken = target?.getItem(OPENCLAW_TOKEN_KEY) || "";
   const legacySession = target?.getItem(OPENCLAW_ACCESS_SESSION_KEY) || target?.getItem(OPENCLAW_ACCESS_JWT_KEY) || "";
   if (legacyToken && !secrets?.getItem(OPENCLAW_TOKEN_KEY)) secrets?.setItem(OPENCLAW_TOKEN_KEY, legacyToken);
-  if (legacySession && resolvedAccessProvider !== "pomerium" &&
-      !secrets?.getItem(OPENCLAW_ACCESS_SESSION_KEY)) {
+  if (legacySession && !secrets?.getItem(OPENCLAW_ACCESS_SESSION_KEY)) {
     secrets?.setItem(OPENCLAW_ACCESS_SESSION_KEY, legacySession);
   }
   target?.removeItem(OPENCLAW_TOKEN_KEY);
   target?.removeItem(OPENCLAW_ACCESS_SESSION_KEY);
   target?.removeItem(OPENCLAW_ACCESS_JWT_KEY);
-  if (resolvedAccessProvider === "pomerium") {
-    secrets?.removeItem(OPENCLAW_ACCESS_SESSION_KEY);
-    secrets?.removeItem(OPENCLAW_ACCESS_JWT_KEY);
-  }
-  const accessSession = resolvedAccessProvider === "pomerium"
-    ? ""
-    : (secrets?.getItem(OPENCLAW_ACCESS_SESSION_KEY) ||
-      secrets?.getItem(OPENCLAW_ACCESS_JWT_KEY) || "");
+  const accessSession = secrets?.getItem(OPENCLAW_ACCESS_SESSION_KEY) ||
+    secrets?.getItem(OPENCLAW_ACCESS_JWT_KEY) || "";
   return {
     rawUrl: migrated.rawUrl,
     effectiveUrl: target?.getItem(OPENCLAW_URL_KEY) || "",

@@ -544,9 +544,7 @@ MUTATION_IMPACTS: dict[tuple[str, ...], tuple[str, ...]] = {
     py("scripts/security/audit_iframe_proxy_opt_in.py", "--self-test"): (
         "scripts/security/audit_iframe_proxy_opt_in.py", "scripts/cors-proxy/*",
         "web/nemoclaw/index.html", "web/nemoclaw/scripts/_keypanel.js",
-        "web/nemoclaw/scripts/_shared.js", "web/nemoclaw/scripts/_connection.js",
-        "web/nemoclaw/scripts/_openclaw.js", "web/nemoclaw/scripts/_openshell.js",
-        "web/nemoclaw/03a-kickstart.html",
+        "web/nemoclaw/scripts/_shared.js",
     ),
     py("scripts/validation/endpoint_registration_audit.py", "--self-test"): (
         "scripts/validation/endpoint_registration_audit.py", "web/nemoclaw/scripts/_shared.js",

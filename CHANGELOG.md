@@ -5,8 +5,11 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
-- Thanks to Vadim Kudlay for reviewing the Spanish and Brazilian Portuguese sender-bound
-  Pomerium guidance.
+- Restored the provider-bound Pomerium relay used by separately hosted course pages. Module 3a
+  accepts the tab-scoped access session, discovers the gateway token through `/api/agent`, and
+  uses the same relay for gateway and terminal WebSockets. Cloudflare behavior is unchanged.
+- Thanks to Vadim Kudlay for reviewing the Spanish and Brazilian Portuguese browser-session
+  availability guidance.
 - Made an ephemeral launchable instance identifier uncommittable: the sensitive-content boundary now
   rejects a provisioned instance ID in either supported host family from the tree, the index, and
   proposed history, the remaining real identifier was replaced with synthetic fixtures, and every

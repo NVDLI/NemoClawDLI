@@ -134,13 +134,12 @@
   <h1 id="skill-title">scripts/runtime link and browser runtime</h1>
   <p>Runtime-facing tooling: the single JavaScript link engine, the browser topology viewer, and the thin Python and shell shims that run the same engine in CI.</p>
   <div class="skill-note">Browser checks run with host Node.js, the pinned <code>playwright-core</code> API, and an installed Chromium or compatible Chrome. Start with <code>scripts/runtime/browser_env_probe.sh</code>. Python tooling requires 3.11 or newer; 3.12 is the tested default. Use a virtual environment and pinned locks. External isolation is operator-owned.</div>
-  <h2>OpenClaw access</h2>
+  <h2>OpenClaw fallback</h2>
   <div class="skill-note">Pass these values from the host when a live check requires them:
     <ul><li><code>CLAW_ACCESS_PROVIDER</code></li><li><code>CLAW_ACCESS_SESSION</code></li><li><code>OPENCLAW_CORS_PROXY_BASE</code></li></ul>
-    Omit <code>CLAW_ACCESS_SESSION</code> to test the browser's existing launchable session.
-    For an isolated live check, the harness installs the supplied value only in its temporary
-    browser cookie jar. Pomerium remains direct and sender-bound. Cloudflare may use the hosted
-    relay with its explicit access value. Keep either value in the process environment only.
+    Omit <code>CLAW_ACCESS_SESSION</code> to test direct browser-session detection. Supply it to
+    test the tab-scoped, provider-bound relay fallback for Cloudflare Access or Pomerium. Keep
+    either provider's value in the process environment only.
   </div>
   <h2>Executable checks</h2>
   <div class="skill-cmds">
