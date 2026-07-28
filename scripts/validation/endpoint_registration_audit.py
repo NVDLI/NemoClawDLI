@@ -174,9 +174,9 @@ def audit(overrides: dict[str, str] | None = None) -> list[str]:
     if "nemoclaw_claw" in openclaw:
         findings.append("OpenClaw widget redeclares a connection storage key outside _connection.js")
     probe_path_contract = (
-        "function _fetchUrl(baseUrl, pathAndQuery)",
-        "return openclawHttpUrl(baseUrl, pathAndQuery, _proxyConfig())",
-        "const route = _fetchUrl(base, actionPath)",
+        'function _fetchUrl(baseUrl, pathAndQuery, accessProvider = "auto", accessSession = "")',
+        "pathAndQuery,\n      _proxyConfig(),\n      accessProvider,\n      accessSession,",
+        "const route = _fetchUrl(base, actionPath, accessProvider, accessSession)",
         "if (action.expectJson)",
     )
     for token in probe_path_contract:
@@ -236,7 +236,9 @@ def self_test() -> list[str]:
     cases = (
         ("model mounted as OpenClaw", {pages[0]: en.replace('mountModelEndpointProbe("#probe-llm"', 'mountClawProbe("#probe-llm"', 1)}, "mounted as OpenClaw"),
         ("conditional registration removed", {OPENCLAW: openclaw.replace("const openClawConnection = isOpenClaw", "const openClawConnection = true", 1)}, "typed endpoint probe"),
-        ("probe path folded into launchable", {OPENCLAW: openclaw.replace("openclawHttpUrl(baseUrl, pathAndQuery, _proxyConfig())", 'openclawHttpUrl(displayUrl, "", _proxyConfig())', 1)}, "drops /healthz"),
+        ("probe path folded into launchable", {OPENCLAW: openclaw.replace("baseUrl,\n      pathAndQuery,", 'displayUrl,\n      "",', 1)}, "probe path contract"),
+        ("probe provider dropped", {OPENCLAW: openclaw.replace("accessProvider,\n      accessSession,", '"auto",\n      accessSession,', 1)}, "probe path contract"),
+        ("probe session dropped", {OPENCLAW: openclaw.replace("accessProvider,\n      accessSession,", 'accessProvider,\n      "",', 1)}, "probe path contract"),
         ("probe JSON guard removed", {pages[0]: en.replace(', expectJson: true', '', 1)}, "JSON/path guard"),
         ("model route panel removed", {pages[1]: localized.replace('id="model-route-settings"', 'id="removed-model-route-settings"', 1)}, "model route source"),
         ("page writes launchable registration", {pages[0]: en + '\n<script>localStorage.setItem("nemoclaw_clawrawurl", "bad")</script>\n'}, "writes protected endpoint"),

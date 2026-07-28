@@ -137,7 +137,9 @@
   <h2>OpenClaw fallback</h2>
   <div class="skill-note">Pass these values from the host when a live check requires them:
     <ul><li><code>CLAW_ACCESS_PROVIDER</code></li><li><code>CLAW_ACCESS_SESSION</code></li><li><code>OPENCLAW_CORS_PROXY_BASE</code></li></ul>
-    Keep Cloudflare Access and Pomerium values in the process environment only.
+    Omit <code>CLAW_ACCESS_SESSION</code> to test direct browser-session detection. Supply it to
+    test the tab-scoped, provider-bound relay fallback for Cloudflare Access or Pomerium. Keep
+    either provider's value in the process environment only.
   </div>
   <h2>Executable checks</h2>
   <div class="skill-cmds">

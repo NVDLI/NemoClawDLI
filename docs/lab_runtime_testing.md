@@ -55,6 +55,13 @@ CLAW_URL="$NEMOCLAW_URL" CLAW_ACCESS_PROVIDER="$ACCESS_PROVIDER" \
   --gateway-only --terminal-contract
 ```
 
+Omit `CLAW_ACCESS_SESSION` when the isolated browser can authenticate to a Pomerium launchable
+directly. Supply it when testing a separately hosted course: the runtime puts that value in
+tab-scoped storage and uses the provider-bound relay. A provider name or hostname alone is not
+evidence that a browser session is available. The course repeats its live gateway check when the
+window regains focus, so a learner can sign in on the launchable tab and return without editing
+the connection fields.
+
 ## Optional external isolation
 
 External isolation is operator-owned. It must preserve the pinned Python, Node, and Chromium versions and run the commands above. This repository does not build, scan, support, or distribute that environment.

@@ -30,16 +30,51 @@ function _uniqueId(prefix = "") {
   return prefix + [...bytes].map(value => value.toString(16).padStart(2, "0")).join("");
 }
 
+export function detectOpenClawBrowserSession(rawUrl, accessProvider = "auto", timeoutMs = 4000) {
+  const direct = openclawWebSocketUrl(
+    rawUrl,
+    "/cli/gateway",
+    "",
+    { enabled: false, base: "" },
+    accessProvider,
+  );
+  if (!direct.url) return Promise.resolve(false);
+  return new Promise(resolve => {
+    let socket = null;
+    let settled = false;
+    const finish = detected => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      try { socket?.close(); } catch (_) {}
+      resolve(Boolean(detected));
+    };
+    const timer = setTimeout(() => finish(false), Math.max(250, Number(timeoutMs) || 4000));
+    try {
+      socket = new WebSocket(direct.url);
+    } catch (_) {
+      finish(false);
+      return;
+    }
+    socket.onmessage = event => {
+      try {
+        const frame = JSON.parse(event.data);
+        if (frame?.event === "connect.challenge") finish(true);
+      } catch (_) {}
+    };
+    socket.onerror = () => finish(false);
+    socket.onclose = () => finish(false);
+  });
+}
+
 export function openclawGatewayWsUrl(rawUrl, accessSession = "", proxyBase = null, proxyEnabled = null, accessProvider = "auto") {
-  // Both supported launchables keep WebSocket authentication in the browser that
-  // signed in. The relay route remains available only when a caller explicitly
-  // opts in; HTTP metadata bootstrap continues to use the approved relay.
   let provider = "auto";
   try { provider = accessProviderForOpenClawUrl(rawUrl, accessProvider); }
   catch (_) { /* openclawWebSocketUrl below returns the authoritative error */ }
   const relayEnabled = proxyEnabled === true ||
-    (proxyEnabled === null && getOpenClawWsRelayEnabled());
-  if (provider === "pomerium" || !relayEnabled) {
+    (proxyEnabled === null && (getOpenClawWsRelayEnabled() ||
+      (provider === "pomerium" && Boolean(String(accessSession || "").trim()))));
+  if (!relayEnabled) {
     return openclawWebSocketUrl(rawUrl, "/cli/gateway", "", { enabled: false, base: "" }, accessProvider);
   }
   const config = {
@@ -66,10 +101,10 @@ const OPENCLAW_BOOTSTRAP_PATHS = new Set(["/api/agent", "/healthz"]);
 export async function openclawBootstrapRequest(path = "/api/agent", { signal = null } = {}) {
   /* @doc <code>helpers.openclawBootstrapRequest(path)</code> ::
        Read <code>/api/agent</code> or <code>/healthz</code> through the provider selected
-       from the normalized Module 3a connection. Pomerium uses its authenticated direct
-       terminal; cross-origin Cloudflare uses the approved relay and tab-scoped
-       <code>CF_Authorization</code> assertion. Returns response metadata plus parsed JSON
-       when available without exposing either access credential. */
+       from the normalized Module 3a connection. A verified browser session stays direct.
+       A manually supplied Cloudflare or Pomerium session uses the approved relay and remains
+       tab-scoped. Returns response metadata plus parsed JSON without exposing either access
+       credential. */
   const actionPath = String(path || "");
   if (!OPENCLAW_BOOTSTRAP_PATHS.has(actionPath)) {
     throw new Error("OpenClaw bootstrap requests are limited to /api/agent and /healthz");
@@ -78,7 +113,7 @@ export async function openclawBootstrapRequest(path = "/api/agent", { signal = n
   const rawUrl = String(connection.rawUrl || "").replace(/\/+$/, "");
   if (!rawUrl) throw new Error("Set the launchable URL in the Module 3a probe first.");
   const provider = accessProviderForOpenClawUrl(rawUrl, connection.accessProvider);
-  if (provider === "pomerium") {
+  if (provider === "pomerium" && !connection.accessSession) {
     const result = await openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal });
     return {
       ...result,
@@ -87,13 +122,20 @@ export async function openclawBootstrapRequest(path = "/api/agent", { signal = n
     };
   }
 
-  const route = openclawHttpUrl(rawUrl, actionPath);
+  const route = openclawHttpUrl(
+    rawUrl,
+    actionPath,
+    getOpenClawProxyConfig(),
+    provider,
+    connection.accessSession,
+  );
   const headers = { Accept: "application/json, text/plain, */*" };
   if (route.viaProxy && connection.accessSession) {
-    if (provider !== "cloudflare") {
-      throw new Error("Choose the access provider that matches this launchable.");
+    if (provider === "cloudflare") headers["CF-Access-Jwt-Assertion"] = connection.accessSession;
+    else {
+      headers["X-OpenClaw-Access-Provider"] = provider;
+      headers["X-OpenClaw-Access-Session"] = connection.accessSession;
     }
-    headers["CF-Access-Jwt-Assertion"] = connection.accessSession;
   }
   // /api/agent discovers the gateway token. A stale token from another
   // launchable must not prevent that replacement.
@@ -645,6 +687,51 @@ export function mountEndpointProbe(targetSel, opts = {}) {
       eyeSessionBtn.title = showing ? "Show session" : "Hide session";
     });
   }
+  let browserSessionProbe = 0;
+  let browserSessionTimer = null;
+  function _setAccessSessionState(provider, state) {
+    if (!accessSessionInp) return;
+    const detected = provider === "pomerium" && state === "detected";
+    accessSessionInp.disabled = detected;
+    if (eyeSessionBtn) eyeSessionBtn.disabled = detected;
+    if (accessSessionRow) {
+      accessSessionRow.dataset.browserCookie = detected ? "1" : "0";
+      accessSessionRow.dataset.sessionState = state;
+    }
+    accessSessionInp.placeholder = provider === "pomerium"
+      ? detected
+        ? "signed-in browser session detected; nothing to paste"
+        : state === "checking"
+          ? "checking for a signed-in browser session…"
+          : "paste the _pomerium cookie value"
+      : provider === "cloudflare"
+        ? "paste the CF_Authorization cookie value"
+        : "choose a provider or enter a launchable URL";
+  }
+  function _scheduleBrowserSessionDetection(provider) {
+    browserSessionProbe += 1;
+    clearTimeout(browserSessionTimer);
+    if (provider !== "pomerium" || !accessSessionInp || accessSessionInp.value.trim()) return;
+    const rawUrl = _normalizeBaseUrl(urlInp.value);
+    if (!rawUrl) return;
+    const probe = browserSessionProbe;
+    _setAccessSessionState(provider, "checking");
+    browserSessionTimer = setTimeout(async () => {
+      const detected = await detectOpenClawBrowserSession(rawUrl, provider);
+      if (probe !== browserSessionProbe ||
+          _normalizeBaseUrl(urlInp.value) !== rawUrl ||
+          accessSessionInp.value.trim()) return;
+      _setAccessSessionState(provider, detected ? "detected" : "manual");
+      if (detected) {
+        _saveOpenClawConnection(
+          rawUrl,
+          tokenInp.value.trim(),
+          accessProviderInp?.value,
+          "",
+        );
+      }
+    }, 250);
+  }
   function _refreshAccessSessionPlaceholder() {
     if (!accessSessionInp) return;
     let provider = "auto";
@@ -656,18 +743,14 @@ export function mountEndpointProbe(targetSel, opts = {}) {
       accessProviderInp?.setCustomValidity(message);
       return;
     }
-    const pomerium = provider === "pomerium";
-    if (pomerium) accessSessionInp.value = "";
-    accessSessionInp.disabled = pomerium;
-    if (eyeSessionBtn) eyeSessionBtn.disabled = pomerium;
-    if (accessSessionRow) accessSessionRow.dataset.browserCookie = pomerium ? "1" : "0";
-    accessSessionInp.placeholder = pomerium
-      ? "uses the signed-in browser session; nothing to paste"
-      : provider === "cloudflare"
-        ? "paste the CF_Authorization cookie value"
-        : "choose a provider or enter a launchable URL";
+    _setAccessSessionState(provider, "manual");
+    _scheduleBrowserSessionDetection(provider);
     if (wsRelayEnabledInp) {
       wsRelayEnabledInp.disabled = provider !== "cloudflare";
+      if (provider !== "cloudflare" && wsRelayEnabledInp.checked) {
+        wsRelayEnabledInp.checked = false;
+        setOpenClawWsRelayEnabled(false);
+      }
       wsRelayEnabledInp.title = provider === "cloudflare"
         ? wsRelayAvailableHint
         : wsRelayUnavailableHint;
@@ -675,6 +758,13 @@ export function mountEndpointProbe(targetSel, opts = {}) {
   }
   if (accessSessionInp) {
     accessSessionInp.addEventListener("input", () => {
+      browserSessionProbe += 1;
+      clearTimeout(browserSessionTimer);
+      let provider = "auto";
+      try {
+        provider = accessProviderForOpenClawUrl(urlInp.value, accessProviderInp?.value || "auto");
+      } catch (_) {}
+      _setAccessSessionState(provider, "manual");
       _saveOpenClawConnection(urlInp.value.trim(), tokenInp.value.trim(), accessProviderInp?.value, accessSessionInp.value.trim());
     });
   }
@@ -684,6 +774,9 @@ export function mountEndpointProbe(targetSel, opts = {}) {
       _saveOpenClawConnection(urlInp.value.trim(), tokenInp.value.trim(), accessProviderInp.value, accessSessionInp?.value.trim());
     });
   }
+  window.addEventListener("focus", () => {
+    if (!accessSessionInp?.value.trim()) _refreshAccessSessionPlaceholder();
+  });
   const outEl    = target.querySelector(".claw-out");
   const actBox   = target.querySelector(".claw-actions");
   const probeEl  = target.querySelector(".claw-probe");
@@ -792,12 +885,18 @@ export function mountEndpointProbe(targetSel, opts = {}) {
   // Used by runAction. Keep the normalized launchable origin and API path separate. Brev launchable
   // normalization intentionally drops UI paths; combining them here would turn
   // /healthz or /api/agent into a request for the OpenClaw Control page at /.
-  function _fetchUrl(baseUrl, pathAndQuery) {
+  function _fetchUrl(baseUrl, pathAndQuery, accessProvider = "auto", accessSession = "") {
     const displayUrl = baseUrl.replace(/\/+$/, "") + (pathAndQuery.startsWith("/") ? pathAndQuery : "/" + pathAndQuery);
     if (!isOpenClaw) {
       return { url: displayUrl, displayUrl, viaProxy: false, directUrl: displayUrl, directDisplayUrl: displayUrl };
     }
-    return openclawHttpUrl(baseUrl, pathAndQuery, _proxyConfig());
+    return openclawHttpUrl(
+      baseUrl,
+      pathAndQuery,
+      _proxyConfig(),
+      accessProvider,
+      accessSession,
+    );
   }
 
   async function runAction(action) {
@@ -806,9 +905,6 @@ export function mountEndpointProbe(targetSel, opts = {}) {
     if (!base) { setOutput("Set a base URL above first.", "err", "blocked"); return; }
     const token = (tokenInp.value || "").trim();
     const actionPath = action.path || "/";
-    const displayUrl = base + (actionPath.startsWith("/") ? actionPath : "/" + actionPath);
-    const route = _fetchUrl(base, actionPath);
-    const fetchTarget = route.url;
     const method = action.method || "GET";
     let body = null;
     if (typeof action.body === "function") {
@@ -821,6 +917,9 @@ export function mountEndpointProbe(targetSel, opts = {}) {
     try { accessProvider = accessProviderForOpenClawUrl(base, accessProviderInp?.value || "auto"); }
     catch (e) { setOutput(localizeCourseUiText(e.message), "err"); return; }
     const accessSession = accessSessionInp ? accessSessionInp.value.trim() : "";
+    const displayUrl = base + (actionPath.startsWith("/") ? actionPath : "/" + actionPath);
+    const route = _fetchUrl(base, actionPath, accessProvider, accessSession);
+    const fetchTarget = route.url;
     const headers = { "Accept": "application/json, text/html, */*" };
     // /api/agent discovers this token. Do not let a token retained from a
     // different launchable prevent discovery of its replacement.
@@ -833,8 +932,6 @@ export function mountEndpointProbe(targetSel, opts = {}) {
       }
       if (accessProvider === "cloudflare") {
         // Cloudflare's relay contract accepts this assertion header.
-        // Explicit relay deployments may use the provider-neutral pair below;
-        // the course keeps Pomerium direct and never enters this branch.
         headers["CF-Access-Jwt-Assertion"] = accessSession;
       } else {
         headers["X-OpenClaw-Access-Provider"] = accessProvider;
@@ -849,7 +946,8 @@ export function mountEndpointProbe(targetSel, opts = {}) {
     hideHtmlFrame(true);
     const t0 = performance.now();
     try {
-      const useLoopback = isOpenClaw && accessProvider === "pomerium" && method === "GET" &&
+      const useLoopback = isOpenClaw && accessProvider === "pomerium" && !accessSession &&
+        method === "GET" &&
         !body && (actionPath === "/healthz" || actionPath === "/api/agent");
       const loopback = useLoopback
         ? await openclawLoopbackProbe(actionPath, { baseUrl: base })
@@ -872,7 +970,11 @@ export function mountEndpointProbe(targetSel, opts = {}) {
       const dt = Math.round(performance.now() - t0);
       const ct = r.headers.get("content-type") || "";
       const head = `← ${r.status} ${r.statusText}   ${dt}ms` +
-        (loopback ? "   (direct browser session → launchable loopback)" : "");
+        (loopback
+          ? "   (direct browser session → launchable loopback)"
+          : route.viaProxy
+            ? "   (via hosted relay)"
+            : "   (direct)");
 
       if (ct.includes("text/html")) {
         const html = await r.text();
@@ -881,7 +983,7 @@ export function mountEndpointProbe(targetSel, opts = {}) {
         if (/cloudflareaccess\.com|Sign in ・ Cloudflare Access|Cloudflare Access|auth\.apps\.run\.brev\.nvidia\.com|pomerium/i.test(html)) {
           const cookieName = accessCookieName(accessProvider);
           const recovery = accessProvider === "pomerium"
-            ? "Open the launchable in this browser and sign in, then probe again. The HttpOnly Pomerium session stays in the browser and is never pasted into the course."
+            ? "Open the launchable in this browser and sign in, then probe again. If this separately hosted course cannot detect that browser session, paste the complete _pomerium value into Access session."
             : "Open the launchable, sign in, then use DevTools → Application → Storage → Cookies. " +
               "Copy the full " + cookieName + " value into Access session above and probe again.";
           setOutput(head + "\n\nThe launchable needs a fresh " + cookieName + " browser session.\n\n" + recovery, "err");
@@ -936,7 +1038,7 @@ export function mountEndpointProbe(targetSel, opts = {}) {
           printed = await r.text();
         }
         if (!r.ok && r.status === 401 && accessProvider === "pomerium") {
-          printed += "\n\nPomerium did not accept the browser session. Open the current launchable in this browser, sign in, and try again. Do not copy the _pomerium cookie into the course.";
+          printed += "\n\nPomerium did not accept the access session. Reopen the current launchable and sign in. If automatic detection remains unavailable here, paste a fresh _pomerium value into Access session.";
         }
         setOutput(head + "\n\n" + printed, r.ok ? "ok" : "err");
       }

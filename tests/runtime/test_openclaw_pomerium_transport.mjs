@@ -53,48 +53,76 @@ test('Pomerium loopback probe is registered for learner cells', () => {
   assert.equal(shared.HELPER_FNS.openclawLoopbackProbe, openshell.openclawLoopbackProbe);
 });
 
-test('Pomerium stays browser-direct and exposes only fixed loopback bootstrap reads', async () => {
+test('Pomerium uses a tab-scoped manual session when browser detection is unavailable', async () => {
   const saved = connection.setOpenClawConnection({
     rawUrl: launchable,
     token: 'tab-token',
     accessProvider: 'pomerium',
-    accessSession: 'must-not-be-retained',
+    accessSession: 'manual-pomerium-session',
   });
 
-  assert.equal(saved.accessSession, '');
-  assert.equal(connection.getOpenClawConnection().accessSession, '');
+  assert.equal(saved.accessSession, 'manual-pomerium-session');
+  const restored = connection.getOpenClawConnection();
+  assert.equal(restored.accessSession, 'manual-pomerium-session');
+  assert.equal(
+    restored.effectiveUrl,
+    'https://openclaw-cors-proxy.experiments.courses.nvidia.com/https/nemoclaw-test.apps.run.brev.nvidia.com',
+  );
   assert.equal(persistent.get(connection.OPENCLAW_TOKEN_KEY), undefined);
   assert.equal(persistent.get(connection.OPENCLAW_ACCESS_SESSION_KEY), undefined);
   assert.equal(tab.get(connection.OPENCLAW_TOKEN_KEY), 'tab-token');
-  assert.equal(tab.get(connection.OPENCLAW_ACCESS_SESSION_KEY), undefined);
+  assert.equal(tab.get(connection.OPENCLAW_ACCESS_SESSION_KEY), 'manual-pomerium-session');
 
-  const http = connection.openclawHttpUrl(launchable, '/api/agent');
+  const http = connection.openclawHttpUrl(
+    launchable, '/api/agent', undefined, 'pomerium', saved.accessSession);
   const gateway = connection.openclawWebSocketUrl(
     launchable,
     '/cli/gateway',
-    'must-not-enter-url',
+    saved.accessSession,
     undefined,
     'pomerium',
   );
-  assert.equal(http.url, launchable + '/api/agent');
-  assert.equal(http.viaProxy, false);
-  assert.equal(gateway.url, 'wss://nemoclaw-test.apps.run.brev.nvidia.com/cli/gateway');
-  assert.equal(gateway.viaProxy, false);
-  assert.doesNotMatch(gateway.url, /openclaw-cors-proxy|access_session|cf_access_jwt|must-not-enter-url/);
+  assert.equal(
+    http.url,
+    'https://openclaw-cors-proxy.experiments.courses.nvidia.com/https/nemoclaw-test.apps.run.brev.nvidia.com/api/agent',
+  );
+  assert.equal(http.viaProxy, true);
+  assert.match(gateway.url, /openclaw-cors-proxy.*access_provider=pomerium.*access_session=manual-pomerium-session/);
+  assert.equal(gateway.viaProxy, true);
+  assert.doesNotMatch(gateway.displayUrl, /manual-pomerium-session/);
 
   const metadata = await openshell.openclawLoopbackProbe('/api/agent', { baseUrl: launchable });
   assert.equal(metadata.transport, 'direct-terminal-loopback');
   assert.equal(metadata.json.agent.dashboardUrl, '/#token=test-gateway-token');
   assert.equal(terminalUrls.length, 1);
   const terminal = new URL(terminalUrls[0]);
-  assert.equal(terminal.origin, 'wss://nemoclaw-test.apps.run.brev.nvidia.com');
-  assert.equal(terminal.pathname, '/ws/terminal');
+  assert.equal(terminal.origin, 'wss://openclaw-cors-proxy.experiments.courses.nvidia.com');
+  assert.equal(terminal.pathname, '/https/nemoclaw-test.apps.run.brev.nvidia.com/ws/terminal');
   assert.equal(terminal.searchParams.get('cmd'), 'curl -fsS --max-time 10 http://127.0.0.1/api/agent');
-  assert.doesNotMatch(terminal.href, /openclaw-cors-proxy|access_session|cf_access_jwt|must-not-be-retained/);
+  assert.equal(terminal.searchParams.get('access_provider'), 'pomerium');
+  assert.equal(terminal.searchParams.get('access_session'), 'manual-pomerium-session');
 
   await assert.rejects(
     openshell.openclawLoopbackProbe('/arbitrary', { baseUrl: launchable }),
     /Unsupported loopback bootstrap path/,
   );
   assert.equal(terminalUrls.length, 1, 'unsupported path opened a terminal socket');
+});
+
+test('Pomerium remains direct when no manual access session is supplied', () => {
+  connection.setOpenClawConnection({
+    rawUrl: launchable,
+    token: 'tab-token',
+    accessProvider: 'pomerium',
+    accessSession: '',
+  });
+  const gateway = connection.openclawWebSocketUrl(
+    launchable,
+    '/cli/gateway',
+    '',
+    undefined,
+    'pomerium',
+  );
+  assert.equal(gateway.url, 'wss://nemoclaw-test.apps.run.brev.nvidia.com/cli/gateway');
+  assert.equal(gateway.viaProxy, false);
 });

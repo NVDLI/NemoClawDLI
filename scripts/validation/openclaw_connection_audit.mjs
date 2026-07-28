@@ -108,16 +108,27 @@ const pomeriumRegistered = mod.setOpenClawConnection({
   accessSession: 'opaque-session',
 });
 ok(pomeriumRegistered.resolvedAccessProvider === 'pomerium', 'Pomerium launchable was not selectable');
-ok(!pomeriumRegistered.accessSession && !storage.get('nemoclaw_openclaw_access_session_v1') &&
-   !secretStorage.get('nemoclaw_openclaw_access_session_v1'),
-  'Pomerium browser cookie entered course-accessible storage');
-const pomeriumHttp = mod.openclawHttpUrl(pomeriumLaunchable, '/api/agent');
-ok(!pomeriumHttp.viaProxy && pomeriumHttp.url === 'https://nemoclaw-test123.apps.run.brev.nvidia.com/api/agent',
-  `Pomerium HTTP route did not stay direct: ${pomeriumHttp.url}`);
+ok(pomeriumRegistered.accessSession === 'opaque-session' &&
+   !storage.get('nemoclaw_openclaw_access_session_v1') &&
+   secretStorage.get('nemoclaw_openclaw_access_session_v1') === 'opaque-session',
+  'Pomerium fallback session was not restricted to tab-scoped storage');
+const pomeriumHttp = mod.openclawHttpUrl(
+  pomeriumLaunchable, '/api/agent', undefined, 'pomerium', 'opaque-session');
+ok(pomeriumHttp.viaProxy &&
+   pomeriumHttp.url === approved + '/https/nemoclaw-test123.apps.run.brev.nvidia.com/api/agent',
+  `Pomerium manual-session HTTP route bypassed the approved relay: ${pomeriumHttp.url}`);
 const pomeriumWs = mod.openclawWebSocketUrl(pomeriumLaunchable, '/cli/gateway', 'opaque-session', undefined, 'pomerium');
-ok(!pomeriumWs.viaProxy && pomeriumWs.url === 'wss://nemoclaw-test123.apps.run.brev.nvidia.com/cli/gateway' &&
-   !/access_session|cf_access_jwt/.test(pomeriumWs.url),
-  `Pomerium WebSocket route exposed or relayed its browser session: ${pomeriumWs.url}`);
+ok(pomeriumWs.viaProxy &&
+   pomeriumWs.url === 'wss://openclaw-cors-proxy.experiments.courses.nvidia.com/https/nemoclaw-test123.apps.run.brev.nvidia.com/cli/gateway?access_provider=pomerium&access_session=opaque-session',
+  `Pomerium manual-session WebSocket did not use the provider-bound relay: ${pomeriumWs.url}`);
+ok(pomeriumWs.displayUrl.includes('access_session=...') &&
+   !pomeriumWs.displayUrl.includes('opaque-session'),
+  'Pomerium display URL exposes the access session');
+const pomeriumDirect = mod.openclawWebSocketUrl(
+  pomeriumLaunchable, '/cli/gateway', '', undefined, 'pomerium');
+ok(!pomeriumDirect.viaProxy &&
+   pomeriumDirect.url === 'wss://nemoclaw-test123.apps.run.brev.nvidia.com/cli/gateway',
+  `Pomerium browser-session route did not remain direct: ${pomeriumDirect.url}`);
 let mismatchRejected = false;
 try { mod.openclawWebSocketUrl(pomeriumLaunchable, '/cli/gateway', 'opaque-session', undefined, 'cloudflare'); }
 catch (_) { mismatchRejected = true; }
@@ -149,12 +160,13 @@ ok(!sameOrigin.viaProxy &&
    sameOrigin.url === 'wss://nemoclaw-test123.brevlab.com/cli/gateway',
   'same-origin co-located launchable did not use its authenticated direct route');
 
-// Terminal WebSocket selection mirrors _openshell.js: both providers are direct by default,
-// while the approved Cloudflare relay remains available only through an explicit opt-in.
+// Terminal WebSocket selection mirrors _openshell.js: detected browser sessions are direct,
+// while a manually supplied Pomerium session and Cloudflare's explicit recovery use the relay.
 globalThis.location = new URL('https://course.example.test/nemoclaw/04b-modern-clis.html');
 const terminalPath = '/ws/terminal?cmd=' + encodeURIComponent('bash');
 function terminalRoutes(rawUrl, accessSession, accessProvider) {
-  const relayEnabled = mod.getOpenClawWsRelayEnabled();
+  const relayEnabled = mod.getOpenClawWsRelayEnabled() ||
+    (accessProvider === 'pomerium' && Boolean(accessSession));
   const routed = mod.openclawWebSocketUrl(
     rawUrl,
     terminalPath,
@@ -169,10 +181,10 @@ ok(cfTerminal.length === 1 &&
    cfTerminal[0] === 'wss://nemoclaw-test123.brevlab.com/ws/terminal?cmd=bash',
   `Cloudflare terminal did not keep its browser-bound direct session: ${cfTerminal.join(' , ')}`);
 const pomTerminal = terminalRoutes(pomeriumLaunchable, 'opaque-session', 'pomerium');
-ok(pomTerminal.length === 1 && pomTerminal[0] === 'wss://nemoclaw-test123.apps.run.brev.nvidia.com/ws/terminal?cmd=bash',
-  `Pomerium terminal did not stay on one direct route: ${pomTerminal.join(' , ')}`);
-ok(!/access_session|cf_access_jwt|_pomerium/.test(pomTerminal.join(' ')),
-  'Pomerium terminal exposed or relayed its browser session');
+ok(pomTerminal.length === 1 &&
+   pomTerminal[0] === approved.replace(/^http/, 'ws') +
+     '/https/nemoclaw-test123.apps.run.brev.nvidia.com/ws/terminal?cmd=bash&access_provider=pomerium&access_session=opaque-session',
+  `Pomerium manual-session terminal did not use the provider-bound relay: ${pomTerminal.join(' , ')}`);
 mod.setOpenClawWsRelayEnabled(true);
 const cfRelayTerminal = terminalRoutes(launchable, 'test.jwt', 'cloudflare');
 ok(cfRelayTerminal[0] ===
@@ -223,8 +235,12 @@ ok(openclaw.includes('opts.proxyControls === true') &&
   'explicit relay-override fixture no longer surfaces rejected configuration');
 ok(openclaw.includes('getOpenClawWsRelayEnabled()') &&
    openclaw.includes('proxyEnabled === true') &&
+   openclaw.includes('detectOpenClawBrowserSession') &&
+   openclaw.includes('signed-in browser session detected; nothing to paste') &&
+   openclaw.includes('paste the _pomerium cookie value') &&
+   !openclaw.includes('uses the signed-in browser session; nothing to paste') &&
    openclaw.includes('{ enabled: false, base: "" }'),
-  'gateway WebSocket does not default direct while retaining explicit relay opt-in');
+  'gateway WebSocket detection and manual-session fallback are incomplete');
 ok(openclaw.includes('if (route.viaProxy && accessSession)') &&
    openclaw.includes('headers["CF-Access-Jwt-Assertion"] = accessSession;') &&
    openclaw.includes('headers["X-OpenClaw-Access-Provider"] = accessProvider;') &&

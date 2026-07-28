@@ -230,8 +230,8 @@ def audit_launchable_transport(surfaces: dict[str, str], connection: str, shared
     _need(findings, "new URL(DEFAULT_OPENCLAW_PROXY_BASE)" in connection and
           re.search(r'\.get\(\s*["\']openclaw_proxy(?:_base)?["\']\s*\)', connection) is None and
           "new URL(config.base)" not in connection and
-          "upstream.origin !== loc.origin" in connection,
-          "cross-origin Cloudflare metadata must use only the approved non-bypassable relay")
+          "upstream.origin === loc.origin" in connection,
+          "cross-origin launchable metadata must use only the approved non-bypassable relay")
     _need(findings, "OPENCLAW_WS_RELAY_ENABLED_KEY" in connection and
           "export function getOpenClawWsRelayEnabled" in connection and
           "export function setOpenClawWsRelayEnabled" in connection and
@@ -250,7 +250,9 @@ def audit_launchable_transport(surfaces: dict[str, str], connection: str, shared
     _need(findings, bootstrap and
           "OPENCLAW_BOOTSTRAP_PATHS" in openclaw and
           "openclawLoopbackProbe" in bootstrap and
-          'headers["CF-Access-Jwt-Assertion"] = connection.accessSession;' in bootstrap,
+          'headers["CF-Access-Jwt-Assertion"] = connection.accessSession;' in bootstrap and
+          'headers["X-OpenClaw-Access-Provider"] = provider;' in bootstrap and
+          'headers["X-OpenClaw-Access-Session"] = connection.accessSession;' in bootstrap,
           "bootstrap discovery must share the normalized Pomerium/Cloudflare provider decision")
     for name, text in sorted(surfaces.items()):
         if not name.endswith("/03a-kickstart.html"):
@@ -276,10 +278,9 @@ def audit_launchable_transport(surfaces: dict[str, str], connection: str, shared
     gateway_start = openclaw.find("export function openclawGatewayWsUrl")
     gateway_end = openclaw.find("export function gatewayTokenFromAgentMetadata", gateway_start)
     gateway_router = openclaw[gateway_start:gateway_end] if gateway_start >= 0 and gateway_end > gateway_start else ""
-    _need(findings, re.search(
-              r"if\s*\(\s*provider\s*===\s*['\"]pomerium['\"]\s*\|\|\s*!\s*relayEnabled\s*\)",
-              gateway_router,
-          ) is not None and
+    _need(findings,
+          "provider === \"pomerium\" && Boolean(String(accessSession || \"\").trim())" in gateway_router and
+          "if (!relayEnabled)" in gateway_router and
           re.search(r"\bproxyEnabled\s*===\s*true\b", gateway_router) is not None and
           "getOpenClawWsRelayEnabled()" in gateway_router and
           re.search(
@@ -287,7 +288,7 @@ def audit_launchable_transport(surfaces: dict[str, str], connection: str, shared
               r"\s*accessSession\s*,\s*config\s*,\s*accessProvider\s*\)",
               gateway_router,
           ) is not None,
-          "gateway sockets must default sender-bound and retain explicit Cloudflare relay opt-in")
+          "gateway sockets must require either live direct detection or a provider-bound manual fallback")
     _need(findings, "const wsUrls = [routed.url]" in openshell and
           "getOpenClawWsRelayEnabled()" in openshell and
           '{ enabled: false, base: "" }' in openshell and
@@ -306,6 +307,7 @@ def audit_launchable_learning_path(pages: dict[str, str]) -> list[str]:
         "Chat with Agent",
         "https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com",
         "https://nemoclaw-&lt;id&gt;.brevlab.com",
+        "_pomerium",
         "CF_Authorization",
     )
     required_recovery = (
@@ -1323,18 +1325,19 @@ def audit_assistant_artifact_harness(runtime: str, wrapper: str, docs: str, skil
         "output.terminalOpen = transcript.frames > 0": "live terminal contract must require a non-empty PTY transcript",
         "id: 'browser-cron-runs', method: 'cron.runs'": "live cron contract must verify the run-history RPC used by Module 3c",
         "const response = await mod.openclawBootstrapRequest('/api/agent')": "live launchable checks must exercise the course bootstrap transport instead of duplicating its credential routing",
-        "const gateway = mod.openclawGatewayWsUrl(clawUrl, accessSession, proxyBase, false, accessProvider)": "live launchable checks must exercise the sender-bound WebSocket default",
+        "const gateway = mod.openclawGatewayWsUrl(clawUrl, accessSession, proxyBase, null, accessProvider)": "live launchable checks must let the shared router select direct detection or the provider-bound fallback",
+        "'X-OpenClaw-Access-Provider': 'pomerium'": "manual Pomerium checks must declare the provider without forwarding a browser cookie",
+        "'X-OpenClaw-Access-Session': CLAW_ACCESS_SESSION": "manual Pomerium checks must send the session only through the provider-bound relay",
     }
     for token, message in contract.items():
         _need(findings, token in runtime, f"scripts/runtime/test_page_runtime.js: {message}")
     pomerium_token_bootstrap = javascript_function(runtime, "async function resolveOpenClawToken")
     pomerium_preflight = javascript_function(runtime, "async function preflightOpenClaw")
     _need(findings,
-          "if (CLAW_ACCESS_PROVIDER === 'pomerium') return;" in pomerium_token_bootstrap and
-          "if (CLAW_ACCESS_PROVIDER === 'pomerium') return;" in pomerium_preflight and
-          "X-OpenClaw-Access-Provider" not in runtime and
-          "X-OpenClaw-Access-Session" not in runtime,
-          "scripts/runtime/test_page_runtime.js: sender-bound Pomerium sessions must never enter the Cloudflare relay-header path")
+          "if (CLAW_ACCESS_PROVIDER === 'pomerium' && !CLAW_ACCESS_SESSION) return;" in pomerium_token_bootstrap and
+          "if (CLAW_ACCESS_PROVIDER === 'pomerium' && !CLAW_ACCESS_SESSION) return;" in pomerium_preflight and
+          "if (!CLAW_ACCESS_SESSION) return direct;" in runtime,
+          "scripts/runtime/test_page_runtime.js: Pomerium must stay direct without a supplied session and use the provider-bound fallback when one is supplied")
     _need(findings, runtime.count("Build a runnable") >= 3,
           "scripts/runtime/test_page_runtime.js: live artifact mode must cover a diagram, dashboard, and quiz")
     _need(findings, '--assistant-artifacts) assistant_artifacts=1' in wrapper and
@@ -1621,8 +1624,10 @@ def self_test() -> list[str]:
         ("hosted terminal skill removed", assistant_runtime, runtime_wrapper, runtime_docs, runtime_skill.replace('Hosted operator terminal', 'Hosted shell', 1), "hosted terminal validation"),
         ("cron run-history check removed", assistant_runtime.replace("id: 'browser-cron-runs', method: 'cron.runs'", "id: 'browser-cron-remove', method: 'cron.remove'", 1), runtime_wrapper, runtime_docs, runtime_skill, "run-history RPC"),
         ("launchable bootstrap helper bypassed", assistant_runtime.replace("const response = await mod.openclawBootstrapRequest('/api/agent')", "const response = await fetch(clawUrl + '/api/agent')", 1), runtime_wrapper, runtime_docs, runtime_skill, "course bootstrap transport"),
-        ("launchable WebSocket relay forced", assistant_runtime.replace("const gateway = mod.openclawGatewayWsUrl(clawUrl, accessSession, proxyBase, false, accessProvider)", "const gateway = mod.openclawGatewayWsUrl(clawUrl, accessSession, proxyBase, true, accessProvider)", 1), runtime_wrapper, runtime_docs, runtime_skill, "sender-bound WebSocket default"),
-        ("Pomerium token bootstrap relayed", assistant_runtime.replace("if (CLAW_ACCESS_PROVIDER === 'pomerium') return;", "if (CLAW_ACCESS_PROVIDER === 'cloudflare') return;", 1), runtime_wrapper, runtime_docs, runtime_skill, "sender-bound Pomerium sessions"),
+        ("launchable WebSocket route forced", assistant_runtime.replace("const gateway = mod.openclawGatewayWsUrl(clawUrl, accessSession, proxyBase, null, accessProvider)", "const gateway = mod.openclawGatewayWsUrl(clawUrl, accessSession, proxyBase, true, accessProvider)", 1), runtime_wrapper, runtime_docs, runtime_skill, "shared router select"),
+        ("Pomerium direct path removed", assistant_runtime.replace("if (CLAW_ACCESS_PROVIDER === 'pomerium' && !CLAW_ACCESS_SESSION) return;", "if (CLAW_ACCESS_PROVIDER === 'pomerium') return;", 1), runtime_wrapper, runtime_docs, runtime_skill, "Pomerium must stay direct"),
+        ("Pomerium provider binding removed", assistant_runtime.replace("'X-OpenClaw-Access-Provider': 'pomerium'", "'X-OpenClaw-Access-Provider': 'cloudflare'", 1), runtime_wrapper, runtime_docs, runtime_skill, "declare the provider"),
+        ("Pomerium session relay removed", assistant_runtime.replace("'X-OpenClaw-Access-Session': CLAW_ACCESS_SESSION", "'X-OpenClaw-Access-Session': ''", 1), runtime_wrapper, runtime_docs, runtime_skill, "send the session"),
     ]
     for label, mutated_runtime, mutated_wrapper, mutated_docs, mutated_skill, expected in assistant_harness_cases:
         if not any(expected in finding for finding in audit_assistant_artifact_harness(mutated_runtime, mutated_wrapper, mutated_docs, mutated_skill)):
@@ -1933,7 +1938,7 @@ def self_test() -> list[str]:
                             'const legacyRelay = new URLSearchParams(location.search).get("openclaw_proxy");\n\nexport function getOpenClawProxyConfig()', 1),
          shared_src, openclaw_src, openshell, "approved non-bypassable relay"),
         ("same-origin exception removed", surfaces,
-         connection.replace("return !loc || upstream.origin !== loc.origin;", "return true;", 1),
+         connection.replace("if (loc && upstream.origin === loc.origin) return false;", "", 1),
          shared_src, openclaw_src, openshell, "approved non-bypassable relay"),
         ("WebSocket direct default removed", surfaces,
          connection.replace("config?.enabled === false", "false", 1),
@@ -1948,6 +1953,20 @@ def self_test() -> list[str]:
          openclaw_src.replace(
              'headers["CF-Access-Jwt-Assertion"] = connection.accessSession;',
              'headers["X-Removed-Assertion"] = connection.accessSession;',
+             1,
+         ),
+         openshell, "bootstrap discovery"),
+        ("bootstrap Pomerium provider binding removed", surfaces, connection, shared_src,
+         openclaw_src.replace(
+             'headers["X-OpenClaw-Access-Provider"] = provider;',
+             'headers["X-OpenClaw-Access-Provider"] = "cloudflare";',
+             1,
+         ),
+         openshell, "bootstrap discovery"),
+        ("bootstrap Pomerium session binding removed", surfaces, connection, shared_src,
+         openclaw_src.replace(
+             'headers["X-OpenClaw-Access-Session"] = connection.accessSession;',
+             'headers["X-OpenClaw-Access-Session"] = "";',
              1,
          ),
          openshell, "bootstrap discovery"),
@@ -1981,11 +2000,18 @@ def self_test() -> list[str]:
          shared_src, openclaw_src.replace("accessProviderForOpenClawUrl(", "guessProvider("), openshell,
          "one access-provider decision"),
         ("gateway loses direct default", surfaces, connection, shared_src,
-         openclaw_src.replace('if (provider === "pomerium" || !relayEnabled)', 'if (provider === "pomerium")', 1),
-         openshell, "default sender-bound"),
+         openclaw_src.replace("if (!relayEnabled)", "if (false)", 1),
+         openshell, "live direct detection"),
+        ("gateway loses manual Pomerium fallback", surfaces, connection, shared_src,
+         openclaw_src.replace(
+             'provider === "pomerium" && Boolean(String(accessSession || "").trim())',
+             'provider === "pomerium" && false',
+             1,
+         ),
+         openshell, "provider-bound manual fallback"),
         ("gateway loses relay opt-in", surfaces, connection, shared_src,
          openclaw_src.replace("proxyEnabled === true", "proxyEnabled !== false", 1),
-         openshell, "explicit Cloudflare relay opt-in"),
+         openshell, "provider-bound manual fallback"),
         ("terminal restores direct-first bypass", surfaces, connection, shared_src, openclaw_src,
          openshell.replace("[routed.url]", "[direct.url, routed.url]", 1),
          "same provider-selected route"),
