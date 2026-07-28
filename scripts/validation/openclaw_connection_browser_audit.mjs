@@ -15,6 +15,7 @@ catch (_) { ({ chromium } = require('playwright-core')); }
 const root = path.resolve(process.env.SITE_ROOT || 'web');
 const port = Number(process.env.SITE_PORT || 4198);
 const screenshot = process.env.SCREENSHOT_PATH || '';
+const APPROVED_RELAY = 'https://openclaw-cors-proxy.experiments.courses.nvidia.com';
 const mime = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
@@ -61,11 +62,21 @@ try {
       localStorage.setItem('nemoclaw_clawurl', retired);
       window.__terminalUrls = [];
       window.__gatewayUrls = [];
+      window.__pomeriumDirectSession = false;
       class FakeWebSocket {
         static OPEN = 1;
         constructor(url) {
           this.url = url; this.readyState = 0; this.onmessage = null; this.onopen = null; this.onclose = null;
           setTimeout(() => {
+            const parsed = new URL(url);
+            const directPomeriumGateway =
+              parsed.hostname.endsWith('.apps.run.brev.nvidia.com') &&
+              parsed.pathname === '/cli/gateway';
+            if (directPomeriumGateway && !window.__pomeriumDirectSession) {
+              this.onerror?.(new Event('error'));
+              this.close();
+              return;
+            }
             this.readyState = FakeWebSocket.OPEN;
             this.onopen?.();
             if (/\/ws\/terminal/.test(url)) {
@@ -286,39 +297,65 @@ try {
        /^wss:\/\/nemoclaw-test123\.brevlab\.com\/cli\/gateway$/.test(url)) &&
      result.cloudflareGatewayUrls.every(url => !/access_session|cf_access_jwt|_pomerium/.test(url)),
     `Cloudflare gateway sockets did not keep authentication sender-bound: ${JSON.stringify(result.cloudflareGatewayUrls)}`);
-  result.pomerium = await page.evaluate(() => {
+  await page.evaluate(() => {
     const host = document.querySelector('#probe-claw');
     const url = host.querySelector('.claw-url');
-    const provider = host.querySelector('.claw-access-provider');
-    const session = host.querySelector('.claw-access-session');
     url.value = 'https://nemoclaw-test123.apps.run.brev.nvidia.com/chat?session=main';
     url.dispatchEvent(new Event('input'));
+  });
+  await page.waitForFunction(() => {
+    const session = document.querySelector('#probe-claw .claw-access-session');
+    return session?.closest('.claw-access-session-row')?.dataset.sessionState === 'manual';
+  });
+  result.pomerium = await page.evaluate(async () => {
+    const host = document.querySelector('#probe-claw');
+    const provider = host.querySelector('.claw-access-provider');
+    const session = host.querySelector('.claw-access-session');
     if (session.value || host.querySelector('.claw-token').value) throw new Error('credentials survived a launchable URL change');
     if (localStorage.getItem('nemoclaw_openclaw_access_session_v1') || localStorage.getItem('nemoclaw_clawtoken')) throw new Error('rotated credentials survived in localStorage');
-    if (provider.value !== 'auto' || !/signed-in browser session/.test(session.placeholder)) throw new Error('Pomerium launchable was not inferred from the URL');
-    if (!session.disabled || session.value) throw new Error('Pomerium cookie input remained writable');
+    if (provider.value !== 'auto' || !/paste the _pomerium cookie value/.test(session.placeholder)) throw new Error('Pomerium manual fallback was not exposed after detection failed');
+    if (session.disabled || session.value) throw new Error('Pomerium manual fallback was not writable');
     provider.value = 'cloudflare';
     provider.dispatchEvent(new Event('change'));
     if (!provider.validationMessage) throw new Error('provider mismatch was not rejected in the UI');
     provider.value = 'pomerium';
     provider.dispatchEvent(new Event('change'));
     if (provider.validationMessage) throw new Error('matching Pomerium provider remained invalid');
+    session.value = 'test-pomerium-session';
+    session.dispatchEvent(new Event('input'));
+    const shared = await import('/nemoclaw/scripts/_shared.js?pomerium-manual=' + Date.now());
+    const routing = await import('/nemoclaw/scripts/_connection.js?pomerium-manual=' + Date.now());
+    const connection = shared.getOpenClawConnection();
     return {
       raw: localStorage.getItem('nemoclaw_clawrawurl'),
       effective: localStorage.getItem('nemoclaw_clawurl'),
       provider: localStorage.getItem('nemoclaw_openclaw_access_provider_v1'),
       localSession: localStorage.getItem('nemoclaw_openclaw_access_session_v1'),
       tabSession: sessionStorage.getItem('nemoclaw_openclaw_access_session_v1'),
+      routed: routing.openclawHttpUrl(
+        connection.rawUrl,
+        '',
+        connection.proxy,
+        connection.accessProvider,
+        connection.accessSession,
+      ),
     };
   });
   ok(result.pomerium.raw === 'https://nemoclaw-test123.apps.run.brev.nvidia.com' &&
-     result.pomerium.effective === 'https://nemoclaw-test123.apps.run.brev.nvidia.com' &&
-     result.pomerium.provider === 'pomerium' && !result.pomerium.localSession && !result.pomerium.tabSession,
+     result.pomerium.effective === APPROVED_RELAY + '/https/nemoclaw-test123.apps.run.brev.nvidia.com' &&
+     result.pomerium.provider === 'pomerium' && !result.pomerium.localSession &&
+     result.pomerium.tabSession === 'test-pomerium-session',
     `Pomerium launchable did not persist through the visible controls: ${JSON.stringify(result.pomerium)}`);
   await page.getByRole('button', { name: 'GET /healthz', exact: true }).click();
   await page.waitForFunction(() => /"status":\s*"ok"/.test(document.querySelector('#probe-claw .claw-out')?.textContent || ''));
   await page.getByRole('button', { name: 'GET /api/agent', exact: true }).click();
-  await page.waitForFunction(() => document.querySelector('#probe-claw .claw-token')?.value === 'pomerium-probe-token_456');
+  await page.waitForFunction(() => document.querySelector('#probe-claw .claw-token')?.value === 'probe-token_123');
+  const pomeriumRequests = probeRequests.filter(item =>
+    item.url.includes('/https/nemoclaw-test123.apps.run.brev.nvidia.com/'));
+  ok(pomeriumRequests.length === 2 &&
+     pomeriumRequests.every(item =>
+       item.provider === 'pomerium' && item.session === 'test-pomerium-session'),
+    `Pomerium manual session did not reach the relay through neutral headers: ${JSON.stringify(pomeriumRequests)}`);
   result.pomeriumTransport = await page.evaluate(() => {
     const gatewayUrls = window.__gatewayUrls.slice();
     window.__gatewayUrls = [];
@@ -333,16 +370,42 @@ try {
   });
   ok(result.pomeriumTransport.gatewayUrls.length > 0 &&
      result.pomeriumTransport.gatewayUrls.every(url =>
-       /^wss:\/\/nemoclaw-test123\.apps\.run\.brev\.nvidia\.com\/cli\/gateway$/.test(url)),
-    `Pomerium gateway sockets did not stay direct and credential-free: ${JSON.stringify(result.pomeriumTransport.gatewayUrls)}`);
-  ok(result.pomeriumTransport.urls.length === 2 &&
-     result.pomeriumTransport.urls.every(url => url.startsWith('wss://nemoclaw-test123.apps.run.brev.nvidia.com/ws/terminal?cmd=')) &&
-     result.pomeriumTransport.urls.every(url => !/openclaw-cors-proxy|access_session|cf_access_jwt/.test(url)) &&
-     result.pomeriumTransport.token === 'pomerium-probe-token_456' &&
+       /^wss:\/\/openclaw-cors-proxy\.experiments\.courses\.nvidia\.com\/https\/nemoclaw-test123\.apps\.run\.brev\.nvidia\.com\/cli\/gateway\?access_provider=pomerium&access_session=test-pomerium-session$/.test(url)),
+    `Pomerium manual-session gateway did not use the provider-bound relay: ${JSON.stringify(result.pomeriumTransport.gatewayUrls)}`);
+  ok(result.pomeriumTransport.urls.length === 0 &&
+     result.pomeriumTransport.token === 'probe-token_123' &&
      result.pomeriumTransport.savedToken === result.pomeriumTransport.token &&
      !result.pomeriumTransport.localToken &&
-     /direct browser session/.test(result.pomeriumTransport.output),
-    `Pomerium bootstrap did not stay on the direct terminal: ${JSON.stringify(result.pomeriumTransport)}`);
+     /via hosted relay/.test(result.pomeriumTransport.output) &&
+     !/test-pomerium-session/.test(result.pomeriumTransport.output),
+    `Pomerium manual-session bootstrap did not use the redacted relay route: ${JSON.stringify(result.pomeriumTransport)}`);
+  result.detectedPomerium = await page.evaluate(() => {
+    const host = document.querySelector('#probe-claw');
+    const session = host.querySelector('.claw-access-session');
+    window.__pomeriumDirectSession = true;
+    session.value = '';
+    session.dispatchEvent(new Event('input'));
+    window.dispatchEvent(new Event('focus'));
+    return true;
+  });
+  await page.waitForFunction(() => {
+    const session = document.querySelector('#probe-claw .claw-access-session');
+    return session?.disabled && /session detected/.test(session.placeholder);
+  });
+  result.detectedPomerium = await page.evaluate(() => {
+    const session = document.querySelector('#probe-claw .claw-access-session');
+    return {
+      state: session.closest('.claw-access-session-row')?.dataset.sessionState,
+      disabled: session.disabled,
+      placeholder: session.placeholder,
+      tabSession: sessionStorage.getItem('nemoclaw_openclaw_access_session_v1'),
+    };
+  });
+  ok(result.detectedPomerium.state === 'detected' &&
+     result.detectedPomerium.disabled &&
+     /signed-in browser session detected; nothing to paste/.test(result.detectedPomerium.placeholder) &&
+     !result.detectedPomerium.tabSession,
+    `Pomerium direct-session success was not bound to a live challenge: ${JSON.stringify(result.detectedPomerium)}`);
   // The model route and the launchable route stay separate registrations: a launchable host
   // is not an OpenAI-compatible model API, so the model normalizer must refuse both families.
   result.modelRouteBoundary = await page.evaluate(async () => {

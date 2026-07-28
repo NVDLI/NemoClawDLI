@@ -69,7 +69,7 @@
     {
       "name": "OpenClaw controls",
       "entry": "scripts/_connection.js, scripts/_openclaw.js, scripts/_runtime_text.js",
-      "style": "Route every launchable HTTP and WebSocket consumer through _connection.js. Keep Cloudflare Access and Pomerium selectable and bind each session to its approved host family. Cloudflare metadata uses the approved relay; both providers keep WebSockets sender-bound in the signed-in browser. Preserve the explicit WebSocket-relay opt-in for recovery without making it the default. Use _openclaw.js for probes, chat, logs, and recovery. Treat chat.final as authoritative after lifecycle end; parse and filter displayed runtime text through _runtime_text.js. Keep actionable tool errors visible."
+      "style": "Route every launchable HTTP and WebSocket consumer through _connection.js. Keep Cloudflare Access and Pomerium selectable and bind each session to its approved host family. Never infer a usable browser session from the hostname: require a live gateway challenge before showing the detected state. Keep direct Pomerium transport when that challenge succeeds; otherwise accept a tab-scoped manual session through the provider-bound relay. Preserve the explicit Cloudflare WebSocket-relay recovery control without making it the default. Use _openclaw.js for probes, chat, logs, and recovery. Treat chat.final as authoritative after lifecycle end; parse and filter displayed runtime text through _runtime_text.js. Keep actionable tool errors visible."
     },
     {
       "name": "Model route settings",
@@ -154,7 +154,7 @@
     <thead><tr><th>File</th><th>Role</th></tr></thead>
     <tbody>
       <tr><td>_shared.js</td><td>Page chrome, model gateway helpers, service config, exported API surface for lesson pages.</td></tr>
-      <tr><td>_connection.js</td><td>Persistent non-secret route configuration, tab-scoped gateway and Cloudflare credentials, relay-backed Cloudflare metadata, direct sender-bound WebSockets, explicit relay fallback, provider/host validation, and stale saved-route migration.</td></tr>
+      <tr><td>_connection.js</td><td>Persistent non-secret route configuration, tab-scoped gateway and access credentials, direct verified sessions, provider-bound manual fallback, provider/host validation, and stale saved-route migration.</td></tr>
       <tr><td>_learning.js</td><td>English-pilot Guided first-visit default, compact header selector, independent native section disclosures, and Guided code collapse with authored defaults restored in Applied and Complete. No modal, telemetry, or generated content.</td></tr>
       <tr><td>_canvas.js</td><td>Runnable code cells and canvas-flow orchestration, including collapsed-code behavior and per-node reset.</td></tr>
       <tr><td>_openclaw.js</td><td>OpenClaw chat, probe, recovery, logs, and sandbox-policy controls.</td></tr>
@@ -185,7 +185,7 @@
       <tr><td><code>python3 scripts/validation/openclaw_fallback_audit.py</code></td><td>Required static OpenClaw fallback and probe lifecycle contract, including explicit hidden-frame CSS and <code>srcdoc</code> cleanup.</td></tr>
       <tr><td><code>python3 scripts/validation/endpoint_registration_audit.py --self-test</code></td><td>Mutation tests for endpoint ownership, typed probes, the SKILL explorer model handoff, and EN/PT/ES registration surfaces.</td></tr>
       <tr><td><code>python3 scripts/validation/endpoint_registration_audit.py</code></td><td>Current-tree endpoint ownership contract. Keeps chat, embedding, and OpenClaw registration paths distinct and visible.</td></tr>
-      <tr><td><code>bash scripts/runtime/run_node.sh scripts/validation/openclaw_connection_audit.mjs</code></td><td>Relay-backed Cloudflare metadata, direct sender-bound WebSockets, explicit relay fallback, retired query/state migration, terminal routing, and EN/PT/ES Module 4b reuse.</td></tr>
+      <tr><td><code>bash scripts/runtime/run_node.sh scripts/validation/openclaw_connection_audit.mjs</code></td><td>Direct browser-session detection, provider-bound manual fallback, retired query/state migration, terminal routing, and EN/PT/ES Module 4b reuse.</td></tr>
       <tr><td><code>bash scripts/runtime/run_node.sh scripts/validation/openclaw_connection_browser_audit.mjs</code></td><td>Chromium proof that Module 3a hides relay overrides, heals retired browser state, and keeps gateway and terminal transport on the selected provider route.</td></tr>
       <tr><td><code>python3 scripts/validation/learner_flow_audit.py --self-test</code></td><td>Mutation tests for learning-view, progressive-disclosure, prerequisite, exercise, and interaction-state regressions.</td></tr>
       <tr><td><code>python3 scripts/validation/learner_flow_audit.py</code></td><td>Required static learning-view, progressive-disclosure, prerequisite, exercise, and interaction-state contract.</td></tr>

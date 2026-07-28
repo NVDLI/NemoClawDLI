@@ -137,7 +137,7 @@ function audit(overrides = {}) {
       || !files.connection.includes('new URL(DEFAULT_OPENCLAW_PROXY_BASE)')
       || /\.get\("openclaw_(?:url|access_provider|proxy|proxy_base)"\)/.test(files.connection)
       || files.connection.includes('new URL(config.base)')
-      || !files.connection.includes('upstream.origin !== loc.origin')) {
+      || !files.connection.includes('upstream.origin === loc.origin')) {
     findings.push('shared OpenClaw connection module lacks relay-backed metadata and explicit WebSocket-relay opt-in');
   }
   if (!files.openshell.includes('openclawWebSocketUrl(')
@@ -153,9 +153,10 @@ function audit(overrides = {}) {
   const gatewayRouter = functionSource(files.helper, 'export function openclawGatewayWsUrl');
   if (!gatewayRouter?.includes('getOpenClawWsRelayEnabled()')
       || !/\bproxyEnabled\s*===\s*true\b/.test(gatewayRouter)
-      || !/if\s*\(\s*provider\s*===\s*["']pomerium["']\s*\|\|\s*!\s*relayEnabled\s*\)/.test(gatewayRouter)
+      || !gatewayRouter.includes('provider === "pomerium" && Boolean(String(accessSession || "").trim())')
+      || !gatewayRouter.includes('if (!relayEnabled)')
       || !/openclawWebSocketUrl\s*\(\s*rawUrl\s*,\s*["']\/cli\/gateway["']\s*,\s*accessSession\s*,\s*config\s*,\s*accessProvider\s*\)/.test(gatewayRouter)) {
-    findings.push('gateway WebSocket does not default sender-bound while retaining explicit Cloudflare relay opt-in');
+    findings.push('gateway WebSocket does not preserve live direct detection and the provider-bound manual fallback');
   }
   const bootstrap = functionSource(files.helper, 'export async function openclawBootstrapRequest');
   if (!files.runtimeText.includes('/proc\\/self\\/oom_score_adj')
@@ -175,7 +176,9 @@ function audit(overrides = {}) {
       || !files.helper.includes('const refreshedGateway = await helpers.refreshOpenClawGatewayToken({ signal: helpers.signal });')
       || !bootstrap
       || !files.helper.includes('await openclawBootstrapRequest("/api/agent"')
-      || !bootstrap.includes('headers["CF-Access-Jwt-Assertion"] = connection.accessSession;')) {
+      || !bootstrap.includes('headers["CF-Access-Jwt-Assertion"] = connection.accessSession;')
+      || !bootstrap.includes('headers["X-OpenClaw-Access-Provider"] = provider;')
+      || !bootstrap.includes('headers["X-OpenClaw-Access-Session"] = connection.accessSession;')) {
     findings.push('gateway entry points do not bootstrap the current token from /api/agent before connecting');
   }
   if (!files.openshell.includes('filterOpenClawRuntimeNoise')
@@ -291,16 +294,19 @@ function selfTest() {
     ['learner transport branch', { en: base.en.replace("const PATH = '/api/agent';", "const TRANSPORT = 'direct';\nconst PATH = '/api/agent';") }],
     ['approved relay construction', { connection: base.connection.replace('new URL(DEFAULT_OPENCLAW_PROXY_BASE)', 'new URL(config.base)') }],
     ['retired presenter query', { connection: base.connection.replace('export function getOpenClawProxyConfig()', 'const legacyRelay = new URLSearchParams(location.search).get("openclaw_proxy");\n\nexport function getOpenClawProxyConfig()') }],
-    ['same-origin Cloudflare exception', { connection: base.connection.replace('return !loc || upstream.origin !== loc.origin;', 'return true;') }],
+    ['same-origin launchable exception', { connection: base.connection.replace('if (loc && upstream.origin === loc.origin) return false;', '') }],
     ['terminal relay', { openshell: base.openshell.replace('openclawWebSocketUrl(', 'directTerminalUrl(', 1) }],
     ['terminal provider route', { openshell: base.openshell.replace('[routed.url]', '[rawUrl + "/ws/terminal"]') }],
-    ['gateway direct default', { helper: base.helper.replace('if (provider === "pomerium" || !relayEnabled)', 'if (provider === "pomerium")') }],
+    ['gateway direct default', { helper: base.helper.replace('if (!relayEnabled)', 'if (false)') }],
+    ['gateway manual Pomerium fallback', { helper: base.helper.replace('provider === "pomerium" && Boolean(String(accessSession || "").trim())', 'provider === "pomerium" && false') }],
     ['gateway relay opt-in', { helper: base.helper.replace('proxyEnabled === true', 'proxyEnabled !== false') }],
     ['downstream gateway', { cliRuntime: base.cliRuntime.replace('runtime.openclawGatewayWsUrl(connection.rawUrl, connection.accessSession, null, null, connection.accessProvider).url', 'connection.rawUrl + "/cli/gateway"') }],
     ['downstream page boundary', { en4b: base.en4b.replace('helpers.mountOpenClawCli("#agent-chat")', 'mountDirectCli("#agent-chat")') }],
     ['shared export', { shared: base.shared.replaceAll('gatewayTokenFromAgentMetadata', 'removedGatewayTokenParser') }],
     ['automatic token bootstrap', { helper: base.helper.replaceAll('refreshOpenClawGatewayToken({ signal', 'removedGatewayTokenRefresh({ signal') }],
     ['bootstrap assertion header', { helper: base.helper.replace('headers["CF-Access-Jwt-Assertion"] = connection.accessSession;', 'headers["X-Removed-Assertion"] = connection.accessSession;') }],
+    ['bootstrap Pomerium provider', { helper: base.helper.replace('headers["X-OpenClaw-Access-Provider"] = provider;', 'headers["X-OpenClaw-Access-Provider"] = "cloudflare";') }],
+    ['bootstrap Pomerium session', { helper: base.helper.replace('headers["X-OpenClaw-Access-Session"] = connection.accessSession;', 'headers["X-OpenClaw-Access-Session"] = "";') }],
     ['harness relay', { runtime: base.runtime.replaceAll('openclaw-cors-proxy.experiments.courses.nvidia.com', 'relay.invalid') }],
     ['focused browser check', { runtime: base.runtime.replace("args.includes('--gateway-only')", 'false') }],
     ['cron cleanup', { runtime: base.runtime.replace("output.cleanupId = ''", "output.cleanupId = id") }],

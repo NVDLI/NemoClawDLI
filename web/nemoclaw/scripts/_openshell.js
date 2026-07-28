@@ -18,16 +18,17 @@ const POMERIUM_LOOPBACK_PROBES = Object.freeze({
 });
 
 // PTY helper: `bash` opens the host; `openshell sandbox connect <agent>` enters the agent.
-// Both supported providers use the signed-in browser's direct PTY by default.
-// An explicit relayWebSocket opt-in retains the approved Cloudflare relay route.
+// A detected browser session uses the direct PTY. A manually supplied access
+// session uses the approved relay; Cloudflare also retains an explicit recovery toggle.
 export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000, openMs = 12000, onChunk = null, baseUrl = null, signal = null, relayWebSocket = null } = {}) {
   /* @doc <code>helpers.terminal(cmd, {send, idleMs, totalMs, openMs, onChunk})</code> ::
        Open a PTY over your launchable's <code>/ws/terminal</code> WebSocket and run
        <code>cmd</code>. Use <code>"bash"</code> for the VM shell, or <code>"openshell sandbox
        connect &lt;agent&gt;"</code> to drop inside the kernel-sandboxed agent.
        <code>send</code> is an array of shell lines typed into the PTY in order (each gets
-       Enter). WebSockets stay in the signed-in browser unless
-       <code>relayWebSocket: true</code> explicitly selects the retained Cloudflare relay.
+       Enter). A detected browser session stays direct. A manually supplied access session
+       uses the approved relay; <code>relayWebSocket: true</code> explicitly selects that
+       recovery route too.
        Returns <code>{ output, raw, frames, exitCode }</code> (<code>output</code>
        is ANSI-stripped; <code>exitCode</code> is the command's PTY exit status, or null if none
        arrived). Reads the launchable URL from the OpenClaw probe. Launchable only.
@@ -37,8 +38,10 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
   if (!rawUrl) throw new Error("No launchable URL set. Connect on the Kickstart page (Module 3a) first, or pass { baseUrl }.");
   const accessProvider = connection.accessProvider;
   const accessSession = connection.accessSession;
+  const resolvedProvider = accessProviderForOpenClawUrl(rawUrl, accessProvider);
   const relayEnabled = relayWebSocket === true ||
-    (relayWebSocket === null && getOpenClawWsRelayEnabled());
+    (relayWebSocket === null && (getOpenClawWsRelayEnabled() ||
+      (resolvedProvider === "pomerium" && Boolean(accessSession))));
   const routed = openclawWebSocketUrl(
     rawUrl,
     "/ws/terminal?cmd=" + encodeURIComponent(cmd),
@@ -58,7 +61,7 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
     const accessHint = routed.viaProxy
       ? (accessSession
           ? "The hosted relay failed. Open the launchable, then paste a fresh matching access session in Module 3a."
-          : "The hosted relay has no Cloudflare Access session. Open the launchable, then paste a fresh CF_Authorization value in Module 3a.")
+          : "The hosted relay has no matching access session. Open the launchable, then paste a fresh provider credential in Module 3a.")
       : "Reopen the launchable and verify that its terminal route is running.";
     const error = new Error(
       `Terminal did not open for ${launchableOrigin}. ` + accessHint

@@ -39,7 +39,7 @@ const CLAW_ACCESS_PROVIDER = (process.env.CLAW_ACCESS_PROVIDER || inferredAccess
 const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY || '';
 const DIRECT_API_URL = process.env.NVIDIA_API_URL || 'https://integrate.api.nvidia.com/v1';
 const OPENCLAW_CORS_PROXY_BASE = process.env.OPENCLAW_CORS_PROXY_BASE || 'https://openclaw-cors-proxy.experiments.courses.nvidia.com';
-const OPENCLAW_BACKUP_HINT = 'For a remote launchable test, set CLAW_URL and CLAW_ACCESS_PROVIDER. The isolated browser harness accepts CLAW_ACCESS_SESSION only to seed its temporary browser context; the course never reads or stores a Pomerium cookie. CLAW_TOKEN is optional when /api/agent can discover it.';
+const OPENCLAW_BACKUP_HINT = 'For a remote launchable test, set CLAW_URL and CLAW_ACCESS_PROVIDER. Set CLAW_ACCESS_SESSION only when the isolated browser cannot reuse the launchable session directly; the value is kept in tab-scoped storage and sent through the provider-bound relay. CLAW_TOKEN is optional when /api/agent can discover it.';
 
 // Locate the chromium-headless-shell binary.
 // The install path moves between playwright versions, so glob the known roots instead of hardcoding one.
@@ -99,7 +99,7 @@ function joinUrl(base, pathPart) {
 
 function openClawHttpUrl(pathPart) {
   const direct = joinUrl(CLAW_URL, pathPart);
-  if (!CLAW_ACCESS_SESSION || CLAW_ACCESS_PROVIDER === 'pomerium') return direct;
+  if (!CLAW_ACCESS_SESSION) return direct;
   try {
     const upstream = new URL(CLAW_URL);
     if (!/(^|\.)brevlab\.com$/i.test(upstream.hostname) && !/(^|\.)apps\.run\.brev\.nvidia\.com$/i.test(upstream.hostname)) return direct;
@@ -110,6 +110,17 @@ function openClawHttpUrl(pathPart) {
   } catch (_) {
     return direct;
   }
+}
+
+function openClawAccessHeaders() {
+  if (!CLAW_ACCESS_SESSION) return {};
+  if (CLAW_ACCESS_PROVIDER === 'pomerium') {
+    return {
+      'X-OpenClaw-Access-Provider': 'pomerium',
+      'X-OpenClaw-Access-Session': CLAW_ACCESS_SESSION,
+    };
+  }
+  return { 'CF-Access-Jwt-Assertion': CLAW_ACCESS_SESSION };
 }
 
 function gatewayTokenFromDashboardUrl(raw) {
@@ -124,16 +135,16 @@ function gatewayTokenFromDashboardUrl(raw) {
 }
 
 async function resolveOpenClawToken() {
-  // A Pomerium session is sender-bound and exists only in the browser context.
-  // Its token bootstrap runs after navigation through the direct terminal socket.
-  if (CLAW_ACCESS_PROVIDER === 'pomerium') return;
+  // A detected Pomerium browser session stays direct. A manually supplied
+  // session follows the same provider-bound fallback as the course runtime.
+  if (CLAW_ACCESS_PROVIDER === 'pomerium' && !CLAW_ACCESS_SESSION) return;
   if (CLAW_TOKEN || !(CLAW_URL && CLAW_ACCESS_SESSION)) return;
   const timeout = withTimeout(8000);
   try {
     const resp = await fetch(openClawHttpUrl('/api/agent'), {
       headers: {
         Accept: 'application/json, text/plain, */*',
-        'CF-Access-Jwt-Assertion': CLAW_ACCESS_SESSION,
+        ...openClawAccessHeaders(),
       },
       signal: timeout.signal,
     });
@@ -154,13 +165,14 @@ async function resolveOpenClawToken() {
 }
 
 async function preflightOpenClaw() {
-  if (CLAW_ACCESS_PROVIDER === 'pomerium') return;
+  if (CLAW_ACCESS_PROVIDER === 'pomerium' && !CLAW_ACCESS_SESSION) return;
   await resolveOpenClawToken();
   if (!(CLAW_URL && CLAW_TOKEN)) return;
-  const headers = { Accept: 'application/json, text/plain, */*', Authorization: `Bearer ${CLAW_TOKEN}` };
-  if (CLAW_ACCESS_SESSION) {
-    headers['CF-Access-Jwt-Assertion'] = CLAW_ACCESS_SESSION;
-  }
+  const headers = {
+    Accept: 'application/json, text/plain, */*',
+    Authorization: `Bearer ${CLAW_TOKEN}`,
+    ...openClawAccessHeaders(),
+  };
   const targets = ['/health', '/healthz', '/api/agent'];
   const attempts = [];
   for (const pathPart of targets) {
@@ -318,13 +330,12 @@ function findChrome() {
     });
   });
 
-  // Direct-mode checks mirror a logged-in browser by setting only the cookie
-  // associated with the chosen access provider.
-  if (CLAW_ACCESS_SESSION && CLAW_URL) {
+  // Cloudflare's direct WebSocket check needs its browser cookie. A manually
+  // supplied Pomerium session intentionally exercises the provider-bound relay.
+  if (CLAW_ACCESS_SESSION && CLAW_URL && CLAW_ACCESS_PROVIDER === 'cloudflare') {
     try {
       const host = new URL(CLAW_URL).hostname;
-      const name = CLAW_ACCESS_PROVIDER === 'pomerium' ? '_pomerium' : 'CF_Authorization';
-      await page.context().addCookies([{ name, value: CLAW_ACCESS_SESSION, domain: host, path: '/', secure: true, sameSite: 'None' }]);
+      await page.context().addCookies([{ name: 'CF_Authorization', value: CLAW_ACCESS_SESSION, domain: host, path: '/', secure: true, sameSite: 'None' }]);
       console.log('ACCESS_COOKIE: set provider=' + CLAW_ACCESS_PROVIDER + ' host=' + host);
     } catch (e) { console.log('ACCESS_COOKIE: skipped (' + e.message + ')'); }
   }
@@ -515,7 +526,7 @@ function findChrome() {
       try {
         const mod = await import(new URL('./scripts/_shared.js', location.href).href);
         mod.setOpenClawConnection({ rawUrl: clawUrl, accessProvider, accessSession });
-        const gateway = mod.openclawGatewayWsUrl(clawUrl, accessSession, proxyBase, false, accessProvider);
+        const gateway = mod.openclawGatewayWsUrl(clawUrl, accessSession, proxyBase, null, accessProvider);
         output.viaProxy = gateway.viaProxy;
         const response = await mod.openclawBootstrapRequest('/api/agent');
         output.httpStatus = response.status;
@@ -638,7 +649,8 @@ function findChrome() {
       return output;
     }, { clawUrl: CLAW_URL, accessProvider: CLAW_ACCESS_PROVIDER, accessSession: CLAW_ACCESS_SESSION, proxyBase: OPENCLAW_CORS_PROXY_BASE, cronContract, terminalContract, chatContract });
     console.log('GATEWAY_CHECK:', JSON.stringify(result));
-    const passed = result.httpStatus === 200 && result.token && !result.viaProxy
+    const expectedProxy = CLAW_ACCESS_PROVIDER === 'pomerium' && !!CLAW_ACCESS_SESSION;
+    const passed = result.httpStatus === 200 && result.token && result.viaProxy === expectedProxy
       && result.challenge && result.connect && result.rpc && !result.error
       && (!cronContract || (result.cronAdd && result.cronRuns && result.cronRemove && !result.cleanupId))
       && (!terminalContract || (result.terminalOpen && result.terminalFrames > 0))
@@ -650,14 +662,14 @@ function findChrome() {
     process.exit(passed ? 0 : 1);
   }
 
-  // Inject credentials after the probe widget mounts, or it clears them. A
-  // Pomerium browser test discovers the gateway token through the authenticated
-  // direct terminal; the HttpOnly cookie never enters course-accessible storage.
-  if (CLAW_URL && (CLAW_TOKEN || CLAW_ACCESS_PROVIDER === 'pomerium')) {
+  // Inject credentials after the probe widget mounts, or it clears them.
+  // Pomerium can use either a directly detected browser session or the same
+  // tab-scoped, provider-bound fallback exposed by Module 3a.
+  if (CLAW_URL && (CLAW_TOKEN || CLAW_ACCESS_PROVIDER === 'pomerium' || CLAW_ACCESS_SESSION)) {
     const injected = await page.evaluate(async ([u, t, provider, session]) => {
       const shared = await import(new URL('./scripts/_shared.js', location.href).href);
-      if (!t && provider === 'pomerium') {
-        shared.setOpenClawConnection({ rawUrl: u, accessProvider: provider });
+      if (!t && provider === 'pomerium' && !session) {
+        shared.setOpenClawConnection({ rawUrl: u, accessProvider: provider, accessSession: '' });
         const metadata = await shared.openclawLoopbackProbe('/api/agent', { baseUrl: u });
         t = shared.gatewayTokenFromAgentMetadata(metadata.json);
         if (!t) throw new Error('agent metadata omitted a gateway token');
@@ -667,7 +679,9 @@ function findChrome() {
     }, [CLAW_URL, CLAW_TOKEN, CLAW_ACCESS_PROVIDER, CLAW_ACCESS_SESSION]);
     console.log('CREDS: injected', CLAW_URL,
       CLAW_ACCESS_PROVIDER === 'pomerium'
-        ? '(Pomerium session remained browser-only)'
+        ? (injected.accessSessionStored
+          ? '(Pomerium fallback session is tab-scoped)'
+          : '(Pomerium browser session will be detected directly)')
         : (injected.accessSessionStored ? '(Cloudflare relay session is tab-scoped)' : ''));
   } else {
     console.log('CREDS: none (gateway nodes will short-circuit on the probe guard)');

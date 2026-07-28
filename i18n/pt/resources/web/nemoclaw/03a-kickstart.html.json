@@ -66,10 +66,10 @@
       "source": "\n        <h3>Launch NemoClaw on Brev</h3>\n        <p>OpenClaw runs inside OpenShell and keeps agent identity, tools, and session memory. The\n          settings below accept either supported Brev host family and connect to\n          <code>/cli/gateway</code>.</p>\n        <p style=\"color:var(--tf);font-size:.8rem\">Gateway credential: gateway token.\n          Launchable access: Pomerium browser session or <code>CF_Authorization</code>.</p>\n      ",
       "value": "\n        <h3>Iniciar o NemoClaw no Brev</h3>\n        <p>O OpenClaw roda dentro do OpenShell e mantém a identidade do agente, as ferramentas e a memória da sessão. A configuração abaixo aceita ambas as famílias de hosts Brev compatíveis e se conecta a <code>/cli/gateway</code>.</p>\n        <p style=\"color:var(--tf);font-size:.8rem\">Credencial do gateway: token do gateway. Acesso ao launchable: sessão do navegador do Pomerium ou <code>CF_Authorization</code>.</p>\n      "
     },
-    "rich.0e2fcec6f5fd": {
+    "rich.d3f92229cadc": {
       "type": "rich",
-      "source": "<p>This field is only for <strong>Cloudflare Access</strong>. Open that launchable, sign in, then copy the complete <code>CF_Authorization</code> value from DevTools → <strong>Application → Storage → Cookies</strong>.</p>\n<p>For <strong>Pomerium</strong>, the field is disabled. Open the launchable and sign in; its <code>HttpOnly</code> cookie stays in the browser and is never copied into course code or storage.</p>",
-      "value": "<p>Este campo serve apenas para <strong>Cloudflare Access</strong>. Abra esse launchable, entre e copie o valor completo de <code>CF_Authorization</code> em DevTools → <strong>Application → Storage → Cookies</strong>.</p>\n<p>Para <strong>Pomerium</strong>, o campo fica desativado. Abra o launchable e entre; o cookie <code>HttpOnly</code> permanece no navegador e nunca é copiado para o código ou o armazenamento do curso.</p>"
+      "source": "<p>Open the launchable and sign in. For <strong>Pomerium</strong>, wait for the direct-session check. If the field remains editable, copy the complete <code>_pomerium</code> value from DevTools → <strong>Application → Storage → Cookies</strong> and paste it here.</p>\n<p>For <strong>Cloudflare Access</strong>, paste the complete <code>CF_Authorization</code> value from the same Cookies view. A pasted value is kept only in this tab and sent through the provider-bound relay.</p>",
+      "value": "<p>Abra o launchable e faça login. Para <strong>Pomerium</strong>, aguarde a verificação da sessão direta. Se o campo continuar editável, copie o valor completo de <code>_pomerium</code> em DevTools → <strong>Application → Storage → Cookies</strong> e cole-o aqui.</p>\n<p>Para <strong>Cloudflare Access</strong>, cole o valor completo de <code>CF_Authorization</code> na mesma visualização de Cookies. O valor colado fica apenas nesta aba e é enviado pelo relay vinculado ao provedor.</p>"
     },
     "rich.1260cedbb7fa": {
       "type": "rich",
@@ -101,10 +101,10 @@
       "source": "\n      <p>Anyone who can read the launchable environment can read that token,\n        and a reader of the token is an operator with everything above. Module 4\n        turns this from a convenience into the central security question.</p>\n    ",
       "value": "<p>Qualquer pessoa que possa ler o ambiente launchable pode ler esse token, e um leitor do token é um operador com tudo acima. Módulo 4 transforma isso de uma conveniência para a questão de segurança central.</p>"
     },
-    "rich.392a47b359e5": {
-      "type": "rich",
-      "source": "\n      Pomerium reads bootstrap metadata through its authenticated terminal loopback.\n      Cloudflare Access reads metadata through the approved relay with the matching\n      <code>CF_Authorization</code> session. Both providers keep gateway and terminal\n      WebSockets in the browser that signed in to the launchable.\n    ",
-      "value": "\n      O Pomerium lê os metadados de inicialização pelo loopback autenticado do terminal. O Cloudflare Access lê os metadados pelo relay aprovado com a sessão <code>CF_Authorization</code> correspondente. Ambos os provedores mantêm os WebSockets do gateway e do terminal no navegador que iniciou sessão no launchable.\n    "
+    "text.6491a05ff572": {
+      "type": "text",
+      "source": "\n      A verified Pomerium browser session reads bootstrap metadata directly. A manually supplied\n      Pomerium or Cloudflare session uses the approved provider-bound relay. The probe displays\n      which route it used without displaying the session value.\n    ",
+      "value": "\n      Uma sessão de navegador do Pomerium verificada lê os metadados de inicialização diretamente. Uma sessão do Pomerium ou Cloudflare fornecida manualmente usa o relay aprovado vinculado ao provedor. A sonda mostra a rota usada sem exibir o valor da sessão.\n    "
     },
     "rich.3ad92e720d94": {
       "type": "rich",
@@ -121,10 +121,10 @@
       "source": "Supported NemoClaw launchables normally report <code>tools.toolSearch=false</code>. A custom configuration can still enable it, so the health check reads the live value before Recover changes anything:",
       "value": "Os launchables compatíveis do NemoClaw normalmente mostram <code>tools.toolSearch=false</code>. Uma configuração personalizada ainda pode ativá-lo; por isso, a verificação de integridade lê o valor ativo antes de Recuperar alterar qualquer coisa:"
     },
-    "rich.4890cfeac8fb": {
+    "rich.e3f886819891": {
       "type": "rich",
-      "source": "<p><strong>Usually you can leave this blank.</strong> Run <strong>GET /api/agent</strong> below and the probe\nreads the gateway token out of <code>agent.dashboardUrl</code> and fills this field for you. For Pomerium, opening the launchable and signing in is enough. Cloudflare also needs its Access session below.</p>\n<p><strong>Manual fallback:</strong> If autofill doesn't fire, run <code>openclaw dashboard --no-open</code> in your\nlaunchable terminal and paste the complete gateway credential it prints. If no gateway token exists yet, generate one on\nthe gateway host with <code>openclaw doctor --generate-gateway-token</code>. Do not assume a fixed length or character set,\nand do not paste an access session here; that is a separate credential.</p>",
-      "value": "<p><strong>Normalmente, este campo pode ficar vazio.</strong> Execute <strong>GET /api/agent</strong> abaixo.\nA sonda lê o token do gateway em <code>agent.dashboardUrl</code> e preenche o campo. Para Pomerium, basta abrir o launchable e entrar. O Cloudflare também precisa da Sessão de acesso abaixo.</p>\n<p><strong>Alternativa manual:</strong> se o preenchimento automático não ocorrer, execute\n<code>openclaw dashboard --no-open</code> no terminal do launchable e cole aqui a credencial de gateway completa que ele\nimprime. Se ainda não existir nenhum token de gateway, gere um no host do gateway com\n<code>openclaw doctor --generate-gateway-token</code>. Não presuma um comprimento ou conjunto de caracteres fixo, e não\ncole aqui uma sessão de acesso: ela é outra credencial.</p>"
+      "source": "<p><strong>Usually you can leave this blank.</strong> Run <strong>GET /api/agent</strong> below and the probe\nreads the gateway token out of <code>agent.dashboardUrl</code> and fills this field for you. This\nworks only after the separate launchable-access check below succeeds.</p>\n<p><strong>Manual fallback:</strong> If autofill doesn't fire, run <code>openclaw dashboard --no-open</code> in your\nlaunchable terminal and paste the complete gateway credential it prints. If no gateway token exists yet, generate one on\nthe gateway host with <code>openclaw doctor --generate-gateway-token</code>. Do not assume a fixed length or character set,\nand do not paste an access session here; that is a separate credential.</p>",
+      "value": "<p><strong>Normalmente, este campo pode ficar vazio.</strong> Execute <strong>GET /api/agent</strong> abaixo. A sonda lê o token do gateway em <code>agent.dashboardUrl</code> e preenche o campo. Isso funciona somente depois que a verificação separada de acesso ao launchable for bem-sucedida.</p>\n<p><strong>Alternativa manual:</strong> se o preenchimento automático não ocorrer, execute <code>openclaw dashboard --no-open</code> no terminal do launchable e cole a credencial completa do gateway. Se ainda não existir um token, gere-o no host do gateway com <code>openclaw doctor --generate-gateway-token</code>. Não presuma comprimento ou conjunto de caracteres fixos e não cole aqui uma sessão de acesso: ela é outra credencial.</p>"
     },
     "rich.4e8cf3cbc64a": {
       "type": "rich",
@@ -206,10 +206,10 @@
       "source": "<strong>Clean up</strong> sweeps the throwaway sessions that pile up in the\n        Control UI as you experiment (including Step 2's per-run keys), keeping only\n        the Main Session.",
       "value": "<strong>Limpar sessões</strong> remove as sessões descartáveis acumuladas durante os testes, inclusive as chaves por execução do Passo 2, e mantém apenas a sessão principal."
     },
-    "rich.b633c1a6b45f": {
+    "rich.553e89defea1": {
       "type": "rich",
-      "source": "<code>https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com</code> uses Pomerium. Its\n        signed-in browser session authenticates direct requests, so the Access session field stays\n        empty.",
-      "value": "<code>https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com</code> usa Pomerium. A sessão autenticada do navegador autentica as requisições diretas, então o campo Sessão de acesso fica vazio."
+      "source": "<code>https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com</code> uses Pomerium. When the\n        launchable session is available to this browser context, a live gateway challenge confirms\n        it and the Access session field stays empty. Otherwise, paste the complete\n        <code>_pomerium</code> value from the signed-in launchable.",
+      "value": "<code>https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com</code> usa Pomerium. Quando a sessão do launchable está disponível neste contexto do navegador, um desafio ativo do gateway a confirma e o campo Sessão de acesso fica vazio. Caso contrário, cole o valor completo de <code>_pomerium</code> do launchable autenticado."
     },
     "rich.48d47a9d5959": {
       "type": "rich",
@@ -256,10 +256,10 @@
       "source": "The gateway token and the launchable access session authorize different things. The\n        gateway token authorizes JSON-RPC calls on <code>/cli/gateway</code>. The access session, a\n        Pomerium browser cookie or a <code>CF_Authorization</code> value, authorizes reaching the\n        launchable at all. Replacing one never repairs a failure in the other.",
       "value": "O token do gateway e a sessão de acesso ao launchable autorizam coisas diferentes. O token do gateway autoriza as chamadas JSON-RPC em <code>/cli/gateway</code>. A sessão de acesso, um cookie do Pomerium ou um valor <code>CF_Authorization</code>, autoriza o acesso ao launchable. Substituir uma nunca conserta uma falha da outra."
     },
-    "rich.1734d648acc3": {
+    "rich.abb10105f839": {
       "type": "rich",
-      "source": "<p><strong>Automatic</strong> chooses from the App URL. Cloudflare Access uses the approved relay for metadata; Pomerium reads metadata through its terminal loopback. Both providers keep gateway and terminal WebSockets in the signed-in browser.</p>",
-      "value": "<p><strong>Automático</strong> escolhe pela App URL. O Cloudflare Access usa o relay aprovado para os metadados; o Pomerium os lê pelo loopback do terminal. Ambos os provedores mantêm os WebSockets do gateway e do terminal no navegador que iniciou sessão.</p>"
+      "source": "<p><strong>Automatic</strong> chooses from the App URL. It does not assume that this course page shares the launchable's signed-in browser session. Pomerium is marked detected only after a live gateway challenge.</p>",
+      "value": "<p><strong>Automático</strong> escolhe pela App URL. Ele não presume que esta página do curso compartilhe a sessão autenticada do launchable. O Pomerium é marcado como detectado somente após um desafio ativo do gateway.</p>"
     },
     "rich.de3dbde22a38": {
       "type": "rich",
@@ -432,10 +432,10 @@
       "source": " Optional visibility: uncomment to inspect the complete timing records.",
       "value": " Visibilidade opcional: remova o comentário para inspecionar todos os registros de tempo."
     },
-    "text.1b4434473302": {
+    "text.7db4eaab92a3": {
       "type": "text",
-      "source": "Return here and probe. This page reads the gateway token from authenticated agent\n        metadata, so the normal path does not require you to paste it.",
-      "value": "Volte para cá e teste a conexão. Esta página lê o token do gateway nos metadados autenticados do agente, então o caminho normal não exige que você o cole."
+      "source": "Return here and enter the launchable URL. The probe first tests whether this browser can\n        reach the launchable directly. If it cannot, the Access session field tells you which\n        browser-cookie value to paste.",
+      "value": "Volte para cá e informe a URL do launchable. A sonda primeiro verifica se este navegador consegue alcançar o launchable diretamente. Se não conseguir, o campo Sessão de acesso informa qual valor de cookie do navegador deve ser colado."
     },
     "text.1c350d860826": {
       "type": "text",
@@ -1361,10 +1361,10 @@
       "value": "120b",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
     },
-    "text.cd61947928bf": {
-      "type": "text",
-      "source": "The four steps above prepare this page to discover its credential from authenticated\n        metadata. Reach for the steps below only when the Control UI reports that the gateway is\n        reachable but still requires authentication.",
-      "value": "Os quatro passos acima preparam esta página para descobrir a credencial nos metadados autenticados. Recorra ao procedimento a seguir apenas quando a Control UI informar que o gateway responde, mas ainda exige autenticação."
+    "rich.850c6f10f4d9": {
+      "type": "rich",
+      "source": "After launchable access succeeds, <strong>GET /api/agent</strong> normally fills the\n        gateway token from authenticated metadata. Use the steps below only when the Control UI\n        reports that the gateway is reachable but still requires authentication.",
+      "value": "Depois que o acesso ao launchable for bem-sucedido, <strong>GET /api/agent</strong> normalmente preenche o token do gateway a partir de metadados autenticados. Use os passos abaixo apenas quando a Control UI informar que o gateway está acessível, mas ainda exige autenticação."
     },
     "text.cdb4ee2aea69": {
       "type": "text",
@@ -1625,10 +1625,10 @@
       "source": "No API key saved. Go to the course home and save the endpoint and key first.",
       "value": "Nenhuma chave de API foi salva. Volte à página inicial e salve o endpoint e a chave."
     },
-    "rich.50d8bce57a69": {
+    "rich.107bedc405c8": {
       "type": "rich",
-      "source": "<p>Leave this off while the direct gateway and terminal sockets work. If a Cloudflare WebSocket fails before its challenge, turn it on and retry through the approved relay. Pomerium remains direct.</p>",
-      "value": "<p>Deixe esta opção desativada enquanto os sockets diretos do gateway e do terminal funcionarem. Se um WebSocket do Cloudflare falhar antes do desafio, ative-a e tente novamente pelo relay aprovado. O Pomerium continua direto.</p>"
+      "source": "<p>Leave this off while direct gateway and terminal sockets work. If a Cloudflare WebSocket fails before its challenge, turn it on and retry through the approved relay. A manually supplied Pomerium session selects its provider-bound relay automatically.</p>",
+      "value": "<p>Deixe esta opção desativada enquanto os sockets diretos do gateway e do terminal funcionarem. Se um WebSocket do Cloudflare falhar antes do desafio, ative-a e tente novamente pelo relay aprovado. Uma sessão do Pomerium fornecida manualmente seleciona automaticamente o relay vinculado ao provedor.</p>"
     }
   }
 }
