@@ -104,9 +104,17 @@ async function exercise(locator, profile, id) {
       : states.has('playing') || [...states].some(state => ['running','queued','stopped','succeeded','reset'].includes(state)) ? 'action'
       : [...states].some(state => ['selected','current','complete'].includes(state)) ? 'selection'
       : 'passive';
-    const beforeStates = stateWords();
+    let beforeStates = stateWords();
+    const entryDeadline = Date.now() + 5000;
+    while (Date.now() < entryDeadline && !beforeStates.some(state => ENTRY_STATES.has(state))) {
+      await new Promise(resolve => setTimeout(resolve, 50));
+      beforeStates = stateWords();
+    }
     if (!beforeStates.some(state => ENTRY_STATES.has(state))) {
       failLocal(`${data.id}: declared entry state is not observable (${beforeStates.join(',') || 'none'})`);
+    }
+    if (beforeStates.includes('blocked')) {
+      return { strategy:'blocked', beforeStates, afterStates:beforeStates };
     }
     if (strategy === 'passive') return { strategy, beforeStates, afterStates:beforeStates };
     if (strategy === 'credential') {
@@ -322,7 +330,11 @@ async function mountProbe(page, target, probe, id) {
         try {
           await exercise(mounted, inventory.form_factors[instance.form_factor], instance.id);
         } catch (error) {
-          fail(`${instance.id}: exercise failed at ${instance.entry} ${instance.selector}: ${error.message}`);
+          const diagnostic = await page.evaluate(selector => ({
+            errors: window.__dliTopErrors || [],
+            html: String(document.querySelector(selector)?.innerHTML || '').slice(0, 1200),
+          }), instance.selector);
+          fail(`${instance.id}: exercise failed at ${instance.entry} ${instance.selector}: ${error.message}; diagnostic=${JSON.stringify(diagnostic)}`);
         }
         exercised.add(instance.form_factor);
         exercisedOnEntry = true;

@@ -249,10 +249,11 @@ def audit_launchable_transport(surfaces: dict[str, str], connection: str, shared
     bootstrap = javascript_function(openclaw, "export async function openclawBootstrapRequest")
     _need(findings, bootstrap and
           "OPENCLAW_BOOTSTRAP_PATHS" in openclaw and
-          "openclawLoopbackProbe" in bootstrap and
+          'if (provider === "pomerium")' in bootstrap and
+          "openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal })" in bootstrap and
           'headers["CF-Access-Jwt-Assertion"] = connection.accessSession;' in bootstrap and
-          'headers["X-OpenClaw-Access-Provider"] = provider;' in bootstrap and
-          'headers["X-OpenClaw-Access-Session"] = connection.accessSession;' in bootstrap,
+          "X-OpenClaw-Access-Provider" not in bootstrap and
+          "X-OpenClaw-Access-Session" not in bootstrap,
           "bootstrap discovery must share the normalized Pomerium/Cloudflare provider decision")
     for name, text in sorted(surfaces.items()):
         if not name.endswith("/03a-kickstart.html"):
@@ -262,9 +263,9 @@ def audit_launchable_transport(surfaces: dict[str, str], connection: str, shared
               "X-OpenClaw-Access-Session" not in text and
               "CF-Access-Jwt-Assertion" not in text,
               f"{name}: learner bootstrap code must delegate provider routing to the shared helper")
-        _need(findings, "wsRelayControls: true" in text and
-              ".claw-ws-relay-enabled" in openclaw,
-              f"{name}: Cloudflare WebSocket recovery must be reachable from the launchable probe")
+        _need(findings, 'mountOpenClawConnectionAudit("#probe-claw"' in text and
+              "wsRelayControls:" not in text,
+              f"{name}: launchable setup must expose the guided audit without a learner relay switch")
     # Both socket families resolve the same provider decision from the same saved state.
     for source, label in ((openclaw, "gateway"), (openshell, "terminal")):
         _need(findings, "getOpenClawConnection()" in source,
@@ -279,21 +280,20 @@ def audit_launchable_transport(surfaces: dict[str, str], connection: str, shared
     gateway_end = openclaw.find("export function gatewayTokenFromAgentMetadata", gateway_start)
     gateway_router = openclaw[gateway_start:gateway_end] if gateway_start >= 0 and gateway_end > gateway_start else ""
     _need(findings,
-          "provider === \"pomerium\" && Boolean(String(accessSession || \"\").trim())" in gateway_router and
+          "const relayEnabled = proxyEnabled === true" in gateway_router and
           "if (!relayEnabled)" in gateway_router and
-          re.search(r"\bproxyEnabled\s*===\s*true\b", gateway_router) is not None and
-          "getOpenClawWsRelayEnabled()" in gateway_router and
+          "Boolean(String(accessSession" not in gateway_router and
           re.search(
               r"openclawWebSocketUrl\s*\(\s*rawUrl\s*,\s*['\"]/cli/gateway['\"]\s*,"
               r"\s*accessSession\s*,\s*config\s*,\s*accessProvider\s*\)",
               gateway_router,
           ) is not None,
-          "gateway sockets must require either live direct detection or a provider-bound manual fallback")
-    _need(findings, "const wsUrls = [routed.url]" in openshell and
-          "getOpenClawWsRelayEnabled()" in openshell and
+          "gateway sockets must stay direct unless an operator explicitly selects the relay")
+    _need(findings, "const direct = openclawWebSocketUrl(" in openshell and
+          'resolvedProvider === "cloudflare" || relayWebSocket === true' in openshell and
           '{ enabled: false, base: "" }' in openshell and
-          "[direct.url, routed.url]" not in openshell,
-          "terminal sockets must use the same provider-selected route as the gateway")
+          "? [direct.url, routed.url]" in openshell,
+          "terminal sockets must keep Pomerium direct and Cloudflare direct-first")
     return findings
 
 
@@ -835,10 +835,11 @@ def audit_runtime_integrations(
     terminal_contract = {
         'function settle()': "operator terminal must settle socket, timers, and abort listener through one path",
         'function fail(error)': "operator terminal must reject through the shared settlement path",
-        'const wsUrls = [routed.url]': "terminal must use the shared provider-selected WebSocket route",
+        'const direct = openclawWebSocketUrl(': "terminal must derive its direct route through the shared router",
+        '? [direct.url, routed.url]': "terminal must retain the bounded Cloudflare relay fallback",
         'if (candidate >= wsUrls.length) return fail(terminalOpenError());': "operator terminal must fail once after exhausting connection routes",
         'else { ws = null; openNext(); }': "operator terminal close-before-open must advance or settle instead of leaving timers alive",
-        'const budget = openMs;': "operator terminal route must receive the configured open timeout",
+        'Math.min(8000, openMs)': "operator terminal fallback must preserve time for its second route",
         'error.code = "TERMINAL_OPEN_TIMEOUT"': "operator terminal open failures need a stable machine-readable code",
     }
     for token, message in terminal_contract.items():
@@ -857,9 +858,11 @@ def audit_runtime_integrations(
         react = pages[f"{locale}-01b"]
         tools = pages[f"{locale}-01c"]
         deep = pages[f"{locale}-02c"]
-        _need(findings, "helpHint:" in kickstart and
-              "autofillToken: gatewayTokenFromAgentMetadata" in kickstart,
-              f"{locale} Module 3a must expose connection-value help and token autofill")
+        _need(findings, 'mountOpenClawConnectionAudit("#probe-claw"' in kickstart and
+              "gatewayTokenFromAgentMetadata(response.json)" in openclaw and
+              'id="claw-audit-url"' in openclaw and
+              'id="claw-audit-session"' in openclaw,
+              f"{locale} Module 3a must expose two-field setup and automatic token discovery")
         _need(findings, r'CFG.url.replace(/\\/+$/, "")' in kickstart,
               f"{locale} Module 3a must preserve the slash regex escape inside its runnable template")
         _need(findings, workspace.count('if (typeof state.turn !== "function")') >= 2,
@@ -1693,15 +1696,16 @@ def self_test() -> list[str]:
         ("swallowed policy parser error", openclaw, openshell.replace("parseError", "ignoredParserError"), runtime_chat, runtime_pages, "expose parser errors"),
         ("remote shared LangChain", openclaw, openshell, runtime_chat.replace('../vendor/langchain-1.4.7.esm.js', 'https://cdn.invalid/langchain.js', 1), runtime_pages, "same-origin bundle"),
         ("terminal timeout bypasses settlement", openclaw, openshell.replace('if (candidate >= wsUrls.length) return fail(terminalOpenError());', 'if (candidate >= wsUrls.length) return reject(terminalOpenError());', 1), runtime_chat, runtime_pages, "must fail once"),
-        ("terminal provider route bypassed", openclaw, openshell.replace('[routed.url]', '[rawUrl + "/ws/terminal"]', 1), runtime_chat, runtime_pages, "provider-selected WebSocket route"),
-        ("terminal open budget shortened", openclaw, openshell.replace('const budget = openMs;', 'const budget = 1;', 1), runtime_chat, runtime_pages, "configured open timeout"),
+        ("terminal direct route bypassed", openclaw, openshell.replace('const direct = openclawWebSocketUrl(', 'const direct = buildTerminalUrl(', 1), runtime_chat, runtime_pages, "shared router"),
+        ("terminal fallback removed", openclaw, openshell.replace('? [direct.url, routed.url]', '? [direct.url]', 1), runtime_chat, runtime_pages, "Cloudflare relay fallback"),
+        ("terminal fallback consumes full budget", openclaw, openshell.replace('Math.min(8000, openMs)', 'openMs', 1), runtime_chat, runtime_pages, "preserve time"),
     ]
     for label, mutated_openclaw, mutated_openshell, mutated_chat, mutated_pages, expected in integration_cases:
         if not any(expected in finding for finding in audit_runtime_integrations(
                 mutated_openclaw, mutated_openshell, mutated_chat, mutated_pages)):
             misses.append(f"detector missed {label}")
     page_cases = [
-        ("Module 3a hidden value help", "en-03a", "helpHint:", "removedHelpHint:", "connection-value help"),
+        ("Module 3a restores legacy probe", "en-03a", 'mountOpenClawConnectionAudit("#probe-claw"', 'mountClawProbe("#probe-claw"', "two-field setup"),
         ("Module 3a consumed regex escape", "en-03a", r'CFG.url.replace(/\\/+$/, "")', r'CFG.url.replace(/\/+$/, "")', "regex escape"),
         ("Module 3c string schedule", "en-03c", 'schedule: { kind: "cron", expr: "* * * * *", tz: "UTC" }', 'schedule: "* * * * *"', "structured cron contract"),
         ("Module 3c fixed blind wait", "en-03c", "const POLL_MS = 5000", "const WAIT_S = 70", "structured cron contract"),
@@ -1956,24 +1960,36 @@ def self_test() -> list[str]:
              1,
          ),
          openshell, "bootstrap discovery"),
-        ("bootstrap Pomerium provider binding removed", surfaces, connection, shared_src,
+        ("bootstrap Pomerium direct branch removed", surfaces, connection, shared_src,
          openclaw_src.replace(
-             'headers["X-OpenClaw-Access-Provider"] = provider;',
-             'headers["X-OpenClaw-Access-Provider"] = "cloudflare";',
+             'if (provider === "pomerium") {',
+             'if (provider === "cloudflare") {',
              1,
          ),
          openshell, "bootstrap discovery"),
-        ("bootstrap Pomerium session binding removed", surfaces, connection, shared_src,
+        ("bootstrap Pomerium loopback removed", surfaces, connection, shared_src,
          openclaw_src.replace(
-             'headers["X-OpenClaw-Access-Session"] = connection.accessSession;',
-             'headers["X-OpenClaw-Access-Session"] = "";',
+             "openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal })",
+             "fetch(rawUrl + actionPath, { signal })",
              1,
          ),
          openshell, "bootstrap discovery"),
-        ("learner WebSocket recovery removed",
+        ("bootstrap Pomerium session replay restored", surfaces, connection, shared_src,
+         openclaw_src.replace(
+             'const headers = { Accept: "application/json, text/plain, */*" };',
+             'const headers = { Accept: "application/json, text/plain, */*", '
+             '"X-OpenClaw-Access-Session": connection.accessSession };',
+             1,
+         ),
+         openshell, "bootstrap discovery"),
+        ("learner relay switch restored",
          {**surfaces, "web/nemoclaw/03a-kickstart.html":
-          surfaces["web/nemoclaw/03a-kickstart.html"].replace("wsRelayControls: true", "wsRelayControls: false", 1)},
-         connection, shared_src, openclaw_src, openshell, "recovery must be reachable"),
+          surfaces["web/nemoclaw/03a-kickstart.html"].replace(
+              'mountOpenClawConnectionAudit("#probe-claw", {',
+              'mountOpenClawConnectionAudit("#probe-claw", {\\n      wsRelayControls: true,',
+              1,
+          )},
+         connection, shared_src, openclaw_src, openshell, "without a learner relay switch"),
         ("learner probe duplicates provider routing",
          {**surfaces, "web/nemoclaw/03a-kickstart.html":
           surfaces["web/nemoclaw/03a-kickstart.html"].replace(
@@ -2001,20 +2017,21 @@ def self_test() -> list[str]:
          "one access-provider decision"),
         ("gateway loses direct default", surfaces, connection, shared_src,
          openclaw_src.replace("if (!relayEnabled)", "if (false)", 1),
-         openshell, "live direct detection"),
-        ("gateway loses manual Pomerium fallback", surfaces, connection, shared_src,
+         openshell, "stay direct"),
+        ("gateway infers relay from a pasted session", surfaces, connection, shared_src,
          openclaw_src.replace(
-             'provider === "pomerium" && Boolean(String(accessSession || "").trim())',
-             'provider === "pomerium" && false',
+             "const relayEnabled = proxyEnabled === true;",
+             'const relayEnabled = proxyEnabled === true || Boolean(String(accessSession || "").trim());',
              1,
          ),
-         openshell, "provider-bound manual fallback"),
+         openshell, "stay direct"),
         ("gateway loses relay opt-in", surfaces, connection, shared_src,
          openclaw_src.replace("proxyEnabled === true", "proxyEnabled !== false", 1),
-         openshell, "provider-bound manual fallback"),
-        ("terminal restores direct-first bypass", surfaces, connection, shared_src, openclaw_src,
-         openshell.replace("[routed.url]", "[direct.url, routed.url]", 1),
-         "same provider-selected route"),
+         openshell, "stay direct"),
+        ("terminal routes Pomerium through relay", surfaces, connection, shared_src, openclaw_src,
+         openshell.replace('resolvedProvider === "cloudflare" || relayWebSocket === true',
+                           'resolvedProvider === "pomerium" || relayWebSocket === true', 1),
+         "Pomerium direct"),
     ]
     for (label, mutated_surfaces, mutated_connection, mutated_shared,
          mutated_openclaw, mutated_openshell, expected) in transport_mutations:

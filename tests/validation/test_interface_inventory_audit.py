@@ -120,10 +120,19 @@ class InterfaceInventoryAuditTests(unittest.TestCase):
     def test_browser_harness_exercises_each_form_factor_and_requires_a_state_transition(self) -> None:
         source = browser_audit.RUNTIME
         self.assertIn("async function exercise(locator, profile, id)", source)
+        self.assertIn("Date.now() < entryDeadline", source)
+        self.assertIn("beforeStates.includes('blocked')", source)
         self.assertIn("action.click()", source)
         self.assertIn("action produced no observable state transition", source)
         self.assertIn("not every discovered form factor was exercised", source)
         self.assertIn("exercised.size !== factors.length", source)
+
+    def test_console_runtime_exposes_declared_semantic_state(self) -> None:
+        for contract, source in self.runtime_surfaces("terminal-console", "scripts/_chat.js"):
+            states = set(contract["form_factors"]["terminal-console"]["states"])
+            self.assertIn("root.dataset.state = semanticState", source)
+            self.assertIn('kind === "error" ? "failed"', source)
+            self.assertTrue({"blocked", "ready", "running", "failed"}.issubset(states))
 
     def test_browser_harness_does_not_infer_state_from_arbitrary_page_prose(self) -> None:
         source = browser_audit.RUNTIME
@@ -259,6 +268,79 @@ class InterfaceInventoryAuditTests(unittest.TestCase):
         (course / "panel.js").write_text(
             'export function mountPanel(root){root.dataset.state="ready";root.innerHTML="<button>Select</button>";'
             'root.querySelector("button").onclick=()=>root.dataset.state="selected"}', encoding="utf-8",
+        )
+        self.assertEqual(0, browser_audit.run(root, 30_000))
+
+    def test_browser_harness_waits_for_an_autorun_mount_state(self) -> None:
+        root = Path(tempfile.mkdtemp(prefix="autorun-interface-browser-"))
+        self.addCleanup(shutil.rmtree, root)
+        course = root / "web/sample"
+        course.mkdir(parents=True)
+        contract = {
+            "schema": audit.SCHEMA,
+            "course": "sample",
+            "discovery": {"html": "all", "mount_calls": "all", "markers": "all"},
+            "factory_profiles": {"mountPanel": "panel"},
+            "marker_profiles": {},
+            "form_factors": {"panel": {"states": ["ready", "selected"], "authority": "none"}},
+            "validation_profile": ["browser-course"],
+            "live_capabilities": [],
+        }
+        (course / "interface-inventory.json").write_text(json.dumps(contract), encoding="utf-8")
+        (course / "SKILL.html").write_text(
+            '<script id="skill-meta" type="application/json">'
+            + json.dumps({
+                "interface_inventory": {"schema": audit.SCHEMA, "source": "interface-inventory.json"},
+                "validation_profile": {"schema": audit.VALIDATION_PROFILE_SCHEMA, "form_factors": ["browser-course"]},
+            })
+            + '</script><a href="interface-inventory.json">Interface inventory</a>', encoding="utf-8",
+        )
+        (course / "index.html").write_text(
+            '<!doctype html><style>body{color:#111;background:#fff}[data-theme="dark"] body{color:#fff;background:#111}</style>'
+            '<div class="rc-card"><div id="panel"></div></div><script>'
+            'function mountPanel(selector){setTimeout(()=>{const root=document.querySelector(selector);'
+            'root.dataset.state="ready";root.innerHTML="<button>Select</button>";'
+            'root.querySelector("button").onclick=()=>root.dataset.state="selected"},100)}'
+            'mountPanel("#panel")</script>',
+            encoding="utf-8",
+        )
+        self.assertEqual(0, browser_audit.run(root, 30_000))
+
+    def test_browser_harness_accepts_an_observable_blocked_prerequisite(self) -> None:
+        root = Path(tempfile.mkdtemp(prefix="blocked-interface-browser-"))
+        self.addCleanup(shutil.rmtree, root)
+        course = root / "web/sample"
+        course.mkdir(parents=True)
+        contract = {
+            "schema": audit.SCHEMA,
+            "course": "sample",
+            "discovery": {"html": "all", "mount_calls": "all", "markers": "all"},
+            "factory_profiles": {"mountConsole": "terminal-console"},
+            "marker_profiles": {},
+            "form_factors": {
+                "terminal-console": {
+                    "states": ["blocked", "ready", "running", "failed"],
+                    "authority": "openclaw-operator",
+                },
+            },
+            "validation_profile": ["browser-course"],
+            "live_capabilities": [],
+        }
+        (course / "interface-inventory.json").write_text(json.dumps(contract), encoding="utf-8")
+        (course / "SKILL.html").write_text(
+            '<script id="skill-meta" type="application/json">'
+            + json.dumps({
+                "interface_inventory": {"schema": audit.SCHEMA, "source": "interface-inventory.json"},
+                "validation_profile": {"schema": audit.VALIDATION_PROFILE_SCHEMA, "form_factors": ["browser-course"]},
+            })
+            + '</script><a href="interface-inventory.json">Interface inventory</a>', encoding="utf-8",
+        )
+        (course / "index.html").write_text(
+            '<!doctype html><style>body{color:#111;background:#fff}[data-theme="dark"] body{color:#fff;background:#111}</style>'
+            '<div id="terminal" data-state="blocked"><div role="status">Complete setup first</div>'
+            '<input disabled><button disabled>Run</button></div>'
+            '<script>function mountConsole(){};mountConsole("#terminal")</script>',
+            encoding="utf-8",
         )
         self.assertEqual(0, browser_audit.run(root, 30_000))
 

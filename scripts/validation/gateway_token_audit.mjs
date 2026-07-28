@@ -112,11 +112,8 @@ function audit(overrides = {}) {
 
   for (const { code: key } of LOCALE_COURSES) {
     const source = files[key];
-    if (!source.includes('gatewayTokenFromAgentMetadata')) {
-      findings.push(`${key}: shared gateway-token parser is not imported`);
-    }
-    if (!source.includes('autofillToken: gatewayTokenFromAgentMetadata')) {
-      findings.push(`${key}: OpenClaw probe does not use the shared gateway-token parser`);
+    if (!source.includes('mountOpenClawConnectionAudit("#probe-claw"')) {
+      findings.push(`${key}: guided connection audit is not imported and mounted`);
     }
     if (/token=\(\[a-f0-9\]/i.test(source)) {
       findings.push(`${key}: hex-only gateway-token parser returned`);
@@ -140,23 +137,25 @@ function audit(overrides = {}) {
       || !files.connection.includes('upstream.origin === loc.origin')) {
     findings.push('shared OpenClaw connection module lacks relay-backed metadata and explicit WebSocket-relay opt-in');
   }
-  if (!files.openshell.includes('openclawWebSocketUrl(')
+  if (!files.openshell.includes('const direct = openclawWebSocketUrl(')
+      || !files.openshell.includes('? openclawWebSocketUrl(')
       || !files.openshell.includes('"/ws/terminal?cmd=" + encodeURIComponent(cmd)')) {
     findings.push('terminal WebSocket bypasses shared OpenClaw routing');
   }
-  if (!files.openshell.includes('const wsUrls = [routed.url]')
-      || !files.openshell.includes('getOpenClawWsRelayEnabled()')
+  if (!files.openshell.includes('resolvedProvider === "cloudflare" || relayWebSocket === true')
       || !files.openshell.includes('{ enabled: false, base: "" }')
-      || files.openshell.includes('[direct.url, routed.url]')) {
-    findings.push('terminal WebSocket does not use the one provider-selected route');
+      || !files.openshell.includes('? [direct.url, routed.url]')
+      || !files.openshell.includes('Math.min(8000, openMs)')
+      || files.openshell.includes('resolvedProvider === "pomerium" || relayWebSocket === true')) {
+    findings.push('terminal WebSocket must keep Pomerium direct and limit Cloudflare relay recovery');
   }
   const gatewayRouter = functionSource(files.helper, 'export function openclawGatewayWsUrl');
-  if (!gatewayRouter?.includes('getOpenClawWsRelayEnabled()')
+  if (!gatewayRouter
       || !/\bproxyEnabled\s*===\s*true\b/.test(gatewayRouter)
-      || !gatewayRouter.includes('provider === "pomerium" && Boolean(String(accessSession || "").trim())')
       || !gatewayRouter.includes('if (!relayEnabled)')
+      || !gatewayRouter.includes('{ enabled: false, base: "" }')
       || !/openclawWebSocketUrl\s*\(\s*rawUrl\s*,\s*["']\/cli\/gateway["']\s*,\s*accessSession\s*,\s*config\s*,\s*accessProvider\s*\)/.test(gatewayRouter)) {
-    findings.push('gateway WebSocket does not preserve live direct detection and the provider-bound manual fallback');
+    findings.push('gateway WebSocket must default to the direct launchable and reserve the relay for explicit operator use');
   }
   const bootstrap = functionSource(files.helper, 'export async function openclawBootstrapRequest');
   if (!files.runtimeText.includes('/proc\\/self\\/oom_score_adj')
@@ -176,10 +175,13 @@ function audit(overrides = {}) {
       || !files.helper.includes('const refreshedGateway = await helpers.refreshOpenClawGatewayToken({ signal: helpers.signal });')
       || !bootstrap
       || !files.helper.includes('await openclawBootstrapRequest("/api/agent"')
+      || !files.helper.includes('gatewayTokenFromAgentMetadata(response.json)')
+      || !bootstrap.includes('if (provider === "pomerium")')
+      || !files.helper.includes('openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal })')
       || !bootstrap.includes('headers["CF-Access-Jwt-Assertion"] = connection.accessSession;')
-      || !bootstrap.includes('headers["X-OpenClaw-Access-Provider"] = provider;')
-      || !bootstrap.includes('headers["X-OpenClaw-Access-Session"] = connection.accessSession;')) {
-    findings.push('gateway entry points do not bootstrap the current token from /api/agent before connecting');
+      || bootstrap.includes('headers["X-OpenClaw-Access-Provider"]')
+      || bootstrap.includes('headers["X-OpenClaw-Access-Session"]')) {
+    findings.push('gateway entry points do not discover the current token through the provider-safe /api/agent bootstrap');
   }
   if (!files.openshell.includes('filterOpenClawRuntimeNoise')
       || !files.openshell.includes('output: clean(raw)')
@@ -288,25 +290,34 @@ function selfTest() {
     ['query token', { helper: base.helper.replace('parsed.searchParams.get("token")', 'null') }],
     ...(localized ? [[
       'localized wiring',
-      { [localized]: base[localized].replace('autofillToken: gatewayTokenFromAgentMetadata', 'autofillToken: null') },
+      { [localized]: base[localized].replace(
+        'mountOpenClawConnectionAudit("#probe-claw"',
+        'mountRemovedConnectionAudit("#probe-claw"',
+      ) },
     ]] : []),
     ['learner bootstrap helper', { en: base.en.replace('helpers.openclawBootstrapRequest(PATH', 'helpers.fetchOpenClawDirect(PATH') }],
     ['learner transport branch', { en: base.en.replace("const PATH = '/api/agent';", "const TRANSPORT = 'direct';\nconst PATH = '/api/agent';") }],
     ['approved relay construction', { connection: base.connection.replace('new URL(DEFAULT_OPENCLAW_PROXY_BASE)', 'new URL(config.base)') }],
     ['retired presenter query', { connection: base.connection.replace('export function getOpenClawProxyConfig()', 'const legacyRelay = new URLSearchParams(location.search).get("openclaw_proxy");\n\nexport function getOpenClawProxyConfig()') }],
     ['same-origin launchable exception', { connection: base.connection.replace('if (loc && upstream.origin === loc.origin) return false;', '') }],
-    ['terminal relay', { openshell: base.openshell.replace('openclawWebSocketUrl(', 'directTerminalUrl(', 1) }],
-    ['terminal provider route', { openshell: base.openshell.replace('[routed.url]', '[rawUrl + "/ws/terminal"]') }],
+    ['terminal relay', { openshell: base.openshell.replace('const direct = openclawWebSocketUrl(', 'const direct = directTerminalUrl(', 1) }],
+    ['terminal provider route', { openshell: base.openshell.replace('resolvedProvider === "cloudflare" || relayWebSocket === true', 'resolvedProvider === "pomerium" || relayWebSocket === true') }],
+    ['terminal direct-first recovery', { openshell: base.openshell.replace('? [direct.url, routed.url]', '? [routed.url]') }],
     ['gateway direct default', { helper: base.helper.replace('if (!relayEnabled)', 'if (false)') }],
-    ['gateway manual Pomerium fallback', { helper: base.helper.replace('provider === "pomerium" && Boolean(String(accessSession || "").trim())', 'provider === "pomerium" && false') }],
     ['gateway relay opt-in', { helper: base.helper.replace('proxyEnabled === true', 'proxyEnabled !== false') }],
     ['downstream gateway', { cliRuntime: base.cliRuntime.replace('runtime.openclawGatewayWsUrl(connection.rawUrl, connection.accessSession, null, null, connection.accessProvider).url', 'connection.rawUrl + "/cli/gateway"') }],
     ['downstream page boundary', { en4b: base.en4b.replace('helpers.mountOpenClawCli("#agent-chat")', 'mountDirectCli("#agent-chat")') }],
     ['shared export', { shared: base.shared.replaceAll('gatewayTokenFromAgentMetadata', 'removedGatewayTokenParser') }],
     ['automatic token bootstrap', { helper: base.helper.replaceAll('refreshOpenClawGatewayToken({ signal', 'removedGatewayTokenRefresh({ signal') }],
+    ['metadata token discovery', { helper: base.helper.replace('gatewayTokenFromAgentMetadata(response.json)', 'null') }],
+    ['Pomerium loopback bootstrap', { helper: base.helper.replace('openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal })', 'fetch(actionPath)') }],
     ['bootstrap assertion header', { helper: base.helper.replace('headers["CF-Access-Jwt-Assertion"] = connection.accessSession;', 'headers["X-Removed-Assertion"] = connection.accessSession;') }],
-    ['bootstrap Pomerium provider', { helper: base.helper.replace('headers["X-OpenClaw-Access-Provider"] = provider;', 'headers["X-OpenClaw-Access-Provider"] = "cloudflare";') }],
-    ['bootstrap Pomerium session', { helper: base.helper.replace('headers["X-OpenClaw-Access-Session"] = connection.accessSession;', 'headers["X-OpenClaw-Access-Session"] = "";') }],
+    ['Pomerium credential replay', {
+      helper: base.helper.replace(
+        'if (provider === "pomerium") {',
+        'headers["X-OpenClaw-Access-Session"] = connection.accessSession;\n  if (provider === "pomerium") {',
+      ),
+    }],
     ['harness relay', { runtime: base.runtime.replaceAll('openclaw-cors-proxy.experiments.courses.nvidia.com', 'relay.invalid') }],
     ['focused browser check', { runtime: base.runtime.replace("args.includes('--gateway-only')", 'false') }],
     ['cron cleanup', { runtime: base.runtime.replace("output.cleanupId = ''", "output.cleanupId = id") }],

@@ -12,7 +12,7 @@ import {
   normalizeOpenClawLaunchableUrl, normalizeOpenClawProxyBase, openclawHttpUrl,
   openclawWebSocketUrl, setOpenClawConnection, setOpenClawProxyConfig, setOpenClawWsRelayEnabled,
 } from "./_connection.js";
-import { openclawLoopbackProbe } from "./_openshell.js";
+import { openclawLoopbackProbe, terminal } from "./_openshell.js";
 import { filterOpenClawRuntimeNoise, filterOpenClawRuntimeValue, openclawMessageText, openclawResultText } from "./_runtime_text.js";
 
 export {
@@ -71,9 +71,10 @@ export function openclawGatewayWsUrl(rawUrl, accessSession = "", proxyBase = nul
   let provider = "auto";
   try { provider = accessProviderForOpenClawUrl(rawUrl, accessProvider); }
   catch (_) { /* openclawWebSocketUrl below returns the authoritative error */ }
-  const relayEnabled = proxyEnabled === true ||
-    (proxyEnabled === null && (getOpenClawWsRelayEnabled() ||
-      (provider === "pomerium" && Boolean(String(accessSession || "").trim()))));
+  // A signed-in browser opens both supported
+  // launchable WebSockets directly. Keep explicit relay selection available to
+  // operator integrations, but never infer it merely because a session was pasted.
+  const relayEnabled = proxyEnabled === true;
   if (!relayEnabled) {
     return openclawWebSocketUrl(rawUrl, "/cli/gateway", "", { enabled: false, base: "" }, accessProvider);
   }
@@ -96,15 +97,42 @@ export function gatewayTokenFromAgentMetadata(payload) {
   }
 }
 
+function redactOpenClawText(value) {
+  return String(value || "")
+    .replace(/([?&#](?:token|access_session|cf_access_jwt|session|password|secret)=)[^&#\s"']+/gi, "$1<redacted>")
+    .replace(/((?:Bearer|Basic)\s+)[A-Za-z0-9._~+/=-]+/gi, "$1<redacted>")
+    .replace(/((?:_pomerium|CF_Authorization)=)[^;\s"']+/gi, "$1<redacted>");
+}
+
+export function redactOpenClawDiagnostic(value, key = "", seen = new WeakSet()) {
+  const name = String(key || "").toLowerCase();
+  if (value == null || typeof value === "number" || typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    if (/authorization|cookie|password|secret|session|token/.test(name) && name !== "status") {
+      return "<redacted>";
+    }
+    return redactOpenClawText(value);
+  }
+  if (typeof value !== "object") return redactOpenClawText(value);
+  if (seen.has(value)) return "<circular>";
+  seen.add(value);
+  if (Array.isArray(value)) return value.map(item => redactOpenClawDiagnostic(item, key, seen));
+  const output = {};
+  for (const [childKey, childValue] of Object.entries(value)) {
+    output[childKey] = redactOpenClawDiagnostic(childValue, childKey, seen);
+  }
+  return output;
+}
+
 const OPENCLAW_BOOTSTRAP_PATHS = new Set(["/api/agent", "/healthz"]);
 
 export async function openclawBootstrapRequest(path = "/api/agent", { signal = null } = {}) {
   /* @doc <code>helpers.openclawBootstrapRequest(path)</code> ::
        Read <code>/api/agent</code> or <code>/healthz</code> through the provider selected
-       from the normalized Module 3a connection. A verified browser session stays direct.
-       A manually supplied Cloudflare or Pomerium session uses the approved relay and remains
-       tab-scoped. Returns response metadata plus parsed JSON without exposing either access
-       credential. */
+       from the normalized Module 3a connection. Pomerium uses the launchable terminal
+       loopback because its session is sender-bound. Cloudflare uses the approved relay when
+       the course is cross-origin. Returns response metadata plus parsed JSON without exposing
+       either access credential. */
   const actionPath = String(path || "");
   if (!OPENCLAW_BOOTSTRAP_PATHS.has(actionPath)) {
     throw new Error("OpenClaw bootstrap requests are limited to /api/agent and /healthz");
@@ -113,7 +141,9 @@ export async function openclawBootstrapRequest(path = "/api/agent", { signal = n
   const rawUrl = String(connection.rawUrl || "").replace(/\/+$/, "");
   if (!rawUrl) throw new Error("Set the launchable URL in the Module 3a probe first.");
   const provider = accessProviderForOpenClawUrl(rawUrl, connection.accessProvider);
-  if (provider === "pomerium" && !connection.accessSession) {
+  // Pomerium's browser session is sender-bound. Avoid replaying it
+  // through the hosted relay by reading HTTP bootstrap routes from the direct PTY.
+  if (provider === "pomerium") {
     const result = await openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal });
     return {
       ...result,
@@ -131,11 +161,7 @@ export async function openclawBootstrapRequest(path = "/api/agent", { signal = n
   );
   const headers = { Accept: "application/json, text/plain, */*" };
   if (route.viaProxy && connection.accessSession) {
-    if (provider === "cloudflare") headers["CF-Access-Jwt-Assertion"] = connection.accessSession;
-    else {
-      headers["X-OpenClaw-Access-Provider"] = provider;
-      headers["X-OpenClaw-Access-Session"] = connection.accessSession;
-    }
+    headers["CF-Access-Jwt-Assertion"] = connection.accessSession;
   }
   // /api/agent discovers the gateway token. A stale token from another
   // launchable must not prevent that replacement.
@@ -202,6 +228,336 @@ export async function refreshOpenClawGatewayToken({ signal = null, maxAgeMs = 30
     ..._verifiedGatewayToken,
     source: metadataToken ? "metadata" : "saved",
     changed: connection.token !== token,
+  };
+}
+
+function accessCredentialDelivery(provider, viaProxy, accessSession) {
+  if (!accessSession) {
+    return viaProxy
+      ? "No access session was supplied to the hosted relay."
+      : "Browser credentials are sent by the browser to the launchable origin.";
+  }
+  if (!viaProxy) return "The saved access session is not copied into a direct browser request.";
+  if (provider === "cloudflare") {
+    return "The tab-scoped access session is sent to the approved relay as CF-Access-Jwt-Assertion.";
+  }
+  return "The tab-scoped access session is sent to the approved relay as X-OpenClaw-Access-Session.";
+}
+
+function openClawHttpDiagnostic(path, connection) {
+  const provider = accessProviderForOpenClawUrl(connection.rawUrl, connection.accessProvider);
+  const viaLoopback = provider === "pomerium";
+  const route = openclawHttpUrl(
+    connection.rawUrl,
+    path,
+    getOpenClawProxyConfig(),
+    provider,
+    connection.accessSession,
+  );
+  const headers = { Accept: "application/json, text/plain, */*" };
+  if (route.viaProxy && connection.accessSession) {
+    if (provider === "cloudflare") headers["CF-Access-Jwt-Assertion"] = "<redacted>";
+    else {
+      headers["X-OpenClaw-Access-Provider"] = provider;
+      headers["X-OpenClaw-Access-Session"] = "<redacted>";
+    }
+  }
+  if (path !== "/api/agent" && connection.token) headers.Authorization = "Bearer <redacted>";
+  return {
+    provider,
+    route,
+    request: {
+      method: "GET",
+      url: viaLoopback ? connection.rawUrl.replace(/\/+$/, "") + path : route.displayUrl,
+      upstreamUrl: connection.rawUrl.replace(/\/+$/, "") + path,
+      transport: viaLoopback ? "launchable terminal loopback" : route.viaProxy ? "hosted relay" : "direct browser",
+      credentialDelivery: viaLoopback
+        ? "The launchable terminal makes this request on the learner's behalf; no browser cookie is copied."
+        : accessCredentialDelivery(provider, route.viaProxy, connection.accessSession),
+      headers: viaLoopback ? {} : headers,
+    },
+  };
+}
+
+export async function probeOpenClawGatewayConnection({ signal = null, timeoutMs = 15000, relayWebSocket = false } = {}) {
+  const connection = getOpenClawConnection();
+  const provider = accessProviderForOpenClawUrl(connection.rawUrl, connection.accessProvider);
+  const route = openclawGatewayWsUrl(
+    connection.rawUrl,
+    connection.accessSession,
+    null,
+    relayWebSocket,
+    provider,
+  );
+  const request = {
+    method: "WEBSOCKET",
+    url: route.displayUrl,
+    upstreamUrl: connection.rawUrl.replace(/\/+$/, "") + "/cli/gateway",
+    transport: route.viaProxy ? "hosted relay" : "direct browser",
+    credentialDelivery: accessCredentialDelivery(provider, route.viaProxy, connection.accessSession),
+    connect: {
+      method: "connect",
+      role: "operator",
+      scopes: ["operator.read", "operator.write", "operator.admin"],
+      auth: { token: connection.token ? "<redacted>" : "<missing>" },
+    },
+  };
+
+  return await new Promise(resolve => {
+    let socket = null;
+    let settled = false;
+    let connectId = "";
+    let challenge = null;
+    const frames = [];
+    const finish = result => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", abort);
+      try { socket?.close(); } catch (_) {}
+      resolve({
+        ...result,
+        request,
+        response: redactOpenClawDiagnostic({ challenge, frames }),
+      });
+    };
+    const abort = () => finish({ ok: false, error: "Connection test stopped." });
+    const timer = setTimeout(
+      () => finish({ ok: false, error: `No gateway challenge arrived within ${Math.round(timeoutMs / 1000)} seconds.` }),
+      Math.max(1000, Number(timeoutMs) || 15000),
+    );
+    if (signal?.aborted) return abort();
+    signal?.addEventListener("abort", abort, { once: true });
+    try {
+      socket = new WebSocket(route.url);
+    } catch (error) {
+      finish({ ok: false, error: String(error?.message || error) });
+      return;
+    }
+    socket.onmessage = event => {
+      let frame;
+      try { frame = JSON.parse(event.data); }
+      catch (_) { frame = { raw: String(event.data || "") }; }
+      frames.push(frame);
+      if (frame?.event === "connect.challenge") {
+        challenge = frame;
+        if (!connection.token) {
+          finish({
+            ok: false,
+            error: "Gateway challenge arrived, but GET /api/agent did not provide a gateway token.",
+          });
+          return;
+        }
+        connectId = _uniqueId("connection-audit-");
+        socket.send(JSON.stringify({
+          type: "req",
+          id: connectId,
+          method: "connect",
+          params: {
+            minProtocol: 4,
+            maxProtocol: 4,
+            client: {
+              id: "openclaw-control-ui",
+              version: "0.1.0",
+              platform: "browser",
+              mode: "webchat",
+            },
+            caps: ["tool-events"],
+            role: "operator",
+            scopes: ["operator.read", "operator.write", "operator.admin"],
+            auth: { token: connection.token },
+          },
+        }));
+        return;
+      }
+      if (frame?.type === "res" && frame?.id === connectId) {
+        finish({
+          ok: Boolean(frame.ok),
+          error: frame.ok ? "" : String(frame.error?.message || "Gateway authentication failed."),
+        });
+      }
+    };
+    socket.onerror = () => finish({ ok: false, error: "Gateway WebSocket failed before authentication completed." });
+    socket.onclose = () => {
+      if (!settled) finish({ ok: false, error: "Gateway WebSocket closed before authentication completed." });
+    };
+  });
+}
+
+export async function runOpenClawConnectionAudit({
+  baseUrl,
+  accessSession = "",
+  signal = null,
+  onStep = null,
+} = {}) {
+  const rawUrl = normalizeOpenClawLaunchableUrl(baseUrl);
+  if (!rawUrl) throw new Error("Enter the NemoClaw launchable Base URL.");
+  const provider = accessProviderForOpenClawUrl(rawUrl);
+  setOpenClawConnection({
+    rawUrl,
+    token: "",
+    accessProvider: provider,
+    accessSession,
+  });
+
+  const results = [];
+  const notify = step => {
+    try { onStep?.(redactOpenClawDiagnostic(step)); } catch (_) {}
+  };
+  const execute = async ({ id, title, purpose, request }, task) => {
+    const step = { id, title, purpose, request: redactOpenClawDiagnostic(request), status: "running" };
+    notify(step);
+    const started = performance.now();
+    try {
+      const outcome = await task();
+      Object.assign(step, outcome);
+      step.status = outcome.ok ? "passed" : "failed";
+    } catch (error) {
+      step.status = "failed";
+      step.ok = false;
+      step.error = String(error?.message || error);
+      step.response = redactOpenClawDiagnostic(error?.diagnostic || null);
+    }
+    step.elapsedMs = Math.round(performance.now() - started);
+    results.push(step);
+    notify(step);
+    return step;
+  };
+
+  let connection = getOpenClawConnection();
+  const metadataDiagnostic = openClawHttpDiagnostic("/api/agent", connection);
+  const metadata = await execute({
+    id: "agent-metadata",
+    title: "Agent metadata",
+    purpose: "Confirms launchable authentication and discovers the gateway token used by later WebSocket checks.",
+    request: metadataDiagnostic.request,
+  }, async () => {
+    const response = await openclawBootstrapRequest("/api/agent", { signal });
+    const token = response.ok ? (gatewayTokenFromAgentMetadata(response.json) || "") : "";
+    if (token) {
+      setOpenClawConnection({
+        rawUrl,
+        token,
+        accessProvider: provider,
+        accessSession,
+      });
+    }
+    return {
+      ok: Boolean(response.ok && token),
+      error: !response.ok
+        ? `GET /api/agent returned ${response.status} ${response.statusText}.`
+        : token
+          ? ""
+          : "GET /api/agent succeeded but did not provide a gateway token.",
+      response: redactOpenClawDiagnostic({
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+        body: response.json ?? response.body,
+      }),
+    };
+  });
+
+  connection = getOpenClawConnection();
+  const gatewayRoute = openclawGatewayWsUrl(
+    rawUrl,
+    connection.accessSession,
+    null,
+    false,
+    provider,
+  );
+  await execute({
+    id: "gateway-websocket",
+    title: "Gateway WebSocket",
+    purpose: "Confirms /cli/gateway reaches a challenge and accepts the token discovered from agent metadata.",
+    request: {
+      method: "WEBSOCKET",
+      url: gatewayRoute.displayUrl,
+      upstreamUrl: rawUrl + "/cli/gateway",
+      transport: gatewayRoute.viaProxy ? "hosted relay" : "direct browser",
+      credentialDelivery: accessCredentialDelivery(provider, gatewayRoute.viaProxy, accessSession),
+      gatewayToken: metadata.ok ? "discovered from /api/agent and sent as connect.auth.token" : "unavailable",
+    },
+  }, async () => {
+    const outcome = await probeOpenClawGatewayConnection({ signal, relayWebSocket: false });
+    return {
+      ok: outcome.ok,
+      error: outcome.error || "",
+      response: outcome.response,
+    };
+  });
+
+  const terminalMarker = "__NEMOCLAW_CONNECTION_READY__";
+  const terminalCommand = `printf '${terminalMarker}\\n'`;
+  const terminalPath = "/ws/terminal?cmd=" + encodeURIComponent(terminalCommand);
+  const terminalRoute = openclawWebSocketUrl(
+    rawUrl,
+    terminalPath,
+    "",
+    { enabled: false, base: "" },
+    provider,
+  );
+  await execute({
+    id: "terminal-websocket",
+    title: "Terminal WebSocket",
+    purpose: "Confirms /ws/terminal opens an authenticated PTY and returns a harmless marker.",
+    request: {
+      method: "WEBSOCKET",
+      url: terminalRoute.displayUrl,
+      upstreamUrl: rawUrl + terminalPath,
+      transport: terminalRoute.viaProxy ? "hosted relay" : "direct browser",
+      credentialDelivery: accessCredentialDelivery(provider, terminalRoute.viaProxy, accessSession),
+      command: terminalCommand,
+    },
+  }, async () => {
+    const response = await terminal(terminalCommand, {
+      idleMs: 1500,
+      totalMs: 20000,
+      openMs: 12000,
+      baseUrl: rawUrl,
+      signal,
+    });
+    const ok = String(response.output || "").includes(terminalMarker);
+    return {
+      ok,
+      error: ok ? "" : "Terminal opened but did not return the connection marker.",
+      response: redactOpenClawDiagnostic({
+        frames: response.frames,
+        exitCode: response.exitCode,
+        output: response.output,
+      }),
+    };
+  });
+
+  connection = getOpenClawConnection();
+  const healthDiagnostic = openClawHttpDiagnostic("/healthz", connection);
+  await execute({
+    id: "health",
+    title: "Health",
+    purpose: "Confirms the authenticated launchable health route after metadata and both WebSocket paths work.",
+    request: healthDiagnostic.request,
+  }, async () => {
+    const response = await openclawBootstrapRequest("/healthz", { signal });
+    return {
+      ok: Boolean(response.ok),
+      error: response.ok ? "" : `GET /healthz returned ${response.status} ${response.statusText}.`,
+      response: redactOpenClawDiagnostic({
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+        body: response.json ?? response.body,
+      }),
+    };
+  });
+
+  const ok = results.every(step => step.ok);
+  updateClawPill(document.getElementById("claw-status"));
+  window.dispatchEvent(new Event("nemoclaw:prerequisites"));
+  return {
+    ok,
+    provider,
+    baseUrl: rawUrl,
+    checks: results,
   };
 }
 
@@ -382,7 +738,7 @@ export function mountClawGateway(targetSel, opts = {}) {
       const refreshed = await refreshOpenClawGatewayToken();
       ({ rawUrl, accessProvider, accessSession } = _creds());
       token = refreshed.token;
-      const gateway = openclawGatewayWsUrl(rawUrl, accessSession, null, null, accessProvider);
+      const gateway = openclawGatewayWsUrl(rawUrl, accessSession, null, false, accessProvider);
       const wsUrl = gateway.url;
       _setStatus("connecting", gateway.viaProxy ? "via hosted relay" : "direct");
       const { scopes, version } = await _connectWs(wsUrl, token);
@@ -1089,6 +1445,254 @@ export function mountClawProbe(targetSel, opts = {}) {
   return mountEndpointProbe(targetSel, { ...opts, connectionKind: "openclaw" });
 }
 
+export function mountOpenClawConnectionAudit(targetSel, opts = {}) {
+  const target = typeof targetSel === "string" ? document.querySelector(targetSel) : targetSel;
+  if (!target) return null;
+  const saved = getOpenClawConnection();
+  const text = value => localizeCourseUiText(value);
+  const steps = [
+    ["agent-metadata", "Agent metadata", "/api/agent"],
+    ["gateway-websocket", "Gateway WebSocket", "/cli/gateway"],
+    ["terminal-websocket", "Terminal WebSocket", "/ws/terminal"],
+    ["health", "Health", "/healthz"],
+  ];
+
+  target.innerHTML = `
+    <div class="claw-probe claw-connection-audit" data-state="ready">
+      <div class="claw-head">
+        <div class="claw-label">${escHtml(text(opts.label || "Connect NemoClaw"))}</div>
+        <div class="claw-intro">${escHtml(text(opts.intro || "Enter the launchable URL and its browser access session. The course discovers everything else."))}</div>
+      </div>
+      <div class="claw-row">
+        <label class="claw-lf" for="claw-audit-url">${escHtml(text("Base URL"))}</label>
+        <input id="claw-audit-url" class="claw-input claw-url" type="url" spellcheck="false" autocapitalize="off"
+          placeholder="https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com" value="${_escAttr(saved.rawUrl)}"/>
+      </div>
+      <div class="claw-row">
+        <label class="claw-lf" for="claw-audit-session">${escHtml(text("Access session"))}</label>
+        <input id="claw-audit-session" class="claw-input claw-access-session" type="password" spellcheck="false"
+          autocapitalize="off" value="${_escAttr(saved.accessSession)}"/>
+        <button type="button" class="claw-btn alt claw-eye-session" title="${escHtml(text("Show session"))}"
+          aria-label="${escHtml(text("Show or hide access session"))}">👁</button>
+      </div>
+      <div class="claw-audit-derived" aria-live="polite"></div>
+      <div class="claw-actions">
+        <button type="button" class="claw-btn claw-audit-run">${escHtml(text("Test connection"))}</button>
+      </div>
+      <div class="claw-audit-summary" aria-live="polite">${escHtml(text("Waiting to test."))}</div>
+      <ol class="claw-audit-list">
+        ${steps.map(([id, title, path]) => `
+          <li class="claw-audit-step" data-step="${id}" data-status="pending">
+            <div class="claw-audit-step-head">
+              <span><strong>${escHtml(text(title))}</strong> <code>${escHtml(path)}</code></span>
+              <span class="claw-audit-status">${escHtml(text("Pending"))}</span>
+            </div>
+            <div class="claw-audit-explain"></div>
+            <details class="claw-audit-raw" hidden>
+              <summary>${escHtml(text("Redacted request and response"))}</summary>
+              <pre><code class="language-json"></code></pre>
+            </details>
+          </li>`).join("")}
+      </ol>
+    </div>
+  `;
+
+  if (!document.head.querySelector('style[data-openclaw-connection-audit="1"]')) {
+    const style = document.createElement("style");
+    style.dataset.openclawConnectionAudit = "1";
+    style.textContent = `
+      .claw-connection-audit{border:1px solid var(--bd,#2a2a2a);border-radius:8px;background:var(--e1,#161616);padding:14px 16px;margin:1em 0}
+      .claw-connection-audit .claw-head{margin-bottom:.8em}.claw-connection-audit .claw-label{font-weight:700;color:var(--gs,#aee23a)}
+      .claw-connection-audit .claw-intro,.claw-audit-derived,.claw-audit-summary{color:var(--td,#b0b0b0);font-size:.84rem;line-height:1.5}
+      .claw-connection-audit .claw-row{display:flex;align-items:center;gap:8px;margin:.5em 0}
+      .claw-connection-audit .claw-lf{width:104px;flex:0 0 104px;font:700 .74rem var(--mono,monospace);color:var(--tf,#8a8a8a);text-transform:uppercase;letter-spacing:.04em}
+      .claw-connection-audit .claw-input{flex:1;min-width:0;background:var(--e2,#1e1e1e);border:1px solid var(--bd,#2a2a2a);border-radius:5px;padding:8px 10px;color:var(--tx,#f2f2f2);font-family:var(--mono,monospace)}
+      .claw-connection-audit .claw-input:focus{outline:none;border-color:var(--g,#76b900)}
+      .claw-connection-audit .claw-actions{margin:.75em 0 .55em}.claw-connection-audit .claw-btn{background:var(--g,#76b900);color:#000;border:0;border-radius:5px;padding:7px 14px;font-weight:700;cursor:pointer}
+      :root[data-theme="light"] .claw-connection-audit .claw-btn{color:#fff}.claw-connection-audit .claw-btn:disabled{opacity:.55;cursor:wait}
+      .claw-connection-audit .claw-btn.alt{background:var(--e2,#1e1e1e);color:var(--gs,#aee23a);border:1px solid var(--bd,#2a2a2a);padding:6px 9px}
+      :root[data-theme="light"] .claw-connection-audit .claw-btn.alt{color:var(--gd,#2f5500)}
+      .claw-audit-summary[data-status="passed"]{color:var(--gs,#aee23a)}.claw-audit-summary[data-status="failed"]{color:var(--err,#ff8f8f)}
+      .claw-audit-list{list-style:none;padding:0;margin:.8em 0 0;display:grid;gap:8px;counter-reset:claw-audit}
+      .claw-audit-step{counter-increment:claw-audit;border:1px solid var(--bd,#2a2a2a);border-radius:6px;padding:9px 11px;background:var(--e2,#111)}
+      .claw-audit-step-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline}.claw-audit-step-head>span:first-child:before{content:counter(claw-audit) ". ";color:var(--tf,#8a8a8a)}
+      .claw-audit-step code{color:var(--gs,#aee23a)}.claw-audit-status{font:700 .72rem var(--mono,monospace);text-transform:uppercase;color:var(--tf,#8a8a8a)}
+      .claw-audit-step[data-status="running"]{border-color:var(--g,#76b900)}.claw-audit-step[data-status="passed"] .claw-audit-status{color:var(--gs,#aee23a)}
+      .claw-audit-step[data-status="failed"]{border-color:var(--err,#a04040)}.claw-audit-step[data-status="failed"] .claw-audit-status{color:var(--err,#ff8f8f)}
+      .claw-audit-explain{display:grid;gap:3px;margin-top:6px;color:var(--td,#b0b0b0);font-size:.79rem;line-height:1.45;overflow-wrap:anywhere}
+      .claw-audit-explain b{color:var(--tx,#f2f2f2)}.claw-audit-raw{margin-top:7px}.claw-audit-raw summary{cursor:pointer;color:var(--gs,#aee23a);font-size:.78rem}
+      .claw-audit-raw pre{max-height:320px;overflow:auto;margin:.45em 0 0;padding:9px;border-radius:5px;background:var(--bg,#0d0d0d);white-space:pre-wrap;word-break:break-word}
+      @media(max-width:620px){.claw-connection-audit .claw-row{align-items:stretch;flex-wrap:wrap}.claw-connection-audit .claw-lf{width:100%;flex-basis:100%}.claw-audit-step-head{align-items:flex-start;flex-direction:column;gap:3px}}
+    `;
+    document.head.appendChild(style);
+  }
+
+  const root = target.querySelector(".claw-connection-audit");
+  const urlInput = target.querySelector(".claw-url");
+  const sessionInput = target.querySelector(".claw-access-session");
+  const eye = target.querySelector(".claw-eye-session");
+  const runButton = target.querySelector(".claw-audit-run");
+  const derived = target.querySelector(".claw-audit-derived");
+  const summary = target.querySelector(".claw-audit-summary");
+  let controller = null;
+  let detectionVersion = 0;
+
+  function setDerived() {
+    const rawUrl = normalizeOpenClawLaunchableUrl(urlInput.value);
+    if (!rawUrl) {
+      derived.textContent = text("Provider and transport are discovered from the Base URL.");
+      sessionInput.placeholder = text("Paste the launchable browser session when this page is hosted separately");
+      return;
+    }
+    try {
+      const provider = accessProviderForOpenClawUrl(rawUrl);
+      const cookie = accessCookieName(provider);
+      derived.textContent = `${text("Detected automatically from Base URL:")} ${provider}. ` +
+        `${text("Access session:")} ${cookie}. ${text("Sensitive values stay in this tab.")}`;
+      sessionInput.placeholder = provider === "pomerium"
+        ? text("Paste _pomerium when this page is hosted separately")
+        : text("Paste CF_Authorization when this page is hosted separately");
+      urlInput.setCustomValidity("");
+    } catch (error) {
+      urlInput.setCustomValidity(localizeCourseUiText(error.message));
+      derived.textContent = localizeCourseUiText(error.message);
+    }
+  }
+
+  function saveInputs({ clearToken = false } = {}) {
+    const rawUrl = normalizeOpenClawLaunchableUrl(urlInput.value);
+    if (!rawUrl) return null;
+    const previous = getOpenClawConnection();
+    const provider = accessProviderForOpenClawUrl(rawUrl);
+    return setOpenClawConnection({
+      rawUrl,
+      token: clearToken || previous.rawUrl !== rawUrl ? "" : previous.token,
+      accessProvider: provider,
+      accessSession: sessionInput.value.trim(),
+    });
+  }
+
+  function resetSteps() {
+    target.querySelectorAll(".claw-audit-step").forEach(step => {
+      step.dataset.status = "pending";
+      step.querySelector(".claw-audit-status").textContent = text("Pending");
+      step.querySelector(".claw-audit-explain").textContent = "";
+      const raw = step.querySelector(".claw-audit-raw");
+      raw.hidden = true;
+      raw.querySelector("code").textContent = "";
+    });
+  }
+
+  function renderStep(step) {
+    const item = target.querySelector(`.claw-audit-step[data-step="${step.id}"]`);
+    if (!item) return;
+    item.dataset.status = step.status;
+    const status = step.status === "running"
+      ? text("Testing")
+      : step.status === "passed"
+        ? text("Passed")
+        : text("Failed");
+    item.querySelector(".claw-audit-status").textContent = step.elapsedMs == null
+      ? status
+      : `${status} · ${step.elapsedMs} ms`;
+    const request = step.request || {};
+    const explain = item.querySelector(".claw-audit-explain");
+    explain.innerHTML = "";
+    const lines = [
+      [text("Query"), request.url || request.upstreamUrl || ""],
+      [text("Why"), step.purpose || ""],
+      [text("Credential"), request.credentialDelivery || request.gatewayToken || ""],
+    ];
+    if (step.error) lines.push([text("Failure"), step.error]);
+    for (const [label, value] of lines) {
+      if (!value) continue;
+      const row = document.createElement("div");
+      const strong = document.createElement("b");
+      strong.textContent = label + ": ";
+      row.append(strong, document.createTextNode(String(value)));
+      explain.appendChild(row);
+    }
+    const raw = item.querySelector(".claw-audit-raw");
+    const code = raw.querySelector("code");
+    code.textContent = JSON.stringify(redactOpenClawDiagnostic({
+      request: step.request || null,
+      response: step.response || null,
+      error: step.error || null,
+    }), null, 2);
+    raw.hidden = step.status === "running";
+    if (!raw.hidden && window.hljs) {
+      try { window.hljs.highlightElement(code); } catch (_) {}
+    }
+  }
+
+  eye.addEventListener("click", () => {
+    const showing = sessionInput.type !== "password";
+    sessionInput.type = showing ? "password" : "text";
+    eye.title = text(showing ? "Show session" : "Hide session");
+  });
+  urlInput.addEventListener("input", () => {
+    detectionVersion += 1;
+    setDerived();
+    try { saveInputs(); } catch (_) {}
+  });
+  sessionInput.addEventListener("input", () => {
+    detectionVersion += 1;
+    try { saveInputs(); } catch (_) {}
+  });
+  urlInput.addEventListener("change", async () => {
+    const version = ++detectionVersion;
+    const rawUrl = normalizeOpenClawLaunchableUrl(urlInput.value);
+    if (!rawUrl || sessionInput.value.trim()) return;
+    let provider = "auto";
+    try { provider = accessProviderForOpenClawUrl(rawUrl); } catch (_) { return; }
+    if (provider !== "pomerium") return;
+    derived.textContent = text("Checking this browser for a signed-in launchable session.");
+    const detected = await detectOpenClawBrowserSession(rawUrl, provider);
+    if (version !== detectionVersion || sessionInput.value.trim()) return;
+    setDerived();
+    if (detected) derived.textContent += " " + text("Signed-in browser session detected.");
+  });
+
+  runButton.addEventListener("click", async () => {
+    controller?.abort();
+    controller = new AbortController();
+    resetSteps();
+    root.dataset.state = "running";
+    summary.dataset.status = "running";
+    summary.textContent = text("Testing required routes in order.");
+    runButton.disabled = true;
+    try {
+      const connection = saveInputs({ clearToken: true });
+      if (!connection) throw new Error(text("Enter the NemoClaw launchable Base URL."));
+      const result = await runOpenClawConnectionAudit({
+        baseUrl: connection.rawUrl,
+        accessSession: connection.accessSession,
+        signal: controller.signal,
+        onStep: renderStep,
+      });
+      root.dataset.state = result.ok ? "succeeded" : "failed";
+      summary.dataset.status = result.ok ? "passed" : "failed";
+      summary.textContent = result.ok
+        ? text("Connection ready. Metadata, gateway, terminal, and health checks passed.")
+        : text("Connection failed. Open the failed check for its redacted request and response.");
+      runButton.textContent = text("Test again");
+    } catch (error) {
+      root.dataset.state = "failed";
+      summary.dataset.status = "failed";
+      summary.textContent = String(error?.message || error);
+    } finally {
+      runButton.disabled = false;
+    }
+  });
+
+  setDerived();
+  return {
+    run: () => runButton.click(),
+    getUrl: () => normalizeOpenClawLaunchableUrl(urlInput.value),
+    stop: () => controller?.abort(),
+  };
+}
+
 export function mountModelEndpointProbe(targetSel, opts = {}) {
   return mountEndpointProbe(targetSel, {
     ...opts,
@@ -1126,7 +1730,7 @@ export async function openclawChat(message, { session = "main", onToken, onTool,
   const accessProvider = connection.accessProvider;
   const accessSession = connection.accessSession;
   if (!rawUrl || !token) throw new Error("Connect first on the Kickstart page (3a): set your launchable URL + token in the probe.");
-  const gateway = openclawGatewayWsUrl(rawUrl, accessSession, null, null, accessProvider);
+  const gateway = openclawGatewayWsUrl(rawUrl, accessSession, null, false, accessProvider);
   const wsUrl = gateway.url;
 
   async function connect() {
@@ -1245,7 +1849,7 @@ if (!rawUrl || !token) {
   helpers.log("Fill in the OpenClaw probe above first. For a Brev launchable, select its access provider and paste the matching browser session.");
   return;
 }
-const gateway = helpers.openclawGatewayWsUrl(rawUrl, accessSession, null, null, accessProvider);
+const gateway = helpers.openclawGatewayWsUrl(rawUrl, accessSession, null, false, accessProvider);
 const wsUrl = gateway.url;
 helpers.log("→ " + gateway.displayUrl + (gateway.viaProxy ? "  (via hosted relay)" : ""));
 

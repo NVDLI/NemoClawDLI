@@ -17,6 +17,7 @@ globalThis.sessionStorage = storage(tab);
 globalThis.location = new URL('https://cdn.dli.learn.nvidia.com/course-static/test/web/nemoclaw/03a-kickstart.html');
 
 const terminalUrls = [];
+let failDirectTerminal = false;
 class FakeWebSocket {
   static OPEN = 1;
   constructor(url) {
@@ -24,6 +25,11 @@ class FakeWebSocket {
     this.readyState = 0;
     terminalUrls.push(url);
     setTimeout(() => {
+      if (failDirectTerminal && new URL(url).hostname.endsWith('.brevlab.com')) {
+        this.onerror?.(new Error('direct route unavailable'));
+        this.close();
+        return;
+      }
       this.readyState = FakeWebSocket.OPEN;
       this.onopen?.();
       const command = new URL(url).searchParams.get('cmd') || '';
@@ -53,7 +59,7 @@ test('Pomerium loopback probe is registered for learner cells', () => {
   assert.equal(shared.HELPER_FNS.openclawLoopbackProbe, openshell.openclawLoopbackProbe);
 });
 
-test('Pomerium uses a tab-scoped manual session when browser detection is unavailable', async () => {
+test('Pomerium keeps a supplied session tab-scoped while course traffic stays direct', async () => {
   const saved = connection.setOpenClawConnection({
     rawUrl: launchable,
     token: 'tab-token',
@@ -73,22 +79,15 @@ test('Pomerium uses a tab-scoped manual session when browser detection is unavai
   assert.equal(tab.get(connection.OPENCLAW_TOKEN_KEY), 'tab-token');
   assert.equal(tab.get(connection.OPENCLAW_ACCESS_SESSION_KEY), 'manual-pomerium-session');
 
-  const http = connection.openclawHttpUrl(
-    launchable, '/api/agent', undefined, 'pomerium', saved.accessSession);
-  const gateway = connection.openclawWebSocketUrl(
+  const gateway = shared.openclawGatewayWsUrl(
     launchable,
-    '/cli/gateway',
     saved.accessSession,
-    undefined,
+    null,
+    false,
     'pomerium',
   );
-  assert.equal(
-    http.url,
-    'https://openclaw-cors-proxy.experiments.courses.nvidia.com/https/nemoclaw-test.apps.run.brev.nvidia.com/api/agent',
-  );
-  assert.equal(http.viaProxy, true);
-  assert.match(gateway.url, /openclaw-cors-proxy.*access_provider=pomerium.*access_session=manual-pomerium-session/);
-  assert.equal(gateway.viaProxy, true);
+  assert.equal(gateway.url, 'wss://nemoclaw-test.apps.run.brev.nvidia.com/cli/gateway');
+  assert.equal(gateway.viaProxy, false);
   assert.doesNotMatch(gateway.displayUrl, /manual-pomerium-session/);
 
   const metadata = await openshell.openclawLoopbackProbe('/api/agent', { baseUrl: launchable });
@@ -96,11 +95,11 @@ test('Pomerium uses a tab-scoped manual session when browser detection is unavai
   assert.equal(metadata.json.agent.dashboardUrl, '/#token=test-gateway-token');
   assert.equal(terminalUrls.length, 1);
   const terminal = new URL(terminalUrls[0]);
-  assert.equal(terminal.origin, 'wss://openclaw-cors-proxy.experiments.courses.nvidia.com');
-  assert.equal(terminal.pathname, '/https/nemoclaw-test.apps.run.brev.nvidia.com/ws/terminal');
+  assert.equal(terminal.origin, 'wss://nemoclaw-test.apps.run.brev.nvidia.com');
+  assert.equal(terminal.pathname, '/ws/terminal');
   assert.equal(terminal.searchParams.get('cmd'), 'curl -fsS --max-time 10 http://127.0.0.1/api/agent');
-  assert.equal(terminal.searchParams.get('access_provider'), 'pomerium');
-  assert.equal(terminal.searchParams.get('access_session'), 'manual-pomerium-session');
+  assert.equal(terminal.searchParams.get('access_provider'), null);
+  assert.equal(terminal.searchParams.get('access_session'), null);
 
   await assert.rejects(
     openshell.openclawLoopbackProbe('/arbitrary', { baseUrl: launchable }),
@@ -125,4 +124,32 @@ test('Pomerium remains direct when no manual access session is supplied', () => 
   );
   assert.equal(gateway.url, 'wss://nemoclaw-test.apps.run.brev.nvidia.com/cli/gateway');
   assert.equal(gateway.viaProxy, false);
+});
+
+test('Cloudflare terminal retries through relay only after direct failure', async () => {
+  const launchable = 'https://nemoclaw-test.brevlab.com';
+  connection.setOpenClawConnection({
+    rawUrl: launchable,
+    token: 'tab-token',
+    accessProvider: 'cloudflare',
+    accessSession: 'cloudflare-session',
+  });
+  terminalUrls.length = 0;
+  failDirectTerminal = true;
+  try {
+    await openshell.terminal('printf ready', {
+      baseUrl: launchable,
+      openMs: 20,
+      idleMs: 20,
+      totalMs: 2000,
+    });
+  } finally {
+    failDirectTerminal = false;
+  }
+
+  assert.equal(terminalUrls.length, 2);
+  assert.equal(new URL(terminalUrls[0]).origin, 'wss://nemoclaw-test.brevlab.com');
+  const fallback = new URL(terminalUrls[1]);
+  assert.equal(fallback.origin, 'wss://openclaw-cors-proxy.experiments.courses.nvidia.com');
+  assert.equal(fallback.searchParams.get('cf_access_jwt'), 'cloudflare-session');
 });

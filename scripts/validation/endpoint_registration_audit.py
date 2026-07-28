@@ -184,6 +184,28 @@ def audit(overrides: dict[str, str] | None = None) -> list[str]:
             findings.append(f"OpenClaw probe path contract missing: {token}")
     if 'openclawHttpUrl(displayUrl, ""' in openclaw:
         findings.append("OpenClaw probe normalizes a combined URL and drops /healthz or /api/agent")
+    audit_steps = (
+        'id: "agent-metadata"',
+        'id: "gateway-websocket"',
+        'id: "terminal-websocket"',
+        'id: "health"',
+    )
+    positions = [openclaw.find(token) for token in audit_steps]
+    if any(position < 0 for position in positions) or positions != sorted(positions):
+        findings.append("OpenClaw connection audit must run metadata, gateway, terminal, and health in order")
+    for token in (
+        'const response = await openclawBootstrapRequest("/api/agent"',
+        "gatewayTokenFromAgentMetadata(response.json)",
+        "probeOpenClawGatewayConnection({ signal, relayWebSocket: false })",
+        "const response = await terminal(terminalCommand",
+        'openclawBootstrapRequest("/healthz"',
+        "response.json ?? response.body",
+        "redactOpenClawDiagnostic",
+        'if (provider === "pomerium")',
+        'transport: viaLoopback ? "launchable terminal loopback"',
+    ):
+        if token not in openclaw:
+            findings.append(f"OpenClaw connection audit lost required route or redaction: {token}")
 
     for rel in endpoint_pages():
         if rel not in overrides and rel not in published_locale_pages() and not (ROOT / rel).is_file():
@@ -194,14 +216,19 @@ def audit(overrides: dict[str, str] | None = None) -> list[str]:
             findings.append(f"{rel}: model endpoint is not mounted through its typed probe")
         if 'mountClawProbe("#probe-llm"' in page:
             findings.append(f"{rel}: model endpoint is mounted as OpenClaw")
-        if 'mountClawProbe("#probe-claw"' not in page:
+        if 'mountOpenClawConnectionAudit("#probe-claw"' not in page:
             findings.append(f"{rel}: OpenClaw endpoint lost its typed probe")
+        if 'mountClawProbe("#probe-claw"' in page:
+            findings.append(f"{rel}: legacy multi-field OpenClaw probe returned")
         for token in ('id="model-route-settings"', 'mountKeyPanel(document.getElementById("model-route-settings")', "await renderModelEndpointProbe()"):
             if token not in page:
                 findings.append(f"{rel}: model route source is not visible or refreshable: {token}")
-        for token in ("unexpectedHtmlHint:", 'path: "/healthz", method: "GET", expectJson: true', 'path: "/api/agent", method: "GET", expectJson: true'):
-            if token not in page:
-                findings.append(f"{rel}: OpenClaw API probe lost its JSON/path guard: {token}")
+        audit_start = page.find('mountOpenClawConnectionAudit("#probe-claw"')
+        audit_end = page.find("\n    });", audit_start)
+        audit_mount = page[audit_start:audit_end + len("\n    });")] if audit_start >= 0 and audit_end >= 0 else ""
+        for token in ("wsRelayControls:", "defaultToken:", "accessProvider:", "fieldHelp:"):
+            if token in audit_mount:
+                findings.append(f"{rel}: legacy learner-facing OpenClaw control returned: {token}")
 
     direct_write = re.compile(
         r"(?:localStorage|sessionStorage)\.(?:setItem|removeItem)\(\s*(['\"])([^'\"]+)\1"
@@ -235,11 +262,15 @@ def self_test() -> list[str]:
     browser_integration = (ROOT / BROWSER_INTEGRATION).read_text(encoding="utf-8")
     cases = (
         ("model mounted as OpenClaw", {pages[0]: en.replace('mountModelEndpointProbe("#probe-llm"', 'mountClawProbe("#probe-llm"', 1)}, "mounted as OpenClaw"),
+        ("OpenClaw audit replaced by legacy probe", {pages[0]: en.replace('mountOpenClawConnectionAudit("#probe-claw"', 'mountClawProbe("#probe-claw"', 1)}, "legacy multi-field"),
         ("conditional registration removed", {OPENCLAW: openclaw.replace("const openClawConnection = isOpenClaw", "const openClawConnection = true", 1)}, "typed endpoint probe"),
         ("probe path folded into launchable", {OPENCLAW: openclaw.replace("baseUrl,\n      pathAndQuery,", 'displayUrl,\n      "",', 1)}, "probe path contract"),
         ("probe provider dropped", {OPENCLAW: openclaw.replace("accessProvider,\n      accessSession,", '"auto",\n      accessSession,', 1)}, "probe path contract"),
         ("probe session dropped", {OPENCLAW: openclaw.replace("accessProvider,\n      accessSession,", 'accessProvider,\n      "",', 1)}, "probe path contract"),
-        ("probe JSON guard removed", {pages[0]: en.replace(', expectJson: true', '', 1)}, "JSON/path guard"),
+        ("connection metadata route removed", {OPENCLAW: openclaw.replace('const response = await openclawBootstrapRequest("/api/agent"', 'const response = await openclawBootstrapRequest("/api/agents-broken"', 1)}, "required route or redaction"),
+        ("connection route order changed", {OPENCLAW: openclaw.replace('id: "agent-metadata"', 'id: "terminal-websocket"', 1)}, "must run metadata"),
+        ("Pomerium loopback becomes session-conditional", {OPENCLAW: openclaw.replace('if (provider === "pomerium")', 'if (provider === "pomerium" && !connection.accessSession)', 1)}, "required route or redaction"),
+        ("gateway silently selects the relay", {OPENCLAW: openclaw.replace("probeOpenClawGatewayConnection({ signal, relayWebSocket: false })", "probeOpenClawGatewayConnection({ signal, relayWebSocket: true })", 1)}, "required route or redaction"),
         ("model route panel removed", {pages[1]: localized.replace('id="model-route-settings"', 'id="removed-model-route-settings"', 1)}, "model route source"),
         ("page writes launchable registration", {pages[0]: en + '\n<script>localStorage.setItem("nemoclaw_clawrawurl", "bad")</script>\n'}, "writes protected endpoint"),
         ("page writes WebSocket relay preference", {pages[0]: en + '\n<script>localStorage.setItem("nemoclaw_openclaw_ws_relay_enabled_v1", "1")</script>\n'}, "writes protected endpoint"),

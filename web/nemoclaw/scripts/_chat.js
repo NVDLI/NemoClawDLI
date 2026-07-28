@@ -799,6 +799,8 @@ export function mountConsole(container, { prompt = "$", greeting = "", suggestio
   const stopBtn = root.querySelector(".da-stop");
   let running = false, runAC = null;
   const setState = (message, kind = "") => {
+    const semanticState = kind === "error" ? "failed" : kind || "ready";
+    root.dataset.state = semanticState;
     state.textContent = message;
     state.className = "da-console-state" + (kind ? " " + kind : "");
   };
