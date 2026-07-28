@@ -26,6 +26,7 @@ FILES = {
     "kickstart": ROOT / "web" / "nemoclaw" / "03a-kickstart.html",
     "openclaw_js": ROOT / "web" / "nemoclaw" / "scripts" / "_openclaw.js",
     "connection_js": ROOT / "web" / "nemoclaw" / "scripts" / "_connection.js",
+    "openshell_js": ROOT / "web" / "nemoclaw" / "scripts" / "_openshell.js",
     "cors_worker": ROOT / "scripts" / "cors-proxy" / "cors-proxy-worker-openclaw.js",
     "runtime_js": ROOT / "scripts" / "runtime" / "test_page_runtime.js",
     "runtime_sh": ROOT / "scripts" / "runtime" / "browser_runtime_test.sh",
@@ -40,13 +41,13 @@ FILES = {
 }
 
 REQUIRED = {
-    "kickstart": ["Cloudflare Access", "Pomerium", "_pomerium", "CF_Authorization", "helpers.openclawBootstrapRequest(PATH"],
+    "kickstart": ["Cloudflare Access", "Pomerium", "HttpOnly", "CF_Authorization", "helpers.openclawBootstrapRequest(PATH"],
     "openclaw_js": ["Cloudflare Access", "Pomerium", "detectOpenClawBrowserSession", "X-OpenClaw-Access-Session", "CF-Access-Jwt-Assertion", "${fallback}${hint}", "openclawGatewayWsUrl", "openclawBootstrapRequest", "getOpenClawProxyConfig", "getOpenClawWsRelayEnabled", "proxyControls", "hideHtmlFrame", ".claw-html-frame[hidden]"],
     "connection_js": ["DEFAULT_OPENCLAW_PROXY_BASE", "OPENCLAW_PROXY_BASE_KEY", "OPENCLAW_PROXY_ENABLED_KEY", "OPENCLAW_WS_RELAY_ENABLED_KEY", "OPENCLAW_ACCESS_PROVIDER_KEY", "OPENCLAW_ACCESS_SESSION_KEY", "openclaw_access_provider", "migrateOpenClawConnectionStorage", "workers\\.dev", "new URL(DEFAULT_OPENCLAW_PROXY_BASE)", "openclawWebSocketUrl"],
     "cors_worker": ["CF_Authorization", "X-Pomerium-Authorization", "X-OpenClaw-Access-Provider", "access_session", "targetSearch.delete", "upstream.webSocket", "Origin", "http://localhost:8088"],
     "runtime_js": ["OPENCLAW_BACKUP_HINT", "OPENCLAW_CORS_PROXY_BASE", "preflightOpenClaw", "resolveOpenClawToken", "OPENCLAW_TOKEN: discovered", "shared.setOpenClawConnection({ rawUrl: u, token: t, accessProvider: provider, accessSession: session })", "RESULT: FAIL (OpenClaw gateway activity missing", "gatewayMissing) ? 1 : 0", "'/health'"],
     "runtime_sh": ["CLAW_ACCESS_PROVIDER", "CLAW_ACCESS_SESSION", "OPENCLAW_CORS_PROXY_BASE"],
-    "runtime_skill": ["OpenClaw fallback", "Cloudflare Access", "Pomerium", "CLAW_ACCESS_SESSION", "OPENCLAW_CORS_PROXY_BASE"],
+    "runtime_skill": ["OpenClaw access", "Cloudflare", "Pomerium", "CLAW_ACCESS_SESSION", "OPENCLAW_CORS_PROXY_BASE"],
     "scripts_skill": ["validation/SKILL.html"],
     "validation_skill": ["openclaw_fallback_audit.py", "OpenClaw fallback"],
     "worker_ws_audit": ["openclaw worker ws audit", "CF_Authorization", "x-pomerium-authorization", "synthesized a Cookie header", "http://localhost:8088", "upstream WebSocket response directly"],
@@ -129,7 +130,7 @@ def worker_provider_findings(worker: str) -> list[str]:
 
 
 def browser_session_findings(openclaw: str, connection: str) -> list[str]:
-    """Reject provider inference masquerading as a verified browser session."""
+    """Enforce sender-bound Pomerium auth while retaining live session detection."""
     findings: list[str] = []
     detector = re.search(
         r"export function detectOpenClawBrowserSession\([^)]*\) \{([\s\S]*?)\n\}",
@@ -144,46 +145,128 @@ def browser_session_findings(openclaw: str, connection: str) -> list[str]:
         openclaw,
     ):
         findings.append("Pomerium detected copy must be limited to the verified detected state")
-    if '"paste the _pomerium cookie value"' not in openclaw:
-        findings.append("Pomerium must expose a manual _pomerium fallback when direct detection fails")
-    if "accessSessionInp.disabled = detected;" not in openclaw:
-        findings.append("Pomerium access-session input may be disabled only after verified detection")
-    if ('accessProviderForOpenClawUrl(clean) === "pomerium"' not in connection or
-            'return Boolean(String(accessSession || "").trim());' not in connection):
-        findings.append("a manually supplied Pomerium session must select the approved relay")
-    direct_without_session = (
-        'if (accessProviderForOpenClawUrl(clean) === "pomerium") {' in connection and
-        'return Boolean(String(accessSession || "").trim());' in connection
-    )
-    if not direct_without_session:
-        findings.append("Pomerium without a supplied session must preserve direct browser detection")
+    if '"open the launchable, sign in, then retry"' not in openclaw:
+        findings.append("Pomerium detection failure must direct the learner back to launchable sign-in")
+    if '"paste the _pomerium cookie value"' in openclaw:
+        findings.append("Pomerium recovery must not ask the learner to copy an HttpOnly session")
+    if "accessSessionInp.disabled = pomerium;" not in openclaw:
+        findings.append("Pomerium access-session input must remain disabled")
+    if 'if (pomerium) accessSessionInp.value = "";' not in openclaw:
+        findings.append("Pomerium access-session input must clear stale values")
+    if 'if (resolvedAccessProvider === "pomerium") nextAccessSession = "";' not in connection:
+        findings.append("Pomerium connection storage must reject supplied sessions")
+    if not re.search(
+        r'if \(accessProviderForOpenClawUrl\(clean\) === "pomerium"\)\s+return false;',
+        connection,
+    ):
+        findings.append("Pomerium HTTP routing must stay direct regardless of stale session state")
+    if not re.search(
+        r'if \(provider === "pomerium"\) \{\s*'
+        r'return openclawWebSocketUrl\([^;]*\{ enabled: false, base: "" \}',
+        openclaw,
+    ):
+        findings.append("Pomerium gateway routing must stay direct")
+    if not re.search(
+        r'if \(provider === "pomerium"\) \{\s*'
+        r'const result = await openclawLoopbackProbe\(actionPath',
+        openclaw,
+    ):
+        findings.append("Pomerium bootstrap reads must use the direct terminal loopback")
+    if re.search(r'provider === "pomerium"\s*&&\s*!connection\.accessSession', openclaw):
+        findings.append("Pomerium bootstrap must not depend on a stored access session")
+    if re.search(r'accessProvider === "pomerium"\s*&&\s*!accessSession', openclaw):
+        findings.append("Pomerium probe actions must not fall back to relay when stale session state exists")
     return findings
 
 
 def browser_session_contract(openclaw: str, connection: str) -> list[str]:
-    """Prove each auto-detection and manual-fallback edge has mutation coverage."""
+    """Mutate every sender-bound Pomerium edge and prove the detector rejects it."""
     cases = (
         ("challenge proof", openclaw.replace('frame?.event === "connect.challenge"', 'frame?.event === "message"', 1),
          connection, "live connect.challenge"),
         ("hostname-only claim", openclaw.replace("uses the signed-in browser session; nothing to paste",
                                                   "uses the signed-in browser session; nothing to paste", 1) +
          "\n// uses the signed-in browser session; nothing to paste", connection, "hostname inference"),
-        ("manual fallback", openclaw.replace('"paste the _pomerium cookie value"', '"session unavailable"', 1),
-         connection, "manual _pomerium"),
-        ("input remains editable", openclaw.replace("accessSessionInp.disabled = detected;",
-                                                     "accessSessionInp.disabled = provider === \"pomerium\";", 1),
-         connection, "disabled only"),
-        ("manual relay", openclaw,
-         connection.replace('accessProviderForOpenClawUrl(clean) === "pomerium"',
-                            'accessProviderForOpenClawUrl(clean) === "cloudflare"', 1), "approved relay"),
-        ("direct detection", openclaw,
-         connection.replace('return Boolean(String(accessSession || "").trim());',
-                            "return true;", 1), "preserve direct"),
+        ("sign-in recovery", openclaw.replace('"open the launchable, sign in, then retry"',
+                                               '"session unavailable"', 1),
+         connection, "launchable sign-in"),
+        ("cookie-paste regression", openclaw + '\nconst unsafe = "paste the _pomerium cookie value";',
+         connection, "must not ask"),
+        ("input remains editable", openclaw.replace("accessSessionInp.disabled = pomerium;",
+                                                     "accessSessionInp.disabled = detected;", 1),
+         connection, "remain disabled"),
+        ("stale input retained", openclaw.replace('if (pomerium) accessSessionInp.value = "";',
+                                                   "// stale value retained", 1),
+         connection, "clear stale"),
+        ("stored session accepted", openclaw,
+         connection.replace('if (resolvedAccessProvider === "pomerium") nextAccessSession = "";',
+                            "// supplied session accepted", 1), "reject supplied"),
+        ("HTTP relay selected", openclaw,
+         connection.replace('if (accessProviderForOpenClawUrl(clean) === "pomerium") return false;',
+                            'if (accessProviderForOpenClawUrl(clean) === "pomerium") return Boolean(accessSession);',
+                            1), "HTTP routing"),
+        ("gateway relay selected", openclaw.replace('if (provider === "pomerium") {',
+                                                     'if (provider === "cloudflare") {', 1),
+         connection, "gateway routing"),
+        ("bootstrap loopback removed", openclaw.replace('if (provider === "pomerium") {\n    const result = await openclawLoopbackProbe(actionPath',
+                                                 'if (provider === "cloudflare") {\n    const result = await openclawLoopbackProbe(actionPath',
+                                                 1),
+         connection, "bootstrap reads"),
+        ("bootstrap session branch", openclaw.replace('if (provider === "pomerium") {\n    const result = await openclawLoopbackProbe(actionPath',
+                                                'if (provider === "pomerium" && !connection.accessSession) {\n    const result = await openclawLoopbackProbe(actionPath',
+                                                1),
+         connection, "must not depend"),
+        ("probe session branch", openclaw.replace('isOpenClaw && accessProvider === "pomerium" && method === "GET"',
+                                                  'isOpenClaw && accessProvider === "pomerium" && !accessSession && method === "GET"',
+                                                  1),
+         connection, "must not fall back"),
     )
     misses = []
     for label, mutated_openclaw, mutated_connection, expected in cases:
         if not any(expected in item for item in browser_session_findings(mutated_openclaw, mutated_connection)):
             misses.append(f"browser-session detector missed {label}")
+    return misses
+
+
+def terminal_routing_findings(openshell: str) -> list[str]:
+    """Reject any terminal route that can move Pomerium auth onto the relay."""
+    findings: list[str] = []
+    if not re.search(
+        r'const relayEnabled = resolvedProvider === "cloudflare"\s*&&',
+        openshell,
+    ):
+        findings.append("Pomerium terminal routing must stay direct")
+    if re.search(r'resolvedProvider === "pomerium"[\s\S]{0,100}accessSession', openshell):
+        findings.append("Pomerium terminal routing must not branch on stored session state")
+    return findings
+
+
+def terminal_routing_contract(openshell: str) -> list[str]:
+    """Prove a provider-guard regression is rejected."""
+    cases = (
+        (
+            "provider guard",
+            openshell.replace(
+                'const relayEnabled = resolvedProvider === "cloudflare" &&',
+                "const relayEnabled =",
+                1,
+            ),
+            "must stay direct",
+        ),
+        (
+            "session-selected relay",
+            openshell.replace(
+                "const relayEnabled = resolvedProvider === \"cloudflare\" &&",
+                'const relayEnabled = resolvedProvider === "pomerium" && accessSession &&',
+                1,
+            ),
+            "must stay direct",
+        ),
+    )
+    misses = []
+    for label, mutated, expected in cases:
+        if not any(expected in item for item in terminal_routing_findings(mutated)):
+            misses.append(f"terminal-routing detector missed {label}")
     return misses
 
 
@@ -201,6 +284,8 @@ def audit() -> list[str]:
 
     openclaw = read(FILES["openclaw_js"])
     connection = read(FILES["connection_js"])
+    openshell = read(FILES["openshell_js"])
+    kickstart = read(FILES["kickstart"])
     if "try { await runAction(action); }\n      try { await runAction(action); }" in openclaw:
         findings.append("web/nemoclaw/scripts/_openclaw.js runs each probe action twice")
     if "?cf_access_jwt=" in openclaw and "?cf_access_jwt=..." not in openclaw:
@@ -213,6 +298,10 @@ def audit() -> list[str]:
     findings.extend(probe_frame_contract(openclaw))
     findings.extend(browser_session_findings(openclaw, connection))
     findings.extend(browser_session_contract(openclaw, connection))
+    findings.extend(terminal_routing_findings(openshell))
+    findings.extend(terminal_routing_contract(openshell))
+    if re.search(r"(?:paste|copy)[^<\n]{0,80}<code>_pomerium</code>", kickstart, re.I):
+        findings.append("web/nemoclaw/03a-kickstart.html must not ask learners to copy a Pomerium session")
 
     findings.extend(worker_provider_findings(read(FILES["cors_worker"])))
 

@@ -5,8 +5,8 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
-- Thanks to Vadim Kudlay for reviewing the Spanish and Brazilian Portuguese browser-session
-  availability guidance.
+- Thanks to Vadim Kudlay for reviewing the Spanish and Brazilian Portuguese sender-bound
+  Pomerium guidance.
 - Made an ephemeral launchable instance identifier uncommittable: the sensitive-content boundary now
   rejects a provisioned instance ID in either supported host family from the tree, the index, and
   proposed history, the remaining real identifier was replaced with synthetic fixtures, and every

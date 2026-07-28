@@ -153,10 +153,11 @@ function audit(overrides = {}) {
   const gatewayRouter = functionSource(files.helper, 'export function openclawGatewayWsUrl');
   if (!gatewayRouter?.includes('getOpenClawWsRelayEnabled()')
       || !/\bproxyEnabled\s*===\s*true\b/.test(gatewayRouter)
-      || !gatewayRouter.includes('provider === "pomerium" && Boolean(String(accessSession || "").trim())')
+      || !gatewayRouter.includes('if (provider === "pomerium")')
+      || !gatewayRouter.includes('{ enabled: false, base: "" }')
       || !gatewayRouter.includes('if (!relayEnabled)')
       || !/openclawWebSocketUrl\s*\(\s*rawUrl\s*,\s*["']\/cli\/gateway["']\s*,\s*accessSession\s*,\s*config\s*,\s*accessProvider\s*\)/.test(gatewayRouter)) {
-    findings.push('gateway WebSocket does not preserve live direct detection and the provider-bound manual fallback');
+    findings.push('gateway WebSocket does not preserve sender-bound Pomerium and explicit Cloudflare relay recovery');
   }
   const bootstrap = functionSource(files.helper, 'export async function openclawBootstrapRequest');
   if (!files.runtimeText.includes('/proc\\/self\\/oom_score_adj')
@@ -298,7 +299,7 @@ function selfTest() {
     ['terminal relay', { openshell: base.openshell.replace('openclawWebSocketUrl(', 'directTerminalUrl(', 1) }],
     ['terminal provider route', { openshell: base.openshell.replace('[routed.url]', '[rawUrl + "/ws/terminal"]') }],
     ['gateway direct default', { helper: base.helper.replace('if (!relayEnabled)', 'if (false)') }],
-    ['gateway manual Pomerium fallback', { helper: base.helper.replace('provider === "pomerium" && Boolean(String(accessSession || "").trim())', 'provider === "pomerium" && false') }],
+    ['gateway sender-bound Pomerium route', { helper: base.helper.replace('if (provider === "pomerium")', 'if (provider === "cloudflare")', 1) }],
     ['gateway relay opt-in', { helper: base.helper.replace('proxyEnabled === true', 'proxyEnabled !== false') }],
     ['downstream gateway', { cliRuntime: base.cliRuntime.replace('runtime.openclawGatewayWsUrl(connection.rawUrl, connection.accessSession, null, null, connection.accessProvider).url', 'connection.rawUrl + "/cli/gateway"') }],
     ['downstream page boundary', { en4b: base.en4b.replace('helpers.mountOpenClawCli("#agent-chat")', 'mountDirectCli("#agent-chat")') }],
