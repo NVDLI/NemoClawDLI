@@ -113,7 +113,7 @@ function handler(event) {
   request.cookies = {};
   if (accessSession && expectedProvider === 'cloudflare') request.cookies.CF_Authorization = { value: accessSession };
   if (accessSession && expectedProvider === 'pomerium') {
-    request.cookies._pomerium = { value: accessSession };
+    headers['x-pomerium-authorization'] = { value: accessSession };
   }
 
   request.uri = upstreamPath;

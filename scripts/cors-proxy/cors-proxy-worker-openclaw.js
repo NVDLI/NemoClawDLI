@@ -110,10 +110,9 @@ export default {
     if (accessSession && expectedProvider === "cloudflare") {
       fwdHeaders.set("Cookie", "CF_Authorization=" + accessSession);
     } else if (accessSession && expectedProvider === "pomerium") {
-      // Recreate only the provider cookie after stripping the caller's Cookie
-      // header. The allowlisted host and validated cookie value keep the
-      // credential bound to the selected Pomerium launchable.
-      fwdHeaders.set("Cookie", "_pomerium=" + accessSession);
+      // Pomerium consumes this upstream-only header before the request reaches
+      // the launchable. Authorization remains available for the gateway token.
+      fwdHeaders.set("X-Pomerium-Authorization", accessSession);
     }
 
     const isWebSocket = (request.headers.get("Upgrade") || "").toLowerCase() === "websocket";

@@ -136,8 +136,8 @@ test('filteredRequestHeaders maps a Pomerium session only for the Pomerium host 
   }, 'nemoclaw-demo.apps.run.brev.nvidia.com');
   assert.equal(headers.get('X-OpenClaw-Access-Provider'), null);
   assert.equal(headers.get('X-OpenClaw-Access-Session'), null);
-  assert.equal(headers.get('cookie'), '_pomerium=opaque-session');
-  assert.equal(headers.get('X-Pomerium-Authorization'), null);
+  assert.equal(headers.get('cookie'), null);
+  assert.equal(headers.get('X-Pomerium-Authorization'), 'opaque-session');
 });
 
 test('filteredRequestHeaders requires an explicit provider for neutral sessions', () => {
@@ -172,8 +172,8 @@ test('Cloudflare service-token headers are always stripped', () => {
   }, 'nemoclaw-demo.apps.run.brev.nvidia.com');
   assert.equal(pomerium.get('cf-access-client-id'), null);
   assert.equal(pomerium.get('cf-access-client-secret'), null);
-  assert.equal(pomerium.get('cookie'), '_pomerium=opaque-session');
-  assert.equal(pomerium.get('x-pomerium-authorization'), null);
+  assert.equal(pomerium.get('cookie'), null);
+  assert.equal(pomerium.get('x-pomerium-authorization'), 'opaque-session');
 
   const unrelated = filteredRequestHeaders({
     'CF-Access-Client-Id': 'caller-id',

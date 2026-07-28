@@ -68,7 +68,7 @@ test('allows CloudFront to omit viewer handshake headers and lets the upstream c
   assert.deepEqual(Object.keys(request.cookies), ['CF_Authorization']);
 });
 
-test('routes a Pomerium-authenticated gateway with only its validated provider cookie', () => {
+test('routes a Pomerium-authenticated gateway without exposing its session upstream', () => {
   const { handler, updates } = loadHandler();
   const request = handler(event({
     uri: '/https/nemoclaw-demo.apps.run.brev.nvidia.com/cli/gateway',
@@ -80,9 +80,8 @@ test('routes a Pomerium-authenticated gateway with only its validated provider c
   }));
   assert.equal(request.uri, '/cli/gateway');
   assert.deepEqual({ ...request.querystring }, { keep: { value: '1' } });
-  assert.deepEqual(Object.keys(request.cookies), ['_pomerium']);
-  assert.equal(request.cookies._pomerium.value, 'opaque-session');
-  assert.equal(request.headers['x-pomerium-authorization'], undefined);
+  assert.deepEqual(Object.keys(request.cookies), []);
+  assert.equal(request.headers['x-pomerium-authorization'].value, 'opaque-session');
   assert.equal(updates[0].domainName, 'nemoclaw-demo.apps.run.brev.nvidia.com');
   assert.deepEqual([...updates[0].allowedCertificateNames], [
     'apps.run.brev.nvidia.com',
@@ -90,7 +89,7 @@ test('routes a Pomerium-authenticated gateway with only its validated provider c
   ]);
 });
 
-test('replaces caller credentials with only the validated Pomerium cookie', () => {
+test('replaces a caller-supplied Pomerium authorization header with the validated session', () => {
   const { handler } = loadHandler();
   const request = handler(event({
     uri: '/https/nemoclaw-demo.apps.run.brev.nvidia.com/cli/gateway',
@@ -105,9 +104,7 @@ test('replaces caller credentials with only the validated Pomerium cookie', () =
       access_session: { value: 'validated-session' },
     },
   }));
-  assert.equal(request.headers['x-pomerium-authorization'], undefined);
-  assert.deepEqual(Object.keys(request.cookies), ['_pomerium']);
-  assert.equal(request.cookies._pomerium.value, 'validated-session');
+  assert.equal(request.headers['x-pomerium-authorization'].value, 'validated-session');
 });
 
 test('rejects a neutral session without an explicit provider', () => {
