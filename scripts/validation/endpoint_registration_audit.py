@@ -108,6 +108,7 @@ def audit(overrides: dict[str, str] | None = None) -> list[str]:
     connection = text(CONNECTION, overrides)
     runtime = text(RUNTIME_HARNESS, overrides)
     explorer = text(EXPLORER, overrides)
+    browser_integration = text(BROWSER_INTEGRATION, overrides)
 
     storage_contract = (
         'const MODEL_API_BASE_URL_KEY = "nemoclaw_model_api_base_url_v1"',
@@ -140,8 +141,20 @@ def audit(overrides: dict[str, str] | None = None) -> list[str]:
         findings.append("SKILL explorer bypasses the canonical course model registry")
     if "nemoclaw_claw" in explorer or "App.prototype.proxy" in explorer:
         findings.append("SKILL explorer redeclares endpoint or OpenClaw state")
-    if "SKILL explorer model registry handoff failed" not in text("scripts/validation/runtime_integration_browser_audit.py", overrides):
+    if "SKILL explorer model registry handoff failed" not in browser_integration:
         findings.append("browser integration audit does not execute the SKILL explorer model handoff")
+    browser_connection_contract = (
+        "#probe-claw .claw-connection-audit",
+        "results.probe.editableFields !== 2",
+        "results.probe.advancedFields !== 0",
+        "['/api/agent', '/cli/gateway', '/ws/terminal', '/healthz']",
+        "connectionPattern",
+    )
+    for token in browser_connection_contract:
+        if token not in browser_integration:
+            findings.append(f"browser connection audit is stale or incomplete: {token}")
+    if "#probe-claw .claw-help-hint" in browser_integration:
+        findings.append("browser connection audit still waits for the retired multi-field help UI")
 
     openclaw_contract = (
         'const isOpenClaw = connectionKind === "openclaw"',
@@ -277,6 +290,8 @@ def self_test() -> list[str]:
         ("embedding conflated with chat", {SHARED: shared.replace('const EMBEDDING_API_BASE_URL_KEY = "nemoclaw_embedding_api_base_url_v1"', 'const EMBEDDING_API_BASE_URL_KEY = "nemoclaw_model_api_base_url_v1"', 1)}, "registry contract"),
         ("explorer bypasses course model registry", {EXPLORER: explorer.replace("return shared.chat({", "return fetch(self.cfg.proxy, {", 1)}, "SKILL explorer bypasses"),
         ("explorer browser handoff removed", {BROWSER_INTEGRATION: browser_integration.replace("SKILL explorer model registry handoff failed", "browser handoff removed", 1)}, "browser integration audit"),
+        ("browser audit restores retired probe selector", {BROWSER_INTEGRATION: browser_integration.replace("#probe-claw .claw-connection-audit", "#probe-claw .claw-help-hint", 1)}, "browser connection audit"),
+        ("browser audit stops enforcing two fields", {BROWSER_INTEGRATION: browser_integration.replace("results.probe.editableFields !== 2", "results.probe.editableFields !== 5", 1)}, "browser connection audit"),
         ("retired model query restored", {SHARED: shared.replace("export function getModelApiBaseUrl()", 'const legacyModel = new URLSearchParams(location.search).get("base_url");\n\nexport function getModelApiBaseUrl()', 1)}, "retired presenter query parameter"),
         ("retired OpenClaw query restored", {CONNECTION: connection.replace("export function getOpenClawProxyConfig()", 'const legacyLaunchable = new URLSearchParams(location.search).get("openclaw_url");\n\nexport function getOpenClawProxyConfig()', 1)}, "retired presenter query parameter"),
         ("learner advertises retired model query", {pages[0]: en + "\n<p>?model=provider/model</p>\n"}, "advertises retired presenter query parameter"),

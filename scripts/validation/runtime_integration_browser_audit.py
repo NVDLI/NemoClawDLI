@@ -435,7 +435,8 @@ async function open(browser, pageName, init) {
     await page.close();
   }
 
-  // 3a: model and OpenClaw registrations stay distinct; the OpenClaw probe writes its registry.
+  // 3a: model and OpenClaw registrations stay distinct. The learner-facing connection
+  // audit owns exactly Base URL and Access session; provider, token, and transport stay derived.
   {
     const { page, errors } = await open(browser, '03a-kickstart.html', () => {
       try {
@@ -446,67 +447,47 @@ async function open(browser, pageName, init) {
         localStorage.setItem('nemoclaw_clawrawurl', 'https://nemoclaw-runtime-audit.brevlab.com');
       } catch (_) {}
     });
-    await page.locator('#probe-claw .claw-help-hint').waitFor({ state: 'visible', timeout: timeoutMs });
-    results.probe = await page.evaluate(async () => {
-      const visibleHint = !!document.querySelector('#probe-claw .claw-help-hint');
-      const helpMarks = document.querySelectorAll('#probe-claw .claw-help-mark').length;
+    await page.locator('#probe-claw .claw-connection-audit').waitFor({ state: 'visible', timeout: timeoutMs });
+    results.probe = await page.evaluate(() => {
+      const root = document.querySelector('#probe-claw .claw-connection-audit');
       const modelUrl = document.querySelector('#probe-llm .claw-url');
-      const launchableUrl = document.querySelector('#probe-claw .claw-url');
+      const launchableUrl = root?.querySelector('.claw-url');
+      const accessSession = root?.querySelector('.claw-access-session');
       const registered = {
         model: modelUrl?.value,
         launchable: launchableUrl?.value,
         modelReadOnly: !!modelUrl?.readOnly,
         modelSourceVisible: (document.querySelector('#model-route-settings')?.textContent || '').includes('https://model-runtime-audit.brevlab.com/v1'),
       };
-      localStorage.clear();
-      const host = document.createElement('section');
-      document.body.appendChild(host);
-      const mod = await import('./scripts/_openclaw.js?runtime-audit=' + Date.now());
-      const realFetch = window.fetch;
-      window.fetch = async () => new Response(JSON.stringify({
-        agent: { dashboardUrl: '/#token=AbCd_ef-0123456789.uvwxyz~token' },
-      }), { status: 200, headers: { 'content-type': 'application/json' } });
-      const probe = mod.mountClawProbe(host, {
-        defaultUrl: 'https://nemoclaw-launchable.brevlab.com',
-        defaultToken: '',
-        syncCanvas: true,
-        cfAccess: true,
-        wsRelayControls: true,
-        helpHint: 'Select the ? for help.',
-        fieldHelp: {
-          url: '<p>URL</p>',
-          token: '<p>token</p>',
-          accessProvider: '<p>provider</p>',
-          accessSession: '<p>session</p>',
-          wsRelay: '<p>recovery</p>',
-        },
-        autofillToken: mod.gatewayTokenFromAgentMetadata,
-        actions: [],
-      });
-      const accessSession = host.querySelector('.claw-access-session');
-      const wsRelay = host.querySelector('.claw-ws-relay-enabled');
+      launchableUrl.value = 'https://nemoclaw-launchable.brevlab.com/chat?session=main#ignored';
+      launchableUrl.dispatchEvent(new Event('input', { bubbles: true }));
       accessSession.value = 'synthetic-access-value';
       accessSession.dispatchEvent(new Event('input', { bubbles: true }));
-      wsRelay.click();
-      await probe.run({ path: '/api/agent', method: 'GET' });
-      window.fetch = realFetch;
       return {
-        visibleHint,
-        helpMarks,
+        visible: !!root,
         registered,
+        editableFields: root?.querySelectorAll('input').length || 0,
+        advancedFields: root?.querySelectorAll(
+          '.claw-token,.claw-access-provider,.claw-ws-relay-enabled,.claw-help-mark'
+        ).length || 0,
+        steps: Array.from(root?.querySelectorAll('.claw-audit-step') || [])
+          .map(step => step.querySelector('code')?.textContent || ''),
         url: localStorage.getItem('nemoclaw_clawrawurl'),
         token: sessionStorage.getItem('nemoclaw_clawtoken'),
         access: sessionStorage.getItem('nemoclaw_openclaw_access_session_v1'),
-        wsRelay: probe.getWsRelayEnabled(),
+        persistentAccess: localStorage.getItem('nemoclaw_openclaw_access_session_v1'),
       };
     });
-    if (!results.probe.visibleHint || results.probe.helpMarks !== 5 ||
+    if (!results.probe.visible || results.probe.editableFields !== 2 ||
+        results.probe.advancedFields !== 0 ||
+        JSON.stringify(results.probe.steps) !== JSON.stringify(['/api/agent', '/cli/gateway', '/ws/terminal', '/healthz']) ||
         results.probe.registered.model !== 'https://model-runtime-audit.brevlab.com/v1' ||
         results.probe.registered.launchable !== 'https://nemoclaw-runtime-audit.brevlab.com' ||
         !results.probe.registered.modelReadOnly || !results.probe.registered.modelSourceVisible ||
         results.probe.url !== 'https://nemoclaw-launchable.brevlab.com' ||
-        results.probe.token !== 'AbCd_ef-0123456789.uvwxyz~token' ||
-        results.probe.access !== 'synthetic-access-value' || !results.probe.wsRelay) {
+        results.probe.token !== null ||
+        results.probe.access !== 'synthetic-access-value' ||
+        results.probe.persistentAccess !== null) {
       fail('probe handoff failed: ' + JSON.stringify(results.probe));
     }
     if (errors.length) fail('3a browser errors: ' + JSON.stringify(errors));
@@ -662,16 +643,18 @@ async function open(browser, pageName, init) {
 
   // Built Pages roots contain locale overlays. Prove runtime guidance stayed translated.
   results.locales = {};
-  for (const [locale, helpPattern, cronPattern, policyPattern] of [
-    ['pt', /Precisa de um valor/, /Adicione uma linha curta[\s\S]*aguardando uma execução cron concluída/i, /Não foi possível interpretar/],
-    ['es', /Necesitas un valor/, /Añade una línea breve[\s\S]*esperando una ejecución cron terminada/i, /No se pudo interpretar/],
+  for (const [locale, connectionPattern, cronPattern, policyPattern] of [
+    ['pt', /URL base[\s\S]*Sessão de acesso[\s\S]*Testar conexão/i, /Adicione uma linha curta[\s\S]*aguardando uma execução cron concluída/i, /Não foi possível interpretar/],
+    ['es', /URL base[\s\S]*Sesión de acceso[\s\S]*Probar conexión/i, /Añade una línea breve[\s\S]*esperando una ejecución cron terminada/i, /No se pudo interpretar/],
   ]) {
     const kickstartPath = `/${locale}/nemoclaw/03a-kickstart.html`;
     if (!fs.existsSync(safeJoin(root, kickstartPath))) continue;
     const kickstart = await open(browser, kickstartPath);
-    await kickstart.page.locator('#probe-claw .claw-help-hint').waitFor({ state: 'visible', timeout: timeoutMs });
-    const hint = await kickstart.page.locator('#probe-claw .claw-help-hint').innerText();
-    if (!helpPattern.test(hint)) fail(`${locale} probe help was de-localized: ${hint}`);
+    await kickstart.page.locator('#probe-claw .claw-connection-audit').waitFor({ state: 'visible', timeout: timeoutMs });
+    const connectionText = await kickstart.page.locator('#probe-claw .claw-connection-audit').innerText();
+    if (!connectionPattern.test(connectionText)) {
+      fail(`${locale} connection audit was de-localized: ${connectionText}`);
+    }
     if (kickstart.errors.length) fail(`${locale} 3a browser errors: ${JSON.stringify(kickstart.errors)}`);
     await kickstart.page.close();
 
@@ -695,7 +678,7 @@ async function open(browser, pageName, init) {
     }
     if (safety.errors.length) fail(`${locale} 4a browser errors: ${JSON.stringify(safety.errors)}`);
     await safety.page.close();
-    results.locales[locale] = { hint, cronLocalized: true, policyLocalized: true };
+    results.locales[locale] = { connectionLocalized: true, cronLocalized: true, policyLocalized: true };
   }
 
   await browser.close();
