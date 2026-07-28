@@ -5,9 +5,10 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
-- Restored the provider-bound Pomerium relay used by separately hosted course pages. Module 3a
-  accepts the tab-scoped access session, discovers the gateway token through `/api/agent`, and
-  uses the same relay for gateway and terminal WebSockets. Cloudflare behavior is unchanged.
+- Replaced Module 3a's transport controls with a Base URL and Access session check. Pomerium
+  metadata uses the launchable's terminal loopback and its WebSockets stay direct; Cloudflare
+  metadata uses the approved relay and its terminal can fall back to that relay. The check discovers
+  the gateway token through `/api/agent`, verifies both WebSocket paths, then verifies `/healthz`.
 - Thanks to Vadim Kudlay for reviewing the Spanish and Brazilian Portuguese browser-session
   availability guidance.
 - Made an ephemeral launchable instance identifier uncommittable: the sensitive-content boundary now

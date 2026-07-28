@@ -1421,7 +1421,7 @@ export const HELPER_CATEGORIES = Object.freeze([
     ["Diagram strings",         ["diagramSVG", "ganttBarsSVG"]],
     ["OpenClaw gateway",        [
       "openclawBootstrapRequest", "openclawChat", "openclawLoopbackProbe",
-      "openclawGatewayWsUrl",
+      "openclawGatewayWsUrl", "runOpenClawConnectionAudit", "redactOpenClawDiagnostic",
       "refreshOpenClawGatewayToken", "getOpenClawConnection", "setOpenClawConnection",
       "filterOpenClawRuntimeNoise", "filterOpenClawRuntimeValue", "openclawMessageText",
       "openclawResultText",

@@ -116,21 +116,19 @@ CHECKS = [
         "OpenShell terminal detects direct access and retains provider-bound fallback",
         "web/nemoclaw/scripts/_openshell.js",
         [
-            "getOpenClawWsRelayEnabled",
             "const resolvedProvider = accessProviderForOpenClawUrl(rawUrl, accessProvider);",
+            'const terminalPath = "/ws/terminal?cmd=" + encodeURIComponent(cmd);',
+            "const direct = openclawWebSocketUrl(",
             "relayWebSocket === true",
-            "relayWebSocket === null && (getOpenClawWsRelayEnabled() ||",
-            'resolvedProvider === "pomerium" && Boolean(accessSession)',
-            'openclawWebSocketUrl(',
-            '"/ws/terminal?cmd=" + encodeURIComponent(cmd)',
-            'relayEnabled ? getOpenClawProxyConfig() : { enabled: false, base: "" }',
-            "const wsUrls = [routed.url]",
+            'resolvedProvider === "cloudflare" || relayWebSocket === true',
+            "const routed = relayEligible",
+            "const wsUrls = relayWebSocket === true",
+            "? [direct.url, routed.url]",
+            "Math.min(8000, openMs)",
         ],
-        # The terminal must not rebuild a socket URL from the raw launchable or
-        # keep a second fallback candidate outside the shared routing helper.
+        # The terminal must not rebuild a socket URL from the raw launchable.
         [
             r'\.replace\(\s*/\^https?[\s\S]{0,160}/ws/terminal',
-            r"\bdirect\.url\b",
         ],
     ),
 ]
@@ -293,13 +291,11 @@ def self_test() -> list[str]:
         ("OpenClaw lesson restores transport branch", "web/nemoclaw/03a-kickstart.html", "const PATH = '/api/agent';", "const TRANSPORT = 'direct';\nconst PATH = '/api/agent';"),
         ("OpenShell shared routing", "web/nemoclaw/scripts/_openshell.js", "openclawWebSocketUrl(", "removedWebSocketRouter("),
         ("OpenShell drops the shared provider decision", "web/nemoclaw/scripts/_openshell.js", "const resolvedProvider = accessProviderForOpenClawUrl(rawUrl, accessProvider);", "const resolvedProvider = guessTerminalProvider(rawUrl, accessProvider);"),
-        ("OpenShell drops the saved relay opt-in", "web/nemoclaw/scripts/_openshell.js", "relayWebSocket === null && (getOpenClawWsRelayEnabled() ||", "relayWebSocket === null && (false ||"),
-        ("OpenShell forces the relay", "web/nemoclaw/scripts/_openshell.js", 'relayEnabled ? getOpenClawProxyConfig() : { enabled: false, base: "" }', "getOpenClawProxyConfig()"),
+        ("OpenShell routes Pomerium through the relay", "web/nemoclaw/scripts/_openshell.js", 'resolvedProvider === "cloudflare" || relayWebSocket === true', 'resolvedProvider === "pomerium" || relayWebSocket === true'),
         ("OpenShell disables explicit relay selection", "web/nemoclaw/scripts/_openshell.js", "relayWebSocket === true", "relayWebSocket === false"),
-        ("OpenShell deletes its single terminal route", "web/nemoclaw/scripts/_openshell.js", "const wsUrls = [routed.url];", ""),
-        ("OpenShell renames its single terminal route", "web/nemoclaw/scripts/_openshell.js", "const wsUrls = [routed.url]", "const terminalRoutes = [routed.url]"),
-        ("OpenShell restores the direct-first fallback", "web/nemoclaw/scripts/_openshell.js", "const wsUrls = [routed.url]", "const wsUrls = [direct.url, routed.url]"),
-        ("OpenShell appends a direct fallback candidate", "web/nemoclaw/scripts/_openshell.js", "const wsUrls = [routed.url]", "const wsUrls = [routed.url, direct.url]"),
+        ("OpenShell deletes the direct route", "web/nemoclaw/scripts/_openshell.js", "const direct = openclawWebSocketUrl(", "const direct = removedWebSocketRouter("),
+        ("OpenShell reverses direct-first fallback", "web/nemoclaw/scripts/_openshell.js", "? [direct.url, routed.url]", "? [routed.url, direct.url]"),
+        ("OpenShell spends the full timeout before fallback", "web/nemoclaw/scripts/_openshell.js", "Math.min(8000, openMs)", "openMs"),
         ("OpenShell rebuilds a socket URL from the raw launchable", "web/nemoclaw/scripts/_openshell.js", "let launchableOrigin = rawUrl;", 'const bypass = rawUrl.replace(/^https/, "wss") + "/ws/terminal?cmd=" + encodeURIComponent(cmd);\n  let launchableOrigin = rawUrl;'),
     )
     # Every mutation must produce a finding the unmutated tree does not already have. A stale

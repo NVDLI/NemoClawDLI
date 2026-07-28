@@ -58,10 +58,17 @@ let unsupportedBrevRejected = false;
 try { mod.accessProviderForOpenClawUrl('https://other-test123.brevlab.com'); }
 catch (error) { unsupportedBrevRejected = /NemoClaw App URL/.test(error.message); }
 ok(unsupportedBrevRejected, 'unsupported Brev host did not produce actionable NemoClaw URL guidance');
-ok(mod.normalizeOpenClawLaunchableUrl(pomeriumLaunchable + '/dashboard?tab=agents#card') === pomeriumLaunchable,
-  'Pomerium launchable URL did not normalize to its origin');
-ok(mod.normalizeOpenClawLaunchableUrl(launchable + '/dashboard?tab=agents#card') === launchable,
-  'Cloudflare launchable URL did not normalize to its origin');
+for (const [base, provider] of [[pomeriumLaunchable, 'Pomerium'], [launchable, 'Cloudflare']]) {
+  for (const suffix of [
+    '/',
+    '/chat?session=main',
+    '/dashboard?tab=agents#card',
+    '/nested/launchable/index.html?view=agent#current',
+  ]) {
+    ok(mod.normalizeOpenClawLaunchableUrl(base + suffix) === base,
+      `${provider} launchable URL did not normalize ${suffix} to its origin`);
+  }
+}
 
 storage.delete('nemoclaw_clawrawurl');
 storage.set('nemoclaw_clawurl', retired);
@@ -160,37 +167,46 @@ ok(!sameOrigin.viaProxy &&
    sameOrigin.url === 'wss://nemoclaw-test123.brevlab.com/cli/gateway',
   'same-origin co-located launchable did not use its authenticated direct route');
 
-// Terminal WebSocket selection mirrors _openshell.js: detected browser sessions are direct,
-// while a manually supplied Pomerium session and Cloudflare's explicit recovery use the relay.
+// Terminal WebSocket selection mirrors the production launchable path: both providers
+// start direct, Cloudflare can fall back to its relay, and an operator can explicitly
+// select a provider-bound relay.
 globalThis.location = new URL('https://course.example.test/nemoclaw/04b-modern-clis.html');
 const terminalPath = '/ws/terminal?cmd=' + encodeURIComponent('bash');
-function terminalRoutes(rawUrl, accessSession, accessProvider) {
-  const relayEnabled = mod.getOpenClawWsRelayEnabled() ||
-    (accessProvider === 'pomerium' && Boolean(accessSession));
-  const routed = mod.openclawWebSocketUrl(
+function terminalRoutes(rawUrl, accessSession, accessProvider, relayWebSocket = false) {
+  const direct = mod.openclawWebSocketUrl(
     rawUrl,
     terminalPath,
-    relayEnabled ? accessSession : '',
-    relayEnabled ? mod.getOpenClawProxyConfig() : { enabled: false, base: '' },
+    '',
+    { enabled: false, base: '' },
     accessProvider,
   );
-  return [routed.url];
+  const relayEligible = Boolean(accessSession) &&
+    (accessProvider === 'cloudflare' || relayWebSocket);
+  const routed = relayEligible
+    ? mod.openclawWebSocketUrl(
+        rawUrl,
+        terminalPath,
+        accessSession,
+        mod.getOpenClawProxyConfig(),
+        accessProvider,
+      )
+    : direct;
+  if (relayWebSocket) return [routed.url];
+  return direct.url !== routed.url ? [direct.url, routed.url] : [direct.url];
 }
 const cfTerminal = terminalRoutes(launchable, 'test.jwt', 'cloudflare');
-ok(cfTerminal.length === 1 &&
-   cfTerminal[0] === 'wss://nemoclaw-test123.brevlab.com/ws/terminal?cmd=bash',
-  `Cloudflare terminal did not keep its browser-bound direct session: ${cfTerminal.join(' , ')}`);
+ok(cfTerminal.length === 2 &&
+   cfTerminal[0] === 'wss://nemoclaw-test123.brevlab.com/ws/terminal?cmd=bash' &&
+   cfTerminal[1].startsWith(approved.replace(/^http/, 'ws')),
+  `Cloudflare terminal lost its direct-first relay fallback: ${cfTerminal.join(' , ')}`);
 const pomTerminal = terminalRoutes(pomeriumLaunchable, 'opaque-session', 'pomerium');
 ok(pomTerminal.length === 1 &&
-   pomTerminal[0] === approved.replace(/^http/, 'ws') +
-     '/https/nemoclaw-test123.apps.run.brev.nvidia.com/ws/terminal?cmd=bash&access_provider=pomerium&access_session=opaque-session',
-  `Pomerium manual-session terminal did not use the provider-bound relay: ${pomTerminal.join(' , ')}`);
-mod.setOpenClawWsRelayEnabled(true);
-const cfRelayTerminal = terminalRoutes(launchable, 'test.jwt', 'cloudflare');
+   pomTerminal[0] === 'wss://nemoclaw-test123.apps.run.brev.nvidia.com/ws/terminal?cmd=bash',
+  `Pomerium terminal did not retain its browser-bound direct path: ${pomTerminal.join(' , ')}`);
+const cfRelayTerminal = terminalRoutes(launchable, 'test.jwt', 'cloudflare', true);
 ok(cfRelayTerminal[0] ===
    'wss://openclaw-cors-proxy.experiments.courses.nvidia.com/https/nemoclaw-test123.brevlab.com/ws/terminal?cmd=bash&cf_access_jwt=test.jwt',
-  `explicit Cloudflare terminal relay opt-in was not retained: ${cfRelayTerminal.join(' , ')}`);
-mod.setOpenClawWsRelayEnabled(false);
+  `explicit Cloudflare terminal relay selection was not retained: ${cfRelayTerminal.join(' , ')}`);
 let terminalMismatchRejected = false;
 try { terminalRoutes(pomeriumLaunchable, 'opaque-session', 'cloudflare'); }
 catch (_) { terminalMismatchRejected = true; }
@@ -216,11 +232,12 @@ const openshell = fs.readFileSync('web/nemoclaw/scripts/_openshell.js', 'utf8');
 ok(openshell.includes('openclawWebSocketUrl(') &&
    openshell.includes('"/ws/terminal?cmd=" + encodeURIComponent(cmd)'),
   'terminal helper bypasses shared launchable routing');
-ok(openshell.includes('const wsUrls = [routed.url]') &&
-   openshell.includes('getOpenClawWsRelayEnabled()') &&
+ok(openshell.includes('const direct = openclawWebSocketUrl(') &&
+   openshell.includes('? [direct.url, routed.url]') &&
+   openshell.includes('resolvedProvider === "cloudflare" || relayWebSocket === true') &&
    openshell.includes('{ enabled: false, base: "" }') &&
-   !openshell.includes('[direct.url, routed.url]'),
-  'terminal helper does not use the one provider-selected route');
+   !openshell.includes('resolvedProvider === "pomerium" && Boolean(accessSession)'),
+  'terminal helper lost the proven direct-first provider boundary');
 ok(openshell.includes('POMERIUM_LOOPBACK_PROBES') &&
    openshell.includes('"/healthz": "http://127.0.0.1/healthz"') &&
    openshell.includes('"/api/agent": "http://127.0.0.1/api/agent"') &&

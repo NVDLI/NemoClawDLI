@@ -66,11 +66,6 @@
       "source": "\n        <h3>Launch NemoClaw on Brev</h3>\n        <p>OpenClaw runs inside OpenShell and keeps agent identity, tools, and session memory. The\n          settings below accept either supported Brev host family and connect to\n          <code>/cli/gateway</code>.</p>\n        <p style=\"color:var(--tf);font-size:.8rem\">Gateway credential: gateway token.\n          Launchable access: Pomerium browser session or <code>CF_Authorization</code>.</p>\n      ",
       "value": "\n        <h3>Iniciar o NemoClaw no Brev</h3>\n        <p>O OpenClaw roda dentro do OpenShell e mantém a identidade do agente, as ferramentas e a memória da sessão. A configuração abaixo aceita ambas as famílias de hosts Brev compatíveis e se conecta a <code>/cli/gateway</code>.</p>\n        <p style=\"color:var(--tf);font-size:.8rem\">Credencial do gateway: token do gateway. Acesso ao launchable: sessão do navegador do Pomerium ou <code>CF_Authorization</code>.</p>\n      "
     },
-    "rich.d3f92229cadc": {
-      "type": "rich",
-      "source": "<p>Open the launchable and sign in. For <strong>Pomerium</strong>, wait for the direct-session check. If the field remains editable, copy the complete <code>_pomerium</code> value from DevTools → <strong>Application → Storage → Cookies</strong> and paste it here.</p>\n<p>For <strong>Cloudflare Access</strong>, paste the complete <code>CF_Authorization</code> value from the same Cookies view. A pasted value is kept only in this tab and sent through the provider-bound relay.</p>",
-      "value": "<p>Abra o launchable e faça login. Para <strong>Pomerium</strong>, aguarde a verificação da sessão direta. Se o campo continuar editável, copie o valor completo de <code>_pomerium</code> em DevTools → <strong>Application → Storage → Cookies</strong> e cole-o aqui.</p>\n<p>Para <strong>Cloudflare Access</strong>, cole o valor completo de <code>CF_Authorization</code> na mesma visualização de Cookies. O valor colado fica apenas nesta aba e é enviado pelo relay vinculado ao provedor.</p>"
-    },
     "rich.1260cedbb7fa": {
       "type": "rich",
       "source": "Each <code>⚙️</code> row is a tool call with its input arguments.",
@@ -120,16 +115,6 @@
       "type": "rich",
       "source": "Supported NemoClaw launchables normally report <code>tools.toolSearch=false</code>. A custom configuration can still enable it, so the health check reads the live value before Recover changes anything:",
       "value": "Os launchables compatíveis do NemoClaw normalmente mostram <code>tools.toolSearch=false</code>. Uma configuração personalizada ainda pode ativá-lo; por isso, a verificação de integridade lê o valor ativo antes de Recuperar alterar qualquer coisa:"
-    },
-    "rich.e3f886819891": {
-      "type": "rich",
-      "source": "<p><strong>Usually you can leave this blank.</strong> Run <strong>GET /api/agent</strong> below and the probe\nreads the gateway token out of <code>agent.dashboardUrl</code> and fills this field for you. This\nworks only after the separate launchable-access check below succeeds.</p>\n<p><strong>Manual fallback:</strong> If autofill doesn't fire, run <code>openclaw dashboard --no-open</code> in your\nlaunchable terminal and paste the complete gateway credential it prints. If no gateway token exists yet, generate one on\nthe gateway host with <code>openclaw doctor --generate-gateway-token</code>. Do not assume a fixed length or character set,\nand do not paste an access session here; that is a separate credential.</p>",
-      "value": "<p><strong>Normalmente, este campo pode ficar vazio.</strong> Execute <strong>GET /api/agent</strong> abaixo. A sonda lê o token do gateway em <code>agent.dashboardUrl</code> e preenche o campo. Isso funciona somente depois que a verificação separada de acesso ao launchable for bem-sucedida.</p>\n<p><strong>Alternativa manual:</strong> se o preenchimento automático não ocorrer, execute <code>openclaw dashboard --no-open</code> no terminal do launchable e cole a credencial completa do gateway. Se ainda não existir um token, gere-o no host do gateway com <code>openclaw doctor --generate-gateway-token</code>. Não presuma comprimento ou conjunto de caracteres fixos e não cole aqui uma sessão de acesso: ela é outra credencial.</p>"
-    },
-    "rich.4e8cf3cbc64a": {
-      "type": "rich",
-      "source": "\n      <strong>If the OpenClaw probe times out or returns a 502.</strong>\n      The agent harness likely has not finished booting, which usually means the\n      launchable started before OpenClaw finished loading its policy YAML. Wait\n      30 seconds and click Probe again. If it stays down, use the Recover cell in\n      the gateway section below before continuing.\n    ",
-      "value": "<strong>Se a sonda do OpenClaw exceder o tempo limite ou retornar 502.</strong> O harness do agente provavelmente ainda está iniciando: o launchable pode ter ficado disponível antes de o OpenClaw carregar a política YAML. Aguarde 30 segundos e execute a sonda novamente. Se continuar indisponível, use a célula Recuperar na seção do gateway."
     },
     "rich.4f2589a3d249": {
       "type": "rich",
@@ -181,11 +166,6 @@
       "source": "<strong>Same key, twice:</strong> the gateway rehydrates the first turn's\n        history before the second runs, so the agent answers from a conversation\n        your client never re-sent.",
       "value": "<strong>Mesma chave, duas vezes:</strong> o gateway reidrata o histórico do primeiro turno antes da segunda execução, então o agente responde de uma conversa que seu cliente nunca reenvia."
     },
-    "rich.8acb32e0728d": {
-      "type": "rich",
-      "source": "<p><strong>What it is:</strong> The root URL of your NemoClaw launchable running OpenClaw inside OpenShell, with no trailing <code>/v1</code>.</p>\n<p><strong>How to find it:</strong> Copy the App URL from the Brev dashboard. Both supported forms work: <code>https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com</code> and <code>https://nemoclaw-&lt;id&gt;.brevlab.com</code>. For local OpenClaw, use <code>http://localhost:8088</code> or its exposed port and leave Access session empty.</p>",
-      "value": "<p><strong>O que é:</strong> a URL raiz do launchable do NemoClaw que executa OpenClaw dentro do OpenShell, sem <code>/v1</code> no final.</p>\n<p><strong>Como encontrá-la:</strong> copie a App URL no painel do Brev. As duas formas compatíveis funcionam: <code>https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com</code> e <code>https://nemoclaw-&lt;id&gt;.brevlab.com</code>. Para o OpenClaw local, use <code>http://localhost:8088</code> ou a porta exposta e deixe Sessão de acesso vazia.</p>"
-    },
     "rich.a390ff174347": {
       "type": "rich",
       "source": "Every <code>chat.send</code> takes a <code>sessionKey</code>, and that key\n      decides what the turn remembers:",
@@ -206,16 +186,6 @@
       "source": "<strong>Clean up</strong> sweeps the throwaway sessions that pile up in the\n        Control UI as you experiment (including Step 2's per-run keys), keeping only\n        the Main Session.",
       "value": "<strong>Limpar sessões</strong> remove as sessões descartáveis acumuladas durante os testes, inclusive as chaves por execução do Passo 2, e mantém apenas a sessão principal."
     },
-    "rich.553e89defea1": {
-      "type": "rich",
-      "source": "<code>https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com</code> uses Pomerium. When the\n        launchable session is available to this browser context, a live gateway challenge confirms\n        it and the Access session field stays empty. Otherwise, paste the complete\n        <code>_pomerium</code> value from the signed-in launchable.",
-      "value": "<code>https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com</code> usa Pomerium. Quando a sessão do launchable está disponível neste contexto do navegador, um desafio ativo do gateway a confirma e o campo Sessão de acesso fica vazio. Caso contrário, cole o valor completo de <code>_pomerium</code> do launchable autenticado."
-    },
-    "rich.48d47a9d5959": {
-      "type": "rich",
-      "source": "<code>https://nemoclaw-&lt;id&gt;.brevlab.com</code> uses Cloudflare Access. Its matching\n        <code>CF_Authorization</code> session authenticates metadata through the approved relay.\n        Gateway and terminal WebSockets stay in the signed-in browser.",
-      "value": "<code>https://nemoclaw-&lt;id&gt;.brevlab.com</code> usa Cloudflare Access. A sessão <code>CF_Authorization</code> correspondente autentica os metadados pelo relay aprovado. Os WebSockets do gateway e do terminal permanecem no navegador que iniciou sessão."
-    },
     "rich.c311fc01830e": {
       "type": "rich",
       "source": "<strong>Clear</strong> wipes one session in a single call, so the next turn\n        starts from nothing. Every chat cell also carries a commented\n        <code>sessions.reset</code> line to start fresh in place.\n      ",
@@ -230,11 +200,6 @@
       "type": "rich",
       "source": "Open <code>&lt;launchable&gt;/dashboard</code>.",
       "value": "Abra <code>&lt;launchable&gt;/dashboard</code>."
-    },
-    "rich.e7b0a7b9f7ad": {
-      "type": "rich",
-      "source": "The probe and exposed code share the normalized launchable connection and provider\n      decision. The exposed helper prints the returned status, headers, and body.\n      Change <code>PATH</code> between <code>/api/agent</code> and <code>/healthz</code> to\n      inspect either bootstrap response.",
-      "value": "A sonda e o código exposto compartilham a conexão normalizada do launchable e a seleção do provedor. O helper exposto mostra o status, os cabeçalhos e o corpo retornados. Altere <code>PATH</code> entre <code>/api/agent</code> e <code>/healthz</code> para inspecionar qualquer uma das respostas de inicialização."
     },
     "rich.d466179d9969": {
       "type": "rich",
@@ -255,11 +220,6 @@
       "type": "rich",
       "source": "The gateway token and the launchable access session authorize different things. The\n        gateway token authorizes JSON-RPC calls on <code>/cli/gateway</code>. The access session, a\n        Pomerium browser cookie or a <code>CF_Authorization</code> value, authorizes reaching the\n        launchable at all. Replacing one never repairs a failure in the other.",
       "value": "O token do gateway e a sessão de acesso ao launchable autorizam coisas diferentes. O token do gateway autoriza as chamadas JSON-RPC em <code>/cli/gateway</code>. A sessão de acesso, um cookie do Pomerium ou um valor <code>CF_Authorization</code>, autoriza o acesso ao launchable. Substituir uma nunca conserta uma falha da outra."
-    },
-    "rich.abb10105f839": {
-      "type": "rich",
-      "source": "<p><strong>Automatic</strong> chooses from the App URL. It does not assume that this course page shares the launchable's signed-in browser session. Pomerium is marked detected only after a live gateway challenge.</p>",
-      "value": "<p><strong>Automático</strong> escolhe pela App URL. Ele não presume que esta página do curso compartilhe a sessão autenticada do launchable. O Pomerium é marcado como detectado somente após um desafio ativo do gateway.</p>"
     },
     "rich.de3dbde22a38": {
       "type": "rich",
@@ -331,11 +291,6 @@
       "source": "Plant a fact, then ask it back",
       "value": "Registrar um fato e recuperá-lo"
     },
-    "text.09ec4a25924f": {
-      "type": "text",
-      "source": "The widgets below make a small request to each endpoint and show\n      what comes back. Green = ready.",
-      "value": "Os widgets abaixo enviam uma pequena solicitação a cada endpoint e mostram a resposta. Verde significa pronto."
-    },
     "text.0a07f6594619": {
       "type": "text",
       "source": ", ",
@@ -401,12 +356,6 @@
       "value": " Stream one prompt through each selected model and measure first-token latency.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
     },
-    "text.139a377f7ba2": {
-      "type": "text",
-      "source": "GET /api/agent",
-      "value": "GET /api/agent",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
-    },
     "text.14348f407a94": {
       "type": "text",
       "source": "turn 2 · ask it back (only the question is sent)",
@@ -431,11 +380,6 @@
       "type": "text",
       "source": " Optional visibility: uncomment to inspect the complete timing records.",
       "value": " Visibilidade opcional: remova o comentário para inspecionar todos os registros de tempo."
-    },
-    "text.7db4eaab92a3": {
-      "type": "text",
-      "source": "Return here and enter the launchable URL. The probe first tests whether this browser can\n        reach the launchable directly. If it cannot, the Access session field tells you which\n        browser-cookie value to paste.",
-      "value": "Volte para cá e informe a URL do launchable. A sonda primeiro verifica se este navegador consegue alcançar o launchable diretamente. Se não conseguir, o campo Sessão de acesso informa qual valor de cookie do navegador deve ser colado."
     },
     "text.1c350d860826": {
       "type": "text",
@@ -491,11 +435,6 @@
       "type": "text",
       "source": "The first cell below plants a fact and then asks for it back under the same key.\n      The agent answers from a turn your client never re-sent, because the gateway\n      rehydrated that history server-side. The other two cells let you manage the stored\n      state.",
       "value": "A primeira célula registra um fato e o solicita novamente com a mesma chave. O agente usa um turno que o cliente não reenviou, pois o gateway restaurou o histórico mantido no servidor. As outras duas células permitem gerenciar esse estado."
-    },
-    "text.230d8358dc8e": {
-      "type": "text",
-      "source": "body",
-      "value": "corpo"
     },
     "text.2585c534c419": {
       "type": "text",
@@ -912,11 +851,6 @@
       "source": "Latency and time to first token across models",
       "value": "Latência e tempo para o primeiro token entre modelos"
     },
-    "text.78dd25f01ac7": {
-      "type": "text",
-      "source": "The probe's request, as editable code",
-      "value": "Solicitação da sonda em código editável"
-    },
     "text.792d3afa2890": {
       "type": "text",
       "source": " ms; give up on a model with no first token by now (some are slow to start)",
@@ -972,11 +906,6 @@
       "source": "A single POST drives a loop inside the gateway, where the session key carries memory forward to the next call.",
       "value": "Um único POST inicia um ciclo dentro do gateway; a chave da sessão leva a memória para a próxima chamada."
     },
-    "text.80a589ac5e9c": {
-      "type": "text",
-      "source": "Need a value? Select the ? beside that field. Start with Base URL; GET /api/agent fills the bearer token.",
-      "value": "Precisa de um valor? Selecione o ? ao lado do campo. Comece pela URL base; GET /api/agent preenche o token bearer."
-    },
     "text.82f713a6ad06": {
       "type": "text",
       "source": "The healthy path uses exec directly. Recover changes toolSearch only when the live check finds it enabled.",
@@ -1013,11 +942,6 @@
       "type": "text",
       "source": "the Try-it artifact, in code",
       "value": "o artefato Try-it, em código"
-    },
-    "text.8b4c73d571e6": {
-      "type": "text",
-      "source": "response headers",
-      "value": "cabeçalhos da resposta"
     },
     "text.8ca587036511": {
       "type": "text",
@@ -1190,16 +1114,6 @@
       "value": " Fetch the model catalog and keep only the IDs this benchmark compares.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
     },
-    "text.a884f2fbb9f7": {
-      "type": "text",
-      "source": "Probe OpenClaw (NemoClaw launchable)",
-      "value": "Sonda OpenClaw (NemoClaw launchable)"
-    },
-    "text.ab2faeea5cb3": {
-      "type": "text",
-      "source": "Step 1 · Probe the endpoints",
-      "value": "Passo 1 · Teste os endpoints"
-    },
     "text.abea8c9b2fde": {
       "type": "text",
       "source": "custom configuration",
@@ -1274,11 +1188,6 @@
       "type": "text",
       "source": "⚠ DEGRADED: started ",
       "value": "□ DEGRADADO: "
-    },
-    "text.bb46a1439146": {
-      "type": "text",
-      "source": "Expected JSON but received the OpenClaw Control page. The request reached the launchable root instead of this API path. Keep Base URL at the launchable origin and retry; this response is not a health result.",
-      "value": "Era esperado JSON, mas a página OpenClaw Control foi recebida. A solicitação chegou à raiz do launchable em vez deste caminho da API. Mantenha a URL base na origem do launchable e tente novamente; esta resposta não é um resultado de integridade."
     },
     "text.bd8daef76c56": {
       "type": "text",
@@ -1360,11 +1269,6 @@
       "source": "120b",
       "value": "120b",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
-    },
-    "rich.850c6f10f4d9": {
-      "type": "rich",
-      "source": "After launchable access succeeds, <strong>GET /api/agent</strong> normally fills the\n        gateway token from authenticated metadata. Use the steps below only when the Control UI\n        reports that the gateway is reachable but still requires authentication.",
-      "value": "Depois que o acesso ao launchable for bem-sucedido, <strong>GET /api/agent</strong> normalmente preenche o token do gateway a partir de metadados autenticados. Use os passos abaixo apenas quando a Control UI informar que o gateway está acessível, mas ainda exige autenticação."
     },
     "text.cdb4ee2aea69": {
       "type": "text",
@@ -1489,12 +1393,6 @@
       "type": "text",
       "source": "Call chat.send with a fresh sessionKey and stream tool frames until run-end. The fresh suffix keeps each demo clean and forces a new tool run. The default prompt executes a command; commented alternatives test simpler turns.",
       "value": "Chame chat.send com uma nova chave de sessão e transmita os eventos de ferramentas até o fim. O sufixo exclusivo mantém cada demonstração isolada e força outra execução. O prompt padrão solicita um comando; as alternativas comentadas testam turnos mais simples."
-    },
-    "text.e5c6f2f2c093": {
-      "type": "text",
-      "source": "GET /healthz",
-      "value": "GET /healthz",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
     },
     "text.e6e1d0a85eea": {
       "type": "text",
@@ -1625,10 +1523,65 @@
       "source": "No API key saved. Go to the course home and save the endpoint and key first.",
       "value": "Nenhuma chave de API foi salva. Volte à página inicial e salve o endpoint e a chave."
     },
-    "rich.107bedc405c8": {
+    "text.2acb59482d62": {
+      "type": "text",
+      "source": "Return here and enter the launchable URL. If this course is not served by the launchable,\n        paste the launchable's browser access session too.",
+      "value": "Volte para cá e informe a URL do launchable. Se o curso não for servido pelo launchable,\n        cole também a sessão de acesso do navegador do launchable."
+    },
+    "rich.63d15167ecf4": {
       "type": "rich",
-      "source": "<p>Leave this off while direct gateway and terminal sockets work. If a Cloudflare WebSocket fails before its challenge, turn it on and retry through the approved relay. A manually supplied Pomerium session selects its provider-bound relay automatically.</p>",
-      "value": "<p>Deixe esta opção desativada enquanto os sockets diretos do gateway e do terminal funcionarem. Se um WebSocket do Cloudflare falhar antes do desafio, ative-a e tente novamente pelo relay aprovado. Uma sessão do Pomerium fornecida manualmente seleciona automaticamente o relay vinculado ao provedor.</p>"
+      "source": "<code>https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com</code> uses Pomerium. When the\n        course shares the launchable origin, the browser supplies its signed-in session. Otherwise,\n        paste the complete <code>_pomerium</code> value from the signed-in launchable.",
+      "value": "<code>https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com</code> usa Pomerium. Quando o\n        curso compartilha a origem do launchable, o navegador fornece a sessão autenticada. Caso contrário,\n        cole o valor completo de <code>_pomerium</code> do launchable autenticado."
+    },
+    "rich.7faa674caeeb": {
+      "type": "rich",
+      "source": "<code>https://nemoclaw-&lt;id&gt;.brevlab.com</code> uses Cloudflare Access. Its matching\n        <code>CF_Authorization</code> session authenticates the separately hosted course through\n        the approved relay.",
+      "value": "<code>https://nemoclaw-&lt;id&gt;.brevlab.com</code> usa Cloudflare Access. A sessão\n        <code>CF_Authorization</code> correspondente autentica o curso hospedado separadamente pelo\n        relay aprovado."
+    },
+    "rich.74be16005989": {
+      "type": "rich",
+      "source": "After launchable access succeeds, <strong>GET /api/agent</strong> supplies the gateway\n        token from authenticated metadata. Use the steps below only when the Control UI reports\n        that the gateway is reachable but still requires authentication.",
+      "value": "Depois que o acesso ao launchable funcionar, <strong>GET /api/agent</strong> obtém o token do gateway\n        nos metadados autenticados. Use os passos abaixo somente se a interface de controle informar\n        que o gateway está acessível, mas ainda precisa de autenticação."
+    },
+    "text.61a99e5b3eac": {
+      "type": "text",
+      "source": "Step 1 · Verify the connections",
+      "value": "Etapa 1 · Verifique as conexões"
+    },
+    "text.8983fb607143": {
+      "type": "text",
+      "source": "The model probe checks the configured model route. The NemoClaw check then verifies agent\n      metadata, both WebSocket paths, and launchable health in the order later exercises need them.",
+      "value": "O teste do modelo verifica a rota configurada. Em seguida, o teste do NemoClaw verifica os metadados\n      do agente, as duas rotas WebSocket e a saúde do launchable na ordem exigida pelos próximos exercícios."
+    },
+    "rich.35b160c0dbd4": {
+      "type": "rich",
+      "source": "\n      <strong>If the NemoClaw check times out or returns a 502.</strong>\n      The agent harness likely has not finished booting, which usually means the\n      launchable started before OpenClaw finished loading its policy YAML. Wait\n      30 seconds and test again. If it stays down, use the Recover cell in\n      the gateway section below before continuing.\n    ",
+      "value": "\n      <strong>Se o teste do NemoClaw exceder o tempo limite ou retornar 502.</strong>\n      É provável que o ambiente do agente ainda não tenha terminado de iniciar. Isso geralmente ocorre quando o\n      launchable inicia antes que o OpenClaw termine de carregar a política YAML. Aguarde\n      30 segundos e teste novamente. Se continuar indisponível, use a célula Recuperar na\n      seção do gateway antes de continuar.\n    "
+    },
+    "text.8c78bd6300f1": {
+      "type": "text",
+      "source": "Inspect one HTTP request",
+      "value": "Inspecione uma solicitação HTTP"
+    },
+    "rich.bde398e9889b": {
+      "type": "rich",
+      "source": "The connection check and exposed code share the normalized launchable connection and\n      provider decision. The helper prints the status, headers, and body after redaction.\n      Change <code>PATH</code> between <code>/api/agent</code> and <code>/healthz</code> to\n      inspect either bootstrap response.",
+      "value": "O teste de conexão e o código visível compartilham a conexão normalizada do launchable e\n      a seleção do provedor. O helper mostra o status, os cabeçalhos e o corpo com os dados sensíveis ocultos.\n      Altere <code>PATH</code> entre <code>/api/agent</code> e <code>/healthz</code> para\n      inspecionar qualquer uma das respostas iniciais."
+    },
+    "text.22759a3f3bc5": {
+      "type": "text",
+      "source": "Connect NemoClaw",
+      "value": "Conectar o NemoClaw"
+    },
+    "text.d3555d131008": {
+      "type": "text",
+      "source": "Enter Base URL and Access session. Provider, relay route, and gateway token are discovered automatically.",
+      "value": "Informe a URL base e a sessão de acesso. O provedor, a rota do relay e o token do gateway são descobertos automaticamente."
+    },
+    "text.ae4e62151b92": {
+      "type": "text",
+      "source": "redacted response",
+      "value": "resposta com dados sensíveis ocultos"
     }
   }
 }

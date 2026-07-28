@@ -226,8 +226,8 @@ def audit() -> list[str]:
         decoded = m.group(1).replace(r"\/", "/")
         if "replace(//" in decoded:
             findings.append("GW_CONNECT template decodes to invalid regex/comment syntax; avoid slash regex literals inside stringified cells")
-        if "helpers.openclawGatewayWsUrl(rawUrl, accessSession, null, null, accessProvider)" not in decoded:
-            findings.append("GW_CONNECT must call the shared provider-aware gateway router")
+        if "helpers.openclawGatewayWsUrl(rawUrl, accessSession, null, false, accessProvider)" not in decoded:
+            findings.append("GW_CONNECT must call the shared gateway router with learner relay inference disabled")
         if "const openclawGatewayWsUrl" in decoded:
             findings.append("GW_CONNECT duplicates the shared gateway router")
         if "_uniqueId(" in decoded:
