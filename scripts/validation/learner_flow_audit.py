@@ -239,9 +239,12 @@ def audit_launchable_transport(surfaces: dict[str, str], connection: str, shared
           "WebSocket routing must default direct and retain an explicit relay opt-in")
     _need(findings,
           'localizeCourseUiText("Gateway recovery")' in openclaw and
-          'localizeCourseUiText("Retry Cloudflare WebSockets through the hosted relay")' in openclaw and
-          'localizeCourseUiText(e.message)' in openclaw,
-          "launchable recovery and routing errors must use the reviewed runtime locale map")
+          'localizeCourseUiText("Retry WebSockets through the hosted relay")' in openclaw,
+          "WebSocket recovery controls must use the reviewed runtime locale map")
+    _need(findings, "wsRelayEnabledInp.disabled = false" in openclaw,
+          "both launchable providers need a selectable WebSocket recovery route")
+    _need(findings, 'localizeCourseUiText(e.message)' in openclaw,
+          "gateway recovery failures must use the reviewed runtime locale map")
     _need(findings, "if (isOpenClawLaunchableHost(url.hostname))" in shared,
           "the model route must reject a launchable through the shared host predicate")
     _need(findings, "openclawBootstrapRequest" in shared,
@@ -264,7 +267,7 @@ def audit_launchable_transport(surfaces: dict[str, str], connection: str, shared
               f"{name}: learner bootstrap code must delegate provider routing to the shared helper")
         _need(findings, "wsRelayControls: true" in text and
               ".claw-ws-relay-enabled" in openclaw,
-              f"{name}: Cloudflare WebSocket recovery must be reachable from the launchable probe")
+              f"{name}: provider-neutral WebSocket recovery must be reachable from the launchable probe")
     # Both socket families resolve the same provider decision from the same saved state.
     for source, label in ((openclaw, "gateway"), (openshell, "terminal")):
         _need(findings, "getOpenClawConnection()" in source,

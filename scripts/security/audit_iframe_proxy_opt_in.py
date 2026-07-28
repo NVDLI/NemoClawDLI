@@ -93,8 +93,8 @@ CHECKS = [
     (
         "OpenClaw relay binds provider sessions without forwarding service tokens",
         "scripts/cors-proxy/cors-proxy-worker-openclaw.js",
-        ["Neutral access sessions require an explicit access provider.", 'fwdHeaders.set("X-Pomerium-Authorization", accessSession)', 'fwdHeaders.delete("CF-Access-Client-Id")', 'fwdHeaders.delete("CF-Access-Client-Secret")'],
-        [r"_pomerium=", r"env\.CF_ACCESS_CLIENT"],
+        ["Neutral access sessions require an explicit access provider.", 'fwdHeaders.set("Cookie", "_pomerium=" + accessSession)', 'fwdHeaders.delete("Cookie")', 'fwdHeaders.delete("CF-Access-Client-Id")', 'fwdHeaders.delete("CF-Access-Client-Secret")'],
+        [r"env\.CF_ACCESS_CLIENT"],
     ),
     (
         "OpenClaw relay is centralized, approved, and non-bypassable",
@@ -282,7 +282,7 @@ def self_test() -> list[str]:
         ("custom endpoint omits NVIDIA attribution", "web/nemoclaw/scripts/_shared.js", "if (billingAttributionEnabled(cfg.url))", "if (true)"),
         ("credential destination warning", "web/nemoclaw/index.html", "selected endpoint", "configured service"),
         ("OpenClaw excludes model billing attribution", "scripts/cors-proxy/cors-proxy-worker-openclaw.js", "x-openclaw-session-key, Accept", "x-openclaw-session-key, X-BILLING-INVOKE-ORIGIN, Accept"),
-        ("OpenClaw Pomerium header", "scripts/cors-proxy/cors-proxy-worker-openclaw.js", 'fwdHeaders.set("X-Pomerium-Authorization", accessSession)', 'fwdHeaders.set("Cookie", "_pomerium=" + accessSession)'),
+        ("OpenClaw Pomerium cookie", "scripts/cors-proxy/cors-proxy-worker-openclaw.js", 'fwdHeaders.set("Cookie", "_pomerium=" + accessSession)', 'fwdHeaders.set("X-Pomerium-Authorization", accessSession)'),
         ("OpenClaw provider declaration", "scripts/cors-proxy/cors-proxy-worker-openclaw.js", "Neutral access sessions require an explicit access provider.", "Neutral access sessions may omit a provider."),
         ("OpenClaw approved relay allowlist", "web/nemoclaw/scripts/_connection.js", "new URL(DEFAULT_OPENCLAW_PROXY_BASE)", "new URL(config.base)"),
         ("OpenClaw relay cannot be disabled", "web/nemoclaw/scripts/_connection.js", 'throw new Error("OpenClaw launchables use the approved NVIDIA DLI relay; it cannot be disabled.");', "return { enabled: false, base: DEFAULT_OPENCLAW_PROXY_BASE };"),

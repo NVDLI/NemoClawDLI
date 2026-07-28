@@ -528,11 +528,9 @@ export function mountEndpointProbe(targetSel, opts = {}) {
   const wsRelayControls = isOpenClaw && opts.cfAccess && opts.wsRelayControls === true;
   const savedWsRelayEnabled = wsRelayControls && getOpenClawWsRelayEnabled();
   const wsRelayLabel = localizeCourseUiText("Gateway recovery");
-  const wsRelayText = localizeCourseUiText("Retry Cloudflare WebSockets through the hosted relay");
+  const wsRelayText = localizeCourseUiText("Retry WebSockets through the hosted relay");
   const wsRelayAvailableHint = localizeCourseUiText(
-    "Use only when a direct Cloudflare gateway or terminal socket fails.");
-  const wsRelayUnavailableHint = localizeCourseUiText(
-    "The recovery relay applies only to Cloudflare Access launchables.");
+    "Use only when a direct gateway or terminal socket fails.");
 
   // Label helper. A key with fieldHelp content renders a toggle button.
   // A key without it renders a plain label. Both match the .claw-lf sizing exactly.
@@ -746,14 +744,8 @@ export function mountEndpointProbe(targetSel, opts = {}) {
     _setAccessSessionState(provider, "manual");
     _scheduleBrowserSessionDetection(provider);
     if (wsRelayEnabledInp) {
-      wsRelayEnabledInp.disabled = provider !== "cloudflare";
-      if (provider !== "cloudflare" && wsRelayEnabledInp.checked) {
-        wsRelayEnabledInp.checked = false;
-        setOpenClawWsRelayEnabled(false);
-      }
-      wsRelayEnabledInp.title = provider === "cloudflare"
-        ? wsRelayAvailableHint
-        : wsRelayUnavailableHint;
+      wsRelayEnabledInp.disabled = false;
+      wsRelayEnabledInp.title = wsRelayAvailableHint;
     }
   }
   if (accessSessionInp) {

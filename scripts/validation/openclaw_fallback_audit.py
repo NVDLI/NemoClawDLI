@@ -49,7 +49,7 @@ REQUIRED = {
     "runtime_skill": ["OpenClaw fallback", "Cloudflare Access", "Pomerium", "CLAW_ACCESS_SESSION", "OPENCLAW_CORS_PROXY_BASE"],
     "scripts_skill": ["validation/SKILL.html"],
     "validation_skill": ["openclaw_fallback_audit.py", "OpenClaw fallback"],
-    "worker_ws_audit": ["openclaw worker ws audit", "CF_Authorization", "x-pomerium-authorization", "synthesized a Cookie header", "http://localhost:8088", "upstream WebSocket response directly"],
+    "worker_ws_audit": ["openclaw worker ws audit", "CF_Authorization", "x-pomerium-authorization", "missing upstream Pomerium cookie", "caller-controlled authorization header", "http://localhost:8088", "upstream WebSocket response directly"],
     "gateway_token_audit": ["gateway token audit", "gatewayTokenFromAgentMetadata", "gatewayTokenFromDashboardUrl", "--self-test"],
     # Bind to the transport facts the audit must still assert (relay route, gateway path,
     # direct sender-bound gateway route, not to its failure prose, so rewording a
@@ -119,13 +119,31 @@ def probe_frame_contract(openclaw: str) -> list[str]:
 def worker_provider_findings(worker: str) -> list[str]:
     """Return failures for the provider-specific upstream credential boundary."""
     findings: list[str] = []
-    if "_pomerium=" in worker:
-        findings.append("OpenClaw relay must use the provider-native Pomerium header, not synthesize a Pomerium cookie")
     if 'fwdHeaders.delete("X-Pomerium-Authorization")' not in worker:
         findings.append("OpenClaw relay must strip caller-supplied Pomerium authorization before provider binding")
-    if 'fwdHeaders.set("X-Pomerium-Authorization", accessSession)' not in worker:
-        findings.append("OpenClaw relay must bind Pomerium sessions to the upstream-only provider header")
+    if 'fwdHeaders.delete("Cookie")' not in worker:
+        findings.append("OpenClaw relay must strip caller cookies before provider binding")
+    if 'fwdHeaders.set("Cookie", "_pomerium=" + accessSession)' not in worker:
+        findings.append("OpenClaw relay must bind Pomerium sessions to the allowlisted upstream cookie")
     return findings
+
+
+def worker_provider_contract(worker: str) -> list[str]:
+    """Prove the Pomerium credential is stripped, validated, and rebound as one cookie."""
+    cases = (
+        ("caller authorization", worker.replace('fwdHeaders.delete("X-Pomerium-Authorization")', "", 1),
+         "caller-supplied"),
+        ("caller cookies", worker.replace('fwdHeaders.delete("Cookie")', "", 1),
+         "strip caller cookies"),
+        ("provider cookie", worker.replace('fwdHeaders.set("Cookie", "_pomerium=" + accessSession)',
+                                            'fwdHeaders.set("X-Pomerium-Authorization", accessSession)', 1),
+         "allowlisted upstream cookie"),
+    )
+    misses = []
+    for label, mutated, expected in cases:
+        if not any(expected in item for item in worker_provider_findings(mutated)):
+            misses.append(f"worker-provider detector missed {label}")
+    return misses
 
 
 def browser_session_findings(openclaw: str, connection: str) -> list[str]:
@@ -214,7 +232,9 @@ def audit() -> list[str]:
     findings.extend(browser_session_findings(openclaw, connection))
     findings.extend(browser_session_contract(openclaw, connection))
 
-    findings.extend(worker_provider_findings(read(FILES["cors_worker"])))
+    cors_worker = read(FILES["cors_worker"])
+    findings.extend(worker_provider_findings(cors_worker))
+    findings.extend(worker_provider_contract(cors_worker))
 
     m = re.search(r"export const GW_CONNECT = `([\s\S]*?)`;", openclaw)
     if not m:

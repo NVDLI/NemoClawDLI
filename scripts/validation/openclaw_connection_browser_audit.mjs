@@ -311,16 +311,20 @@ try {
     const host = document.querySelector('#probe-claw');
     const provider = host.querySelector('.claw-access-provider');
     const session = host.querySelector('.claw-access-session');
+    const wsRelay = host.querySelector('.claw-ws-relay-enabled');
     if (session.value || host.querySelector('.claw-token').value) throw new Error('credentials survived a launchable URL change');
     if (localStorage.getItem('nemoclaw_openclaw_access_session_v1') || localStorage.getItem('nemoclaw_clawtoken')) throw new Error('rotated credentials survived in localStorage');
     if (provider.value !== 'auto' || !/paste the _pomerium cookie value/.test(session.placeholder)) throw new Error('Pomerium manual fallback was not exposed after detection failed');
     if (session.disabled || session.value) throw new Error('Pomerium manual fallback was not writable');
+    if (!wsRelay || wsRelay.disabled) throw new Error('Pomerium WebSocket recovery was disabled');
     provider.value = 'cloudflare';
     provider.dispatchEvent(new Event('change'));
     if (!provider.validationMessage) throw new Error('provider mismatch was not rejected in the UI');
     provider.value = 'pomerium';
     provider.dispatchEvent(new Event('change'));
     if (provider.validationMessage) throw new Error('matching Pomerium provider remained invalid');
+    if (wsRelay.checked) wsRelay.click();
+    wsRelay.click();
     session.value = 'test-pomerium-session';
     session.dispatchEvent(new Event('input'));
     const shared = await import('/nemoclaw/scripts/_shared.js?pomerium-manual=' + Date.now());
@@ -332,6 +336,7 @@ try {
       provider: localStorage.getItem('nemoclaw_openclaw_access_provider_v1'),
       localSession: localStorage.getItem('nemoclaw_openclaw_access_session_v1'),
       tabSession: sessionStorage.getItem('nemoclaw_openclaw_access_session_v1'),
+      relayControl: !wsRelay.disabled && routing.getOpenClawWsRelayEnabled(),
       routed: routing.openclawHttpUrl(
         connection.rawUrl,
         '',
@@ -344,7 +349,7 @@ try {
   ok(result.pomerium.raw === 'https://nemoclaw-test123.apps.run.brev.nvidia.com' &&
      result.pomerium.effective === APPROVED_RELAY + '/https/nemoclaw-test123.apps.run.brev.nvidia.com' &&
      result.pomerium.provider === 'pomerium' && !result.pomerium.localSession &&
-     result.pomerium.tabSession === 'test-pomerium-session',
+     result.pomerium.tabSession === 'test-pomerium-session' && result.pomerium.relayControl,
     `Pomerium launchable did not persist through the visible controls: ${JSON.stringify(result.pomerium)}`);
   await page.getByRole('button', { name: 'GET /healthz', exact: true }).click();
   await page.waitForFunction(() => /"status":\s*"ok"/.test(document.querySelector('#probe-claw .claw-out')?.textContent || ''));
@@ -430,6 +435,7 @@ try {
   result.chatContract = await page.evaluate(async () => {
     const mod = await import('/nemoclaw/scripts/_openclaw.js?chat-contract=' + Date.now());
     const connection = await import('/nemoclaw/scripts/_connection.js?chat-contract=' + Date.now());
+    connection.setOpenClawWsRelayEnabled(false);
     connection.setOpenClawConnection({
       rawUrl: 'https://nemoclaw-test123.brevlab.com',
       token: 'test-token',

@@ -243,10 +243,10 @@ export function filteredRequestHeaders(inputHeaders = {}, upstreamHost = '') {
   if (accessSession && expectedProvider === 'cloudflare') {
     headers.set('Cookie', `CF_Authorization=${accessSession}`);
   } else if (accessSession && expectedProvider === 'pomerium') {
-    // Pomerium consumes and removes its signed session handle from this
-    // dedicated header before forwarding upstream. Keep Authorization available
-    // for the OpenClaw gateway token and avoid a synthesized Cookie header.
-    headers.set('X-Pomerium-Authorization', accessSession);
+    // Caller cookies were removed above. Recreate only the provider cookie for
+    // the exact allowlisted Pomerium host; Authorization remains available for
+    // the separate OpenClaw gateway token.
+    headers.set('Cookie', `_pomerium=${accessSession}`);
   }
 
   return headers;

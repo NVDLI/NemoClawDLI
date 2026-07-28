@@ -15,12 +15,8 @@ class OpenClawFallbackAuditTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.worker = audit.read(audit.FILES["cors_worker"])
 
-    def test_current_worker_uses_provider_native_pomerium_transport(self) -> None:
+    def test_current_worker_binds_only_the_validated_pomerium_cookie(self) -> None:
         self.assertEqual([], audit.worker_provider_findings(self.worker))
-
-    def test_pomerium_cookie_transport_is_rejected(self) -> None:
-        mutated = self.worker + '\nconst unsafe = "_pomerium=session";\n'
-        self.assertTrue(any("not synthesize" in item for item in audit.worker_provider_findings(mutated)))
 
     def test_incoming_pomerium_header_must_be_stripped(self) -> None:
         mutated = self.worker.replace(
@@ -30,13 +26,21 @@ class OpenClawFallbackAuditTests(unittest.TestCase):
         )
         self.assertTrue(any("strip caller-supplied" in item for item in audit.worker_provider_findings(mutated)))
 
-    def test_provider_bound_pomerium_header_must_be_added(self) -> None:
+    def test_incoming_cookie_header_must_be_stripped(self) -> None:
         mutated = self.worker.replace(
-            'fwdHeaders.set("X-Pomerium-Authorization", accessSession);',
+            'fwdHeaders.delete("Cookie");',
+            "// caller cookie retained",
+            1,
+        )
+        self.assertTrue(any("strip caller cookies" in item for item in audit.worker_provider_findings(mutated)))
+
+    def test_provider_bound_pomerium_cookie_must_be_added(self) -> None:
+        mutated = self.worker.replace(
+            'fwdHeaders.set("Cookie", "_pomerium=" + accessSession);',
             "// provider binding removed",
             1,
         )
-        self.assertTrue(any("upstream-only provider header" in item for item in audit.worker_provider_findings(mutated)))
+        self.assertTrue(any("allowlisted upstream cookie" in item for item in audit.worker_provider_findings(mutated)))
 
 
 if __name__ == "__main__":
