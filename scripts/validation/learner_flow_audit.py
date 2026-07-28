@@ -249,11 +249,11 @@ def audit_launchable_transport(surfaces: dict[str, str], connection: str, shared
     bootstrap = javascript_function(openclaw, "export async function openclawBootstrapRequest")
     _need(findings, bootstrap and
           "OPENCLAW_BOOTSTRAP_PATHS" in openclaw and
-          'if (provider === "pomerium")' in bootstrap and
+          'if (provider === "pomerium" && !connection.accessSession)' in bootstrap and
           "openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal })" in bootstrap and
           'headers["CF-Access-Jwt-Assertion"] = connection.accessSession;' in bootstrap and
-          "X-OpenClaw-Access-Provider" not in bootstrap and
-          "X-OpenClaw-Access-Session" not in bootstrap,
+          'headers["X-OpenClaw-Access-Provider"] = provider;' in bootstrap and
+          'headers["X-OpenClaw-Access-Session"] = connection.accessSession;' in bootstrap,
           "bootstrap discovery must share the normalized Pomerium/Cloudflare provider decision")
     for name, text in sorted(surfaces.items()):
         if not name.endswith("/03a-kickstart.html"):
@@ -280,20 +280,26 @@ def audit_launchable_transport(surfaces: dict[str, str], connection: str, shared
     gateway_end = openclaw.find("export function gatewayTokenFromAgentMetadata", gateway_start)
     gateway_router = openclaw[gateway_start:gateway_end] if gateway_start >= 0 and gateway_end > gateway_start else ""
     _need(findings,
-          "const relayEnabled = proxyEnabled === true" in gateway_router and
+          "const relayEnabled = proxyEnabled === true ||" in gateway_router and
+          "proxyEnabled === null" in gateway_router and
+          "getOpenClawWsRelayEnabled()" in gateway_router and
+          'provider === "pomerium"' in gateway_router and
+          "Boolean(String(accessSession" in gateway_router and
           "if (!relayEnabled)" in gateway_router and
-          "Boolean(String(accessSession" not in gateway_router and
           re.search(
               r"openclawWebSocketUrl\s*\(\s*rawUrl\s*,\s*['\"]/cli/gateway['\"]\s*,"
               r"\s*accessSession\s*,\s*config\s*,\s*accessProvider\s*\)",
               gateway_router,
           ) is not None,
-          "gateway sockets must stay direct unless an operator explicitly selects the relay")
-    _need(findings, "const direct = openclawWebSocketUrl(" in openshell and
-          'resolvedProvider === "cloudflare" || relayWebSocket === true' in openshell and
+          "gateway sockets must keep direct mode available and infer the provider-bound relay for a pasted Pomerium session")
+    _need(findings,
+          "const direct = openclawWebSocketUrl(" in openshell and
+          "const relayEligible = Boolean(accessSession) && relayWebSocket !== false;" in openshell and
           '{ enabled: false, base: "" }' in openshell and
+          "relayWebSocket === true" in openshell and
+          "? [routed.url]" in openshell and
           "? [direct.url, routed.url]" in openshell,
-          "terminal sockets must keep Pomerium direct and Cloudflare direct-first")
+          "terminal sockets must try direct first, then use a provider-bound relay only with a pasted session")
     return findings
 
 
@@ -1962,8 +1968,8 @@ def self_test() -> list[str]:
          openshell, "bootstrap discovery"),
         ("bootstrap Pomerium direct branch removed", surfaces, connection, shared_src,
          openclaw_src.replace(
-             'if (provider === "pomerium") {',
-             'if (provider === "cloudflare") {',
+             'if (provider === "pomerium" && !connection.accessSession) {',
+             'if (provider === "cloudflare" && !connection.accessSession) {',
              1,
          ),
          openshell, "bootstrap discovery"),
@@ -1974,11 +1980,10 @@ def self_test() -> list[str]:
              1,
          ),
          openshell, "bootstrap discovery"),
-        ("bootstrap Pomerium session replay restored", surfaces, connection, shared_src,
+        ("bootstrap Pomerium provider binding removed", surfaces, connection, shared_src,
          openclaw_src.replace(
-             'const headers = { Accept: "application/json, text/plain, */*" };',
-             'const headers = { Accept: "application/json, text/plain, */*", '
-             '"X-OpenClaw-Access-Session": connection.accessSession };',
+             'headers["X-OpenClaw-Access-Provider"] = provider;',
+             'headers["X-OpenClaw-Access-Provider"] = "cloudflare";',
              1,
          ),
          openshell, "bootstrap discovery"),
@@ -2017,21 +2022,27 @@ def self_test() -> list[str]:
          "one access-provider decision"),
         ("gateway loses direct default", surfaces, connection, shared_src,
          openclaw_src.replace("if (!relayEnabled)", "if (false)", 1),
-         openshell, "stay direct"),
-        ("gateway infers relay from a pasted session", surfaces, connection, shared_src,
+         openshell, "keep direct mode"),
+        ("gateway loses pasted Pomerium recovery", surfaces, connection, shared_src,
          openclaw_src.replace(
-             "const relayEnabled = proxyEnabled === true;",
-             'const relayEnabled = proxyEnabled === true || Boolean(String(accessSession || "").trim());',
+             '(provider === "pomerium" && Boolean(String(accessSession || "").trim()))',
+             "false",
              1,
          ),
-         openshell, "stay direct"),
+         openshell, "infer the provider-bound relay"),
         ("gateway loses relay opt-in", surfaces, connection, shared_src,
          openclaw_src.replace("proxyEnabled === true", "proxyEnabled !== false", 1),
-         openshell, "stay direct"),
-        ("terminal routes Pomerium through relay", surfaces, connection, shared_src, openclaw_src,
-         openshell.replace('resolvedProvider === "cloudflare" || relayWebSocket === true',
-                           'resolvedProvider === "pomerium" || relayWebSocket === true', 1),
-         "Pomerium direct"),
+         openshell, "keep direct mode"),
+        ("terminal loses direct-first ordering", surfaces, connection, shared_src, openclaw_src,
+         openshell.replace("? [direct.url, routed.url]", "? [routed.url, direct.url]", 1),
+         "try direct first"),
+        ("terminal relays without a pasted session", surfaces, connection, shared_src, openclaw_src,
+         openshell.replace(
+             "const relayEligible = Boolean(accessSession) && relayWebSocket !== false;",
+             "const relayEligible = relayWebSocket !== false;",
+             1,
+         ),
+         "only with a pasted session"),
     ]
     for (label, mutated_surfaces, mutated_connection, mutated_shared,
          mutated_openclaw, mutated_openshell, expected) in transport_mutations:

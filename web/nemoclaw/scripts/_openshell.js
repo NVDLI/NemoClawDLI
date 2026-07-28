@@ -18,17 +18,16 @@ const POMERIUM_LOOPBACK_PROBES = Object.freeze({
 });
 
 // PTY helper: `bash` opens the host; `openshell sandbox connect <agent>` enters the agent.
-// Pomerium uses its direct PTY. Cloudflare
-// tries direct first and may fall back to the approved relay. An operator can
-// still request the relay explicitly without exposing that choice to learners.
-export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000, openMs = 12000, onChunk = null, baseUrl = null, signal = null, relayWebSocket = false } = {}) {
+// A browser-bound session stays direct. A pasted session tries direct first,
+// then the approved provider-bound relay.
+export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000, openMs = 12000, onChunk = null, baseUrl = null, signal = null, relayWebSocket = null } = {}) {
   /* @doc <code>helpers.terminal(cmd, {send, idleMs, totalMs, openMs, onChunk})</code> ::
        Open a PTY over your launchable's <code>/ws/terminal</code> WebSocket and run
        <code>cmd</code>. Use <code>"bash"</code> for the VM shell, or <code>"openshell sandbox
        connect &lt;agent&gt;"</code> to drop inside the kernel-sandboxed agent.
        <code>send</code> is an array of shell lines typed into the PTY in order (each gets
-       Enter). Pomerium uses the signed-in browser's direct socket. Cloudflare tries
-       direct first and can use its supplied session through the approved relay.
+       Enter). A browser-bound session stays direct. A pasted access session tries
+       direct first and then its approved provider-bound relay.
        <code>relayWebSocket: true</code> explicitly selects that recovery route.
        Returns <code>{ output, raw, frames, exitCode }</code> (<code>output</code>
        is ANSI-stripped; <code>exitCode</code> is the command's PTY exit status, or null if none
@@ -46,17 +45,16 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
     terminalPath,
     "",
     { enabled: false, base: "" },
-    accessProvider,
+    resolvedProvider,
   );
-  const relayEligible = Boolean(accessSession) &&
-    (resolvedProvider === "cloudflare" || relayWebSocket === true);
+  const relayEligible = Boolean(accessSession) && relayWebSocket !== false;
   const routed = relayEligible
     ? openclawWebSocketUrl(
         rawUrl,
         terminalPath,
         accessSession,
         getOpenClawProxyConfig(),
-        accessProvider,
+        resolvedProvider,
       )
     : direct;
   const wsUrls = relayWebSocket === true

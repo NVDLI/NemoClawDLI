@@ -214,7 +214,7 @@ def audit(overrides: dict[str, str] | None = None) -> list[str]:
         'openclawBootstrapRequest("/healthz"',
         "response.json ?? response.body",
         "redactOpenClawDiagnostic",
-        'if (provider === "pomerium")',
+        'if (provider === "pomerium" && !connection.accessSession)',
         'transport: viaLoopback ? "launchable terminal loopback"',
     ):
         if token not in openclaw:
@@ -282,7 +282,7 @@ def self_test() -> list[str]:
         ("probe session dropped", {OPENCLAW: openclaw.replace("accessProvider,\n      accessSession,", 'accessProvider,\n      "",', 1)}, "probe path contract"),
         ("connection metadata route removed", {OPENCLAW: openclaw.replace('const response = await openclawBootstrapRequest("/api/agent"', 'const response = await openclawBootstrapRequest("/api/agents-broken"', 1)}, "required route or redaction"),
         ("connection route order changed", {OPENCLAW: openclaw.replace('id: "agent-metadata"', 'id: "terminal-websocket"', 1)}, "must run metadata"),
-        ("Pomerium loopback becomes session-conditional", {OPENCLAW: openclaw.replace('if (provider === "pomerium")', 'if (provider === "pomerium" && !connection.accessSession)', 1)}, "required route or redaction"),
+        ("Pomerium manual relay removed", {OPENCLAW: openclaw.replace('if (provider === "pomerium" && !connection.accessSession)', 'if (provider === "pomerium")', 1)}, "required route or redaction"),
         ("gateway silently selects the relay", {OPENCLAW: openclaw.replace("probeOpenClawGatewayConnection({ signal, relayWebSocket: false })", "probeOpenClawGatewayConnection({ signal, relayWebSocket: true })", 1)}, "required route or redaction"),
         ("model route panel removed", {pages[1]: localized.replace('id="model-route-settings"', 'id="removed-model-route-settings"', 1)}, "model route source"),
         ("page writes launchable registration", {pages[0]: en + '\n<script>localStorage.setItem("nemoclaw_clawrawurl", "bad")</script>\n'}, "writes protected endpoint"),

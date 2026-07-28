@@ -71,10 +71,9 @@ export function openclawGatewayWsUrl(rawUrl, accessSession = "", proxyBase = nul
   let provider = "auto";
   try { provider = accessProviderForOpenClawUrl(rawUrl, accessProvider); }
   catch (_) { /* openclawWebSocketUrl below returns the authoritative error */ }
-  // A signed-in browser opens both supported
-  // launchable WebSockets directly. Keep explicit relay selection available to
-  // operator integrations, but never infer it merely because a session was pasted.
-  const relayEnabled = proxyEnabled === true;
+  const relayEnabled = proxyEnabled === true ||
+    (proxyEnabled === null && (getOpenClawWsRelayEnabled() ||
+      (provider === "pomerium" && Boolean(String(accessSession || "").trim()))));
   if (!relayEnabled) {
     return openclawWebSocketUrl(rawUrl, "/cli/gateway", "", { enabled: false, base: "" }, accessProvider);
   }
@@ -129,10 +128,9 @@ const OPENCLAW_BOOTSTRAP_PATHS = new Set(["/api/agent", "/healthz"]);
 export async function openclawBootstrapRequest(path = "/api/agent", { signal = null } = {}) {
   /* @doc <code>helpers.openclawBootstrapRequest(path)</code> ::
        Read <code>/api/agent</code> or <code>/healthz</code> through the provider selected
-       from the normalized Module 3a connection. Pomerium uses the launchable terminal
-       loopback because its session is sender-bound. Cloudflare uses the approved relay when
-       the course is cross-origin. Returns response metadata plus parsed JSON without exposing
-       either access credential. */
+       from the normalized Module 3a connection. A signed-in launchable session stays direct.
+       A pasted access session uses the approved provider-bound relay. Returns response
+       metadata plus parsed JSON without exposing either access credential. */
   const actionPath = String(path || "");
   if (!OPENCLAW_BOOTSTRAP_PATHS.has(actionPath)) {
     throw new Error("OpenClaw bootstrap requests are limited to /api/agent and /healthz");
@@ -141,9 +139,7 @@ export async function openclawBootstrapRequest(path = "/api/agent", { signal = n
   const rawUrl = String(connection.rawUrl || "").replace(/\/+$/, "");
   if (!rawUrl) throw new Error("Set the launchable URL in the Module 3a probe first.");
   const provider = accessProviderForOpenClawUrl(rawUrl, connection.accessProvider);
-  // Pomerium's browser session is sender-bound. Avoid replaying it
-  // through the hosted relay by reading HTTP bootstrap routes from the direct PTY.
-  if (provider === "pomerium") {
+  if (provider === "pomerium" && !connection.accessSession) {
     const result = await openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal });
     return {
       ...result,
@@ -161,7 +157,11 @@ export async function openclawBootstrapRequest(path = "/api/agent", { signal = n
   );
   const headers = { Accept: "application/json, text/plain, */*" };
   if (route.viaProxy && connection.accessSession) {
-    headers["CF-Access-Jwt-Assertion"] = connection.accessSession;
+    if (provider === "cloudflare") headers["CF-Access-Jwt-Assertion"] = connection.accessSession;
+    else {
+      headers["X-OpenClaw-Access-Provider"] = provider;
+      headers["X-OpenClaw-Access-Session"] = connection.accessSession;
+    }
   }
   // /api/agent discovers the gateway token. A stale token from another
   // launchable must not prevent that replacement.
@@ -183,7 +183,7 @@ export async function openclawBootstrapRequest(path = "/api/agent", { signal = n
     body,
     json,
     headers: Object.fromEntries(response.headers),
-    transport: route.viaProxy ? "approved-cloudflare-relay" : "direct-browser",
+    transport: route.viaProxy ? "approved-provider-relay" : "direct-browser",
     displayUrl: route.displayUrl,
   };
 }
@@ -246,7 +246,7 @@ function accessCredentialDelivery(provider, viaProxy, accessSession) {
 
 function openClawHttpDiagnostic(path, connection) {
   const provider = accessProviderForOpenClawUrl(connection.rawUrl, connection.accessProvider);
-  const viaLoopback = provider === "pomerium";
+  const viaLoopback = provider === "pomerium" && !connection.accessSession;
   const route = openclawHttpUrl(
     connection.rawUrl,
     path,
@@ -459,54 +459,90 @@ export async function runOpenClawConnectionAudit({
   });
 
   connection = getOpenClawConnection();
-  const gatewayRoute = openclawGatewayWsUrl(
+  const directGatewayRoute = openclawGatewayWsUrl(
     rawUrl,
     connection.accessSession,
     null,
     false,
     provider,
   );
+  const relayGatewayRoute = connection.accessSession
+    ? openclawGatewayWsUrl(rawUrl, connection.accessSession, null, true, provider)
+    : null;
   await execute({
     id: "gateway-websocket",
     title: "Gateway WebSocket",
     purpose: "Confirms /cli/gateway reaches a challenge and accepts the token discovered from agent metadata.",
     request: {
       method: "WEBSOCKET",
-      url: gatewayRoute.displayUrl,
+      attempts: [
+        {
+          url: directGatewayRoute.displayUrl,
+          transport: "direct browser",
+          credentialDelivery: accessCredentialDelivery(provider, false, accessSession),
+        },
+        ...(relayGatewayRoute ? [{
+          url: relayGatewayRoute.displayUrl,
+          transport: "hosted relay fallback",
+          credentialDelivery: accessCredentialDelivery(provider, true, accessSession),
+        }] : []),
+      ],
       upstreamUrl: rawUrl + "/cli/gateway",
-      transport: gatewayRoute.viaProxy ? "hosted relay" : "direct browser",
-      credentialDelivery: accessCredentialDelivery(provider, gatewayRoute.viaProxy, accessSession),
       gatewayToken: metadata.ok ? "discovered from /api/agent and sent as connect.auth.token" : "unavailable",
     },
   }, async () => {
-    const outcome = await probeOpenClawGatewayConnection({ signal, relayWebSocket: false });
+    const attempts = [];
+    let outcome = await probeOpenClawGatewayConnection({ signal, relayWebSocket: false });
+    attempts.push(outcome);
+    if (!outcome.ok && relayGatewayRoute) {
+      outcome = await probeOpenClawGatewayConnection({ signal, relayWebSocket: true });
+      attempts.push(outcome);
+    }
     return {
       ok: outcome.ok,
       error: outcome.error || "",
-      response: outcome.response,
+      response: { attempts },
     };
   });
 
   const terminalMarker = "__NEMOCLAW_CONNECTION_READY__";
   const terminalCommand = `printf '${terminalMarker}\\n'`;
   const terminalPath = "/ws/terminal?cmd=" + encodeURIComponent(terminalCommand);
-  const terminalRoute = openclawWebSocketUrl(
+  const directTerminalRoute = openclawWebSocketUrl(
     rawUrl,
     terminalPath,
     "",
     { enabled: false, base: "" },
     provider,
   );
+  const relayTerminalRoute = connection.accessSession
+    ? openclawWebSocketUrl(
+        rawUrl,
+        terminalPath,
+        connection.accessSession,
+        getOpenClawProxyConfig(),
+        provider,
+      )
+    : null;
   await execute({
     id: "terminal-websocket",
     title: "Terminal WebSocket",
     purpose: "Confirms /ws/terminal opens an authenticated PTY and returns a harmless marker.",
     request: {
       method: "WEBSOCKET",
-      url: terminalRoute.displayUrl,
+      attempts: [
+        {
+          url: directTerminalRoute.displayUrl,
+          transport: "direct browser",
+          credentialDelivery: accessCredentialDelivery(provider, false, accessSession),
+        },
+        ...(relayTerminalRoute ? [{
+          url: relayTerminalRoute.displayUrl,
+          transport: "hosted relay fallback",
+          credentialDelivery: accessCredentialDelivery(provider, true, accessSession),
+        }] : []),
+      ],
       upstreamUrl: rawUrl + terminalPath,
-      transport: terminalRoute.viaProxy ? "hosted relay" : "direct browser",
-      credentialDelivery: accessCredentialDelivery(provider, terminalRoute.viaProxy, accessSession),
       command: terminalCommand,
     },
   }, async () => {
@@ -516,6 +552,7 @@ export async function runOpenClawConnectionAudit({
       openMs: 12000,
       baseUrl: rawUrl,
       signal,
+      relayWebSocket: null,
     });
     const ok = String(response.output || "").includes(terminalMarker);
     return {
@@ -738,7 +775,7 @@ export function mountClawGateway(targetSel, opts = {}) {
       const refreshed = await refreshOpenClawGatewayToken();
       ({ rawUrl, accessProvider, accessSession } = _creds());
       token = refreshed.token;
-      const gateway = openclawGatewayWsUrl(rawUrl, accessSession, null, false, accessProvider);
+      const gateway = openclawGatewayWsUrl(rawUrl, accessSession, null, null, accessProvider);
       const wsUrl = gateway.url;
       _setStatus("connecting", gateway.viaProxy ? "via hosted relay" : "direct");
       const { scopes, version } = await _connectWs(wsUrl, token);
@@ -1729,8 +1766,8 @@ export async function openclawChat(message, { session = "main", onToken, onTool,
   const token = refreshed.token;
   const accessProvider = connection.accessProvider;
   const accessSession = connection.accessSession;
-  if (!rawUrl || !token) throw new Error("Connect first on the Kickstart page (3a): set your launchable URL + token in the probe.");
-  const gateway = openclawGatewayWsUrl(rawUrl, accessSession, null, false, accessProvider);
+  if (!rawUrl || !token) throw new Error("Connect first on the Kickstart page (3a): enter the launchable URL and, when requested, its access session.");
+  const gateway = openclawGatewayWsUrl(rawUrl, accessSession, null, null, accessProvider);
   const wsUrl = gateway.url;
 
   async function connect() {
@@ -1757,7 +1794,7 @@ export async function openclawChat(message, { session = "main", onToken, onTool,
         call("connect", { minProtocol: 4, maxProtocol: 4, client: { id: "openclaw-control-ui", version: "0.1.0", platform: "browser", mode: "webchat" }, caps: ["tool-events"], role: "operator", scopes: ["operator.read", "operator.write", "operator.admin"], auth: { token } })
           .then(() => resolve(sock)).catch(reject);
       };
-      setTimeout(() => reject(new Error("no challenge arrived within 15s. For a Brev URL, open the launchable, select its access provider, and paste a fresh matching browser session in Module 3a.")), 15000);
+      setTimeout(() => reject(new Error("no challenge arrived within 15s. Open the launchable, then retry with a fresh matching access session in Module 3a.")), 15000);
     });
   }
 
@@ -1846,10 +1883,10 @@ const token = refreshedGateway.token;
 const accessProvider = connection.accessProvider;
 const accessSession = connection.accessSession;
 if (!rawUrl || !token) {
-  helpers.log("Fill in the OpenClaw probe above first. For a Brev launchable, select its access provider and paste the matching browser session.");
+  helpers.log("Connect in Module 3a first. Enter the launchable URL and, when requested, its matching access session.");
   return;
 }
-const gateway = helpers.openclawGatewayWsUrl(rawUrl, accessSession, null, false, accessProvider);
+const gateway = helpers.openclawGatewayWsUrl(rawUrl, accessSession, null, null, accessProvider);
 const wsUrl = gateway.url;
 helpers.log("→ " + gateway.displayUrl + (gateway.viaProxy ? "  (via hosted relay)" : ""));
 
@@ -1921,7 +1958,7 @@ await new Promise((resolve, reject) => {
       resolve(pl);
     }).catch(error => { clearTimeout(challengeTimer); reject(error); });
   };
-  challengeTimer = setTimeout(() => reject(new Error("no challenge arrived within 30s. For a Brev URL, open the launchable, select its access provider, and refresh its session in Module 3a.")), 30000);
+  challengeTimer = setTimeout(() => reject(new Error("no challenge arrived within 30s. Open the launchable, then retry with a fresh matching access session in Module 3a.")), 30000);
 });
 `;
 

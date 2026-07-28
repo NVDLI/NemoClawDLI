@@ -167,12 +167,11 @@ ok(!sameOrigin.viaProxy &&
    sameOrigin.url === 'wss://nemoclaw-test123.brevlab.com/cli/gateway',
   'same-origin co-located launchable did not use its authenticated direct route');
 
-// Terminal WebSocket selection mirrors the production launchable path: both providers
-// start direct, Cloudflare can fall back to its relay, and an operator can explicitly
-// select a provider-bound relay.
+// Terminal WebSocket selection mirrors the production launchable path: a browser-bound
+// session stays direct; a pasted session tries direct, then its provider-bound relay.
 globalThis.location = new URL('https://course.example.test/nemoclaw/04b-modern-clis.html');
 const terminalPath = '/ws/terminal?cmd=' + encodeURIComponent('bash');
-function terminalRoutes(rawUrl, accessSession, accessProvider, relayWebSocket = false) {
+function terminalRoutes(rawUrl, accessSession, accessProvider, relayWebSocket = null) {
   const direct = mod.openclawWebSocketUrl(
     rawUrl,
     terminalPath,
@@ -180,8 +179,7 @@ function terminalRoutes(rawUrl, accessSession, accessProvider, relayWebSocket = 
     { enabled: false, base: '' },
     accessProvider,
   );
-  const relayEligible = Boolean(accessSession) &&
-    (accessProvider === 'cloudflare' || relayWebSocket);
+  const relayEligible = Boolean(accessSession) && relayWebSocket !== false;
   const routed = relayEligible
     ? mod.openclawWebSocketUrl(
         rawUrl,
@@ -200,9 +198,11 @@ ok(cfTerminal.length === 2 &&
    cfTerminal[1].startsWith(approved.replace(/^http/, 'ws')),
   `Cloudflare terminal lost its direct-first relay fallback: ${cfTerminal.join(' , ')}`);
 const pomTerminal = terminalRoutes(pomeriumLaunchable, 'opaque-session', 'pomerium');
-ok(pomTerminal.length === 1 &&
-   pomTerminal[0] === 'wss://nemoclaw-test123.apps.run.brev.nvidia.com/ws/terminal?cmd=bash',
-  `Pomerium terminal did not retain its browser-bound direct path: ${pomTerminal.join(' , ')}`);
+ok(pomTerminal.length === 2 &&
+   pomTerminal[0] === 'wss://nemoclaw-test123.apps.run.brev.nvidia.com/ws/terminal?cmd=bash' &&
+   pomTerminal[1] === approved.replace(/^http/, 'ws') +
+     '/https/nemoclaw-test123.apps.run.brev.nvidia.com/ws/terminal?cmd=bash&access_provider=pomerium&access_session=opaque-session',
+  `Pomerium terminal lost its direct-first provider-bound relay fallback: ${pomTerminal.join(' , ')}`);
 const cfRelayTerminal = terminalRoutes(launchable, 'test.jwt', 'cloudflare', true);
 ok(cfRelayTerminal[0] ===
    'wss://openclaw-cors-proxy.experiments.courses.nvidia.com/https/nemoclaw-test123.brevlab.com/ws/terminal?cmd=bash&cf_access_jwt=test.jwt',
@@ -216,7 +216,7 @@ ok(terminalMismatchRejected, 'terminal route accepted a provider that does not m
 // reach one surface and not the other.
 for (const [rawUrl, provider, session] of [
   [launchable, 'cloudflare', 'test.jwt'],
-  [pomeriumLaunchable, 'pomerium', ''],
+  [pomeriumLaunchable, 'pomerium', 'opaque-session'],
 ]) {
   const gateway = mod.openclawWebSocketUrl(
     rawUrl, '/cli/gateway', '', { enabled: false, base: '' }, provider);
@@ -234,9 +234,9 @@ ok(openshell.includes('openclawWebSocketUrl(') &&
   'terminal helper bypasses shared launchable routing');
 ok(openshell.includes('const direct = openclawWebSocketUrl(') &&
    openshell.includes('? [direct.url, routed.url]') &&
-   openshell.includes('resolvedProvider === "cloudflare" || relayWebSocket === true') &&
+   openshell.includes('Boolean(accessSession) && relayWebSocket !== false') &&
    openshell.includes('{ enabled: false, base: "" }') &&
-   !openshell.includes('resolvedProvider === "pomerium" && Boolean(accessSession)'),
+   !openshell.includes('resolvedProvider === "cloudflare" || relayWebSocket === true'),
   'terminal helper lost the proven direct-first provider boundary');
 ok(openshell.includes('POMERIUM_LOOPBACK_PROBES') &&
    openshell.includes('"/healthz": "http://127.0.0.1/healthz"') &&
@@ -252,6 +252,7 @@ ok(openclaw.includes('opts.proxyControls === true') &&
   'explicit relay-override fixture no longer surfaces rejected configuration');
 ok(openclaw.includes('getOpenClawWsRelayEnabled()') &&
    openclaw.includes('proxyEnabled === true') &&
+   openclaw.includes('provider === "pomerium" && Boolean(String(accessSession || "").trim())') &&
    openclaw.includes('detectOpenClawBrowserSession') &&
    openclaw.includes('signed-in browser session detected; nothing to paste') &&
    openclaw.includes('paste the _pomerium cookie value') &&
@@ -269,6 +270,7 @@ ok(openclaw.includes('getOpenClawConnection()') && openclaw.includes('setOpenCla
   'OpenClaw widgets bypass the shared connection registry');
 ok(openclaw.includes('export async function openclawBootstrapRequest') &&
    openclaw.includes('await openclawBootstrapRequest("/api/agent"') &&
+   openclaw.includes('provider === "pomerium" && !connection.accessSession') &&
    openclaw.includes('OPENCLAW_BOOTSTRAP_PATHS'),
   'bootstrap discovery does not use the shared provider-aware request helper');
 // A locale page is the bytes the build publishes. When it ships from a key-based resource there is

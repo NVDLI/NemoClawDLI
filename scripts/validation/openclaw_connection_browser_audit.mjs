@@ -82,7 +82,9 @@ try {
             if (/\/ws\/terminal/.test(url)) {
               window.__terminalUrls.push(url);
               const command = new URL(url).searchParams.get('cmd') || '';
-              const body = command.endsWith('http://127.0.0.1/healthz')
+              const body = command.includes('__NEMOCLAW_CONNECTION_READY__')
+                ? '__NEMOCLAW_CONNECTION_READY__\n'
+                : command.endsWith('http://127.0.0.1/healthz')
                 ? JSON.stringify({ status: 'ok' })
                 : JSON.stringify({ agent: { dashboardUrl: '/#token=pomerium-probe-token_456' } });
               this.emit({ type: 'data', data: body }, 1);
@@ -168,6 +170,71 @@ try {
   await page.goto(`http://127.0.0.1:${port}/nemoclaw/03a-kickstart.html`, { waitUntil: 'networkidle' });
   await page.waitForSelector('#probe-llm .claw-url');
   await page.waitForSelector('#probe-claw .claw-url');
+  await page.evaluate(() => {
+    const host = document.querySelector('#probe-claw');
+    if (!host.querySelector('.claw-access-session') || !host.querySelector('.claw-audit-run')) {
+      throw new Error('connection audit did not expose Base URL, Access session, and one run control');
+    }
+    if (host.querySelector('.claw-token') || host.querySelector('.claw-access-provider') ||
+        host.querySelector('.claw-ws-relay-enabled') || host.querySelector('.claw-proxy-enabled')) {
+      throw new Error('connection audit exposed a derived credential or transport control');
+    }
+    const url = host.querySelector('.claw-url');
+    const session = host.querySelector('.claw-access-session');
+    url.value = 'https://nemoclaw-test123.brevlab.com/chat?session=main';
+    url.dispatchEvent(new Event('input'));
+    session.value = 'test-access-session';
+    session.dispatchEvent(new Event('input'));
+    host.querySelector('.claw-audit-run').click();
+  });
+  await page.waitForFunction(() => {
+    const state = document.querySelector('#probe-claw .claw-connection-audit')?.dataset.state;
+    return state === 'succeeded' || state === 'failed';
+  }, null, { timeout: 65000 });
+  const connectionAudit = await page.evaluate(() => {
+    const host = document.querySelector('#probe-claw');
+    const raw = [...host.querySelectorAll('.claw-audit-raw code')].map(node => node.textContent || '').join('\n');
+    return {
+      statuses: [...host.querySelectorAll('.claw-audit-step')].map(node => node.dataset.status),
+      summary: host.querySelector('.claw-audit-summary')?.textContent || '',
+      raw,
+    };
+  });
+  ok(connectionAudit.statuses.length === 4 &&
+     connectionAudit.statuses.every(status => status === 'passed') &&
+     /Connection ready/.test(connectionAudit.summary) &&
+     !connectionAudit.raw.includes('test-access-session'),
+    `guided connection audit did not pass and redact all required routes: ${JSON.stringify(connectionAudit)}`);
+
+  // Keep the older endpoint-probe fixture as a lower-level transport regression test.
+  // Learners see only the guided audit verified above.
+  probeRequests.length = 0;
+  await page.evaluate(async () => {
+    window.__terminalUrls = [];
+    window.__gatewayUrls = [];
+    const host = document.querySelector('#probe-claw');
+    const mod = await import('/nemoclaw/scripts/_openclaw.js?endpoint-fixture=' + Date.now());
+    const shared = await import('/nemoclaw/scripts/_shared.js?endpoint-fixture=' + Date.now());
+    shared.setOpenClawConnection({
+      rawUrl: 'https://nemoclaw-test123.brevlab.com',
+      token: '',
+      accessProvider: 'auto',
+      accessSession: '',
+    });
+    mod.mountClawProbe(host, {
+      label: 'Transport fixture',
+      defaultUrl: '',
+      defaultToken: '',
+      syncCanvas: true,
+      cfAccess: true,
+      wsRelayControls: true,
+      autofillToken: mod.gatewayTokenFromAgentMetadata,
+      actions: [
+        { label: 'GET /healthz', path: '/healthz', method: 'GET', expectJson: true },
+        { label: 'GET /api/agent', path: '/api/agent', method: 'GET', expectJson: true },
+      ],
+    });
+  });
   const result = await page.evaluate(async () => {
     const approved = 'https://openclaw-cors-proxy.experiments.courses.nvidia.com';
     const modelHost = document.querySelector('#probe-llm');
@@ -190,7 +257,7 @@ try {
     }
     const wsRelay = host.querySelector('.claw-ws-relay-enabled');
     if (!wsRelay || wsRelay.checked) {
-      throw new Error('learner probe lacks an off-by-default WebSocket recovery control');
+      throw new Error('transport fixture lacks an off-by-default WebSocket recovery control');
     }
     const state = () => ({
       model: modelUrl.value,
@@ -222,14 +289,14 @@ try {
     if (connection.getOpenClawWsRelayEnabled()) {
       throw new Error('WebSocket relay did not default off');
     }
-    wsRelay.click();
+    connection.setOpenClawWsRelayEnabled(true);
     if (!connection.getOpenClawWsRelayEnabled()) {
-      throw new Error('learner WebSocket relay opt-in was not retained');
+      throw new Error('operator WebSocket relay opt-in was not retained');
     }
     const relayedGateway = (await import('/nemoclaw/scripts/_openclaw.js?relay-ui=' + Date.now()))
       .openclawGatewayWsUrl(url.value, 'test-access-session', null, null, 'cloudflare');
     if (!relayedGateway.viaProxy || !relayedGateway.url.includes('cf_access_jwt=')) {
-      throw new Error('learner recovery control did not select the approved Cloudflare relay');
+      throw new Error('operator recovery control did not select the approved Cloudflare relay');
     }
     connection.setOpenClawWsRelayEnabled(false);
     session.value = 'test-access-session';

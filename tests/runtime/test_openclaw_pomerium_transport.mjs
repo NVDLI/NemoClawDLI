@@ -59,7 +59,7 @@ test('Pomerium loopback probe is registered for learner cells', () => {
   assert.equal(shared.HELPER_FNS.openclawLoopbackProbe, openshell.openclawLoopbackProbe);
 });
 
-test('Pomerium keeps a supplied session tab-scoped while course traffic stays direct', async () => {
+test('Pomerium keeps a supplied session tab-scoped and uses the provider-bound relay', async () => {
   const saved = connection.setOpenClawConnection({
     rawUrl: launchable,
     token: 'tab-token',
@@ -83,11 +83,14 @@ test('Pomerium keeps a supplied session tab-scoped while course traffic stays di
     launchable,
     saved.accessSession,
     null,
-    false,
+    null,
     'pomerium',
   );
-  assert.equal(gateway.url, 'wss://nemoclaw-test.apps.run.brev.nvidia.com/cli/gateway');
-  assert.equal(gateway.viaProxy, false);
+  assert.equal(
+    gateway.url,
+    'wss://openclaw-cors-proxy.experiments.courses.nvidia.com/https/nemoclaw-test.apps.run.brev.nvidia.com/cli/gateway?access_provider=pomerium&access_session=manual-pomerium-session',
+  );
+  assert.equal(gateway.viaProxy, true);
   assert.doesNotMatch(gateway.displayUrl, /manual-pomerium-session/);
 
   const metadata = await openshell.openclawLoopbackProbe('/api/agent', { baseUrl: launchable });
