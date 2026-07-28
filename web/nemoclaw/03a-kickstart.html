@@ -295,9 +295,10 @@
       Change <code>PATH</code> between <code>/api/agent</code> and <code>/healthz</code> to
       inspect either bootstrap response.</p>
     <p>
-      A verified Pomerium browser session reads bootstrap metadata directly. A manually supplied
-      Pomerium or Cloudflare session uses the approved provider-bound relay. The probe displays
-      which route it used without displaying the session value.
+      A Pomerium launchable keeps bootstrap and WebSocket traffic direct: HTTP checks run through
+      its terminal loopback. Cloudflare sends HTTP checks through the approved relay; its WebSockets
+      try the launchable first and can recover through the relay. The probe shows the route without
+      displaying the session value.
     </p>
 
     <div id="claw-raw-cell"></div>

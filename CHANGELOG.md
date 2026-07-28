@@ -11,6 +11,8 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
   the gateway token through `/api/agent`, verifies both WebSocket paths, then verifies `/healthz`.
 - Thanks to Vadim Kudlay for reviewing the Spanish and Brazilian Portuguese browser-session
   availability guidance.
+- Thanks to Vadim Kudlay for reviewing the corrected provider-specific connection guidance in
+  Spanish and Brazilian Portuguese.
 - Made an ephemeral launchable instance identifier uncommittable: the sensitive-content boundary now
   rejects a provisioned instance ID in either supported host family from the tree, the index, and
   proposed history, the remaining real identifier was replaced with synthetic fixtures, and every
