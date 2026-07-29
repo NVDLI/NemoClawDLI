@@ -60,6 +60,23 @@ REQUIRED_SKILL_TOKENS = {
     "do not read transcripts",
     "bypass hook trust",
 }
+REQUIRED_CREDENTIAL_BINDING_ROWS = {
+    "GITLAB_DLI": "| `GITLAB_DLI` | `gitlab.com/nvidia/DLI` |",
+    "NEMOCLAWDLI_GITHUB": (
+        "| `NEMOCLAWDLI_GITHUB` | `github.com/NVDLI/NemoClawDLI` |"
+    ),
+    "NEMOCLAW_DLIOS": (
+        "| `NEMOCLAW_DLIOS` | internal GitLab `NemoClawDLIOS` origin; "
+        "owner from `.gitlab/CODEOWNERS` |"
+    ),
+}
+REQUIRED_CREDENTIAL_SAFETY_TOKENS = {
+    "gitlab_master.com",
+    "Never substitute",
+    "NEMOCLAW_DLI_PAT",
+    "Do not launch OAuth",
+    "prompt for credentials",
+}
 REQUIRED_METADATA_FIELDS = {"display_name", "short_description", "default_prompt"}
 SKILL_MANIFEST = "SKILL.md"
 SKILL_METADATA = Path("agents/openai.yaml")
@@ -450,6 +467,16 @@ def audit(root: Path = ROOT, files: list[Path] | None = None) -> list[str]:
     for token in sorted(REQUIRED_SKILL_TOKENS):
         if token not in skill_raw:
             findings.append(f"{normalized_skill}: missing hook trust boundary {token!r}")
+    for credential, binding in sorted(REQUIRED_CREDENTIAL_BINDING_ROWS.items()):
+        if binding not in skill_raw:
+            findings.append(
+                f"{normalized_skill}: missing exclusive credential binding {credential}"
+            )
+    for token in sorted(REQUIRED_CREDENTIAL_SAFETY_TOKENS):
+        if token not in skill_raw:
+            findings.append(
+                f"{normalized_skill}: missing credential safety boundary {token!r}"
+            )
 
     agents_raw = _read_utf8(root, AGENTS_PATH, findings) or ""
     for token in (normalized_skill.as_posix(), CONTRACT_PATH.as_posix()):

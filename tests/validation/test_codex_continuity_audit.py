@@ -407,6 +407,88 @@ class CodexContinuityAuditTests(unittest.TestCase):
         )
         self.assertTrue(any("missing hook trust boundary" in item for item in audit.audit(root, paths)))
 
+    def test_credential_binding_cannot_be_deleted(self) -> None:
+        temporary, root, paths = self.fixture()
+        self.addCleanup(temporary.cleanup)
+        skill = root / ".agents/skills/nemoclaw-contribution/SKILL.md"
+        skill.write_text(
+            skill.read_text(encoding="utf-8").replace(
+                "| `GITLAB_DLI` | `gitlab.com/nvidia/DLI` |\n",
+                "",
+            ),
+            encoding="utf-8",
+        )
+        self.assertTrue(
+            any(
+                "missing exclusive credential binding GITLAB_DLI"
+                in item
+                for item in audit.audit(root, paths)
+            )
+        )
+
+    def test_credential_bindings_cannot_be_swapped(self) -> None:
+        temporary, root, paths = self.fixture()
+        self.addCleanup(temporary.cleanup)
+        skill = root / ".agents/skills/nemoclaw-contribution/SKILL.md"
+        raw = skill.read_text(encoding="utf-8")
+        raw = raw.replace(
+            "| `GITLAB_DLI` | `gitlab.com/nvidia/DLI` |",
+            "| `GITLAB_DLI` | `github.com/NVDLI/NemoClawDLI` |",
+        ).replace(
+            "| `NEMOCLAWDLI_GITHUB` | `github.com/NVDLI/NemoClawDLI` |",
+            "| `NEMOCLAWDLI_GITHUB` | `gitlab.com/nvidia/DLI` |",
+        )
+        skill.write_text(raw, encoding="utf-8")
+        findings = audit.audit(root, paths)
+        self.assertTrue(any("missing exclusive credential binding GITLAB_DLI" in item
+                            for item in findings))
+        self.assertTrue(any("missing exclusive credential binding NEMOCLAWDLI_GITHUB" in item
+                            for item in findings))
+
+    def test_dlios_binding_cannot_change_repository_or_owner_source(self) -> None:
+        temporary, root, paths = self.fixture()
+        self.addCleanup(temporary.cleanup)
+        skill = root / ".agents/skills/nemoclaw-contribution/SKILL.md"
+        skill.write_text(
+            skill.read_text(encoding="utf-8").replace(
+                "internal GitLab `NemoClawDLIOS` origin; owner from `.gitlab/CODEOWNERS`",
+                "internal GitLab `OtherRepository` origin; owner supplied by the caller",
+            ),
+            encoding="utf-8",
+        )
+        self.assertTrue(
+            any(
+                "missing exclusive credential binding NEMOCLAW_DLIOS" in item
+                for item in audit.audit(root, paths)
+            )
+        )
+
+    def test_credential_safety_boundaries_cannot_be_relaxed(self) -> None:
+        temporary, root, paths = self.fixture()
+        self.addCleanup(temporary.cleanup)
+        skill = root / ".agents/skills/nemoclaw-contribution/SKILL.md"
+        raw = skill.read_text(encoding="utf-8")
+        raw = raw.replace("Never substitute", "You may substitute")
+        raw = raw.replace("Do not launch OAuth", "Launch OAuth")
+        raw = raw.replace("gitlab_master.com", "some_internal_host")
+        raw = raw.replace(
+            "An unmapped variable, including `NEMOCLAW_DLI_PAT`, is not a fallback:",
+            "An unmapped variable is a fallback:",
+        )
+        skill.write_text(raw, encoding="utf-8")
+        findings = audit.audit(root, paths)
+        for token in (
+            "gitlab_master.com",
+            "Never substitute",
+            "NEMOCLAW_DLI_PAT",
+            "Do not launch OAuth",
+        ):
+            with self.subTest(token=token):
+                self.assertTrue(
+                    any(f"missing credential safety boundary {token!r}" in item
+                        for item in findings)
+                )
+
     def test_malformed_skill_metadata_is_rejected(self) -> None:
         temporary, root, paths = self.fixture()
         self.addCleanup(temporary.cleanup)

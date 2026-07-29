@@ -51,6 +51,28 @@ policy change, or handoff.
   repository Python, validators, generators, inspections, and one-off probes. The host shell may
   orchestrate the container.
 
+## Bind credentials to one forge
+
+Resolve the remote before reading a credential. These bindings are exclusive:
+
+| Credential | Authorized forge and owner |
+| --- | --- |
+| `GITLAB_DLI` | `gitlab.com/nvidia/DLI` |
+| `NEMOCLAWDLI_GITHUB` | `github.com/NVDLI/NemoClawDLI` |
+| `NEMOCLAW_DLIOS` | internal GitLab `NemoClawDLIOS` origin; owner from `.gitlab/CODEOWNERS` |
+
+Treat the `gitlab_master.com` shorthand only as that configured internal DLIOS origin. GitLab
+remote paths may render the `DLI` namespace in lowercase; compare that owner path
+case-insensitively.
+Never substitute, sweep, or try one mapped credential against another forge, owner, or repository.
+An unmapped variable, including `NEMOCLAW_DLI_PAT`, is not a fallback: require an explicit target
+binding before use.
+
+Pass credentials only through the environment, standard input, or an ephemeral credential helper;
+never place them in arguments, logs, URLs, repository configuration, or persistent client
+configuration. On `401` or `403`, verify the one declared mapping and supported API interface, then
+report the exact blocker. Do not launch OAuth, prompt for credentials, or try other credentials.
+
 ## Work in the cheapest valid order
 
 1. Read the current issue, pull request, rulesets, environment policy, and remote main.
