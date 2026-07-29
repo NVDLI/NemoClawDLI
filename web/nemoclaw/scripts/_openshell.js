@@ -29,9 +29,10 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
        Enter). A browser-bound session stays direct. A pasted access session tries
        direct first and then its approved provider-bound relay.
        <code>relayWebSocket: true</code> explicitly selects that recovery route.
-       Returns <code>{ output, raw, frames, exitCode }</code> (<code>output</code>
+       Returns <code>{ output, raw, frames, exitCode, transport }</code> (<code>output</code>
        is ANSI-stripped; <code>exitCode</code> is the command's PTY exit status, or null if none
-       arrived). Reads the launchable URL from the OpenClaw probe. Launchable only.
+       arrived; <code>transport</code> identifies the direct or approved-relay route that opened).
+       Reads the launchable URL from the OpenClaw probe. Launchable only.
   */
   const connection = getOpenClawConnection();
   const rawUrl = (baseUrl || connection.rawUrl).replace(/\/+$/, "");
@@ -62,6 +63,7 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
     : direct.url && direct.url !== routed.url
       ? [direct.url, routed.url]
       : [direct.url];
+  const wsRoutes = wsUrls.map(url => url === routed.url && routed.viaProxy ? routed : direct);
   let launchableOrigin = rawUrl;
   try { launchableOrigin = new URL(rawUrl).origin; } catch (_) {}
   // Drop xterm control sequences so the returned text reads like a transcript.
@@ -84,7 +86,7 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
   };
   return await new Promise((resolve, reject) => {
     let raw = "", frames = 0, opened = false, idleT = null, exitCode = null;
-    let ws = null, candidate = 0, openT = null;
+    let ws = null, candidate = 0, openT = null, openedRoute = null;
     let finished = false, abortHandler = null;
     const totalT = setTimeout(() => opened ? finish() : fail(terminalOpenError()), totalMs);
     function settle() {
@@ -97,7 +99,13 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
     }
     function finish() {
       if (!settle()) return;
-      resolve({ output: clean(raw), raw: filterOpenClawRuntimeNoise(raw), frames, exitCode });
+      resolve({
+        output: clean(raw),
+        raw: filterOpenClawRuntimeNoise(raw),
+        frames,
+        exitCode,
+        transport: openedRoute?.viaProxy ? "approved-provider-relay-terminal" : "direct-terminal",
+      });
     }
     function fail(error) {
       if (!settle()) return;
@@ -123,7 +131,7 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
       }, budget);
       socket.onopen = () => {
         if (finished || socket !== ws) return;
-        opened = true; clearTimeout(openT); bump();
+        opened = true; openedRoute = wsRoutes[routeIndex]; clearTimeout(openT); bump();
         let i = 0;
         (function pump() {
           if (finished || i >= send.length) return;
@@ -161,7 +169,7 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
 }
 
 // Pomerium keeps its HttpOnly session between the browser and launchable.
-// The direct terminal reads two loopback bootstrap endpoints without exposing the cookie.
+// The terminal reads two loopback bootstrap endpoints without exposing the cookie.
 // A fixed map selects the command; no learner-controlled shell fragment is interpolated.
 export async function openclawLoopbackProbe(path, { baseUrl = null, signal = null } = {}) {
   const connection = getOpenClawConnection();
@@ -194,7 +202,7 @@ export async function openclawLoopbackProbe(path, { baseUrl = null, signal = nul
     body,
     json,
     frames: result.frames,
-    transport: "direct-terminal-loopback",
+    transport: `${result.transport || "terminal"}-loopback`,
   };
 }
 

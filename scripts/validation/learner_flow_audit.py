@@ -249,7 +249,7 @@ def audit_launchable_transport(surfaces: dict[str, str], connection: str, shared
     bootstrap = javascript_function(openclaw, "export async function openclawBootstrapRequest")
     _need(findings, bootstrap and
           "OPENCLAW_BOOTSTRAP_PATHS" in openclaw and
-          'if (provider === "pomerium" && !connection.accessSession)' in bootstrap and
+          'if (provider === "pomerium")' in bootstrap and
           "openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal })" in bootstrap and
           'headers["CF-Access-Jwt-Assertion"] = connection.accessSession;' in bootstrap and
           'headers["X-OpenClaw-Access-Provider"] = provider;' in bootstrap and
@@ -1974,10 +1974,10 @@ def self_test() -> list[str]:
              1,
          ),
          openshell, "bootstrap discovery"),
-        ("bootstrap Pomerium direct branch removed", surfaces, connection, shared_src,
+        ("bootstrap Pomerium manual-session loopback removed", surfaces, connection, shared_src,
          openclaw_src.replace(
+             'if (provider === "pomerium") {',
              'if (provider === "pomerium" && !connection.accessSession) {',
-             'if (provider === "cloudflare" && !connection.accessSession) {',
              1,
          ),
          openshell, "bootstrap discovery"),

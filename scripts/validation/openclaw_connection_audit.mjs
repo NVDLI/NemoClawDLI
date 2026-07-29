@@ -288,7 +288,7 @@ ok(openclaw.includes('getOpenClawConnection()') && openclaw.includes('setOpenCla
   'OpenClaw widgets bypass the shared connection registry');
 ok(openclaw.includes('export async function openclawBootstrapRequest') &&
    openclaw.includes('await openclawBootstrapRequest("/api/agent"') &&
-   openclaw.includes('provider === "pomerium" && !connection.accessSession') &&
+   openclaw.includes('if (provider === "pomerium")') &&
    openclaw.includes('OPENCLAW_BOOTSTRAP_PATHS'),
   'bootstrap discovery does not use the shared provider-aware request helper');
 ok(openclaw.includes('[text("What"), step.what || ""]') &&

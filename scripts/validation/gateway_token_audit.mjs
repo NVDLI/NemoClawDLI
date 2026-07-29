@@ -181,7 +181,7 @@ function audit(overrides = {}) {
       || !bootstrap
       || !files.helper.includes('await openclawBootstrapRequest("/api/agent"')
       || !files.helper.includes('gatewayTokenFromAgentMetadata(response.json)')
-      || !bootstrap.includes('if (provider === "pomerium" && !connection.accessSession)')
+      || !bootstrap.includes('if (provider === "pomerium")')
       || !files.helper.includes('openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal })')
       || !bootstrap.includes('headers["CF-Access-Jwt-Assertion"] = connection.accessSession;')
       || !bootstrap.includes('headers["X-OpenClaw-Access-Provider"] = provider;')
@@ -320,6 +320,7 @@ function selfTest() {
     ['automatic token bootstrap', { helper: base.helper.replaceAll('refreshOpenClawGatewayToken({ signal', 'removedGatewayTokenRefresh({ signal') }],
     ['metadata token discovery', { helper: base.helper.replace('gatewayTokenFromAgentMetadata(response.json)', 'null') }],
     ['Pomerium loopback bootstrap', { helper: base.helper.replace('openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal })', 'fetch(actionPath)') }],
+    ['Pomerium manual-session loopback bootstrap', { helper: base.helper.replace('if (provider === "pomerium")', 'if (provider === "pomerium" && !connection.accessSession)') }],
     ['bootstrap assertion header', { helper: base.helper.replace('headers["CF-Access-Jwt-Assertion"] = connection.accessSession;', 'headers["X-Removed-Assertion"] = connection.accessSession;') }],
     ['Pomerium provider header', { helper: base.helper.replace('headers["X-OpenClaw-Access-Provider"] = provider;', 'headers["X-OpenClaw-Access-Provider"] = "cloudflare";') }],
     ['Pomerium session header', { helper: base.helper.replace('headers["X-OpenClaw-Access-Session"] = connection.accessSession;', 'headers["X-OpenClaw-Access-Session"] = "";') }],
