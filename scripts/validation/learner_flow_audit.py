@@ -258,11 +258,15 @@ def audit_launchable_transport(surfaces: dict[str, str], connection: str, shared
     for name, text in sorted(surfaces.items()):
         if not name.endswith("/03a-kickstart.html"):
             continue
-        _need(findings, "helpers.openclawBootstrapRequest(PATH" in text and
+        _need(findings, "helpers.runOpenClawConnectionAudit({" in text and
+              "baseUrl: connection.rawUrl" in text and
+              "accessSession: connection.accessSession" in text and
+              "checks: result.checks" in text and
+              "helpers.log.json('redacted response', redacted)" not in text and
               "const TRANSPORT =" not in text and
               "X-OpenClaw-Access-Session" not in text and
               "CF-Access-Jwt-Assertion" not in text,
-              f"{name}: learner bootstrap code must delegate provider routing to the shared helper")
+              f"{name}: learner connection code must delegate all four routes to the shared helper")
         _need(findings, 'mountOpenClawConnectionAudit("#probe-claw"' in text and
               "wsRelayControls:" not in text,
               f"{name}: launchable setup must expose the guided audit without a learner relay switch")
@@ -1665,9 +1669,13 @@ def self_test() -> list[str]:
     helper_registry_cases = [
         (
             "registered helper removed",
-            shared.replace(", mountModelEndpointProbe, openclawBootstrapRequest,", ", mountModelEndpointProbe,", 1),
+            shared.replace(
+                ", refreshOpenClawGatewayToken, runOpenClawConnectionAudit, redactOpenClawDiagnostic,",
+                ", refreshOpenClawGatewayToken, redactOpenClawDiagnostic,",
+                1,
+            ),
             runtime_pages,
-            "helpers.openclawBootstrapRequest",
+            "helpers.runOpenClawConnectionAudit",
         ),
         (
             "unknown lesson helper added",
@@ -1998,16 +2006,30 @@ def self_test() -> list[str]:
         ("learner probe duplicates provider routing",
          {**surfaces, "web/nemoclaw/03a-kickstart.html":
           surfaces["web/nemoclaw/03a-kickstart.html"].replace(
-              "const PATH = '/api/agent';", "const TRANSPORT = 'direct';\nconst PATH = '/api/agent';", 1)},
-         connection, shared_src, openclaw_src, openshell, "learner bootstrap code"),
+              "const connection = helpers.getOpenClawConnection();",
+              "const TRANSPORT = 'direct';\nconst connection = helpers.getOpenClawConnection();",
+              1)},
+         connection, shared_src, openclaw_src, openshell, "learner connection code"),
+        ("learner probe drops four-route helper",
+         {**surfaces, "web/nemoclaw/03a-kickstart.html":
+          surfaces["web/nemoclaw/03a-kickstart.html"].replace(
+              "helpers.runOpenClawConnectionAudit({", "helpers.runSingleOpenClawCheck({", 1)},
+         connection, shared_src, openclaw_src, openshell, "learner connection code"),
+        ("learner probe restores duplicate diagnostic output",
+         {**surfaces, "web/nemoclaw/03a-kickstart.html":
+          surfaces["web/nemoclaw/03a-kickstart.html"].replace(
+              "return redacted;",
+              "helpers.log.json('redacted response', redacted);\nreturn redacted;",
+              1)},
+         connection, shared_src, openclaw_src, openshell, "learner connection code"),
         # A published locale page has no HTML file of its own; it renders from a key-based
         # resource onto this template. Derive the locale fixture from the canonical page so the
         # mutation still proves the detector reads a localized 03a surface at any locale path.
-        ("learner probe drops shared bootstrap helper on a locale page",
+        ("learner probe drops shared four-route helper on a locale page",
          {**surfaces, "i18n/de/web/nemoclaw/03a-kickstart.html":
           surfaces["web/nemoclaw/03a-kickstart.html"].replace(
-              "helpers.openclawBootstrapRequest(PATH", "helpers.fetchOpenClawDirect(PATH", 1)},
-         connection, shared_src, openclaw_src, openshell, "learner bootstrap code"),
+              "helpers.runOpenClawConnectionAudit({", "helpers.runSingleOpenClawCheck({", 1)},
+         connection, shared_src, openclaw_src, openshell, "learner connection code"),
         ("gateway leaves the shared connection state", surfaces, connection,
          shared_src, openclaw_src.replace("getOpenClawConnection()", "readLegacyConnection()"), openshell,
          "gateway sockets must read the shared normalized connection state"),

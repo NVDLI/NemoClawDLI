@@ -196,15 +196,44 @@ try {
     const raw = [...host.querySelectorAll('.claw-audit-raw code')].map(node => node.textContent || '').join('\n');
     return {
       statuses: [...host.querySelectorAll('.claw-audit-step')].map(node => node.dataset.status),
+      explanations: [...host.querySelectorAll('.claw-audit-step')].map(node =>
+        node.querySelector('.claw-audit-explain')?.textContent || ''),
       summary: host.querySelector('.claw-audit-summary')?.textContent || '',
       raw,
     };
   });
   ok(connectionAudit.statuses.length === 4 &&
      connectionAudit.statuses.every(status => status === 'passed') &&
+     connectionAudit.explanations.every(text =>
+       text.includes('What:') &&
+       text.includes('Credential:') &&
+       !text.includes('Credential: <redacted>')) &&
      /Connection ready/.test(connectionAudit.summary) &&
      !connectionAudit.raw.includes('test-access-session'),
     `guided connection audit did not pass and redact all required routes: ${JSON.stringify(connectionAudit)}`);
+  await page.locator('#claw-raw-cell .rc-run').click();
+  await page.waitForFunction(() => {
+    const state = document.querySelector('#claw-raw-cell')?.dataset.state;
+    return state === 'succeeded' || state === 'failed';
+  }, null, { timeout: 65000 });
+  const learnerAuditCell = await page.evaluate(() => {
+    const source = document.querySelector('#claw-raw-cell .rc-code')?.value || '';
+    const output = document.querySelector('#claw-raw-cell .cell-output-panel')?.textContent || '';
+    return {
+      state: document.querySelector('#claw-raw-cell')?.dataset.state || '',
+      allRoutes: ['agent-metadata', 'gateway-websocket', 'terminal-websocket', 'health']
+        .every(id => output.includes(id)),
+      sharedHelper: source.includes('helpers.runOpenClawConnectionAudit({'),
+      duplicateOutput: source.includes("helpers.log.json('redacted response'"),
+      leakedSession: output.includes('test-access-session'),
+    };
+  });
+  ok(learnerAuditCell.state === 'succeeded' &&
+     learnerAuditCell.allRoutes &&
+     learnerAuditCell.sharedHelper &&
+     !learnerAuditCell.duplicateOutput &&
+     !learnerAuditCell.leakedSession,
+    `editable learner audit did not exercise all four redacted routes: ${JSON.stringify(learnerAuditCell)}`);
 
   // Keep the older endpoint-probe fixture as a lower-level transport regression test.
   // Learners see only the guided audit verified above.

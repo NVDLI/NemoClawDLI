@@ -318,10 +318,10 @@
       "source": "OpenClaw implements that same route internally too. A separately hosted course reads its\n      metadata through the launchable access layer, then opens authenticated WebSockets directly\n      from the signed-in browser.",
       "value": "OpenClaw también implementa esa ruta internamente. Un curso alojado por separado lee sus metadatos mediante la capa de acceso del launchable y después abre WebSockets autenticados directamente desde el navegador que inició sesión."
     },
-    "text.0f7c51aa455f": {
+    "text.ac5740663e09": {
       "type": "text",
-      "source": "the probe's request, as editable code",
-      "value": "La solicitud de la sonda como código editable"
+      "source": "all four connection checks, as editable code",
+      "value": "las cuatro pruebas de conexión, como código editable"
     },
     "text.0f82aca66af9": {
       "type": "text",
@@ -571,10 +571,10 @@
       "source": "Module 3 · Part A of 3 · live calls begin",
       "value": "Módulo 3 · Parte A de 3"
     },
-    "text.ff5de7b6e6b1": {
+    "text.459be464036a": {
       "type": "text",
-      "source": "Use the probe UI above for the normal path. This cell uses the same saved provider decision and exposes the bootstrap response for inspection.",
-      "value": "Usa la interfaz de la sonda anterior para el recorrido habitual. Esta celda usa la misma selección de proveedor guardada y expone la respuesta de inicialización para examinarla."
+      "source": "Use the probe UI above for the normal path. This cell reruns the same four checks and returns their redacted requests and responses.",
+      "value": "Usa la interfaz de la prueba anterior para el recorrido habitual. Esta celda repite las mismas cuatro pruebas y devuelve sus solicitudes y respuestas con los datos sensibles ocultos."
     },
     "text.4004db613c6e": {
       "type": "text",
@@ -668,11 +668,6 @@
       "source": " Use the existing gateway socket to list models and scheduled jobs.",
       "value": " Use the existing gateway socket to list models and scheduled jobs.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
-    },
-    "text.52d30f4ab661": {
-      "type": "text",
-      "source": " const PATH = '/healthz'; // alternate read-only bootstrap endpoint",
-      "value": " const PATH = '/healthz'; // endpoint de inicialización alternativo de solo lectura"
     },
     "text.5337ff8b7cd0": {
       "type": "text",
@@ -860,10 +855,10 @@
       "value": " ms; give up on a model with no first token by now (some are slow to start)",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
     },
-    "text.7abb42fdff30": {
+    "text.1637a7765d02": {
       "type": "text",
-      "source": " The shared helper reads the normalized Module 3a connection and selects transport.",
-      "value": " El helper compartido lee la conexión normalizada del Módulo 3a y selecciona el transporte."
+      "source": " The shared audit reads the normalized Module 3a connection and selects transport.",
+      "value": " La auditoría compartida lee la conexión normalizada del Módulo 3a y selecciona el transporte."
     },
     "text.7b30f0e7342a": {
       "type": "text",
@@ -1334,12 +1329,6 @@
       "source": "raw models.list",
       "value": "datos sin procesar de models.list"
     },
-    "text.d245234894bb": {
-      "type": "text",
-      "source": "/api/agent",
-      "value": "/api/agent",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
-    },
     "text.d257e553fce9": {
       "type": "text",
       "source": " One call wipes the conversation the gateway holds for this key.",
@@ -1518,11 +1507,6 @@
       "source": "Update the credential in the Control UI, then reconnect.",
       "value": "Actualiza la credencial en la Control UI y vuelve a conectar."
     },
-    "text.fe5d9ad8fc1c": {
-      "type": "text",
-      "source": " read-only token-discovery endpoint",
-      "value": " endpoint de solo lectura para descubrir el token"
-    },
     "text.ff72caa36dca": {
       "type": "text",
       "source": "data:",
@@ -1575,15 +1559,15 @@
       "source": "\n      <strong>If the NemoClaw check times out or returns a 502.</strong>\n      The agent harness likely has not finished booting, which usually means the\n      launchable started before OpenClaw finished loading its policy YAML. Wait\n      30 seconds and test again. If it stays down, use the Recover cell in\n      the gateway section below before continuing.\n    ",
       "value": "\n      <strong>Si la prueba de NemoClaw agota el tiempo de espera o devuelve 502.</strong>\n      Es probable que el entorno del agente aún no haya terminado de arrancar. Esto suele ocurrir cuando el\n      launchable se inicia antes de que OpenClaw termine de cargar su política YAML. Espera\n      30 segundos y vuelve a probar. Si sigue sin responder, usa la celda Recuperar de\n      la sección del gateway antes de continuar.\n    "
     },
-    "text.8c78bd6300f1": {
+    "text.765989849995": {
       "type": "text",
-      "source": "Inspect one HTTP request",
-      "value": "Inspecciona una solicitud HTTP"
+      "source": "Inspect all four connection routes",
+      "value": "Inspecciona las cuatro rutas de conexión"
     },
-    "rich.bde398e9889b": {
-      "type": "rich",
-      "source": "The connection check and exposed code share the normalized launchable connection and\n      provider decision. The helper prints the status, headers, and body after redaction.\n      Change <code>PATH</code> between <code>/api/agent</code> and <code>/healthz</code> to\n      inspect either bootstrap response.",
-      "value": "La prueba de conexión y el código visible comparten la conexión normalizada del launchable y\n      la selección del proveedor. El helper muestra el estado, los encabezados y el cuerpo con los datos sensibles ocultos.\n      Cambia <code>PATH</code> entre <code>/api/agent</code> y <code>/healthz</code> para\n      inspeccionar cualquiera de las respuestas iniciales."
+    "text.9f0a32e2aa93": {
+      "type": "text",
+      "source": "The connection check and exposed code share the normalized launchable connection and\n      provider decision. Run the editable cell to test agent metadata, gateway, terminal, and\n      health in order, then inspect its automatically rendered redacted result.",
+      "value": "La prueba de conexión y el código visible comparten la conexión normalizada del launchable y la decisión del proveedor. Ejecuta la celda editable para probar, en orden, los metadatos del agente, el gateway, la terminal y el estado; después, inspecciona el resultado renderizado automáticamente con los datos sensibles ocultos."
     },
     "text.22759a3f3bc5": {
       "type": "text",
@@ -1595,10 +1579,11 @@
       "source": "Enter Base URL and Access session. Provider, relay route, and gateway token are discovered automatically.",
       "value": "Introduce la URL base y la sesión de acceso. El proveedor, la ruta del relay y el token del gateway se descubren automáticamente."
     },
-    "text.ae4e62151b92": {
+    "text.8a5edab28263": {
       "type": "text",
-      "source": "redacted response",
-      "value": "respuesta con datos sensibles ocultos"
+      "source": "/",
+      "value": "/",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
     }
   }
 }
