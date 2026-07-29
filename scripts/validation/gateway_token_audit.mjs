@@ -118,11 +118,15 @@ function audit(overrides = {}) {
     if (/token=\(\[a-f0-9\]/i.test(source)) {
       findings.push(`${key}: hex-only gateway-token parser returned`);
     }
-    if (!source.includes('helpers.openclawBootstrapRequest(PATH')
+    if (!source.includes('helpers.runOpenClawConnectionAudit({')
+        || !source.includes('baseUrl: connection.rawUrl')
+        || !source.includes('accessSession: connection.accessSession')
+        || !source.includes('checks: result.checks')
+        || source.includes("helpers.log.json('redacted response', redacted)")
         || source.includes('const TRANSPORT =')
         || source.includes('X-OpenClaw-Access-Session')
         || source.includes('CF-Access-Jwt-Assertion')) {
-      findings.push(`${key}: learner bootstrap probe duplicates or bypasses shared provider routing`);
+      findings.push(`${key}: learner connection audit does not delegate all four routes to the shared provider decision`);
     }
   }
 
@@ -297,8 +301,10 @@ function selfTest() {
         'mountRemovedConnectionAudit("#probe-claw"',
       ) },
     ]] : []),
-    ['learner bootstrap helper', { en: base.en.replace('helpers.openclawBootstrapRequest(PATH', 'helpers.fetchOpenClawDirect(PATH') }],
-    ['learner transport branch', { en: base.en.replace("const PATH = '/api/agent';", "const TRANSPORT = 'direct';\nconst PATH = '/api/agent';") }],
+    ['learner four-route helper', { en: base.en.replace('helpers.runOpenClawConnectionAudit({', 'helpers.runSingleOpenClawCheck({') }],
+    ['learner connection input', { en: base.en.replace('baseUrl: connection.rawUrl', 'baseUrl: "https://example.invalid"') }],
+    ['learner duplicate diagnostic output', { en: base.en.replace('return redacted;', "helpers.log.json('redacted response', redacted);\nreturn redacted;") }],
+    ['learner transport branch', { en: base.en.replace('const connection = helpers.getOpenClawConnection();', "const TRANSPORT = 'direct';\nconst connection = helpers.getOpenClawConnection();") }],
     ['approved relay construction', { connection: base.connection.replace('new URL(DEFAULT_OPENCLAW_PROXY_BASE)', 'new URL(config.base)') }],
     ['retired presenter query', { connection: base.connection.replace('export function getOpenClawProxyConfig()', 'const legacyRelay = new URLSearchParams(location.search).get("openclaw_proxy");\n\nexport function getOpenClawProxyConfig()') }],
     ['same-origin launchable exception', { connection: base.connection.replace('if (loc && upstream.origin === loc.origin) return false;', '') }],

@@ -289,11 +289,10 @@
       the gateway section below before continuing.
     </div>
 
-    <h3>Inspect one HTTP request</h3>
+    <h3>Inspect all four connection routes</h3>
     <p>The connection check and exposed code share the normalized launchable connection and
-      provider decision. The helper prints the status, headers, and body after redaction.
-      Change <code>PATH</code> between <code>/api/agent</code> and <code>/healthz</code> to
-      inspect either bootstrap response.</p>
+      provider decision. Run the editable cell to test agent metadata, gateway, terminal, and
+      health in order, then inspect its automatically rendered redacted result.</p>
     <p>
       A Pomerium launchable keeps bootstrap and WebSocket traffic direct: HTTP checks run through
       its terminal loopback. Cloudflare sends HTTP checks through the approved relay; its WebSockets
@@ -747,32 +746,28 @@ return { ranked: ok.map(r => r.model), errors: results.filter(r => r.err).length
       intro: "Enter Base URL and Access session. Provider, relay route, and gateway token are discovered automatically.",
     });
 
-    // ── Raw request console: the probe's fetch as editable code ───────────────────
+    // ── Editable connection audit: all four routes ────────────────────────────────
     mountRunCell("#claw-raw-cell", {
-      label: "the probe's request, as editable code",
+      label: "all four connection checks, as editable code",
       openCode: true,
-      intro: "Use the probe UI above for the normal path. This cell uses the same saved provider decision and exposes the bootstrap response for inspection.",
+      intro: "Use the probe UI above for the normal path. This cell reruns the same four checks and returns their redacted requests and responses.",
       autorun: false,
-      code: `// The shared helper reads the normalized Module 3a connection and selects transport.
-const PATH = '/api/agent';  // read-only token-discovery endpoint
-// const PATH = '/healthz'; // alternate read-only bootstrap endpoint
-
-const result = await helpers.openclawBootstrapRequest(PATH, {
+      code: `// The shared audit reads the normalized Module 3a connection and selects transport.
+const connection = helpers.getOpenClawConnection();
+const result = await helpers.runOpenClawConnectionAudit({
+  baseUrl: connection.rawUrl,
+  accessSession: connection.accessSession,
   signal: helpers.signal,
 });
 helpers.log.kv({
-  status: result.status + ' ' + result.statusText,
-  transport: result.transport,
+  provider: result.provider,
+  passed: result.checks.filter(check => check.ok).length + '/' + result.checks.length,
 });
 const redacted = helpers.redactOpenClawDiagnostic({
-  status: result.status,
-  statusText: result.statusText,
-  transport: result.transport,
-  url: result.displayUrl,
-  headers: result.headers,
-  body: result.json ?? result.body,
+  provider: result.provider,
+  baseUrl: result.baseUrl,
+  checks: result.checks,
 });
-helpers.log.json('redacted response', redacted);
 return redacted;
 `,
     });

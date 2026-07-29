@@ -119,6 +119,24 @@ ok(pomeriumRegistered.accessSession === 'opaque-session' &&
    !storage.get('nemoclaw_openclaw_access_session_v1') &&
    secretStorage.get('nemoclaw_openclaw_access_session_v1') === 'opaque-session',
   'Pomerium fallback session was not restricted to tab-scoped storage');
+
+// A stale provider from an interrupted or older write must not brick the
+// learner's next host-family switch before the visible URL can be saved.
+storage.set(mod.OPENCLAW_RAW_URL_KEY, launchable);
+storage.set(mod.OPENCLAW_ACCESS_PROVIDER_KEY, 'pomerium');
+const healedProvider = mod.migrateOpenClawConnectionStorage();
+ok(healedProvider.rawUrl === launchable &&
+   storage.get(mod.OPENCLAW_ACCESS_PROVIDER_KEY) === 'auto' &&
+   storage.get(mod.OPENCLAW_URL_KEY) === approved + '/https/nemoclaw-test123.brevlab.com',
+  'stale host/provider mismatch was not healed to automatic');
+const cloudflareAfterPomerium = mod.setOpenClawConnection({
+  rawUrl: launchable,
+  accessProvider: 'cloudflare',
+  accessSession: 'new-cloudflare-session',
+});
+ok(cloudflareAfterPomerium.resolvedAccessProvider === 'cloudflare' &&
+   cloudflareAfterPomerium.accessSession === 'new-cloudflare-session',
+  'Pomerium-to-Cloudflare UI rotation did not preserve the new provider session');
 const pomeriumHttp = mod.openclawHttpUrl(
   pomeriumLaunchable, '/api/agent', undefined, 'pomerium', 'opaque-session');
 ok(pomeriumHttp.viaProxy &&
@@ -273,6 +291,15 @@ ok(openclaw.includes('export async function openclawBootstrapRequest') &&
    openclaw.includes('provider === "pomerium" && !connection.accessSession') &&
    openclaw.includes('OPENCLAW_BOOTSTRAP_PATHS'),
   'bootstrap discovery does not use the shared provider-aware request helper');
+ok(openclaw.includes('[text("What"), step.what || ""]') &&
+   openclaw.includes('[text("Credential"), request.authSummary || ""]') &&
+   openclaw.includes('what: "Returns launchable agent metadata') &&
+   openclaw.includes('what: "Carries authenticated OpenClaw JSON-RPC') &&
+   openclaw.includes('what: "Opens an operator PTY') &&
+   openclaw.includes('what: "Reports whether the launchable HTTP service is alive') &&
+   openclaw.includes('authSummary: accessCredentialDelivery(') &&
+   !openclaw.includes('request.credentialDelivery || request.gatewayToken'),
+  'connection audit lost endpoint explanations or useful redacted credential delivery');
 // A locale page is the bytes the build publishes. When it ships from a key-based resource there is
 // no HTML file to read, so the caller renders the published pages and names their root here.
 const localeRoot = process.env.NEMOCLAW_LOCALE_PAGES || 'i18n';
@@ -288,11 +315,15 @@ for (const entry of fs.readdirSync(localeRoot, { withFileTypes: true })) {
 for (const courseRoot of courseRoots) {
   const pagePath = path.join(courseRoot, '03a-kickstart.html');
   const page = fs.readFileSync(pagePath, 'utf8');
-  ok(page.includes('helpers.openclawBootstrapRequest(PATH') &&
+  ok(page.includes('helpers.runOpenClawConnectionAudit({') &&
+     page.includes('baseUrl: connection.rawUrl') &&
+     page.includes('accessSession: connection.accessSession') &&
+     page.includes('checks: result.checks') &&
+     !page.includes("helpers.log.json('redacted response', redacted)") &&
      !page.includes("const TRANSPORT =") &&
      !page.includes('X-OpenClaw-Access-Session') &&
      !page.includes('CF-Access-Jwt-Assertion'),
-    `${pagePath}: learner probe duplicated or bypassed the shared provider decision`);
+    `${pagePath}: learner probe does not expose all four shared, redacted connection checks`);
 }
 const openclawCli = fs.readFileSync('web/nemoclaw/scripts/_openclaw_cli.js', 'utf8');
 ok(openclawCli.includes('runtime.openclawGatewayWsUrl(connection.rawUrl, connection.accessSession, null, null, connection.accessProvider).url'),

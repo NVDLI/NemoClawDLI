@@ -216,6 +216,13 @@ def audit(overrides: dict[str, str] | None = None) -> list[str]:
         "redactOpenClawDiagnostic",
         'if (provider === "pomerium" && !connection.accessSession)',
         'transport: viaLoopback ? "launchable terminal loopback"',
+        '[text("What"), step.what || ""]',
+        '[text("Credential"), request.authSummary || ""]',
+        'what: "Returns launchable agent metadata',
+        'what: "Carries authenticated OpenClaw JSON-RPC',
+        'what: "Opens an operator PTY',
+        'what: "Reports whether the launchable HTTP service is alive',
+        "authSummary: accessCredentialDelivery(",
     ):
         if token not in openclaw:
             findings.append(f"OpenClaw connection audit lost required route or redaction: {token}")
@@ -282,6 +289,8 @@ def self_test() -> list[str]:
         ("probe session dropped", {OPENCLAW: openclaw.replace("accessProvider,\n      accessSession,", 'accessProvider,\n      "",', 1)}, "probe path contract"),
         ("connection metadata route removed", {OPENCLAW: openclaw.replace('const response = await openclawBootstrapRequest("/api/agent"', 'const response = await openclawBootstrapRequest("/api/agents-broken"', 1)}, "required route or redaction"),
         ("connection route order changed", {OPENCLAW: openclaw.replace('id: "agent-metadata"', 'id: "terminal-websocket"', 1)}, "must run metadata"),
+        ("connection endpoint explanation removed", {OPENCLAW: openclaw.replace('[text("What"), step.what || ""]', '[text("Endpoint"), step.title || ""]', 1)}, "required route or redaction"),
+        ("connection credential explanation redacted away", {OPENCLAW: openclaw.replace('[text("Credential"), request.authSummary || ""]', '[text("Credential"), request.gatewayToken || ""]', 1)}, "required route or redaction"),
         ("Pomerium manual relay removed", {OPENCLAW: openclaw.replace('if (provider === "pomerium" && !connection.accessSession)', 'if (provider === "pomerium")', 1)}, "required route or redaction"),
         ("gateway silently selects the relay", {OPENCLAW: openclaw.replace("probeOpenClawGatewayConnection({ signal, relayWebSocket: false })", "probeOpenClawGatewayConnection({ signal, relayWebSocket: true })", 1)}, "required route or redaction"),
         ("model route panel removed", {pages[1]: localized.replace('id="model-route-settings"', 'id="removed-model-route-settings"', 1)}, "model route source"),

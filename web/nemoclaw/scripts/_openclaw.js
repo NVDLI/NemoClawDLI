@@ -271,7 +271,7 @@ function openClawHttpDiagnostic(path, connection) {
       url: viaLoopback ? connection.rawUrl.replace(/\/+$/, "") + path : route.displayUrl,
       upstreamUrl: connection.rawUrl.replace(/\/+$/, "") + path,
       transport: viaLoopback ? "launchable terminal loopback" : route.viaProxy ? "hosted relay" : "direct browser",
-      credentialDelivery: viaLoopback
+      authSummary: viaLoopback
         ? "The launchable terminal makes this request on the learner's behalf; no browser cookie is copied."
         : accessCredentialDelivery(provider, route.viaProxy, connection.accessSession),
       headers: viaLoopback ? {} : headers,
@@ -294,7 +294,8 @@ export async function probeOpenClawGatewayConnection({ signal = null, timeoutMs 
     url: route.displayUrl,
     upstreamUrl: connection.rawUrl.replace(/\/+$/, "") + "/cli/gateway",
     transport: route.viaProxy ? "hosted relay" : "direct browser",
-    credentialDelivery: accessCredentialDelivery(provider, route.viaProxy, connection.accessSession),
+    authSummary: accessCredentialDelivery(provider, route.viaProxy, connection.accessSession) +
+      " The gateway token discovered from /api/agent is sent only in connect.auth.token.",
     connect: {
       method: "connect",
       role: "operator",
@@ -404,8 +405,8 @@ export async function runOpenClawConnectionAudit({
   const notify = step => {
     try { onStep?.(redactOpenClawDiagnostic(step)); } catch (_) {}
   };
-  const execute = async ({ id, title, purpose, request }, task) => {
-    const step = { id, title, purpose, request: redactOpenClawDiagnostic(request), status: "running" };
+  const execute = async ({ id, title, what, purpose, request }, task) => {
+    const step = { id, title, what, purpose, request: redactOpenClawDiagnostic(request), status: "running" };
     notify(step);
     const started = performance.now();
     try {
@@ -429,6 +430,7 @@ export async function runOpenClawConnectionAudit({
   const metadata = await execute({
     id: "agent-metadata",
     title: "Agent metadata",
+    what: "Returns launchable agent metadata, including the dashboard URL used to discover the gateway token.",
     purpose: "Confirms launchable authentication and discovers the gateway token used by later WebSocket checks.",
     request: metadataDiagnostic.request,
   }, async () => {
@@ -472,23 +474,26 @@ export async function runOpenClawConnectionAudit({
   await execute({
     id: "gateway-websocket",
     title: "Gateway WebSocket",
+    what: "Carries authenticated OpenClaw JSON-RPC for agent sessions, tools, models, and control operations.",
     purpose: "Confirms /cli/gateway reaches a challenge and accepts the token discovered from agent metadata.",
     request: {
       method: "WEBSOCKET",
+      authSummary: accessCredentialDelivery(provider, Boolean(relayGatewayRoute), accessSession) +
+        " The gateway token discovered from /api/agent is sent only in connect.auth.token.",
       attempts: [
         {
           url: directGatewayRoute.displayUrl,
           transport: "direct browser",
-          credentialDelivery: accessCredentialDelivery(provider, false, accessSession),
+          authSummary: accessCredentialDelivery(provider, false, accessSession),
         },
         ...(relayGatewayRoute ? [{
           url: relayGatewayRoute.displayUrl,
           transport: "hosted relay fallback",
-          credentialDelivery: accessCredentialDelivery(provider, true, accessSession),
+          authSummary: accessCredentialDelivery(provider, true, accessSession),
         }] : []),
       ],
       upstreamUrl: rawUrl + "/cli/gateway",
-      gatewayToken: metadata.ok ? "discovered from /api/agent and sent as connect.auth.token" : "unavailable",
+      gatewayAuthentication: metadata.ok ? "discovered from /api/agent and sent as connect.auth.token" : "unavailable",
     },
   }, async () => {
     const attempts = [];
@@ -527,19 +532,22 @@ export async function runOpenClawConnectionAudit({
   await execute({
     id: "terminal-websocket",
     title: "Terminal WebSocket",
+    what: "Opens an operator PTY on the launchable host for terminal commands and OpenShell access.",
     purpose: "Confirms /ws/terminal opens an authenticated PTY and returns a harmless marker.",
     request: {
       method: "WEBSOCKET",
+      authSummary: accessCredentialDelivery(provider, Boolean(relayTerminalRoute), accessSession) +
+        " The terminal route uses launchable access only; it does not receive the gateway token.",
       attempts: [
         {
           url: directTerminalRoute.displayUrl,
           transport: "direct browser",
-          credentialDelivery: accessCredentialDelivery(provider, false, accessSession),
+          authSummary: accessCredentialDelivery(provider, false, accessSession),
         },
         ...(relayTerminalRoute ? [{
           url: relayTerminalRoute.displayUrl,
           transport: "hosted relay fallback",
-          credentialDelivery: accessCredentialDelivery(provider, true, accessSession),
+          authSummary: accessCredentialDelivery(provider, true, accessSession),
         }] : []),
       ],
       upstreamUrl: rawUrl + terminalPath,
@@ -571,6 +579,7 @@ export async function runOpenClawConnectionAudit({
   await execute({
     id: "health",
     title: "Health",
+    what: "Reports whether the launchable HTTP service is alive after authenticated routes are established.",
     purpose: "Confirms the authenticated launchable health route after metadata and both WebSocket paths work.",
     request: healthDiagnostic.request,
   }, async () => {
@@ -1637,8 +1646,9 @@ export function mountOpenClawConnectionAudit(targetSel, opts = {}) {
     explain.innerHTML = "";
     const lines = [
       [text("Query"), request.url || request.upstreamUrl || ""],
+      [text("What"), step.what || ""],
       [text("Why"), step.purpose || ""],
-      [text("Credential"), request.credentialDelivery || request.gatewayToken || ""],
+      [text("Credential"), request.authSummary || ""],
     ];
     if (step.error) lines.push([text("Failure"), step.error]);
     for (const [label, value] of lines) {

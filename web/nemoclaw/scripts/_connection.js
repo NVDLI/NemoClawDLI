@@ -243,7 +243,17 @@ export function migrateOpenClawConnectionStorage() {
     }
     return { rawUrl: "", migrated: !!(beforeRaw || beforeEffective) };
   }
-  const accessProvider = target.getItem(OPENCLAW_ACCESS_PROVIDER_KEY) || "auto";
+  let accessProvider = target.getItem(OPENCLAW_ACCESS_PROVIDER_KEY) || "auto";
+  try {
+    accessProviderForOpenClawUrl(clean, accessProvider);
+  } catch (error) {
+    // Older or interrupted writes can leave the previous host family's explicit
+    // provider beside a newly entered launchable URL. The allowlisted hostname
+    // is authoritative, so heal only this exact mismatch back to automatic.
+    if (error?.message !== "Selected access provider does not match the launchable URL") throw error;
+    accessProvider = "auto";
+    target.setItem(OPENCLAW_ACCESS_PROVIDER_KEY, accessProvider);
+  }
   const secrets = secretStorage();
   const accessSession = secrets?.getItem(OPENCLAW_ACCESS_SESSION_KEY) ||
     secrets?.getItem(OPENCLAW_ACCESS_JWT_KEY) || "";
@@ -292,19 +302,25 @@ export function setOpenClawConnection({ rawUrl, token, accessProvider, accessSes
     accessSession: nextAccessSession,
     accessJwt: nextAccessSession,
   };
+  const effectiveUrl = clean
+    ? (openclawHttpUrl(
+        clean, "", getOpenClawProxyConfig(), nextAccessProvider, nextAccessSession,
+      ).url || clean)
+    : "";
   if (clean) {
+    // Compute and validate first, then persist the provider before its URL.
+    // Readers never observe a cross-family host/provider pair.
+    target.setItem(OPENCLAW_ACCESS_PROVIDER_KEY, nextAccessProvider);
     target.setItem(OPENCLAW_RAW_URL_KEY, clean);
-    target.setItem(OPENCLAW_URL_KEY, openclawHttpUrl(
-      clean, "", getOpenClawProxyConfig(), nextAccessProvider, nextAccessSession,
-    ).url || clean);
+    target.setItem(OPENCLAW_URL_KEY, effectiveUrl);
   } else {
+    target.setItem(OPENCLAW_ACCESS_PROVIDER_KEY, nextAccessProvider);
     target.removeItem(OPENCLAW_RAW_URL_KEY);
     target.removeItem(OPENCLAW_URL_KEY);
   }
   if (nextToken) secrets?.setItem(OPENCLAW_TOKEN_KEY, nextToken);
   else secrets?.removeItem(OPENCLAW_TOKEN_KEY);
   target.removeItem(OPENCLAW_TOKEN_KEY);
-  target.setItem(OPENCLAW_ACCESS_PROVIDER_KEY, nextAccessProvider);
   if (nextAccessSession) secrets?.setItem(OPENCLAW_ACCESS_SESSION_KEY, nextAccessSession);
   else secrets?.removeItem(OPENCLAW_ACCESS_SESSION_KEY);
   target.removeItem(OPENCLAW_ACCESS_SESSION_KEY);
