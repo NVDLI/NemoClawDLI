@@ -261,9 +261,10 @@ function audit(overrides = {}) {
   }
   if (!files.runtime.includes('expectsGateway:')
       || !files.runtime.includes('activity.allFrames > 0 && activity.resOk > 0')
-      || !files.runtime.includes('const gatewayMissing =')
+      || !files.runtime.includes('const gatewayExpected = !!CLAW_URL')
+      || !files.runtime.includes('const gatewayMissing = gatewayExpected')
       || files.runtime.includes('const expectedTools = !!(CLAW_URL && CLAW_TOKEN)')) {
-    findings.push('full-canvas harness must use flow-specific gateway evidence instead of a blanket tool requirement');
+    findings.push('full-canvas harness must fail closed on token bootstrap and use flow-specific gateway evidence');
   }
   if (!files.lab.includes('--cron-contract requires --gateway-only')
       || !files.lab.includes('--cron-contract) cron_contract=1')) {
@@ -327,6 +328,7 @@ function selfTest() {
     ['hidden full-canvas flow click', { runtime: base.runtime.replace("document.querySelectorAll('.cf-btn-run')[i]?.click()", "document.querySelectorAll('.cf-btn-run')[0]?.click()") }],
     ['wrong full-canvas running selector', { runtime: base.runtime.replace("flow?.querySelector('.cf-panel.running')", "flow?.querySelector('.cf-panel.cf-running')") }],
     ['blanket full-canvas tool requirement', { runtime: base.runtime.replace('const gatewayMissing =', 'const expectedTools =') }],
+    ['token-bootstrap false green', { runtime: base.runtime.replace('const gatewayExpected = !!CLAW_URL', 'const gatewayExpected = !!(CLAW_URL && CLAW_TOKEN)') }],
     ['runtime noise filter', { runtimeText: base.runtimeText.replace('/proc\\/self\\/oom_score_adj', '/proc/noise') }],
     ['nested runtime filter', { runtimeText: base.runtimeText.replace('filterOpenClawRuntimeValue(value)', 'removedRuntimeValueFilter(value)') }],
     ['final event delivery', { helper: base.helper.replace('deliverFull(openclawMessageText(pl.message)); done(false);', 'done(false);') }],
