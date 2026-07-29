@@ -43,13 +43,13 @@ REQUIRED = {
     "kickstart": ["Cloudflare Access", "Pomerium", "_pomerium", "CF_Authorization", "helpers.openclawBootstrapRequest(PATH"],
     "openclaw_js": ["Cloudflare Access", "Pomerium", "detectOpenClawBrowserSession", "X-OpenClaw-Access-Session", "CF-Access-Jwt-Assertion", "${fallback}${hint}", "openclawGatewayWsUrl", "openclawBootstrapRequest", "getOpenClawProxyConfig", "getOpenClawWsRelayEnabled", "proxyControls", "hideHtmlFrame", ".claw-html-frame[hidden]"],
     "connection_js": ["DEFAULT_OPENCLAW_PROXY_BASE", "OPENCLAW_PROXY_BASE_KEY", "OPENCLAW_PROXY_ENABLED_KEY", "OPENCLAW_WS_RELAY_ENABLED_KEY", "OPENCLAW_ACCESS_PROVIDER_KEY", "OPENCLAW_ACCESS_SESSION_KEY", "openclaw_access_provider", "migrateOpenClawConnectionStorage", "workers\\.dev", "new URL(DEFAULT_OPENCLAW_PROXY_BASE)", "openclawWebSocketUrl"],
-    "cors_worker": ["CF_Authorization", "X-Pomerium-Authorization", "X-OpenClaw-Access-Provider", "access_session", "targetSearch.delete", "upstream.webSocket", "Origin", "http://localhost:8088"],
+    "cors_worker": ["CF_Authorization", "_pomerium", "X-Pomerium-Authorization", "X-OpenClaw-Access-Provider", "access_session", "targetSearch.delete", "upstream.webSocket", "Origin", "http://localhost:8088"],
     "runtime_js": ["OPENCLAW_BACKUP_HINT", "OPENCLAW_CORS_PROXY_BASE", "preflightOpenClaw", "resolveOpenClawToken", "OPENCLAW_TOKEN: discovered", "shared.setOpenClawConnection({ rawUrl: u, token: t, accessProvider: provider, accessSession: session })", "RESULT: FAIL (OpenClaw gateway activity missing", "gatewayMissing) ? 1 : 0", "'/health'"],
     "runtime_sh": ["CLAW_ACCESS_PROVIDER", "CLAW_ACCESS_SESSION", "OPENCLAW_CORS_PROXY_BASE"],
     "runtime_skill": ["OpenClaw fallback", "Cloudflare Access", "Pomerium", "CLAW_ACCESS_SESSION", "OPENCLAW_CORS_PROXY_BASE"],
     "scripts_skill": ["validation/SKILL.html"],
     "validation_skill": ["openclaw_fallback_audit.py", "OpenClaw fallback"],
-    "worker_ws_audit": ["openclaw worker ws audit", "CF_Authorization", "x-pomerium-authorization", "synthesized a Cookie header", "http://localhost:8088", "upstream WebSocket response directly"],
+    "worker_ws_audit": ["openclaw worker ws audit", "CF_Authorization", "_pomerium", "http://localhost:8088", "upstream WebSocket response directly"],
     "gateway_token_audit": ["gateway token audit", "gatewayTokenFromAgentMetadata", "gatewayTokenFromDashboardUrl", "--self-test"],
     # Bind to the transport facts the audit must still assert (relay route, gateway path,
     # direct sender-bound gateway route, not to its failure prose, so rewording a
@@ -119,12 +119,12 @@ def probe_frame_contract(openclaw: str) -> list[str]:
 def worker_provider_findings(worker: str) -> list[str]:
     """Return failures for the provider-specific upstream credential boundary."""
     findings: list[str] = []
-    if "_pomerium=" in worker:
-        findings.append("OpenClaw relay must use the provider-native Pomerium header, not synthesize a Pomerium cookie")
     if 'fwdHeaders.delete("X-Pomerium-Authorization")' not in worker:
         findings.append("OpenClaw relay must strip caller-supplied Pomerium authorization before provider binding")
-    if 'fwdHeaders.set("X-Pomerium-Authorization", accessSession)' not in worker:
-        findings.append("OpenClaw relay must bind Pomerium sessions to the upstream-only provider header")
+    if 'fwdHeaders.delete("Cookie")' not in worker:
+        findings.append("OpenClaw relay must strip caller-supplied cookies before provider binding")
+    if 'fwdHeaders.set("Cookie", "_pomerium=" + accessSession)' not in worker:
+        findings.append("OpenClaw relay must bind Pomerium sessions to the upstream-only provider cookie")
     return findings
 
 
@@ -226,8 +226,8 @@ def audit() -> list[str]:
         decoded = m.group(1).replace(r"\/", "/")
         if "replace(//" in decoded:
             findings.append("GW_CONNECT template decodes to invalid regex/comment syntax; avoid slash regex literals inside stringified cells")
-        if "helpers.openclawGatewayWsUrl(rawUrl, accessSession, null, false, accessProvider)" not in decoded:
-            findings.append("GW_CONNECT must call the shared gateway router with learner relay inference disabled")
+        if "helpers.openclawGatewayWsUrl(rawUrl, accessSession, null, null, accessProvider)" not in decoded:
+            findings.append("GW_CONNECT must use the shared provider-aware gateway route")
         if "const openclawGatewayWsUrl" in decoded:
             findings.append("GW_CONNECT duplicates the shared gateway router")
         if "_uniqueId(" in decoded:

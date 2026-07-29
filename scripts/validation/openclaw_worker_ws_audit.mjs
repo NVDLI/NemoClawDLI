@@ -56,8 +56,8 @@ try {
   if (calls.length !== 1) fail(`expected one Pomerium upstream fetch, saw ${calls.length}`);
   const pomeriumCall = calls[0];
   if (pomeriumCall.target !== 'https://nemoclaw-demo.apps.run.brev.nvidia.com/ws/terminal?cmd=openshell+sandbox+list&keep=1') fail(`bad Pomerium upstream target: ${pomeriumCall.target}`);
-  if (pomeriumCall.headers['x-pomerium-authorization'] !== 'opaque.session') fail(`missing upstream Pomerium session header: ${JSON.stringify(pomeriumCall.headers)}`);
-  if (pomeriumCall.headers.cookie) fail('Pomerium request synthesized a Cookie header');
+  if (pomeriumCall.headers.cookie !== '_pomerium=opaque.session') fail(`missing upstream Pomerium session cookie: ${JSON.stringify(pomeriumCall.headers)}`);
+  if (pomeriumCall.headers['x-pomerium-authorization']) fail('caller Pomerium header reached upstream');
   if (pomeriumCall.headers['cf-access-client-id'] || pomeriumCall.headers['cf-access-client-secret']) fail('Cloudflare service-token headers reached a Pomerium host');
 
   const mismatch = await worker.fetch(new Request('https://openclaw-cors-proxy.test/https/nemoclaw-demo.apps.run.brev.nvidia.com/cli/gateway?access_provider=cloudflare&access_session=must-not-forward', {
