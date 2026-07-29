@@ -72,7 +72,10 @@ try {
             const directPomeriumGateway =
               parsed.hostname.endsWith('.apps.run.brev.nvidia.com') &&
               parsed.pathname === '/cli/gateway';
-            if (directPomeriumGateway && !window.__pomeriumDirectSession) {
+            const directPomeriumTerminal =
+              parsed.hostname.endsWith('.apps.run.brev.nvidia.com') &&
+              parsed.pathname === '/ws/terminal';
+            if ((directPomeriumGateway || directPomeriumTerminal) && !window.__pomeriumDirectSession) {
               this.onerror?.(new Event('error'));
               this.close();
               return;
@@ -445,13 +448,11 @@ try {
   await page.getByRole('button', { name: 'GET /healthz', exact: true }).click();
   await page.waitForFunction(() => /"status":\s*"ok"/.test(document.querySelector('#probe-claw .claw-out')?.textContent || ''));
   await page.getByRole('button', { name: 'GET /api/agent', exact: true }).click();
-  await page.waitForFunction(() => document.querySelector('#probe-claw .claw-token')?.value === 'probe-token_123');
+  await page.waitForFunction(() => document.querySelector('#probe-claw .claw-token')?.value === 'pomerium-probe-token_456');
   const pomeriumRequests = probeRequests.filter(item =>
     item.url.includes('/https/nemoclaw-test123.apps.run.brev.nvidia.com/'));
-  ok(pomeriumRequests.length === 2 &&
-     pomeriumRequests.every(item =>
-       item.provider === 'pomerium' && item.session === 'test-pomerium-session'),
-    `Pomerium manual session did not reach the relay through neutral headers: ${JSON.stringify(pomeriumRequests)}`);
+  ok(pomeriumRequests.length === 0,
+    `Pomerium bootstrap escaped the terminal loopback boundary: ${JSON.stringify(pomeriumRequests)}`);
   result.pomeriumTransport = await page.evaluate(() => {
     const gatewayUrls = window.__gatewayUrls.slice();
     window.__gatewayUrls = [];
@@ -468,13 +469,20 @@ try {
      result.pomeriumTransport.gatewayUrls.every(url =>
        /^wss:\/\/openclaw-cors-proxy\.experiments\.courses\.nvidia\.com\/https\/nemoclaw-test123\.apps\.run\.brev\.nvidia\.com\/cli\/gateway\?access_provider=pomerium&access_session=test-pomerium-session$/.test(url)),
     `Pomerium manual-session gateway did not use the provider-bound relay: ${JSON.stringify(result.pomeriumTransport.gatewayUrls)}`);
-  ok(result.pomeriumTransport.urls.length === 0 &&
-     result.pomeriumTransport.token === 'probe-token_123' &&
+  ok(result.pomeriumTransport.urls.length === 2 &&
+     result.pomeriumTransport.urls.every(url => {
+       const parsed = new URL(url);
+       return parsed.origin === 'wss://openclaw-cors-proxy.experiments.courses.nvidia.com' &&
+         parsed.pathname === '/https/nemoclaw-test123.apps.run.brev.nvidia.com/ws/terminal' &&
+         parsed.searchParams.get('access_provider') === 'pomerium' &&
+         parsed.searchParams.get('access_session') === 'test-pomerium-session';
+     }) &&
+     result.pomeriumTransport.token === 'pomerium-probe-token_456' &&
      result.pomeriumTransport.savedToken === result.pomeriumTransport.token &&
      !result.pomeriumTransport.localToken &&
-     /via hosted relay/.test(result.pomeriumTransport.output) &&
+     /hosted relay fallback/.test(result.pomeriumTransport.output) &&
      !/test-pomerium-session/.test(result.pomeriumTransport.output),
-    `Pomerium manual-session bootstrap did not use the redacted relay route: ${JSON.stringify(result.pomeriumTransport)}`);
+    `Pomerium manual-session bootstrap did not use terminal loopback over the redacted relay route: ${JSON.stringify(result.pomeriumTransport)}`);
   result.detectedPomerium = await page.evaluate(() => {
     const host = document.querySelector('#probe-claw');
     const session = host.querySelector('.claw-access-session');

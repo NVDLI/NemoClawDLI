@@ -25,7 +25,8 @@ class FakeWebSocket {
     this.readyState = 0;
     terminalUrls.push(url);
     setTimeout(() => {
-      if (failDirectTerminal && new URL(url).hostname.endsWith('.brevlab.com')) {
+      if (failDirectTerminal &&
+          new URL(url).hostname !== 'openclaw-cors-proxy.experiments.courses.nvidia.com') {
         this.onerror?.(new Error('direct route unavailable'));
         this.close();
         return;
@@ -93,22 +94,34 @@ test('Pomerium keeps a supplied session tab-scoped and uses the provider-bound r
   assert.equal(gateway.viaProxy, true);
   assert.doesNotMatch(gateway.displayUrl, /manual-pomerium-session/);
 
-  const metadata = await openshell.openclawLoopbackProbe('/api/agent', { baseUrl: launchable });
-  assert.equal(metadata.transport, 'direct-terminal-loopback');
+  terminalUrls.length = 0;
+  failDirectTerminal = true;
+  let metadata;
+  try {
+    metadata = await openshell.openclawLoopbackProbe('/api/agent', { baseUrl: launchable });
+  } finally {
+    failDirectTerminal = false;
+  }
+  assert.equal(metadata.transport, 'approved-provider-relay-terminal-loopback');
   assert.equal(metadata.json.agent.dashboardUrl, '/#token=test-gateway-token');
-  assert.equal(terminalUrls.length, 1);
+  assert.equal(terminalUrls.length, 2);
   const terminal = new URL(terminalUrls[0]);
   assert.equal(terminal.origin, 'wss://nemoclaw-test.apps.run.brev.nvidia.com');
   assert.equal(terminal.pathname, '/ws/terminal');
   assert.equal(terminal.searchParams.get('cmd'), 'curl -fsS --max-time 10 http://127.0.0.1/api/agent');
   assert.equal(terminal.searchParams.get('access_provider'), null);
   assert.equal(terminal.searchParams.get('access_session'), null);
+  const fallback = new URL(terminalUrls[1]);
+  assert.equal(fallback.origin, 'wss://openclaw-cors-proxy.experiments.courses.nvidia.com');
+  assert.equal(fallback.searchParams.get('cmd'), 'curl -fsS --max-time 10 http://127.0.0.1/api/agent');
+  assert.equal(fallback.searchParams.get('access_provider'), 'pomerium');
+  assert.equal(fallback.searchParams.get('access_session'), 'manual-pomerium-session');
 
   await assert.rejects(
     openshell.openclawLoopbackProbe('/arbitrary', { baseUrl: launchable }),
     /Unsupported loopback bootstrap path/,
   );
-  assert.equal(terminalUrls.length, 1, 'unsupported path opened a terminal socket');
+  assert.equal(terminalUrls.length, 2, 'unsupported path opened a terminal socket');
 });
 
 test('Pomerium remains direct when no manual access session is supplied', () => {

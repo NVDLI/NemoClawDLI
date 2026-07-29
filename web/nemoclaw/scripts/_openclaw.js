@@ -128,9 +128,10 @@ const OPENCLAW_BOOTSTRAP_PATHS = new Set(["/api/agent", "/healthz"]);
 export async function openclawBootstrapRequest(path = "/api/agent", { signal = null } = {}) {
   /* @doc <code>helpers.openclawBootstrapRequest(path)</code> ::
        Read <code>/api/agent</code> or <code>/healthz</code> through the provider selected
-       from the normalized Module 3a connection. A signed-in launchable session stays direct.
-       A pasted access session uses the approved provider-bound relay. Returns response
-       metadata plus parsed JSON without exposing either access credential. */
+       from the normalized Module 3a connection. Pomerium reads these fixed endpoints from
+       launchable loopback over the terminal WebSocket, which tries the signed-in browser
+       first and then the approved provider-bound relay. Returns response metadata plus
+       parsed JSON without exposing either access credential. */
   const actionPath = String(path || "");
   if (!OPENCLAW_BOOTSTRAP_PATHS.has(actionPath)) {
     throw new Error("OpenClaw bootstrap requests are limited to /api/agent and /healthz");
@@ -139,7 +140,7 @@ export async function openclawBootstrapRequest(path = "/api/agent", { signal = n
   const rawUrl = String(connection.rawUrl || "").replace(/\/+$/, "");
   if (!rawUrl) throw new Error("Set the launchable URL in the Module 3a probe first.");
   const provider = accessProviderForOpenClawUrl(rawUrl, connection.accessProvider);
-  if (provider === "pomerium" && !connection.accessSession) {
+  if (provider === "pomerium") {
     const result = await openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal });
     return {
       ...result,
@@ -246,7 +247,7 @@ function accessCredentialDelivery(provider, viaProxy, accessSession) {
 
 function openClawHttpDiagnostic(path, connection) {
   const provider = accessProviderForOpenClawUrl(connection.rawUrl, connection.accessProvider);
-  const viaLoopback = provider === "pomerium" && !connection.accessSession;
+  const viaLoopback = provider === "pomerium";
   const route = openclawHttpUrl(
     connection.rawUrl,
     path,
@@ -270,9 +271,11 @@ function openClawHttpDiagnostic(path, connection) {
       method: "GET",
       url: viaLoopback ? connection.rawUrl.replace(/\/+$/, "") + path : route.displayUrl,
       upstreamUrl: connection.rawUrl.replace(/\/+$/, "") + path,
-      transport: viaLoopback ? "launchable terminal loopback" : route.viaProxy ? "hosted relay" : "direct browser",
+      transport: viaLoopback ? "launchable terminal loopback (direct first, hosted relay fallback)" : route.viaProxy ? "hosted relay" : "direct browser",
       authSummary: viaLoopback
-        ? "The launchable terminal makes this request on the learner's behalf; no browser cookie is copied."
+        ? connection.accessSession
+          ? "The launchable terminal makes this request on the learner's behalf. It tries the signed-in browser first, then sends the tab-scoped session only to the approved provider-bound relay."
+          : "The launchable terminal makes this request through the signed-in browser session; no browser cookie is copied."
         : accessCredentialDelivery(provider, route.viaProxy, connection.accessSession),
       headers: viaLoopback ? {} : headers,
     },
@@ -1348,7 +1351,7 @@ export function mountEndpointProbe(targetSel, opts = {}) {
     hideHtmlFrame(true);
     const t0 = performance.now();
     try {
-      const useLoopback = isOpenClaw && accessProvider === "pomerium" && !accessSession &&
+      const useLoopback = isOpenClaw && accessProvider === "pomerium" &&
         method === "GET" &&
         !body && (actionPath === "/healthz" || actionPath === "/api/agent");
       const loopback = useLoopback
@@ -1373,7 +1376,7 @@ export function mountEndpointProbe(targetSel, opts = {}) {
       const ct = r.headers.get("content-type") || "";
       const head = `← ${r.status} ${r.statusText}   ${dt}ms` +
         (loopback
-          ? "   (direct browser session → launchable loopback)"
+          ? "   (launchable terminal loopback; direct first, hosted relay fallback)"
           : route.viaProxy
             ? "   (via hosted relay)"
             : "   (direct)");
@@ -1424,8 +1427,8 @@ export function mountEndpointProbe(targetSel, opts = {}) {
           }
           printed = JSON.stringify(j, null, 2);
           // Auto-fill the bearer token from agent.dashboardUrl in the /api/agent response.
-          // Cloudflare metadata uses its tab-scoped relay session; Pomerium metadata
-          // uses the authenticated direct terminal socket. Their WebSockets stay direct.
+          // Cloudflare metadata uses its tab-scoped relay session. Pomerium metadata
+          // uses launchable loopback over the direct-first terminal transport.
           if (opts.autofillToken && r.ok && j) {
             try {
               const found = opts.autofillToken(j);
