@@ -770,7 +770,12 @@ function findChrome() {
   const nodeErr = Object.values(nodeStatus).some(v => v.error);
   const noFlows = flowCount === 0;
   const hardFail = errors.length > 0 || nodeErr || !settled || noFlows;
-  const gatewayMissing = !!(CLAW_URL && CLAW_TOKEN)
+  // Supplying a launchable makes gateway evidence mandatory even when
+  // /api/agent fails to discover a token. Otherwise an authentication or relay
+  // regression can erase the token and silently disable the live assertion.
+  const gatewayExpected = !!CLAW_URL
+    && flowRuns.some(flow => flow.expectsGateway);
+  const gatewayMissing = gatewayExpected
     && flowRuns.some(flow => flow.expectsGateway && !flow.gatewayOk);
 
   if (hardFail) console.log('RESULT: FAIL (errors / unsettled nodes / no flows)');
