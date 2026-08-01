@@ -37,11 +37,13 @@
       round-trip does not change here. What changes is the tool surface: the model must choose
       among more descriptions, and each tool may hide a larger capability.
     </p>
-    <p>
-      The page follows that contract from local functions to a search backend, a sub-agent,
-      and finally a Model Context Protocol (MCP) server. These are different ways to supply
-      capabilities to the same loop. A long flat tool list also consumes context and can make
-      routing less reliable, which motivates the scoped workflows in Module 2.
+    <p data-learning-spine="tool-boundaries">
+      The page follows that contract from local functions to a search backend and a sub-agent.
+      A <strong>sub-agent as a tool</strong> places one focused agent behind a single schema so the
+      outer workflow can route work without exposing every internal capability. Model Context
+      Protocol (MCP) gives a client a standard way to discover and call tools served by another
+      process. Use it at a capability boundary, after validating the server, identity, and scope.
+      Both patterns keep the main loop's tool list small and motivate Module 2's scoped workflows.
     </p>
   </div>
 
@@ -486,13 +488,13 @@ return state.question;
     },
     {
       id: "tool_a", icon: "🛠", title: "Tool A · calculate", x: 0, y: 1,
-      summary: "Scoped to arithmetic expressions only. Its description explicitly says not to use it for definitions or conceptual questions, which steers the model toward the other tool when the intent is explanatory.",
+      summary: "Handles arithmetic only. Its narrow description steers conceptual questions to the other tool.",
       code: `// Describe the calculator tool so the model knows when to route to it.
 state.toolA = {
   type: "function",
   function: {
     name: "calculate",
-    description: "Evaluate an arithmetic expression. Use for any computation. Do NOT use for definitions or conceptual questions.",
+    description: "Evaluate arithmetic expressions; do not use for definitions or conceptual questions.",
     parameters: { type: "object",
       properties: { expression: { type: "string" } }, required: ["expression"] },
   },
@@ -508,7 +510,7 @@ state.toolB = {
   type: "function",
   function: {
     name: "explain_concept",
-    description: "Explains a technical or scientific concept in plain English. Use for definitions and conceptual questions. Do NOT use for arithmetic.",
+    description: "Explain technical or scientific concepts; do not use for arithmetic.",
     parameters: { type: "object",
       properties: { concept: { type: "string" } }, required: ["concept"] },
   },
@@ -518,7 +520,7 @@ return state.toolB.function.name;
     },
     {
       id: "llm", icon: "🧠", title: "LLM call · the model routes", x: 1, y: 2,
-      summary: "Streams the model as it reasons over the two tool descriptions, then returns the routing decision. The route turns almost entirely on the description strings, so edit one and rerun to watch the model change its mind.",
+      summary: "Streams the routing decision. Edit either tool description and rerun to see how it changes the route.",
       code: `// Ask the model to choose one of the two tool descriptions above.
 const s = await helpers.chatStream({
   messages: [{ role: "user", content: state.question }],
@@ -578,7 +580,7 @@ return { name: state.SEARCH_SCHEMA[0].function.name };
     },
     {
       id: "llm1", icon: "🧠", title: "LLM call #1", x: 1, y: 1,
-      summary: "Force glossary_search so the complete tool round-trip stays visible. The model supplies the search query; autonomous tool routing is the lesson above and the behavior of the final artifact.",
+      summary: "Forces glossary_search to expose the complete round-trip while the model supplies the query.",
       code: `// Send the prepared messages and stream the model response.
 state.messages = [
   { role: "system", content: "You are a research assistant. Ground answers in glossary_search results; never answer factual questions from memory." },
@@ -599,7 +601,7 @@ return {
     },
     {
       id: "search", icon: "🌐", title: "glossary_search", x: 1, y: 2,
-      summary: "The executor. It calls the in-page glossary MCP server (defined at the top of this page) via tools/call and gets back ranked NVIDIA glossary entries. The catalog and the search both run locally in your browser, with no key and no network call.",
+      summary: "Calls the in-page MCP server through tools/call and returns ranked NVIDIA glossary entries. The search stays local to the browser.",
       code: `// Handle the tool-call result from the previous model turn.
 if (!state.s1.tool_calls.length) {
   // No tool call here: the model either answered from training (it has content) or ran out of tokens mid-call.
@@ -629,7 +631,7 @@ return { query: state.query, count: meta.count, source: meta.source };
     },
     {
       id: "llm2", icon: "🧠", title: "LLM call #2", x: 1, y: 3,
-      summary: "Synthesizes the final answer from the search results. Note this call passes NO tools, so it must answer from what call #1 retrieved rather than request another search. That is what turns a tool result into a final reply.",
+      summary: "Writes the final answer from retrieved results. No tools are passed, so the model must use the returned evidence.",
       code: `// Handle the tool-call result from the previous model turn.
 if (state.skipped) {
   return { final_answer: state.s1.content || "(" + (state.reason || "no answer") + ")",
@@ -693,7 +695,7 @@ return article
 // ── agents as tools ────────────────────────────────────────
 mountCanvasFlow("#cell-m2b-p5", {
   label: "agents as tools · hide the database, expose the question",
-  intro: "The top-level agent gets a single query_customer_db tool backed by a sub-agent that knows the schema (a tiny JS array stands in for SQL). Raw rows never reach the caller, which poses a question and receives a natural-language answer in return.",
+  intro: "Give the top-level agent one query_customer_db tool backed by a schema-aware sub-agent. The caller receives an answer, not raw rows.",
   edges: [
     { from: "sub_data",  to: "sub_agent" },
     { from: "tool_spec", to: "main_llm" },
@@ -727,10 +729,11 @@ state.queryCustomerDB = async function(question) {
   const rowsText   = state.customers.map(c => JSON.stringify(c)).join("\\n");
   const sub = await helpers.chatStream({
     messages: [
-      { role: "system", content:
-        "You are a customer-database analyst. Use ONLY the rows provided. " +
-        "If the rows do not contain the answer, say so. Be concise.\\n\\n" +
-        schemaText + "\\n\\nRows:\\n" + rowsText },
+      {
+        role: "system",
+        content: "You are a customer-database analyst. Use ONLY the rows provided. If the rows do not contain the answer, say so. Be concise.\\n\\n" +
+          schemaText + "\\n\\nRows:\\n" + rowsText,
+      },
       { role: "user", content: question },
     ],
     max_tokens: 8196,
@@ -792,7 +795,7 @@ return {
 `,
     },
     {
-      id: "dispatch", icon: "📤", title: "Dispatch to sub-agent · synth final answer", x: 1, y: 3,
+      id: "dispatch", icon: "📤", title: "Dispatch to the sub-agent and answer", x: 1, y: 3,
       summary: "Once the top-level agent calls the tool, we hand the natural-language question to the sub-agent, append its answer, and ask for the user-facing reply.",
       code: `// Handle the tool-call result from the previous model turn.
 if (!state.s1.tool_calls.length) {
@@ -826,7 +829,7 @@ return s2.content || s2.reasoning || "(empty)";
 // ── MCP-shaped tool server ─────────────────────────────────
 mountCanvasFlow("#cell-m2b-p6", {
   label: "MCP-shaped tool server · discovery + dispatch",
-  intro: "A fake in-page MCP server exposes two tools through tools/list and tools/call with no network. The agent discovers the tool list, hands the schemas to the LLM, and dispatches the model's tool_calls back through tools/call. Only the tool source changes; the agent loop stays identical to a normal tool call.",
+  intro: "Discover two in-page MCP tools through tools/list, then dispatch model requests through tools/call. The agent loop stays unchanged.",
   edges: [
     { from: "server",   to: "discover" },
     { from: "discover", to: "llm" },
@@ -836,7 +839,7 @@ mountCanvasFlow("#cell-m2b-p6", {
   nodes: [
     {
       id: "server", icon: "🖥", title: "In-page MCP server", x: 0, y: 0,
-      summary: "Define an in-page server with tools/list and tools/call in MCP's JSON-RPC shape. A deployed MCP server carries those calls over stdio or HTTP instead of the same JavaScript process.",
+      summary: "Defines tools/list and tools/call in MCP's JSON-RPC shape. A deployed server transports the same calls over stdio or HTTP.",
       code: `// The same in-page glossary server the search cell called directly, now reached through
 // Discover tools through MCP instead of hard-coding direct calls.
 state.mcpServer = window.glossaryMCP;
@@ -846,7 +849,7 @@ return { exposes: ["tools/list", "tools/call"], tools: listed.tools.map(t => t.n
     },
     {
       id: "discover", icon: "🔎", title: "Client · tools/list", x: 0, y: 1,
-      summary: "The client side of the MCP handshake: it calls tools/list on the server and maps each returned tool's inputSchema to the OpenAI function-calling format so the model can read it as a normal tools array.",
+      summary: "Calls tools/list and maps each inputSchema to the function-calling format the model reads.",
       code: `// Ask the mock MCP server which tools it exposes.
 const list = await state.mcpServer.request("tools/list");
 helpers.log("discovered " + list.tools.length + " tools");
@@ -859,7 +862,7 @@ return state.tools.map(t => t.function.name);
     },
     {
       id: "user", icon: "👤", title: "User question", x: 2, y: 1,
-      summary: "The question the model answers using the discovered glossary tools. A definitional ask is served by glossary_search, while a request for a specific term by slug goes to glossary_lookup.",
+      summary: "Sets the question. Definitions route to glossary_search; requests by slug route to glossary_lookup.",
       code: `// TODO: Try a broad definition or request a specific glossary term.
 state.question = "What is retrieval-augmented generation, and what does a vector database have to do with it?";
 // state.question = "What is an AI agent?";
@@ -869,7 +872,7 @@ return state.question;
     },
     {
       id: "llm", icon: "🧠", title: "LLM (sees discovered tools)", x: 1, y: 2,
-      summary: "The same single chatStream call runs unchanged because the agent loop cannot tell whether the tools came from a hardcoded array or a remote MCP server. The discovery step above lets you swap that source without touching the loop at all.",
+      summary: "Runs the unchanged chatStream call with discovered tools, keeping transport outside the agent loop.",
       code: `// Send the prepared messages and stream the model response.
 state.messages = [{ role: "user", content: state.question }];
 state.s1 = await helpers.chatStream({
@@ -889,8 +892,8 @@ return {
 `,
     },
     {
-      id: "dispatch", icon: "📤", title: "Client → tools/call → LLM #2", x: 1, y: 3,
-      summary: "Closes the loop: for each tool_call the model requested, this node forwards the call to the server's tools/call endpoint, appends the result as a tool message, then makes one final model call to produce the user-facing answer from whatever the server returned.",
+      id: "dispatch", icon: "📤", title: "Dispatch tools, then answer", x: 1, y: 3,
+      summary: "Forwards each tool_call through tools/call, appends the result, and asks the model for the final answer.",
       code: `// Handle the tool-call result from the previous model turn.
 if (!state.s1.tool_calls.length) return state.s1.content || "(model answered directly)";
 for (const tc of state.s1.tool_calls) {

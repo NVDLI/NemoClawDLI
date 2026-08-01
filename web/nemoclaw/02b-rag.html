@@ -52,6 +52,16 @@
     </p>
   </div>
 
+  <div class="callout" data-learning-spine="retrieval-ladder">
+    <strong>Build the retrieval ladder in order.</strong>
+    <ol>
+      <li><strong>Generation alone</strong> answers from the model's current context and training.</li>
+      <li><strong>Traditional RAG</strong> runs a fixed retrieval step before every generated answer.</li>
+      <li><strong>Agent-controlled retrieval</strong> exposes retrieval as a tool, so the loop decides whether another lookup is needed.</li>
+    </ol>
+    The exercises keep the corpus and question visible while changing who controls retrieval.
+  </div>
+
   <!-- video removed: short teaser, more distraction than signal. Re-enable by uncommenting.
   <figure class="lp-video">
     <div class="video-wrap">
@@ -60,7 +70,7 @@
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
     </div>
-    <figcaption><b>Watch:</b> A walkthrough of agentic RAG, where the model reasons over a query and decides when to retrieve rather than running a fixed lookup on every turn. The narrated version fills in the moving parts that a static page leaves implicit. Part of NVIDIA's <a href="https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-agentic-ai-rag" target="_blank" rel="noopener">Agentic AI Learning Path</a>.</figcaption>
+    <figcaption><b>Watch:</b> See how a model decides when to retrieve instead of running a fixed lookup on every turn. Part of NVIDIA's <a href="https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-agentic-ai-rag" target="_blank" rel="noopener">Agentic AI Learning Path</a>.</figcaption>
   </figure>
   -->
 
@@ -683,7 +693,7 @@ hljs.highlightAll();
 mountRunCell("#cell-m3b-p1", {
   openCode: false,
   label: "Inspect one embedding",
-  intro: "The default model returns 2,048 values. Choose an example, then inspect its fixed length and near-1 normalized magnitude. Change EXAMPLE or add your own text.",
+  intro: "Choose text, then compare the signed-value profile, fixed length, and normalized magnitude. Change EXAMPLE or add your own input.",
   code: `const EXAMPLES = [
   "The transformer architecture replaced recurrent neural networks for sequence modeling.",
   "What replaced recurrent neural networks for sequence modeling?",
@@ -697,10 +707,31 @@ const [v] = await helpers.embed(text, {
   model:     "nvidia/llama-nemotron-embed-1b-v2",
   inputType: "passage",
 });
+const preview = v.slice(0, 16).map(x => +x.toFixed(4));
+const scale = Math.max(...preview.map(Math.abs), 0.0001);
+const rows = preview.map((value, index) => {
+  const width = Math.max(2, Math.round(Math.abs(value) / scale * 100));
+  const signClass = value >= 0 ? "positive" : "negative";
+  const signLabel = value >= 0 ? "positive value" : "negative value";
+  return \`<tr>
+    <th scope="row">d\${index + 1}</th>
+    <td>\${signLabel}</td>
+    <td><span class="embedding-profile-bar \${signClass}" style="width:\${width}%" aria-hidden="true"></span></td>
+    <td><code>\${value >= 0 ? "+" : ""}\${value.toFixed(4)}</code></td>
+  </tr>\`;
+}).join("");
+helpers.log.html(\`<figure class="embedding-profile" aria-label="Signed values for the first sixteen embedding dimensions">
+  <table>
+    <caption>First 16 dimensions, scaled to the largest visible magnitude</caption>
+    <thead><tr><th>dimension</th><th>sign</th><th>relative magnitude</th><th>raw value</th></tr></thead>
+    <tbody>\${rows}</tbody>
+  </table>
+</figure>\`);
+// helpers.log.json("complete raw embedding", v);
 return {
   text,
   dimensions: v.length,
-  first_16: v.slice(0, 16).map(x => +x.toFixed(4)),
+  first_16: preview,
   magnitude: +Math.sqrt(v.reduce((sum, x) => sum + x * x, 0)).toFixed(4),
 };
 `,
@@ -709,7 +740,7 @@ return {
 // ── M3b P2: in-memory vector index ───────────────────────────────────────────
 mountCanvasFlow("#cell-m3b-p2", {
   label: "Build an in-memory vector index",
-  intro: "A tiny corpus is embedded once and held in memory. Each query is embedded and scored against every passage by cosine similarity, returning the top-K closest. This is the full production retrieval shape at toy scale, with every step visible.",
+  intro: "Embed a small corpus once, score each query by cosine similarity, and inspect the top-K passages.",
   edges: [
     { from: "corpus", to: "index" },
     { from: "query",  to: "retrieve" },
@@ -718,7 +749,7 @@ mountCanvasFlow("#cell-m3b-p2", {
   nodes: [
     {
       id: "corpus", icon: "📚", title: "Corpus", x: 0, y: 0,
-      summary: "Eight short passages on agent patterns, retrieval, and model APIs. The diversity is deliberate, and it makes it easy to see which passages a query pulls toward the top and which it leaves behind. Edit any passage and re-run to change what the index holds.",
+      summary: "Defines eight varied passages. Edit one and rerun to change what the index can retrieve.",
       code: `// Seed the small dataset this retrieval example searches.
 state.corpus = [
   "ReAct interleaves reasoning steps with tool calls, deciding what to do next after each observation.",
@@ -747,7 +778,7 @@ return { indexed: state.index.length, dim: vecs[0].length };
     },
     {
       id: "query", icon: "❓", title: "User query", x: 1, y: 0,
-      summary: "The question to retrieve against. Changing it changes which passages rank highest, because the query is embedded using the 'query' input type, which produces a vector that the model has trained to point toward relevant passages rather than toward identical text.",
+      summary: "Sets the retrieval question. The 'query' input type points its embedding toward relevant passages.",
       code: `// TODO: Try another query and rerun to watch the ranking shift.
 state.query = "what is the difference between react and rewoo?";
 // state.query = "what does the openshell sandbox do?";           // single-fact lookup
@@ -756,7 +787,7 @@ return state.query;
 `,
     },
     {
-      id: "retrieve", icon: "🎯", title: "Embed query + top-K", x: 1, y: 1,
+      id: "retrieve", icon: "🎯", title: "Embed the query and rank matches", x: 1, y: 1,
       summary: "Embeds the query with the 'query' input type, cosine-scores it against every passage, and returns the top three.",
       code: `// Embed the text so similarity search can compare vectors.
 const [qv] = await helpers.embed(state.query, {
@@ -818,7 +849,7 @@ return { n_chunks: state.chunks.length, per_doc: state.docs.map(d => ({ id: d.id
     },
     {
       id: "index", icon: "🗂", title: "Embed chunks", x: 0, y: 2,
-      summary: "Embeds every child chunk so they can be searched by cosine similarity. On a chunk match, the retriever hands the LLM the whole parent document that chunk came from, restoring the surrounding context.",
+      summary: "Embeds child chunks for precise search, then returns the matching parent document for context.",
       code: `// Embed the text so similarity search can compare vectors.
 const vecs = await helpers.embed(state.chunks.map(c => c.text), {
   model:     "nvidia/llama-nemotron-embed-1b-v2",
@@ -839,9 +870,9 @@ return state.query;
 `,
     },
     {
-      id: "lookup", icon: "🎯", title: "Hit on chunk → return parent (+ score viz)", x: 1, y: 1,
+      id: "lookup", icon: "🎯", title: "Return the parent of each matching chunk", x: 1, y: 1,
       showCode: false,
-      summary: "Takes the top chunk by cosine and returns its full parent document. The code is collapsed by default because the retrieval step is short and the rest builds score bars and hierarchy cards.",
+      summary: "Selects the top chunk by cosine and returns its parent document. Expand the code to inspect the visualisation data.",
       code: `// Reading guide: the retrieval happens first: embed the query, score chunks, pick the
 // top hit, then return that hit's parent document. The lower half renders the score bars and cards.
 const [qv] = await helpers.embed(state.query, {
@@ -899,7 +930,7 @@ return {
 // ── M3b P4: RAG agent (retrieval as a tool) ──────────────────────────────────
 mountCanvasFlow("#cell-m3b-p4", {
   label: "Expose retrieval as an agent tool",
-  intro: "A corpus is indexed once and held in memory, then the question goes to a chat call with a retrieve tool exposed. The model decides whether to retrieve; if it does, cosine similarity returns the top passages and a second call writes the answer grounded in them.",
+  intro: "Index the corpus, expose retrieval as a tool, and let the model decide whether the question needs evidence.",
   edges: [
     { from: "build_corpus", to: "agent" },
     { from: "tool",         to: "agent" },
@@ -909,9 +940,9 @@ mountCanvasFlow("#cell-m3b-p4", {
   ],
   nodes: [
     {
-      id: "build_corpus", icon: "📚", title: "Corpus + index", x: 0, y: 0,
+      id: "build_corpus", icon: "📚", title: "Build the corpus and index", x: 0, y: 0,
       showCode: false,
-      summary: "Embed every passage and store each one alongside its vector. The index is built once here and held in memory for the rest of the flow; every subsequent query reads from this same structure without re-embedding the corpus.",
+      summary: "Embeds each passage once and stores its vector in the shared in-memory index.",
       code: `// Seed the small dataset this retrieval example searches.
 state.corpus = [
   "NVIDIA Nemotron is a family of NVIDIA's open-weights reasoning models. Nano variants are small and fast; Super and Ultra are larger.",
@@ -929,7 +960,7 @@ return { indexed: state.index.length, dim: vecs[0].length };
     {
       id: "tool", icon: "📄", title: "Retrieve tool spec", x: 2, y: 0,
       showCode: false,
-      summary: "Declares the retrieve tool as a JSON schema the model can read. The model sees only the name, description, and parameter types. It has no visibility into the cosine implementation behind it. That separation matters: you can swap the retrieval backend later without changing any model-facing contract.",
+      summary: "Declares the model-facing retrieve schema while hiding the cosine implementation, so the backend can change independently.",
       code: `// Define the tool schema the model can choose from next.
 state.RETRIEVE_SCHEMA = [{
   type: "function",
@@ -951,7 +982,7 @@ return { tool: state.RETRIEVE_SCHEMA[0].function.name };
     },
     {
       id: "query", icon: "❓", title: "User query", x: 1, y: 0,
-      summary: "The user's question, plus a system prompt that instructs the model to use the retrieve tool only when it needs specific facts it cannot answer confidently from training knowledge. With that instruction in place, the model weighs each turn and chooses whether to retrieve, instead of retrieving on every call.",
+      summary: "Sets the question and tells the model to retrieve only when it needs specific evidence.",
       code: `// TODO: Choose a prompt that should retrieve, skip retrieval, or be ambiguous.
 
 const EXAMPLES = {
@@ -978,7 +1009,7 @@ return state.query;
     },
     {
       id: "agent", icon: "🧠", title: "Agent decides", x: 1, y: 1,
-      summary: "The first LLM call, made with the retrieve tool exposed. When the response carries tool_calls, the model is asking your code to run retrieval and return the results. When finish_reason is \'stop\', the model judged retrieval unnecessary and answered directly.",
+      summary: "Calls the model with retrieval exposed. tool_calls requests evidence; finish_reason 'stop' means the model answered directly.",
       code: `// Send the prepared messages and stream the model response.
 state.s1 = await helpers.chatStream({
   messages:   state.messages,
@@ -997,8 +1028,8 @@ return {
 `,
     },
     {
-      id: "retrieve", icon: "🎯", title: "Cosine retrieve (+ pipeline viz)", x: 1, y: 2,
-      summary: "Plain JavaScript embeds the question, scores it against every indexed passage, and returns the top-K, while the score bars show the full distribution and which K passages make it into the LLM context.",
+      id: "retrieve", icon: "🎯", title: "Retrieve by cosine similarity", x: 1, y: 2,
+      summary: "Embeds the question, scores every passage, and returns top-K while plotting the full score distribution.",
       code: `// Handle the tool-call result from the previous model turn.
 if (!state.s1.tool_calls.length) { state.skipped = true; return { skipped: "model answered directly" }; }
 const tc        = state.s1.tool_calls[0];
@@ -1026,7 +1057,7 @@ return { question, k, top_scores: state.retrieved.map(r => r.score.toFixed(3)) }
     },
     {
       id: "answer", icon: "🧠", title: "Final answer (LLM #2)", x: 1, y: 3,
-      summary: "The second LLM call, made after the tool message is appended. The model now has the original user question alongside the retrieved passages and can write a grounded answer rather than relying on its training knowledge alone.",
+      summary: "Appends the retrieved passages as a tool message, then asks the model for a grounded answer.",
       code: `// Handle the tool-call result from the previous model turn.
 if (state.skipped) return state.s1.content || "(model answered directly but produced no text; raise max_tokens)";
 // No tools here: the model must synthesize from retrieved passages.

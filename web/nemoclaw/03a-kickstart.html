@@ -67,39 +67,6 @@
       font-size: .82em;
     }
 
-    details.recovery-note {
-      margin: 1em 0 1.6em;
-      border: 1px solid var(--bd);
-      border-radius: var(--r);
-      background: var(--e1);
-    }
-
-    details.recovery-note > summary {
-      cursor: pointer;
-      padding: 11px 14px;
-      color: var(--gs);
-      font-family: var(--mono);
-      font-weight: 700;
-      font-size: .86rem;
-    }
-
-    details.recovery-note > summary:hover {
-      background: var(--e2);
-    }
-
-    details.recovery-note > summary::marker {
-      color: var(--gs);
-    }
-
-    details.recovery-note > :not(summary) {
-      margin-left: 14px;
-      margin-right: 14px;
-    }
-
-    details.recovery-note > ol {
-      padding-left: 22px;
-    }
-
     figure.lp-video {
       margin: 1.4em 0;
     }
@@ -182,9 +149,7 @@
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
       </div>
-      <figcaption><b>Watch:</b> An introduction to designing and deploying long-running, self-evolving
-        autonomous agents with OpenClaw, NemoClaw, and OpenShell. It sets up the kickstart this page runs,
-        so it is a useful companion before you probe the endpoints below. Part of NVIDIA's
+      <figcaption><b>Watch:</b> See how OpenClaw, NemoClaw, and OpenShell support long-running autonomous agents before you probe the endpoints below. Part of NVIDIA's
         <a href="https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-safer-autonomous-agent-using-openclaw"
           target="_blank" rel="noopener">Agentic AI Learning Path</a>.
       </figcaption>
@@ -208,11 +173,9 @@
         href="https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990"
         target="_blank" rel="noopener">
         <h3>Launch NemoClaw on Brev</h3>
-        <p>OpenClaw runs inside OpenShell and keeps agent identity, tools, and session memory. The
-          settings below accept either supported Brev host family and connect to
-          <code>/cli/gateway</code>.</p>
-        <p style="color:var(--tf);font-size:.8rem">Gateway credential: gateway token.
-          Launchable access: Pomerium browser session or <code>CF_Authorization</code>.</p>
+        <p>The interface below connects to Brev hostings of OpenClaw in OpenShell.</p>
+        <p style="color:var(--tf);font-size:.8rem">Launchable access:
+          <code>_pomerium</code> or <code>CF_Authorization</code>.</p>
       </a>
     </div>
     <p>Local deployments use the same gateway contract; follow the
@@ -230,54 +193,31 @@
       <li>Return here and enter the launchable URL. If this course is not served by the launchable,
         paste the launchable's browser access session too.</li>
     </ol>
-    <p>Your launchable answers on one of two account-specific hostnames. Both are supported, and the
-      probe selects the matching access provider from the hostname:</p>
+    <h3>Copy the launchable access session when this page is hosted separately</h3>
+    <p>The gateway token and the launchable access session authorize different things:</p>
     <ul>
-      <li><code>https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com</code> uses Pomerium. When the
-        course shares the launchable origin, the browser supplies its signed-in session. Otherwise,
-        paste the complete <code>_pomerium</code> value from the signed-in launchable.</li>
-      <li><code>https://nemoclaw-&lt;id&gt;.brevlab.com</code> uses Cloudflare Access. Its matching
-        <code>CF_Authorization</code> session authenticates the separately hosted course through
-        the approved relay.</li>
+      <li>The gateway token authorizes JSON-RPC calls on <code>/cli/gateway</code>.</li>
+      <li>The access session, an <code>_pomerium</code> or <code>CF_Authorization</code> browser cookie,
+        authorizes reaching the launchable at all.</li>
     </ul>
-
-    <details class="recovery-note">
-      <summary>If the Control UI reports that the gateway needs a token or password</summary>
-      <p>After launchable access succeeds, <strong>GET /api/agent</strong> supplies the gateway
-        token from authenticated metadata. Use the steps below only when the Control UI reports
-        that the gateway is reachable but still requires authentication.</p>
-      <ol>
-        <li>Run <code>openclaw dashboard --no-open</code> and read the configured gateway credential
-          it prints.</li>
-        <li>If no gateway token exists yet, generate one on the gateway host with
-          <code>openclaw doctor --generate-gateway-token</code>.</li>
-        <li>Update the credential in the Control UI, then reconnect.</li>
-      </ol>
-      <p>The gateway token and the launchable access session authorize different things. The
-        gateway token authorizes JSON-RPC calls on <code>/cli/gateway</code>. The access session, a
-        Pomerium browser cookie or a <code>CF_Authorization</code> value, authorizes reaching the
-        launchable at all. Replacing one never repairs a failure in the other.</p>
-    </details>
-
-    <h2>Step 1 · Verify the connections</h2>
-    <p>The model probe checks the configured model route. The NemoClaw check then verifies agent
-      metadata, both WebSocket paths, and launchable health in the order later exercises need them.</p>
-
-    <h3>Model route settings</h3>
-    <p>The model probe is a read-only mirror of the persistent chat route configured on the course home
-      page or in Module 1a. Change it here once; the benchmark and later lessons reuse that route. The
-      NemoClaw launchable settings below remain separate.</p>
-    <div id="model-route-settings"></div>
-    <div id="probe-llm"></div>
-
-    <h3>Latency and time to first token across models</h3>
-    <p>Before committing to a model, measure it. The cells below pull matching
-      models from the catalog, stream a short prompt through each one, and
-      record each model's <em>time to first token</em> (TTFT) and time to
-      finish. The catalog-fetching cell starts open so the filter list is visible
-      before you run the benchmark.</p>
-
-    <div id="bench-llm"></div>
+    <p>When this course is not served by the launchable, copy that browser cookie into the Access
+      session field below:</p>
+    <ol>
+      <li>Keep the signed-in launchable tab open. Use <code>_pomerium</code> for an
+        <code>apps.run.brev.nvidia.com</code> host or <code>CF_Authorization</code> for a
+        <code>brevlab.com</code> host.</li>
+      <li><strong>Chrome, Edge, or Brave:</strong> open Developer Tools, select
+        <strong>Application</strong> → <strong>Storage</strong> → <strong>Cookies</strong>, then select
+        the launchable origin.</li>
+      <li><strong>Firefox:</strong> open Developer Tools, select <strong>Storage</strong> →
+        <strong>Cookies</strong>, then select the launchable origin.</li>
+      <li><strong>Safari:</strong> enable web-developer features in <strong>Settings</strong> →
+        <strong>Advanced</strong> if necessary, open the Web Inspector, then select
+        <strong>Storage</strong> → <strong>Cookies</strong> and the launchable origin.</li>
+      <li>Find the matching cookie name and copy only its complete <strong>Value</strong>. Do not copy
+        the whole <code>Cookie</code> header or paste the value anywhere except the Access session
+        field on this page.</li>
+    </ol>
 
     <div id="probe-claw"></div>
 
@@ -301,6 +241,26 @@
     </p>
 
     <div id="claw-raw-cell"></div>
+
+    <h2>Step 1 · Verify the model route</h2>
+    <p>The model probe checks the persistent chat route configured on the course home page or in
+      Module 1a. It remains separate from the launchable connection you verified above.</p>
+
+    <h3>Model route settings</h3>
+    <p>The model probe is a read-only mirror of the persistent chat route configured on the course home
+      page or in Module 1a. Change it here once; the benchmark and later lessons reuse that route. The
+      NemoClaw launchable settings below remain separate.</p>
+    <div id="model-route-settings"></div>
+    <div id="probe-llm"></div>
+
+    <h3>Latency and time to first token across models</h3>
+    <p>Before committing to a model, measure it. The cells below pull matching
+      models from the catalog, stream a short prompt through each one, and
+      record each model's <em>time to first token</em> (TTFT) and time to
+      finish. The catalog-fetching cell starts open so the filter list is visible
+      before you run the benchmark.</p>
+
+    <div id="bench-llm"></div>
 
     <h2>Step 2 · The gateway</h2>
 
@@ -932,7 +892,7 @@ if (!_text.trim() && !_didResult && _toolStarts > 0) {
       nodes: [
         {
           id: "gw-connect", icon: "🔌", title: "Open the gateway connection", x: 0, y: 0,
-          summary: "Open a WebSocket to /cli/gateway, respond to the server's challenge frame with the operator.admin credential, then store a call() helper on state so subsequent nodes can send typed requests without repeating the handshake.",
+          summary: "Authenticates the /cli/gateway WebSocket with operator.admin and stores a call() helper so later nodes reuse the connection.",
           code: GW_CONNECT,
         },
 
@@ -963,7 +923,7 @@ return { models: models?.models?.length, cronJobs: jobs.length };
         {
           id: "gw-chat", icon: "💬", title: "Send a chat message (streaming)", x: 2, y: 0,
           showCode: false,
-          summary: "Call chat.send with a fresh sessionKey and stream tool frames until run-end. The fresh suffix keeps each demo clean and forces a new tool run. The default prompt executes a command; commented alternatives test simpler turns.",
+          summary: "Streams chat.send under a fresh sessionKey until run-end. Commented prompts offer simpler alternatives.",
           code: gwChat({ raw: `"quick-3a-gw-" + Math.random().toString(36).slice(2, 8)` }, {
             raw:
               `// The LAST uncommented line wins; comment the bottom ones to try those above.
@@ -990,7 +950,7 @@ message = "Use your exec tool to run \`whoami\` and \`pwd\` in your sandbox, the
         {
           id: "sk-memory", icon: "🧠", title: "Plant a fact, then ask it back", x: 0, y: 0,
           showCode: false,
-          summary: "Send two turns under the same sessionKey. The second sends only a recall question; the gateway restores the first turn before the model runs. A different key addresses a separate history.",
+          summary: "Sends two turns under one sessionKey so the second can recall the first. Another key creates separate history.",
           code: GW_CONNECT + `
 helpers.log("turn 1 · plant a fact");
 {
@@ -1011,7 +971,7 @@ helpers.log(/BLUEJAY-7/i.test(state.out)
         {
           id: "sk-clear", icon: "🧹", title: "Clear the session memory", x: 1, y: 0,
           showCode: false,
-          summary: "Wipe a session's server-side history with one call. Run it on the memory session above, then re-run the recall turn: the planted code is gone, because the conversation the gateway held is gone. Change sessionKey to clear any session you like. This is the drop-in to copy anywhere you want a fresh start.",
+          summary: "Clears server-side history for one sessionKey. Rerun the recall turn to confirm the planted fact is gone.",
           code: GW_CONNECT + `
 // One call wipes the conversation the gateway holds for this key.
 const sessionKey = "quick-3a-memory";
@@ -1028,7 +988,7 @@ helpers.log("Re-run the recall turn above and the planted code is gone.");
         {
           id: "sk-cleanup", icon: "🗑", title: "Clean up old sessions", x: 2, y: 0,
           showCode: false,
-          summary: "Every distinct sessionKey you use leaves a session behind, and they accumulate in the Control UI. This lists them all (paginated) and deletes the throwaway ones, keeping only the Main Session. Edit KEEP to change what survives, e.g. /:(main|quick-3c-skill)$/ to also keep a session you care about.",
+          summary: "Lists sessions and removes throwaway entries while retaining KEEP. Use /:(main|quick-3c-skill)$/ to preserve another named session.",
           code: GW_CONNECT + `
 // Keep these; delete the rest. The default keeps only the Main Session.
 const KEEP = /:main$/;

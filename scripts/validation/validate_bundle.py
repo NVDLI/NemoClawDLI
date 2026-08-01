@@ -16,9 +16,9 @@ current health without a live lab:
 
 Each suite also runs standalone for detail, e.g. `python3 scripts/validation/prose_variety.py`.
 
-Exit 0 iff there are no SHIP-blocking link failures AND validate_layout passes. Breakage
-outside the shipped surface (anything that is not the released nemoclaw course or its shared
-infra) is LOGGED as advisory and never blocks the gate.
+Exit 0 iff every required ship contract passes, including links, layout, learner code, interface
+prose, localization, dependencies, security, and release evidence. Breakage outside the shipped
+surface is logged at its declared severity rather than silently dropped.
 
 Outputs (overwritten each run, committable as "current known state"):
   docs/validation/latest.json   full machine report (blocking + advisory)
@@ -228,6 +228,9 @@ SUITE_META = [
     ("structure", "Structural rhythm", "recommended",
      "Block-level monotony a sentence metric cannot see: prose runs, buried enumerations, repeated short subsection shapes that may want a focused list, and list clusters that are too close. Code and reference cards are excluded. Break the run, lift the buried list out, add a segued-into list where structure repeats, or refactor dense list clusters at section scale.",
      "scripts/validation/prose_variety.py", "structure_findings"),
+    ("interface_prose", "Interface prose contract", "required",
+     "Every owned HTML interface, including localized overlays, must keep headings and learner-visible component fields readable. Semantic prose is whitespace-normalized before style analysis. Source assembly and runtime newlines are checked separately: UI-string fragmentation, incomplete prompt fragments, source walls, runtime-only wraps, and shorthand title soup block every language. Complete prompt units may remain visibly structured. New files and classes enter automatically.",
+     "scripts/validation/prose_variety.py", "interface_prose_findings"),
     ("branding", "Brand naming", "recommended",
      "Product and brand names must use canonical casing in PROSE: NVIDIA, NemoClaw, OpenClaw, OpenShell, Nemotron. Code, URLs, paths, model-ids, and the lowercase CLI names (openshell, openclaw) are excluded, so only a real prose miscasing flags. Mostly a regression guard: it locks brand casing so future drift cannot ship.",
      "scripts/validation/prose_variety.py", "branding_hits"),
@@ -420,6 +423,44 @@ _EN_PROSE_SUITES = ("prose_variety", "prose_buzz", "redundancy", "grammar", "str
                     "assertions", "word_echo", "comma_weight", "branding", "defer_copula",
                     "dense_repeats", "over_verbage", "padding", "hollow_intro", "repeated_phrase",
                     "vacuous_meta", "staccato_cadence")
+
+
+def _interface_required(item: dict) -> bool:
+    """Whether one interface-prose finding blocks the bundle.
+
+    UI-string fragmentation, incomplete prompt units, source walls, runtime-only wraps, and title
+    shorthand are structural defects in every language. Canonical English also owns the shared
+    compactness budget. Localized length expansion stays visible for a qualified language reviewer
+    until locale profiles define language-specific budgets.
+    """
+    return (item.get("kind") != "component-prose-too-long"
+            or not str(item.get("page", "")).startswith("i18n/"))
+
+
+def _interface_fix(item: dict) -> str:
+    """Give a structural repair, not generic style advice."""
+    return {
+        "component-prose-concatenation":
+            "Keep the complete learner-facing value in one searchable string. Do not split prose "
+            "with + merely to wrap source lines.",
+        "component-prose-array-assembly":
+            "Arrays represent data, not one prose value. Replace the joined fragments with one "
+            "searchable string so reviewers and localization tools see the sentence.",
+        "model-prose-fragmented-array":
+            "Keep array entries as complete prompt sentences or sections. Do not use fragments merely "
+            "to wrap source code.",
+        "model-prose-source-wall":
+            "Split the prompt into complete semantic units joined with one space, or use a multiline "
+            "template only when its runtime line breaks carry meaning.",
+        "model-prose-runtime-wrap":
+            "Normalize source-only wrapping. Keep runtime newlines only between complete sentences, "
+            "sections, list items, or key/value instruction lines.",
+        "title-shorthand":
+            "Replace arrows, operators, and clipped abbreviations with the relationship in words.",
+        "component-prose-too-long":
+            "Keep the action and immediate outcome in the component. Move durable explanation into "
+            "the surrounding lesson prose.",
+    }.get(item.get("kind"), "Rewrite the component copy as one short, readable value.")
 
 
 def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang: str = "en") -> int:
@@ -630,10 +671,17 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
         pv_phrase = [{"page": rel, "phrase": p, "sentence": s} for f, rel in pv._pages(scope) for p, s in pv.repeated_phrase(f)]
         pv_meta = [{"page": rel, "phrase": p, "sentence": s} for f, rel in pv._pages(scope) for p, s in pv.vacuous_meta(f)]
         pv_staccato = [{"page": rel, "kind": k, "detail": d, "sentence": c[:160]} for f, rel in pv._pages(scope) for k, d, c in pv.staccato_cadence(f)]
+        pv_interface_pages = list(pv._interface_pages(scope))
+        pv_interface = [{"page": rel, **item}
+                        for f, rel in pv_interface_pages
+                        for item in pv.interface_prose_findings(f)]
+        if any(_interface_required(item) for item in pv_interface):
+            ok = False
     except Exception as e:
         pv_rows, pv_flagged, pv_antithesis, pv_grammar, pv_structure, pv_heading, pv_listcard, pv_assert, pv_echo, pv_comma, pv_brand = [], [], [], [], [], [], [], [], [], [], []
-        pv_defer, pv_dense, pv_verbose, pv_padding, pv_hollow, pv_phrase, pv_meta, pv_staccato = [], [], [], [], [], [], [], []
-        for _s in ("prose_variety", "prose_buzz", "redundancy", "grammar", "structure", "headings", "assertions", "word_echo", "comma_weight", "branding", "defer_copula", "dense_repeats", "over_verbage", "padding", "hollow_intro", "repeated_phrase", "vacuous_meta", "staccato_cadence"):
+        pv_defer, pv_dense, pv_verbose, pv_padding, pv_hollow, pv_phrase, pv_meta, pv_staccato, pv_interface = [], [], [], [], [], [], [], [], []
+        pv_interface_pages = []
+        for _s in ("prose_variety", "prose_buzz", "redundancy", "grammar", "structure", "headings", "assertions", "word_echo", "comma_weight", "branding", "defer_copula", "dense_repeats", "over_verbage", "padding", "hollow_intro", "repeated_phrase", "vacuous_meta", "staccato_cadence", "interface_prose"):
             suite_errors[_s] = str(e)
         vl_fail.append(f"prose variety error: {e}")
 
@@ -679,10 +727,14 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
         fa_find, fa_total = {}, 0
         suite_errors["figure_audit"] = str(e); vl_fail.append(f"figure audit error: {e}")
 
-    # cell audit (advisory): runnable-cell contract (transparency, helpers.log, awaited calls, no inline key).
+    # Cell audit: runnable-cell quality plus hard duplicate-key and embedded-key contracts.
     try:
         ca_find = ca.run(verbose=False)
         ca_total = sum(len(v) for v in ca_find.values())
+        hard_cell_findings = len(ca_find.get("inline_key", [])) + len(ca_find.get("duplicate_keys", []))
+        if hard_cell_findings:
+            ok = False
+            vl_fail.append(f"learner cell contract: {hard_cell_findings} hard finding(s)")
     except Exception as e:
         ca_find, ca_total = {}, 0
         suite_errors["cell_audit"] = str(e); vl_fail.append(f"cell audit error: {e}")
@@ -884,6 +936,16 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
     def D(page, detail, severity, fix):
         return {"page": page, "detail": detail, "severity": severity, "fix": fix}
 
+    def _concept_page(detail):
+        match = re.match(r"([^:]+\.html):", detail)
+        return f"web/nemoclaw/{match.group(1)}" if match else "web/nemoclaw"
+
+    def _interface_severity(item):
+        # Structural anti-patterns are language-neutral and always block. Localized prose still
+        # receives size findings, but translation expansion remains reviewer-owned until each
+        # locale profile declares its own compactness budget.
+        return REQUIRED if _interface_required(item) else RECOMMENDED
+
     def _ground_fix(issues):
         j = " ".join(issues)
         if "em-dash" in j:
@@ -897,6 +959,9 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
     _CELL_FIX = {
         "inline_key": (REQUIRED, "Delete the hard-coded key. The cell reaches the model through the proxy; "
                        "a key in static source ships to every student and into git."),
+        "duplicate_keys": (REQUIRED, "Delete the duplicate object property and keep the intended value. "
+                           "JavaScript silently keeps the last key, so the code students read disagrees with "
+                           "the code the browser executes."),
         "opaque": (RECOMMENDED, "Show the work in the panel: helpers.log the steps, finish_reason, and usage "
                    "(or surface the raw payload) so the run is observable, not a black box."),
         "console": (RECOMMENDED, "Write with helpers.log, not console.log, so the output lands in the cell "
@@ -1016,7 +1081,7 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
         "course_contract": [D("web/nemoclaw/COURSE_CANON.md", x, REQUIRED,
                               "Restore the canonical DLI title, abstract, and learning objectives verbatim. Do not paraphrase, retitle, reorder, or translate the English source copy.")
                             for x in course_contract_find],
-        "concept_order": [D("web/nemoclaw/01b-react.html", x, REQUIRED,
+        "concept_order": [D(_concept_page(x), x, REQUIRED,
                             "Define the term or prerequisite before the prose or runnable code depends on it; avoid hover-only definitions.")
                           for x in concept_order_find],
         "prose_variety": [D(r["path"], f"score {r['score']} · {', '.join(r['tells'])}", CONSIDER,
@@ -1109,6 +1174,11 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
                               _STACCATO_FIX.get(sc["kind"], "Choppy cadence the rhythm score misses. Merge the short "
                               "clauses into flowing sentences and cut the stacked mid-sentence colons."))
                              for sc in pv_staccato],
+        "interface_prose": [D(f"{item['page']}:{item['line']}",
+                               f"[{item['field']}] {item['detail']}: {item['text']}",
+                               _interface_severity(item),
+                               _interface_fix(item))
+                              for item in pv_interface],
         "structure": [D(s["page"], f"[{s['kind']}] {s['detail']}", RECOMMENDED, _STRUCTURE_FIX.get(s["kind"],
                         "Vary the block rhythm: break the run, lift the buried list, or space the stacked lists."))
                       for s in pv_structure],
@@ -1213,7 +1283,7 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
         "grounding": len(grecs), "prose_variety": len(pv_rows), "prose_buzz": len(pv_rows), "redundancy": len(pv_rows), "grammar": len(pv_rows), "structure": len(pv_rows), "headings": len(pv_rows), "assertions": len(pv_rows), "word_echo": len(pv_rows), "comma_weight": len(pv_rows), "branding": len(pv_rows),
         "defer_copula": len(pv_rows), "dense_repeats": len(pv_rows), "over_verbage": len(pv_rows), "padding": len(pv_rows),
         "hollow_intro": len(pv_rows), "repeated_phrase": len(pv_rows), "vacuous_meta": len(pv_rows),
-        "staccato_cadence": len(pv_rows),
+        "staccato_cadence": len(pv_rows), "interface_prose": len(pv_interface_pages),
         "code_comments": ch_scanned, "code_walls": ch_scanned, "code_dup": ch_scanned,
         "code_size": ch_scanned, "code_const": ch_scanned,
         "helper_notebook": 1,
@@ -1365,6 +1435,7 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
           f"ui-contract {len(ca_find.get('ui_contract', []))}, "
           f"code-surface {len(ca_find.get('code_surface', []))}, "
           f"readability {len(ca_find.get('readability', []))}, "
+          f"duplicate-keys {len(ca_find.get('duplicate_keys', []))}, "
           f"copy {len(ca_find.get('copy_surface', []))}, "
           f"run-cell-style {len(ca_find.get('run_cell_style', []))}, "
           f"prompt-experiment {len(ca_find.get('prompt_experiment', []))})")
@@ -1495,7 +1566,7 @@ def _render_md(summary: dict) -> str:
                    "defer_copula": "Deferred copula", "dense_repeats": "Dense repetition", "over_verbage": "Over-verbage",
                    "padding": "Padding", "hollow_intro": "Scaffolding openers",
                    "repeated_phrase": "Phrase repetition", "vacuous_meta": "Vacuous meta-writing",
-                   "staccato_cadence": "Staccato cadence",
+                   "staccato_cadence": "Staccato cadence", "interface_prose": "Interface prose contract",
                    "code_comments": "Code comments", "code_walls": "Code walls", "code_dup": "Code duplication",
                    "code_size": "File size & density", "code_const": "Hard-coded constants",
                    "code_prose": "Prose tells in code"}

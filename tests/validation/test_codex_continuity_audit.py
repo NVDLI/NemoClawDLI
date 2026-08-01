@@ -407,6 +407,78 @@ class CodexContinuityAuditTests(unittest.TestCase):
         )
         self.assertTrue(any("missing hook trust boundary" in item for item in audit.audit(root, paths)))
 
+    def test_public_contribution_does_not_require_an_operator_extension(self) -> None:
+        temporary, root, paths = self.fixture()
+        self.addCleanup(temporary.cleanup)
+        skill = root / ".agents/skills/nemoclaw-contribution/SKILL.md"
+        skill.write_text(
+            skill.read_text(encoding="utf-8").replace(
+                "absence is normal",
+                "absence is required",
+            ),
+            encoding="utf-8",
+        )
+        self.assertTrue(
+            any(
+                "missing public contribution boundary" in item
+                for item in audit.audit(root, paths)
+            )
+        )
+
+    def test_operator_extension_cannot_replace_public_checks(self) -> None:
+        temporary, root, paths = self.fixture()
+        self.addCleanup(temporary.cleanup)
+        skill = root / ".agents/skills/nemoclaw-contribution/SKILL.md"
+        skill.write_text(
+            skill.read_text(encoding="utf-8").replace(
+                "must not weaken, skip",
+                "may weaken or skip",
+            ),
+            encoding="utf-8",
+        )
+        self.assertTrue(
+            any(
+                "missing public contribution boundary" in item
+                for item in audit.audit(root, paths)
+            )
+        )
+
+    def test_contribution_facade_is_the_default_interface(self) -> None:
+        temporary, root, paths = self.fixture()
+        self.addCleanup(temporary.cleanup)
+        skill = root / ".agents/skills/nemoclaw-contribution/SKILL.md"
+        skill.write_text(
+            skill.read_text(encoding="utf-8").replace(
+                "`candidate`",
+                "`make-candidate`",
+            ),
+            encoding="utf-8",
+        )
+        self.assertTrue(
+            any(
+                "missing contribution facade token" in item
+                for item in audit.audit(root, paths)
+            )
+        )
+
+    def test_facade_absence_preserves_the_public_fallback(self) -> None:
+        temporary, root, paths = self.fixture()
+        self.addCleanup(temporary.cleanup)
+        skill = root / ".agents/skills/nemoclaw-contribution/SKILL.md"
+        skill.write_text(
+            skill.read_text(encoding="utf-8").replace(
+                "complete fallback contract",
+                "internal-only fallback",
+            ),
+            encoding="utf-8",
+        )
+        self.assertTrue(
+            any(
+                "missing contribution facade token" in item
+                for item in audit.audit(root, paths)
+            )
+        )
+
     def test_malformed_skill_metadata_is_rejected(self) -> None:
         temporary, root, paths = self.fixture()
         self.addCleanup(temporary.cleanup)

@@ -483,12 +483,19 @@ class PrivilegedRequestTests(unittest.TestCase):
                 self.context,
             )
 
-    def test_child_projection_drops_process_control_variables(self) -> None:
-        projected = privileged_request.child_request_env({
-            "DLI_REQUEST_COURSE_OP": "cdn-publish", "BASH_ENV": "/tmp/attack",
-            "PATH": "/tmp/attack", "AWS_PROFILE": "attack",
-        })
-        self.assertEqual("cdn-publish", projected["COURSE_OP"])
+    def test_child_projection_matches_the_bridge_and_drops_process_control_variables(self) -> None:
+        bridge = (ROOT / ".gitlab/ci/privileged.yml").read_text(encoding="utf-8")
+        declared = dict(re.findall(
+            r'^    (DLI_REQUEST_[A-Z0-9_]+): "\$([A-Z0-9_]+)"$', bridge, flags=re.MULTILINE,
+        ))
+        expected = {child: canonical for canonical, child in privileged_request.CHILD_BINDINGS}
+        self.assertEqual(expected, declared)
+        parent = self.base()
+        child = {name: parent.get(canonical, "") for name, canonical in declared.items()}
+        child.update({"BASH_ENV": "/tmp/attack", "PATH": "/tmp/attack", "AWS_PROFILE": "attack"})
+        projected = privileged_request.child_request_env(child)
+        result = privileged_request.validate("cdn-publish", projected, Path("."), self.context)
+        self.assertEqual("cdn-publish", result["operation"])
         self.assertFalse({"BASH_ENV", "PATH", "AWS_PROFILE"} & set(projected))
 
     def test_stable_ref_is_deferred_to_root_owned_publisher_allowlist(self) -> None:

@@ -142,14 +142,14 @@ class InterfaceInventoryAuditTests(unittest.TestCase):
     def test_editable_cells_emit_their_declared_lifecycle(self) -> None:
         for contract, source in self.runtime_surfaces("editable-code-cell", "scripts/_canvas.js"):
             declared = set(contract["form_factors"]["editable-code-cell"]["states"])
-            emitted = set(re.findall(r'setCellState\("([a-z-]+)"\)', source))
+            emitted = set(re.findall(r'setCellState\("([a-z-]+)"(?:,|\))', source))
             self.assertEqual({"ready", "running", "stopped", "succeeded", "failed", "reset"}, declared)
             self.assertTrue(declared.issubset(emitted))
 
     def test_ordered_flows_emit_observable_lifecycle_states(self) -> None:
         expected = {"ready", "running", "stopped", "succeeded", "failed", "reset"}
         for _, source in self.runtime_surfaces("ordered-flow", "scripts/_canvas.js"):
-            emitted = set(re.findall(r'setFlowState\("([a-z-]+)"\)', source))
+            emitted = set(re.findall(r'setFlowState\("([a-z-]+)"(?:,|\))', source))
             self.assertEqual(expected, emitted)
 
     def test_credential_controls_emit_semantic_connection_states(self) -> None:

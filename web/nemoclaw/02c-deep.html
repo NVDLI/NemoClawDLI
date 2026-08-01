@@ -129,7 +129,7 @@
     an in-memory filesystem to make shared state visible.
   </div>
 
-  <h2>Try it · plan → investigate → synthesize</h2>
+  <h2>Try it · plan, investigate, and synthesize</h2>
   <p>
     Ask a research question and watch the agent create branches that run in
     parallel across curated external materials and this course before writing one cited answer.
@@ -615,7 +615,7 @@ state.vfs = {};
 state.writeFile = tool(
   async ({ path, content }) => { state.vfs[path] = content; return "wrote " + path + " (" + content.length + " chars)"; },
   { name: "write_file",
-    description: "Save text to a file. Call this whenever you finish a deliverable. Files persist across sub-agent calls.",
+    description: "Save a completed deliverable to a file that persists across sub-agent calls.",
     schema: z.object({ path: z.string(), content: z.string() }) },
 );
 

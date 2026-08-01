@@ -199,6 +199,40 @@ class ThemeRuntimeContractTests(unittest.TestCase):
         self.assertIn('BROWSER_TOOLS_REQUIRED: "1"', test_job)
         self.assertIn('cd scripts/runtime && pnpm install --frozen-lockfile --ignore-scripts', core)
 
+    def test_pages_protected_root_build_has_the_pinned_browser_runtime(self) -> None:
+        core = (ROOT / ".gitlab/ci/core.yml").read_text(encoding="utf-8")
+        pages = core_job("pages", "pages_smoke")
+        self.assertIn(
+            f"image: {contribution_safety.PINNED_PLAYWRIGHT_IMAGE}",
+            pages,
+        )
+        self.assertIn('BROWSER_TOOLS_REQUIRED: "1"', pages)
+        self.assertIn(
+            'NODE_PATH="$CI_PROJECT_DIR/scripts/runtime/node_modules"',
+            pages,
+        )
+        self.assertEqual([], contribution_safety.audit_gitlab_pages_browser_runtime(core))
+        for original, replacement in (
+            ('BROWSER_TOOLS_REQUIRED: "1"', 'BROWSER_TOOLS_REQUIRED: "0"'),
+            (
+                'NODE_PATH="$CI_PROJECT_DIR/scripts/runtime/node_modules"',
+                'NODE_PATH="/tmp/nemoclaw-prod-root/scripts/runtime/node_modules"',
+            ),
+            (
+                contribution_safety.PINNED_PLAYWRIGHT_IMAGE,
+                "node:20-bookworm-slim",
+            ),
+        ):
+            with self.subTest(original=original):
+                mutated_pages = pages.replace(original, replacement, 1)
+                self.assertNotEqual(mutated_pages, pages)
+                mutated = core.replace(pages, mutated_pages, 1)
+                codes = {
+                    item["code"]
+                    for item in contribution_safety.audit_gitlab_pages_browser_runtime(mutated)
+                }
+                self.assertIn("gitlab-pages-browser-runtime", codes)
+
     def test_github_validation_jobs_install_the_pinned_browser_runtime(self) -> None:
         for workflow in ("pages.yml", "release.yml"):
             with self.subTest(workflow=workflow):
