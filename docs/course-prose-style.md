@@ -37,7 +37,7 @@ Automated signals identify passages that deserve review. Human judgment decides 
 would improve them. Run both commands before recording the disposition in the Issue or merge request.
 
 ```bash
-python3 scripts/validation/prose_variety.py --scope course
+python3 scripts/validation/prose_variety.py --scope ship
 python3 scripts/validation/validate_bundle.py --scope ship --no-write
 ```
 
@@ -48,6 +48,22 @@ Review each proposed rewrite against these checks:
 - Would the intended audience say it naturally while the paragraph progresses as a whole?
 
 A lower score alone never justifies a less precise sentence.
+
+## Code-carried prose
+
+Learners read component copy, prompts, tool descriptions, and comments as code. Review three
+separate representations:
+
+1. **Meaning.** Validators normalize whitespace before checking grammar, length, repetition, and
+   cadence. Source wrapping must not change that result.
+2. **Source shape.** Keep interface fields such as `intro`, `summary`, and `title` in one searchable
+   string. A prompt or tool description may use an array joined with one space only when every item
+   is a complete sentence or section. Do not split clauses with `+` to satisfy a line limit.
+3. **Runtime shape.** A template-literal newline reaches the model or rendered interface. Keep it
+   only when it separates meaningful paragraphs, list items, headings, or key/value instructions.
+
+Duplicate object keys are forbidden in runnable cells. JavaScript silently keeps the last value,
+making the code a learner reads disagree with the code the browser executes.
 
 ## Repository prose
 

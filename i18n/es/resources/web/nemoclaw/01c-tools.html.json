@@ -98,6 +98,11 @@
       "source": "\n    Model Context Protocol (MCP) gives tool serving a standard shape. The agent retrieves a server's\n    catalog with <code>tools/list</code> and invokes a selected entry with\n    <code>tools/call</code>. Those tools live in a separate process that the agent\n    connects to and queries when it starts up. Because the protocol is the same\n    everywhere, the agent can connect to additional servers without learning a new\n    interface for each one. Use MCP when tool discovery and transport need a shared\n    protocol. Use a local function, a repo skill, or a direct API call when the harness\n    already knows where the capability lives and how to invoke it.\n  ",
       "value": "Model Context Protocol (MCP) define una interfaz estándar para publicar herramientas. Un agente\nobtiene mediante <code>tools/list</code> la lista que ofrece un servidor e invoca cada herramienta con\n<code>tools/call</code>. Estas herramientas pueden ejecutarse en otro proceso, al que el agente se\nconecta durante la inicialización. Como todos los servidores comparten el protocolo, el agente puede\nincorporar nuevas fuentes de herramientas sin implementar una interfaz distinta para cada una. MCP\nresulta útil cuando el descubrimiento y el transporte requieren un protocolo común. Si el motor de ejecución ya\nconoce la ubicación y la forma de invocar una capacidad, suele bastar una función local, una skill\ndel repositorio o una llamada directa a una API."
     },
+    "rich.6409a1729518": {
+      "type": "rich",
+      "source": "\n      The page follows that contract from local functions to a search backend and a sub-agent.\n      A <strong>sub-agent as a tool</strong> places one focused agent behind a single schema so the\n      outer workflow can route work without exposing every internal capability. Model Context\n      Protocol (MCP) gives a client a standard way to discover and call tools served by another\n      process. Use it at a capability boundary, after validating the server, identity, and scope.\n      Both patterns keep the main loop's tool list small and motivate Module 2's scoped workflows.\n    ",
+      "value": "\n      La página sigue ese contrato desde las funciones locales hasta un backend de búsqueda y un subagente.\n      Un <strong>subagente como herramienta</strong> sitúa un agente especializado detrás de un único esquema para que el\n      workflow externo pueda enrutar el trabajo sin exponer cada capacidad interna. Model Context\n      Protocol (MCP) ofrece al cliente una forma estándar de descubrir e invocar herramientas servidas por otro\n      proceso. Úsalo en un límite de capacidades, después de validar el servidor, la identidad y el alcance.\n      Ambos patrones mantienen reducida la lista de herramientas del bucle principal y motivan los workflows acotados del Módulo 2.\n    "
+    },
     "rich.6e4cb8b55f4e": {
       "type": "rich",
       "source": "\n    Agents rarely have a single tool. With more than one, the model decides\n    which to call based on the <code>description</code> field.\n  ",
@@ -140,6 +145,11 @@
       "source": " Streams the grounded answer; the return surfaces the full article the model actually read.",
       "value": " Streams the grounded answer; the return surfaces the full article the model actually read.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
+    "text.04b54aefbd2f": {
+      "type": "text",
+      "source": "Runs the unchanged chatStream call with discovered tools, keeping transport outside the agent loop.",
+      "value": "La llamada a chatStream no cambia: el bucle no necesita saber si las herramientas proceden de un array fijado en el código o de un servidor MCP remoto. La etapa de descubrimiento permite sustituir la fuente sin modificar el bucle."
     },
     "text.04f8996da763": {
       "type": "text",
@@ -230,6 +240,11 @@
       "value": " room for several search-then-read rounds before the safety cap",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
+    "text.0f54ec71de61": {
+      "type": "text",
+      "source": "Dispatch tools, then answer",
+      "value": "Procesa las llamadas a herramientas y responde"
+    },
     "text.11ed402fcd6b": {
       "type": "text",
       "source": " Describe the calculator tool so the model knows when to route to it.",
@@ -268,11 +283,6 @@
       "source": " Send the prepared messages and stream the model response.",
       "value": " Send the prepared messages and stream the model response.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
-    "text.1bbad7aaa956": {
-      "type": "text",
-      "source": "Define an in-page server with tools/list and tools/call in MCP's JSON-RPC shape. A deployed MCP server carries those calls over stdio or HTTP instead of the same JavaScript process.",
-      "value": "Define un servidor en la página con tools/list y tools/call en formato JSON-RPC. Un servidor MCP desplegado transportaría estas llamadas mediante stdio o HTTP en lugar de ejecutarlas en el mismo proceso JavaScript."
     },
     "text.1d1ec0e0e8bd": {
       "type": "text",
@@ -313,21 +323,16 @@
       "value": "true to read the full article for the best match instead of short blurbs",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
-    "text.25a3a8e24756": {
-      "type": "text",
-      "source": "The same single chatStream call runs unchanged because the agent loop cannot tell whether the tools came from a hardcoded array or a remote MCP server. The discovery step above lets you swap that source without touching the loop at all.",
-      "value": "La llamada a chatStream no cambia: el bucle no necesita saber si las herramientas proceden de un array fijado en el código o de un servidor MCP remoto. La etapa de descubrimiento permite sustituir la fuente sin modificar el bucle."
-    },
-    "text.25da1df7dff7": {
-      "type": "text",
-      "source": "The question the model answers using the discovered glossary tools. A definitional ask is served by glossary_search, while a request for a specific term by slug goes to glossary_lookup.",
-      "value": "Es la pregunta que el modelo resolverá mediante las herramientas descubiertas. glossary_search atiende definiciones generales; glossary_lookup recupera un término específico a partir de su slug."
-    },
     "text.26e4f0aada35": {
       "type": "text",
       "source": "2024-03-12",
       "value": "2024-03-12",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
+    "text.283d8940d227": {
+      "type": "text",
+      "source": "Streams the routing decision. Edit either tool description and rerun to see how it changes the route.",
+      "value": "Transmite la respuesta mientras el modelo compara las descripciones y muestra la decisión de enrutamiento. Modifica una descripción y vuelve a ejecutar el nodo para comprobar si cambia la ruta elegida."
     },
     "text.2842081fe7fd": {
       "type": "text",
@@ -432,27 +437,22 @@
       "value": "(",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
-    "text.333af355f202": {
-      "type": "text",
-      "source": "Client → tools/call → LLM #2",
-      "value": "Cliente → tools/call → LLM #2"
-    },
     "text.34426c5d0088": {
       "type": "text",
       "source": " The same in-page glossary server the search cell called directly, now reached through",
       "value": " The same in-page glossary server the search cell called directly, now reached through",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
-    "text.35fe07575a1a": {
-      "type": "text",
-      "source": "A fake in-page MCP server exposes two tools through tools/list and tools/call with no network. The agent discovers the tool list, hands the schemas to the LLM, and dispatches the model's tool_calls back through tools/call. Only the tool source changes; the agent loop stays identical to a normal tool call.",
-      "value": "Un servidor MCP simulado en la página expone dos herramientas mediante tools/list y tools/call, sin utilizar la red. El agente descubre la lista, entrega los esquemas al LLM y dirige las llamadas del modelo a tools/call. Solo cambia el origen de las herramientas; el bucle conserva la misma estructura."
-    },
     "text.38e7b324bdc5": {
       "type": "text",
       "source": "calculate only accepts arithmetic.",
       "value": "calculate only accepts arithmetic.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
+    "text.3a3e43fce08a": {
+      "type": "text",
+      "source": "Give the top-level agent one query_customer_db tool backed by a schema-aware sub-agent. The caller receives an answer, not raw rows.",
+      "value": "El agente principal recibe una única herramienta de consulta respaldada por un subagente que conoce el esquema de datos; un pequeño array de JavaScript sustituye aquí a SQL. Las filas sin procesar nunca llegan al agente principal, que formula una pregunta y recibe una respuesta en lenguaje natural."
     },
     "text.3a83362c50c7": {
       "type": "text",
@@ -597,6 +597,11 @@
       "source": " TODO: Try a broad definition or request a specific glossary term.",
       "value": " TODO: Prueba una definición amplia o solicita un término concreto del glosario."
     },
+    "text.47f8bdf61749": {
+      "type": "text",
+      "source": "Explain technical or scientific concepts; do not use for arithmetic.",
+      "value": "Explains a technical or scientific concept in plain English. Use for definitions and conceptual questions. Do NOT use for arithmetic."
+    },
     "text.499419ebeb5e": {
       "type": "text",
       "source": "two tools, the model routes",
@@ -642,6 +647,11 @@
       "source": "Tool spec (to the main agent)",
       "value": "Especificación de la herramienta (para el agente principal)"
     },
+    "text.4eec59a3f753": {
+      "type": "text",
+      "source": "Evaluate arithmetic expressions; do not use for definitions or conceptual questions.",
+      "value": "Evaluate an arithmetic expression. Use for any computation. Do NOT use for definitions or conceptual questions."
+    },
     "text.514cc7428c3b": {
       "type": "text",
       "source": "Edit this to try a question like 'How many pro-plan customers do we have?' or 'Who has the most tickets in the last 30 days?'",
@@ -663,6 +673,12 @@
       "source": " One glossary tool, two modes: ranked blurbs from several terms, or the full article for one.",
       "value": " One glossary tool, two modes: ranked blurbs from several terms, or the full article for one.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
+    "text.5620fbf32f8a": {
+      "type": "text",
+      "source": "You are a customer-database analyst. Use ONLY the rows provided. If the rows do not contain the answer, say so. Be concise.\\\\n\\\\n",
+      "value": "You are a customer-database analyst. Use ONLY the rows provided. If the rows do not contain the answer, say so. Be concise.\\\\n\\\\n",
+      "untranslated": "carried from the qualified es-ES review at 1324ea214b69f7df81614c2ebaad451a3dcdc30b"
     },
     "text.56525bf8e45b": {
       "type": "text",
@@ -744,17 +760,6 @@
       "type": "text",
       "source": "What is a vector database, and how does it use embeddings?",
       "value": "What is a vector database, and how does it use embeddings?",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
-    "text.62e663ee4de1": {
-      "type": "text",
-      "source": "The executor. It calls the in-page glossary MCP server (defined at the top of this page) via tools/call and gets back ranked NVIDIA glossary entries. The catalog and the search both run locally in your browser, with no key and no network call.",
-      "value": "Actúa como ejecutor: llama al servidor de glosario incluido en la página mediante tools/call y devuelve entradas clasificadas. El catálogo y la búsqueda se ejecutan localmente en el navegador, sin clave ni solicitud de red."
-    },
-    "text.6319be709284": {
-      "type": "text",
-      "source": "Evaluate an arithmetic expression. Use for any computation. Do NOT use for definitions or conceptual questions.",
-      "value": "Evaluate an arithmetic expression. Use for any computation. Do NOT use for definitions or conceptual questions.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
     "text.63400dc62376": {
@@ -875,6 +880,11 @@
       "source": "Three roots feed into one LLM, and editing either tool description shifts how the model routes. The description string is one of the most consequential prompt-engineering surfaces in any tool-using agent.",
       "value": "Tres nodos convergen en un LLM. Al modificar la descripción de una herramienta cambia la decisión de enrutamiento del modelo. La descripción es una de las superficies de ingeniería de prompts con mayor impacto en un agente que utiliza herramientas."
     },
+    "text.775c1f9044f4": {
+      "type": "text",
+      "source": "Calls the in-page MCP server through tools/call and returns ranked NVIDIA glossary entries. The search stays local to the browser.",
+      "value": "Actúa como ejecutor: llama al servidor de glosario incluido en la página mediante tools/call y devuelve entradas clasificadas. El catálogo y la búsqueda se ejecutan localmente en el navegador, sin clave ni solicitud de red."
+    },
     "text.77f6b5919129": {
       "type": "text",
       "source": "Module 2a: Workflows →",
@@ -928,12 +938,6 @@
       "value": "function",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
-    "text.793e04b7aed8": {
-      "type": "text",
-      "source": "You are a customer-database analyst. Use ONLY the rows provided. ",
-      "value": "You are a customer-database analyst. Use ONLY the rows provided. ",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
     "text.795a9e2f7ad7": {
       "type": "text",
       "source": "Boris Müller",
@@ -945,6 +949,16 @@
       "source": "2023-08-22",
       "value": "2023-08-22",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
+    "text.7b1a5970524a": {
+      "type": "text",
+      "source": "Sets the question. Definitions route to glossary_search; requests by slug route to glossary_lookup.",
+      "value": "Es la pregunta que el modelo resolverá mediante las herramientas descubiertas. glossary_search atiende definiciones generales; glossary_lookup recupera un término específico a partir de su slug."
+    },
+    "text.7be7a0cea3e6": {
+      "type": "text",
+      "source": "Defines tools/list and tools/call in MCP's JSON-RPC shape. A deployed server transports the same calls over stdio or HTTP.",
+      "value": "Define un servidor en la página con tools/list y tools/call en formato JSON-RPC. Un servidor MCP desplegado transportaría estas llamadas mediante stdio o HTTP en lugar de ejecutarlas en el mismo proceso JavaScript."
     },
     "text.7c44b6b5352b": {
       "type": "text",
@@ -1012,6 +1026,11 @@
       "value": " Edit the system prompt or the tools, then Run to re-render.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
+    "text.810a24cd0d6f": {
+      "type": "text",
+      "source": "Writes the final answer from retrieved results. No tools are passed, so the model must use the returned evidence.",
+      "value": "Sintetiza la respuesta final a partir de los resultados recuperados. Esta llamada no recibe herramientas, por lo que debe responder con la información obtenida por la llamada 1 en lugar de iniciar otra búsqueda."
+    },
     "text.842bc6e20dfa": {
       "type": "text",
       "source": "error: ",
@@ -1027,11 +1046,6 @@
       "type": "text",
       "source": "Try it · an agent with two real tools",
       "value": "Prueba · un agente con dos herramientas reales"
-    },
-    "text.89c87b85c178": {
-      "type": "text",
-      "source": "\n      The page follows that contract from local functions to a search backend, a sub-agent,\n      and finally a Model Context Protocol (MCP) server. These are different ways to supply\n      capabilities to the same loop. A long flat tool list also consumes context and can make\n      routing less reliable, which motivates the scoped workflows in Module 2.\n    ",
-      "value": "Esta sección sigue este mismo proceso usando desde funciones locales hasta un backend de búsqueda, un subagente y, finalmente, un servidor de Model Context Protocol (MCP). En realidad, se trata de distintas formas de proporcionar capacidades al mismo bucle. Como contrapunto, hay que tener en cuenta que una lista de herramientas extensa también consume contexto y puede reducir la fiabilidad del enrutamiento, lo que motiva los flujos de trabajo acotados del Módulo 2 de este curso."
     },
     "text.8a8de823d5ed": {
       "type": "text",
@@ -1072,22 +1086,11 @@
       "source": " TODO: Choose an example or write a question that makes the tool choice interesting.",
       "value": " TODO: Elige un ejemplo o escribe una pregunta que haga interesante la elección de herramienta."
     },
-    "text.973e63978c76": {
-      "type": "text",
-      "source": "Explains a technical or scientific concept in plain English. Use for definitions and conceptual questions. Do NOT use for arithmetic.",
-      "value": "Explains a technical or scientific concept in plain English. Use for definitions and conceptual questions. Do NOT use for arithmetic.",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
     "text.983987033f0e": {
       "type": "text",
       "source": "**",
       "value": "**",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
-    "text.99598099b2dc": {
-      "type": "text",
-      "source": "Streams the model as it reasons over the two tool descriptions, then returns the routing decision. The route turns almost entirely on the description strings, so edit one and rerun to watch the model change its mind.",
-      "value": "Transmite la respuesta mientras el modelo compara las descripciones y muestra la decisión de enrutamiento. Modifica una descripción y vuelve a ejecutar el nodo para comprobar si cambia la ruta elegida."
     },
     "text.9bb0026a8b4b": {
       "type": "text",
@@ -1274,11 +1277,6 @@
       "value": " Discover tools through MCP instead of hard-coding direct calls.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
-    "text.b03a84ee14e2": {
-      "type": "text",
-      "source": "Force glossary_search so the complete tool round-trip stays visible. The model supplies the search query; autonomous tool routing is the lesson above and the behavior of the final artifact.",
-      "value": "Fuerza una búsqueda para mantener visible el bucle completo de la herramienta. El modelo genera la consulta; la sección anterior y el artefacto final muestran el enrutamiento autónomo."
-    },
     "text.b07e027420de": {
       "type": "text",
       "source": "2025-11-04",
@@ -1412,6 +1410,21 @@
       "value": "system",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
+    "text.bd232248b00f": {
+      "type": "text",
+      "source": "Handles arithmetic only. Its narrow description steers conceptual questions to the other tool.",
+      "value": "Acepta únicamente expresiones aritméticas. La descripción excluye definiciones y preguntas conceptuales para dirigir esas consultas hacia la otra herramienta."
+    },
+    "text.bf3b25babd23": {
+      "type": "text",
+      "source": "Forces glossary_search to expose the complete round-trip while the model supplies the query.",
+      "value": "Fuerza una búsqueda para mantener visible el bucle completo de la herramienta. El modelo genera la consulta; la sección anterior y el artefacto final muestran el enrutamiento autónomo."
+    },
+    "text.bfd21ead912e": {
+      "type": "text",
+      "source": "Forwards each tool_call through tools/call, appends the result, and asks the model for the final answer.",
+      "value": "Cierra el bucle: envía cada llamada solicitada por el modelo a tools/call, añade el resultado como mensaje de herramienta y vuelve a invocar el modelo para generar la respuesta final."
+    },
     "text.c161ac627293": {
       "type": "text",
       "source": "tools/call",
@@ -1446,10 +1459,10 @@
       "source": "User question",
       "value": "Pregunta del usuario"
     },
-    "text.c8cc066e05a2": {
+    "text.c84612fc6182": {
       "type": "text",
-      "source": "Closes the loop: for each tool_call the model requested, this node forwards the call to the server's tools/call endpoint, appends the result as a tool message, then makes one final model call to produce the user-facing answer from whatever the server returned.",
-      "value": "Cierra el bucle: envía cada llamada solicitada por el modelo a tools/call, añade el resultado como mensaje de herramienta y vuelve a invocar el modelo para generar la respuesta final."
+      "source": "Dispatch to the sub-agent and answer",
+      "value": "Reenviar al subagente · sintetizar respuesta final"
     },
     "text.c9f6aee2dc65": {
       "type": "text",
@@ -1474,11 +1487,6 @@
       "source": "You are a customer-success agent. When the user asks about customer data, call query_customer_db rather than guessing.",
       "value": "You are a customer-success agent. When the user asks about customer data, call query_customer_db rather than guessing.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
-    "text.cb033143d9b2": {
-      "type": "text",
-      "source": "Synthesizes the final answer from the search results. Note this call passes NO tools, so it must answer from what call #1 retrieved rather than request another search. That is what turns a tool result into a final reply.",
-      "value": "Sintetiza la respuesta final a partir de los resultados recuperados. Esta llamada no recibe herramientas, por lo que debe responder con la información obtenida por la llamada 1 en lugar de iniciar otra búsqueda."
     },
     "text.d29a0939bcb5": {
       "type": "text",
@@ -1510,11 +1518,6 @@
       "value": "call #1 stopped before answering (finish_reason: ",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
-    "text.d4309bdb679e": {
-      "type": "text",
-      "source": "Scoped to arithmetic expressions only. Its description explicitly says not to use it for definitions or conceptual questions, which steers the model toward the other tool when the intent is explanatory.",
-      "value": "Acepta únicamente expresiones aritméticas. La descripción excluye definiciones y preguntas conceptuales para dirigir esas consultas hacia la otra herramienta."
-    },
     "text.d70bd34cd925": {
       "type": "text",
       "source": "Aiyana Brooks",
@@ -1543,6 +1546,11 @@
       "source": " state.question = \"Which NVIDIA model family is designed for reasoning?\";",
       "value": " state.question = \"Which NVIDIA model family is designed for reasoning?\";",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
+    "text.de584c0085ba": {
+      "type": "text",
+      "source": "Calls tools/list and maps each inputSchema to the function-calling format the model reads.",
+      "value": "El cliente inicia la conexión MCP: llama a tools/list y convierte cada esquema de entrada al formato de llamada a funciones compatible con OpenAI, de modo que el modelo lo lea como un array de herramientas normal."
     },
     "text.de9ad1ba7c3d": {
       "type": "text",
@@ -1589,10 +1597,10 @@
       "value": " Return the chosen tool, if any, plus the arguments the model filled in.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
-    "text.e3d47eaf29e8": {
+    "text.e766695f7eca": {
       "type": "text",
-      "source": "Dispatch to sub-agent · synth final answer",
-      "value": "Reenviar al subagente · sintetizar respuesta final"
+      "source": "Discover two in-page MCP tools through tools/list, then dispatch model requests through tools/call. The agent loop stays unchanged.",
+      "value": "Un servidor MCP simulado en la página expone dos herramientas mediante tools/list y tools/call, sin utilizar la red. El agente descubre la lista, entrega los esquemas al LLM y dirige las llamadas del modelo a tools/call. Solo cambia el origen de las herramientas; el bucle conserva la misma estructura."
     },
     "text.e8812f0b9325": {
       "type": "text",
@@ -1704,11 +1712,6 @@
       "source": "The schema the main agent sees, which exposes the capability alone and gives zero details about the underlying table.",
       "value": "Es el único esquema que ve el agente principal: expone la capacidad sin revelar detalles de la tabla subyacente."
     },
-    "text.f5d52204585b": {
-      "type": "text",
-      "source": "The client side of the MCP handshake: it calls tools/list on the server and maps each returned tool's inputSchema to the OpenAI function-calling format so the model can read it as a normal tools array.",
-      "value": "El cliente inicia la conexión MCP: llama a tools/list y convierte cada esquema de entrada al formato de llamada a funciones compatible con OpenAI, de modo que el modelo lo lea como un array de herramientas normal."
-    },
     "text.f699e94964cf": {
       "type": "text",
       "source": "MCP-shaped tool server · discovery + dispatch",
@@ -1723,12 +1726,6 @@
       "type": "text",
       "source": "What is 2 to the power of 10?",
       "value": "What is 2 to the power of 10?",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
-    "text.f97f47db9df5": {
-      "type": "text",
-      "source": "If the rows do not contain the answer, say so. Be concise.\\\\n\\\\n",
-      "value": "If the rows do not contain the answer, say so. Be concise.\\\\n\\\\n",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
     "text.f9e235789471": {
@@ -1746,11 +1743,6 @@
       "type": "text",
       "source": "Client · tools/list",
       "value": "Cliente · tools/list"
-    },
-    "text.fbdf2023dc9e": {
-      "type": "text",
-      "source": "The top-level agent gets a single query_customer_db tool backed by a sub-agent that knows the schema (a tiny JS array stands in for SQL). Raw rows never reach the caller, which poses a question and receives a natural-language answer in return.",
-      "value": "El agente principal recibe una única herramienta de consulta respaldada por un subagente que conoce el esquema de datos; un pequeño array de JavaScript sustituye aquí a SQL. Las filas sin procesar nunca llegan al agente principal, que formula una pregunta y recibe una respuesta en lenguaje natural."
     },
     "text.fc4fb4d05383": {
       "type": "text",

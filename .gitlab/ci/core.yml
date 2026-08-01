@@ -197,9 +197,11 @@ pages:
   <<: *with_python_node
   stage: deploy
   # Branch previews rebuild the protected production root, whose bundle gate imports
-  # localization/material tooling even when live pulls are disabled.
+  # localization/material and browser tooling even when live pulls are disabled.
+  image: mcr.microsoft.com/playwright:v1.61.1-noble@sha256:5b8f294aff9041b7191c34a4bab3ac270157a28774d4b0660e9743297b697e48
   variables:
     MATERIAL_TOOLS_REQUIRED: "1"
+    BROWSER_TOOLS_REQUIRED: "1"
   # Generic previews depend only on the required ship gate. A rules:needs override below
   # imports deep-SCA evidence when that scanner is automatic for the changed inputs.
   # Do not add a top-level optional need on the manual scanner: GitLab 16.8 marks the
@@ -289,7 +291,11 @@ pages:
         git fetch origin "$prod_ref:refs/remotes/origin/$prod_ref" --quiet
         git worktree prune
         git worktree add --quiet --detach /tmp/nemoclaw-prod-root "origin/$prod_ref"
-        if ! (cd /tmp/nemoclaw-prod-root && bash scripts/build/build_pages.sh "$CI_PROJECT_DIR/public"); then
+        if ! (
+          cd /tmp/nemoclaw-prod-root
+          NODE_PATH="$CI_PROJECT_DIR/scripts/runtime/node_modules" \
+            bash scripts/build/build_pages.sh "$CI_PROJECT_DIR/public"
+        ); then
           git worktree remove --force /tmp/nemoclaw-prod-root >/dev/null 2>&1 || true
           return 1
         fi
