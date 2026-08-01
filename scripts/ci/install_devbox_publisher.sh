@@ -14,10 +14,11 @@ if [[ "$2" == *:assumed-role/* && "$2" != */ ]]; then
   exit 2
 fi
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+source "$root/scripts/ci/publisher_binary_guard.sh"
 python_bin=$(readlink -f "$(command -v python3)")
 aws_bin=$(readlink -f "$(command -v aws)")
 for binary in "$python_bin" "$aws_bin"; do
-  [[ "$binary" = /* && ! -L "$binary" && $(stat -f '%u' "$binary" 2>/dev/null || stat -c '%u' "$binary") = 0 ]] || {
+  dli_require_root_binary "$binary" || {
     echo "python3 and aws must resolve to root-owned absolute regular files" >&2; exit 2;
   }
 done

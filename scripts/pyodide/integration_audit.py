@@ -64,6 +64,7 @@ EXAMPLE_MARKERS = {
         "display_markdown", "display_html", "display_json", "display_code", "display_table",
         "application/json", "text/x-code", "DISPLAY_WIDTH = 100", "pprint.pformat",
         "_structured_json_value", "model_dump", "dataclasses.is_dataclass",
+        "injectedHelpers", "validateHelperDocs",
         "error_line", "PyCF_ALLOW_TOP_LEVEL_AWAIT", "__course_helper_overrides", "definitionSource",
         "display_artifact", "application/x-course-artifact+json", "register_background",
         "background_status", "wait_background", "cancel_background", "__course_background_tasks",
@@ -432,6 +433,7 @@ def audit(
         "Notebook ?? inspection did not resolve a persistent value", "Bounded browser-shell pipeline did not execute",
         "Background registration did not produce the downloadable JSON artifact",
         "Background cancellation did not settle the registered task",
+        "discoveredHelpers", "incomplete or duplicate helper discovery contract",
     ):
         if marker not in smoke_source:
             findings.append(f"Pyodide runtime verifier lost an assertion: {marker}")
@@ -537,6 +539,9 @@ def self_test() -> list[str]:
     broken = dict(implementation)
     broken["smoke"] = broken["smoke"].replace("stateNext.display !== \"42\"", "false")
     cases.append(("missing persistent namespace assertion", base, blueprint, skill, [], {}, broken, use_cases))
+    broken = dict(implementation)
+    broken["smoke"] = broken["smoke"].replace("discoveredHelpers", "hiddenHelpers")
+    cases.append(("missing real-runtime helper discovery evidence", base, blueprint, skill, [], {}, broken, use_cases))
     broken = dict(implementation)
     broken["editor"] = broken["editor"].replace("py-code-error-line", "removed-error-line")
     cases.append(("missing source-line highlight", base, blueprint, skill, [], {}, broken, use_cases))

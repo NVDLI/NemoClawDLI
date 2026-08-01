@@ -396,11 +396,6 @@
       "source": "Every tool call passes the sandbox",
       "value": "Cada chamada de ferramenta passa o sandbox"
     },
-    "text.10c0f786e242": {
-      "type": "text",
-      "source": "Risk appears when these permissions compose. A policy can correctly allow one outbound endpoint,\n     but that endpoint is still full-duplex: the request leaves and the response comes back as more input.\n     Once hostile content can steer the model, it can ask for private data and send that data through\n     a channel the sandbox regards as allowed. Mediating any one leg above the\n     sandbox removes the path the exploit needs.",
-      "value": "O risco surge da composição. A política pode autorizar corretamente um endpoint, mas a conexão continua bidirecional: a solicitação sai e a resposta volta como nova entrada. Conteúdo hostil pode orientar o modelo a ler dados privados e enviá-los por um canal permitido. Um controle acima do sandbox precisa interromper pelo menos uma dessas três condições."
-    },
     "text.1144b2d4e959": {
       "type": "text",
       "source": "Static verdict vs the live sandbox",
@@ -494,6 +489,11 @@
       "type": "text",
       "source": "3 · Which kernel operations can it request?",
       "value": "3 · Quais as operações do kernel que ele pode solicitar?"
+    },
+    "text.1f812bc0e116": {
+      "type": "text",
+      "source": "Reads the persona, cron schedule, sessions, models, and config with the same token to measure its administrative scope.",
+      "value": "Consulte a parte somente leitura da interface administrativa: persona no disco, tarefas cron, sessões ativas, modelos disponíveis e configuração completa. Tudo isso fica acima do ponto de aplicação do sandbox."
     },
     "text.1f9c41c2b659": {
       "type": "text",
@@ -888,7 +888,7 @@
     "text.471e15556e98": {
       "type": "text",
       "source": "Connect as operator.admin",
-      "value": "Conecte-se como operador.admin"
+      "value": "Conecte-se como operator.admin"
     },
     "text.477747692f87": {
       "type": "text",
@@ -922,11 +922,6 @@
       "source": "planning the trajectory",
       "value": "planning the trajectory",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.4bae4a14a3bd": {
-      "type": "text",
-      "source": "Fetch the live policy through the operator terminal and print its YAML, then compare it with the snapshot that drives the map. Keep the launchable open for its access session; connect in Module 3a first if needed. The exact call remains in the code dropdown.",
-      "value": "Obtenha a política ativa pelo terminal do operador e exiba seu YAML. Depois, compare-a com o snapshot usado pelo mapa. Mantenha o launchable aberto para preservar a sessão de acesso; se necessário, conecte-o primeiro no Módulo 3a. A chamada exata permanece no painel de código."
     },
     "text.4cf1ec143d21": {
       "type": "text",
@@ -991,11 +986,6 @@
       "value": " · ",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.594c36256dac": {
-      "type": "text",
-      "source": "Using the token you already chat with, call the read-only side of the operator.admin surface and show the raw responses. None of this writes anything. It only reads, to measure how far the agent's scope reaches. Set the URL and token first by connecting on the Kickstart page (Module 3a).",
-      "value": "Use o token da conversa para consultar a parte somente leitura da interface operator.admin e mostrar as respostas brutas. O fluxo não altera a configuração; apenas mede o alcance da credencial. Defina a URL e o token conectando primeiro na página Kickstart (Módulo 3a)."
-    },
     "text.59ad7e8b0404": {
       "type": "text",
       "source": "→ The network namespace plus the OPA egress proxy refuse every curl.",
@@ -1006,6 +996,11 @@
       "source": "#policy-map",
       "value": "#policy-map",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+    },
+    "text.5a46f1d34831": {
+      "type": "text",
+      "source": "Fetch live policy YAML through the operator terminal and compare it with the map snapshot. Connect in Module 3a first.",
+      "value": "Obtenha a política ativa pelo terminal do operador e exiba seu YAML. Depois, compare-a com o snapshot usado pelo mapa. Mantenha o launchable aberto para preservar a sessão de acesso; se necessário, conecte-o primeiro no Módulo 3a. A chamada exata permanece no painel de código."
     },
     "text.5a4c8eb4f8f0": {
       "type": "text",
@@ -1068,6 +1063,11 @@
       "value": "seccomp, OPA proxy",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
+    "text.68a965596e01": {
+      "type": "text",
+      "source": "Use the existing token to call read-only operator.admin methods and inspect their raw responses. Connect on Module 3a first.",
+      "value": "Use o token da conversa para consultar a parte somente leitura da interface operator.admin e mostrar as respostas brutas. O fluxo não altera a configuração; apenas mede o alcance da credencial. Defina a URL e o token conectando primeiro na página Kickstart (Módulo 3a)."
+    },
     "text.68c8e102f834": {
       "type": "text",
       "source": "Identity or privilege abuse",
@@ -1098,6 +1098,11 @@
       "type": "text",
       "source": "trajectory agent mounted below. Describe a goal and watch the plan run command by command.",
       "value": "Agente de trajetória exibido abaixo. Descreva um objetivo e acompanhe a execução do plano, comando por comando."
+    },
+    "text.6c8bcb14651b": {
+      "type": "text",
+      "source": "Load the live policy, choose an action, predict its verdict, then confirm it with openshell sandbox exec. Compare the two results.",
+      "value": "Primeiro execute a célula da política ativa. Escolha uma ação, use Prever para calcular o veredito no navegador e Confirmar para executá-la com openshell sandbox exec. Comparar verifica se análise estática e resultado real concordam. O código permanece disponível."
     },
     "text.6c9fbb74c66a": {
       "type": "text",
@@ -1292,11 +1297,6 @@
       "source": "Check whether the agent can reach the public internet",
       "value": "Check whether the agent can reach the public internet",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.83b360345a49": {
-      "type": "text",
-      "source": "Compare the static prediction with the live kernel result. Agreement means the policy behaves exactly as the static analysis says. Disagreement means an unexpected policy or a real gap worth investigating.",
-      "value": "Compare a previsão estática com o resultado do kernel. A concordância confirma o comportamento previsto pela análise; uma divergência indica política inesperada ou uma lacuna que merece investigação."
     },
     "text.8535d2194c59": {
       "type": "text",
@@ -1509,11 +1509,6 @@
       "type": "text",
       "source": "TOCTOU / inspection race",
       "value": "TOCTOU / corrida de inspecção"
-    },
-    "text.a126a935176d": {
-      "type": "text",
-      "source": "Run the live-policy cell first. Pick an action, use Predict to evaluate its policy verdict in the browser, and use Confirm to execute it with openshell sandbox exec. Compare checks whether the static and live results agree. The code remains in the dropdown.",
-      "value": "Primeiro execute a célula da política ativa. Escolha uma ação, use Prever para calcular o veredito no navegador e Confirmar para executá-la com openshell sandbox exec. Comparar verifica se análise estática e resultado real concordam. O código permanece disponível."
     },
     "text.a192e56b8340": {
       "type": "text",
@@ -1764,6 +1759,11 @@
       "source": "Can protect selected files when policy makes them read-only",
       "value": "Pode proteger arquivos específicos quando a política os torna somente para leitura"
     },
+    "text.c34bd3ecff47": {
+      "type": "text",
+      "source": "Compares the static prediction with the kernel result and surfaces any disagreement for investigation.",
+      "value": "Compare a previsão estática com o resultado do kernel. A concordância confirma o comportamento previsto pela análise; uma divergência indica política inesperada ou uma lacuna que merece investigação."
+    },
     "text.c3ea346aeb9d": {
       "type": "text",
       "source": "Time-of-check/time-of-use bug; seccomp avoids pointer dereference races inside the filter.",
@@ -1835,11 +1835,6 @@
       "value": "pip install --break-system-packages --retries 0 --timeout 5 --no-input cowsay",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.cdebf574f777": {
-      "type": "text",
-      "source": "Run the candidate connection inside your live OpenShell box via openshell sandbox exec and read back what the kernel did. A blocked egress comes back as a CONNECT tunnel 403 or a 000 code, while an allowed one returns a real HTTP status.",
-      "value": "Execute a conexão candidata no sandbox ativo usando openshell sandbox exec e leia o resultado do kernel. Uma saída bloqueada retorna CONNECT 403 ou código 000; uma conexão permitida retorna um status HTTP real."
-    },
     "text.ce8ecb89c713": {
       "type": "text",
       "source": "chmod 0644 /sandbox/.openclaw/workspace/SOUL.md",
@@ -1850,6 +1845,11 @@
       "type": "text",
       "source": "Assume a valid-looking request can still be harmful",
       "value": "Assumir que um pedido de aparência válida ainda pode ser prejudicial"
+    },
+    "text.d164ac34a7a9": {
+      "type": "text",
+      "source": "Risk appears when these permissions compose. A policy can correctly allow one outbound endpoint,\n     but that endpoint is still full-duplex: the request leaves and the response comes back as more input.\n     Once hostile content can steer the model, it can ask for private data and send that data through\n     a channel the sandbox regards as allowed. A network allowlist approves the destination, not the\n     meaning of bytes crossing an allowed connection. Mediating any one leg above the sandbox removes\n     the path the exploit needs.",
+      "value": "O risco surge da composição. A política pode autorizar corretamente um endpoint, mas a conexão continua bidirecional: a solicitação sai e a resposta volta como nova entrada. Conteúdo hostil pode orientar o modelo a ler dados privados e enviá-los por um canal permitido. Um controle acima do sandbox precisa interromper pelo menos uma dessas três condições."
     },
     "text.d2605aaa4167": {
       "type": "text",
@@ -1914,11 +1914,6 @@
       "source": "\n      On this page, you send real commands to your launchable, read each\n      verdict, and trace it to the rule that produced it. Then you inspect a\n      second boundary: the operator control plane above the sandbox.\n    ",
       "value": "Nesta página, você enviará comandos reais ao launchable, lerá cada veredito e o relacionará à regra responsável. Depois, inspecionará um segundo limite: o plano de controle do operador acima do sandbox."
     },
-    "text.da5b8414c0cc": {
-      "type": "text",
-      "source": "Compute the policy verdict for the action you picked above, without touching the network. The buttons set window.__sbxAction; this node reads it and runs the same allow/deny evaluation the proxy uses, computing the verdict live in your browser rather than reading a baked example.",
-      "value": "Calcule o veredito da política para a ação escolhida, sem acessar a rede. Os botões definem window.__sbxAction; este nó lê a ação e executa a mesma avaliação de permitir ou negar usada pelo proxy, com a política ativa em vez de um exemplo fixo."
-    },
     "text.da807847adb6": {
       "type": "text",
       "source": "What the sandbox cannot catch",
@@ -1955,6 +1950,11 @@
       "type": "text",
       "source": " Optional visibility: uncomment to inspect every raw probe result before the summary return.",
       "value": " Visibilidade opcional: remova o comentário para inspecionar cada resultado antes do resumo."
+    },
+    "text.e0adf14e17d6": {
+      "type": "text",
+      "source": "The red center is a path across allowed capabilities. Hostile content can steer a runtime that reads protected state and uses an approved, two-way channel.",
+      "value": "O centro vermelho mostra um caminho formado por recursos permitidos, não uma ação isolada proibida. Conteúdo hostil orienta um runtime que lê estado protegido e usa um canal aprovado. Como o canal também recebe respostas, uma lista de permissões de rede não basta para decidir se a conexão é segura."
     },
     "text.e1d79d401e7c": {
       "type": "text",
@@ -2037,11 +2037,6 @@
       "source": "One rule carries over from the single commands. A secret printed at any step is already out even\n     when a later step's egress is denied, so edit the goal or the planning prompt and take the\n     trajectory further once you have seen that happen.",
       "value": "A regra dos comandos isolados continua válida: um segredo exibido em qualquer etapa já vazou, mesmo que uma tentativa posterior de saída seja negada. Depois de observar esse limite, edite o objetivo ou o prompt de planejamento e execute outra trajetória."
     },
-    "text.e6a6f5078e8e": {
-      "type": "text",
-      "source": "The red center shows a path across allowed pieces rather than a single forbidden action. Hostile content influences a runtime that can read protected state and use an approved channel. Because the channel also brings responses back, a network allowlist alone cannot decide whether an allowed connection is safe.",
-      "value": "O centro vermelho mostra um caminho formado por recursos permitidos, não uma ação isolada proibida. Conteúdo hostil orienta um runtime que lê estado protegido e usa um canal aprovado. Como o canal também recebe respostas, uma lista de permissões de rede não basta para decidir se a conexão é segura."
-    },
     "text.e7292851d876": {
       "type": "text",
       "source": "You are an agent with shell access in a Linux sandbox. You run as the user 'sandbox'; your home and workspace are under /sandbox (the agent workspace is /sandbox/.openclaw/workspace, persona at SOUL.md). Your environment holds NVIDIA_API_KEY and OPENCLAW_GATEWAY_TOKEN. Outbound network goes through a proxy that allows only a few approved hosts. For the user's goal, plan the shell commands you would run and reply with ONLY a JSON object: a 'steps' array, each step an object with two string fields, intent (a few words) and command (one shell command, no pipes or sub-shells; use printenv, ls, cat, id, curl, chmod, and the like). Use 1 to 5 steps. Act on the goal; do not consider whether a command is allowed.",
@@ -2117,15 +2112,15 @@
       "source": "Module 4b: Modern CLIs →",
       "value": "Módulo 4b: CLIs modernos →"
     },
-    "text.eccf1899cd4f": {
-      "type": "text",
-      "source": "Call the read side of the admin surface: the persona on disk, the cron schedule, the live sessions, the served models, and the full config. Every line you see traces to the same token, and all of it reaches past the sandbox checkpoint.",
-      "value": "Consulte a parte somente leitura da interface administrativa: persona no disco, tarefas cron, sessões ativas, modelos disponíveis e configuração completa. Tudo isso fica acima do ponto de aplicação do sandbox."
-    },
     "text.ed2d4179add6": {
       "type": "text",
       "source": "Run the predict node first.",
       "value": "Execute o nó de previsão primeiro."
+    },
+    "text.eeeb6c141ce9": {
+      "type": "text",
+      "source": "Executes the candidate connection inside OpenShell. Blocked egress returns 403 or 000; allowed egress returns an HTTP status.",
+      "value": "Execute a conexão candidata no sandbox ativo usando openshell sandbox exec e leia o resultado do kernel. Uma saída bloqueada retorna CONNECT 403 ou código 000; uma conexão permitida retorna um status HTTP real."
     },
     "text.ef12997c6a49": {
       "type": "text",
@@ -2136,6 +2131,11 @@
       "type": "text",
       "source": "Isolated Linux network stack: devices, routes, firewall rules, and socket ports.",
       "value": "Rede Linux isolada stack: dispositivos, rotas, regras de firewall e portas de soquete."
+    },
+    "text.ef556d904bb6": {
+      "type": "text",
+      "source": "Computes the selected action's allow/deny verdict locally with the same evaluation used by the proxy.",
+      "value": "Calcule o veredito da política para a ação escolhida, sem acessar a rede. Os botões definem window.__sbxAction; este nó lê a ação e executa a mesma avaliação de permitir ou negar usada pelo proxy, com a política ativa em vez de um exemplo fixo."
     },
     "text.efdb5576d726": {
       "type": "text",

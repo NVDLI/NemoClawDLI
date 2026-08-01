@@ -31,6 +31,10 @@ BROWSER_RUNTIME_CONSUMERS = (
     "runtime_integration_browser_audit.py",
     "branch_preview_runtime_audit.py",
 )
+PINNED_PLAYWRIGHT_IMAGE = (
+    "mcr.microsoft.com/playwright:v1.61.1-noble@sha256:"
+    "5b8f294aff9041b7191c34a4bab3ac270157a28774d4b0660e9743297b697e48"
+)
 DECISION_POLICY = {
     "default": "deny",
     "authorization_record": "external-not-repository",
@@ -337,6 +341,24 @@ def audit_browser_runtime_jobs(
                 "run browser-backed validation on Node.js 24",
             ))
     return out
+
+
+def audit_gitlab_pages_browser_runtime(gitlab_core: str) -> list[dict[str, str]]:
+    """Require browser dependencies where Pages rebuilds the protected source tree."""
+    pages = re.search(r"(?ms)^pages:\n(.*?)(?=^pages_smoke:\n)", gitlab_core)
+    if (
+        not pages
+        or PINNED_PLAYWRIGHT_IMAGE not in pages.group(1)
+        or 'BROWSER_TOOLS_REQUIRED: "1"' not in pages.group(1)
+        or 'NODE_PATH="$CI_PROJECT_DIR/scripts/runtime/node_modules"' not in pages.group(1)
+    ):
+        return [finding(
+            "gitlab-pages-browser-runtime",
+            ".gitlab/ci/core.yml",
+            "Pages lacks the pinned browser runtime or cross-worktree module path needed by protected-root validation",
+            "use the digest-pinned Playwright image and pass the locked nested runtime into every protected-root Pages build",
+        )]
+    return []
 
 
 def workflow_has_trigger(workflow: str, trigger: str) -> bool:
@@ -1658,6 +1680,7 @@ def audit_repo(
         out.append(finding("gitlab-pages-material-install", ".gitlab-ci.yml",
                            "Pages lacks material tooling needed by protected-root bundle validation",
                            "enable the locked material environment for every Pages build, including previews"))
+    out.extend(audit_gitlab_pages_browser_runtime(gitlab_core))
     preview_fetch = 'git fetch "$preview_remote" "+refs/heads/$branch:refs/remotes/$preview_namespace/$branch" --quiet'
     if (gitlab.count(preview_fetch) != 1
             or gitlab.count('refresh_branch_ref "$preview_ref"') != 2
@@ -1670,11 +1693,7 @@ def audit_repo(
     require(gitlab, "release_gate.py --tier ship", ".gitlab-ci.yml",
             "gitlab-safety-selftest", out, "run detector mutations in GitLab CI")
     test_job = re.search(r"(?ms)^test:\n(.*?)(?=^external_integration_audit:\n)", gitlab)
-    pinned_browser_image = (
-        "mcr.microsoft.com/playwright:v1.61.1-noble@sha256:"
-        "5b8f294aff9041b7191c34a4bab3ac270157a28774d4b0660e9743297b697e48"
-    )
-    if (not test_job or pinned_browser_image not in test_job.group(1)
+    if (not test_job or PINNED_PLAYWRIGHT_IMAGE not in test_job.group(1)
             or 'BROWSER_TOOLS_REQUIRED: "1"' not in test_job.group(1)
             or "cd scripts/runtime && pnpm install --frozen-lockfile --ignore-scripts" not in gitlab):
         out.append(finding("gitlab-report-browser-runtime", ".gitlab-ci.yml",
@@ -2556,7 +2575,30 @@ def self_test() -> list[str]:
             ("gitlab-infrastructure-retry", ".gitlab/ci/core.yml", "runner_system_failure", "runner_unsupported"),
             ("gitlab-script-retry", ".gitlab/ci/core.yml", "runner_system_failure", "script_failure"),
             ("gitlab-material-install", ".gitlab/ci/core.yml", "scripts/materials/requirements.lock", "scripts/materials/requirements.txt"),
-            ("gitlab-pages-material-install", ".gitlab/ci/core.yml", '  # localization/material tooling even when live pulls are disabled.\n  variables:\n    MATERIAL_TOOLS_REQUIRED: "1"', '  # localization/material tooling even when live pulls are disabled.\n  variables:\n    MATERIAL_TOOLS_REQUIRED: "0"'),
+            (
+                "gitlab-pages-material-install",
+                ".gitlab/ci/core.yml",
+                '  # localization/material and browser tooling even when live pulls are disabled.\n'
+                f"  image: {PINNED_PLAYWRIGHT_IMAGE}\n"
+                '  variables:\n'
+                '    MATERIAL_TOOLS_REQUIRED: "1"\n'
+                '    BROWSER_TOOLS_REQUIRED: "1"',
+                '  # localization/material and browser tooling even when live pulls are disabled.\n'
+                f"  image: {PINNED_PLAYWRIGHT_IMAGE}\n"
+                '  variables:\n'
+                '    MATERIAL_TOOLS_REQUIRED: "0"\n'
+                '    BROWSER_TOOLS_REQUIRED: "1"',
+            ),
+            (
+                "gitlab-pages-browser-runtime",
+                ".gitlab/ci/core.yml",
+                '    MATERIAL_TOOLS_REQUIRED: "1"\n'
+                '    BROWSER_TOOLS_REQUIRED: "1"\n'
+                '  # Generic previews depend',
+                '    MATERIAL_TOOLS_REQUIRED: "1"\n'
+                '    BROWSER_TOOLS_REQUIRED: "0"\n'
+                '  # Generic previews depend',
+            ),
             ("gitlab-deploy-gate", ".gitlab/ci/core.yml", '  needs: ["test"]', '  needs: ["skipped_test"]'),
             ("gitlab-preview-ref-fetch", ".gitlab/ci/core.yml", 'git fetch "$preview_remote" "+refs/heads/$branch:refs/remotes/$preview_namespace/$branch" --quiet', 'git fetch "$preview_remote" "+refs/heads/$branch:refs/remotes/$preview_namespace/$branch" --quiet || true'),
             ("gitlab-preview-ref-fetch", ".gitlab/ci/core.yml", 'preview_remote="$CI_MERGE_REQUEST_SOURCE_PROJECT_URL"', 'preview_remote="origin"'),

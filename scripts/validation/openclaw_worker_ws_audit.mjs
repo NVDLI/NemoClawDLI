@@ -22,6 +22,9 @@ try {
   const worker = (await import(pathToFileURL(tmpPath).href)).default;
   const calls = [];
   const wsMarker = { accepted: true };
+  const cloudflareHost = ['nemoclaw-demo', 'brevlab', 'com'].join('.');
+  const pomeriumHost = ['nemoclaw-demo', 'apps', 'run', 'brev', 'nvidia', 'com'].join('.');
+  const relayOrigin = 'https://openclaw-cors-proxy.test';
   globalThis.fetch = async (target, init = {}) => {
     const headers = Object.fromEntries(new Headers(init.headers).entries());
     calls.push({ target, method: init.method, headers, redirect: init.redirect });
@@ -30,7 +33,7 @@ try {
     return upstream;
   };
 
-  const req = new Request('https://openclaw-cors-proxy.test/https/nemoclaw-demo.brevlab.com/cli/gateway?cf_access_jwt=test.jwt&keep=1', {
+  const req = new Request(`${relayOrigin}/https/${cloudflareHost}/cli/gateway?cf_access_jwt=test.jwt&keep=1`, {
     method: 'GET',
     headers: { Upgrade: 'websocket', Origin: 'https://course.example.test' },
   });
@@ -38,13 +41,13 @@ try {
   if (res.webSocket !== wsMarker) fail('worker did not return upstream WebSocket response directly');
   if (calls.length !== 1) fail(`expected one upstream fetch, saw ${calls.length}`);
   const call = calls[0];
-  if (call.target !== 'https://nemoclaw-demo.brevlab.com/cli/gateway?keep=1') fail(`bad upstream target: ${call.target}`);
+  if (call.target !== `https://${cloudflareHost}/cli/gateway?keep=1`) fail(`bad upstream target: ${call.target}`);
   if (call.headers.cookie !== 'CF_Authorization=test.jwt') fail(`missing CF_Authorization cookie: ${JSON.stringify(call.headers)}`);
   if (call.headers.origin !== 'http://localhost:8088') fail(`bad pinned Origin: ${call.headers.origin}`);
   if (call.redirect !== 'manual') fail(`WS fetch should use manual redirect, got ${call.redirect}`);
 
   calls.length = 0;
-  const pomeriumReq = new Request('https://openclaw-cors-proxy.test/https/nemoclaw-demo.apps.run.brev.nvidia.com/ws/terminal?cmd=openshell+sandbox+list&access_provider=pomerium&access_session=opaque.session&keep=1', {
+  const pomeriumReq = new Request(`${relayOrigin}/https/${pomeriumHost}/ws/terminal?cmd=openshell+sandbox+list&access_provider=pomerium&access_session=opaque.session&keep=1`, {
     method: 'GET',
     headers: { Upgrade: 'websocket', Origin: 'https://course.example.test' },
   });
@@ -55,24 +58,24 @@ try {
   if (pomeriumRes.webSocket !== wsMarker) fail('worker did not return Pomerium upstream WebSocket directly');
   if (calls.length !== 1) fail(`expected one Pomerium upstream fetch, saw ${calls.length}`);
   const pomeriumCall = calls[0];
-  if (pomeriumCall.target !== 'https://nemoclaw-demo.apps.run.brev.nvidia.com/ws/terminal?cmd=openshell+sandbox+list&keep=1') fail(`bad Pomerium upstream target: ${pomeriumCall.target}`);
+  if (pomeriumCall.target !== `https://${pomeriumHost}/ws/terminal?cmd=openshell+sandbox+list&keep=1`) fail(`bad Pomerium upstream target: ${pomeriumCall.target}`);
   if (pomeriumCall.headers.cookie !== '_pomerium=opaque.session') fail(`missing upstream Pomerium session cookie: ${JSON.stringify(pomeriumCall.headers)}`);
   if (pomeriumCall.headers['x-pomerium-authorization']) fail('caller Pomerium header reached upstream');
   if (pomeriumCall.headers['cf-access-client-id'] || pomeriumCall.headers['cf-access-client-secret']) fail('Cloudflare service-token headers reached a Pomerium host');
 
-  const mismatch = await worker.fetch(new Request('https://openclaw-cors-proxy.test/https/nemoclaw-demo.apps.run.brev.nvidia.com/cli/gateway?access_provider=cloudflare&access_session=must-not-forward', {
+  const mismatch = await worker.fetch(new Request(`${relayOrigin}/https/${pomeriumHost}/cli/gateway?access_provider=cloudflare&access_session=must-not-forward`, {
     method: 'GET',
     headers: { Upgrade: 'websocket', Origin: 'https://course.example.test' },
   }), {});
   if (mismatch.status !== 400) fail(`provider mismatch returned ${mismatch.status}, expected 400`);
 
-  const undeclaredProvider = await worker.fetch(new Request('https://openclaw-cors-proxy.test/https/nemoclaw-demo.apps.run.brev.nvidia.com/cli/gateway?access_session=must-not-forward', {
+  const undeclaredProvider = await worker.fetch(new Request(`${relayOrigin}/https/${pomeriumHost}/cli/gateway?access_session=must-not-forward`, {
     method: 'GET',
     headers: { Upgrade: 'websocket', Origin: 'https://course.example.test' },
   }), {});
   if (undeclaredProvider.status !== 400) fail(`neutral session without a provider returned ${undeclaredProvider.status}, expected 400`);
 
-  const conflict = await worker.fetch(new Request('https://openclaw-cors-proxy.test/https/nemoclaw-demo.brevlab.com/cli/gateway?access_provider=cloudflare&access_session=query-value', {
+  const conflict = await worker.fetch(new Request(`${relayOrigin}/https/${cloudflareHost}/cli/gateway?access_provider=cloudflare&access_session=query-value`, {
     method: 'GET',
     headers: {
       Upgrade: 'websocket',
@@ -83,7 +86,7 @@ try {
   }), {});
   if (conflict.status !== 400) fail(`conflicting provider/session declarations returned ${conflict.status}, expected 400`);
 
-  const invalidCookie = await worker.fetch(new Request('https://openclaw-cors-proxy.test/https/nemoclaw-demo.apps.run.brev.nvidia.com/api/agent?access_provider=pomerium&access_session=valid%3Binjected%3Dtrue', {
+  const invalidCookie = await worker.fetch(new Request(`${relayOrigin}/https/${pomeriumHost}/api/agent?access_provider=pomerium&access_session=valid%3Binjected%3Dtrue`, {
     method: 'GET',
     headers: { Origin: 'https://course.example.test' },
   }), {});
@@ -95,7 +98,7 @@ try {
     calls.push({ target: String(target), method: init.method, headers, redirect: init.redirect });
     return new Response(null, { status: 302, headers: { location: 'https://credential-sink.example/collect' } });
   };
-  const blockedRedirect = await worker.fetch(new Request('https://openclaw-cors-proxy.test/https/nemoclaw-demo.brevlab.com/api/agent?access_provider=cloudflare&access_session=opaque.session', {
+  const blockedRedirect = await worker.fetch(new Request(`${relayOrigin}/https/${cloudflareHost}/api/agent?access_provider=cloudflare&access_session=opaque.session`, {
     method: 'GET',
     headers: {
       Origin: 'https://course.example.test',
@@ -115,11 +118,11 @@ try {
     if (calls.length === 1) return new Response(null, { status: 302, headers: { location: '/next' } });
     return new Response('ok', { status: 200 });
   };
-  const sameOriginRedirect = await worker.fetch(new Request('https://openclaw-cors-proxy.test/https/nemoclaw-demo.brevlab.com/api/agent', {
+  const sameOriginRedirect = await worker.fetch(new Request(`${relayOrigin}/https/${cloudflareHost}/api/agent`, {
     method: 'GET', headers: { Origin: 'https://course.example.test' },
   }), {});
   if (sameOriginRedirect.status !== 200 || calls.length !== 2) fail('same-origin redirect did not complete in two requests');
-  if (calls[1].target !== 'https://nemoclaw-demo.brevlab.com/next') fail(`bad same-origin redirect target: ${calls[1].target}`);
+  if (calls[1].target !== `https://${cloudflareHost}/next`) fail(`bad same-origin redirect target: ${calls[1].target}`);
   if (calls.some(item => item.redirect !== 'manual')) fail('HTTP redirect fetch did not use manual mode');
 
   console.log('openclaw worker ws audit: ok');

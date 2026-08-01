@@ -53,7 +53,7 @@
 
   <figure class="agent-loop-figure">
     <div class="fig-embed" data-svg-src="assets/figures/01a-agent-environment.svg" style="aspect-ratio:860 / 270"></div>
-    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">Only perception and action cross the boundary. The decision step between them can change.</figcaption>
+    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">The agent perceives the environment through observations and acts on it through actions. The decision step between them can change.</figcaption>
   </figure>
 
   <p data-localization-scope="en">
@@ -105,7 +105,7 @@
   </p>
   <figure style="margin:1.4em 0">
     <div class="fig-embed" data-svg-src="assets/figures/01a-loop-1.svg" style="aspect-ratio:1020 / 400"></div>
-    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">Four agent architectures in order of growing structure, from a reflex agent that maps inputs straight to actions up to a learning agent that rewrites its own rules. Adapted from Russell and Norvig's <a href="https://aima.cs.berkeley.edu/" target="_blank" rel="noopener">Artificial Intelligence: A Modern Approach</a> (Ch 1).</figcaption>
+    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">Four agent architectures, from direct input-to-action rules to an agent that improves its rules. Adapted from Russell and Norvig's <a href="https://aima.cs.berkeley.edu/" target="_blank" rel="noopener">Artificial Intelligence: A Modern Approach</a> (Ch 1).</figcaption>
   </figure>
   </div>
   </details>
@@ -450,8 +450,8 @@ mountCanvasFlow("#cell-reflex", {
 
   nodes: [
     {
-      id: "setup", icon: "🌍", title: "Environment + agent intrinsics", x: 0, y: 0,
-      summary: "Initialises the environment (a 1-D track bounded by walls at positions 0 and 9) and the agent's intrinsic state (its starting position and direction). Separating environment state from agent state makes it easy to swap the reasoning rule without touching the world model.",
+      id: "setup", icon: "🌍", title: "Set up the world and agent", x: 0, y: 0,
+      summary: "Initialises a 1-D track and the agent's position and direction. Environment and agent state remain separate so the reasoning rule can change independently.",
       code: `// Set up the tiny world the loop will inspect.
 state.env = {
     leftWall:  0,
@@ -468,7 +468,7 @@ return { env: state.env, agent: state.agent };
 
     {
       id: "tick", icon: "🔁", title: "One perceive-reason-act cycle", x: 0, y: 1,
-      summary: "Reads the environment, decides which way to move, then updates the environment. The entire reasoning step is a single if statement, kept deliberately minimal so the structure of the loop stays clear without a model in the way.",
+      summary: "Reads the track, chooses a direction with one if statement, and updates the position.",
       code: `// PERCEIVE
 const perception = {
   position:    state.env.position,
@@ -488,7 +488,7 @@ return { perception, action, newPosition: state.env.position };
 
     {
       id: "run", icon: "▶️", title: "Run the loop for 25 ticks", x: 0, y: 2,
-      summary: "Calls the same perceive-reason-act cycle 25 times in sequence. The position trace in the output makes the bouncing pattern concrete and shows how the repeated loop drives the behaviour while the reasoning rule stays trivial.",
+      summary: "Repeats the perceive-reason-act cycle 25 times and plots the bouncing position.",
       code: `// Run the loop and collect a step-by-step trace.
 const trace = [];
 for (let t = 0; t < 25; t++) {
@@ -520,7 +520,7 @@ return { ticks: trace.length, finalPosition: state.env.position, trace };
 // ── Module 1a Part 4: maze + search reasoners ───────────────────────────────
 mountCanvasFlow("#cell-maze", {
   label: "The agent loop with a swappable reasoning step",
-  intro: "Run the nodes in order. Setup exports the maze helpers; the search nodes show fixed reasoners before the language model takes over. Plumbing stays collapsed because the lesson is the behavior, but you can expand any decision rule.",
+  intro: "Run the nodes in order. Compare fixed search strategies before the language model takes over; expand a decision rule when you want its implementation.",
   edges: [
     { from: "maze", to: "bfs"   },
     { from: "maze", to: "dfs"   },
@@ -529,9 +529,9 @@ mountCanvasFlow("#cell-maze", {
 
   nodes: [
     {
-      id: "maze", icon: "🌐", title: "Maze + constant reasoner", x: 0, y: 0,
+      id: "maze", icon: "🌐", title: "Set up the maze and fixed rule", x: 0, y: 0,
       showCode: false,
-      summary: "This node hides the maze plumbing by default. If you expand it, read from the bottom: it stores shared helpers in state, then runs the corridor and maze animations that show why a fixed rule is not enough.",
+      summary: "Exports the shared maze helpers and animations. Expand it only when you want the browser plumbing.",
       code: `// Reading guide: most of this block is support code.
 // Start near the bottom where state.fn is assigned, then read the two animations.
 // The search nodes reuse these maze and movement helpers with different decision rules.
@@ -852,7 +852,7 @@ return { steps, examined: exploreOrder.length };
     {
       id: "astar", icon: "⭐", title: "A* reasoner", x: 1, y: 1,
       showCode: false,
-      summary: "A* code is collapsed by default. If you expand it, notice that the animation loop is almost the same as BFS. The difference is the planner that produced the path.",
+      summary: "Runs A* through the same animation loop as BFS so you can compare only the planner.",
       code: `// A* reuses the same animation loop shape as BFS. The planner changed, not the
 // surrounding perceive-act loop that displays each move.
 if (!state.fn) { helpers.log("Run the 'Maze + constant reasoner' node first."); return; }
@@ -894,7 +894,7 @@ mountCanvasFlow("#cell-llm-maze", {
       x: 0, y: 0,
       showCode: false,
 
-      summary: "The engine code is collapsed by default because it is mostly web plumbing. If you expand it, scan the exported names at the bottom: state.runMaze is the shared controller that the editable run node calls.",
+      summary: "Exports state.runMaze, the shared solver used by the editable run node. Expand it to inspect the browser plumbing.",
       code: `// Reading guide: this is infrastructure, not a required coding exercise.
 // The run node below is the editing surface; expand this to inspect its supporting plumbing.
 // The same loop that ran DFS, BFS, and A* now drives a language model over this maze.
@@ -1036,14 +1036,14 @@ state.DECISION_TOOL = {
   type: "function",
   function: {
     name: "choose_direction",
-    description: "Choose one available direction at this junction. Corridors are walked automatically after the move.",
+    description: "At each junction, return NSEW moves. Execution stops at a wall or goal, then walks any corridor automatically.",
 
     parameters: {
       type: "object",
       properties: {
         direction: {
           type: "string",
-          description: "One compass letter: N, S, E, or W.",
+          description: "NSEW sequence such as 'E' or 'EEN'; direction words also work.",
         },
       },
       required: ["direction"],

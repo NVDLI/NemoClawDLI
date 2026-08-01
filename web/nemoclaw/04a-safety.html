@@ -106,7 +106,7 @@
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
     </div>
-    <figcaption><b>Watch:</b> This talk walks through how OpenShell wraps an agent in a hardened sandbox with policy-driven network, filesystem, and process controls, and how NemoClaw wires those pieces together. It is the direct companion to the sandbox argument and the policy probes you run on this page. Part of NVIDIA's <a href="https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-safer-autonomous-agent-using-openclaw" target="_blank" rel="noopener">Agentic AI Learning Path</a>.</figcaption>
+    <figcaption><b>Watch:</b> See how OpenShell applies network, filesystem, and process policy around a NemoClaw agent. Part of NVIDIA's <a href="https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-safer-autonomous-agent-using-openclaw" target="_blank" rel="noopener">Agentic AI Learning Path</a>.</figcaption>
   </figure>
   -->
 
@@ -581,9 +581,10 @@ helpers.log("trajectory agent mounted below. Describe a goal and watch the plan 
   <p>Risk appears when these permissions compose. A policy can correctly allow one outbound endpoint,
      but that endpoint is still full-duplex: the request leaves and the response comes back as more input.
      Once hostile content can steer the model, it can ask for private data and send that data through
-     a channel the sandbox regards as allowed. Mediating any one leg above the
-     sandbox removes the path the exploit needs.</p>
-<figure style="margin:0"><div class="fig-embed" data-svg-src="assets/figures/lethal-trifecta.svg" style="aspect-ratio:800 / 500"></div><figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">The red center shows a path across allowed pieces rather than a single forbidden action. Hostile content influences a runtime that can read protected state and use an approved channel. Because the channel also brings responses back, a network allowlist alone cannot decide whether an allowed connection is safe.</figcaption></figure>
+     a channel the sandbox regards as allowed. A network allowlist approves the destination, not the
+     meaning of bytes crossing an allowed connection. Mediating any one leg above the sandbox removes
+     the path the exploit needs.</p>
+<figure style="margin:0"><div class="fig-embed" data-svg-src="assets/figures/lethal-trifecta.svg" style="aspect-ratio:800 / 500"></div><figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">The red center is a path across allowed capabilities. Hostile content can steer a runtime that reads protected state and uses an approved, two-way channel.</figcaption></figure>
   <p>These gaps are real on a default box, and none of them is decidable by the network and
      filesystem policy:</p>
   <ul>
@@ -780,7 +781,7 @@ return { probes: results.length, denied: results.filter(result => result.blocked
 // ── Read your live policy, draw the map from it ───────────────────────────────
 mountRunCell("#cell-live-policy", {
   label: "Read your launchable's live policy",
-  intro: "Fetch the live policy through the operator terminal and print its YAML, then compare it with the snapshot that drives the map. Keep the launchable open for its access session; connect in Module 3a first if needed. The exact call remains in the code dropdown.",
+  intro: "Fetch live policy YAML through the operator terminal and compare it with the map snapshot. Connect in Module 3a first.",
   code: `// helpers.policyGet() returns the command, raw output, status, and parsed policy.
 const p = await helpers.policyGet();
 helpers.log("called:  " + p.command);          // the exact command that ran on your box
@@ -813,7 +814,7 @@ return { agent, networks: nets };
 // ── Predict, then confirm against the live kernel ─────────────────────────────
 mountCanvasFlow("#cell-predict-confirm", {
   label: "Static verdict vs the live sandbox",
-  intro: "Run the live-policy cell first. Pick an action, use Predict to evaluate its policy verdict in the browser, and use Confirm to execute it with openshell sandbox exec. Compare checks whether the static and live results agree. The code remains in the dropdown.",
+  intro: "Load the live policy, choose an action, predict its verdict, then confirm it with openshell sandbox exec. Compare the two results.",
   edges: [
     { from: "predict", to: "confirm" },
     { from: "confirm", to: "compare" },
@@ -823,7 +824,7 @@ mountCanvasFlow("#cell-predict-confirm", {
     {
       id: "predict", icon: "🧮", title: "Predict (static, in-browser)", x: 0, y: 0,
       showCode: false,
-      summary: "Compute the policy verdict for the action you picked above, without touching the network. The buttons set window.__sbxAction; this node reads it and runs the same allow/deny evaluation the proxy uses, computing the verdict live in your browser rather than reading a baked example.",
+      summary: "Computes the selected action's allow/deny verdict locally with the same evaluation used by the proxy.",
       code: `// This predicts from YOUR launchable's live policy. Run the live-policy cell above first
 // so window.__SBX_POLICY is set; there is one policy here, not a baked copy.
 const policy = window.__SBX_POLICY;
@@ -853,7 +854,7 @@ return verdict;
     {
       id: "confirm", icon: "🛂", title: "Confirm (live, in the sandbox)", x: 1, y: 0,
       showCode: false,
-      summary: "Run the candidate connection inside your live OpenShell box via openshell sandbox exec and read back what the kernel did. A blocked egress comes back as a CONNECT tunnel 403 or a 000 code, while an allowed one returns a real HTTP status.",
+      summary: "Executes the candidate connection inside OpenShell. Blocked egress returns 403 or 000; allowed egress returns an HTTP status.",
       code: `// Execute the selected network action inside the live sandbox and read the verdict.
 if (!state.action) { helpers.log("Run the predict node first."); return; }
 const a = state.action;
@@ -883,7 +884,7 @@ return { observed: state.observed, exitCode: res.exitCode };
     {
       id: "compare", icon: "✅", title: "Do they agree?", x: 2, y: 0,
       showCode: false,
-      summary: "Compare the static prediction with the live kernel result. Agreement means the policy behaves exactly as the static analysis says. Disagreement means an unexpected policy or a real gap worth investigating.",
+      summary: "Compares the static prediction with the kernel result and surfaces any disagreement for investigation.",
       code: `// Compare the browser-side prediction with the kernel result from Confirm.
 if (!state.predicted || !state.observed) { helpers.log("Run predict and confirm first."); return; }
 const match = state.predicted === state.observed;
@@ -905,7 +906,7 @@ return { predicted: state.predicted, observed: state.observed, agree: match };
 // ── Enumerate the token's reach (read-only) ──────────────────────────────────
 mountCanvasFlow("#cell-token", {
   label: "What can one operator.admin token see?",
-  intro: "Using the token you already chat with, call the read-only side of the operator.admin surface and show the raw responses. None of this writes anything. It only reads, to measure how far the agent's scope reaches. Set the URL and token first by connecting on the Kickstart page (Module 3a).",
+  intro: "Use the existing token to call read-only operator.admin methods and inspect their raw responses. Connect on Module 3a first.",
   edges: [ { from: "tok-conn", to: "tok-survey" } ],
 
   nodes: [
@@ -918,7 +919,7 @@ mountCanvasFlow("#cell-token", {
     {
       id: "tok-survey", icon: "🗝️", title: "Survey the reach", x: 1, y: 0,
       showCode: false,
-      summary: "Call the read side of the admin surface: the persona on disk, the cron schedule, the live sessions, the served models, and the full config. Every line you see traces to the same token, and all of it reaches past the sandbox checkpoint.",
+      summary: "Reads the persona, cron schedule, sessions, models, and config with the same token to measure its administrative scope.",
       code: `// Survey the read-only admin surface reachable by the current gateway token.
 if (!state.call) { helpers.log("Run Connect first."); return; }
 const soul = await state.call("agents.files.get", { agentId: "main", name: "SOUL.md" });

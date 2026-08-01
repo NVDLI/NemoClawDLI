@@ -536,6 +536,33 @@ jsonlib.dumps(reply, default=str)
     return lines.slice(start, end).join("\n").trimEnd();
   }
 
+  function injectedHelperNames(source = EXECUTE_CELL) {
+    const match = String(source).match(/\nhelper_defaults = \{(?<body>[\s\S]*?)\n\}\nhelper_overrides = /);
+    if (!match?.groups?.body) throw new Error("Missing Python helper_defaults registry.");
+    return [...match.groups.body.matchAll(/^\s*"([A-Za-z_][A-Za-z0-9_]*)":\s*[A-Za-z_][A-Za-z0-9_]*,\s*$/gm)]
+      .map(item => item[1]);
+  }
+
+  function validateHelperDocs(helperDocs, source = EXECUTE_CELL) {
+    const injected = injectedHelperNames(source);
+    const documented = helperDocs.map(item => item.name);
+    const duplicates = documented.filter((name, index) => documented.indexOf(name) !== index);
+    const missing = injected.filter(name => !documented.includes(name));
+    const unknown = documented.filter(name => !injected.includes(name));
+    const sourceMissing = helperDocs
+      .filter(item => !item.source || !new RegExp(`^(?:async\\s+def|def|class)\\s+${item.name}\\b`, "m").test(item.source))
+      .map(item => item.name);
+    if (duplicates.length || missing.length || unknown.length || sourceMissing.length) {
+      throw new Error([
+        duplicates.length ? `duplicate: ${[...new Set(duplicates)].join(", ")}` : "",
+        missing.length ? `missing: ${missing.join(", ")}` : "",
+        unknown.length ? `unknown: ${unknown.join(", ")}` : "",
+        sourceMissing.length ? `source missing: ${sourceMissing.join(", ")}` : "",
+      ].filter(Boolean).join("; "));
+    }
+    return injected;
+  }
+
   const HELPER_DOCS = [
     ["display", "display(*objects)", "Render one or more values using their richest safe representation."],
     ["display_text", "display_text(value)", "Render plain text without syntax or Markdown interpretation."],
@@ -553,12 +580,26 @@ jsonlib.dumps(reply, default=str)
     ["inspect_object", "inspect_object(expression, detail=1)", "Inspect a live expression; notebook ? and ?? syntax calls this helper."],
     ["browser_shell", "browser_shell(command)", "Run bounded shell-like commands inside the browser virtual filesystem; no host process is started."],
     ["notebook_who", "notebook_who(details=False)", "List the learner variables in the persistent Python namespace."],
+    ["notebook_pwd", "notebook_pwd()", "Return the current directory in the browser virtual filesystem."],
+    ["notebook_ls", "notebook_ls(path='.')", "List files and directories in the browser virtual filesystem."],
+    ["notebook_cd", "notebook_cd(path='.')", "Change the current directory in the browser virtual filesystem."],
+    ["notebook_pip_list", "notebook_pip_list()", "List packages already installed in the browser-Python runtime."],
+    ["notebook_time", "notebook_time(expression, repeat=1)", "Time a Python expression with a bounded repeat count."],
+    ["notebook_magic", "notebook_magic()", "List the notebook syntax supported by this browser runtime."],
+    ["HTML", "HTML(data)", "Return HTML for the notebook's sanitized rich-output renderer."],
+    ["Markdown", "Markdown(data)", "Return Markdown for the notebook's sanitized rich-output renderer."],
+    ["Code", "Code(data, language='python')", "Return source code with an explicit language for highlighting."],
+    ["JSON", "JSON(data, expanded=True, indent=2)", "Return structured data as indented JSON output."],
+    ["Artifact", "Artifact(filename, content, mime_type='text/plain', language='')", "Return a non-executing file preview with exact downloadable bytes."],
   ].map(([name, signature, description]) => Object.freeze({
     name, signature, description, source: definitionSource(name),
   }));
+  const INJECTED_HELPERS = validateHelperDocs(HELPER_DOCS);
 
   globalThis.PYODIDE_EXECUTION_CONTRACT = Object.freeze({
     source: EXECUTE_CELL,
     helpers: Object.freeze(HELPER_DOCS),
+    injectedHelpers: Object.freeze(INJECTED_HELPERS),
+    validateHelperDocs,
   });
 })();

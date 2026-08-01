@@ -6,14 +6,15 @@
 
 LLM prose has structural tells that have nothing to do with word choice: sentences cluster at one
 length, ideas get forced into triads, and clauses get welded with colons and semicolons to sound
-punchy. This check measures those signals per page over the narrative flow only and ranks the pages,
-surfacing the ones that read machine-uniform so a human can go vary the rhythm. Narrative is the <p>
-paragraph text. SKILL.html guidance also includes list items because those lists explain the project
-to a reader; they are not course-data enumerations. Other list items, catalog cards, code, SVG,
-headings, and nav chrome stay excluded. A paragraph break counts as a sentence boundary, so a
-list-/cell-lead-in colon at a paragraph's end is not mistaken for a welded mid-sentence clause. It is
-deterministic and advisory:
-it points at pages and shows its work, it does not pass verdicts and never blocks the gate.
+punchy. This check measures those signals across owned narrative and interface copy, then ranks the
+pages that deserve a rhythm pass. It discovers HTML and Markdown by ownership instead of a page
+allowlist. Paragraphs, explanatory list items, headings, interface labels, Canvas/RunCell fields,
+documentation comments, and long figure captions therefore share the same rules. Short structural
+labels remain outside sentence-rhythm statistics, but deterministic size budgets still cover them.
+A paragraph break counts as a sentence boundary, so a list-/cell-lead-in colon at a paragraph's end
+is not mistaken for a welded mid-sentence clause. Statistical style findings remain advisory. The
+interface contract is deterministic and blocking: unreadable string assembly, title shorthand, and
+oversized canonical component copy cannot ship.
 
 Per page it reports:
 
@@ -42,6 +43,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import os
 import re
 import statistics
 import sys
@@ -90,6 +92,76 @@ _SKILL_ITEM = re.compile(r"<li\b[^>]*>(.*?)</li>", re.I | re.S)
 _SKILL_CATALOG = re.compile(
     r'<(?P<tag>ul|ol)\b[^>]*\bclass="[^"]*\bfile-index\b[^"]*"[^>]*>.*?</(?P=tag)>',
     re.I | re.S,
+)
+
+# Learners read prose carried by JavaScript just as surely as prose carried by HTML. CanvasFlow
+# node summaries, RunCell intros, helper documentation, accessible labels, and tool descriptions
+# used to receive only one narrow buzz scan. Keep one field registry and parse every owned page by
+# default so a new component cannot create an unmonitored prose island.
+_SCRIPT_PROSE_FIELDS = {
+    "aria", "blurb", "caption", "content", "description", "disabledMsg", "greeting", "help", "intro",
+    "hint", "instruction", "kicker", "label", "placeholder", "question", "socket", "statusText",
+    "subtitle", "summary", "text", "title", "tooltip", "emptyMessage", "errorMessage", "message",
+    "notice", "prompt", "successMessage", "warning",
+}
+_MODEL_PROSE_FIELDS = {"content", "message", "prompt", "question", "text"}
+_SEMANTIC_ARRAY_FIELDS = _MODEL_PROSE_FIELDS | {"description"}
+_MODEL_SOURCE_WALL = 160
+_SCRIPT_FIELD_START = re.compile(
+    r"(?<![\w$-])(?:[\"']?)(" + "|".join(sorted(_SCRIPT_PROSE_FIELDS, key=len, reverse=True))
+    + r")(?:[\"']?)\s*(?::|(?<![=!<>])=(?!=))\s*"
+)
+_DOC_COMMENT = re.compile(r"@doc\b(.*?)\*/", re.S)
+_LINE_COMMENT = re.compile(r"^\s*//\s*(?![-=─━]{3,})(.*\b.*)$", re.M)
+_STATIC_ARRAY = re.compile(
+    r"\[\s*(?P<body>(?:(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*')\s*,\s*)+"
+    r"(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*')\s*,?\s*)\]"
+    r"\s*\.join\(\s*(?P<join_quote>[\"'])(?P<join_sep>\s+|\\n(?:\\n)?)(?P=join_quote)\s*\)",
+    re.S,
+)
+_STATIC_ARRAY_STRING = re.compile(r"\"((?:\\.|[^\"\\])*)\"|'((?:\\.|[^'\\])*)'", re.S)
+
+# Compact component copy keeps the code visible. These are interface budgets, not prose scores:
+# titles identify, summaries orient one node, and intros tell the learner what to do before opening
+# implementation. A second paragraph belongs beside the component, not inside its chrome.
+_SCRIPT_FIELD_BUDGETS = {
+    "title": (12, 1),
+    "label": (16, 1),
+    "summary": (30, 2),
+    "intro": (44, 2),
+    "caption": (34, 2),
+    "description": (40, 3),
+    "subtitle": (18, 1),
+    "question": (30, 2),
+    "hint": (32, 2),
+    "tooltip": (24, 2),
+    "instruction": (40, 2),
+    "statusText": (20, 2),
+}
+
+# HTML component copy is code-adjacent prose too. Keep this registry structural rather than tied to
+# current classes so a new page, renderer, or design system enters the check without registration.
+_HTML_PROSE_ELEMENT = re.compile(
+    r"<(title|h[1-6]|li|figcaption|legend|summary|label|button|th|caption|option|dt)\b[^>]*>"
+    r"(.*?)</\1>", re.I | re.S
+)
+_HTML_PROSE_ATTR = re.compile(
+    r"(?<![-:\w])(aria-label|aria-description|placeholder|title|alt)\s*=\s*([\"'])(.*?)\2",
+    re.I | re.S,
+)
+_HTML_FIELD_BUDGETS = {
+    "title": (12, 1), "h1": (12, 1), "h2": (14, 1), "h3": (16, 1), "h4": (18, 1),
+    "h5": (18, 1), "h6": (18, 1), "figcaption": (34, 2),
+    "legend": (16, 1), "summary": (16, 1), "label": (16, 1),
+    "button": (8, 1), "th": (10, 1), "caption": (24, 2), "option": (12, 1),
+    "dt": (12, 1), "aria-label": (16, 1), "aria-description": (30, 2),
+    "placeholder": (16, 1), "alt": (18, 1),
+}
+_TITLE_FIELDS = {"title", "h1", "h2", "h3", "h4", "h5", "h6"}
+_TITLE_SHORTHAND = re.compile(r"\b(?:synth|viz|config|impl|deps|reqs|resp)\b", re.I)
+_TITLE_SYMBOL_SHORTHAND = re.compile(r"(?:→|->|\+|&|\||\s/\s)")
+_HTML_MASKED_BLOCK = re.compile(
+    r"<(script|style|svg|pre|template)\b[^>]*>.*?</\1>", re.I | re.S
 )
 # The course contract owns this verbatim canonical copy. Exclude it from style advice: a validator
 # must not flag prose that authors are forbidden to rewrite. Content and presence remain release-gated
@@ -405,10 +477,12 @@ def grammar_hits(prose) -> list:
         if k not in seen:
             seen.add(k); out.append((label, s))
 
-    sents = _sentences(prose)
+    chunks = [prose] if isinstance(prose, str) else list(prose)
+    chunk_sentences = [_sentences(chunk) for chunk in chunks]
+    sents = [sentence for group in chunk_sentences for sentence in group]
     lens = [n for _, n in sents]
     for s, n in sents:
-        if _WEAK_OPEN.match(s) and not _WEAK_OPEN_OK.match(s):
+        if _WEAK_OPEN.match(s) and not _WEAK_OPEN_OK.match(s) and not s.rstrip().endswith("?"):
             add("weak-opener", s)
         if n <= 8 and _QSTMT.match(s.strip()):
             add("question-as-statement", s)
@@ -426,17 +500,19 @@ def grammar_hits(prose) -> list:
             add("and-then-chain", s)
         if _BARE_AND.search(s):
             add("bare-and-chain", s)
-    for (a, na), (b, nb) in zip(sents, sents[1:]):
-        if 6 <= na <= 13 and 8 <= nb <= 36 and _STUB_SUBJECT.match(b) and _STUB_CONTINUATION.search(b):
-            add("stub-split", f"{a} {b}")
-    i = 0                                                 # runs of consecutive very-short sentences
-    while i < len(sents):
-        j = i
-        while j < len(sents) and lens[j] <= _CHOPPY_LEN:
-            j += 1
-        if j - i >= 3:
-            add("choppy-run", " ".join(x for x, _ in sents[i:j]))
-        i = j + 1 if j > i else i + 1
+    for group in chunk_sentences:
+        for (a, na), (b, nb) in zip(group, group[1:]):
+            if 6 <= na <= 13 and 8 <= nb <= 36 and _STUB_SUBJECT.match(b) and _STUB_CONTINUATION.search(b):
+                add("stub-split", f"{a} {b}")
+        i = 0                                             # runs stay inside one authored paragraph/field
+        group_lens = [n for _, n in group]
+        while i < len(group):
+            j = i
+            while j < len(group) and group_lens[j] <= _CHOPPY_LEN:
+                j += 1
+            if j - i >= 3:
+                add("choppy-run", " ".join(x for x, _ in group[i:j]))
+            i = j + 1 if j > i else i + 1
     return out
 
 
@@ -517,6 +593,310 @@ def narrative(f: Path) -> list:
         if c:
             chunks.append(c)
     return chunks
+
+
+def _quoted_js_parts(js: str, start: int) -> tuple[list[str], int]:
+    """Read a static JS string expression beginning at *start*.
+
+    The course commonly wraps one sentence as ``"first " + "second"``. A regex that stops at
+    the first quote silently truncates that prose, so this small scanner follows adjacent quoted
+    parts while refusing variables, calls, and other executable expressions.
+    """
+    parts: list[str] = []
+    cursor = start
+    while True:
+        cursor += len(js[cursor:]) - len(js[cursor:].lstrip())
+        escaped_template = js.startswith("\\`", cursor)
+        if cursor >= len(js) or (js[cursor] not in {'"', "'", "`"} and not escaped_template):
+            break
+        quote = "`" if escaped_template else js[cursor]
+        cursor += 2 if escaped_template else 1
+        buf: list[str] = []
+        escaped = False
+        while cursor < len(js):
+            char = js[cursor]
+            if escaped:
+                # A JavaScript line continuation wraps source without changing the runtime string.
+                if char not in "\r\n":
+                    buf.append(char)
+                escaped = False
+            elif escaped_template and js.startswith("\\`", cursor):
+                cursor += 2
+                break
+            elif char == "\\":
+                escaped = True
+            elif not escaped_template and char == quote:
+                cursor += 1
+                break
+            else:
+                buf.append(char)
+            cursor += 1
+        else:
+            return [], start
+        parts.append("".join(buf).replace("\\n", "\n"))
+        probe = cursor
+        probe += len(js[probe:]) - len(js[probe:].lstrip())
+        if probe >= len(js) or js[probe] != "+":
+            break
+        cursor = probe + 1
+    return parts, cursor
+
+
+def script_prose(f: Path) -> list[dict]:
+    """Return owned prose embedded in executable page components.
+
+    Each row carries its field and source line so reports can point to the exact Canvas node,
+    RunCell option, helper description, or documentation comment. Runtime syntax and dynamic
+    expressions are never interpreted.
+    """
+    raw, suffix = lp._read_for_links(f)
+    if suffix not in (".html", ".htm"):
+        return []
+    rows: list[dict] = []
+    seen: set[tuple[str, str, int]] = set()
+
+    def add(field: str, text: str, absolute: int, *, absolute_end: int | None = None,
+            parts: int = 1, assembly: str = "literal", semantic_units: bool = True) -> None:
+        runtime_lines = [html.unescape(_TAG.sub(" ", line)).strip()
+                         for line in text.splitlines()]
+        cleaned = html.unescape(re.sub(r"\s+", " ", _TAG.sub(" ", text))).strip()
+        # Short status tokens and code-shaped values are labels, not prose. Keep compact titles:
+        # their size contract still matters even when sentence-level analysis does not.
+        if not re.search(r"[A-Za-z]", cleaned) or "${" in cleaned:
+            return
+        line = raw[:absolute].count("\n") + 1
+        key = (field, cleaned, line)
+        if key not in seen:
+            seen.add(key)
+            source = raw[absolute:absolute_end] if absolute_end is not None else ""
+            rows.append({"field": field, "text": cleaned, "line": line, "parts": parts,
+                         "assembly": assembly, "semantic_units": semantic_units,
+                         "runtime_lines": runtime_lines,
+                         "source_lines": source.count("\n") + 1 if source else 1,
+                         "source_width": max((len(item) for item in source.splitlines()), default=0)})
+
+    for block in raw_text_blocks(raw, "script"):
+        attrs = block.attributes
+        if "src" in attrs or re.fullmatch(
+                r"(?:application|text)/(?:json|ld\+json|css)", attrs.get("type", ""), re.I):
+            continue
+        js = block.body
+        base = block.body_start
+        for match in _SCRIPT_FIELD_START.finditer(js):
+            parts, expression_end = _quoted_js_parts(js, match.end())
+            if parts:
+                add(match.group(1), "".join(parts), base + match.start(),
+                    absolute_end=base + expression_end, parts=len(parts))
+                continue
+            array = _STATIC_ARRAY.match(js, match.end())
+            if array:
+                array_parts = [next(value for value in item.groups() if value is not None)
+                               for item in _STATIC_ARRAY_STRING.finditer(array.group("body"))]
+                if array_parts:
+                    complete = all(
+                        re.search(r"[.!?:;]\s*$", item.strip())
+                        or re.match(r"^[A-Za-z][\w-]*\s*=", item.strip())
+                        for item in array_parts
+                    )
+                    separator = array.group("join_sep").replace("\\n", "\n")
+                    add(match.group(1), separator.join(array_parts), base + match.start(),
+                        absolute_end=base + array.end(), parts=len(array_parts),
+                        assembly="array-join", semantic_units=complete)
+        for match in _DOC_COMMENT.finditer(js):
+            add("doc", match.group(1), base + match.start())
+
+        # Explanatory source comments are authored documentation. Join adjacent lines so wrapped
+        # comments remain one sentence and filter only syntax banners, legal headers, and directives.
+        run: list[tuple[int, int, str]] = []
+        for line_match in _LINE_COMMENT.finditer(js + "\n"):
+            value = line_match.group(1).strip()
+            line_no = js[:line_match.start()].count("\n")
+            if (not value or value.startswith(("Copyright", "SPDX-", "@", "eslint", "prettier"))
+                    or re.fullmatch(r"[\W_]+", value)):
+                continue
+            if run and line_no != run[-1][0] + 1:
+                joined = " ".join(item[2] for item in run)
+                if len(_WORD.findall(joined)) >= 8:
+                    add("comment", joined, base + run[0][1])
+                run = []
+            run.append((line_no, line_match.start(), value))
+        if run:
+            joined = " ".join(item[2] for item in run)
+            if len(_WORD.findall(joined)) >= 8:
+                add("comment", joined, base + run[0][1])
+    return rows
+
+
+def html_component_prose(f: Path) -> list[dict]:
+    """Return headings and compact HTML components with stable source locations.
+
+    Non-rendered and code-bearing blocks are replaced with same-length whitespace before matching.
+    This preserves line numbers without allowing example markup, SVG labels, or JavaScript syntax to
+    masquerade as interface copy. The selector is tag-based: no page or CSS class opts in.
+    """
+    raw, suffix = lp._read_for_links(f)
+    if suffix not in (".html", ".htm"):
+        return []
+
+    def mask(match: re.Match) -> str:
+        return re.sub(r"[^\n]", " ", match.group(0))
+
+    visible = _HTML_MASKED_BLOCK.sub(mask, raw)
+    rows: list[dict] = []
+    seen: set[tuple[str, str, int]] = set()
+    for match in _HTML_PROSE_ELEMENT.finditer(visible):
+        field = match.group(1).lower()
+        inner = match.group(2)
+        text = html.unescape(re.sub(r"\s+", " ", _TAG.sub(" ", inner))).strip()
+        prose_inner = re.sub(r"<(?:code|pre)\b.*?</(?:code|pre)>", " ", inner,
+                             flags=re.I | re.S)
+        prose_text = html.unescape(re.sub(r"\s+", " ", _TAG.sub(" ", prose_inner))).strip()
+        if not re.search(r"[A-Za-z]", text):
+            continue
+        line = raw[:match.start()].count("\n") + 1
+        key = (field, text, line)
+        if key not in seen:
+            seen.add(key)
+            rows.append({"field": field, "text": text, "prose_text": prose_text,
+                         "line": line, "parts": 1})
+    for match in _HTML_PROSE_ATTR.finditer(visible):
+        field = match.group(1).lower()
+        text = html.unescape(re.sub(r"\s+", " ", match.group(3))).strip()
+        if not re.search(r"[A-Za-z]", text) or "${" in text:
+            continue
+        line = raw[:match.start()].count("\n") + 1
+        key = (field, text, line)
+        if key not in seen:
+            seen.add(key)
+            rows.append({"field": field, "text": text, "prose_text": text,
+                         "line": line, "parts": 1})
+    return rows
+
+
+def authored_prose(f: Path) -> list[str]:
+    """Owned sentence prose a learner, contributor, or reviewer is expected to read.
+
+    Component fragments shorter than eight words stay out of cadence statistics; their explicit
+    interface budgets still apply. SKILL list guidance enters through :func:`narrative`, so the
+    generic HTML-component pass must not add the same source location a second time. Inline code
+    remains available to interface budgets but is removed from the prose corpus.
+    """
+    chunks = narrative(f)
+    chunks.extend(row["text"] for row in script_prose(f))
+    chunks.extend(
+        row["prose_text"] for row in html_component_prose(f)
+        if not (f.name == "SKILL.html" and row["field"] == "li")
+        and len(_WORD.findall(row["prose_text"])) >= 8
+    )
+    return chunks
+
+
+def cadence_prose(f: Path) -> list[str]:
+    """Sentence prose whose rhythm can be judged as continuous reader-facing copy.
+
+    Code-carried component fields remain in :func:`authored_prose` and the required
+    interface contracts. They are intentionally excluded from page-level cadence:
+    independent labels, prompts, comments, and source examples do not form one
+    continuous essay merely because they share a script block. Figure captions are
+    measured through ``graphic_prose`` and must not also enter the comparison corpus,
+    where a caption would otherwise be reported as repeating itself.
+    """
+    chunks = narrative(f)
+    chunks.extend(
+        row["prose_text"] for row in html_component_prose(f)
+        if row["field"] != "figcaption"
+        and not (f.name == "SKILL.html" and row["field"] == "li")
+        and len(_WORD.findall(row["prose_text"])) >= 8
+    )
+    return chunks
+
+
+def _runtime_wrap_problem(lines: list[str]) -> str | None:
+    """Return the first runtime newline that merely wraps a sentence.
+
+    Blank lines, complete sentences, list items, headings, and key/value instruction lines carry
+    meaning at runtime. A newline after an unfinished clause usually exists only to wrap source,
+    but a model or learner receives it as real whitespace.
+    """
+    visible = [line.strip() for line in lines if line.strip()]
+    for previous, current in zip(visible, visible[1:]):
+        if re.search(r"[.!?:;]$", previous):
+            continue
+        if re.match(r"^(?:[-*] |\d+[.)] |#{1,6} |[A-Za-z][\w-]*\s*=)", current):
+            continue
+        if re.match(r"^[A-Za-z][\w-]*\s*=", previous):
+            continue
+        return f"runtime newline follows unfinished text {previous[-48:]!r}"
+    return None
+
+
+def interface_prose_findings(f: Path) -> list[dict]:
+    """Deterministic size contracts for prose rendered inside component chrome."""
+    out: list[dict] = []
+    rows = [*script_prose(f), *html_component_prose(f)]
+    for row in rows:
+        budget = _SCRIPT_FIELD_BUDGETS.get(row["field"]) or _HTML_FIELD_BUDGETS.get(row["field"])
+        if budget:
+            max_words, max_sentences = budget
+            words = len(_WORD.findall(row["text"]))
+            sentences = max(1, len(_sentences(row["text"])))
+            if words > max_words or sentences > max_sentences:
+                out.append({
+                    **row,
+                    "kind": "component-prose-too-long",
+                    "detail": (f"{row['field']} has {words} words / {sentences} sentences; "
+                               f"budget is {max_words} words / {max_sentences} sentences"),
+                })
+        if row["field"] in _TITLE_FIELDS:
+            shorthand = _TITLE_SHORTHAND.search(row["text"])
+            symbol = _TITLE_SYMBOL_SHORTHAND.search(row["text"])
+            if shorthand or symbol:
+                reason = (f"abbreviation {shorthand.group(0)!r}" if shorthand
+                          else f"symbol shorthand {symbol.group(0)!r}")
+                out.append({
+                    **row,
+                    "kind": "title-shorthand",
+                    "detail": f"{row['field']} uses {reason}; write the relationship in words",
+                })
+        if row.get("assembly") == "array-join":
+            if row["field"] not in _SEMANTIC_ARRAY_FIELDS:
+                out.append({
+                    **row,
+                    "kind": "component-prose-array-assembly",
+                    "detail": (f"{row['field']} assembles interface copy from {row['parts']} array "
+                               "entries; keep component prose in one searchable string"),
+                })
+            elif not row.get("semantic_units"):
+                out.append({
+                    **row,
+                    "kind": "model-prose-fragmented-array",
+                    "detail": (f"{row['field']} wraps source with {row['parts']} incomplete fragments; "
+                               "array entries must be complete prompt units"),
+                })
+        elif row.get("parts", 1) > 1 and row["field"] in _SCRIPT_PROSE_FIELDS:
+            out.append({
+                **row,
+                "kind": "component-prose-concatenation",
+                "detail": (f"{row['field']} is split across {row['parts']} static strings; "
+                           "keep learner-facing copy in one readable value"),
+            })
+        if (row["field"] in _MODEL_PROSE_FIELDS and row.get("assembly") == "literal"
+                and row.get("source_lines", 1) == 1 and len(row["text"]) > _MODEL_SOURCE_WALL):
+            out.append({
+                **row,
+                "kind": "model-prose-source-wall",
+                "detail": (f"{row['field']} places {len(row['text'])} normalized characters on one "
+                           "source line; use semantic prompt units or meaningful runtime lines"),
+            })
+        if row["field"] in _MODEL_PROSE_FIELDS and len(row.get("runtime_lines", [])) > 1:
+            wrap = _runtime_wrap_problem(row["runtime_lines"])
+            if wrap:
+                out.append({
+                    **row,
+                    "kind": "model-prose-runtime-wrap",
+                    "detail": f"{row['field']} uses source wrapping that changes runtime text: {wrap}",
+                })
+    return out
 
 
 _BLOCK = re.compile(r"<h[1-3]\b|<p\b[^>]*>|<ul\b|<ol\b|<table\b|<figure\b|<svg\b|<img\b|<pre\b"
@@ -1009,20 +1389,11 @@ def nonprose_buzz(f: Path) -> list:
             if key not in seen:
                 seen.add(key); out.append({"where": where, "kind": k, "sentence": s})
 
-    # Canvas documentation lives in <script>: the human-readable intro/summary/caption/aria strings
-    # and @doc comments of a mountCanvasFlow / mountDiagram / helper spec. It is authored prose a
-    # student reads, so it gets the same buzz scan as the page body, not a free pass for being in JS.
+    # Reuse the common component extractor. New fields enter one registry rather than a second
+    # allowlist that can drift away from the full prose pass.
     body = raw[raw.lower().find("<body"):] if "<body" in raw.lower() else raw
-    for script in raw_text_blocks(body, "script"):
-        js = script.body
-        for fm in re.finditer(
-            r'\b(?:intro|summary|caption|aria|blurb)\s*:\s*(?:"((?:\\.|[^"\\])*)"|\'((?:\\.|[^\'\\])*)\'|`((?:\\.|[^`\\])*)`)',
-            js,
-            re.S,
-        ):
-            scan(next(value for value in fm.groups() if value is not None).replace("\\n", " "), "canvas")
-        for dm in re.finditer(r"@doc\b(.*?)\*/", js, re.S):
-            scan(dm.group(1), "canvas")
+    for row in script_prose(f):
+        scan(row["text"], "component")
     # Body: headings, list items, cards (code/svg/scripts stripped so their syntax is not prose).
     body = _SVG.sub(" ", body)
     body = re.sub(r"<pre\b.*?</pre>", " ", body, flags=re.S | re.I)
@@ -1049,7 +1420,7 @@ def comma_interruptions(f: Path) -> list:
     and the fresh context each sub-agent gets, is the mitigation'). A raw comma count is no good (a
     clean five-item list has many commas and reads fine); this targets the hard-to-parse interruption.
     Advisory / judgment: a short appositive can be fine, so it surfaces rather than blocks."""
-    return [s for c in narrative(f) for s, _ in _sentences(c) if _COMMA_INTERRUPT.search(s)]
+    return [s for c in authored_prose(f) for s, _ in _sentences(c) if _COMMA_INTERRUPT.search(s)]
 
 
 def close_repeats(f: Path) -> list:
@@ -1058,7 +1429,7 @@ def close_repeats(f: Path) -> list:
     ("many patterns that leverage ideas from both patterns") that reads better lightened. Advisory /
     judgment: a technical term repeated on purpose is fine, so this surfaces rather than blocks."""
     out = []
-    for c in narrative(f):
+    for c in authored_prose(f):
         for s, _ in _sentences(c):
             low = [w.lower() for w in _WORD.findall(s)]
             last = {}
@@ -1089,7 +1460,7 @@ def defer_copula(f: Path) -> list:
     """Sentences that defer the verb behind a copular abstraction ('X is what lets Y' for 'X lets Y';
     'that is what keeps ...'; 'what an always-on agent is for'). Reads heavier than the direct form
     and recurs as a machine tic. Advisory: lead with the verb and the layer disappears."""
-    return [s for c in narrative(f) for s, _ in _sentences(c) if _DEFER_COPULA.search(s)]
+    return [s for c in authored_prose(f) for s, _ in _sentences(c) if _DEFER_COPULA.search(s)]
 
 
 def dense_repeats(f: Path) -> list:
@@ -1098,7 +1469,7 @@ def dense_repeats(f: Path) -> list:
     brand-new agent invocation ... the sub-agent's context window'). Split it and the echo dissolves.
     Stronger than close_repeats, which only sees a within-five-words pair."""
     out = []
-    for c in narrative(f):
+    for c in authored_prose(f):
         for s, _ in _sentences(c):
             counts = {}
             for w in (w.lower() for w in _WORD.findall(s)):
@@ -1122,7 +1493,7 @@ def over_verbage(f: Path) -> list:
     gloss the sentence could fold in or drop. Distinct from grammar's run-on (a single >45-word length
     cap); this is about density, not just length."""
     out = []
-    for c in narrative(f):
+    for c in authored_prose(f):
         for s, n in _sentences(c):
             commas = s.count(",")
             subs = len(_SUBORD.findall(s))
@@ -1148,7 +1519,7 @@ def padding_phrases(f: Path) -> list:
     'on your own terms', 'under the hood'). Extends grammar's filler list with the course's recurring
     padding; cut the phrase and the sentence is unchanged in meaning."""
     out = []
-    for c in narrative(f):
+    for c in authored_prose(f):
         for s, _ in _sentences(c):
             m = _PADDING.search(s)
             if m:
@@ -1181,7 +1552,7 @@ def hollow_intro(f: Path) -> list:
     """Sentences that open on scaffolding rather than content ('This page does X', 'Below, you...',
     'Notice that...', 'In other words...'). The frame is usually cuttable: the sentence after the
     comma carries the meaning. High-yield in course prose, which leans on these to stitch sections."""
-    return [s for c in narrative(f) for s, _ in _sentences(c) if _HOLLOW.match(s.strip())]
+    return [s for c in authored_prose(f) for s, _ in _sentences(c) if _HOLLOW.match(s.strip())]
 
 
 # Vacuous meta-writing: filler that comments on the course or the idea instead of conveying it.
@@ -1222,7 +1593,7 @@ def vacuous_meta(f: Path) -> list:
     """(phrase, sentence) for vacuous meta-writing: filler that comments on the course or the idea
     instead of conveying it ('where the real engineering lives', 'Don't X; do Y', 'first-class part').
     Reads as marketing and carries no information; cut the sentence or replace it with the fact."""
-    return _vacuous_meta_text(narrative(f))
+    return _vacuous_meta_text(authored_prose(f))
 
 
 # A copular definitional appositive ("This is the smallest artifact in the course, a single chat() call",
@@ -1246,7 +1617,7 @@ def staccato_cadence(f: Path) -> list:
     reveals stacking 'setup: payoff', breaks (comma/colon/semicolon) so dense the prose is short clauses
     welded together, or breaks spaced so evenly the cadence turns mechanical."""
     out = []
-    for c in narrative(f):
+    for c in authored_prose(f):
         if _APPOS_DEF.search(c):
             out.append(("appositive-definition", "copular 'X is the Y, a Z' reveal (colon or comma, even when split)", c))
             continue
@@ -1276,7 +1647,7 @@ def repeated_phrase(f: Path) -> list:
     close_repeats' within-five-words pair). A crutch phrase a reader notices on the second pass;
     vary or cut it. Page-scoped: the second occurrence in a different sentence is what surfaces."""
     seen, out, fired = {}, [], set()
-    for c in narrative(f):
+    for c in authored_prose(f):
         for s, _ in _sentences(c):
             ws = [w.lower() for w in _WORD.findall(s) if len(w) >= 4 and w.lower() not in _STOP]
             for i in range(len(ws) - 2):
@@ -1445,42 +1816,90 @@ def tells(m: dict) -> list[str]:
     return t
 
 
-def _pages(scope: str):
-    """Select the requested authored prose surface.
+_PROSE_SKIP_ANYWHERE = {
+    ".git", ".cache", ".pytest_cache", ".venv", "venv", "node_modules", "vendor",
+    "__pycache__", "mats", "repos",
+}
+_PROSE_SKIP_ROOTS = {
+    "artifacts", "candidate", "public", "dist", "build", "export", "generated_images",
+    "_paper_cache", "repos_index", "docstore_index",
+}
+_PROSE_SKIP_PREFIXES = {("docs", "validation"), ("web", "nemoclaw", "standalone")}
 
-    ``course`` is the canonical learner journey: its landing page and numbered modules only.
-    ``ship`` adds other authored browser pages and every repository SKILL contract. ``all`` also
-    considers root policies and direct ``docs/`` Markdown. Generated reports, script references,
-    vendored materials, and the license use different genres and stay outside this prose signal.
+
+def _owned_prose_pages() -> set[Path]:
+    """Discover owned HTML and Markdown without a file opt-in list."""
+    out: set[Path] = set()
+    for directory, names, files in os.walk(TASK1):
+        rel_dir = Path(directory).relative_to(TASK1)
+        kept = []
+        for name in names:
+            child = (*rel_dir.parts, name)
+            if name in _PROSE_SKIP_ANYWHERE:
+                continue
+            if not rel_dir.parts and name in _PROSE_SKIP_ROOTS:
+                continue
+            if any(child[:len(prefix)] == prefix for prefix in _PROSE_SKIP_PREFIXES):
+                continue
+            kept.append(name)
+        names[:] = kept
+        for name in files:
+            path = Path(directory) / name
+            rel = path.relative_to(TASK1).as_posix()
+            if path.suffix.lower() not in {".html", ".htm", ".md"}:
+                continue
+            if lp.is_mat_path(rel):
+                continue
+            out.add(path)
+    return out
+
+
+def _english_surface(path: Path) -> bool:
+    if path.suffix.lower() == ".md":
+        parts = path.relative_to(TASK1).parts
+        return not (len(parts) > 1 and parts[0] == "i18n"
+                    and parts[1].lower() in {"es", "es-es", "pt", "pt-br"})
+    raw = lp._read_for_links(path)[0]
+    match = re.search(r"<html\b[^>]*\blang=[\"']([^\"']+)", raw, re.I)
+    return not match or match.group(1).lower().split("-")[0] == "en"
+
+
+def _pages(scope: str):
+    """Select owned English prose by content.
+
+    ``course`` remains a focused learner-journey view. Broader runs discover every owned HTML and
+    Markdown file automatically, then reject only external/generated material and non-English
+    content by semantics. Studio pages, course choosers, nested runbooks, script documentation,
+    new directories, and English adaptations therefore enter the suite without registration.
     """
     if scope == "course":
         course_root = TASK1 / "web" / "nemoclaw"
         candidates = {course_root / "index.html", *course_root.glob("[0-9][0-9][a-z]-*.html")}
     else:
-        candidates = set(lp._iter_pages(TASK1))
-        candidates.update(TASK1.rglob("SKILL.html"))
+        candidates = _owned_prose_pages()
     for f in sorted(candidates):
         rel = f.relative_to(TASK1).as_posix()
-        if set(f.relative_to(TASK1).parts) & {".git", "i18n", "node_modules", ".venv", "venv", "artifacts"}:
-            continue
-        suf = f.suffix.lower()
-        if f.name in ("studio.html", "courses.html", "LICENSE"):
-            continue
-        # vendored mats (now course-scoped under web/nemoclaw/mats/, both .md and .html snapshots)
-        # are external reference packets, never authored narrative, so they are excluded by segment.
-        if lp.is_mat_path(rel) and f.name != "SKILL.html":
-            continue
-        if suf in (".html", ".htm"):
-            if f.name != "SKILL.html" and not rel.startswith("web/"):
-                continue
-        elif suf == ".md":
-            if scope != "all" or rel.startswith("scripts/"):
-                continue
-            if rel.startswith("docs/") and f.parent != TASK1 / "docs":
-                continue
-        else:
+        if not _english_surface(f):
             continue
         yield f, rel
+
+
+def _interface_pages(scope: str):
+    """Select every owned HTML interface, including localized overlays.
+
+    Grammar and cadence remain language-profiled, but structural readability is language-neutral:
+    localized component copy cannot regain string concatenation, oversized chrome, or shorthand
+    titles merely because the surrounding prose is not English.
+    """
+    if scope == "course":
+        canonical = TASK1 / "web" / "nemoclaw"
+        candidates = {canonical / "index.html", *canonical.glob("[0-9][0-9][a-z]-*.html")}
+        candidates.update((TASK1 / "i18n").glob("*/web/nemoclaw/[0-9][0-9][a-z]-*.html"))
+    else:
+        candidates = _owned_prose_pages()
+    for path in sorted(candidates):
+        if path.suffix.lower() in {".html", ".htm"}:
+            yield path, path.relative_to(TASK1).as_posix()
 
 
 def sweep(scope: str = "ship"):
@@ -1493,7 +1912,7 @@ def sweep(scope: str = "ship"):
     rows = []
     for f, rel in _pages(scope):
         try:
-            m = metrics(narrative(f), graphics(f), graphic_prose(f))   # prose + figure text (redundancy) + caption sentences (buzz)
+            m = metrics(cadence_prose(f), graphics(f), graphic_prose(f))
         except Exception:
             m = None                              # unreadable / too-short page: skip rather than crash
         if m:
@@ -1574,7 +1993,7 @@ def main() -> int:
         f = TASK1 / a.page
         if not f.is_file():
             print(f"no such page: {a.page}", file=sys.stderr); return 2
-        prose = narrative(f)
+        prose = cadence_prose(f)
         m = metrics(prose, graphics(f), graphic_prose(f))
         if a.json:
             print(json.dumps({"path": a.page, "score": _score(m) if m else None,

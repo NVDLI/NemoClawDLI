@@ -7,7 +7,8 @@
 A good cell is transparent (a model call surfaces its work via the house logger or a
 raw-request <details>, not silence), uses helpers.log not console.* (which students
 never see), and is correct: awaited model calls, keys from helpers.getKey() not inlined,
-no blocking dialog. Flags cells below that bar. Advisory.
+no blocking dialog. Duplicate keys and embedded credentials are ship-blocking because the browser
+either executes different code than the learner reads or exposes a secret; other findings guide review.
 
 Run:  python3 scripts/validation/cell_audit.py
 """
@@ -74,6 +75,99 @@ def strip_noise(c: str) -> str:
     c = re.sub(r"/\*.*?\*/", " ", c, flags=re.S)
     c = re.sub(r"//[^\n]*", " ", c)
     return c
+
+
+def _mask_js_literals(code: str) -> str:
+    """Blank comments and string bodies without moving any source position."""
+    chars = list(code)
+    i = 0
+    while i < len(chars):
+        if code.startswith("//", i):
+            end = code.find("\n", i)
+            end = len(code) if end < 0 else end
+            for j in range(i, end):
+                chars[j] = " "
+            i = end
+            continue
+        if code.startswith("/*", i):
+            end = code.find("*/", i + 2)
+            end = len(code) if end < 0 else end + 2
+            for j in range(i, end):
+                if chars[j] != "\n":
+                    chars[j] = " "
+            i = end
+            continue
+        if code[i] in {'"', "'", "`"}:
+            quote = code[i]
+            end = i + 1
+            while end < len(chars):
+                if code[end] == "\\":
+                    end += 2
+                    continue
+                if code[end] == quote:
+                    break
+                end += 1
+            probe = end + 1
+            while probe < len(chars) and code[probe].isspace():
+                probe += 1
+            quoted_key = quote != "`" and probe < len(chars) and code[probe] == ":"
+            if not quoted_key:
+                for j in range(i + 1, min(end, len(chars))):
+                    if chars[j] != "\n":
+                        chars[j] = " "
+            i = min(end + 1, len(chars))
+            continue
+        i += 1
+    return "".join(chars)
+
+
+def duplicate_object_keys(code: str) -> list[tuple[str, int]]:
+    """Return repeated literal keys inside one JavaScript object.
+
+    JavaScript accepts duplicate object keys and silently keeps the last value. Runnable examples
+    cannot rely on that behavior: a learner sees two instructions while the runtime follows one.
+    The scanner operates at direct object depth and ignores strings, comments, nested objects,
+    arrays, and function calls.
+    """
+    masked = _mask_js_literals(code)
+    stack: list[int] = []
+    spans: list[tuple[int, int]] = []
+    for index, char in enumerate(masked):
+        if char == "{":
+            stack.append(index)
+        elif char == "}" and stack:
+            spans.append((stack.pop(), index))
+
+    findings: list[tuple[str, int]] = []
+    for start, end in spans:
+        body = masked[start + 1:end]
+        braces = brackets = parens = 0
+        segment_start = 0
+        keys: dict[str, int] = {}
+        for offset, char in enumerate(body):
+            if char == "{": braces += 1
+            elif char == "}": braces = max(0, braces - 1)
+            elif char == "[": brackets += 1
+            elif char == "]": brackets = max(0, brackets - 1)
+            elif char == "(": parens += 1
+            elif char == ")": parens = max(0, parens - 1)
+            elif not (braces or brackets or parens) and char == ",":
+                segment_start = offset + 1
+            elif not (braces or brackets or parens) and char == ":":
+                lead = body[segment_start:offset]
+                match = re.fullmatch(
+                    r"\s*(?:([A-Za-z_$][\w$]*)|[\"']([A-Za-z_$][\w$]*)[\"'])\s*", lead)
+                if not match:
+                    continue
+                key = match.group(1) or match.group(2)
+                key_group = 1 if match.group(1) else 2
+                absolute = start + 1 + segment_start + match.start(key_group)
+                line = code[:absolute].count("\n") + 1
+                if key in keys:
+                    findings.append((key, line))
+                else:
+                    keys[key] = line
+    return findings
 
 
 def is_awaited(code: str, call_start: int) -> bool:
@@ -337,6 +431,22 @@ def audit_visible_code_hygiene():
     return findings
 
 
+def audit_duplicate_cell_keys():
+    """Reject silent last-key-wins behavior in every canonical and localized runnable cell."""
+    findings = []
+    roots = [WEB / "nemoclaw", *sorted((TASK1 / "i18n").glob("*/web/nemoclaw"))]
+    for root in roots:
+        for path in sorted(root.glob("0*.html")):
+            text = path.read_text(errors="ignore")
+            rel = str(path.relative_to(TASK1))
+            for cell in CODE.finditer(text):
+                cell_line = text[:cell.start(1)].count("\n") + 1
+                for key, local_line in duplicate_object_keys(cell.group(1)):
+                    findings.append((rel, f"line {cell_line + local_line - 1}: duplicate object key "
+                                          f"{key!r}; JavaScript silently discards the earlier value"))
+    return findings
+
+
 def audit_canvas_copy():
     """Keep learner-facing canvas chrome shorter than the implementation it introduces.
 
@@ -494,6 +604,7 @@ def run(verbose=True):
     code_surface = audit_code_surface()
 
     readability = audit_visible_code_hygiene()
+    duplicate_keys = audit_duplicate_cell_keys()
     copy_surface = audit_canvas_copy()
     run_cell_style = audit_run_cell_style()
     prompt_experiment = audit_prompt_experiments()
@@ -518,24 +629,26 @@ def run(verbose=True):
         show("default-open canvas code surface", code_surface, lambda it: f"{it[0]}  {it[1]}")
 
         show("visible learner code hygiene", readability, lambda it: f"{it[0]}  {it[1]}")
+        show("duplicate object keys in learner code", duplicate_keys, lambda it: f"{it[0]}  {it[1]}")
         show("learner-facing canvas copy", copy_surface, lambda it: f"{it[0]}  {it[1]}")
         show("student RunCell style", run_cell_style, lambda it: f"{it[0]}  {it[1]}")
         show("prompt experimentation", prompt_experiment, lambda it: f"{it[0]}  {it[1]}")
 
         total = (len(opaque) + len(console) + len(unawaited) + len(dialog) + len(key) + len(static)
                  + len(unhi) + len(ui_contract) + len(code_surface) + len(readability)
-                 + len(copy_surface) + len(run_cell_style) + len(prompt_experiment))
+                 + len(duplicate_keys) + len(copy_surface) + len(run_cell_style) + len(prompt_experiment))
         print(f"\ncell_audit: {total} finding(s) (opaque {len(opaque)}, console {len(console)}, "
               f"unawaited {len(unawaited)}, dialog {len(dialog)}, inline-key {len(key)}, static {len(static)}, "
 
               f"unhighlighted {len(unhi)}, ui-contract {len(ui_contract)}, code-surface {len(code_surface)}, "
-              f"readability {len(readability)}, copy {len(copy_surface)}, run-cell-style {len(run_cell_style)}, "
+              f"readability {len(readability)}, duplicate-keys {len(duplicate_keys)}, "
+              f"copy {len(copy_surface)}, run-cell-style {len(run_cell_style)}, "
               f"prompt-experiment {len(prompt_experiment)})")
 
     return {"opaque": opaque, "console": console, "unawaited": unawaited,
             "dialog": dialog, "inline_key": key, "static_cell_code": static,
             "unhighlighted": unhi, "ui_contract": ui_contract,
-            "code_surface": code_surface, "readability": readability,
+            "code_surface": code_surface, "readability": readability, "duplicate_keys": duplicate_keys,
             "copy_surface": copy_surface, "run_cell_style": run_cell_style,
             "prompt_experiment": prompt_experiment}
 

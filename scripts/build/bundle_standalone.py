@@ -882,13 +882,20 @@ def _self_test() -> int:
         linked_out = root / "linked-out"
         source_course.mkdir(); linked_out.mkdir()
         (source_course / "SKILL.html").write_text(
-            '<a href="interface-inventory.json">inventory</a><a href="../outside.json">outside</a>',
+            '<a href="interface-inventory.json">inventory</a>'
+            '<a href="learning-profile.json">profile</a>'
+            '<a href="../outside.json">outside</a>',
             encoding="utf-8",
         )
         (source_course / "interface-inventory.json").write_text('{"schema":"fixture"}\n', encoding="utf-8")
+        (source_course / "learning-profile.json").write_text('{"schema":"fixture-profile"}\n', encoding="utf-8")
         (root / "outside.json").write_text("not copied\n", encoding="utf-8")
-        assert _copy_linked_course_files(source_course, linked_out) == ["interface-inventory.json"]
+        assert _copy_linked_course_files(source_course, linked_out) == [
+            "interface-inventory.json",
+            "learning-profile.json",
+        ]
         assert (linked_out / "interface-inventory.json").is_file()
+        assert (linked_out / "learning-profile.json").is_file()
         assert not (linked_out / "outside.json").exists()
     print("bundle_standalone self-test: PASS")
     return 0

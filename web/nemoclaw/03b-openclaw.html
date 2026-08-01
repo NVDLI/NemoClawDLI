@@ -397,8 +397,7 @@ mountRunCell("#cell-introspect", {
   intro: "Run one turn, then compare the answer with the live workspace in Step 1b.",
   code: `${setupTurn}
 const report = await state.turn({
-  content: "Briefly: list the files in your workspace and tell me what each one is for. " +
-           "One bullet per file. Don't dump file contents.",
+  content: "Briefly list the files in your workspace and explain each in one bullet without dumping file contents.",
   session: "quick-3b-introspect",
 });
 helpers.log(report);
@@ -408,7 +407,7 @@ helpers.log(report);
 mountRunCell("#cell-workspace-term", {
   openCode: true,
   label: "Read the live workspace over the operator terminal",
-  intro: "helpers.terminal() opens the launchable's /ws/terminal WebSocket, the same operator terminal the Brev console uses. This connects into the agent's sandbox and reads its configuration files directly, with no model call involved. Edit the command list and re-run to explore.",
+  intro: "Open the launchable's /ws/terminal WebSocket and read sandbox configuration without a model call. Edit the command list to explore.",
   code: `// ── what to read (edit freely; these run as shell lines INSIDE the sandbox) ──
 const AGENT = "my-assistant";   // your agent's name, from GET /api/agent on the Kickstart page
 const commands = [
@@ -430,7 +429,7 @@ helpers.log.details("raw transcript (" + frames + " WebSocket frames)", raw);
 
 mountCanvasFlow("#cell-personas", {
   label: "Two SOUL personas, same question",
-  intro: "The lab maps two session keys to prebuilt SOUL variants, then sends both the same question and model. Compare the voices. Outside this lab affordance, change the persona by editing SOUL.md.",
+  intro: "Send one question to two prebuilt SOUL variants and compare their voices. Edit SOUL.md to change a real persona.",
 
   edges: [
     { from: "ask-a", to: "ask-b" },
@@ -442,11 +441,10 @@ mountCanvasFlow("#cell-personas", {
       showCode: false,
       summary: "Send the question under the default SOUL session, a friendly, concise persona that reaches for tools when they are relevant.",
       code: setupTurn + `
-state.question =
-  "Summarise this for me in three bullets and tell me what to do next: " +
-  "'We added a script to copy DB rows from prod to staging. It runs on cron at 03:00 UTC. " +
-  "It has no row-count guardrail and runs as the 'admin' SA. Last week it copied 4 hours " +
-  "of data twice; we caught it manually.' ";
+state.question = [
+  "Review this incident in bullets and recommend the next step.",
+  "An admin cron job copies production rows to staging without a row-count guardrail and duplicated four hours of data.",
+].join(" ");
 state.a = await state.turn({ content: state.question, session: "quick-3b-soul-default" });
 helpers.log(state.a);
 `,
@@ -454,7 +452,7 @@ helpers.log(state.a);
     {
       id: "ask-b", icon: "🅱️", title: "Auditor SOUL", x: 1, y: 0,
       showCode: false,
-      summary: "Send the SAME question under the auditor session, whose SOUL.md tells the agent to surface risks first and cite what it is commenting on. Both replies print here so you can read the two voices against one identical input.",
+      summary: "Sends the same question under the auditor SOUL, which surfaces risks and cites its subject. Compare both replies.",
       code: `// Reuses state.question + state.turn from the Default-SOUL node above. Run that first.
 if (typeof state.turn !== "function") {
   helpers.log("Connect OpenClaw in Module 3a, then run Default SOUL first.");
@@ -470,7 +468,7 @@ helpers.log("\\n── auditor ──"); helpers.log(b);
 
 mountCanvasFlow("#cell-memory", {
   label: "The agent writes to MEMORY.md, then reads it back",
-  intro: "Two turns on one session: the agent saves a preference to MEMORY.md, then a fresh turn asks for it back. The model is stateless. The preference survives because the runtime carries it forward through the session it holds and the MEMORY.md the agent saved, while the weights stay untouched.",
+  intro: "Save a preference to MEMORY.md, then ask for it in a fresh turn on the same session. The model weights remain unchanged.",
 
   edges: [
     { from: "write", to: "recall" },
@@ -483,8 +481,7 @@ mountCanvasFlow("#cell-memory", {
       summary: "Give the agent a preference and ask it to save the note to MEMORY.md so a later turn can see it.",
       code: setupTurn + `
 state.r1 = await state.turn({
-  content: "Please remember: I prefer code review feedback as a numbered list, " +
-           "and I care most about race conditions. Save this to MEMORY.md so next session knows.",
+  content: "Please remember that I prefer numbered code review feedback and care most about race conditions. Save this to MEMORY.md for the next session.",
   session: "quick-3b-memory",
 });
 helpers.log(state.r1);
@@ -493,7 +490,7 @@ helpers.log(state.r1);
     {
       id: "recall", icon: "💭", title: "Turn 2 · ask it back", x: 1, y: 0,
       showCode: false,
-      summary: "A fresh turn on the same session asks what the agent remembers. The model has no memory of turn 1; the preference survives because the runtime carried it forward (the session, and the MEMORY.md the agent saved). The check confirms the keywords actually came through.",
+      summary: "Asks what the agent remembers in a fresh turn, then checks that the saved preference returned through session and file state.",
       code: `// Ask the same session what it retained after the write turn.
 if (typeof state.turn !== "function") {
   helpers.log("Connect OpenClaw in Module 3a, then run Turn 1 first.");

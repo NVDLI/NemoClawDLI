@@ -9,6 +9,11 @@
     "web/nemoclaw/assets/figures/01a-loop-3.svg"
   ],
   "values": {
+    "link.352d85a4d532": {
+      "type": "link",
+      "source": "Four agent architectures, from direct input-to-action rules to an agent that improves its rules. Adapted from Russell and Norvig's <a href=\"https://aima.cs.berkeley.edu/\" target=\"_blank\" rel=\"noopener\">Artificial Intelligence: A Modern Approach</a> (Ch 1).",
+      "value": "Quatro arquiteturas de agente em ordem crescente de estrutura, de um agente reflexo que mapeia entradas diretamente em ações até um agente de aprendizado que reescreve as próprias regras. Adaptado de Artificial Intelligence: A Modern Approach, de Russell e Norvig ( <a href=\"https://aima.cs.berkeley.edu/\" target=\"_blank\" rel=\"noopener\">Artificial Intelligence: A Modern Approach</a> )."
+    },
     "link.45c391295392": {
       "type": "link",
       "source": "The cell below sends one chat-completion to the model. It needs an\n     <a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NVIDIA API key</a>,\n     though the free tier covers every exercise. You enter it once, and the course then\n     keeps it in your browser and reuses it on every page so you never paste it twice.",
@@ -18,11 +23,6 @@
       "type": "link",
       "source": "\n    This course uses the\n    <a href=\"https://platform.openai.com/docs/api-reference/chat\" target=\"_blank\" rel=\"noopener\">Chat Completions API</a>\n    throughout: you keep the conversation as a <code>messages[]</code> array in your own code and resend\n    the full array on every turn. The newer\n    <a href=\"https://platform.openai.com/docs/api-reference/responses\" target=\"_blank\" rel=\"noopener\">Responses API</a>\n    can hold the thread server-side instead, so you send only the new input and a reference to the prior\n    turn. Either way the model stays stateless and unchanged between calls. The conversation lives outside\n    it, in state your code or the server keeps.\n  ",
       "value": "\n    Este curso usa a\n    <a href=\"https://platform.openai.com/docs/api-reference/chat\" target=\"_blank\" rel=\"noopener\">Chat Completions API</a>\n    o tempo todo: você mantém a conversa como um array <code>messages[]</code> no seu próprio código e reenvia o array completo a cada turno. A mais recente\n    <a href=\"https://platform.openai.com/docs/api-reference/responses\" target=\"_blank\" rel=\"noopener\">Responses API</a>\n    pode, em vez disso, manter a thread no servidor, de modo que você envia apenas a nova entrada e uma referência ao turno anterior. De qualquer forma, o modelo permanece sem estado e inalterado entre as chamadas. A conversa vive fora dele, em um estado que seu código ou o servidor guarda.\n  "
-    },
-    "link.4db733ba68a4": {
-      "type": "link",
-      "source": "Four agent architectures in order of growing structure, from a reflex agent that maps inputs straight to actions up to a learning agent that rewrites its own rules. Adapted from Russell and Norvig's <a href=\"https://aima.cs.berkeley.edu/\" target=\"_blank\" rel=\"noopener\">Artificial Intelligence: A Modern Approach</a> (Ch 1).",
-      "value": "Quatro arquiteturas de agente em ordem crescente de estrutura, de um agente reflexo que mapeia entradas diretamente em ações até um agente de aprendizado que reescreve as próprias regras. Adaptado de Artificial Intelligence: A Modern Approach, de Russell e Norvig ( <a href=\"https://aima.cs.berkeley.edu/\" target=\"_blank\" rel=\"noopener\">Artificial Intelligence: A Modern Approach</a> )."
     },
     "link.5537840cabb5": {
       "type": "link",
@@ -1248,6 +1248,11 @@
       "value": "c",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
+    "text.2f5a41cfbfd0": {
+      "type": "text",
+      "source": "Run the nodes in order. Compare fixed search strategies before the language model takes over; expand a decision rule when you want its implementation.",
+      "value": "Execute os nós em ordem. Setup exporta os helpers do labirinto; os nós de busca mostram funções de decisão fixas antes da entrada do modelo de linguagem. O código de infraestrutura começa recolhido porque a lição trata do comportamento, mas você pode abrir qualquer regra."
+    },
     "text.30615e803a22": {
       "type": "text",
       "source": " false = simple 11x9 maze. true = larger 15x11 maze with more loops",
@@ -1548,11 +1553,6 @@
       "value": "Bearer ",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.36292bbe306f": {
-      "type": "text",
-      "source": "Reads the environment, decides which way to move, then updates the environment. The entire reasoning step is a single if statement, kept deliberately minimal so the structure of the loop stays clear without a model in the way.",
-      "value": "Lê o ambiente, decide a direção e atualiza o estado. A decisão é uma única instrução if, mantida mínima para deixar a estrutura do ciclo visível sem a interferência de um modelo."
-    },
     "text.363d049490fc": {
       "type": "text",
       "source": "finish_reason:",
@@ -1645,6 +1645,11 @@
       "source": " opts.advanced swaps in the bigger, loopier maze.",
       "value": " opts.advanced swaps in the bigger, loopier maze.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "text.40e307855768": {
+      "type": "text",
+      "source": "Set up the maze and fixed rule",
+      "value": "Configure o labirinto e a regra fixa"
     },
     "text.411fdb22d8d9": {
       "type": "text",
@@ -1826,6 +1831,11 @@
       "source": "Try it · the model as a pure function",
       "value": "Experimente · o modelo como uma função pura"
     },
+    "text.50d9f42a0e82": {
+      "type": "text",
+      "source": "Exports state.runMaze, the shared solver used by the editable run node. Expand it to inspect the browser plumbing.",
+      "value": "O código do mecanismo começa recolhido porque trata principalmente da infraestrutura web. Ao abri-lo, examine os nomes exportados no final: state.runMaze é o resolvedor compartilhado chamado pelo nó editável."
+    },
     "text.510047b5e771": {
       "type": "text",
       "source": "Run the 'Maze + constant reasoner' node first.",
@@ -1864,9 +1874,9 @@
       "source": " One call. No loop, no memory.",
       "value": " Uma chamada. Sem laço, sem memória."
     },
-    "text.53abe4d45807": {
+    "text.53806e20174f": {
       "type": "text",
-      "source": "Calls the same perceive-reason-act cycle 25 times in sequence. The position trace in the output makes the bouncing pattern concrete and shows how the repeated loop drives the behaviour while the reasoning rule stays trivial.",
+      "source": "Repeats the perceive-reason-act cycle 25 times and plots the bouncing position.",
       "value": "Repete o mesmo ciclo 25 vezes. O histórico de posições torna o movimento concreto e mostra que a repetição conduz o comportamento, embora a regra de decisão permaneça trivial."
     },
     "text.54936f10dfa9": {
@@ -1913,6 +1923,11 @@
       "type": "text",
       "source": "tick",
       "value": "iteração"
+    },
+    "text.5733c5730597": {
+      "type": "text",
+      "source": "Reads the track, chooses a direction with one if statement, and updates the position.",
+      "value": "Lê o ambiente, decide a direção e atualiza o estado. A decisão é uma única instrução if, mantida mínima para deixar a estrutura do ciclo visível sem a interferência de um modelo."
     },
     "text.576d30007f28": {
       "type": "text",
@@ -2060,10 +2075,10 @@
       "value": " reasoning model. Give it room to think and call tools",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.65c734420d9f": {
+    "text.65adfd47d54e": {
       "type": "text",
-      "source": "A* code is collapsed by default. If you expand it, notice that the animation loop is almost the same as BFS. The difference is the planner that produced the path.",
-      "value": "O código do A* começa recolhido. Ao abri-lo, observe que o ciclo de animação é quase igual ao da BFS; a diferença está no planejador que produz o caminho."
+      "source": "The agent perceives the environment through observations and acts on it through actions. The decision step between them can change.",
+      "value": "O agente percebe o ambiente por meio de observações e atua sobre ele por meio de ações. A etapa de decisão entre as duas pode mudar."
     },
     "text.6602ec19e678": {
       "type": "text",
@@ -2080,6 +2095,16 @@
       "type": "text",
       "source": "rendered below. Edit the config and Run.",
       "value": "renderizado abaixo. Edite a configuração e rode (Run)."
+    },
+    "text.6923a489c475": {
+      "type": "text",
+      "source": "Initialises a 1-D track and the agent's position and direction. Environment and agent state remain separate so the reasoning rule can change independently.",
+      "value": "Inicializa o ambiente, uma pista limitada pelas posições 0 e 9, e o estado interno do agente: posição inicial e direção. Separar os dois estados permite trocar a regra de decisão sem alterar o modelo do mundo."
+    },
+    "text.69e63406cfc4": {
+      "type": "text",
+      "source": "Exports the shared maze helpers and animations. Expand it only when you want the browser plumbing.",
+      "value": "Este nó recolhe a infraestrutura do labirinto por padrão. Ao abri-lo, leia de baixo para cima: ele armazena helpers compartilhados em state e executa as animações que mostram por que uma regra fixa não basta."
     },
     "text.6a89dad0efaf": {
       "type": "text",
@@ -2115,11 +2140,6 @@
       "source": "east",
       "value": "east",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.6c19a45e3132": {
-      "type": "text",
-      "source": "Run the nodes in order. Setup exports the maze helpers; the search nodes show fixed reasoners before the language model takes over. Plumbing stays collapsed because the lesson is the behavior, but you can expand any decision rule.",
-      "value": "Execute os nós em ordem. Setup exporta os helpers do labirinto; os nós de busca mostram funções de decisão fixas antes da entrada do modelo de linguagem. O código de infraestrutura começa recolhido porque a lição trata do comportamento, mas você pode abrir qualquer regra."
     },
     "text.6db9cd5cc167": {
       "type": "text",
@@ -2529,21 +2549,16 @@
       "value": "#S...............G#",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.90f695882926": {
-      "type": "text",
-      "source": "This node hides the maze plumbing by default. If you expand it, read from the bottom: it stores shared helpers in state, then runs the corridor and maze animations that show why a fixed rule is not enough.",
-      "value": "Este nó recolhe a infraestrutura do labirinto por padrão. Ao abri-lo, leia de baixo para cima: ele armazena helpers compartilhados em state e executa as animações que mostram por que uma regra fixa não basta."
-    },
     "text.91a45bd811a1": {
       "type": "text",
       "source": "qwen/qwen3.5-122b-a10b",
       "value": "qwen/qwen3.5-122b-a10b",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.9337cb62d095": {
+    "text.9353bfb7fb04": {
       "type": "text",
-      "source": "Choose one available direction at this junction. Corridors are walked automatically after the move.",
-      "value": "Escolha uma direção disponível neste cruzamento. Os corredores são percorridos automaticamente depois do movimento."
+      "source": "Runs A* through the same animation loop as BFS so you can compare only the planner.",
+      "value": "O código do A* começa recolhido. Ao abri-lo, observe que o ciclo de animação é quase igual ao da BFS; a diferença está no planejador que produz o caminho."
     },
     "text.9390298f3fb0": {
       "type": "text",
@@ -2643,11 +2658,6 @@
       "source": "POST",
       "value": "POST",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.9c70b77ad00c": {
-      "type": "text",
-      "source": "Environment + agent intrinsics",
-      "value": "Ambiente + estado interno do agente"
     },
     "text.9d7de0441056": {
       "type": "text",
@@ -2799,11 +2809,6 @@
       "value": "You are at (",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.a619a755d110": {
-      "type": "text",
-      "source": "Maze + constant reasoner",
-      "value": "Labirinto + regra constante"
-    },
     "text.a6cbb77572fd": {
       "type": "text",
       "source": "sample → perceive → (text → text) → act → impact",
@@ -2836,11 +2841,6 @@
       "type": "text",
       "source": "Run the nodes in order. Each puts a different decision rule into the same maze-solving loop:",
       "value": "Execute os nós em ordem. Cada um aplica uma regra de decisão diferente ao mesmo ciclo que resolve o labirinto:"
-    },
-    "text.aa6d580bd9eb": {
-      "type": "text",
-      "source": "One compass letter: N, S, E, or W.",
-      "value": "Uma letra da bússola: N, S, E ou W."
     },
     "text.aa88a0a85757": {
       "type": "text",
@@ -3068,6 +3068,11 @@
       "type": "text",
       "source": "The loop, drawn locally",
       "value": "O ciclo em detalhe"
+    },
+    "text.bb175ed1ddd8": {
+      "type": "text",
+      "source": "Set up the world and agent",
+      "value": "Configure o ambiente e o agente"
     },
     "text.bb940641b5d0": {
       "type": "text",
@@ -3418,10 +3423,10 @@
       "source": " Reading guide: this is infrastructure, not a required coding exercise.",
       "value": " Guia de leitura: isto é infraestrutura, não um exercício obrigatório."
     },
-    "text.d6d6bd0f9577": {
+    "text.d84064ac3e29": {
       "type": "text",
-      "source": "The engine code is collapsed by default because it is mostly web plumbing. If you expand it, scan the exported names at the bottom: state.runMaze is the shared controller that the editable run node calls.",
-      "value": "O código do mecanismo começa recolhido porque trata principalmente da infraestrutura web. Ao abri-lo, examine os nomes exportados no final: state.runMaze é o resolvedor compartilhado chamado pelo nó editável."
+      "source": "At each junction, return NSEW moves. Execution stops at a wall or goal, then walks any corridor automatically.",
+      "value": "Em cada cruzamento, retorne movimentos NSEW. A execução para diante de uma parede ou do objetivo e depois percorre automaticamente qualquer corredor."
     },
     "text.d8980a134cfd": {
       "type": "text",
@@ -3448,11 +3453,6 @@
       "source": " SYS_DIRECTIVE is the editable \"core\" of the system message.",
       "value": " SYS_DIRECTIVE is the editable \"core\" of the system message.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.da214b48bd7e": {
-      "type": "text",
-      "source": "Only perception and action cross the boundary. The decision step between them can change.",
-      "value": "Somente a percepção e a ação cruzam a fronteira. A etapa de decisão entre elas pode mudar."
     },
     "text.daa6a64e67ad": {
       "type": "text",
@@ -3522,11 +3522,6 @@
       "type": "text",
       "source": "Using a language model to choose maze moves",
       "value": "Como usar um modelo de linguagem para escolher movimentos"
-    },
-    "text.e6e73662c15d": {
-      "type": "text",
-      "source": "Initialises the environment (a 1-D track bounded by walls at positions 0 and 9) and the agent's intrinsic state (its starting position and direction). Separating environment state from agent state makes it easy to swap the reasoning rule without touching the world model.",
-      "value": "Inicializa o ambiente, uma pista limitada pelas posições 0 e 9, e o estado interno do agente: posição inicial e direção. Separar os dois estados permite trocar a regra de decisão sem alterar o modelo do mundo."
     },
     "text.e8c84d27732d": {
       "type": "text",
@@ -3651,6 +3646,11 @@
       "source": "2d",
       "value": "2d",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "text.f94f864ca363": {
+      "type": "text",
+      "source": "NSEW sequence such as 'E' or 'EEN'; direction words also work.",
+      "value": "Sequência NSEW como 'E' ou 'EEN'; palavras de direção também funcionam."
     },
     "text.f956b9e6ef93": {
       "type": "text",

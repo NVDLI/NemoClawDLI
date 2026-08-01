@@ -220,8 +220,7 @@ mountDiagram("#gx-pipeline-doc", {
 // ── The search pipeline, as an editable canvas flow (key-less; no model calls) ──
 mountCanvasFlow("#gx-pipeline", {
   label: "materials search · query in, ranked entries out",
-  intro: "Each node is one real step web_search takes over the unified catalog. Edit the query, " +
-         "then Run all. No API key: this pipeline only loads a file and sorts it.",
+  intro: "Edit the query, then run the real web_search steps over the unified catalog. This local pipeline needs no API key.",
   edges: [
     { from: "query", to: "load" },
     { from: "load",  to: "rank" },
@@ -230,8 +229,7 @@ mountCanvasFlow("#gx-pipeline", {
   nodes: [
     {
       id: "query", icon: "🔎", title: "The query", x: 0, y: 0,
-      summary: "The text the agent passes to web_search. Edit it and rerun to see the ranking change. " +
-               "A short topical phrase beats a full question, because the catalog is keyed on names and tags.",
+      summary: "Sets the web_search text. Short topical phrases usually rank names and tags better than full questions.",
       code: `state.query = "retrieval augmented generation";
 helpers.log("query:", state.query);
 return state.query;`,
@@ -239,9 +237,7 @@ return state.query;`,
 
     {
       id: "load", icon: "📚", title: "Load the cached catalog", x: 0, y: 1,
-      summary: "Fetch the shipped catalog: cached glossary terms plus on-demand materials, one list. " +
-               "The browser hits a same-origin static file with no key. After the first run the catalog " +
-               "is cached, so later queries are effectively free.",
+      summary: "Loads cached glossary terms and on-demand materials from one same-origin catalog, then caches it for later queries.",
       code: `const r = await helpers.fetch("assets/materials_index.json");
 state.entries = (await r.json()).entries;
 const cached = state.entries.filter(e => e.tier === "cached").length;
@@ -251,9 +247,7 @@ return { entries: state.entries.length };`,
 
     {
       id: "rank", icon: "📊", title: "Score and rank every entry", x: 0, y: 2,
-      summary: "The exact scoring helpers.webSearch uses: an exact or substring name match ranks " +
-               "highest, then tag hits, then blurb hits. Cached and on-demand entries compete in the " +
-               "same ranking. Tweak a weight and watch the order move.",
+      summary: "Scores exact and substring names first, followed by tag and blurb matches. Change a weight to move the ranking.",
       code: `// Same scoring as helpers.webSearch (see "The functions, in full" below).
 function score(t, q) {
   q = q.trim().toLowerCase();
@@ -284,10 +278,7 @@ return { hits: state.ranked.length };`,
 
     {
       id: "format", icon: "📤", title: "Format for the model", x: 0, y: 3,
-      summary: "Turn the ranked entries into the numbered text block the model receives as the tool " +
-               "result. Each line is marked cached or on-demand, so the model knows whether it has the " +
-               "full text or should rely on the linked source. If the block is empty, the agent is told " +
-               "to say it found nothing rather than answer from memory.",
+      summary: "Formats ranked entries as the model's numbered tool result, marking cached and on-demand sources. An empty result explicitly reports no match.",
       code: `state.out = helpers.formatSearchResults({
   source: "materials", query: state.query, unreachable: false,
   count: state.ranked.length,

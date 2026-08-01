@@ -264,6 +264,11 @@
             throw new Error("unsupported CI SBOM evidence link catalog");
           }
           catalog._ciEvidence = runtime;
+          (runtime.artifacts || []).forEach(function (item) {
+            if (item.preview_href) {
+              item._resolvedPreviewHref = new URL(item.preview_href, runtimeUrl).href;
+            }
+          });
           var artifact = (runtime.artifacts || []).find(function (item) {
             return item.label === "CycloneDX SBOM" && item.status === "available" && item.preview_href;
           });
@@ -704,9 +709,13 @@
       });
       if (catalog._ciEvidence && catalog._ciEvidence.record_id === record.id) {
         (catalog._ciEvidence.artifacts || []).filter(function (artifact) {
-          return artifact.status === "available" && artifact.href;
+          return artifact.status === "available" && (artifact.href || artifact._resolvedPreviewHref);
         }).forEach(function (artifact) {
-          lines.push({url:artifact.href, label:auditLabel(artifact.label), kind:"ci-artifact"});
+          lines.push({
+            url:artifact.href || artifact._resolvedPreviewHref,
+            label:auditLabel(artifact.label),
+            kind:artifact.href ? "ci-artifact" : "ci-artifact-preview"
+          });
         });
         if (catalog._ciEvidence.state !== "available") {
           lines.push({label:"CI artifact links flagged " + catalog._ciEvidence.state + ": " + catalog._ciEvidence.reason});
@@ -774,8 +783,10 @@
             note:runtime.source_commit ? "Source commit " + runtime.source_commit.slice(0, 12) : ""});
         }
         var artifactLines = runtime && runtime.artifacts && runtime.artifacts.length ? runtime.artifacts.map(function (artifact) {
-          return artifact.status === "available" && artifact.href ?
-            {url:artifact.href, label:auditLabel(artifact.label), kind:"ci-artifact", note:artifact.repository_path} :
+          var availableHref = artifact.href || artifact._resolvedPreviewHref;
+          return artifact.status === "available" && availableHref ?
+            {url:availableHref, label:auditLabel(artifact.label), kind:artifact.href ? "ci-artifact" : "ci-artifact-preview",
+              note:artifact.repository_path} :
             {label:auditLabel(artifact.label) + " unavailable", note:artifact.repository_path + ". " + (artifact.reason || "No link is available for this build.")};
         }) : [
           {label:"Machine-readable package list unavailable", note:record.ci.sbom_artifact_path},

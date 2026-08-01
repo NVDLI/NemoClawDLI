@@ -210,7 +210,7 @@ mountCanvasFlow("#helper-map-cell", {
   label: "Helper map",
   intro: "Run this as a compact tour of state, log, trace, and visualization helpers. It is local-only.",
   nodes: [
-    { id: "state-log", icon: "S", title: "State + log", x: 1, y: 1, summary: "Write state, emit traces, and use every log surface.", code: `
+    { id: "state-log", icon: "S", title: "Store state and log it", x: 1, y: 1, summary: "Write state, emit traces, and use every log surface.", code: `
 state.question = "Which helpers are local, live, or lab-only?";
 helpers.trace("helper-notebook.start", { page: "web/nemoclaw/scripts/SKILL.html" });
 helpers.log.h("shared log surfaces");
@@ -280,7 +280,7 @@ helpers.log({ estimatedTokens: helpers.estimateTokens(snippet), contextWindow: m
 helpers.log.details("coursePage usage", 'Use helpers.coursePage("01a-loop") from lesson pages; this scripts page uses "overview" because it is nested one directory deeper.');
 return { pages: pages.length, sample: snippet.slice(0, 120) };
 `},
-    { id: "search-embed", icon: "R", title: "Search + embeddings", x: 2, y: 1, summary: "Use search formatting locally; call embeddings only when a key is present.", code: `
+    { id: "search-embed", icon: "R", title: "Search and create embeddings", x: 2, y: 1, summary: "Use search formatting locally; call embeddings only when a key is present.", code: `
 const sampleResults = { results: [
   { title: "Agent loop", href: "01a-loop.html", body: "Perceive, reason, act." },
   { title: "Tools", href: "01c-tools.html", body: "The model asks; code executes." },
@@ -305,7 +305,7 @@ mountCanvasFlow("#helper-live-cell", {
   label: "Live model, network, and lab helpers",
   intro: "The node is runnable without a key: it logs availability, then skips calls that need credentials or a launchable.",
   nodes: [
-    { id: "model-network", icon: "M", title: "Model + fetch", x: 1, y: 1, summary: "Inspect config, key, retry fetch, and optional chat/chatStream.", code: `
+    { id: "model-network", icon: "M", title: "Call a model and fetch data", x: 1, y: 1, summary: "Inspect config, key, retry fetch, and optional chat/chatStream.", code: `
 const cfg = await helpers.getConfig();
 helpers.log("config", cfg);
 helpers.log({ hasKey: !!helpers.getKey(), hasBrowserFetch: typeof helpers.browserChatFetch() === "function" });

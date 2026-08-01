@@ -156,6 +156,25 @@ body {
 .learning-block > summary:focus-visible { outline: 1px solid var(--learning-scope-color); outline-offset: 3px; }
 .learning-block-body { padding-top: .15em; }
 .learning-block-body > :first-child { margin-top: .9em; }
+.learning-profile-entry {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  margin: 1.2em 0 2em; padding: 14px 16px; border: 1px solid var(--bd);
+  border-left: 3px solid var(--g); border-radius: 8px; background: var(--e1);
+}
+.learning-profile-entry h2 { margin: 0 0 .25em; font-size: 1rem; color: var(--gs); }
+.learning-profile-entry p { margin: .25em 0; color: var(--td); font-size: .86rem; }
+.learning-profile-start {
+  flex: 0 0 auto; padding: 8px 11px; border: 1px solid var(--g); border-radius: 6px;
+  color: var(--gs); font: 800 .72rem/1.2 var(--mono); text-align: center;
+}
+.embedding-profile { max-width: 720px; margin: 10px 0; overflow-x: auto; }
+.embedding-profile table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: .76rem; }
+.embedding-profile caption { padding: 0 0 7px; color: var(--td); text-align: left; }
+.embedding-profile th, .embedding-profile td { padding: 4px 7px; border-bottom: 1px solid var(--bd); text-align: left; }
+.embedding-profile tbody th { color: var(--gs); font-family: var(--mono); }
+.embedding-profile-bar { display: inline-block; min-width: 2px; height: .65rem; vertical-align: middle; }
+.embedding-profile-bar.positive { background: var(--g); }
+.embedding-profile-bar.negative { background: var(--acc); }
 
 /* Live, student-operated artifacts get one restrained cue distinct from teaching cells. */
 .course-artifact {
@@ -272,6 +291,7 @@ body {
   .course-assistant-body { padding: 0 6px; }
   .course-artifact-editors { grid-template-columns: 1fr; flex-basis: 44%; }
   .course-assistant-artifact textarea { min-height: 58px; }
+  .learning-profile-entry { align-items: stretch; flex-direction: column; }
 }
 
 @media print {

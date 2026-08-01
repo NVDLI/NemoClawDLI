@@ -51,6 +51,51 @@ policy change, or handoff.
   repository Python, validators, generators, inspections, and one-off probes. The host shell may
   orchestrate the container.
 
+## Keep the public path self-sufficient
+
+This skill is the complete contribution path for a public contributor. It must work with the public
+repository, public issue and pull-request surfaces, public CI, and contributor-owned local tools.
+Access to an operator extension, private forge, private runner, or NVIDIA account is never required.
+
+An optional operator extension may add gates before public submission. Its absence is normal and
+does not block contribution. An extension may only add evidence: it must not weaken, skip,
+reclassify, or replace a public check. Extension-owned source, configuration, credentials, logs,
+and artifacts must remain outside the public candidate.
+
+## Use the contribution facade
+
+Use the installed Apple Container course-testing facade as the default interface for GitHub
+contributions. It turns the contribution lifecycle into one status command and one guarded next
+action:
+
+```bash
+CONTRIBUTE="$HOME/.codex/skills/apple-container-course-testing/scripts/course_contribute.py"
+python3 "$CONTRIBUTE" --repo "$PWD" status
+```
+
+Run the command named by `NEXT`; do not reconstruct an equivalent sequence with `gh` or ad hoc API
+calls. The supported lifecycle is:
+
+- `status`: report the local tree, DCO, signature, exact-build evidence, remote head, pull request,
+  checks, merge state, and one next action;
+- `candidate`: turn staged bytes into one GitHub-signed candidate, round-trip its parent and tree,
+  run the exact Pages build, and push the verified branch;
+- `repair-signature`: replace a clean one-commit unsigned pull-request head with an identical
+  GitHub-signed tree after `--dry-run` proves the repair plan;
+- `submit`: validate and create the pull request for the exact candidate;
+- `watch`: follow every exact-head workflow and check to a terminal result;
+- `merge`: re-read protection, approval, signature, head, and check state before guarded merge;
+- `watch-main`: bind the merged commit to the main-branch workflows and Pages result.
+
+The facade reads GitHub authentication through Git's credential helper, never prints the secret,
+never invokes `gh`, and fails closed if the branch, tree, signature, DCO, build, review, or check
+evidence changes. Its host-side Python orchestrates Git, GitHub, and Apple Container; it does not
+run repository Python on macOS.
+
+If the facade is not installed, this skill remains the complete fallback contract: follow the
+steps below with contributor-owned Git and GitHub tooling, preserve every invariant, and install
+the `apple-container-course-testing` skill before running repository validation on macOS.
+
 ## Work in the cheapest valid order
 
 1. Read the current issue, pull request, rulesets, environment policy, and remote main.

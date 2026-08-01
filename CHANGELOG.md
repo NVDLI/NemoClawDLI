@@ -5,6 +5,8 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Thanks to Vadim Kudlay for reviewing the Spanish and Brazilian Portuguese course-readiness
+  corrections included in the aggregate internal integration.
 - Thanks to Vadim Kudlay for the four-route Module 3a connection-audit interface feedback.
 - Replaced Module 3a's transport controls with a Base URL and Access session check. Pomerium
   metadata uses the launchable's terminal loopback and its WebSockets stay direct; Cloudflare

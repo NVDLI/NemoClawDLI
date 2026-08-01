@@ -244,6 +244,10 @@ async function inspect(browser, file) {
           playground.replEditor.setValue(`display_html('<img src="https://invalid.example/pixel"><script>globalThis.__pyodideUnsafe = true</script><meta http-equiv="refresh" content="0;url=https://invalid.example"><iframe src="https://invalid.example"></iframe><svg onload="globalThis.__pyodideUnsafe = true"><circle></circle></svg><a href="javascript:globalThis.__pyodideUnsafe=true" onclick="globalThis.__pyodideUnsafe=true">unsafe link</a><strong>safe HTML</strong>')`);
           await playground.runRepl();
           document.querySelector('[data-python-helpers]').open = true;
+          const documentedHelpers = globalThis.PYODIDE_EXECUTION_CONTRACT.helpers.map(item => item.name);
+          const injectedHelpers = globalThis.PYODIDE_EXECUTION_CONTRACT.injectedHelpers;
+          const renderedHelpers = [...document.querySelectorAll('[data-helper-row]')].map(node => node.dataset.helperRow);
+          const renderedHelperSources = [...document.querySelectorAll('[data-helper-source]')].map(node => node.dataset.helperSource);
           document.querySelector('[data-helper-row="display_json"]').click();
           const helperEditor = playground.helperEditors.get('display_json');
           const helperSourceVisible = !!helperEditor && helperEditor.getValue().includes('def display_json');
@@ -362,6 +366,7 @@ async function inspect(browser, file) {
             artifactContent, artifactPreviewTokens, firstChat,
             secondChat, chatMessages, liveChat, websocketReply, richMimes, syntaxMimes, richMarkdownStrong, prettyText,
             jsonSyntaxTokens, codeSyntaxTokens, syntaxWhiteSpace, syntaxWidth, outputWidth, tableOutput,
+            documentedHelpers, injectedHelpers, renderedHelpers, renderedHelperSources,
             helperSourceVisible, helperApplied, helperReply, leakedKey,
             tracebackFinished, traceback, errorHighlight, resetReady,
           };
@@ -425,6 +430,18 @@ async function inspect(browser, file) {
             || runtimeContract.helperReply?.displays?.[0]?.type !== 'text/x-code'
             || !runtimeContract.helperReply.displays[0].data.startsWith('OVERRIDE:')) {
           errors.push(`Pyodide helper menu did not preview, edit, and apply the live helper source (${JSON.stringify(runtimeContract.helperReply)})`);
+        }
+        const helperSet = values => [...new Set(values)].sort().join('\n');
+        if (runtimeContract.documentedHelpers.length !== new Set(runtimeContract.documentedHelpers).size
+            || helperSet(runtimeContract.documentedHelpers) !== helperSet(runtimeContract.injectedHelpers)
+            || helperSet(runtimeContract.documentedHelpers) !== helperSet(runtimeContract.renderedHelpers)
+            || helperSet(runtimeContract.documentedHelpers) !== helperSet(runtimeContract.renderedHelperSources)) {
+          errors.push(`Pyodide browser helper discovery is incomplete or duplicated (${JSON.stringify({
+            documented:runtimeContract.documentedHelpers,
+            injected:runtimeContract.injectedHelpers,
+            rendered:runtimeContract.renderedHelpers,
+            sources:runtimeContract.renderedHelperSources,
+          })})`);
         }
         if (runtimeContract.leakedKey) errors.push('Pyodide rendered a model credential into page output');
         if (!runtimeContract.tracebackFinished || !runtimeContract.traceback.includes('IndexError')) {
@@ -701,7 +718,9 @@ async function inspect(browser, file) {
           subjectHints:sbomEvidence.querySelectorAll('tr[data-sbom-subject="1"] [data-license-hint="1"]').length,
           subjectLinks:Array.from(sbomEvidence.querySelectorAll('tr[data-sbom-subject="1"]')).map(row => row.querySelectorAll('a[data-evidence-link]').length),
           ciLinksState:sbomEvidence.querySelector('[data-ci-links-state]')?.dataset.ciLinksState || '',
-          ciArtifactLinks:sbomEvidence.querySelectorAll('a[data-evidence-link="ci-artifact"]').length,
+          ciArtifactLinks:sbomEvidence.querySelectorAll(
+            'a[data-evidence-link="ci-artifact"], a[data-evidence-link="ci-artifact-preview"]'
+          ).length,
           ciComponentRows:sbomEvidence.querySelectorAll('[data-ci-component-preview="1"] tbody tr').length,
           clarificationRows:sbomEvidence.querySelectorAll('[data-license-clarification="1"] tbody tr').length,
           clarificationCount:Number(sbomEvidence.querySelector('[data-sbom-fact="unresolved"] strong')?.textContent ?? NaN),

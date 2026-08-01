@@ -12,6 +12,7 @@ import json
 import os
 import re
 import shutil
+import sys
 import tempfile
 import time
 import urllib.error
@@ -23,6 +24,8 @@ import render_sbom_license_inventory as license_inventory
 
 
 ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 CATALOG = ROOT / "scripts/compliance/docs/sbom_evidence.json"
 INVENTORY = ROOT / "THIRD_PARTY_LICENSES.md"
 COMMIT = re.compile(r"^[0-9a-f]{40}(?:[0-9a-f]{24})?$")
@@ -33,6 +36,48 @@ CI_LINK_SCHEMA = "nemoclaw-ci-evidence-links/1"
 
 def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def active_publication_policy() -> object | None:
+    """Load the public policy plus any additive private publication policy."""
+    from scripts.validation.sensitive_content_audit import load_policy
+
+    return load_policy()
+
+
+def publication_safe_text(value: str, policy: object | None) -> bool:
+    """Return whether generated text is safe for the current publication boundary."""
+    if policy is None:
+        return True
+    from scripts.validation.sensitive_content_audit import scan_text
+
+    return not scan_text("generated-ci-evidence", value, policy)
+
+
+def set_publication_field(
+    output: dict, key: str, value: str, policy: object | None,
+) -> bool:
+    """Set optional generated metadata only when the publication policy accepts it."""
+    if not value or not publication_safe_text(value, policy):
+        return False
+    output[key] = value
+    return True
+
+
+def copy_publication_evidence(
+    source: Path, destination: Path, policy: object | None,
+) -> bool:
+    """Copy evidence only when its complete bytes pass the active publication policy."""
+    destination.unlink(missing_ok=True)
+    try:
+        text = source.read_bytes().decode("utf-8", errors="replace")
+    except OSError:
+        return False
+    if not publication_safe_text(text, policy):
+        return False
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, destination)
+    return True
 
 
 def license_summary(components: list[dict]) -> dict[str, int]:
@@ -201,15 +246,16 @@ def audit_catalog(document: dict | None = None) -> list[str]:
 
 def ci_link_catalog(args: argparse.Namespace) -> tuple[dict, int]:
     """Resolve one pipeline job and verify each named artifact before exposing browser links."""
+    publication_policy = active_publication_policy()
     output = {
         "schema": CI_LINK_SCHEMA,
         "record_id": "python-material-tooling",
         "state": "unavailable",
         "source_commit": args.ci_commit,
-        "pipeline_url": args.ci_pipeline_url,
         "reason": "The expected CI artifact was not available in this validated pipeline.",
         "artifacts": [],
     }
+    set_publication_field(output, "pipeline_url", args.ci_pipeline_url, publication_policy)
     token = os.environ.get(args.ci_job_token_env, "")
     if not token:
         output["reason"] = f"{args.ci_job_token_env} was unavailable while resolving CI evidence."
@@ -234,7 +280,8 @@ def ci_link_catalog(args: argparse.Namespace) -> tuple[dict, int]:
     if not isinstance(records, list) or len(records) != 1 or records[0].get("source_commit") != args.ci_commit:
         output["reason"] = "The producing CI artifact does not identify the preview commit."
         return output, 1
-    output["job_url"] = args.ci_project_url.rstrip("/") + "/-/jobs/" + job_id
+    job_url = args.ci_project_url.rstrip("/") + "/-/jobs/" + job_id
+    set_publication_field(output, "job_url", job_url, publication_policy)
     missing = 0
     artifact_source_root = args.ci_artifact_root.resolve()
     args.ci_preview_root.mkdir(parents=True, exist_ok=True)
@@ -261,13 +308,21 @@ def ci_link_catalog(args: argparse.Namespace) -> tuple[dict, int]:
             if not source.is_file():
                 raise ValueError("downloaded artifact is absent from the Pages workspace")
             destination = args.ci_preview_root / source.name
-            shutil.copy2(source, destination)
             entry["status"] = "available"
-            entry["href"] = (
+            direct_href = (
                 args.ci_project_url.rstrip("/") + "/-/jobs/" + job_id +
                 "/artifacts/file/" + encoded_path
             )
-            entry["preview_href"] = os.path.relpath(destination, args.ci_links_out.parent).replace(os.sep, "/")
+            set_publication_field(entry, "href", direct_href, publication_policy)
+            if copy_publication_evidence(source, destination, publication_policy):
+                entry["preview_href"] = os.path.relpath(
+                    destination, args.ci_links_out.parent,
+                ).replace(os.sep, "/")
+            else:
+                entry["publication_status"] = "withheld"
+                entry["publication_reason"] = (
+                    "The verified source is not distributed in this preview."
+                )
             entry["sha256"] = digest(source)
             entry["bytes"] = source.stat().st_size
             if kind == "CycloneDX SBOM":
@@ -278,14 +333,21 @@ def ci_link_catalog(args: argparse.Namespace) -> tuple[dict, int]:
                     raise ValueError("resolved SBOM still contains non-SPDX or missing license rows")
         except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ValueError, OSError) as error:
             missing += 1
-            entry["reason"] = f"Artifact read failed: {getattr(error, 'reason', error)}"
+            reason = f"Artifact read failed: {getattr(error, 'reason', error)}"
+            entry["reason"] = (
+                reason if publication_safe_text(reason, publication_policy)
+                else "Artifact verification did not complete."
+            )
         output["artifacts"].append(entry)
     if missing:
         output["state"] = "incomplete"
         output["reason"] = f"{missing} expected artifact path(s) were missing from the successful job."
     else:
         output["state"] = "available"
-        output["reason"] = "Every link was read through the GitLab job-artifact API before this preview was built."
+        output["reason"] = "Every referenced artifact was verified before this preview was built."
+    encoded = json.dumps(output, indent=2, sort_keys=True) + "\n"
+    if not publication_safe_text(encoded, publication_policy):
+        raise ValueError("generated CI evidence still violates the publication policy")
     return output, missing
 
 
@@ -416,6 +478,33 @@ def self_test() -> list[str]:
             failures.append("release catalog does not link the versioned browser SBOM")
         if release_records["python-material-tooling"]["state"] != "available":
             failures.append("release catalog does not replace the transient Python declaration")
+
+        from scripts.validation.sensitive_content_audit import Policy
+
+        private_host = "review.private.invalid"
+        policy = Policy(
+            frozenset(),
+            frozenset(),
+            frozenset({hashlib.sha256("private.invalid".encode("utf-8")).hexdigest()}),
+            6,
+        )
+        optional: dict[str, str] = {}
+        if set_publication_field(optional, "href", f"https://{private_host}/job", policy):
+            failures.append("private generated URL escaped the publication policy")
+        if not set_publication_field(optional, "preview_href", "ci/evidence.json", policy):
+            failures.append("safe same-origin preview path was removed")
+        blocked_source = root / "blocked.json"
+        blocked_source.write_text(json.dumps({"href": f"https://{private_host}/job"}), encoding="utf-8")
+        blocked_destination = root / "published" / "blocked.json"
+        if copy_publication_evidence(blocked_source, blocked_destination, policy):
+            failures.append("private evidence file escaped the publication policy")
+        if blocked_destination.exists():
+            failures.append("withheld evidence left stale publication bytes")
+        safe_source = root / "safe.json"
+        safe_source.write_text(json.dumps({"state": "available"}), encoding="utf-8")
+        safe_destination = root / "published" / "safe.json"
+        if not copy_publication_evidence(safe_source, safe_destination, policy):
+            failures.append("safe evidence file was withheld")
     return failures
 
 

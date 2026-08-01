@@ -357,6 +357,9 @@ export function mountCourseAssistant(runtime = {}) {
     created: "Nova sessão criada", deleted: "Sessão excluída", renamed: "Sessão renomeada", attachedNow: "Página vinculada à sessão", compacted: "Contexto condensado e salvo localmente",
     emptyTitle: "Nova sessão", clear: "↺ Limpar sessão",
     intro: "As sessões ficam neste navegador. Turnos antigos são condensados automaticamente.",
+    entryTitle: "Assistente do Curso",
+    entryText: "O botão ✦ abre um assistente em todas as lições. Cada sessão fica neste navegador e permanece vinculada à página onde começou até você escolher a página atual.",
+    entryAction: "Abrir Assistente do Curso",
     greeting: (liveId, sessionId) => sessionId && sessionId !== liveId
       ? `Você está em ${liveId}. Esta sessão começou em ${sessionId}; “esta página” sempre significa ${liveId}.`
       : liveId ? `Você está em ${liveId}. A prosa, o documento HTML e o índice de código desta página estão disponíveis.` : "Nenhuma página está vinculada. Pesquise ou leia qualquer parte do curso.",
@@ -377,6 +380,9 @@ export function mountCourseAssistant(runtime = {}) {
     created: "Nueva sesión creada", deleted: "Sesión eliminada", renamed: "Sesión renombrada", attachedNow: "Página vinculada a la sesión", compacted: "Contexto condensado y guardado localmente",
     emptyTitle: "Nueva sesión", clear: "↺ Borrar sesión",
     intro: "Las sesiones permanecen en este navegador. Los turnos antiguos se condensan automáticamente.",
+    entryTitle: "Asistente del curso",
+    entryText: "El botón ✦ abre un asistente en cada lección. Cada sesión permanece en este navegador y sigue vinculada a la página donde comenzó hasta que usted elija la página actual.",
+    entryAction: "Abrir el Asistente del curso",
     greeting: (liveId, sessionId) => sessionId && sessionId !== liveId
       ? `Está en ${liveId}. Esta sesión comenzó en ${sessionId}; «esta página» siempre significa ${liveId}.`
       : liveId ? `Está en ${liveId}. La prosa, el documento HTML y el índice de código de esta página están disponibles.` : "No hay ninguna página vinculada. Busque o lea cualquier parte del curso.",
@@ -397,6 +403,9 @@ export function mountCourseAssistant(runtime = {}) {
     created: "New session created", deleted: "Session deleted", renamed: "Session renamed", attachedNow: "Page attached to session", compacted: "Compacted and saved locally",
     emptyTitle: "New session", clear: "↺ Clear session",
     intro: "Sessions stay in this browser. Older turns compact automatically.",
+    entryTitle: "Course Assistant",
+    entryText: "The ✦ button opens an assistant on every lesson. Each session stays in this browser and remains attached to the page where it began until you explicitly choose the current page.",
+    entryAction: "Open Course Assistant",
     greeting: (liveId, sessionId) => sessionId && sessionId !== liveId
       ? `You are on ${liveId}. This session began on ${sessionId}; “this page” always means ${liveId}.`
       : liveId ? `You are on ${liveId}. This page's prose, HTML document, and code index are available.` : "No page is attached. Search or read any part of the course.",
@@ -434,6 +443,24 @@ export function mountCourseAssistant(runtime = {}) {
       <section class="course-assistant-history" hidden><header><strong>${copy.historyTitle}</strong><button type="button" data-course-history-copy>${copy.copyHistory}</button></header><pre tabindex="0"></pre></section>
     </aside>`;
   document.body.append(launcher, shell);
+  if (page.id === "overview" && !document.querySelector(".course-assistant-entry")) {
+    const entry = document.createElement("section");
+    entry.className = "section course-assistant-entry";
+    const heading = document.createElement("h2");
+    heading.textContent = copy.entryTitle;
+    const explanation = document.createElement("p");
+    explanation.className = "help";
+    explanation.textContent = copy.entryText;
+    const action = document.createElement("button");
+    action.type = "button";
+    action.className = "btn course-assistant-open";
+    action.textContent = copy.entryAction;
+    action.addEventListener("click", () => launcher.click());
+    entry.append(heading, explanation, action);
+    const hero = document.querySelector("main .hero");
+    if (hero) hero.after(entry);
+    else document.querySelector("main")?.prepend(entry);
+  }
   const panel = shell.querySelector(".course-assistant-panel");
   const body = shell.querySelector(".course-assistant-body");
   const artifactPanel = shell.querySelector(".course-assistant-artifact");

@@ -61,20 +61,15 @@
       "source": "Open the\n        <a href=\"https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990\"\n          target=\"_blank\" rel=\"noopener\">NemoClaw launchable</a> and sign in.",
       "value": "Abre el <a href=\"https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990\" target=\"_blank\" rel=\"noopener\">launchable de NemoClaw</a> e inicia sesión."
     },
-    "rich.08bc8c9557b4": {
+    "rich.93b577493b62": {
       "type": "rich",
-      "source": "\n        <h3>Launch NemoClaw on Brev</h3>\n        <p>OpenClaw runs inside OpenShell and keeps agent identity, tools, and session memory. The\n          settings below accept either supported Brev host family and connect to\n          <code>/cli/gateway</code>.</p>\n        <p style=\"color:var(--tf);font-size:.8rem\">Gateway credential: gateway token.\n          Launchable access: Pomerium browser session or <code>CF_Authorization</code>.</p>\n      ",
-      "value": "\n        <h3>Inicia NemoClaw en Brev</h3>\n        <p>OpenClaw se ejecuta dentro de OpenShell y conserva la identidad del agente, sus herramientas y la memoria de sesión. La configuración inferior admite ambas familias de hosts de Brev compatibles y se conecta a <code>/cli/gateway</code>.</p>\n        <p style=\"color:var(--tf);font-size:.8rem\">Credencial del gateway: token del gateway. Acceso al launchable: sesión del navegador de Pomerium o <code>CF_Authorization</code>.</p>\n      "
+      "source": "\n        <h3>Launch NemoClaw on Brev</h3>\n        <p>The interface below connects to Brev hostings of OpenClaw in OpenShell.</p>\n        <p style=\"color:var(--tf);font-size:.8rem\">Launchable access:\n          <code>_pomerium</code> or <code>CF_Authorization</code>.</p>\n      ",
+      "value": "\n        <h3>Inicia NemoClaw en Brev</h3>\n        <p>La interfaz inferior se conecta a instancias de OpenClaw en OpenShell alojadas en Brev.</p>\n        <p style=\"color:var(--tf);font-size:.8rem\">Acceso al launchable: <code>_pomerium</code> o <code>CF_Authorization</code>.</p>\n      "
     },
     "rich.1260cedbb7fa": {
       "type": "rich",
       "source": "Each <code>⚙️</code> row is a tool call with its input arguments.",
       "value": "Cada fila <code>⚙️</code> es una llamada a herramienta con sus argumentos de entrada."
-    },
-    "rich.15cfe9729c28": {
-      "type": "rich",
-      "source": "If no gateway token exists yet, generate one on the gateway host with\n          <code>openclaw doctor --generate-gateway-token</code>.",
-      "value": "Si todavía no existe ningún token de gateway, genera uno en el host del gateway con <code>openclaw doctor --generate-gateway-token</code>."
     },
     "rich.182a0563107f": {
       "type": "rich",
@@ -96,10 +91,10 @@
       "source": "\n      <p>Anyone who can read the launchable environment can read that token,\n        and a reader of the token is an operator with everything above. Module 4\n        turns this from a convenience into the central security question.</p>\n    ",
       "value": "<p>Cualquiera que pueda leer el entorno del launchable también puede leer ese token; quien posea el token es un operador con todas las capacidades anteriores. El Módulo 4 convierte esta comodidad en la pregunta central de seguridad.</p>"
     },
-    "text.7b65aa343238": {
-      "type": "text",
-      "source": "\n      A Pomerium launchable keeps bootstrap and WebSocket traffic direct: HTTP checks run through\n      its terminal loopback. Cloudflare sends HTTP checks through the approved relay; its WebSockets\n      try the launchable first and can recover through the relay. The probe shows the route without\n      displaying the session value.\n    ",
-      "value": "\n      Un launchable de Pomerium mantiene directo el tráfico de arranque y WebSocket: las comprobaciones HTTP se ejecutan mediante el loopback de su terminal. Cloudflare envía las comprobaciones HTTP mediante el relay aprobado; sus WebSockets prueban primero el launchable y pueden recuperarse mediante el relay. La comprobación muestra la ruta sin revelar la sesión.\n    "
+    "rich.35b160c0dbd4": {
+      "type": "rich",
+      "source": "\n      <strong>If the NemoClaw check times out or returns a 502.</strong>\n      The agent harness likely has not finished booting, which usually means the\n      launchable started before OpenClaw finished loading its policy YAML. Wait\n      30 seconds and test again. If it stays down, use the Recover cell in\n      the gateway section below before continuing.\n    ",
+      "value": "\n      <strong>Si la prueba de NemoClaw agota el tiempo de espera o devuelve 502.</strong>\n      Es probable que el entorno del agente aún no haya terminado de arrancar. Esto suele ocurrir cuando el\n      launchable se inicia antes de que OpenClaw termine de cargar su política YAML. Espera\n      30 segundos y vuelve a probar. Si sigue sin responder, usa la celda Recuperar de\n      la sección del gateway antes de continuar.\n    "
     },
     "rich.3ad92e720d94": {
       "type": "rich",
@@ -121,6 +116,11 @@
       "source": "<strong>Different key:</strong> a clean start, nothing carried over.",
       "value": "<strong>Una clave distinta:</strong> comienza desde cero, sin conservar nada."
     },
+    "rich.5825c6e83954": {
+      "type": "rich",
+      "source": "\n      <p>The Control UI in your browser tab does not use a special private channel.\n        It talks to the agent over the same WebSocket at <code>/cli/gateway</code> that is\n        open to you. After the browser authenticates to the launchable with its access session,\n        the Control UI authenticates gateway calls with the gateway token. A\n        <code>GET /api/agent</code> returns it under the field <code>agent.dashboardUrl</code>,\n        a read that your launchable session authorises. Leave the token field blank and\n        let the probe fill it in.</p>\n    ",
+      "value": "<p>La Control UI de la pestaña del navegador no utiliza un canal privado especial. Se comunica con el agente mediante el mismo WebSocket en <code>/cli/gateway</code> que puedes usar. Después de que el navegador se autentique en el launchable con su sesión de acceso, la Control UI autentica las llamadas al gateway con el token del gateway. Una solicitud <code>GET /api/agent</code>, autorizada por tu sesión del launchable, devuelve el token en <code>agent.dashboardUrl</code>. Deja el campo del token vacío para que la sonda lo complete.</p>"
+    },
     "rich.58c9a3916107": {
       "type": "rich",
       "source": "Every chat run self-checks: if one logs <code>⚠ DEGRADED</code>, come back up\n      here, run Recover, then retry.",
@@ -130,11 +130,6 @@
       "type": "rich",
       "source": "<p><strong>What it is:</strong> The model API base saved on the course home page.</p>\n<p><strong>How requests reach it:</strong> The default is <code>integrate.api.nvidia.com</code>.\nYou can select a compatible model endpoint once; every lesson and this probe reuse that value.\nIframe proxy mode remains available only for the default NVIDIA endpoint.</p>\n<p><strong>Active endpoint:</strong> <code>${MODEL_API_BASE_URL}</code>.</p>",
       "value": "<p><strong>Qué es:</strong> la URL base de la API de modelos guardada en la página inicial.</p>\n<p><strong>Cómo llegan las solicitudes:</strong> el valor predeterminado es <code>integrate.api.nvidia.com</code>.\nPuedes seleccionar un endpoint de modelo compatible una sola vez; todas las lecciones y esta\nsonda reutilizan el valor. El proxy para iframe solo está disponible con el endpoint predeterminado.</p>\n<p><strong>Endpoint activo:</strong> <code>${MODEL_API_BASE_URL}</code>.</p>"
-    },
-    "rich.64855dec2651": {
-      "type": "rich",
-      "source": "Run <code>openclaw dashboard --no-open</code> and read the configured gateway credential\n          it prints.",
-      "value": "Ejecuta <code>openclaw dashboard --no-open</code> y lee la credencial de gateway configurada que imprime."
     },
     "rich.695769efb0e3": {
       "type": "rich",
@@ -216,10 +211,40 @@
       "source": "Before committing to a model, measure it. The cells below pull matching\n      models from the catalog, stream a short prompt through each one, and\n      record each model's <em>time to first token</em> (TTFT) and time to\n      finish. The catalog-fetching cell starts open so the filter list is visible\n      before you run the benchmark.",
       "value": "Antes de elegir un modelo, mide su comportamiento. Las celdas siguientes obtienen del catálogo los modelos coincidentes, transmiten el mismo prompt breve a cada uno y registran el <em>tiempo hasta el primer token</em> (TTFT, del inglés <i>Time to First Token</i>) y el tiempo total de cada modelo. La celda que consulta el catálogo comienza abierta para mostrar el filtro antes de ejecutar el benchmark."
     },
-    "rich.db40a60b24f3": {
+    "rich.00d188488ec3": {
       "type": "rich",
-      "source": "The gateway token and the launchable access session authorize different things. The\n        gateway token authorizes JSON-RPC calls on <code>/cli/gateway</code>. The access session, a\n        Pomerium browser cookie or a <code>CF_Authorization</code> value, authorizes reaching the\n        launchable at all. Replacing one never repairs a failure in the other.",
-      "value": "El token del gateway y la sesión de acceso al launchable autorizan cosas distintas. El token del gateway autoriza las llamadas JSON-RPC en <code>/cli/gateway</code>. La sesión de acceso, una cookie de Pomerium o un valor <code>CF_Authorization</code>, autoriza el acceso al launchable. Sustituir una nunca repara un fallo de la otra."
+      "source": "<strong>Firefox:</strong> open Developer Tools, select <strong>Storage</strong> →\n        <strong>Cookies</strong>, then select the launchable origin.",
+      "value": "<strong>Firefox:</strong> abre las herramientas para desarrolladores, selecciona <strong>Storage (Almacenamiento)</strong> → <strong>Cookies</strong> y elige el origen del launchable."
+    },
+    "rich.44904fdf3de4": {
+      "type": "rich",
+      "source": "Keep the signed-in launchable tab open. Use <code>_pomerium</code> for an\n        <code>apps.run.brev.nvidia.com</code> host or <code>CF_Authorization</code> for a\n        <code>brevlab.com</code> host.",
+      "value": "Mantén abierta la pestaña del launchable donde iniciaste sesión. Usa <code>_pomerium</code> para un host <code>apps.run.brev.nvidia.com</code> o <code>CF_Authorization</code> para un host <code>brevlab.com</code>."
+    },
+    "rich.83b0706d0fbc": {
+      "type": "rich",
+      "source": "<strong>Chrome, Edge, or Brave:</strong> open Developer Tools, select\n        <strong>Application</strong> → <strong>Storage</strong> → <strong>Cookies</strong>, then select\n        the launchable origin.",
+      "value": "<strong>Chrome, Edge o Brave:</strong> abre las herramientas para desarrolladores, selecciona <strong>Application (Aplicación)</strong> → <strong>Storage (Almacenamiento)</strong> → <strong>Cookies</strong> y elige el origen del launchable."
+    },
+    "rich.97e76bf6cfe3": {
+      "type": "rich",
+      "source": "The gateway token authorizes JSON-RPC calls on <code>/cli/gateway</code>.",
+      "value": "El token del gateway autoriza las llamadas JSON-RPC en <code>/cli/gateway</code>."
+    },
+    "rich.bad87a9c2742": {
+      "type": "rich",
+      "source": "<strong>Safari:</strong> enable web-developer features in <strong>Settings</strong> →\n        <strong>Advanced</strong> if necessary, open the Web Inspector, then select\n        <strong>Storage</strong> → <strong>Cookies</strong> and the launchable origin.",
+      "value": "<strong>Safari:</strong> si es necesario, activa las funciones de desarrollo web en <strong>Settings (Ajustes)</strong> → <strong>Advanced (Avanzado)</strong>, abre el Inspector web y selecciona <strong>Storage (Almacenamiento)</strong> → <strong>Cookies</strong> y el origen del launchable."
+    },
+    "rich.d4e42a7691c4": {
+      "type": "rich",
+      "source": "Find the matching cookie name and copy only its complete <strong>Value</strong>. Do not copy\n        the whole <code>Cookie</code> header or paste the value anywhere except the Access session\n        field on this page.",
+      "value": "Busca el nombre de cookie correspondiente y copia solo su <strong>Value (Valor)</strong> completo. No copies todo el encabezado <code>Cookie</code> ni pegues el valor en ningún lugar que no sea el campo Sesión de acceso de esta página."
+    },
+    "rich.eed8805240f3": {
+      "type": "rich",
+      "source": "The access session, an <code>_pomerium</code> or <code>CF_Authorization</code> browser cookie,\n        authorizes reaching the launchable at all.",
+      "value": "La sesión de acceso, una cookie del navegador <code>_pomerium</code> o <code>CF_Authorization</code>, autoriza el acceso al launchable."
     },
     "rich.de3dbde22a38": {
       "type": "rich",
@@ -240,11 +265,6 @@
       "type": "rich",
       "source": "\n        <h3>build.nvidia.com</h3>\n        <p>Call the Chat Completions API with an <code>nvapi-</code> key. Each POST carries its own\n          messages. No tool or session state is kept between calls.</p>\n        <p style=\"color:var(--tf);font-size:.8rem\">Credential: <code>nvapi-</code> key.</p>\n      ",
       "value": "<h3>build.nvidia.com</h3> <p>Invoca la API de Chat Completions con una clave <code>nvapi-</code>. Cada POST incluye sus propios mensajes. No conserva herramientas ni estado de sesión entre llamadas.</p> <p style=\"color:var(--tf);font-size:.8rem\">Credencial: clave <code>nvapi-</code>.</p>"
-    },
-    "rich.5825c6e83954": {
-      "type": "rich",
-      "source": "\n      <p>The Control UI in your browser tab does not use a special private channel.\n        It talks to the agent over the same WebSocket at <code>/cli/gateway</code> that is\n        open to you. After the browser authenticates to the launchable with its access session,\n        the Control UI authenticates gateway calls with the gateway token. A\n        <code>GET /api/agent</code> returns it under the field <code>agent.dashboardUrl</code>,\n        a read that your launchable session authorises. Leave the token field blank and\n        let the probe fill it in.</p>\n    ",
-      "value": "<p>La Control UI de la pestaña del navegador no utiliza un canal privado especial. Se comunica con el agente mediante el mismo WebSocket en <code>/cli/gateway</code> que puedes usar. Después de que el navegador se autentique en el launchable con su sesión de acceso, la Control UI autentica las llamadas al gateway con el token del gateway. Una solicitud <code>GET /api/agent</code>, autorizada por tu sesión del launchable, devuelve el token en <code>agent.dashboardUrl</code>. Deja el campo del token vacío para que la sonda lo complete.</p>"
     },
     "text.01a9ecdc3c66": {
       "type": "text",
@@ -313,16 +333,6 @@
       "source": "toolSearch is a conditional failure mode",
       "value": "toolSearch es un modo de fallo condicional"
     },
-    "text.39f180d6d137": {
-      "type": "text",
-      "source": "OpenClaw implements that same route internally too. A separately hosted course reads its\n      metadata through the launchable access layer, then opens authenticated WebSockets directly\n      from the signed-in browser.",
-      "value": "OpenClaw también implementa esa ruta internamente. Un curso alojado por separado lee sus metadatos mediante la capa de acceso del launchable y después abre WebSockets autenticados directamente desde el navegador que inició sesión."
-    },
-    "text.ac5740663e09": {
-      "type": "text",
-      "source": "all four connection checks, as editable code",
-      "value": "las cuatro pruebas de conexión, como código editable"
-    },
     "text.0f82aca66af9": {
       "type": "text",
       "source": "length",
@@ -361,6 +371,11 @@
       "type": "text",
       "source": "turn 2 · ask it back (only the question is sent)",
       "value": "turno 2 · vuelve a preguntarlo (solo se envía la pregunta)"
+    },
+    "text.1637a7765d02": {
+      "type": "text",
+      "source": " The shared audit reads the normalized Module 3a connection and selects transport.",
+      "value": " La auditoría compartida lee la conexión normalizada del Módulo 3a y selecciona el transporte."
     },
     "text.16e4ab430622": {
       "type": "text",
@@ -421,6 +436,16 @@
       "source": "Call models.list and cron.list",
       "value": "Llama a models.list y cron.list"
     },
+    "text.222f88777073": {
+      "type": "text",
+      "source": "Streams chat.send under a fresh sessionKey until run-end. Commented prompts offer simpler alternatives.",
+      "value": "Llama a chat.send con una sessionKey nueva y transmite los frames de herramientas hasta el final de la ejecución. El sufijo nuevo mantiene aislada cada demostración y fuerza otra ejecución de herramientas. El prompt predeterminado ejecuta un comando; las alternativas comentadas prueban turnos más sencillos."
+    },
+    "text.22759a3f3bc5": {
+      "type": "text",
+      "source": "Connect NemoClaw",
+      "value": "Conectar NemoClaw"
+    },
     "text.2298879d8c60": {
       "type": "text",
       "source": " tok",
@@ -437,11 +462,6 @@
       "type": "text",
       "source": "The first cell below plants a fact and then asks for it back under the same key.\n      The agent answers from a turn your client never re-sent, because the gateway\n      rehydrated that history server-side. The other two cells let you manage the stored\n      state.",
       "value": "La primera celda introduce un dato y después pide recuperarlo con la misma clave. El agente responde a partir de un turno que tu cliente nunca reenvió, porque el gateway reconstruyó ese historial en el servidor. Las otras dos celdas te permiten gestionar el estado almacenado:"
-    },
-    "text.2585c534c419": {
-      "type": "text",
-      "source": "If the Control UI reports that the gateway needs a token or password",
-      "value": "Si la Control UI indica que el gateway necesita un token o una contraseña"
     },
     "text.25e417a76686": {
       "type": "text",
@@ -464,6 +484,11 @@
       "type": "text",
       "source": "Check before changing runtime settings",
       "value": "Comprueba antes de cambiar el runtime"
+    },
+    "text.2acb59482d62": {
+      "type": "text",
+      "source": "Return here and enter the launchable URL. If this course is not served by the launchable,\n        paste the launchable's browser access session too.",
+      "value": "Vuelve aquí e introduce la URL del launchable. Si el curso no se sirve desde el launchable,\n        pega también la sesión de acceso del navegador del launchable."
     },
     "text.2b50d1ad6eb6": {
       "type": "text",
@@ -554,6 +579,16 @@
       "source": "\\\\n── ranked by TTFT ──────────────────────────",
       "value": "\\\\n── ordenados por TTFT ──────────────────────"
     },
+    "text.3928dddb82c8": {
+      "type": "text",
+      "source": "Sends two turns under one sessionKey so the second can recall the first. Another key creates separate history.",
+      "value": "Envía dos turnos con la misma sessionKey. El segundo contiene únicamente una pregunta de recuperación; el gateway restaura el primer turno antes de ejecutar el modelo. Una clave distinta identifica otro historial."
+    },
+    "text.39f180d6d137": {
+      "type": "text",
+      "source": "OpenClaw implements that same route internally too. A separately hosted course reads its\n      metadata through the launchable access layer, then opens authenticated WebSockets directly\n      from the signed-in browser.",
+      "value": "OpenClaw también implementa esa ruta internamente. Un curso alojado por separado lee sus metadatos mediante la capa de acceso del launchable y después abre WebSockets autenticados directamente desde el navegador que inició sesión."
+    },
     "text.3a53db8a2c8a": {
       "type": "text",
       "source": "abort",
@@ -570,11 +605,6 @@
       "type": "text",
       "source": "Module 3 · Part A of 3 · live calls begin",
       "value": "Módulo 3 · Parte A de 3"
-    },
-    "text.459be464036a": {
-      "type": "text",
-      "source": "Use the probe UI above for the normal path. This cell reruns the same four checks and returns their redacted requests and responses.",
-      "value": "Usa la interfaz de la prueba anterior para el recorrido habitual. Esta celda repite las mismas cuatro pruebas y devuelve sus solicitudes y respuestas con los datos sensibles ocultos."
     },
     "text.4004db613c6e": {
       "type": "text",
@@ -626,6 +656,11 @@
       "value": ": ",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
     },
+    "text.459be464036a": {
+      "type": "text",
+      "source": "Use the probe UI above for the normal path. This cell reruns the same four checks and returns their redacted requests and responses.",
+      "value": "Usa la interfaz de la prueba anterior para el recorrido habitual. Esta celda repite las mismas cuatro pruebas y devuelve sus solicitudes y respuestas con los datos sensibles ocultos."
+    },
     "text.4d7cbb57371a": {
       "type": "text",
       "source": " Server-sent events: one \"data: {json}\" line per chunk.",
@@ -669,11 +704,6 @@
       "value": " Use the existing gateway socket to list models and scheduled jobs.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
     },
-    "text.5337ff8b7cd0": {
-      "type": "text",
-      "source": "Open a WebSocket to /cli/gateway, respond to the server's challenge frame with the operator.admin credential, then store a call() helper on state so subsequent nodes can send typed requests without repeating the handshake.",
-      "value": "Abre un WebSocket en /cli/gateway, responde al frame de desafío del servidor con la credencial operator.admin y guarda un helper call() en el estado. Los nodos siguientes podrán enviar solicitudes tipadas sin repetir el intercambio inicial."
-    },
     "text.552e423045fc": {
       "type": "text",
       "source": "(none)",
@@ -689,11 +719,6 @@
       "type": "text",
       "source": "reply",
       "value": "respuesta"
-    },
-    "text.57ce75b3f9a1": {
-      "type": "text",
-      "source": "Your launchable answers on one of two account-specific hostnames. Both are supported, and the\n      probe selects the matching access provider from the hostname:",
-      "value": "Tu launchable responde en uno de dos nombres de host propios de tu cuenta. Ambos son compatibles y la sonda elige el proveedor de acceso según el nombre de host:"
     },
     "text.588da4105320": {
       "type": "text",
@@ -738,6 +763,31 @@
       "type": "text",
       "source": "CHECK THE LIVE VALUE BEFORE REPAIR",
       "value": "COMPRUEBA EL VALOR ACTIVO ANTES DE REPARAR"
+    },
+    "text.097cd4e6916f": {
+      "type": "text",
+      "source": "When this course is not served by the launchable, copy that browser cookie into the Access\n      session field below:",
+      "value": "Si el curso no se sirve desde el launchable, copia esa cookie del navegador en el campo Sesión de acceso que aparece abajo:"
+    },
+    "text.1e5f42d45364": {
+      "type": "text",
+      "source": "Copy the launchable access session when this page is hosted separately",
+      "value": "Copia la sesión de acceso al launchable cuando esta página se aloje por separado"
+    },
+    "text.a62efdf14807": {
+      "type": "text",
+      "source": "Step 1 · Verify the model route",
+      "value": "Paso 1 · Verifica la ruta del modelo"
+    },
+    "text.d435465e54ef": {
+      "type": "text",
+      "source": "The model probe checks the persistent chat route configured on the course home page or in\n      Module 1a. It remains separate from the launchable connection you verified above.",
+      "value": "La prueba del modelo comprueba la ruta de chat persistente configurada en la página de inicio del curso o en el Módulo 1a. Se mantiene separada de la conexión al launchable que verificaste arriba."
+    },
+    "text.f27ee28f8d6d": {
+      "type": "text",
+      "source": "The gateway token and the launchable access session authorize different things:",
+      "value": "El token del gateway y la sesión de acceso al launchable autorizan cosas distintas:"
     },
     "text.61bf18320777": {
       "type": "text",
@@ -784,11 +834,6 @@
       "type": "text",
       "source": "What tools can you call?",
       "value": "¿Qué herramientas puedes llamar?"
-    },
-    "text.697af400d729": {
-      "type": "text",
-      "source": "Wipe a session's server-side history with one call. Run it on the memory session above, then re-run the recall turn: the planted code is gone, because the conversation the gateway held is gone. Change sessionKey to clear any session you like. This is the drop-in to copy anywhere you want a fresh start.",
-      "value": "Borra con una llamada el historial que conserva el servidor. Ejecútala sobre la sesión de memoria anterior y repite el turno de recuperación: el código registrado desapareció con la conversación guardada. Cambia sessionKey para borrar cualquier otra sesión. Puedes copiar esta operación donde necesites comenzar desde cero."
     },
     "text.69824d3b0e70": {
       "type": "text",
@@ -838,6 +883,11 @@
       "source": "Fetch matching models",
       "value": "Obtén los modelos coincidentes"
     },
+    "text.765989849995": {
+      "type": "text",
+      "source": "Inspect all four connection routes",
+      "value": "Inspecciona las cuatro rutas de conexión"
+    },
     "text.77c5ab5fe82d": {
       "type": "text",
       "source": " streams the reply into the view and fires a chip per tool call.",
@@ -855,15 +905,15 @@
       "value": " ms; give up on a model with no first token by now (some are slow to start)",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
     },
-    "text.1637a7765d02": {
-      "type": "text",
-      "source": " The shared audit reads the normalized Module 3a connection and selects transport.",
-      "value": " La auditoría compartida lee la conexión normalizada del Módulo 3a y selecciona el transporte."
-    },
     "text.7b30f0e7342a": {
       "type": "text",
       "source": "raw output · ",
       "value": "salida sin procesar · "
+    },
+    "text.7b65aa343238": {
+      "type": "text",
+      "source": "\n      A Pomerium launchable keeps bootstrap and WebSocket traffic direct: HTTP checks run through\n      its terminal loopback. Cloudflare sends HTTP checks through the approved relay; its WebSockets\n      try the launchable first and can recover through the relay. The probe shows the route without\n      displaying the session value.\n    ",
+      "value": "\n      Un launchable de Pomerium mantiene directo el tráfico de arranque y WebSocket: las comprobaciones HTTP se ejecutan mediante el loopback de su terminal. Cloudflare envía las comprobaciones HTTP mediante el relay aprobado; sus WebSockets prueban primero el launchable y pueden recuperarse mediante el relay. La comprobación muestra la ruta sin revelar la sesión.\n    "
     },
     "text.7bd374b9cfef": {
       "type": "text",
@@ -926,11 +976,6 @@
       "value": "/models",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
     },
-    "text.85c2ca9907f1": {
-      "type": "text",
-      "source": "Send two turns under the same sessionKey. The second sends only a recall question; the gateway restores the first turn before the model runs. A different key addresses a separate history.",
-      "value": "Envía dos turnos con la misma sessionKey. El segundo contiene únicamente una pregunta de recuperación; el gateway restaura el primer turno antes de ejecutar el modelo. Una clave distinta identifica otro historial."
-    },
     "text.85eb00994d09": {
       "type": "text",
       "source": "Content-Type",
@@ -941,6 +986,12 @@
       "type": "text",
       "source": "the Try-it artifact, in code",
       "value": "El artefacto de prueba, en código"
+    },
+    "text.8a5edab28263": {
+      "type": "text",
+      "source": "/",
+      "value": "/",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
     },
     "text.8ca587036511": {
       "type": "text",
@@ -1069,6 +1120,11 @@
       "value": " Rank survivors by TTFT, the metric that matters when streaming to a user.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
     },
+    "text.9f0a32e2aa93": {
+      "type": "text",
+      "source": "The connection check and exposed code share the normalized launchable connection and\n      provider decision. Run the editable cell to test agent metadata, gateway, terminal, and\n      health in order, then inspect its automatically rendered redacted result.",
+      "value": "La prueba de conexión y el código visible comparten la conexión normalizada del launchable y la decisión del proveedor. Ejecuta la celda editable para probar, en orden, los metadatos del agente, el gateway, la terminal y el estado; después, inspecciona el resultado renderizado automáticamente con los datos sensibles ocultos."
+    },
     "text.9f15dc7d72da": {
       "type": "text",
       "source": "Run the Connect node first.",
@@ -1124,6 +1180,11 @@
       "type": "text",
       "source": "custom configuration",
       "value": "configuración personalizada"
+    },
+    "text.ac5740663e09": {
+      "type": "text",
+      "source": "all four connection checks, as editable code",
+      "value": "las cuatro pruebas de conexión, como código editable"
     },
     "text.ad6fc89ae222": {
       "type": "text",
@@ -1196,6 +1257,11 @@
       "type": "text",
       "source": "⚠ DEGRADED: started ",
       "value": "⚠ DEGRADED: se iniciaron "
+    },
+    "text.bd18f7a030cb": {
+      "type": "text",
+      "source": "Clears server-side history for one sessionKey. Rerun the recall turn to confirm the planted fact is gone.",
+      "value": "Borra con una llamada el historial que conserva el servidor. Ejecútala sobre la sesión de memoria anterior y repite el turno de recuperación: el código registrado desapareció con la conversación guardada. Cambia sessionKey para borrar cualquier otra sesión. Puedes copiar esta operación donde necesites comenzar desde cero."
     },
     "text.bd8daef76c56": {
       "type": "text",
@@ -1341,6 +1407,11 @@
       "value": "\\\\n  ",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
     },
+    "text.d3555d131008": {
+      "type": "text",
+      "source": "Enter Base URL and Access session. Provider, relay route, and gateway token are discovered automatically.",
+      "value": "Introduce la URL base y la sesión de acceso. El proveedor, la ruta del relay y el token del gateway se descubren automáticamente."
+    },
     "text.d356dfadceeb": {
       "type": "text",
       "source": "\\\\ncron jobs: ",
@@ -1361,10 +1432,20 @@
       "source": "Read your SOUL.md and summarize who you are",
       "value": "Lee tu SOUL.md y resume quién eres"
     },
+    "text.de56802acbde": {
+      "type": "text",
+      "source": "Lists sessions and removes throwaway entries while retaining KEEP. Use /:(main|quick-3c-skill)$/ to preserve another named session.",
+      "value": "Cada sessionKey distinta deja una sesión que se acumula en la interfaz de control. Esta celda recorre la lista paginada y elimina las sesiones desechables, conservando únicamente la sesión principal. Edita KEEP para cambiar cuáles perduran; por ejemplo, /:(main|quick-3c-skill)$/ también conserva una sesión que te interese."
+    },
     "text.dee9df394086": {
       "type": "text",
       "source": "   Run the 🩺 Health check (it flags toolSearch) + 🛠 Recover; for a deeper look, the 📜 logs cell tails the runtime.",
       "value": "   Ejecuta la comprobación de estado, que detecta toolSearch, y después Recuperar. Para obtener más detalles, la celda de logs sigue el runtime."
+    },
+    "text.e0f265428fc2": {
+      "type": "text",
+      "source": "Authenticates the /cli/gateway WebSocket with operator.admin and stores a call() helper so later nodes reuse the connection.",
+      "value": "Abre un WebSocket en /cli/gateway, responde al frame de desafío del servidor con la credencial operator.admin y guarda un helper call() en el estado. Los nodos siguientes podrán enviar solicitudes tipadas sin repetir el intercambio inicial."
     },
     "text.e1517be14d06": {
       "type": "text",
@@ -1394,11 +1475,6 @@
       "value": "kimi",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
     },
-    "text.e5450cb6df67": {
-      "type": "text",
-      "source": "Call chat.send with a fresh sessionKey and stream tool frames until run-end. The fresh suffix keeps each demo clean and forces a new tool run. The default prompt executes a command; commented alternatives test simpler turns.",
-      "value": "Llama a chat.send con una sessionKey nueva y transmite los frames de herramientas hasta el final de la ejecución. El sufijo nuevo mantiene aislada cada demostración y fuerza otra ejecución de herramientas. El prompt predeterminado ejecuta un comando; las alternativas comentadas prueban turnos más sencillos."
-    },
     "text.e6e1d0a85eea": {
       "type": "text",
       "source": "Hello chat",
@@ -1414,11 +1490,6 @@
       "source": "ms/tok",
       "value": "ms/tok",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
-    },
-    "text.e95a995dbbf3": {
-      "type": "text",
-      "source": "Every distinct sessionKey you use leaves a session behind, and they accumulate in the Control UI. This lists them all (paginated) and deletes the throwaway ones, keeping only the Main Session. Edit KEEP to change what survives, e.g. /:(main|quick-3c-skill)$/ to also keep a session you care about.",
-      "value": "Cada sessionKey distinta deja una sesión que se acumula en la interfaz de control. Esta celda recorre la lista paginada y elimina las sesiones desechables, conservando únicamente la sesión principal. Edita KEEP para cambiar cuáles perduran; por ejemplo, /:(main|quick-3c-skill)$/ también conserva una sesión que te interese."
     },
     "text.e971a93a70cd": {
       "type": "text",
@@ -1502,11 +1573,6 @@
       "value": "cron.list",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
     },
-    "text.fdb010b0871d": {
-      "type": "text",
-      "source": "Update the credential in the Control UI, then reconnect.",
-      "value": "Actualiza la credencial en la Control UI y vuelve a conectar."
-    },
     "text.ff72caa36dca": {
       "type": "text",
       "source": "data:",
@@ -1523,67 +1589,6 @@
       "type": "text",
       "source": "No API key saved. Go to the course home and save the endpoint and key first.",
       "value": "No hay una clave de API guardada. Ve a la página inicial del curso y guarda primero el endpoint y la clave."
-    },
-    "text.2acb59482d62": {
-      "type": "text",
-      "source": "Return here and enter the launchable URL. If this course is not served by the launchable,\n        paste the launchable's browser access session too.",
-      "value": "Vuelve aquí e introduce la URL del launchable. Si el curso no se sirve desde el launchable,\n        pega también la sesión de acceso del navegador del launchable."
-    },
-    "rich.63d15167ecf4": {
-      "type": "rich",
-      "source": "<code>https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com</code> uses Pomerium. When the\n        course shares the launchable origin, the browser supplies its signed-in session. Otherwise,\n        paste the complete <code>_pomerium</code> value from the signed-in launchable.",
-      "value": "<code>https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com</code> usa Pomerium. Cuando el\n        curso comparte el origen del launchable, el navegador proporciona la sesión autenticada. En caso contrario,\n        pega el valor completo de <code>_pomerium</code> del launchable autenticado."
-    },
-    "rich.7faa674caeeb": {
-      "type": "rich",
-      "source": "<code>https://nemoclaw-&lt;id&gt;.brevlab.com</code> uses Cloudflare Access. Its matching\n        <code>CF_Authorization</code> session authenticates the separately hosted course through\n        the approved relay.",
-      "value": "<code>https://nemoclaw-&lt;id&gt;.brevlab.com</code> usa Cloudflare Access. La sesión\n        <code>CF_Authorization</code> correspondiente autentica el curso alojado por separado mediante\n        el relay aprobado."
-    },
-    "rich.74be16005989": {
-      "type": "rich",
-      "source": "After launchable access succeeds, <strong>GET /api/agent</strong> supplies the gateway\n        token from authenticated metadata. Use the steps below only when the Control UI reports\n        that the gateway is reachable but still requires authentication.",
-      "value": "Cuando el acceso al launchable funciona, <strong>GET /api/agent</strong> obtiene el token del gateway\n        de los metadatos autenticados. Sigue los pasos siguientes solo si la interfaz de control indica\n        que puede alcanzar el gateway, pero todavía necesita autenticación."
-    },
-    "text.61a99e5b3eac": {
-      "type": "text",
-      "source": "Step 1 · Verify the connections",
-      "value": "Paso 1 · Verifica las conexiones"
-    },
-    "text.8983fb607143": {
-      "type": "text",
-      "source": "The model probe checks the configured model route. The NemoClaw check then verifies agent\n      metadata, both WebSocket paths, and launchable health in the order later exercises need them.",
-      "value": "La prueba del modelo comprueba la ruta configurada. Después, la prueba de NemoClaw verifica los metadatos\n      del agente, las dos rutas WebSocket y el estado del launchable en el orden que requieren los ejercicios posteriores."
-    },
-    "rich.35b160c0dbd4": {
-      "type": "rich",
-      "source": "\n      <strong>If the NemoClaw check times out or returns a 502.</strong>\n      The agent harness likely has not finished booting, which usually means the\n      launchable started before OpenClaw finished loading its policy YAML. Wait\n      30 seconds and test again. If it stays down, use the Recover cell in\n      the gateway section below before continuing.\n    ",
-      "value": "\n      <strong>Si la prueba de NemoClaw agota el tiempo de espera o devuelve 502.</strong>\n      Es probable que el entorno del agente aún no haya terminado de arrancar. Esto suele ocurrir cuando el\n      launchable se inicia antes de que OpenClaw termine de cargar su política YAML. Espera\n      30 segundos y vuelve a probar. Si sigue sin responder, usa la celda Recuperar de\n      la sección del gateway antes de continuar.\n    "
-    },
-    "text.765989849995": {
-      "type": "text",
-      "source": "Inspect all four connection routes",
-      "value": "Inspecciona las cuatro rutas de conexión"
-    },
-    "text.9f0a32e2aa93": {
-      "type": "text",
-      "source": "The connection check and exposed code share the normalized launchable connection and\n      provider decision. Run the editable cell to test agent metadata, gateway, terminal, and\n      health in order, then inspect its automatically rendered redacted result.",
-      "value": "La prueba de conexión y el código visible comparten la conexión normalizada del launchable y la decisión del proveedor. Ejecuta la celda editable para probar, en orden, los metadatos del agente, el gateway, la terminal y el estado; después, inspecciona el resultado renderizado automáticamente con los datos sensibles ocultos."
-    },
-    "text.22759a3f3bc5": {
-      "type": "text",
-      "source": "Connect NemoClaw",
-      "value": "Conectar NemoClaw"
-    },
-    "text.d3555d131008": {
-      "type": "text",
-      "source": "Enter Base URL and Access session. Provider, relay route, and gateway token are discovered automatically.",
-      "value": "Introduce la URL base y la sesión de acceso. El proveedor, la ruta del relay y el token del gateway se descubren automáticamente."
-    },
-    "text.8a5edab28263": {
-      "type": "text",
-      "source": "/",
-      "value": "/",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
     }
   }
 }

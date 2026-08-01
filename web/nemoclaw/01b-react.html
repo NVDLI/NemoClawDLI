@@ -296,7 +296,7 @@ hljs.highlightAll();
 mountRunCell("#cell-finish-reason", {
   openCode: true,
   label: "finish_reason · the one field the loop reads to decide what to do next",
-  intro: "Compare two calls to the same model. The first answers directly; the second requests a tool that your code must run. Watch finish_reason change between them. This tool is a preview of the complete loop below.",
+  intro: "Compare a direct answer with a tool request. Watch finish_reason change before building the complete loop.",
   code: `// MODEL is the swappable brain. Change it and rerun to see whether a stronger model
 // stops or asks for the tool on these same two questions.
 const MODEL = "nvidia/nemotron-3-nano-30b-a3b";   // or "nvidia/nemotron-3-super-120b-a12b" for a stronger brain
@@ -341,9 +341,7 @@ return { call1: r1.choices[0].finish_reason, call2: r2.choices[0].finish_reason 
 // ── The complete ReAct loop, built from scratch ──────────────────────────────
 mountCanvasFlow("#cell-m2c-p3", {
   label: "The complete ReAct loop, built from scratch",
-  intro: "The user node sets the prompt and system instructions; the tool node registers the function. " +
-         "The loop calls the model, runs any requested tools, appends the observations, and repeats " +
-         "until finish_reason is 'stop'. Every step is logged, so you can see what the model decided.",
+  intro: "Set the prompt, register one tool, then watch the loop call the model, execute requests, append observations, and stop.",
   edges: [
     { from: "user", to: "loop" },
     { from: "tool", to: "loop" },
@@ -351,9 +349,7 @@ mountCanvasFlow("#cell-m2c-p3", {
   nodes: [
     {
       id: "user", icon: "👤", title: "User input", x: 0, y: 0,
-      summary: "Sets the system prompt and the user question. Swap in 'What is the capital of France?' " +
-               "and the model answers from training data, so no tool call fires and step 1's finish_reason " +
-               "is 'stop', not 'tool_calls'.",
+      summary: "Sets the system prompt and question. Try a factual question to see the model answer without a tool call.",
       code: `// Save the system prompt that frames the agent loop.
 state.systemPrompt = "You are a helpful assistant. Use the tools available "
   + "when the user asks for something you cannot answer from training data alone.";
@@ -365,8 +361,7 @@ return state.userPrompt;
     },
     {
       id: "tool", icon: "🛠", title: "Tool spec", x: 2, y: 0,
-      summary: "Registers get_current_time as the one tool and wires a JavaScript executor to run it. " +
-               "The model only names the call; your code does the work.",
+      summary: "Registers get_current_time and its JavaScript executor. The model requests the call; your code runs it.",
       code: `// Define the tool schema the model can choose from next.
 state.TOOLS = [{
   type: "function",
@@ -386,9 +381,7 @@ return state.execTool("get_current_time");
     },
     {
       id: "loop", icon: "🔄", title: "ReAct loop", x: 1, y: 1,
-      summary: "Runs the ReAct cycle: call the model, check finish_reason, run any requested tools, append " +
-               "the results as observations, then loop. It exits when finish_reason is 'stop'. " +
-               "Edit MODEL at the top to swap the brain.",
+      summary: "Runs the ReAct cycle until finish_reason is 'stop'. Edit MODEL to compare another model.",
       code: `// MODEL is the swappable brain in the reasoning slot. Change it and rerun to drive the
 // same loop with a different model.
 const MODEL = "nvidia/nemotron-3-nano-30b-a3b";   // or "nvidia/nemotron-3-super-120b-a12b" for a stronger brain
@@ -435,9 +428,7 @@ return { model: MODEL, steps_taken: step, messages: state.messages };
 // ── Part 5: running this cell BUILDS a live chat artifact (createReactAgent) ──
 mountRunCell("#cell-react-lab", {
   label: "Build the artifact · createReactAgent → a live chat panel",
-  intro: "This cell renders a working chat panel from LangChain's off-the-shelf createReactAgent loop, " +
-         "rather than printing a log. Its one tool is read_course_page; its memory is MemorySaver. " +
-         "Edit the agent, the tool, or the prompt and rerun to rebuild the panel.",
+  intro: "Build a LangChain chat agent with read_course_page and MemorySaver. Edit the agent, tool, or prompt, then rerun.",
   code: `// Running this cell renders a live chat panel into #react-artifact below.
 const cfg = await helpers.getConfig();
 if (cfg.needsKey && !helpers.getKey()) {
