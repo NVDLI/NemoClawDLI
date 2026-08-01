@@ -13,7 +13,15 @@ await import(pathToFileURL(path.join(HERE, "examples/cell-examples.js")));
 await import(pathToFileURL(path.join(HERE, "examples/execution-contract.js")));
 await import(pathToFileURL(path.join(HERE, "examples/notebook-syntax.js")));
 const EXAMPLES = globalThis.PYODIDE_CELL_EXAMPLES;
-const EXECUTE_CELL = globalThis.PYODIDE_EXECUTION_CONTRACT.source;
+const EXECUTION_CONTRACT = globalThis.PYODIDE_EXECUTION_CONTRACT;
+const EXECUTE_CELL = EXECUTION_CONTRACT.source;
+const documentedHelperNames = EXECUTION_CONTRACT.helpers.map(item => item.name);
+if (new Set(documentedHelperNames).size !== documentedHelperNames.length
+    || documentedHelperNames.slice().sort().join("\n")
+      !== EXECUTION_CONTRACT.injectedHelpers.slice().sort().join("\n")
+    || EXECUTION_CONTRACT.helpers.some(item => !item.signature || !item.description || !item.source)) {
+  throw new Error("Real Pyodide smoke found an incomplete or duplicate helper discovery contract");
+}
 const CDN_BASE = `https://cdn.jsdelivr.net/pyodide/v${MANIFEST.runtime.pyodide}/full/`;
 const args = process.argv.slice(2);
 
@@ -216,6 +224,7 @@ console.log(JSON.stringify({
   stdout: "captured",
   display: "highlight-ready structured objects, JSON, code, Markdown, HTML, and table MIME output",
   helpers: "editable display override persisted",
+  discoveredHelpers: documentedHelperNames,
   background: "registered, completed, inspected, and cancelled named asyncio tasks",
   artifact: "generated JSON preview retained exact downloadable content",
   repl: "namespace and execution counter persisted",

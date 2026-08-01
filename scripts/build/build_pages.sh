@@ -323,7 +323,7 @@ cat > "$OUT/tests.html" <<'HTML'
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <link rel="icon" type="image/x-icon" href="favicon.ico"/>
 <title>Client-side test runner</title></head><body>
-<div id="explorer"></div>
+<main><div id="explorer"></div></main>
 <script type="application/json" id="explorer-config">{"mode":"tests","title":"Test harness","nav":{"home":"index.html"}}</script>
 <script src="engine.js"></script>
 <script src="web/_skill_explorer.js"></script>

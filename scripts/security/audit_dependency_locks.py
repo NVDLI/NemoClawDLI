@@ -79,6 +79,21 @@ def pins(path: Path, *, require_hashes: bool = False) -> tuple[dict[str, str], l
     return found, errors
 
 
+def gitlab_browser_jobs(source: str) -> list[tuple[str, str]]:
+    """Discover top-level jobs that activate or directly consume browser tooling."""
+    headings = list(re.finditer(r"(?m)^([A-Za-z][A-Za-z0-9_-]*):\s*$", source))
+    jobs: list[tuple[str, str]] = []
+    for index, heading in enumerate(headings):
+        end = headings[index + 1].start() if index + 1 < len(headings) else len(source)
+        block = source[heading.start():end]
+        if (
+            'BROWSER_TOOLS_REQUIRED: "1"' in block
+            or "skill_renderer_runtime_audit.py" in block
+        ):
+            jobs.append((heading.group(1), block))
+    return jobs
+
+
 def audit(root: Path = ROOT) -> list[str]:
     errors: list[str] = []
     for source_rel, lock_rel in PAIRS:
@@ -116,11 +131,15 @@ def audit(root: Path = ROOT) -> list[str]:
         if token not in lock_text:
             errors.append(f"scripts/runtime/pnpm-lock.yaml: missing locked browser-runtime token: {token}")
     core_text = gitlab_core.read_text(encoding="utf-8") if gitlab_core.is_file() else ""
-    if core_text.count(PLAYWRIGHT_IMAGE) != 2:
-        errors.append(
-            ".gitlab/ci/core.yml: validation jobs must use the reviewed Playwright image "
-            "and immutable digest exactly twice"
-        )
+    browser_jobs = gitlab_browser_jobs(core_text)
+    if not browser_jobs:
+        errors.append(".gitlab/ci/core.yml: no browser-consuming validation jobs discovered")
+    for job_name, block in browser_jobs:
+        if PLAYWRIGHT_IMAGE not in block:
+            errors.append(
+                f".gitlab/ci/core.yml: browser-consuming job {job_name} must use "
+                "the reviewed Playwright image and immutable digest"
+            )
     return errors
 
 
@@ -158,6 +177,19 @@ def self_test() -> list[str]:
             if not audit(fixture):
                 failures.append(f"mutation escaped detector: {rel}")
             path.write_text(baseline, encoding="utf-8")
+        core_path = fixture / ".gitlab/ci/core.yml"
+        baseline = core_path.read_text(encoding="utf-8")
+        core_path.write_text(
+            baseline
+            + '\nnovel_browser_job:\n'
+            + '  image: node:20-bookworm-slim\n'
+            + '  variables:\n'
+            + '    BROWSER_TOOLS_REQUIRED: "1"\n'
+            + '  script: ["true"]\n',
+            encoding="utf-8",
+        )
+        if not audit(fixture):
+            failures.append("novel browser-consuming GitLab job escaped detector")
     return failures
 
 

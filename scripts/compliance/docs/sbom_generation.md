@@ -57,7 +57,9 @@ manifest names the exact preview commit and every expected path succeeds. A miss
 commit mismatch, or missing path stays visibly unavailable; a branch or job-name guess never turns
 into an evidence link. The verified files are also copied beside the staged evidence catalog. That
 same-origin CycloneDX copy is SHA-256 checked in the browser before the license view renders its
-resolved Python component rows; the GitLab links remain the provenance and retention authority.
+resolved Python component rows. Direct GitLab links remain the provenance and retention authority
+when the publication policy permits them. A stricter deployment policy withholds blocked links or
+source files while retaining safe, digest-bound same-origin copies.
 
 The scanner-original CycloneDX file is retained unchanged.
 `scripts/compliance/resolve_sbom_licenses.py` then creates

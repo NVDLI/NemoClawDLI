@@ -22,18 +22,28 @@ OPERATIONS = {"live-interface-review", "cdn-publish"}
 CHANNELS = {"immutable", "stable"}
 COURSES = {"nemoclaw"}
 PROVIDERS = {"cloudflare", "pomerium"}
-CHILD_KEYS = (
-    "COURSE_OP", "CANDIDATE_REF", "CANDIDATE_SHA", "CANDIDATE_TEST_JOB_ID",
-    "CLAW_URL_1", "CLAW_ACCESS_PROVIDER_1", "CLAW_URL_2", "CLAW_ACCESS_PROVIDER_2",
-    "PUBLISH_SOURCE_REF", "PUBLISH_SOURCE_SHA", "PUBLISH_SOURCE_TEST_JOB_ID",
-    "PUBLISH_COURSES", "PUBLISH_LANGUAGES", "PUBLISH_CHANNEL",
+CHILD_BINDINGS = (
+    ("COURSE_OP", "DLI_REQUEST_OP"),
+    ("CANDIDATE_REF", "DLI_REQUEST_CANDIDATE_REF"),
+    ("CANDIDATE_SHA", "DLI_REQUEST_CANDIDATE_SHA"),
+    ("CANDIDATE_TEST_JOB_ID", "DLI_REQUEST_CANDIDATE_TEST_JOB_ID"),
+    ("CLAW_URL_1", "DLI_REQUEST_CLAW_URL_1"),
+    ("CLAW_ACCESS_PROVIDER_1", "DLI_REQUEST_CLAW_ACCESS_PROVIDER_1"),
+    ("CLAW_URL_2", "DLI_REQUEST_CLAW_URL_2"),
+    ("CLAW_ACCESS_PROVIDER_2", "DLI_REQUEST_CLAW_ACCESS_PROVIDER_2"),
+    ("PUBLISH_SOURCE_REF", "DLI_REQUEST_PUBLISH_SOURCE_REF"),
+    ("PUBLISH_SOURCE_SHA", "DLI_REQUEST_PUBLISH_SOURCE_SHA"),
+    ("PUBLISH_SOURCE_TEST_JOB_ID", "DLI_REQUEST_PUBLISH_SOURCE_TEST_JOB_ID"),
+    ("PUBLISH_COURSES", "DLI_REQUEST_PUBLISH_COURSES"),
+    ("PUBLISH_LANGUAGES", "DLI_REQUEST_PUBLISH_LANGUAGES"),
+    ("PUBLISH_CHANNEL", "DLI_REQUEST_PUBLISH_CHANNEL"),
 )
 
 
 def child_request_env(env: dict[str, str]) -> dict[str, str]:
     """Project only the bridge's closed request vocabulary into canonical names."""
 
-    return {name: env.get("DLI_REQUEST_" + name, "") for name in CHILD_KEYS}
+    return {canonical: env.get(child, "") for canonical, child in CHILD_BINDINGS}
 
 
 def validate(operation: str, env: dict[str, str], root: Path, context: dict[str, object] | None = None) -> dict[str, object]:

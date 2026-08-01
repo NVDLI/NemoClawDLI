@@ -495,6 +495,7 @@ def gen_web_course_hubs():
                 "children": [{"name": _label(p), "path": p.relative_to(TASK1).as_posix()} for p in pages]
                             + [{"name": p.parent.name, "path": p.relative_to(TASK1).as_posix()} for p in support_files]}
         interface_inventory = d / "interface-inventory.json"
+        interface_section = None
         if interface_inventory.is_file():
             contract = json.loads(interface_inventory.read_text(encoding="utf-8"))
             meta["interface_inventory"] = {
@@ -515,7 +516,42 @@ def gen_web_course_hubs():
                     name, interface_inventory.name,
                     f"Authority: {profile.get('authority', 'unknown')}. Required states: {states}.",
                 ))
-            sections.append(("Interfaces", "Machine-checked discovery rules and form-factor contracts for every course interface.", interface_items))
+            interface_section = (
+                "Interfaces",
+                "Machine-checked discovery rules and form-factor contracts for every course interface.",
+                interface_items,
+            )
+        runtime_profiles = sorted(d.glob("*-profile.json"))
+        profile_items = []
+        if runtime_profiles:
+            meta["runtime_profiles"] = []
+            for profile_path in runtime_profiles:
+                profile = json.loads(profile_path.read_text(encoding="utf-8"))
+                meta["runtime_profiles"].append({
+                    "schema": profile.get("schema"),
+                    "source": profile_path.name,
+                })
+                profile_items.append((
+                    profile_path.stem.replace("-", " "),
+                    profile_path.name,
+                    "Browser runtime profile shipped beside the course modules that consume it.",
+                ))
+        if interface_section:
+            title, description, items = interface_section
+            if profile_items:
+                title = "Interfaces and runtime profiles"
+                description += (
+                    " Discovered course-level profiles are fetched by the browser runtime and "
+                    "copied into every standalone artifact."
+                )
+                items.extend(profile_items)
+            sections.append((title, description, items))
+        elif profile_items:
+            sections.append((
+                "Runtime profiles",
+                "Discovered course-level profiles fetched by the browser runtime and copied into every standalone artifact.",
+                profile_items,
+            ))
         lead = WEB_COURSE_DESC.get(d.name, f"The {d.name} browser course, {len(primary)} pages.")
         write(sk, framer_page(meta, f"web/{d.name} · course hub", sections, summary=lead,
                               nav=_nav("web/" + d.name, "web/SKILL.html", "web"),

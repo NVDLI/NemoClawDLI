@@ -51,6 +51,7 @@ cron_contract=0
 terminal_contract=0
 chat_contract=0
 assistant_artifacts=0
+all_course=0
 for arg in "${args[@]}"; do
   case "$arg" in
     --gateway-only) gateway_only=1 ;;
@@ -58,6 +59,7 @@ for arg in "${args[@]}"; do
     --terminal-contract) terminal_contract=1 ;;
     --chat-contract) chat_contract=1 ;;
     --assistant-artifacts) assistant_artifacts=1 ;;
+    --all-course) all_course=1 ;;
   esac
 done
 if (( cron_contract && ! gateway_only )); then echo "--cron-contract requires --gateway-only" >&2; exit 2; fi
@@ -66,6 +68,22 @@ if (( chat_contract && ! gateway_only )); then echo "--chat-contract requires --
 if (( assistant_artifacts )) && [[ -z "${NVIDIA_API_KEY:-}" ]]; then
   echo "--assistant-artifacts requires NVIDIA_API_KEY" >&2
   exit 2
+fi
+if (( all_course )); then
+  base_url="${COURSE_BASE_URL:-http://127.0.0.1:4173/nemoclaw}"
+  base_url="${base_url%/}"
+  failures=0
+  tested=0
+  while IFS= read -r page; do
+    if ! grep -Eq 'mount(CanvasFlow|RunCell)' "$page"; then continue; fi
+    tested=$((tested + 1))
+    echo "[all-course $tested] ${page##*/}"
+    if ! "$0" --serve-static "$base_url/${page##*/}"; then failures=$((failures + 1)); fi
+  done < <(find "$ROOT/web/nemoclaw" -maxdepth 1 -type f -name '[0-9][0-9][a-z]-*.html' | sort)
+  if (( tested == 0 )); then echo "all-course runtime: no interactive lessons discovered" >&2; exit 1; fi
+  if (( failures )); then echo "all-course runtime: FAIL ($failures/$tested lessons)" >&2; exit 1; fi
+  echo "all-course runtime: PASS ($tested lessons)"
+  exit 0
 fi
 if [[ " ${args[*]} " != *" --smoke "* && " ${args[*]} " != *" --serve-static "* ]]; then
   args+=(--serve-static)

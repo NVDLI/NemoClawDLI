@@ -71,7 +71,7 @@ GUIDANCE = {
       <li><strong>Exercise or publish:</strong> a separate secret-free job builds the pinned browser runtime without opening candidate content. Candidate browsers run without protected variables. Live probes receive only environment-scoped file secrets. CDN preparation has no AWS authority; the root-installed devbox publisher accepts only its hash plan.</li>
     </ol>
     <p><a href="../../docs/pages_deploy.md">Open the exact <code>glab</code> branch/language commands and runner provisioning steps.</a></p>
-    <p>These operations stay inside GitLab, so public GitHub receives the source and ordinary validation but no trigger, secret, protected environment, devbox runner, or AWS authority.</p>
+    <p>GitLab contains these operations. Public GitHub receives the source and ordinary validation. It receives none of the internal triggers, secrets, protected environments, devbox-runner access, or AWS authority.</p>
   </section>''',
     "scripts/cors-proxy/deployable": '''
   <section aria-labelledby="projection-flow"><h2 id="projection-flow">Verify before use</h2>

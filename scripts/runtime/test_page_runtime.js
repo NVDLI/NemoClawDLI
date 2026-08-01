@@ -9,12 +9,6 @@
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
-let pw;
-try {
-  pw = require('/usr/lib/node_modules/openclaw/node_modules/playwright-core');
-} catch (_) {
-  pw = require('playwright-core');
-}
 
 const args = process.argv.slice(2);
 const smoke = args.includes('--smoke');
@@ -28,7 +22,7 @@ const serveStatic = args.includes('--serve-static');
 const DEFAULT_LAB_URL = 'http://127.0.0.1:4173/nemoclaw/01a-loop.html';
 const STATIC_SERVER_URL = 'http://127.0.0.1:4173';
 const LOOPBACK_ORIGIN = 'http:' + '//127.0.0.1';
-const url = args.find(a => !['--smoke', '--render-only', '--gateway-only', '--cron-contract', '--terminal-contract', '--chat-contract', '--assistant-artifacts', '--serve-static'].includes(a)) || DEFAULT_LAB_URL;
+const url = args.find(a => !['--smoke', '--render-only', '--gateway-only', '--cron-contract', '--terminal-contract', '--chat-contract', '--assistant-artifacts', '--serve-static', '--self-test-redaction', '--self-test-access-boundary', '--self-test-direct-fallback'].includes(a)) || DEFAULT_LAB_URL;
 const CLAW_URL = process.env.CLAW_URL || '';
 let CLAW_TOKEN = process.env.CLAW_TOKEN || '';
 const CLAW_ACCESS_SESSION = process.env.CLAW_ACCESS_SESSION || process.env.CLAW_CF || '';
@@ -38,8 +32,135 @@ const inferredAccessProvider = /(^|\.)apps\.run\.brev\.nvidia\.com$/i.test((() =
 const CLAW_ACCESS_PROVIDER = (process.env.CLAW_ACCESS_PROVIDER || inferredAccessProvider).toLowerCase();
 const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY || '';
 const DIRECT_API_URL = process.env.NVIDIA_API_URL || 'https://integrate.api.nvidia.com/v1';
+const CELL_TIMEOUT_MS = Number(process.env.COURSE_CELL_TIMEOUT_MS || 420000);
+if (!Number.isInteger(CELL_TIMEOUT_MS) || CELL_TIMEOUT_MS < 1000 || CELL_TIMEOUT_MS > 900000) {
+  throw new Error('COURSE_CELL_TIMEOUT_MS must be a whole number from 1000 to 900000');
+}
 const OPENCLAW_CORS_PROXY_BASE = process.env.OPENCLAW_CORS_PROXY_BASE || 'https://openclaw-cors-proxy.experiments.courses.nvidia.com';
 const OPENCLAW_BACKUP_HINT = 'For a remote launchable test, set CLAW_URL and CLAW_ACCESS_PROVIDER. Set CLAW_ACCESS_SESSION only when the isolated browser cannot reuse the launchable session directly; the value is kept in tab-scoped storage and sent through the provider-bound relay. CLAW_TOKEN is optional when /api/agent can discover it.';
+
+function redactDiagnosticText(value) {
+  let text = String(value);
+  for (const secret of [CLAW_ACCESS_SESSION, CLAW_TOKEN, NVIDIA_API_KEY].filter(Boolean)) {
+    for (const candidate of new Set([secret, encodeURIComponent(secret)])) {
+      text = text.split(candidate).join('<redacted>');
+    }
+  }
+  return text
+    .replace(/([?&](?:access_session|token)=)[^&\s"'<>]+/gi, '$1<redacted>')
+    .replace(/((?:CF-Access-Jwt-Assertion|X-OpenClaw-Access-Session)\s*[:=]\s*)[^\s,;}]+/gi, '$1<redacted>')
+    .replace(/(Authorization\s*[:=]\s*Bearer\s+)[^\s,;}]+/gi, '$1<redacted>');
+}
+
+function redactDiagnosticValue(value) {
+  if (typeof value === 'string') return redactDiagnosticText(value);
+  if (value instanceof Error) return redactDiagnosticText(value.stack || value.message);
+  try {
+    return JSON.parse(redactDiagnosticText(JSON.stringify(value)));
+  } catch (_) {
+    return redactDiagnosticText(value);
+  }
+}
+
+function sameOriginCourseControl(courseUrl, launchableUrl) {
+  try {
+    return new URL(courseUrl).origin === new URL(launchableUrl).origin;
+  } catch (_) {
+    return false;
+  }
+}
+
+function isExactDirectProbeRedirect(value, launchableUrl, paths) {
+  const match = String(value).match(
+    /^WebSocket connection to '([^']+)' failed: Error during WebSocket handshake: Unexpected response code: 302$/,
+  );
+  if (!match) return false;
+  try {
+    const candidate = new URL(match[1]);
+    const launchable = new URL(launchableUrl);
+    const prefix = launchable.pathname.replace(/\/+$/, '');
+    return candidate.protocol === 'wss:'
+      && candidate.host === launchable.host
+      && paths.some(pathPart => candidate.pathname === `${prefix}${pathPart}`);
+  } catch (_) {
+    return false;
+  }
+}
+
+function isExpectedTerminalFallbackProbeError(value, config = {}) {
+  const provider = config.provider ?? CLAW_ACCESS_PROVIDER;
+  const session = config.session ?? CLAW_ACCESS_SESSION;
+  const launchableUrl = config.launchableUrl ?? CLAW_URL;
+  if (!['cloudflare', 'pomerium'].includes(provider) || !session || !launchableUrl) return false;
+  return isExactDirectProbeRedirect(value, launchableUrl, ['/ws/terminal']);
+}
+
+const diagnosticLog = console.log.bind(console);
+const diagnosticError = console.error.bind(console);
+console.log = (...values) => diagnosticLog(...values.map(redactDiagnosticValue));
+console.error = (...values) => diagnosticError(...values.map(redactDiagnosticValue));
+
+if (args.includes('--self-test-redaction')) {
+  const sentinel = CLAW_ACCESS_SESSION || 'diagnostic-session-sentinel';
+  const encoded = encodeURIComponent(sentinel);
+  const probe = `wss://relay.invalid/ws?access_session=${encoded}&token=token-sentinel Authorization: Bearer bearer-sentinel`;
+  const redacted = redactDiagnosticText(probe);
+  if (redacted.includes(sentinel) || redacted.includes(encoded) || redacted.includes('token-sentinel') || redacted.includes('bearer-sentinel')) {
+    throw new Error('diagnostic redaction self-test failed');
+  }
+  console.log('diagnostic redaction self-test: PASS');
+  process.exit(0);
+}
+
+if (args.includes('--self-test-access-boundary')) {
+  const sameOrigin = sameOriginCourseControl(
+    'https://nemoclaw.example.test/nemoclaw/03a-kickstart.html',
+    'https://nemoclaw.example.test',
+  );
+  const crossOrigin = sameOriginCourseControl(
+    'https://course.example.test/nemoclaw/03a-kickstart.html',
+    'https://nemoclaw.example.test',
+  );
+  const lookalike = sameOriginCourseControl(
+    'https://nemoclaw.example.test.attacker.invalid/nemoclaw/03a-kickstart.html',
+    'https://nemoclaw.example.test',
+  );
+  if (!sameOrigin || crossOrigin || lookalike) {
+    throw new Error('access boundary self-test failed');
+  }
+  console.log('access boundary self-test: PASS');
+  process.exit(0);
+}
+
+if (args.includes('--self-test-direct-fallback')) {
+  const expected = "WebSocket connection to 'wss://nemoclaw.example.test/ws/terminal?cmd=probe' failed: Error during WebSocket handshake: Unexpected response code: 302";
+  const config = {
+    provider: 'pomerium',
+    session: 'session-sentinel',
+    launchableUrl: 'https://nemoclaw.example.test',
+  };
+  const mutations = [
+    expected.replace('nemoclaw.example.test/', 'nemoclaw.example.test.attacker.invalid/'),
+    expected.replace('/ws/terminal', '/cli/gateway'),
+    expected.replace('code: 302', 'code: 401'),
+  ];
+  if (!isExpectedTerminalFallbackProbeError(expected, config)
+      || !isExpectedTerminalFallbackProbeError(expected, { ...config, provider: 'cloudflare' })
+      || mutations.some(value => isExpectedTerminalFallbackProbeError(value, config))
+      || isExpectedTerminalFallbackProbeError(expected, { ...config, provider: 'auto' })
+      || isExpectedTerminalFallbackProbeError(expected, { ...config, session: '' })) {
+    throw new Error('direct fallback self-test failed');
+  }
+  console.log('direct fallback self-test: PASS');
+  process.exit(0);
+}
+
+let pw;
+try {
+  pw = require('/usr/lib/node_modules/openclaw/node_modules/playwright-core');
+} catch (_) {
+  pw = require('playwright-core');
+}
 
 // Locate the chromium-headless-shell binary.
 // The install path moves between playwright versions, so glob the known roots instead of hardcoding one.
@@ -283,6 +404,23 @@ function findChrome() {
 
   const errors = [];
   const resourceErrors = [];
+  const resourceEvents = [];
+  let resourceEventOrder = 0;
+  let activeCell = null;
+  function requestMetadata(req) {
+    const raw = req.postData() || '';
+    let body = null;
+    try { body = raw ? JSON.parse(raw) : null; } catch (_) {}
+    return {
+      cellIndex: activeCell?.index ?? null,
+      cellKind: activeCell?.kind ?? null,
+      requestBytes: Buffer.byteLength(raw),
+      model: body && typeof body.model === 'string' ? body.model : null,
+      messageCount: body && Array.isArray(body.messages) ? body.messages.length : null,
+      maxTokens: body && (body.max_tokens ?? body.maxTokens ?? null),
+      stream: body ? body.stream === true : null,
+    };
+  }
   page.on('console', msg => {
     if (msg.type() !== 'error') return;
     const text = msg.text();
@@ -297,8 +435,17 @@ function findChrome() {
     // HTTP error responses remain visible through the response listener below.
     if (req.method() === 'HEAD' && failure && failure.errorText === 'net::ERR_ABORTED') return;
     resourceErrors.push(`FAILED ${req.url()} ${failure ? failure.errorText : ''}`.trim());
+    resourceEvents.push({
+      order: resourceEventOrder++, kind:'failed', method:req.method(), url:req.url(),
+      errorText:failure?.errorText || '', ...requestMetadata(req),
+    });
   });
   page.on('response', resp => {
+    const req = resp.request();
+    resourceEvents.push({
+      order:resourceEventOrder++, kind:'response', method:req.method(), url:resp.url(),
+      status:resp.status(), ...requestMetadata(req),
+    });
     if (resp.status() >= 400) resourceErrors.push(`${resp.status()} ${resp.url()}`);
   });
   if (process.env.DEBUG_WS) {
@@ -330,9 +477,9 @@ function findChrome() {
     });
   });
 
-  // Cloudflare's direct WebSocket check needs its browser cookie. A manually
-  // supplied Pomerium session intentionally exercises the provider-bound relay.
-  if (CLAW_ACCESS_SESSION && CLAW_URL && CLAW_ACCESS_PROVIDER === 'cloudflare') {
+  // A same-origin launchable control may reuse its Cloudflare browser cookie.
+  // Cross-origin course tests must exercise the learner's tab-scoped relay path.
+  if (CLAW_ACCESS_SESSION && CLAW_URL && CLAW_ACCESS_PROVIDER === 'cloudflare' && sameOriginCourseControl(url, CLAW_URL)) {
     try {
       const host = new URL(CLAW_URL).hostname;
       await page.context().addCookies([{ name: 'CF_Authorization', value: CLAW_ACCESS_SESSION, domain: host, path: '/', secure: true, sameSite: 'None' }]);
@@ -358,7 +505,9 @@ function findChrome() {
     } catch (_) {}
   }, {
     apiUrl: DIRECT_API_URL,
-    useIframeProxy: assistantArtifacts && ['127.0.0.1', 'localhost'].includes(new URL(url).hostname) && DIRECT_API_URL === 'https://integrate.api.nvidia.com/v1',
+    useIframeProxy: !renderOnly && !gatewayOnly &&
+      ['127.0.0.1', 'localhost'].includes(new URL(url).hostname) &&
+      DIRECT_API_URL === 'https://integrate.api.nvidia.com/v1',
   });
 
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
@@ -662,46 +811,81 @@ function findChrome() {
     process.exit(passed ? 0 : 1);
   }
 
-  // Inject credentials after the probe widget mounts, or it clears them.
-  // Pomerium can use either a directly detected browser session or the same
-  // tab-scoped, provider-bound fallback exposed by Module 3a.
+  // Drive Module 3a's visible four-route connection audit when present. Other
+  // lessons retain direct registry setup because they depend on Module 3a.
+  const acceptedAuditErrors = new Set();
   if (CLAW_URL && (CLAW_TOKEN || CLAW_ACCESS_PROVIDER === 'pomerium' || CLAW_ACCESS_SESSION)) {
-    const injected = await page.evaluate(async ([u, t, provider, session]) => {
-      const shared = await import(new URL('./scripts/_shared.js', location.href).href);
-      if (!t && provider === 'pomerium' && !session) {
-        shared.setOpenClawConnection({ rawUrl: u, accessProvider: provider, accessSession: '' });
-        const metadata = await shared.openclawLoopbackProbe('/api/agent', { baseUrl: u });
-        t = shared.gatewayTokenFromAgentMetadata(metadata.json);
-        if (!t) throw new Error('agent metadata omitted a gateway token');
+    const audit = page.locator('.claw-connection-audit');
+    if (await audit.count()) {
+      const beforeAuditErrors = errors.length;
+      await audit.locator('.claw-url').fill(CLAW_URL);
+      await audit.locator('.claw-access-session').fill(CLAW_ACCESS_SESSION);
+      await audit.locator('.claw-audit-run').click();
+      await page.waitForFunction(() => {
+        const root = document.querySelector('.claw-connection-audit');
+        return root && ['succeeded', 'failed'].includes(root.dataset.state);
+      }, null, { timeout: 90000 });
+      const auditResult = await audit.evaluate(root => ({
+        state: root.dataset.state,
+        summary: root.querySelector('.claw-audit-summary')?.textContent?.trim() || '',
+        checks: [...root.querySelectorAll('.claw-audit-step')].map(step => ({
+          id: step.dataset.step,
+          status: step.dataset.status,
+        })),
+      }));
+      if (auditResult.state !== 'succeeded') {
+        throw new Error(`visible connection audit failed: ${JSON.stringify(auditResult)}`);
       }
-      shared.setOpenClawConnection({ rawUrl: u, token: t, accessProvider: provider, accessSession: session });
-      return { token: !!t, accessSessionStored: !!shared.getOpenClawConnection().accessSession };
-    }, [CLAW_URL, CLAW_TOKEN, CLAW_ACCESS_PROVIDER, CLAW_ACCESS_SESSION]);
-    console.log('CREDS: injected', CLAW_URL,
-      CLAW_ACCESS_PROVIDER === 'pomerium'
-        ? (injected.accessSessionStored
-          ? '(Pomerium fallback session is tab-scoped)'
-          : '(Pomerium browser session will be detected directly)')
-        : (injected.accessSessionStored ? '(Cloudflare relay session is tab-scoped)' : ''));
+      for (const error of errors.slice(beforeAuditErrors)) {
+        if (isExactDirectProbeRedirect(error, CLAW_URL, ['/cli/gateway', '/ws/terminal'])) {
+          acceptedAuditErrors.add(error);
+        }
+      }
+      console.log('CONNECTION_AUDIT:', JSON.stringify(auditResult));
+    } else {
+      const injected = await page.evaluate(async ([u, t, provider, session]) => {
+        const shared = await import(new URL('./scripts/_shared.js', location.href).href);
+        if (!t && provider === 'pomerium' && !session) {
+          shared.setOpenClawConnection({ rawUrl: u, accessProvider: provider, accessSession: '' });
+          const metadata = await shared.openclawLoopbackProbe('/api/agent', { baseUrl: u });
+          t = shared.gatewayTokenFromAgentMetadata(metadata.json);
+          if (!t) throw new Error('agent metadata omitted a gateway token');
+        }
+        shared.setOpenClawConnection({ rawUrl: u, token: t, accessProvider: provider, accessSession: session });
+        return { token: !!t, accessSessionStored: !!shared.getOpenClawConnection().accessSession };
+      }, [CLAW_URL, CLAW_TOKEN, CLAW_ACCESS_PROVIDER, CLAW_ACCESS_SESSION]);
+      console.log('CREDS: injected', CLAW_URL,
+        CLAW_ACCESS_PROVIDER === 'pomerium'
+          ? (injected.accessSessionStored
+            ? '(Pomerium fallback session is tab-scoped)'
+            : '(Pomerium browser session will be detected directly)')
+          : (injected.accessSessionStored ? '(Cloudflare relay session is tab-scoped)' : ''));
+    }
   } else {
     console.log('CREDS: none (gateway nodes will short-circuit on the probe guard)');
   }
 
-  // Run page-level flows one at a time. Nodes are sequential inside each CanvasFlow,
-  // but clicking every flow together races recovery/session cleanup against chat or cron work.
-  const flowCount = await page.locator('.cf-btn-run').count();
-  const flowRuns = [];
-  console.log('FLOWS:', flowCount);
+  // Run every learner cell in document order. A RunCell may prepare state for a
+  // later CanvasFlow, so grouping by widget type changes the authored exercise.
+  const runnableSelector = '.cf-btn-run,.rc-run';
+  const runnableCount = await page.locator(runnableSelector).count();
+  const cellRuns = [];
+  console.log('RUNNABLE_CELLS:', runnableCount);
   let settled = true;
-  for (let index = 0; index < flowCount; index++) {
+  for (let index = 0; index < runnableCount; index++) {
     const metadata = await page.evaluate(i => {
-      const button = document.querySelectorAll('.cf-btn-run')[i];
+      const button = document.querySelectorAll('.cf-btn-run,.rc-run')[i];
       const flow = button?.closest('.cf-wrap');
-      const source = [...(flow?.querySelectorAll('textarea.cf-panel-code') || [])]
-        .map(textarea => textarea.value || textarea.textContent || '')
-        .join('\n');
+      const runCell = button?.closest('.rc-card');
+      const source = flow
+        ? [...flow.querySelectorAll('textarea.cf-panel-code')]
+            .map(textarea => textarea.value || textarea.textContent || '').join('\n')
+        : (runCell?.querySelector('textarea.rc-code')?.value || '');
       return {
-        label: (flow?.querySelector('.cf-label')?.textContent || `flow ${i + 1}`).trim(),
+        kind: flow ? 'canvas-flow' : 'run-cell',
+        label: (flow?.querySelector('.cf-label')?.textContent ||
+          runCell?.querySelector('.rc-label')?.textContent || `cell ${i + 1}`).trim(),
+        disabled: !!button?.disabled,
         expectsGateway: /\bopenclawGatewayWsUrl\b|\bopenclawChat\b|\/cli\/gateway/.test(source),
       };
     }, index);
@@ -710,23 +894,41 @@ function findChrome() {
       resOk: ws.resOk, errors: ws.errors, agentFrames: ws.agentFrames,
       toolStarts: ws.toolStarts.length, cmdEnds: ws.cmdEnds.length, chatFinals: ws.chatFinals,
     };
+    if (metadata.disabled) {
+      cellRuns.push({ index, ...metadata, settled:false, status:'disabled before execution', runtimeError:'', gatewayOk:false, ws:{} });
+      settled = false;
+      continue;
+    }
     // Some flows live inside collapsed Guided-mode sections. Programmatic click keeps
     // full-course auditing independent of the learner's current disclosure preference.
-    await page.evaluate(i => document.querySelectorAll('.cf-btn-run')[i]?.click(), index);
+    activeCell = { index, kind:metadata.kind };
+    await page.evaluate(i => document.querySelectorAll('.cf-btn-run,.rc-run')[i]?.click(), index);
+    let runSettled = true;
     try {
-      await page.waitForFunction(i => {
-        const button = document.querySelectorAll('.cf-btn-run')[i];
+      await page.waitForFunction(({ i, selector }) => {
+        const button = document.querySelectorAll(selector)[i];
         const flow = button?.closest('.cf-wrap');
-        const status = (flow?.querySelector('.cf-status-bar')?.textContent || '').trim();
-        return !!button && !flow?.querySelector('.cf-panel.running') && !!status;
-      }, index, { timeout: 240000 });
+        if (flow) {
+          const status = (flow.querySelector('.cf-status-bar')?.textContent || '').trim();
+          return !flow?.querySelector('.cf-panel.running') && !!status;
+        }
+        return !!button && !/stop/i.test(button.textContent || '');
+      }, { i:index, selector:runnableSelector }, { timeout:CELL_TIMEOUT_MS });
     } catch (_) {
+      runSettled = false;
       settled = false;
     }
     const status = await page.evaluate(i => {
-      const button = document.querySelectorAll('.cf-btn-run')[i];
+      const button = document.querySelectorAll('.cf-btn-run,.rc-run')[i];
       const flow = button?.closest('.cf-wrap');
-      return (flow?.querySelector('.cf-status-bar')?.textContent || '').trim();
+      const runCell = button?.closest('.rc-card');
+      return (flow?.querySelector('.cf-status-bar')?.textContent ||
+        runCell?.querySelector('.rc-out')?.textContent || '').trim().slice(0, 500);
+    }, index);
+    const runtimeError = await page.evaluate(i => {
+      const button = document.querySelectorAll('.cf-btn-run,.rc-run')[i];
+      const owner = button?.closest('.cf-wrap,.rc-card');
+      return (owner?.querySelector('.cell-runtime-error,.cf-panel-error')?.textContent || '').trim().slice(0, 500);
     }, index);
     const activity = {
       sockets: ws.sockets - before.sockets,
@@ -742,10 +944,10 @@ function findChrome() {
     const gatewayOk = !metadata.expectsGateway || (
       activity.allFrames > 0 && activity.resOk > 0 && activity.errors === 0
     );
-    flowRuns.push({ index, ...metadata, status, gatewayOk, ws: activity });
-    if (!settled) break;
+    cellRuns.push({ index, ...metadata, settled:runSettled, status, runtimeError, gatewayOk, ws:activity });
+    activeCell = null;
   }
-  console.log('FLOW_RUNS:', JSON.stringify(flowRuns, null, 2));
+  console.log('CELL_RUNS:', JSON.stringify(cellRuns, null, 2));
   console.log('SETTLED:', settled);
 
   // Per-node status: error text + how many <details> blocks rendered (tool trace).
@@ -764,23 +966,54 @@ function findChrome() {
   });
 
   console.log('PAGE_ERRORS:', JSON.stringify(errors));
+  console.log('RESOURCE_ERRORS:', JSON.stringify(resourceErrors));
   console.log('NODE_STATUS:', JSON.stringify(nodeStatus, null, 2));
   console.log('WS_STATS:', JSON.stringify(ws, null, 2));
 
+  const failedResourceEvents = resourceEvents.filter(event => {
+    if (serveStatic && event.kind === 'response' && event.status === 404 &&
+        new URL(event.url).pathname === '/languages.json') return false;
+    return event.kind === 'failed' || (event.kind === 'response' && event.status >= 400);
+  });
+  const recoveredResourceEvents = failedResourceEvents.filter(event => {
+    if (event.kind === 'response' && event.status < 500 && event.status !== 429) return false;
+    return resourceEvents.some(candidate =>
+      candidate.order > event.order && candidate.kind === 'response' &&
+      candidate.method === event.method && candidate.url === event.url &&
+      candidate.status >= 200 && candidate.status < 400);
+  });
+  const recoveredOrders = new Set(recoveredResourceEvents.map(event => event.order));
+  const recoveredUrls = new Set(recoveredResourceEvents.map(event => event.url));
+  const unrecoveredResourceErrors = failedResourceEvents.filter(event => !recoveredOrders.has(event.order));
+  console.log('RECOVERED_TRANSIENTS:', JSON.stringify(recoveredResourceEvents));
+  console.log('UNRECOVERED_RESOURCE_ERRORS:', JSON.stringify(unrecoveredResourceErrors));
+
   const nodeErr = Object.values(nodeStatus).some(v => v.error);
-  const noFlows = flowCount === 0;
-  const hardFail = errors.length > 0 || nodeErr || !settled || noFlows;
+  const cellErr = cellRuns.some(cell => cell.runtimeError);
+  const noRunnableCells = runnableCount === 0;
+  const expectedProbeErrors = errors.filter(error =>
+    acceptedAuditErrors.has(error) || isExpectedTerminalFallbackProbeError(error));
+  const unexpectedErrors = errors.filter(error =>
+    !acceptedAuditErrors.has(error) && !isExpectedTerminalFallbackProbeError(error));
+  const actionableErrors = unexpectedErrors.filter(text => {
+    const cors = text.match(/Access to fetch at '([^']+)'[^]*blocked by CORS policy:[^]*No 'Access-Control-Allow-Origin'/);
+    return !(cors && recoveredUrls.has(cors[1]));
+  });
+  console.log('EXPECTED_ACCESS_PROBE_ERRORS:', expectedProbeErrors.length);
+  console.log('ACTIONABLE_PAGE_ERRORS:', JSON.stringify(actionableErrors));
+  const hardFail = actionableErrors.length > 0 || unrecoveredResourceErrors.length > 0 ||
+    nodeErr || cellErr || !settled || noRunnableCells;
   // Supplying a launchable makes gateway evidence mandatory even when
   // /api/agent fails to discover a token. Otherwise an authentication or relay
   // regression can erase the token and silently disable the live assertion.
   const gatewayExpected = !!CLAW_URL
-    && flowRuns.some(flow => flow.expectsGateway);
+    && cellRuns.some(cell => cell.expectsGateway);
   const gatewayMissing = gatewayExpected
-    && flowRuns.some(flow => flow.expectsGateway && !flow.gatewayOk);
+    && cellRuns.some(cell => cell.expectsGateway && !cell.gatewayOk);
 
-  if (hardFail) console.log('RESULT: FAIL (errors / unsettled nodes / no flows)');
-  else if (gatewayMissing) console.log('RESULT: FAIL (OpenClaw gateway activity missing for a gateway-backed flow). ' + OPENCLAW_BACKUP_HINT);
-  else console.log('RESULT: PASS' + (flowRuns.some(flow => flow.expectsGateway)
+  if (hardFail) console.log('RESULT: FAIL (errors / unsettled or disabled cells / no runnable cells)');
+  else if (gatewayMissing) console.log('RESULT: FAIL (OpenClaw gateway activity missing for a gateway-backed cell). ' + OPENCLAW_BACKUP_HINT);
+  else console.log('RESULT: PASS' + (cellRuns.some(cell => cell.expectsGateway)
     ? ` (${ws.allFrames} gateway frames, ${ws.chatFinals} chat finals, ${ws.toolStarts.length} tool starts)` : ''));
 
   await browser.close();
