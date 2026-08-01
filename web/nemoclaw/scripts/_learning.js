@@ -11,8 +11,11 @@ const DEPTHS = new Set(["guided", "applied", "complete"]);
 const DEPTH_RANK = { guided: 0, applied: 1, complete: 2 };
 const TIER_RANK = { applied: 1, deep: 2 };
 const CODE_DETAILS_SELECTOR = "details.rc-code-det, details.cf-panel-code-det";
+const LESSON_PAGE_RE = /^(0[1-4][a-c]-[^/]+)\.html$/;
+const PROFILE_URL = new URL("../learning-profile.json", import.meta.url);
 let printOpenStates = null;
 let codeObserver = null;
+let profilePromise = null;
 
 function supportsLearningView() {
   if (document.body?.hasAttribute("data-learning-view")) return true;
@@ -22,6 +25,119 @@ function supportsLearningView() {
 
 function storage() {
   try { return window.localStorage; } catch (_) { return null; }
+}
+
+function localeKey() {
+  const lang = document.documentElement.lang.toLowerCase();
+  if (lang.startsWith("pt")) return "pt";
+  if (lang.startsWith("es")) return "es";
+  return "en";
+}
+
+function lessonId() {
+  const page = location.pathname.split("/").pop() || "";
+  return page.match(LESSON_PAGE_RE)?.[1] || "";
+}
+
+function isCompactProfile() {
+  try { return new URLSearchParams(location.search).get("profile") === "compact"; }
+  catch (_) { return false; }
+}
+
+async function loadLearningProfile() {
+  if (!profilePromise) {
+    profilePromise = fetch(PROFILE_URL)
+      .then(response => {
+        if (!response.ok) throw new Error(`learning profile returned ${response.status}`);
+        return response.json();
+      })
+      .then(profile => {
+        if (profile?.schema !== "nemoclaw-learning-profile/1" || !Array.isArray(profile.lessons)) {
+          throw new Error("invalid learning profile");
+        }
+        return profile;
+      });
+  }
+  return profilePromise;
+}
+
+function profileWords() {
+  const locale = localeKey();
+  if (locale === "pt") {
+    return {
+      lesson: "Lição", compact: "Rota prática compacta",
+      compactIntro: "A mesma trilha, objetivos, runtime e evidências, com os detalhes opcionais recolhidos.",
+      compactStart: "Iniciar rota compacta de 2 horas", of: "de",
+    };
+  }
+  if (locale === "es") {
+    return {
+      lesson: "Lección", compact: "Ruta práctica compacta",
+      compactIntro: "La misma ruta, objetivos, runtime y pruebas, con los detalles opcionales cerrados.",
+      compactStart: "Iniciar ruta compacta de 2 horas", of: "de",
+    };
+  }
+  return {
+    lesson: "Lesson", compact: "Compact hands-on path",
+    compactIntro: "The same lessons, objectives, runtime, and evidence with optional detail collapsed.",
+    compactStart: "Start the compact 2-hour path", of: "of",
+  };
+}
+
+function propagateCompactLinks() {
+  if (!isCompactProfile()) return;
+  document.querySelectorAll('a[href]').forEach(link => {
+    let url;
+    try { url = new URL(link.href, location.href); } catch (_) { return; }
+    if (url.origin !== location.origin || !LESSON_PAGE_RE.test(url.pathname.split("/").pop() || "")) return;
+    url.searchParams.set("profile", "compact");
+    link.href = url.href;
+  });
+}
+
+function mountProfileHome(profile) {
+  if (document.querySelector(".learning-profile-entry")) return;
+  const moduleSection = document.querySelector(".module-grid")?.closest(".section");
+  if (!moduleSection) return;
+  const words = profileWords();
+  const section = document.createElement("section");
+  section.className = "learning-profile-entry";
+  section.dataset.learningProfile = "compact";
+  const first = profile.lessons[0];
+  const href = new URL(`${first.id}.html`, location.href);
+  href.searchParams.set("profile", "compact");
+  section.innerHTML = `
+    <div>
+      <h2>${words.compact}</h2>
+      <p>${words.compactIntro}</p>
+    </div>
+    <a class="learning-profile-start" href="${href.href}">${words.compactStart}</a>`;
+  moduleSection.before(section);
+}
+
+function mountLessonPosition(profile) {
+  const id = lessonId();
+  const lesson = profile.lessons.find(item => item.id === id);
+  if (!lesson) return;
+  const words = profileWords();
+  const eyebrow = document.querySelector(".hero .eyebrow");
+  const moduleLessons = profile.lessons.filter(item => item.module === lesson.module);
+  const position = moduleLessons.findIndex(item => item.id === lesson.id) + 1;
+  if (eyebrow) {
+    eyebrow.textContent = `Module ${lesson.module} · ${words.lesson} ${position} ${words.of} ${moduleLessons.length}`;
+  }
+  document.documentElement.dataset.learningProfile = isCompactProfile() ? "compact" : "canonical";
+}
+
+async function mountLearningProfile() {
+  try {
+    const profile = await loadLearningProfile();
+    if (lessonId()) mountLessonPosition(profile);
+    else mountProfileHome(profile);
+    propagateCompactLinks();
+  } catch (error) {
+    console.warn("Learning profile unavailable:", error);
+  }
 }
 
 export function readLearningDepth() {
@@ -152,4 +268,5 @@ export function mountLearningView() {
   try { storage()?.setItem(LEARNING_DEPTH_KEY, "guided"); } catch (_) {}
   applyLearningDepth("guided");
   mountHashReveal();
+  void mountLearningProfile();
 }

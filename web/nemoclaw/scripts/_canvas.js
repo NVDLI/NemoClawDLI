@@ -376,8 +376,9 @@ export function mountCanvasFlow(targetSel, opts) {
   `;
   target.appendChild(wrap);
 
-  const setFlowState = (state) => {
+  const setFlowState = state => {
     wrap.dataset.state = state;
+    target.dataset.state = state;
     wrap.setAttribute("aria-busy", state === "running" ? "true" : "false");
   };
   setFlowState("ready");
@@ -1549,7 +1550,7 @@ export function mountRunCell(targetSel, opts) {
       </details>
       <div class="rc-out cell-output-panel" role="status" aria-live="polite" aria-atomic="true">empty until you Run</div>
     </div>`;
-  const setCellState = (state) => {
+  const setCellState = state => {
     target.dataset.state = state;
     target.setAttribute("aria-busy", state === "running" ? "true" : "false");
     const card = target.querySelector(".rc-card");

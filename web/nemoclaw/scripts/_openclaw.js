@@ -403,6 +403,7 @@ export async function runOpenClawConnectionAudit({
     accessProvider: provider,
     accessSession,
   });
+  setOpenClawWsRelayEnabled(false);
 
   const results = [];
   const notify = step => {
@@ -500,16 +501,22 @@ export async function runOpenClawConnectionAudit({
     },
   }, async () => {
     const attempts = [];
+    let relaySelected = false;
     let outcome = await probeOpenClawGatewayConnection({ signal, relayWebSocket: false });
     attempts.push(outcome);
     if (!outcome.ok && relayGatewayRoute) {
+      relaySelected = true;
       outcome = await probeOpenClawGatewayConnection({ signal, relayWebSocket: true });
       attempts.push(outcome);
     }
+    if (outcome.ok) setOpenClawWsRelayEnabled(relaySelected);
     return {
       ok: outcome.ok,
       error: outcome.error || "",
-      response: { attempts },
+      response: {
+        attempts,
+        selectedTransport: relaySelected ? "hosted relay" : "direct browser",
+      },
     };
   });
 
@@ -566,6 +573,9 @@ export async function runOpenClawConnectionAudit({
       relayWebSocket: null,
     });
     const ok = String(response.output || "").includes(terminalMarker);
+    if (ok && response.transport === "approved-provider-relay-terminal") {
+      setOpenClawWsRelayEnabled(true);
+    }
     return {
       ok,
       error: ok ? "" : "Terminal opened but did not return the connection marker.",

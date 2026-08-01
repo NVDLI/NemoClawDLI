@@ -5,7 +5,7 @@
 
 import {
   DEFAULT_EMBEDDING_MODEL, fetchRetry, getEmbeddingConfig, getEmbeddingKey,
-  isDefaultModelApiBaseUrl, modelRequestCredentials, _apiHeaders,
+  getModelRequestPolicy, isDefaultModelApiBaseUrl, modelRequestCredentials, _apiHeaders,
 } from "./_shared.js";
 
 // Embed one or more strings and always return a list of vectors.
@@ -30,8 +30,13 @@ export async function embed(input, { model = null, inputType = "query" } = {}) {
   };
   const r = await fetchRetry(`${cfg.url}/embeddings`, {
     method: "POST", headers, body: JSON.stringify(body), credentials: modelRequestCredentials(cfg.url),
-  });
-  if (!r.ok) throw new Error(`embeddings ${r.status}: ${(await r.text()).slice(0, 300)}`);
+  }, getModelRequestPolicy());
+  if (!r.ok) {
+    const reason = r.status === 429 ? "rate limited" :
+      r.status === 401 || r.status === 403 ? "credential rejected" :
+      r.status >= 500 ? "upstream unavailable or starting" : "request rejected";
+    throw new Error(`Embedding request failed: HTTP ${r.status} (${reason}). Check Request handling in course setup.`);
+  }
   const data = await r.json();
   return data.data.map(d => d.embedding);
 }

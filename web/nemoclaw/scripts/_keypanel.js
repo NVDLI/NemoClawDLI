@@ -5,9 +5,10 @@
 import {
   DEFAULT_MODEL, DEFAULT_MODEL_API_BASE_URL, browserChatFetch, chat,
   getEmbeddingApiBaseUrl, getEmbeddingKey, getEmbeddingModelId, getKey, getModelApiBaseUrl, getModelId,
-  hasKey, normalizeModelApiBaseUrl, normalizeModelId, setEmbeddingApiBaseUrl, setEmbeddingKey,
+  getModelRequestPolicy, hasKey, normalizeModelApiBaseUrl, normalizeModelId,
+  normalizeModelRequestRetries, normalizeModelRequestTimeoutMs, setEmbeddingApiBaseUrl, setEmbeddingKey,
   setEmbeddingModelId, setKey, setModelApiBaseUrl, setModelId, updateKeyPill,
-  iframeProxyModeEnabled, setIframeProxyMode,
+  iframeProxyModeEnabled, setIframeProxyMode, setModelRequestRetries, setModelRequestTimeoutMs,
 } from "./_shared.js";
 
 const BUILD_SIGNUP_URL = "https://build.nvidia.com/?ncid=ref-dli-146986";
@@ -37,6 +38,8 @@ export function mountKeyPanel(container, opts = {}) {
     const customEndpoint = modelApiBaseUrl !== DEFAULT_MODEL_API_BASE_URL;
     const filePreview = globalThis.location?.protocol === "file:";
     const proxyChecked = !customEndpoint && iframeProxyModeEnabled();
+    const requestPolicy = getModelRequestPolicy();
+    const timeoutSeconds = Math.round(requestPolicy.timeoutMs / 1000);
     if (keySaved) {
       el.innerHTML = `<div class="key-panel key-panel-saved">
         <span class="key-saved-label">&#10003; API key available in this tab</span>
@@ -46,6 +49,16 @@ export function mountKeyPanel(container, opts = {}) {
           <input type="checkbox" class="iframe-proxy-toggle" ${proxyChecked ? "checked" : ""} ${customEndpoint || filePreview ? "disabled" : ""}/>
           ${customEndpoint ? "Custom endpoint uses direct browser requests" : filePreview ? "Local file preview uses the NVIDIA DLI browser relay" : "Use the NVIDIA DLI browser relay"}
         </label>
+        <details class="request-settings">
+          <summary>Request handling: wait ${timeoutSeconds}s · ${requestPolicy.retries} automatic ${requestPolicy.retries === 1 ? "retry" : "retries"}</summary>
+          <p>Failures stay visible. Retries apply only to network failures, HTTP 429, and transient 5xx responses.</p>
+          <label>Wait for response headers or the next stream chunk (seconds)</label>
+          <input type="number" class="request-timeout" min="5" max="300" step="5" value="${timeoutSeconds}"/>
+          <label>Automatic retries before streaming starts</label>
+          <input type="number" class="request-retries" min="0" max="5" step="1" value="${requestPolicy.retries}"/>
+          <button class="btn request-save-btn" type="button">Save request handling</button>
+          <span class="request-status" role="status"></span>
+        </details>
         <button class="btn key-change-btn">Change</button>
       </div>`;
       const toggle = el.querySelector(".iframe-proxy-toggle");
@@ -54,7 +67,18 @@ export function mountKeyPanel(container, opts = {}) {
         const pill = document.getElementById("key-status");
         if (pill) updateKeyPill(pill);
       };
-      el.querySelector(".btn").onclick = () => {
+      el.querySelector(".request-save-btn").onclick = () => {
+        const status = el.querySelector(".request-status");
+        try {
+          setModelRequestTimeoutMs(Number(el.querySelector(".request-timeout").value) * 1000);
+          setModelRequestRetries(Number(el.querySelector(".request-retries").value));
+          status.textContent = "Saved. Rerun the cell.";
+          setTimeout(_draw, 900);
+        } catch (error) {
+          status.textContent = error.message;
+        }
+      };
+      el.querySelector(".key-change-btn").onclick = () => {
         setKey("");
         const pill = document.getElementById("key-status");
         if (pill) updateKeyPill(pill);
@@ -87,6 +111,14 @@ export function mountKeyPanel(container, opts = {}) {
           <label>Embedding API bearer key</label>
           <input type="password" class="embedding-api-key" placeholder="${getEmbeddingKey() ? "saved separately" : "nvapi-&hellip;"}" autocomplete="off" spellcheck="false"/>
         </details>
+        <details class="request-settings">
+          <summary>Request handling</summary>
+          <p>Failures remain visible. Retries are off by default and apply only before a stream starts.</p>
+          <label>Wait for response headers or the next stream chunk (seconds)</label>
+          <input type="number" class="request-timeout" min="5" max="300" step="5" value="${timeoutSeconds}"/>
+          <label>Automatic retries for network, HTTP 429, or transient 5xx failures</label>
+          <input type="number" class="request-retries" min="0" max="5" step="1" value="${requestPolicy.retries}"/>
+        </details>
         <button class="btn">Save &amp; verify</button>
         <div class="status"></div>
         <p style="margin:.8em 0 0;font-size:.8rem;color:var(--tf,#8a8a8a)">
@@ -100,6 +132,8 @@ export function mountKeyPanel(container, opts = {}) {
       const embeddingEndpointInput = el.querySelector(".embedding-api-base-url");
       const embeddingModelInput = el.querySelector(".embedding-model-id");
       const embeddingKeyInput = el.querySelector(".embedding-api-key");
+      const timeoutInput = el.querySelector(".request-timeout");
+      const retriesInput = el.querySelector(".request-retries");
       const status = el.querySelector(".status");
       const btn = el.querySelector(".btn");
       const toggle = el.querySelector(".iframe-proxy-toggle");
@@ -114,12 +148,14 @@ export function mountKeyPanel(container, opts = {}) {
       syncEndpointMode();
       async function save() {
         const key = _clean(input.value);
-        let endpoint, model, embeddingEndpoint, embeddingModel;
+        let endpoint, model, embeddingEndpoint, embeddingModel, timeoutMs, retries;
         try {
           endpoint = normalizeModelApiBaseUrl(endpointInput.value);
           model = normalizeModelId(modelInput.value);
           embeddingEndpoint = normalizeModelApiBaseUrl(embeddingEndpointInput.value);
           embeddingModel = normalizeModelId(embeddingModelInput.value, getEmbeddingModelId());
+          timeoutMs = normalizeModelRequestTimeoutMs(Number(timeoutInput.value) * 1000);
+          retries = normalizeModelRequestRetries(Number(retriesInput.value));
         }
         catch (e) { _setState("failed"); status.className = "status err"; status.textContent = e.message; return; }
         const defaultEndpoint = endpoint === DEFAULT_MODEL_API_BASE_URL;
@@ -151,7 +187,10 @@ export function mountKeyPanel(container, opts = {}) {
         const previousEmbeddingModel = getEmbeddingModelId();
         const previousEmbeddingKey = getEmbeddingKey();
         const previousProxyMode = iframeProxyModeEnabled();
+        const previousRequestPolicy = getModelRequestPolicy();
         try {
+          setModelRequestTimeoutMs(timeoutMs);
+          setModelRequestRetries(retries);
           if (!defaultEndpoint) {
             const response = await browserChatFetch()(endpoint + "/models", {
               headers: { Authorization: "Bearer " + key },
@@ -212,6 +251,8 @@ export function mountKeyPanel(container, opts = {}) {
           setEmbeddingModelId(previousEmbeddingModel);
           setEmbeddingKey(previousEmbeddingKey || "");
           setIframeProxyMode(previousProxyMode);
+          setModelRequestTimeoutMs(previousRequestPolicy.timeoutMs);
+          setModelRequestRetries(previousRequestPolicy.retries);
           _setState("failed");
           status.className = "status err"; status.textContent = `Connection failed: ${e.message}`;
         }

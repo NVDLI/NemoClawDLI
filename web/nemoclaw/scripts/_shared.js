@@ -19,6 +19,10 @@ const MODEL_ID_KEY = "nemoclaw_model_id_v1";
 const EMBEDDING_API_BASE_URL_KEY = "nemoclaw_embedding_api_base_url_v1";
 const EMBEDDING_MODEL_ID_KEY = "nemoclaw_embedding_model_id_v1";
 const EMBEDDING_API_KEY = "nemoclaw_embedding_api_key_v1";
+const MODEL_REQUEST_TIMEOUT_KEY = "nemoclaw_model_request_timeout_ms_v1";
+const MODEL_REQUEST_RETRIES_KEY = "nemoclaw_model_request_retries_v1";
+export const DEFAULT_MODEL_REQUEST_TIMEOUT_MS = 60000;
+export const DEFAULT_MODEL_REQUEST_RETRIES = 0;
 // Billing attribution is sent on direct and iframe-proxy calls.
 const BILLING_INVOKE_ORIGIN = "dli-nemoclaw-web";
 // Web-cell model contract. All repository explorers delegate to this one default.
@@ -284,6 +288,60 @@ export function setEmbeddingKey(k) {
   } catch (_) {}
 }
 
+export function normalizeModelRequestTimeoutMs(raw) {
+  const value = Number(raw);
+  if (!Number.isFinite(value)) throw new Error("Request wait must be a number");
+  const milliseconds = Math.round(value);
+  if (milliseconds < 5000 || milliseconds > 300000) {
+    throw new Error("Request wait must be between 5 and 300 seconds");
+  }
+  return milliseconds;
+}
+
+export function getModelRequestTimeoutMs() {
+  try {
+    const saved = localStorage.getItem(MODEL_REQUEST_TIMEOUT_KEY);
+    return saved === null ? DEFAULT_MODEL_REQUEST_TIMEOUT_MS : normalizeModelRequestTimeoutMs(saved);
+  } catch (_) { return DEFAULT_MODEL_REQUEST_TIMEOUT_MS; }
+}
+
+export function setModelRequestTimeoutMs(raw) {
+  const value = normalizeModelRequestTimeoutMs(raw);
+  try {
+    if (value === DEFAULT_MODEL_REQUEST_TIMEOUT_MS) localStorage.removeItem(MODEL_REQUEST_TIMEOUT_KEY);
+    else localStorage.setItem(MODEL_REQUEST_TIMEOUT_KEY, String(value));
+  } catch (_) {}
+  return value;
+}
+
+export function normalizeModelRequestRetries(raw) {
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 0 || value > 5) {
+    throw new Error("Automatic retries must be a whole number from 0 to 5");
+  }
+  return value;
+}
+
+export function getModelRequestRetries() {
+  try {
+    const saved = localStorage.getItem(MODEL_REQUEST_RETRIES_KEY);
+    return saved === null ? DEFAULT_MODEL_REQUEST_RETRIES : normalizeModelRequestRetries(saved);
+  } catch (_) { return DEFAULT_MODEL_REQUEST_RETRIES; }
+}
+
+export function setModelRequestRetries(raw) {
+  const value = normalizeModelRequestRetries(raw);
+  try {
+    if (value === DEFAULT_MODEL_REQUEST_RETRIES) localStorage.removeItem(MODEL_REQUEST_RETRIES_KEY);
+    else localStorage.setItem(MODEL_REQUEST_RETRIES_KEY, String(value));
+  } catch (_) {}
+  return value;
+}
+
+export function getModelRequestPolicy() {
+  return { retries: getModelRequestRetries(), timeoutMs: getModelRequestTimeoutMs() };
+}
+
 export function isDefaultModelApiBaseUrl(url) {
   try {
     const host = new URL(url, location.href).hostname;
@@ -308,8 +366,11 @@ export function browserChatFetch() {
     for (const k of [...h.keys()]) { if (k.startsWith("x-stainless")) h.delete(k); }
     if (billingAttributionEnabled(url)) h.set("X-BILLING-INVOKE-ORIGIN", BILLING_INVOKE_ORIGIN);
     else h.delete("X-BILLING-INVOKE-ORIGIN");
-    const r = await fetchRetry(url, { ...init, headers: h, credentials: modelRequestCredentials(url) },
-      { retries: 2, backoffMs: 250, timeoutMs: 60000 });
+    const r = await fetchRetry(
+      url,
+      { ...init, headers: h, credentials: modelRequestCredentials(url) },
+      getModelRequestPolicy(),
+    );
     // Wrap non-JSON HTTP errors so the SDK surfaces the real status and body.
     if (!r.ok && !(r.headers.get("content-type") || "").toLowerCase().includes("application/json")) {
       const txt = await r.text().catch(() => "");
@@ -330,39 +391,66 @@ export function requireKey(returnUrl) {
   });
 }
 
-// Retry a fetch on transient failure (network error, 502 / 503 / 504 / 524), backing off 250ms, 500ms, 1000ms; streaming calls retry only the headers phase.
-// `timeoutMs` aborts the fetch when no headers arrive, so a Cloudflare 524 cannot hang the cell for 100+ seconds.
-async function fetchRetry(url, opts = {}, { retries = 2, backoffMs = 250, timeoutMs = 60000 } = {}) {
+export function retryDelayMs(response, backoffMs, attempt, timeoutMs, nowMs = Date.now()) {
+  const fallback = backoffMs * (2 ** attempt);
+  const raw = response?.headers?.get?.("retry-after");
+  if (!raw) return Math.min(fallback, timeoutMs);
+  const seconds = Number(raw);
+  let requested;
+  if (Number.isFinite(seconds) && seconds >= 0) requested = seconds * 1000;
+  else {
+    const date = Date.parse(raw);
+    requested = Number.isFinite(date) ? Math.max(0, date - nowMs) : fallback;
+  }
+  return Math.min(Math.round(requested), timeoutMs);
+}
+
+// Retry only when the learner opts in. Network failures, 429, and transient 5xx
+// are eligible; Retry-After is honored within the same bounded wait policy.
+// Streaming callers retry only the response-headers phase.
+async function fetchRetry(url, opts = {}, {
+  retries = DEFAULT_MODEL_REQUEST_RETRIES,
+  backoffMs = 500,
+  timeoutMs = DEFAULT_MODEL_REQUEST_TIMEOUT_MS,
+} = {}) {
   /* @doc <code>helpers.fetchRetry(url, opts)</code> ::
-       Like <code>helpers.fetch</code>, but retries up to 2 times on 5xx or network errors
-       with exponential backoff (250 / 500 / 1000 ms). Use it when calling an endpoint by
-       hand (e.g. the Responses API) and you want resilience without writing the loop. */
+       Like <code>helpers.fetch</code>, with an optional bounded third argument such as
+       <code>{ retries: 2, timeoutMs: 120000 }</code>. It honors <code>Retry-After</code>
+       for HTTP 429 and otherwise reports the final network or HTTP result. */
+  retries = normalizeModelRequestRetries(retries);
+  timeoutMs = Math.round(Number(timeoutMs));
+  if (!Number.isFinite(timeoutMs) || timeoutMs < 1 || timeoutMs > 300000) {
+    throw new Error("Request timeout must be between 1 millisecond and 300 seconds");
+  }
+  if (opts.signal?.aborted) {
+    throw opts.signal.reason || new DOMException("stopped", "AbortError");
+  }
   let lastErr = null;
   for (let attempt = 0; attempt <= retries; attempt++) {
     // Stitch in an AbortController so we don't sit on a half-dead socket.
     // Honour any external signal the caller passed in too.
     const ac = new AbortController();
-    const onAbort = () => ac.abort();
+    const onAbort = () => ac.abort(opts.signal?.reason);
     if (opts.signal) opts.signal.addEventListener("abort", onAbort, { once: true });
     const timer = setTimeout(() => ac.abort(new Error(`timeout after ${timeoutMs}ms`)), timeoutMs);
     try {
       const r = await fetch(url, { ...opts, signal: ac.signal });
       clearTimeout(timer);
+      opts.signal?.removeEventListener("abort", onAbort);
       if (r.ok) return r;
-      // 5xx (including Cloudflare's 524 origin-timeout) is transient upstream.
-      // 4xx is the caller's fault, don't retry.
-      if (r.status >= 500 && r.status < 600 && attempt < retries) {
-        await new Promise(res => setTimeout(res, backoffMs * (2 ** attempt)));
+      const retryable = r.status === 429 || (r.status >= 500 && r.status < 600);
+      if (retryable && attempt < retries) {
+        await delay(retryDelayMs(r, backoffMs, attempt, timeoutMs), opts.signal);
         continue;
       }
-      return r;  // 4xx or a final 5xx. The caller handles these.
+      return r;
     } catch (e) {
       clearTimeout(timer);
+      opts.signal?.removeEventListener("abort", onAbort);
       lastErr = e;
-      // Aborted by caller? Don't retry, because they asked us to stop.
       if (opts.signal && opts.signal.aborted) throw e;
       if (attempt < retries) {
-        await new Promise(res => setTimeout(res, backoffMs * (2 ** attempt)));
+        await delay(Math.min(backoffMs * (2 ** attempt), timeoutMs), opts.signal);
         continue;
       }
       if (globalThis.location?.protocol === "file:" && billingAttributionEnabled(url)) {
@@ -372,12 +460,32 @@ async function fetchRetry(url, opts = {}, { retries = 2, backoffMs = 250, timeou
           "http://localhost:8000/nemoclaw/. " + (e?.message || String(e))
         );
       }
-      throw e;
+      const attempts = attempt + 1;
+      throw new Error(
+        `Network or endpoint failure after ${attempts} ${attempts === 1 ? "attempt" : "attempts"} ` +
+        `(wait limit ${Math.round(timeoutMs / 1000)}s): ${e?.message || String(e)}. ` +
+        "Check the endpoint and browser access, then change Request handling in course setup if needed.",
+        { cause: e },
+      );
     }
   }
   throw lastErr || new Error("fetchRetry exhausted");
 }
 export { fetchRetry };
+
+function modelHttpFailure(resp) {
+  const policy = getModelRequestPolicy();
+  let reason = "The model route rejected the request.";
+  if (resp.status === 429) reason = "The model route is rate limited; Retry-After was honored when a retry remained.";
+  else if (resp.status === 401 || resp.status === 403) reason = "The model credential was rejected or lacks access.";
+  else if (resp.status === 404) reason = "The model endpoint or API route was not found.";
+  else if (resp.status >= 500) reason = "The relay or upstream model failed or is still starting.";
+  return new Error(
+    `Model request failed: HTTP ${resp.status}${resp.statusText ? ` ${resp.statusText}` : ""}. ${reason} ` +
+    `Request handling is ${Math.round(policy.timeoutMs / 1000)}s with ${policy.retries} automatic ` +
+    `${policy.retries === 1 ? "retry" : "retries"}; change it in course setup and rerun the cell.`,
+  );
+}
 
 // Headers shared by model requests. NVIDIA routes receive course attribution; a learner-selected
 // compatible endpoint receives only standard content and authorization headers.
@@ -410,21 +518,31 @@ export async function chat({ messages, tools = null, model = null, temperature =
     body: JSON.stringify(body),
     credentials: modelRequestCredentials(cfg.url),
     signal,
-  });
+  }, getModelRequestPolicy());
   if (!resp.ok) {
-    const txt = await resp.text();
-    // 524 is Cloudflare's origin-timeout.
-    // The generic "524: <html>..." body does not help a student debug their cell, so surface it explicitly with next steps.
-    if (resp.status === 524) {
-      throw new Error(
-        "524 origin timeout: the model took too long to respond (Cloudflare cut the connection). " +
-        "This usually clears on retry; if it persists, the upstream model may be cold-starting. " +
-        "Try again in 10–20 seconds."
-      );
-    }
-    throw new Error(`${resp.status}: ${txt.slice(0, 400)}`);
+    throw modelHttpFailure(resp);
   }
   return resp.json();
+}
+
+export async function readModelStreamChunk(reader, timeoutMs) {
+  let timer;
+  try {
+    return await Promise.race([
+      reader.read(),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(
+          `Model stream stopped producing data for ${Math.round(timeoutMs / 1000)}s. ` +
+          "Change Request handling in course setup, then rerun the cell.",
+        )), timeoutMs);
+      }),
+    ]);
+  } catch (error) {
+    try { await reader.cancel(error); } catch (_) {}
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // Streaming wrapper. `onChunk(text)` receives each user-facing content delta.
@@ -443,6 +561,7 @@ export async function chatStream(opts, onChunk, extra = {}) {
   const onMeta = extra.onMeta || null;
   const cfg = await getConfig();
   const useModel = isDefaultModelApiBaseUrl(cfg.url) ? (model || cfg.model) : cfg.model;
+  const requestPolicy = getModelRequestPolicy();
 
   const headers = _apiHeaders(cfg);
 
@@ -454,16 +573,9 @@ export async function chatStream(opts, onChunk, extra = {}) {
 
   const resp = await fetchRetry(`${cfg.url}/chat/completions`, {
     method: "POST", headers, body: JSON.stringify(body), credentials: modelRequestCredentials(cfg.url), signal,
-  });
+  }, requestPolicy);
   if (!resp.ok) {
-    const txt = await resp.text();
-    if (resp.status === 524) {
-      throw new Error(
-        "524 origin timeout (streaming): the model didn't start responding in time. " +
-        "Try again in 10–20 seconds. This usually clears on retry."
-      );
-    }
-    throw new Error(`${resp.status}: ${txt.slice(0, 400)}`);
+    throw modelHttpFailure(resp);
   }
 
   const reader = resp.body.getReader();
@@ -490,7 +602,7 @@ export async function chatStream(opts, onChunk, extra = {}) {
   // Boundary-safe SSE frame parser: consume only complete "data: ...\n\n" frames.
   // Partial frames stay buffered for the next read.
   outer: while (true) {
-    const { done, value } = await reader.read();
+    const { done, value } = await readModelStreamChunk(reader, requestPolicy.timeoutMs);
     if (done) break;
     buf += dec.decode(value, { stream: true });
     let idx;
@@ -621,12 +733,13 @@ export function delay(ms, signal = null) {
        <code>AbortSignal</code> only when the wait belongs to a different lifecycle. */
   const waitMs = Number(ms);
   if (!Number.isFinite(waitMs) || waitMs < 0) throw new TypeError("helpers.delay expects a non-negative number of milliseconds");
-  if (signal?.aborted) return Promise.reject(new DOMException("stopped", "AbortError"));
+  const abortReason = () => signal?.reason || new DOMException("stopped", "AbortError");
+  if (signal?.aborted) return Promise.reject(abortReason());
   return new Promise((resolve, reject) => {
     const timer = setTimeout(done, waitMs);
     function cleanup() { signal?.removeEventListener("abort", stop); }
     function done() { cleanup(); resolve(); }
-    function stop() { clearTimeout(timer); cleanup(); reject(new DOMException("stopped", "AbortError")); }
+    function stop() { clearTimeout(timer); cleanup(); reject(abortReason()); }
     signal?.addEventListener("abort", stop, { once: true });
   });
 }

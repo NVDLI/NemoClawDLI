@@ -125,7 +125,13 @@
       "openclaw-client",
       "remote-model-client"
     ]
-  }
+  },
+  "runtime_profiles": [
+    {
+      "schema": "nemoclaw-learning-profile/1",
+      "source": "learning-profile.json"
+    }
+  ]
 }
 </script>
 <script type="application/json" id="explorer-config">
@@ -288,7 +294,7 @@
       ]
     },
     {
-      "title": "Interfaces",
+      "title": "Interfaces and runtime profiles",
       "items": [
         {
           "label": "interface inventory",
@@ -354,6 +360,11 @@
           "label": "terminal-console",
           "href": "interface-inventory.json",
           "desc": "Authority: openclaw-operator. Required states: blocked, ready, running, stopped, succeeded, failed."
+        },
+        {
+          "label": "learning profile",
+          "href": "learning-profile.json",
+          "desc": "Browser runtime profile shipped beside the course modules that consume it."
         }
       ]
     }
@@ -415,7 +426,7 @@
     <li><a href="standalone/SKILL.html">standalone export</a></li>
     <li><a href="vendor/SKILL.html">browser vendor</a></li>
   </ul>
-  <h2>Interfaces</h2>
+  <h2>Interfaces and runtime profiles</h2>
   <ul>
     <li><a href="interface-inventory.json">interface inventory</a></li>
     <li><a href="interface-inventory.json">course-progress</a></li>
@@ -430,6 +441,7 @@
     <li><a href="interface-inventory.json">scenario-picker</a></li>
     <li><a href="interface-inventory.json">streaming-chat</a></li>
     <li><a href="interface-inventory.json">terminal-console</a></li>
+    <li><a href="learning-profile.json">learning profile</a></li>
   </ul>
 </noscript>
 <script src="../_skill_explorer.js"></script>
