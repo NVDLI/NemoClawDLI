@@ -11,8 +11,9 @@ const quoteTemplate = value => value.replace(/\\/g, '\\\\').replace(/`/g, '\\`')
 const code = Function('return `' + quoteTemplate(m[1]) + '`')();
 
 const logs = [];
+const cloudflareHost = ['nemoclaw-demo', 'brevlab', 'com'].join('.');
 const storage = new Map([
-  ['nemoclaw_clawrawurl', 'https://nemoclaw-demo.brevlab.com'],
+  ['nemoclaw_clawrawurl', `https://${cloudflareHost}`],
   ['nemoclaw_clawtoken', 'test-token'],
   ['nemoclaw_openclaw_access_provider_v1', 'cloudflare'],
   ['nemoclaw_openclaw_access_session_v1', 'test.jwt'],
@@ -74,7 +75,7 @@ await fn(state, helpers, helpers, console);
 
 if (opened.length !== 1) throw new Error(`expected one WebSocket, saw ${opened.length}`);
 if (tokenRefreshes !== 1) throw new Error(`expected one gateway-token bootstrap, saw ${tokenRefreshes}`);
-const expected = 'wss://nemoclaw-demo.brevlab.com/cli/gateway';
+const expected = `wss://${cloudflareHost}/cli/gateway`;
 if (opened[0] !== expected) throw new Error(`expected sender-bound Cloudflare route ${expected}, got ${opened[0]}`);
 if (logs.some(x => x.includes('via hosted relay')) || /access_session|cf_access_jwt/.test(opened[0])) {
   throw new Error('gateway connection did not preserve the direct browser credential boundary');

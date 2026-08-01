@@ -253,22 +253,23 @@ function audit(overrides = {}) {
       || !files.runtime.includes('!result.chatNoise')) {
     findings.push('browser harness lacks the focused live OpenClaw chat contract');
   }
-  if (!files.runtime.includes("document.querySelectorAll('.cf-btn-run')[i]")
-      || !files.runtime.includes("for (let index = 0; index < flowCount; index++)")
-      || !files.runtime.includes("document.querySelectorAll('.cf-btn-run')[i]?.click()")
+  if (!files.runtime.includes("const runnableSelector = '.cf-btn-run,.rc-run'")
+      || !files.runtime.includes("for (let index = 0; index < runnableCount; index++)")
+      || !files.runtime.includes("document.querySelectorAll('.cf-btn-run,.rc-run')[i]?.click()")
       || files.runtime.includes("btns.forEach(b => b.click())")) {
-    findings.push('full-canvas harness must run page-level flows sequentially');
+    findings.push('full-course harness must run CanvasFlow and RunCell sequentially in document order');
   }
   if (!files.runtime.includes("flow?.querySelector('.cf-panel.running')")
       || files.runtime.includes(".cf-panel.cf-running")) {
-    findings.push('full-canvas harness does not wait for the CanvasFlow running class');
+    findings.push('full-course harness does not wait for the CanvasFlow running class');
   }
   if (!files.runtime.includes('expectsGateway:')
       || !files.runtime.includes('activity.allFrames > 0 && activity.resOk > 0')
       || !files.runtime.includes('const gatewayExpected = !!CLAW_URL')
       || !files.runtime.includes('const gatewayMissing = gatewayExpected')
+      || !files.runtime.includes('cellRuns.some(cell => cell.expectsGateway')
       || files.runtime.includes('const expectedTools = !!(CLAW_URL && CLAW_TOKEN)')) {
-    findings.push('full-canvas harness must fail closed on token bootstrap and use flow-specific gateway evidence');
+    findings.push('full-course harness must fail closed on token bootstrap and use cell-specific gateway evidence');
   }
   if (!files.lab.includes('--cron-contract requires --gateway-only')
       || !files.lab.includes('--cron-contract) cron_contract=1')) {
@@ -331,10 +332,10 @@ function selfTest() {
     ['cron wrapper', { lab: base.lab.replace('--cron-contract) cron_contract=1', '--cron-contract) cron_contract=0') }],
     ['live chat harness', { runtime: base.runtime.replace("args.includes('--chat-contract')", 'false') }],
     ['live chat wrapper', { lab: base.lab.replace('--chat-contract) chat_contract=1', '--chat-contract) chat_contract=0') }],
-    ['parallel full-canvas flows', { runtime: base.runtime.replace('for (let index = 0; index < flowCount; index++)', 'for (const index of [0])') }],
-    ['hidden full-canvas flow click', { runtime: base.runtime.replace("document.querySelectorAll('.cf-btn-run')[i]?.click()", "document.querySelectorAll('.cf-btn-run')[0]?.click()") }],
-    ['wrong full-canvas running selector', { runtime: base.runtime.replace("flow?.querySelector('.cf-panel.running')", "flow?.querySelector('.cf-panel.cf-running')") }],
-    ['blanket full-canvas tool requirement', { runtime: base.runtime.replace('const gatewayMissing =', 'const expectedTools =') }],
+    ['parallel full-course cells', { runtime: base.runtime.replace('for (let index = 0; index < runnableCount; index++)', 'for (const index of [0])') }],
+    ['hidden full-course cell click', { runtime: base.runtime.replace("document.querySelectorAll('.cf-btn-run,.rc-run')[i]?.click()", "document.querySelectorAll('.cf-btn-run,.rc-run')[0]?.click()") }],
+    ['wrong full-course running selector', { runtime: base.runtime.replace("flow?.querySelector('.cf-panel.running')", "flow?.querySelector('.cf-panel.cf-running')") }],
+    ['blanket full-course tool requirement', { runtime: base.runtime.replace('const gatewayMissing =', 'const expectedTools =') }],
     ['token-bootstrap false green', { runtime: base.runtime.replace('const gatewayExpected = !!CLAW_URL', 'const gatewayExpected = !!(CLAW_URL && CLAW_TOKEN)') }],
     ['runtime noise filter', { runtimeText: base.runtimeText.replace('/proc\\/self\\/oom_score_adj', '/proc/noise') }],
     ['nested runtime filter', { runtimeText: base.runtimeText.replace('filterOpenClawRuntimeValue(value)', 'removedRuntimeValueFilter(value)') }],

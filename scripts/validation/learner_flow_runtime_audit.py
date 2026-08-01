@@ -36,7 +36,7 @@ const fixture = `<!doctype html><html lang="en"><head><meta charset="utf-8"><lin
   <details id="learning-applied" class="learning-block" open data-learning-id="fixture-applied" data-learning-tier="applied"><summary><span class="learning-scope">Applied · Build</span><span class="learning-question">Inspect the implementation detail?</span></summary><div class="learning-block-body"><h2>Applied detail</h2><p>Applied implementation detail stays available in the source and can be revealed without changing the canonical page.</p></div></details>
   <details id="learning-deep" class="learning-block" open data-learning-id="fixture-deep" data-learning-tier="deep"><summary><span class="learning-scope">Deep · Sources</span><span class="learning-question">Read the deeper reference?</span></summary><div class="learning-block-body"><h2>Deep detail</h2><p>Deep reference detail stays available in the source while guided and applied views keep the main path short.</p></div></details>
   <details id="learning-reference" class="references learning-block" open data-learning-always-open data-learning-id="fixture-references" data-learning-tier="deep"><summary><span class="learning-scope">Deep · Sources</span><span class="learning-question">Read the primary paper sources?</span></summary><div class="learning-block-body"><h2>Primary sources</h2><p>Paper references stay visible on first load while the native disclosure still lets a learner collapse this list.</p></div></details>
-  <div id="run-cell"></div><div id="canvas"></div><div id="chat"></div><div id="console"></div>
+  <div id="run-cell"></div><div id="canvas"></div><div id="chat"></div><div id="artifact-action"></div><div id="console"></div>
 </main><script type="module">
 import { mountRunCell, mountCanvasFlow, mountChatUI, mountConsole } from "/nemoclaw/scripts/_shared.js";
 window.fixtureReady = false;
@@ -56,6 +56,10 @@ window.chatApi = mountChatUI("#chat", {
   disabledMsg: "Complete fixture setup.",
   greeting: "Fixture chat",
   respond: async (_text, ctx) => { await new Promise((resolve, reject) => { const timer = setTimeout(resolve, 5000); ctx.signal.addEventListener("abort", () => { clearTimeout(timer); reject(new DOMException("stopped", "AbortError")); }, { once:true }); }); },
+});
+mountChatUI("#artifact-action", {
+  greeting: "Artifact action fixture",
+  respond: async (text, ctx) => { ctx.view.token("observed " + text); },
 });
 window.consoleApi = mountConsole("#console", {
   greeting: "Fixture console",
@@ -126,6 +130,9 @@ async function waitText(locator, pattern) {
   });
   await page.goto(`http://127.0.0.1:${port}/fixture.html`, { waitUntil:'networkidle' });
   await page.waitForFunction(() => window.fixtureMounted === true);
+  await page.locator('#artifact-action .chatui-text').fill('learner-authored input');
+  await page.locator('#artifact-action .chatui-send').click();
+  await waitText(page.locator('#artifact-action .chatui-state'), /^Ready$/);
 
   const runtimeRegistryContract = await page.evaluate(async () => {
     const shared = await import('/nemoclaw/scripts/_shared.js');
@@ -359,6 +366,17 @@ async function waitText(locator, pattern) {
       activity:'USER\\nPersisted learner question\\n\\nAGENT ACTIVITY\\nread_course_page · 01a-loop\\nPersisted course answer',
     }] }));
   });
+  const overviewPage = await courseContext.newPage();
+  await overviewPage.goto(`http://127.0.0.1:${port}/nemoclaw/index.html`, { waitUntil:'domcontentloaded' });
+  const assistantEntry = overviewPage.locator('.course-assistant-entry');
+  await assistantEntry.waitFor({ state:'visible' });
+  if (!/session stays in this browser/i.test(await assistantEntry.innerText()) || !/assistant on every lesson/i.test(await assistantEntry.innerText())) {
+    throw new Error('course overview does not explain Course Assistant availability and browser-local sessions');
+  }
+  await assistantEntry.locator('button').click();
+  if (!await overviewPage.locator('.course-assistant-panel').isVisible()) throw new Error('course overview Course Assistant entry does not open the shared panel');
+  await overviewPage.keyboard.press('Escape');
+  await overviewPage.close();
   const coursePage = await courseContext.newPage();
   await coursePage.goto(`http://127.0.0.1:${port}/nemoclaw/02b-rag.html`, { waitUntil:'domcontentloaded' });
   const courseSearch = await coursePage.evaluate(async () => {
@@ -525,6 +543,8 @@ async function waitText(locator, pattern) {
   const crossPanel = crossPage.locator('.course-assistant-panel');
   await crossPanel.waitFor({ state:'visible' });
   if (!/Attached page: 02b-rag/.test(await crossPanel.locator('.course-assistant-context').innerText()) || !/Current page: 01b-react/.test(await crossPanel.locator('.course-assistant-context').innerText()) || !/Use 01b-react/.test(await crossPanel.locator('[data-course-assistant-use-page]').innerText())) throw new Error('Course Assistant did not distinguish a restored session page from the currently open page');
+  await crossPanel.locator('[data-course-assistant-use-page]').click();
+  if (!/Attached page: 01b-react/.test(await crossPanel.locator('.course-assistant-context').innerText()) || !/Refresh page/.test(await crossPanel.locator('[data-course-assistant-use-page]').innerText())) throw new Error('Course Assistant did not explicitly reattach the persisted session to the current page');
   if (!/Explain MCP trust boundaries/.test(await crossPanel.locator('.chatui-log').innerText())) throw new Error('Course Assistant session metadata survived cross-page navigation but its transcript did not');
   await crossPanel.locator('[data-course-assistant-view="history"]').click();
   if (!/Explain MCP trust boundaries/.test(await crossPanel.locator('.course-assistant-history pre').innerText())) throw new Error('Course Assistant session transcript survived cross-page navigation but its agent activity did not');
@@ -661,6 +681,15 @@ async function waitText(locator, pattern) {
   await deepPage.setViewportSize({ width:390, height:844 });
   await deepPage.goto(`http://127.0.0.1:${port}/nemoclaw/02c-deep.html`, { waitUntil:'domcontentloaded' });
   await deepPage.locator('#deep-artifact .chatui').waitFor({ state:'visible' });
+  const deepProgress = await deepPage.evaluate(() => {
+    return {
+      fakeRecap:Boolean(document.querySelector('.lesson-recap')),
+      syntheticCheckpoint:Boolean(document.querySelector('.compact-practice')),
+    };
+  });
+  if (deepProgress.fakeRecap || deepProgress.syntheticCheckpoint) {
+    throw new Error(`02c retained a fake interaction surface: ${JSON.stringify(deepProgress)}`);
+  }
   const materialsSearch = await deepPage.evaluate(async () => {
     const { webSearch, formatSearchResults } = await import('./scripts/_shared.js');
     const result = await webSearch('AI Agents', { maxResults:4 });
@@ -779,6 +808,20 @@ async function waitText(locator, pattern) {
   if (!await loopPage.locator('[data-learning-id="replaceable-reasoning-lab"] .learning-block-body').isVisible()) throw new Error('01a Complete did not restore the local loop lab');
   const loopCompleteHeight = await loopPage.evaluate(() => document.documentElement.scrollHeight);
   if (loopGuidedHeight >= loopCompleteHeight * 0.65) throw new Error(`01a Guided remains too tall: ${loopGuidedHeight}px versus ${loopCompleteHeight}px complete`);
+
+  const compactPage = await courseContext.newPage();
+  await compactPage.goto(`http://127.0.0.1:${port}/nemoclaw/01a-loop.html?profile=compact`, { waitUntil:'domcontentloaded' });
+  const compactProgress = await compactPage.evaluate(() => {
+    return {
+      profile:document.documentElement.dataset.learningProfile,
+      fakeRecap:Boolean(document.querySelector('.lesson-recap')),
+      syntheticCheckpoint:Boolean(document.querySelector('.compact-practice')),
+      syntheticStorage:Object.keys(localStorage).some(key => key.startsWith('nemoclaw_compact_practice')),
+    };
+  });
+  if (compactProgress.profile !== 'compact' || compactProgress.fakeRecap || compactProgress.syntheticCheckpoint || compactProgress.syntheticStorage) {
+    throw new Error(`compact profile retained a fake interaction surface: ${JSON.stringify(compactProgress)}`);
+  }
   await courseContext.close();
 
   const result = await page.evaluate(() => ({
@@ -793,7 +836,8 @@ async function waitText(locator, pattern) {
     states:result,
     course01a:{ guidedHeight:loopGuidedHeight, completeHeight:loopCompleteHeight },
     course02b:{ guidedHeight, completeHeight },
-    course02c:{ deepBoard, materialsSearch:{ count:materialsSearch.count, source:materialsSearch.source } },
+    course02c:{ deepBoard, deepProgress, materialsSearch:{ count:materialsSearch.count, source:materialsSearch.source } },
+    compact:{ fakeRecap:compactProgress.fakeRecap, syntheticCheckpoint:compactProgress.syntheticCheckpoint },
     assistant:{ courseSearch:courseSearch.map(result => result.id), sourceAccess, sessions:{ restored:true, completedAcrossNavigation:true, inFlightAcrossNavigation:true, renamed:true, duplicateEmptyBlocked:true, pageOwned:true, artifactAcrossPages:true, cap:sessionCap.live, storeChars:sessionCap.chars, reload:true, createDelete:true }, widths:{ initial:panelBeforeResize.width, dragged:panelAfterResize.width, keyboard:panelAfterKeyboard.width } },
   }, null, 2));
   await browser.close();

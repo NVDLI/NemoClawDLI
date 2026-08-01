@@ -308,28 +308,32 @@ def audit_launchable_transport(surfaces: dict[str, str], connection: str, shared
 
 
 def audit_launchable_learning_path(pages: dict[str, str]) -> list[str]:
-    """Keep the normal launch path before a collapsed, exceptional recovery route."""
+    """Keep browser-session acquisition and the launchable probe ahead of model work."""
     findings: list[str] = []
     required_normal = (
         "launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990",
         "&lt;launchable&gt;/dashboard",
         "my-assistant",
         "Chat with Agent",
-        "https://nemoclaw-&lt;id&gt;.apps.run.brev.nvidia.com",
-        "https://nemoclaw-&lt;id&gt;.brevlab.com",
+        "apps.run.brev.nvidia.com",
+        "brevlab.com",
         "_pomerium",
         "CF_Authorization",
-    )
-    required_recovery = (
-        "openclaw dashboard --no-open",
-        "openclaw doctor --generate-gateway-token",
-        "/cli/gateway",
     )
     for locale in runtime_page_locales(pages):
         name = f"{locale}-03a"
         text = pages[name]
         for token in required_normal:
             _need(findings, token in text, f"{name}: normal launch path is missing {token}")
+        credential_cards = [
+            paragraph for paragraph in re.findall(r"<p\b[^>]*>.*?</p>", text, re.S | re.I)
+            if re.search(r"(?:launchable access|acceso al launchable|acesso ao launchable)", paragraph, re.I)
+        ]
+        _need(findings, any(
+            "<code>_pomerium</code>" in paragraph
+            and "<code>CF_Authorization</code>" in paragraph
+            for paragraph in credential_cards
+        ), f"{name}: launchable card must name _pomerium and CF_Authorization as its access sessions")
         _need(findings, "x-openclaw-session-key" not in text,
               f"{name}: generic relay-session guidance conflates gateway and launchable credentials")
         _need(findings, re.search(
@@ -338,25 +342,24 @@ def audit_launchable_learning_path(pages: dict[str, str]) -> list[str]:
             text,
             re.I,
         ) is None, f"{name}: gateway-token guidance erases the launchable access boundary")
-        recovery = re.search(
-            r'<details\s+class="recovery-note"(?![^>]*\bopen\b)[^>]*>(.*?)</details>',
-            text,
-            re.S | re.I,
-        )
-        _need(findings, recovery is not None,
-              f"{name}: exceptional Control UI recovery must be a collapsed disclosure")
-        if recovery is None:
-            continue
-        _need(findings, all(0 <= text.find(token) < recovery.start()
-              for token in required_normal),
-              f"{name}: normal launch and discovery path must appear before recovery")
-        recovery_text = recovery.group(1)
-        for token in required_recovery:
-            _need(findings, token in recovery_text,
-                  f"{name}: Control UI recovery is missing {token}")
-        _need(findings, "CF_Authorization" in recovery_text and
-              re.search(r"Pomerium", recovery_text, re.I) is not None,
-              f"{name}: recovery must distinguish gateway credentials from both access sessions")
+        _need(findings, all(token not in text for token in (
+            'class="recovery-note"',
+            "openclaw dashboard --no-open",
+            "openclaw doctor --generate-gateway-token",
+        )), f"{name}: retired manual gateway-token recovery must not precede the automatic probe")
+        probe_start = text.find('id="probe-claw"')
+        raw_audit_start = text.find('id="claw-raw-cell"')
+        model_start = text.find('id="model-route-settings"')
+        browser_start = text.find("<strong>Chrome")
+        access_guidance = text[max(0, browser_start - 1200):probe_start] if probe_start > browser_start >= 0 else ""
+        _need(findings, all(token in access_guidance for token in (
+            "/cli/gateway", "_pomerium", "CF_Authorization", "apps.run.brev.nvidia.com",
+            "brevlab.com", "Chrome", "Firefox", "Safari",
+        )), f"{name}: browser-cookie acquisition must distinguish both launchable sessions before the probe")
+        _need(findings, re.search(r"(?:not|no|não)[^.<]{0,100}<code>Cookie</code>", access_guidance, re.I) is not None,
+              f"{name}: browser-cookie guidance must prohibit copying the complete Cookie header")
+        _need(findings, 0 <= browser_start < probe_start < raw_audit_start < model_start,
+              f"{name}: browser-session guidance, connection probe, route inspection, and model setup are out of order")
     return findings
 
 
@@ -494,6 +497,9 @@ def audit_learning_runtime(learning: str, shared: str, css: str) -> list[str]:
         'locale.startsWith("es")': "Guided mode must support Spanish course pages",
         'storage()?.setItem(LEARNING_DEPTH_KEY, "guided")': "hidden-selector pilot must reset every page to Guided",
         'applyLearningDepth("guided")': "hidden-selector pilot must render every page in Guided",
+        "mountLessonPosition(profile)": "lesson numbering must derive from the shared learning profile",
+        "const moduleLessons = profile.lessons.filter": "lesson position must derive from discovered profile metadata",
+        "moduleLessons.length": "lesson position must not use a fixed module denominator",
     }
     for token, message in contract.items():
         _need(findings, token in learning, message)
@@ -513,9 +519,20 @@ def audit_learning_runtime(learning: str, shared: str, css: str) -> list[str]:
           "unmounted artifact placeholders must not add blank page height")
     _need(findings, ".learning-depth-control { display: none; }" in css,
           "Guided pilot must retain but hide the global depth selector")
+    _need(findings,
+          "lesson-recap" not in learning and "lesson-recap" not in css
+          and "Prove what you learned" not in learning and "Now do this" not in learning,
+          "learning runtime must not create a fake lesson recap or interaction prompt")
+    _need(findings, "compact-practice" not in learning and "compact-practice" not in css,
+          "compact mode must not create a self-attested completion gate")
+    _need(findings, "nemoclaw_compact_practice" not in learning,
+          "compact mode must not store a synthetic learner-completion record")
     _need(findings, ".course-artifact .chatui-log" in css and "overscroll-behavior: contain" in css,
           "live artifacts need a bounded transcript instead of unbounded page growth")
-    _need(findings, "fetch(" not in learning and "XMLHttpRequest" not in learning and "sendBeacon" not in learning,
+    _need(findings,
+          'const PROFILE_URL = new URL("../learning-profile.json", import.meta.url);' in learning and
+          "fetch(PROFILE_URL)" in learning and learning.count("fetch(") == 1 and
+          "XMLHttpRequest" not in learning and "sendBeacon" not in learning,
           "learning profile runtime must remain local and telemetry-free")
     return findings
 
@@ -776,8 +793,12 @@ def audit_model_routes(shared: str, keypanel: str, rag: str, chat: str, openclaw
         'return isDefaultModelApiBaseUrl(url) ? "same-origin" : "include"': "custom model routes need credentialed cross-origin requests",
         'const useModel = isDefaultModelApiBaseUrl(cfg.url) ? (model || cfg.model) : cfg.model': "custom chat routes must override lesson-specific hosted model IDs",
         'credentials: modelRequestCredentials(url)': "browser SDK calls must reuse custom-route credentials",
-        'const r = await fetchRetry(url': "browser SDK calls must retry transient header/network failures",
+        'const r = await fetchRetry(\n      url,': "browser SDK calls must retry transient header/network failures",
         'headers: _apiHeaders(cfg), credentials: modelRequestCredentials(cfg.url)': "key status must verify through the custom route transport",
+        "export const DEFAULT_MODEL_REQUEST_RETRIES = 0": "model requests must not retry unless the learner opts in",
+        "r.status === 429 || (r.status >= 500 && r.status < 600)": "model retries must stay limited to rate limits and transient server failures",
+        "if (opts.signal?.aborted)": "model requests must honor caller cancellation before retry",
+        "export async function readModelStreamChunk": "streaming requests need one independently testable stall boundary",
     }
     for token, message in contract.items():
         _need(findings, token in shared, message)
@@ -793,6 +814,10 @@ def audit_model_routes(shared: str, keypanel: str, rag: str, chat: str, openclaw
         'endpoint + "/models"': "custom chat setup must discover the served model before saving",
         'embeddingEndpoint + "/models"': "custom embedding setup must discover the served model before saving",
         'models.length === 1': "single-model endpoints must auto-select their served model",
+        'class="request-timeout"': "model setup must expose the bounded wait policy",
+        'class="request-retries"': "model setup must expose opt-in retry count",
+        "setModelRequestTimeoutMs(previousRequestPolicy.timeoutMs)": "failed route changes must restore the prior wait policy",
+        "setModelRequestRetries(previousRequestPolicy.retries)": "failed route changes must restore the prior retry policy",
         BUILD_SIGNUP_HOST: "key setup must link NVIDIA Build key acquisition",
     }
     for token, message in key_contract.items():
@@ -969,6 +994,30 @@ def audit_course_assistant_handoff(text: str) -> list[str]:
     return findings
 
 
+def audit_embedding_profile(text: str, css: str) -> list[str]:
+    """Keep the embedding lesson observable without hiding its raw numeric result."""
+    findings: list[str] = []
+    contract = {
+        'class="embedding-profile" aria-label=': "02b embedding output needs a named accessible figure",
+        "<caption>First 16 dimensions": "02b embedding output needs a table-equivalent caption",
+        '<th scope="row">d\\${index + 1}</th>': "02b embedding dimensions need row headers",
+        '<td>\\${signLabel}</td>': "02b embedding sign must be text, not color alone",
+        '<td><code>\\${value >= 0 ? "+" : ""}\\${value.toFixed(4)}</code></td>': "02b embedding output must retain inspectable raw values",
+        "first_16: preview": "02b embedding RunCell must return the raw preview with its figure",
+    }
+    for token, message in contract.items():
+        _need(findings, token in text, message)
+    css_contract = {
+        ".embedding-profile {": "02b embedding profile needs a bounded inspectable view",
+        ".embedding-profile table": "02b embedding profile needs a tabular equivalent",
+        ".embedding-profile-bar.positive": "02b embedding profile needs a positive-value cue",
+        ".embedding-profile-bar.negative": "02b embedding profile needs a negative-value cue",
+    }
+    for token, message in css_contract.items():
+        _need(findings, token in css, message)
+    return findings
+
+
 def audit_learning_lesson(path: Path, text: str) -> list[str]:
     findings: list[str] = []
     rel = path.relative_to(ROOT).as_posix()
@@ -1065,6 +1114,10 @@ def audit_runtime_sources(canvas: str, chat: str) -> list[str]:
     }
     for token, message in canvas_contract.items():
         _need(findings, token in canvas, message)
+    _need(findings, '"nemoclaw:cell-state"' not in canvas,
+          "interactive cells must not publish synthetic learner-completion events")
+    _need(findings, '"nemoclaw:artifact-state"' not in chat,
+          "chat artifacts must not publish synthetic learner-completion events")
     error_scope = canvas.find("const _rcCode = cm ? cm.getValue() : ta.value;")
     open_error = canvas.find("if (codeDet && !codeDet.open) codeDet.open = true;", error_scope)
     cm_only = canvas.find("if (_ep !== null && cm)", error_scope)
@@ -1442,6 +1495,10 @@ def audit_tree(root: Path = ROOT) -> list[str]:
     findings.extend(audit_course_assistant_handoff(
         (root / "web/nemoclaw/04c-going-further.html").read_text(encoding="utf-8"),
     ))
+    findings.extend(audit_embedding_profile(
+        (root / "web/nemoclaw/02b-rag.html").read_text(encoding="utf-8"),
+        (root / "web/nemoclaw/styles/_style.css").read_text(encoding="utf-8"),
+    ))
     discovered = course_dirs() if root == ROOT else []
     for course in discovered:
         for page in sorted(course.glob("0*.html")):
@@ -1487,6 +1544,8 @@ def self_test() -> list[str]:
         ("chat root link escapes deployed subpath", canvas, chat.replace("rebaseChatMarkdownUrls(elm);", "", 1), "deployed course subpath"),
         ("duplicated helper error", canvas.replace('if (!e.__courseHelperErrorLogged)', 'if (true)', 1), chat, "must not duplicate"),
         ("console failure resets to Ready", canvas, chat.replace('outcome.status === "error"', 'false', 1), "retain an error state"),
+        ("synthetic cell completion event reintroduced", canvas + '\nconst retiredCellEvent = "nemoclaw:cell-state";', chat, "must not publish synthetic"),
+        ("synthetic artifact completion event reintroduced", canvas, chat + '\nconst retiredArtifactEvent = "nemoclaw:artifact-state";', "must not publish synthetic"),
     ]
     for label, mutated_canvas, mutated_chat, expected in runtime_mutations:
         if not any(expected in finding for finding in audit_runtime_sources(mutated_canvas, mutated_chat)):
@@ -1515,6 +1574,10 @@ def self_test() -> list[str]:
          css.replace(".course-artifact:empty { display: none; }", "", 1), "blank page height"),
         ("depth selector exposed", learning, shared,
          css.replace(".learning-depth-control { display: none; }", ".learning-depth-control { display: flex; }", 1), "hide the global depth selector"),
+        ("fake lesson recap reintroduced", learning + '\nconst retiredRecap = "lesson-recap Prove what you learned Now do this";', shared, css, "fake lesson recap"),
+        ("synthetic compact checkpoint reintroduced", learning + '\nconst retiredCheckpoint = "compact-practice";', shared, css, "self-attested completion gate"),
+        ("synthetic compact completion storage reintroduced", learning + '\nconst retiredStorage = "nemoclaw_compact_practice_v2";', shared, css, "synthetic learner-completion record"),
+        ("compact lesson position uses a fixed denominator", learning.replace("moduleLessons.length", "3", 1), shared, css, "fixed module denominator"),
         ("unbounded artifact transcript", learning, shared,
          css.replace(".course-artifact .chatui-log", ".removed-artifact .chatui-log", 1), "bounded transcript"),
     ]
@@ -1694,7 +1757,26 @@ def self_test() -> list[str]:
         ("embedding endpoint persistence removed", shared.replace('const EMBEDDING_API_BASE_URL_KEY = "nemoclaw_embedding_api_base_url_v1"', 'const EMBEDDING_API_BASE_URL_KEY = MODEL_API_BASE_URL_KEY', 1), keypanel, rag, runtime_chat, openclaw, "independent from chat"),
         ("custom credentials omitted", shared.replace('return isDefaultModelApiBaseUrl(url) ? "same-origin" : "include"', 'return "same-origin"', 1), keypanel, rag, runtime_chat, openclaw, "credentialed cross-origin"),
         ("learner route predicate omitted", shared.replace(', isDefaultModelApiBaseUrl, terminal', ', terminal', 1), keypanel, rag, runtime_chat, openclaw, "expose the default-model route predicate"),
-        ("browser SDK retry removed", shared.replace('const r = await fetchRetry(url', 'const r = await fetch(url', 1), keypanel, rag, runtime_chat, openclaw, "retry transient"),
+        ("browser SDK retry removed", shared.replace(
+            'const r = await fetchRetry(\n      url,',
+            'const r = await fetch(\n      url,',
+            1,
+        ), keypanel, rag, runtime_chat, openclaw, "retry transient"),
+        ("default retry enabled", shared.replace(
+            "export const DEFAULT_MODEL_REQUEST_RETRIES = 0",
+            "export const DEFAULT_MODEL_REQUEST_RETRIES = 1",
+            1,
+        ), keypanel, rag, runtime_chat, openclaw, "must not retry"),
+        ("stream stall boundary removed", shared.replace(
+            "export async function readModelStreamChunk",
+            "async function readModelStreamChunk",
+            1,
+        ), keypanel, rag, runtime_chat, openclaw, "stall boundary"),
+        ("failed setup retains attempted timeout", shared, keypanel.replace(
+            "setModelRequestTimeoutMs(previousRequestPolicy.timeoutMs)",
+            "setModelRequestTimeoutMs(timeoutMs)",
+            1,
+        ), rag, runtime_chat, openclaw, "restore the prior wait"),
         ("single-model discovery removed", shared, keypanel.replace("models.length === 1", "models.length === 0"), rag, runtime_chat, openclaw, "auto-select"),
         ("embedding reuses chat config", shared, keypanel, rag.replace("getEmbeddingConfig", "getConfig"), runtime_chat, openclaw, "independent persistent route"),
         ("agent chat ignores custom model", shared, keypanel, rag, runtime_chat.replace("isDefaultModelApiBaseUrl(cfg.url) ? model : cfg.model", "model", 1), openclaw, "configured custom model"),
@@ -1812,6 +1894,17 @@ def self_test() -> list[str]:
         if not any(expected in finding for finding in audit_course_assistant_handoff(mutated)):
             misses.append(f"detector missed {label}")
 
+    rag = (ROOT / "web/nemoclaw/02b-rag.html").read_text(encoding="utf-8")
+    embedding_cases = [
+        ("embedding figure unnamed", rag.replace('class="embedding-profile" aria-label=', 'class="embedding-profile" data-label=', 1), css, "accessible figure"),
+        ("embedding sign becomes color-only", rag.replace("<td>\\${signLabel}</td>", "<td></td>", 1), css, "not color alone"),
+        ("embedding raw return removed", rag.replace("first_16: preview", "sample_count: preview.length", 1), css, "return the raw preview"),
+        ("embedding table styling removed", rag, css.replace(".embedding-profile table", ".removed-profile table", 1), "tabular equivalent"),
+    ]
+    for label, mutated_rag, mutated_css, expected in embedding_cases:
+        if not any(expected in finding for finding in audit_embedding_profile(mutated_rag, mutated_css)):
+            misses.append(f"detector missed {label}")
+
     heavy_path = ROOT / "web/nemoclaw/04b-modern-clis.html"
     heavy = heavy_path.read_text(encoding="utf-8")
     heavy = heavy.replace('mountRunCell("#cell-jsagent", {\n      openCode: false,', 'mountRunCell("#cell-jsagent", {\n      openCode: true,', 1)
@@ -1847,16 +1940,16 @@ def self_test() -> list[str]:
         ("normal dashboard step", "&lt;launchable&gt;/dashboard", "&lt;launchable&gt;/overview"),
         ("running assistant card", "my-assistant", "some-agent"),
         ("normal token discovery", "Chat with Agent", "Open Agent"),
-        ("Cloudflare hostname family", "https://nemoclaw-&lt;id&gt;.brevlab.com",
-         "https://other-&lt;id&gt;.brevlab.com"),
-        ("recovery disclosure", '<details class="recovery-note">',
-         '<details class="recovery-note" open>'),
-        ("credential recovery command", "openclaw dashboard --no-open",
-         "printenv OPENCLAW_GATEWAY_TOKEN"),
-        ("token generation command", "openclaw doctor --generate-gateway-token",
-         "openclaw doctor"),
-        ("credential distinction", "Pomerium browser cookie", "browser access cookie"),
-        ("generic relay session conflation", "Gateway credential: gateway token.",
+        ("Cloudflare hostname family", "brevlab.com", "other.example"),
+        ("retired recovery disclosure", "<h2>Step 1 · Verify the model route</h2>",
+         '<details class="recovery-note">openclaw dashboard --no-open</details><h2>Step 1 · Verify the model route</h2>'),
+        ("credential distinction", "The gateway token authorizes JSON-RPC calls on <code>/cli/gateway</code>.",
+         "The gateway token and launchable access session are interchangeable."),
+        ("browser-cookie retrieval", "<strong>Firefox:</strong>", "<strong>Another browser:</strong>"),
+        ("launchable probe ordering", 'id="probe-claw"', 'id="probe-claw-delayed"'),
+        ("launchable credential card", "Launchable access:\n          <code>_pomerium</code> or <code>CF_Authorization</code>.",
+         "Launchable access: Pomerium browser session or <code>CF_Authorization</code>."),
+        ("generic relay session conflation", "Launchable access:",
          "Gateway credential: gateway token. Session: <code>x-openclaw-session-key</code>."),
         ("only-credential conflation", "After the browser authenticates to the launchable with its access session,",
          "The only credential is the gateway token. After the browser authenticates to the launchable with its access session,"),

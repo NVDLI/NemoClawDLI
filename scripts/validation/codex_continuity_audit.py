@@ -60,6 +60,25 @@ REQUIRED_SKILL_TOKENS = {
     "do not read transcripts",
     "bypass hook trust",
 }
+REQUIRED_PUBLIC_PATH_TOKENS = {
+    "complete contribution path for a public contributor",
+    "absence is normal",
+    "must not weaken, skip",
+    "must remain outside the public candidate",
+}
+REQUIRED_CONTRIBUTION_FACADE_TOKENS = {
+    "Use the contribution facade",
+    "course_contribute.py",
+    "`status`",
+    "`candidate`",
+    "`repair-signature`",
+    "`submit`",
+    "`watch`",
+    "`merge`",
+    "`watch-main`",
+    "never invokes `gh`",
+    "complete fallback contract",
+}
 REQUIRED_METADATA_FIELDS = {"display_name", "short_description", "default_prompt"}
 SKILL_MANIFEST = "SKILL.md"
 SKILL_METADATA = Path("agents/openai.yaml")
@@ -450,6 +469,12 @@ def audit(root: Path = ROOT, files: list[Path] | None = None) -> list[str]:
     for token in sorted(REQUIRED_SKILL_TOKENS):
         if token not in skill_raw:
             findings.append(f"{normalized_skill}: missing hook trust boundary {token!r}")
+    for token in sorted(REQUIRED_PUBLIC_PATH_TOKENS):
+        if token not in skill_raw:
+            findings.append(f"{normalized_skill}: missing public contribution boundary {token!r}")
+    for token in sorted(REQUIRED_CONTRIBUTION_FACADE_TOKENS):
+        if token not in skill_raw:
+            findings.append(f"{normalized_skill}: missing contribution facade token {token!r}")
 
     agents_raw = _read_utf8(root, AGENTS_PATH, findings) or ""
     for token in (normalized_skill.as_posix(), CONTRACT_PATH.as_posix()):

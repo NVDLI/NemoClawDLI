@@ -23,6 +23,9 @@ from _bootstrap import find_repo_root
 
 ROOT = find_repo_root(Path(__file__).resolve())
 COURSE = ROOT / "web" / "nemoclaw"
+LEARNING_PROFILE = COURSE / "learning-profile.json"
+COURSE_CONTRACT = COURSE / "course_contract.json"
+LESSON_RE = re.compile(r"^(?P<module>0[1-4])(?P<part>[a-c])-[a-z0-9-]+$")
 
 CHECKS = [
     {
@@ -50,6 +53,11 @@ CHECKS = [
     },
     {
         "page": "01c-tools.html",
+        "label": "required sub-agent and MCP boundary spine",
+        "required": 'data-learning-spine="tool-boundaries"',
+    },
+    {
+        "page": "01c-tools.html",
         "label": "tool contract connected to the scoped workflows that follow",
         "before": "Module 2 keeps this tool contract and changes the outer structure",
         "after": "Before you continue",
@@ -64,6 +72,11 @@ CHECKS = [
         "page": "02a-routing.html",
         "label": "workflow scope named as the module control surface",
         "required": "The harness can scope a workflow around a model call",
+    },
+    {
+        "page": "02a-routing.html",
+        "label": "shared incident contrasts one loop with one workflow",
+        "required": 'data-learning-spine="support-loop-workflow"',
     },
     {
         "page": "02a-routing.html",
@@ -87,6 +100,11 @@ CHECKS = [
         "page": "02b-rag.html",
         "label": "fixed retrieval pipeline distinguished from its bounded context",
         "required": "It embeds and indexes a corpus ahead of time",
+    },
+    {
+        "page": "02b-rag.html",
+        "label": "generation to fixed RAG to agent-controlled retrieval ladder",
+        "required": 'data-learning-spine="retrieval-ladder"',
     },
     {
         "page": "02c-deep.html",
@@ -114,7 +132,7 @@ CHECKS = [
     {
         "page": "02c-deep.html",
         "label": "runnable research artifact appears before implementation details",
-        "before": "Try it · plan → investigate → synthesize",
+        "before": 'id="deep-cell"',
         "after": "Inspect the implementation",
     },
     {
@@ -247,12 +265,111 @@ def norm(raw: str) -> str:
     return re.sub(r"\s+", " ", raw)
 
 
-def audit() -> list[str]:
+def _lesson_pages(discovered_pages: set[str] | None = None) -> set[str]:
+    if discovered_pages is not None:
+        return set(discovered_pages)
+    return {path.stem for path in COURSE.glob("0[1-4][a-c]-*.html")}
+
+
+def _profile_findings(
+    profile_override: dict[str, object] | None = None,
+    discovered_pages: set[str] | None = None,
+    page_overrides: dict[str, str] | None = None,
+) -> list[str]:
+    findings: list[str] = []
+    try:
+        profile = profile_override if profile_override is not None else json.loads(
+            LEARNING_PROFILE.read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"learning-profile.json: cannot read valid JSON: {exc}"]
+    if not isinstance(profile, dict) or profile.get("schema") != "nemoclaw-learning-profile/1":
+        return ["learning-profile.json: schema must be nemoclaw-learning-profile/1"]
+    profiles = profile.get("profiles")
+    if not isinstance(profiles, dict):
+        findings.append("learning-profile.json: profiles must be an object")
+    else:
+        canonical = profiles.get("canonical")
+        compact = profiles.get("compact")
+        if not isinstance(canonical, dict) or canonical.get("query") != "":
+            findings.append("learning-profile.json: canonical profile must use the unmodified course URL")
+        if (
+            not isinstance(compact, dict)
+            or compact.get("query") != "profile=compact"
+            or compact.get("detail") != "guided"
+            or not isinstance(compact.get("duration_minutes"), int)
+        ):
+            findings.append("learning-profile.json: compact must be the guided profile=compact overlay with a duration")
+        forbidden = {"source_root", "content_root", "copied_tree", "lesson_tree"}
+        if isinstance(compact, dict) and forbidden.intersection(compact):
+            findings.append("learning-profile.json: compact profile must not define a copied lesson tree")
+
+    lessons = profile.get("lessons")
+    if not isinstance(lessons, list):
+        return findings + ["learning-profile.json: lessons must be a list"]
+    try:
+        objective_count = len(json.loads(COURSE_CONTRACT.read_text(encoding="utf-8"))["learning_objectives"])
+    except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
+        return findings + [f"course_contract.json: cannot discover objective ids: {exc}"]
+    allowed_objectives = {f"learning-objective-{index}" for index in range(1, objective_count + 1)}
+    expected_pages = _lesson_pages(discovered_pages)
+    seen: set[str] = set()
+    mapped: set[str] = set()
+    page_overrides = page_overrides or {}
+    for index, lesson in enumerate(lessons):
+        prefix = f"learning-profile.json: lesson {index + 1}"
+        if not isinstance(lesson, dict):
+            findings.append(f"{prefix} must be an object")
+            continue
+        lesson_id = lesson.get("id")
+        if not isinstance(lesson_id, str):
+            findings.append(f"{prefix} id must be a string")
+            continue
+        if lesson_id in seen:
+            findings.append(f"learning-profile.json: duplicate lesson id {lesson_id}")
+        seen.add(lesson_id)
+        mapped.add(lesson_id)
+        match = LESSON_RE.fullmatch(lesson_id)
+        if not match:
+            findings.append(f"{prefix} has malformed id {lesson_id}")
+        else:
+            expected_module = int(match.group("module"))
+            expected_lesson = ord(match.group("part")) - ord("a") + 1
+            if lesson.get("module") != expected_module or lesson.get("lesson") != expected_lesson:
+                findings.append(f"{prefix} module/lesson does not match {lesson_id}")
+        if lesson.get("objective") not in allowed_objectives:
+            findings.append(f"{prefix} maps unknown objective {lesson.get('objective')!r}")
+        retired = {
+            "action",
+            "evidence",
+            "evidence_target",
+            "interaction",
+            "recap",
+            "transition",
+        }.intersection(lesson)
+        if retired:
+            findings.append(
+                f"{prefix} contains retired synthetic-checkpoint fields: {', '.join(sorted(retired))}"
+            )
+    for page in sorted(expected_pages - mapped):
+        findings.append(f"learning-profile.json: discovered lesson {page}.html is not mapped")
+    for page in sorted(mapped - expected_pages):
+        findings.append(f"learning-profile.json: mapped lesson {page}.html does not exist")
+    return findings
+
+
+def audit(
+    overrides: dict[str, str] | None = None,
+    profile_override: dict[str, object] | None = None,
+    discovered_pages: set[str] | None = None,
+) -> list[str]:
+    """Check order using optional in-memory page mutations for contract tests."""
     findings: list[str] = []
     cache: dict[str, str] = {}
+    overrides = overrides or {}
     for check in CHECKS:
         page = check["page"]
-        raw = cache.setdefault(page, read(page))
+        raw = cache.setdefault(page, overrides.get(page, read(page)))
         text = norm(raw)
         label = check["label"]
         if "required" in check:
@@ -270,10 +387,11 @@ def audit() -> list[str]:
         if b >= 0 and a >= 0 and b > a:
             findings.append(f"{page}: concept appears after first use: {label}")
     for page, tokens in BAD_TOKENS.items():
-        text = cache.setdefault(page, read(page))
+        text = cache.setdefault(page, overrides.get(page, read(page)))
         for token in tokens:
             if token in text:
                 findings.append(f"{page}: stale confusing wording remains: {token}")
+    findings.extend(_profile_findings(profile_override, discovered_pages, overrides))
     return findings
 
 
