@@ -232,7 +232,7 @@ Sources of truth are the exact lock files named in the Scope column. The same pa
 | material-tooling, security-tooling | urllib3 | 2.7.0 | MIT | [PyPI](https://pypi.org/pypi/urllib3/2.7.0/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | webcolors | 25.10.0 | BSD-3-Clause | [PyPI](https://pypi.org/pypi/webcolors/25.10.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | wheel | 0.47.0 | MIT | [PyPI](https://pypi.org/pypi/wheel/0.47.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
-| browser-validation | playwright-core | 1.61.1 | Apache-2.0 | [npm](https://www.npmjs.com/package/playwright-core/v/1.61.1); [`scripts/runtime/pnpm-lock.yaml`](scripts/runtime/pnpm-lock.yaml) |
+| browser-validation | playwright-core | 1.62.0 | Apache-2.0 | [npm](https://www.npmjs.com/package/playwright-core/v/1.62.0); [`scripts/runtime/pnpm-lock.yaml`](scripts/runtime/pnpm-lock.yaml) |
 
 ### Less common license families and their scope
 

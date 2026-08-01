@@ -19,10 +19,10 @@ PAIRS = (
 )
 PIN = re.compile(r"^([A-Za-z0-9_.-]+)(?:\[[^\]]+\])?==([^\s;]+)(?:\s*;\s*.+)?$")
 HASH = re.compile(r"--hash=sha256:[0-9a-f]{64}")
-PLAYWRIGHT_VERSION = "1.61.1"
+PLAYWRIGHT_VERSION = "1.62.0"
 PLAYWRIGHT_IMAGE = (
-    "mcr.microsoft.com/playwright:v1.61.1-noble@sha256:"
-    "5b8f294aff9041b7191c34a4bab3ac270157a28774d4b0660e9743297b697e48"
+    "mcr.microsoft.com/playwright:v1.62.0-noble@sha256:"
+    "baed2032d533817f3dbe6425de795788430ba345e819a1201337009ba17c9d07"
 )
 PNPM_PACKAGE_MANAGER = (
     "pnpm@10.34.5+sha512."
@@ -162,10 +162,10 @@ def self_test() -> list[str]:
             ("scripts/materials/requirements.lock", "requests==2.34.2", "requests==0.0.1"),
             ("scripts/materials/requirements.lock", "requests==2.34.2 \\", "requests==2.34.2"),
             ("scripts/security/requirements-sca.lock", "pip-audit==2.10.1", "# removed pip-audit"),
-            ("scripts/runtime/package.json", '"playwright-core": "1.61.1"', '"playwright-core": "1.55.0"'),
+            ("scripts/runtime/package.json", '"playwright-core": "1.62.0"', '"playwright-core": "1.55.0"'),
             ("scripts/runtime/package.json", PNPM_PACKAGE_MANAGER, "pnpm@latest"),
-            ("scripts/runtime/pnpm-lock.yaml", "specifier: 1.61.1", "specifier: 1.55.0"),
-            (".gitlab/ci/core.yml", PLAYWRIGHT_IMAGE, "mcr.microsoft.com/playwright:v1.61.1-noble"),
+            ("scripts/runtime/pnpm-lock.yaml", "specifier: 1.62.0", "specifier: 1.55.0"),
+            (".gitlab/ci/core.yml", PLAYWRIGHT_IMAGE, "mcr.microsoft.com/playwright:v1.62.0-noble"),
         )
         for rel, old, new in mutations:
             path = fixture / rel

@@ -25,7 +25,7 @@ include:
 SCA_JOBS = ("security_browser_sca", "security_sca", "security_python_sca")
 PRIVILEGED_DIGESTS = {
     ".gitlab/ci/privileged.yml": "1b143eb94e21e2f2f5e68e8496146fc926bc6bbb86ccb237cfbe9e7baca7c9e0",
-    ".gitlab/ci/privileged-child.yml": "74b074a473f5fa3c81f4f96af250f458639064a55c2d08b95628c77b96834624",
+    ".gitlab/ci/privileged-child.yml": "c2b64ce85ba0be1d7d1d382bcc0d1e26ed9d387d0d2477abc6544fe174aedeff",
 }
 OWNER_PATHS = (
     "/.gitlab-ci.yml",

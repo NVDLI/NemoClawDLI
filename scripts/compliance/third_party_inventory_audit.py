@@ -260,9 +260,9 @@ def audit(overrides: dict[str, str] | None = None) -> list[str]:
             findings.append(f"missing Python package row: {name}=={version}")
         elif row[3] in {"", "BSD", "Apache2.0", "NOASSERTION"}:
             findings.append(f"non-specific Python license identifier: {name}=={version}: {row[3]}")
-    playwright = python_index.get(("playwright-core", "1.61.1"))
+    playwright = python_index.get(("playwright-core", "1.62.0"))
     if not playwright or playwright[0] != "browser-validation" or playwright[3] != "Apache-2.0":
-        findings.append("missing pinned host browser-validation package: playwright-core==1.61.1")
+        findings.append("missing pinned host browser-validation package: playwright-core==1.62.0")
 
     material_rows = rows(section(document, "Third-party course-material relationships"))
     material_paths = {row[0] for row in material_rows if row}
