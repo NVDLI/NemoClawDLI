@@ -47,6 +47,18 @@ const node = {
                             if item["kind"] == "component-prose-concatenation"]
             self.assertEqual([item["field"] for item in concatenated], ["title"])
 
+    def test_script_discovery_uses_browser_raw_text_boundaries(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prose-script-boundary-") as temp:
+            page = self.write(Path(temp), "lesson.html", '''<!doctype html><html><body>
+<script src="bundle.js"></script >
+<script>const node = {summary: "Inspect the recovered inline script boundary."};</script>
+</body></html>''')
+            rows = prose_variety.script_prose(page)
+            self.assertEqual(
+                [row["text"] for row in rows if row["field"] == "summary"],
+                ["Inspect the recovered inline script boundary."],
+            )
+
     def test_code_documentation_and_figure_captions_do_not_distort_cadence(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prose-cadence-") as temp:
             page = self.write(Path(temp), "lesson.html", '''<!doctype html><html lang="en"><body>

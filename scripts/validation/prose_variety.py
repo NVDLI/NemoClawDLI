@@ -111,7 +111,6 @@ _SCRIPT_FIELD_START = re.compile(
     r"(?<![\w$-])(?:[\"']?)(" + "|".join(sorted(_SCRIPT_PROSE_FIELDS, key=len, reverse=True))
     + r")(?:[\"']?)\s*(?::|(?<![=!<>])=(?!=))\s*"
 )
-_SCRIPT_BLOCK = re.compile(r"<script\b(?P<attrs>[^>]*)>(?P<body>.*?)</script>", re.I | re.S)
 _DOC_COMMENT = re.compile(r"@doc\b(.*?)\*/", re.S)
 _LINE_COMMENT = re.compile(r"^\s*//\s*(?![-=─━]{3,})(.*\b.*)$", re.M)
 _STATIC_ARRAY = re.compile(
@@ -676,13 +675,13 @@ def script_prose(f: Path) -> list[dict]:
                          "source_lines": source.count("\n") + 1 if source else 1,
                          "source_width": max((len(item) for item in source.splitlines()), default=0)})
 
-    for block in _SCRIPT_BLOCK.finditer(raw):
-        attrs = block.group("attrs")
-        if re.search(r"\bsrc\s*=", attrs, re.I) or re.search(
-                r"\btype\s*=\s*[\"'](?:application|text)/(?:json|ld\+json|css)[\"']", attrs, re.I):
+    for block in raw_text_blocks(raw, "script"):
+        attrs = block.attributes
+        if "src" in attrs or re.fullmatch(
+                r"(?:application|text)/(?:json|ld\+json|css)", attrs.get("type", ""), re.I):
             continue
-        js = block.group("body")
-        base = block.start("body")
+        js = block.body
+        base = block.body_start
         for match in _SCRIPT_FIELD_START.finditer(js):
             parts, expression_end = _quoted_js_parts(js, match.end())
             if parts:
