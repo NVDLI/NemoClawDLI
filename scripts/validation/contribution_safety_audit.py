@@ -32,8 +32,8 @@ BROWSER_RUNTIME_CONSUMERS = (
     "branch_preview_runtime_audit.py",
 )
 PINNED_PLAYWRIGHT_IMAGE = (
-    "mcr.microsoft.com/playwright:v1.61.1-noble@sha256:"
-    "5b8f294aff9041b7191c34a4bab3ac270157a28774d4b0660e9743297b697e48"
+    "mcr.microsoft.com/playwright:v1.62.0-noble@sha256:"
+    "baed2032d533817f3dbe6425de795788430ba345e819a1201337009ba17c9d07"
 )
 DECISION_POLICY = {
     "default": "deny",
@@ -2570,7 +2570,7 @@ def self_test() -> list[str]:
             ("gitlab-immutable-report-reuse", ".gitlab/ci/core.yml", 'bash scripts/build/build_pages.sh "$CI_PROJECT_DIR/candidate"', 'bash scripts/build/build_pages.sh "$CI_PROJECT_DIR/rebuilt-candidate"'),
             ("gitlab-protected-root-worktree", ".gitlab/ci/core.yml", 'git worktree add --quiet --detach /tmp/nemoclaw-prod-root "origin/$prod_ref"', 'git archive "origin/$prod_ref" | tar -x -C /tmp/nemoclaw-prod-root'),
             ("gitlab-image-pin", ".gitlab/ci/core.yml", "node:20-bookworm-slim@sha256:25070a03f077f5860e4f2db8d147380678ed40ead415a21eaffd5a6208f61948", "node:20-bookworm-slim"),
-            ("gitlab-report-browser-runtime", ".gitlab/ci/core.yml", "mcr.microsoft.com/playwright:v1.61.1-noble@sha256:5b8f294aff9041b7191c34a4bab3ac270157a28774d4b0660e9743297b697e48", "mcr.microsoft.com/playwright:v1.61.1-noble"),
+            ("gitlab-report-browser-runtime", ".gitlab/ci/core.yml", "mcr.microsoft.com/playwright:v1.62.0-noble@sha256:baed2032d533817f3dbe6425de795788430ba345e819a1201337009ba17c9d07", "mcr.microsoft.com/playwright:v1.62.0-noble"),
             ("gitlab-runtime-sca", ".gitlab/ci/sca.yml", "npm audit --prefix .cache/runtime-npm-audit --package-lock-only --audit-level=moderate", "echo runtime-audit-skipped"),
             ("gitlab-infrastructure-retry", ".gitlab/ci/core.yml", "runner_system_failure", "runner_unsupported"),
             ("gitlab-script-retry", ".gitlab/ci/core.yml", "runner_system_failure", "script_failure"),
