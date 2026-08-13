@@ -21,6 +21,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -36,6 +37,45 @@ def discover_html(site: Path, scan_root: Optional[Path] = None) -> list[str]:
     scan.relative_to(site)
     return sorted(path.relative_to(site).as_posix() for path in scan.rglob("*.html"))
 
+
+class RedirectDeclarationParser(HTMLParser):
+    """Collect document-declared meta-refresh targets without regex-parsing HTML."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.targets: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, Optional[str]]]) -> None:
+        if tag.lower() != "meta":
+            return
+        attributes = {name.lower(): value or "" for name, value in attrs}
+        if attributes.get("http-equiv", "").strip().lower() != "refresh":
+            return
+        _, separator, assignment = attributes.get("content", "").partition(";")
+        name, equals, target = assignment.partition("=") if separator else ("", "", "")
+        if name.strip().lower() == "url" and equals and target.strip():
+            self.targets.append(target.strip().strip("\"'"))
+        else:
+            self.targets.append("")
+
+
+def discover_declared_redirects(site: Path, files: list[str]) -> dict[str, str]:
+    """Map every valid meta-refresh document to its declared target."""
+    site = site.resolve()
+    redirects: dict[str, str] = {}
+    for relative in files:
+        path = (site / relative).resolve()
+        path.relative_to(site)
+        parser = RedirectDeclarationParser()
+        parser.feed(path.read_text(encoding="utf-8"))
+        parser.close()
+        if not parser.targets:
+            continue
+        if len(parser.targets) != 1 or not parser.targets[0]:
+            raise ValueError(f"{relative}: meta refresh must declare exactly one non-empty URL target")
+        redirects[relative] = parser.targets[0]
+    return redirects
+
 RUNTIME_JS = r"""
 const http = require('http');
 const crypto = require('crypto');
@@ -45,6 +85,7 @@ const { chromium } = require('playwright-core');
 
 const root = process.env.SITE_ROOT || '/site';
 const htmlFiles = JSON.parse(fs.readFileSync(process.env.HTML_FILES || '/tmp/html-files.json', 'utf8'));
+const declaredRedirectTargets = JSON.parse(fs.readFileSync(process.env.REDIRECT_TARGETS || '/tmp/redirect-targets.json', 'utf8'));
 const pageTimeoutMs = Number(process.env.PAGE_TIMEOUT_MS || '120000');
 let port = 0;
 const mime = {
@@ -168,16 +209,26 @@ async function inspect(browser, file) {
     });
   }
   try {
-    const response = await page.goto(`http://127.0.0.1:${port}/${file}`, { waitUntil:'domcontentloaded', timeout:30000 });
-    // Generated aliases use document-declared redirects. Playwright resolves the initial
-    // document before that navigation begins, so wait on the redirect contract itself before
-    // evaluating the final page. This applies to every discovered HTML file without naming or
-    // exempting an alias path.
-    await page.waitForFunction(() =>
-      !document.querySelector('meta[http-equiv="refresh" i]'),
-      null,
-      { timeout:10000 }
-    );
+    // Redirect declarations were parsed from the immutable artifact before Chromium started.
+    // Arm the exact-target wait before page.goto so a zero-delay refresh cannot destroy the
+    // evaluation context. This applies to every discovered HTML file without naming an alias.
+    const initialUrl = `http://127.0.0.1:${port}/${file}`;
+    const declaredRedirectTarget = declaredRedirectTargets[file] || null;
+    const expectedRedirectUrl = declaredRedirectTarget
+      ? new URL(declaredRedirectTarget, initialUrl).href
+      : null;
+    if (expectedRedirectUrl && new URL(expectedRedirectUrl).origin !== ownedOrigin) {
+      throw new Error(`cross-origin meta refresh is not allowed: ${expectedRedirectUrl}`);
+    }
+    if (expectedRedirectUrl === initialUrl) throw new Error('self-refreshing documents cannot be audited stably');
+    const redirectWait = expectedRedirectUrl
+      ? page.waitForURL(url => url.href === expectedRedirectUrl, {
+          waitUntil:'domcontentloaded',
+          timeout:Math.min(pageTimeoutMs, 30000),
+        })
+      : Promise.resolve(null);
+    const navigation = page.goto(initialUrl, { waitUntil:'domcontentloaded', timeout:30000 });
+    const [response] = await Promise.all([navigation, redirectWait]);
     await page.waitForLoadState('domcontentloaded');
     await page.evaluate(() => new Promise(resolve =>
       requestAnimationFrame(() => requestAnimationFrame(resolve))
@@ -989,12 +1040,19 @@ def run(args: argparse.Namespace) -> int:
     if args.timeout_seconds <= 0 or args.page_timeout_seconds <= 0:
         print("skill_renderer_runtime_audit: FAIL\n  - timeout values must be positive")
         return 1
+    try:
+        redirect_targets = discover_declared_redirects(site, files)
+    except (OSError, UnicodeError, ValueError) as exc:
+        print(f"skill_renderer_runtime_audit: FAIL\n  - invalid redirect declaration: {exc}")
+        return 1
     with tempfile.TemporaryDirectory(prefix="skill-renderer-audit-") as temp:
         temp_path = Path(temp)
         script = temp_path / "audit.js"
         manifest = temp_path / "html-files.json"
+        redirect_manifest = temp_path / "redirect-targets.json"
         script.write_text(RUNTIME_JS, encoding="utf-8")
         manifest.write_text(json.dumps(files), encoding="utf-8")
+        redirect_manifest.write_text(json.dumps(redirect_targets), encoding="utf-8")
         command = [os.environ.get("NODE_BIN") or "node", str(script)]
         try:
             environment = os.environ.copy()
@@ -1003,6 +1061,7 @@ def run(args: argparse.Namespace) -> int:
                 "CHROME_BIN": "" if args.chrome_bin == "auto" else args.chrome_bin,
                 "SITE_ROOT": str(site),
                 "HTML_FILES": str(manifest),
+                "REDIRECT_TARGETS": str(redirect_manifest),
                 "PAGE_TIMEOUT_MS": str(args.page_timeout_seconds * 1000),
             })
             returncode, timed_out, stalled = stream_command(

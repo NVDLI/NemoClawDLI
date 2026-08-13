@@ -5,6 +5,10 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Added lesson-grounded search metadata for the released NemoClaw course, canonical and locale URL
+  projection, public-only sitemap generation, preview/source-mirror noindex handling, and a
+  discovery-driven AI-content transparency contract covering authored text, figures, and
+  runtime-generated media. Repository checks preserve the external human editorial-owner decision.
 - Thanks to Vadim Kudlay for reviewing the final Module 3a connection guidance and its Spanish and
   Brazilian Portuguese course-readiness corrections for the aggregate internal integration.
 - Thanks to Vadim Kudlay for the four-route Module 3a connection-audit interface feedback.

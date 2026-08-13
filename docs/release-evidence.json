@@ -198,7 +198,17 @@
       "owner": "shared",
       "automated_commands": [
         "python3 scripts/validation/security_architecture_audit.py",
+        "python3 scripts/validation/publication_integrity_audit.py",
         "python3 scripts/validation/release_evidence_audit.py"
+      ],
+      "external_evidence": "operator-required"
+    },
+    {
+      "id": "content-publication-integrity",
+      "owner": "shared",
+      "automated_commands": [
+        "python3 scripts/validation/publication_integrity_audit.py",
+        "python3 -m unittest -v tests/validation/test_publication_integrity_audit.py"
       ],
       "external_evidence": "operator-required"
     },
@@ -283,6 +293,7 @@
       "legal-and-license",
       "export",
       "privacy",
+      "ai-content-transparency",
       "verified-secret-scan",
       "final-artifact-vulnerability-scan",
       "malware-scan",

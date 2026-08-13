@@ -37,12 +37,13 @@ REQUIRED_AREAS = {
     "registration-context", "repository-baseline", "source-and-licenses", "privacy-and-data",
     "cryptography-and-export", "secret-scanning", "vulnerability-scanning", "malware-scanning",
     "architecture-and-deployment", "release-artifacts", "release-approval",
-    "threat-control-disposition",
+    "threat-control-disposition", "content-publication-integrity",
 }
 REQUIRED_EXTERNAL_CATEGORIES = {
     "registration", "public-repository-hosting", "legal-and-license", "export", "privacy",
     "verified-secret-scan", "final-artifact-vulnerability-scan", "malware-scan", "host-controls",
     "source-integration", "external-service-controls", "release-decision",
+    "ai-content-transparency",
 }
 REQUIRED_HEADINGS = {
     "design": {
@@ -72,20 +73,28 @@ REQUIRED_AUTOMATED_IDS = {f"A{index:02d}" for index in range(1, 13)}
 REQUIRED_MANUAL_IDS = {f"M{index:02d}" for index in range(1, 12)}
 REQUIRED_WIRING = {
     ".gitlab/ci/core.yml": ("release_gate.py --tier ship",),
-    ".github/workflows/pages.yml": ("release_gate.py --tier ship",),
-    ".github/workflows/release.yml": ("release_gate.py --tier ship",),
+    ".github/workflows/pages.yml": (
+        "release_gate.py --tier ship", "BUILD_PAGES_PUBLICATION_MODE: public",
+    ),
+    ".github/workflows/release.yml": (
+        "release_gate.py --tier ship", "BUILD_PAGES_PUBLICATION_MODE: public",
+    ),
     "scripts/git-hooks/pre-commit": ("release_evidence_audit.py",),
     "scripts/git-hooks/pre-push": (
         "release_gate.py", "--tier ship --no-write --changed-since origin/main --reuse-success",
     ),
     "scripts/validation/validate_bundle.py": ("import release_evidence_audit as rea", '"release_evidence"'),
+    "scripts/validation/publication_integrity_audit.py": (
+        "release-owner-required", "substantive-human-review-and-editorial-control",
+        "external-authoritative-system", "page-unclassified", "media-origin",
+    ),
     "scripts/validation/release_gate.py": (
         "scripts/build/project_docs_explorer.py", '"--audit"',
         "scripts/validation/course_dependency_integrity.py",
         "scripts/validation/cell_audit.py",
         'unit_test("release_evidence_audit")',
         'unit_test("threat_control_audit")',
-        "HARNESS_CONTRACT", "test_test_harness_contract",
+        "HARNESS_CONTRACT", "test_test_harness_contract", "STANDARD_TEST_DISCOVERY",
     ),
     "AGENTS.md": (
         "CONTRIBUTING.md", "docs/release-test-plan.md",
@@ -109,6 +118,9 @@ REQUIRED_WIRING = {
         "--artifact-root",
         "project_docs_explorer.py",
         "-path 'web/nemoclaw/standalone' -prune",
+        "project_publication_metadata.py",
+        "publication_integrity_audit.py",
+        "BUILD_PAGES_PUBLICATION_MODE",
     ),
     "scripts/build/project_docs_explorer.py": (
         "local_markdown_targets", "missing or unsafe", "--self-test",

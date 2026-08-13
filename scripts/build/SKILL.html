@@ -18,6 +18,7 @@
     "scripts/build/project_source_tree.py",
     "scripts/build/project_artifact_navigation.py",
     "scripts/build/project_artifact_manifests.py",
+    "scripts/build/project_publication_metadata.py",
     "scripts/build/vendor_browser_dependencies.mjs",
     "scripts/build/bundle_standalone.py",
     "scripts/build/push_pages.sh",
@@ -73,6 +74,11 @@
       "path": "project_artifact_manifests.py",
       "role": "artifact manifest projector",
       "desc": "Reprojects branch, language, and license data into every discovered source mirror after manifest rewrites."
+    },
+    {
+      "path": "project_publication_metadata.py",
+      "role": "publication metadata projector",
+      "desc": "Projects canonical, robots, social, structured-data, locale, and sitemap policy onto built course pages while keeping previews and source mirrors noindex."
     },
     {
       "path": "vendor_browser_dependencies.mjs",
@@ -144,6 +150,7 @@
     <div class="skill-cmd"><b>Source explorer projection</b><code>python3 scripts/build/project_source_tree.py --self-test</code></div>
     <div class="skill-cmd"><b>Artifact navigation</b><code>python3 scripts/build/project_artifact_navigation.py /tmp/nemoclaw-pages</code></div>
     <div class="skill-cmd"><b>Artifact manifests</b><code>python3 scripts/build/project_artifact_manifests.py /tmp/nemoclaw-pages</code></div>
+    <div class="skill-cmd"><b>Publication metadata</b><code>python3 scripts/validation/publication_integrity_audit.py</code></div>
     <div class="skill-cmd"><b>Browser package inventory</b><code>python3 -m unittest -v tests.validation.test_embedded_validator_suites.ValidatorSelfTests.test_course_dependency_integrity</code></div>
     <div class="skill-cmd"><b>Release package determinism</b><code>python3 scripts/build/package_release.py --self-test</code></div>
     <div class="skill-cmd"><b>Security review package</b><code>python3 scripts/build/build_security_review_package.py --package</code></div>
@@ -156,6 +163,7 @@
     <a class="skill-link" href="project_source_tree.py"><b>project_source_tree.py</b><span>Authoring-source projection for complete, working SKILL explorers in Pages; maps dot-prefixed host configuration to public-safe routes and rebuilds generated standalone output only at its canonical route.</span></a>
     <a class="skill-link" href="project_artifact_navigation.py"><b>project_artifact_navigation.py</b><span>Artifact-root projector. Rebases generated navigation and supplies a working directory entry for every shipped SKILL contract.</span></a>
     <a class="skill-link" href="project_artifact_manifests.py"><b>project_artifact_manifests.py</b><span>Artifact manifest projector. Keeps branch, language, and license evidence aligned across every discovered source mirror.</span></a>
+    <a class="skill-link" href="project_publication_metadata.py"><b>project_publication_metadata.py</b><span>Publication projector. Adds page-grounded metadata and public-only indexing while keeping every preview and source mirror noindex.</span></a>
     <a class="skill-link" href="vendor_browser_dependencies.mjs"><b>vendor_browser_dependencies.mjs</b><span>browser dependency packager. Generates same-origin bundles, licenses, hashes, and source references from the exact lock.</span></a>
     <a class="skill-link" href="bundle_standalone.py"><b>bundle_standalone.py</b><span>standalone bundler. Copies and inlines the course into a self-contained web bundle.</span></a>
     <a class="skill-link" href="push_pages.sh"><b>push_pages.sh</b><span>Pages pusher. Pushes the assembled public/ output to the Pages target.</span></a>

@@ -155,6 +155,7 @@ jobs:
       - name: Assemble without installed validation dependencies
         env:
           RELEASE_TAG: ${{ inputs.tag }}
+          BUILD_PAGES_PUBLICATION_MODE: public
         run: |
           set -euo pipefail
           export BUILD_PAGES_LANGS=0
@@ -227,6 +228,7 @@ jobs:
       - name: Independently rebuild the static tree
         env:
           RELEASE_TAG: ${{ inputs.tag }}
+          BUILD_PAGES_PUBLICATION_MODE: public
         run: |
           set -euo pipefail
           test "$GITHUB_REF" = "refs/tags/$RELEASE_TAG"

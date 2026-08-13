@@ -380,6 +380,22 @@ PROJ
     done
 fi
 
+# ── 6b. Search discovery and publication-integrity projection ──────────────
+# Lesson prose remains in its canonical and reviewed locale sources. This build-only pass adds
+# truthful page metadata, marks every preview/source mirror noindex, and gives only the protected
+# public GitHub production build an indexable sitemap. Internal GitLab Pages and local builds must
+# opt out of public indexing even though their canonical URLs point at the public course.
+PUBLICATION_MODE="${BUILD_PAGES_PUBLICATION_MODE:-preview}"
+case "$PUBLICATION_MODE" in public|preview) ;; *)
+    echo "[build_pages] ERROR: BUILD_PAGES_PUBLICATION_MODE must be public or preview" >&2
+    exit 1
+esac
+python3 "$T1/scripts/build/project_publication_metadata.py" \
+    --site-root "$OUT" \
+    --course-root "$OUT/${COURSE_PREFIX:+$COURSE_PREFIX/}nemoclaw" \
+    --contract "$T1/web/nemoclaw/publication-integrity.json" \
+    --mode "$PUBLICATION_MODE"
+
 # -- 7. Language manifest for the foyer dropdown -----------------------------
 # Generate this after translations are built so the manifest lists only languages
 # that actually exist in this artifact. The English URL follows COURSE_PREFIX;
@@ -412,5 +428,11 @@ python3 "$T1/scripts/build/project_artifact_navigation.py" "$OUT" \
 # navigation/resource URL must remain inside it and resolve; there are no per-page exemptions.
 python3 "$T1/scripts/validation/artifact_link_audit.py" "$OUT"
 
+# Audit the finished artifact, after every manifest, delivery, and navigation projection. This
+# catches metadata stripped or duplicated by a later build transform, not merely projector output.
+python3 "$T1/scripts/validation/publication_integrity_audit.py" \
+    --artifact-root "$OUT" \
+    --course-root "$OUT/${COURSE_PREFIX:+$COURSE_PREFIX/}nemoclaw" \
+    --expected-mode "$PUBLICATION_MODE"
 echo "[build_pages] done -> $OUT"
 echo "[build_pages] preview locally: python3 -m http.server -d $OUT 8000"

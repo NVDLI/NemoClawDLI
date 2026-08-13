@@ -64,6 +64,7 @@
     "scripts/validation/pages_artifact_integrity.py",
     "scripts/validation/release_evidence_audit.py",
     "scripts/validation/repository_work_products_audit.py",
+    "scripts/validation/publication_integrity_audit.py",
     "scripts/pyodide/integration_audit.py"
   ],
   "explorer": "../../web/_skill_explorer.js"
@@ -104,6 +105,11 @@
       "path": "validate_bundle.py",
       "role": "ship gate",
       "desc": "Composes every validator into the release gate and durable report."
+    },
+    {
+      "path": "publication_integrity_audit.py",
+      "role": "search and AI-content publication gate",
+      "desc": "Discovers course pages and media, grounds product metadata in visible content, enforces preview noindex and exact public sitemaps, and keeps human editorial ownership external."
     },
     {
       "path": "artifact_link_audit.py",
@@ -423,6 +429,7 @@
   <div class="skill-cmd"><b>Repository integration classifier</b><code>python3 -m unittest discover -v -s tests/validation</code></div>
   <div class="skill-cmd"><b>Pages artifact integrity</b><code>python3 -m unittest discover -v -s tests/validation</code></div>
   <div class="skill-cmd"><b>Product design + release test evidence</b><code>python3 -m unittest discover -v -s tests/validation &amp;&amp; python3 scripts/validation/release_evidence_audit.py</code></div>
+  <div class="skill-cmd"><b>Search and AI-content publication integrity</b><code>python3 -m unittest -v tests.validation.test_publication_integrity_audit &amp;&amp; python3 scripts/validation/publication_integrity_audit.py</code></div>
   <div class="skill-cmd"><b>Repository work products + detector</b><code>python3 -m unittest discover -v -s tests/validation &amp;&amp; python3 scripts/validation/repository_work_products_audit.py</code></div>
   <div class="skill-cmd"><b>Rendered page screenshots</b><code>python3 scripts/validation/cell_ui_runtime_audit.py --site-root /tmp/nemoclaw_visual_preview --page /nemoclaw/02b-rag.html --screenshots /tmp/nemoclaw_visual_audit</code></div>
   <div class="skill-cmd"><b>Studio interface</b><code>python3 scripts/validation/studio_interface_audit.py</code></div>
@@ -475,6 +482,7 @@
     <a class="skill-link" href="repository_sync_audit.py"><b>repository_sync_audit.py</b><span>Read-only public-to-internal source drift classifier. External changes stop for a reviewed integration MR.</span></a>
     <a class="skill-link" href="pages_artifact_integrity.py"><b>pages_artifact_integrity.py</b><span>Pages bounds, safe archive extraction, manifest continuity, and live byte-for-byte deployment verification.</span></a>
     <a class="skill-link" href="release_evidence_audit.py"><b>release_evidence_audit.py</b><span>Required product-design and release-test gate. Checks public-safe scope, data and cryptography inventories, evidence ownership, external-review boundaries, gate wiring, and mutation coverage.</span></a>
+    <a class="skill-link" href="publication_integrity_audit.py"><b>publication_integrity_audit.py</b><span>Required search and AI-content publication gate. Discovers pages and media, grounds product metadata in visible content, keeps previews noindex, and retains human editorial decisions outside repository automation.</span></a>
     <a class="skill-link" href="repository_work_products_audit.py"><b>repository_work_products_audit.py</b><span>Required repository work-product gate. Checks requirement levels, applicability, evidence paths, policy content, maintainer procedures, issue intake, gate wiring, and mutation coverage.</span></a>
     <a class="skill-link" href="cell_ui_runtime_audit.py"><b>cell_ui_runtime_audit.py</b><span>rendered page screenshot audit. Discovers every canonical and localized interactive page, renders desktop/narrow light/dark pages, writes paired initial/expanded screenshots, rejects split or wrapped cell actions and localized overflow, flags wrong-tone surfaces, and exercises mobile figure zoom, pan, and close behavior.</span></a>
     <a class="skill-link" href="cell_audit.py"><b>cell_audit.py</b><span>cell contract. Checks runnable-cell transparency, logging, awaits, keys, bundled editor assets, and UI contract with a focused asset-detector self-test.</span></a>

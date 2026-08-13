@@ -138,6 +138,20 @@ The intended release license is Apache-2.0. Contributions use the DCO and the in
 [`CONTRIBUTING.md`](../CONTRIBUTING.md). The source inventory and provenance beacons record copied,
 vendored, converted, and externally sourced material.
 
+The publication-integrity contract classifies every direct course page, displayed course image,
+and runtime-generated media surface. Search descriptions can name a product only when it appears in
+learner-visible page content. Internal Pages, branch previews, and source mirrors remain `noindex`;
+only the protected public build emits the canonical sitemap. Media records distinguish technical
+diagrams, source-figure conversions, stylized illustrations, brand assets, and realistic synthetic
+media. A realistic synthetic image, video, or audio requires an adjacent visible disclosure before
+publication.
+
+The course text is recorded as AI-assisted standard editing. Repository automation cannot decide
+whether text concerns a matter of public interest or certify substantive human review. Before public
+publication, an accountable editorial owner records that assessment and either confirms substantive
+human review and editorial control or supplies the required visible disclosure through the
+authorized external process. An unknown origin or missing decision blocks release.
+
 Direct Python requirements are pinned. Transitive environments are locked. Browser packages use an
 exact npm lock and are bundled into same-origin assets before release. The public browser dependency inventory
 at `web/nemoclaw/dependencies.html` lists direct and bundled
@@ -196,6 +210,7 @@ draft artifacts may be replaced before publication. The complete artifact contra
 | Test execution and evidence ownership | `release-test-plan.md` | `release_evidence_audit.py` plus CI |
 | Source, license, and path hygiene | `scripts/compliance/docs/source_inventory.json`, provenance beacons, and repository-relative path policy | `source_gate.py` and `local_path_leak_audit.py` |
 | Dependencies and SBOM | manifests, locks, browser package inventory, waiver registry, generated CycloneDX documents | dependency, browser integrity, waiver, and SBOM policy audits |
+| Search and AI-content publication integrity | `web/nemoclaw/publication-integrity.json`, image provenance | `publication_integrity_audit.py` on source and built Pages |
 | Release bytes | protected tag, archive, manifest, SBOM, checksums | release workflow and `package_release.py` |
 
 Reviewers must combine this repository evidence with live host configuration and external approval

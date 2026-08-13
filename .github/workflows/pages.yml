@@ -181,6 +181,8 @@ jobs:
       - name: Fix generated time to the reviewed commit
         run: echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$GITHUB_SHA")" >> "$GITHUB_ENV"
       - name: Build the client-side static site
+        env:
+          BUILD_PAGES_PUBLICATION_MODE: public
         run: BUILD_PAGES_PULL_MATERIALS=0 BUILD_PAGES_REUSE_VALIDATION=1 bash scripts/build/build_pages.sh public
       - name: Sensitive content boundary on the exact Pages artifact
         run: python3 scripts/validation/sensitive_content_audit.py --root public --publication-source-root .
@@ -230,6 +232,8 @@ jobs:
         with:
           python-version: "3.11"
       - name: Independently rebuild the static tree
+        env:
+          BUILD_PAGES_PUBLICATION_MODE: public
         run: |
           set -euo pipefail
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$GITHUB_SHA")"
