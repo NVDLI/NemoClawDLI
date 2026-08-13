@@ -92,6 +92,10 @@ README_LEARNER_ROUTES = {
         "published course site",
         "https://nvdli.github.io/NemoClawDLI/nemoclaw/",
     ),
+    "dli-course": (
+        "official NVIDIA DLI enrollment",
+        "https://learn.nvidia.com/courses/course-detail?course_id=course-v1:DLI+S-FX-43+V1",
+    ),
     "brev-launchable": (
         "agent runtime launchable",
         "https://brev.nvidia.com/launchable/deploy/now"

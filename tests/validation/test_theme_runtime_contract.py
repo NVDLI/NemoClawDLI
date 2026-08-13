@@ -68,6 +68,32 @@ class ThemeRuntimeContractTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 theme_runtime.discover_html(site, site.parent)
 
+    def test_redirect_discovery_parses_attributes_and_rejects_near_matches(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixtures = {
+                "alias.html": "<META content=\"0; URL=../target.html\" HTTP-EQUIV='Refresh'>",
+                "metadata.html": "<metadata http-equiv='refresh' content='0;url=wrong.html'>",
+                "other.html": "<meta http-equiv='not-refresh' content='0;url=wrong.html'>",
+                "script.html": "<script>const text = '<meta http-equiv=refresh>';</script>",
+            }
+            for relative, source in fixtures.items():
+                (root / relative).write_text(source, encoding="utf-8")
+            self.assertEqual(
+                {"alias.html": "../target.html"},
+                theme_runtime.discover_declared_redirects(root, sorted(fixtures)),
+            )
+
+    def test_redirect_discovery_rejects_ambiguous_or_targetless_refreshes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "bad.html").write_text(
+                "<meta http-equiv='refresh' content='0'>",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "exactly one non-empty URL target"):
+                theme_runtime.discover_declared_redirects(root, ["bad.html"])
+
     def test_runtime_has_dark_light_dependency_detection(self) -> None:
         source = theme_runtime.RUNTIME_JS
         for token in (
@@ -141,6 +167,19 @@ class ThemeRuntimeContractTests(unittest.TestCase):
                 self.assertIn(token, source)
         self.assertNotIn("waitForTimeout(500)", source)
         self.assertNotIn("htmlFiles.filter", source)
+
+    def test_redirect_wait_applies_only_to_documents_that_declare_one(self) -> None:
+        source = theme_runtime.RUNTIME_JS
+        self.assertIn("const declaredRedirectTargets = JSON.parse", source)
+        self.assertIn("const declaredRedirectTarget = declaredRedirectTargets[file] || null", source)
+        self.assertIn("const redirectWait = expectedRedirectUrl", source)
+        self.assertIn("url.href === expectedRedirectUrl", source)
+        self.assertIn("new URL(expectedRedirectUrl).origin !== ownedOrigin", source)
+        self.assertIn("cross-origin meta refresh is not allowed", source)
+        self.assertLess(source.index("const redirectWait = expectedRedirectUrl"), source.index("const navigation = page.goto(initialUrl"))
+        self.assertIn("await Promise.all([navigation, redirectWait])", source)
+        self.assertIn("timeout:Math.min(pageTimeoutMs, 30000)", source)
+        self.assertNotIn("page.locator('meta[http-equiv=\"refresh\" i]')", source)
 
     def test_streamed_runner_reports_the_active_document_on_timeout(self) -> None:
         lines: list[str] = []
@@ -424,7 +463,8 @@ class ThemeRuntimeContractTests(unittest.TestCase):
 
     def test_runtime_settles_declared_redirects_without_a_path_exemption(self) -> None:
         source = theme_runtime.RUNTIME_JS
-        self.assertIn('meta[http-equiv="refresh" i]', source)
+        self.assertIn("declaredRedirectTargets[file]", source)
+        self.assertIn('REDIRECT_TARGETS', source)
         self.assertIn("await page.waitForLoadState('domcontentloaded');", source)
         self.assertNotIn("file.endsWith('standalone/SKILL.html')", source)
 

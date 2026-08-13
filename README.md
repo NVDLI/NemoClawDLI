@@ -8,6 +8,7 @@
 | Work through the four modules. | Keep it running for the live-agent exercises. | Create an API key when prompted. |
 
 [course]: https://nvdli.github.io/NemoClawDLI/nemoclaw/
+[dli-course]: https://learn.nvidia.com/courses/course-detail?course_id=course-v1:DLI+S-FX-43+V1
 [brev-launchable]: https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&ncid=ref-dli-759990
 [nvidia-build]: https://build.nvidia.com/?ncid=ref-dli-146986
 
@@ -17,9 +18,9 @@
 
 ## About the course
 
-Modern agents are everywhere, and they’re conceptually simple: a model wired to tools, memory, and a routing decision that keeps running until the task is done. This course starts by building such a system from scratch, then connects those ideas to modern frameworks used by software engineers and non‑technical users alike. You’ll go from a single API call to agent coordination, grounded retrieval, deep planning, and safe deployment using NVIDIA OpenClaw and NemoClaw™.
+An agent connects a model to tools, memory, and a routing decision that repeats until its task is done. This course builds that loop, then connects it to current frameworks. You’ll go from a single API call to agent coordination, grounded retrieval, deep planning, and safe deployment using OpenClaw, NVIDIA NemoClaw™, and OpenShell.
 
-Every lesson is an editable browser exercise. Later modules use NemoClaw to bootstrap a working agent and OpenShell to inspect what it may access.
+Every lesson is an editable browser exercise. Later modules use NemoClaw and OpenShell to run and inspect an agent.
 
 > [!NOTE]
 > This repository releases the course and validation tools. NemoClaw and its runtime remain external dependencies.
@@ -54,7 +55,7 @@ Connect the design to NemoClaw, keep an agent running, then use OpenShell to con
 
 ## Take the course
 
-1. Open the **[GitHub Pages course][course]** and work through Module 1.
+1. Use the **[official NVIDIA DLI course page][dli-course]** for NVIDIA-managed enrollment, then open the **[GitHub Pages course][course]** and work through Module 1.
 2. Start the **[NemoClaw Brev launchable][brev-launchable]** before Module 3, where the exercises drive a live agent.
 3. Open **[NVIDIA Build][nvidia-build]** and create an API key when a lesson asks for one.
 4. Run the supplied examples, inspect their behavior, and change one input at a time.
