@@ -119,27 +119,24 @@
       <div class="eyebrow">Module 3 · Part A of 3 · live calls begin</div>
       <h1>Connect the <span>NemoClaw</span> Stack</h1>
       <p class="lead">
-        Modules 1 and 2 kept orchestration in the browser. A workflow ended when the page stopped
+        In Modules 1 and 2, we kept orchestration in the browser, and each workflow ended when the page stopped
         carrying its messages, intermediate results, or branch state. Module 3 moves the same agent patterns into a
         <a href="https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990" target="_blank" rel="noopener">
-        NemoClaw Brev launchable</a>. OpenClaw preserves session history and a file-backed workspace
-        while continuing to expose tools; OpenShell limits what that running agent can reach. From the browser, you will compare
-        the stateless model API with the persistent OpenClaw gateway.
+        NemoClaw Brev launchable</a>. In this setup, the <strong>LLM</strong> supplies semantic responses;
+        the <strong>OpenClaw harness</strong> preserves session history, a file-backed workspace, and tool access;
+        the <strong>OpenShell sandbox</strong> limits what the running agent can reach; and the
+        <strong>NemoClaw blueprint</strong> configures OpenClaw and OpenShell to work together. From the browser,
+        you will compare the stateless model API with the persistent OpenClaw gateway.
       </p>
       <figure style="margin:1.4em 0">
-        <div class="fig-embed" data-svg-src="assets/figures/03a-kickstart-1.svg" style="aspect-ratio:1300 / 400"></div>
-        <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">Access moves from stateless model HTTP, to server-side conversation state, to standard tool protocols, to the long-lived WebSocket that streams a live OpenClaw agent session.</figcaption>
+        <div class="fig-embed" data-svg-src="assets/figures/03a-nemoclaw-workflow.svg" style="aspect-ratio:1200 / 620"></div>
+        <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">
+          Runtime roles in the NemoClaw blueprint. Course redraw adapted from NVIDIA's
+          <a href="https://build.nvidia.com/nvidia/nemoclaw-for-openclaw/nemoclawcard?ncid=ref-dli-146986"
+            target="_blank" rel="noopener">NemoClaw for OpenClaw workflow</a>.
+        </figcaption>
       </figure>
-
-
     </div>
-
-    <p>The diagram separates three interfaces:</p>
-    <ul>
-      <li><strong>REST (Representational State Transfer).</strong> One request carries all the info necessary to produces one response.</li>
-      <li><strong><a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener">Model Context Protocol (MCP)</a>.</strong> A common request format lets a runtime discover and call tools.</li>
-      <li><strong>OpenClaw gateway.</strong> A <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API" target="_blank" rel="noopener">WebSocket</a> at <code>/cli/gateway</code> carries <a href="https://www.jsonrpc.org/specification" target="_blank" rel="noopener">JSON-RPC</a> events for the agent session.</li>
-    </ul>
 
     <!-- video removed: hour-long NemoClaw session, too long and distracting for an inline companion. Re-enable by uncommenting.
     <figure class="lp-video">
@@ -161,6 +158,16 @@
       The model route is stateless and uses an <code>nvapi-</code> key. The NemoClaw route keeps a
       running OpenClaw session inside OpenShell. Compare each route's URL, credential, and state below.
     </p>
+    <figure style="margin:1.4em 0">
+      <div class="fig-embed" data-svg-src="assets/figures/03a-kickstart-1.svg" style="aspect-ratio:1300 / 400"></div>
+      <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">Access moves from stateless model HTTP, to server-side conversation state, to standard tool protocols, to the long-lived WebSocket that streams a live OpenClaw agent session.</figcaption>
+    </figure>
+    <p>The diagram separates three interfaces:</p>
+    <ul>
+      <li><strong>REST (Representational State Transfer).</strong> One request carries all the information needed to produce one response.</li>
+      <li><strong><a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener">Model Context Protocol (MCP)</a>.</strong> A common request format lets a runtime discover and call tools.</li>
+      <li><strong>OpenClaw gateway.</strong> A <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API" target="_blank" rel="noopener">WebSocket</a> at <code>/cli/gateway</code> carries <a href="https://www.jsonrpc.org/specification" target="_blank" rel="noopener">JSON-RPC</a> events for the agent session.</li>
+    </ul>
 
     <div class="url-pair">
       <a class="url-card" href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener">

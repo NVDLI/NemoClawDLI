@@ -143,7 +143,7 @@ CHECKS = [
     {
         "page": "03a-kickstart.html",
         "label": "persistent runtime introduced from the browser-hosted workflows",
-        "before": "Modules 1 and 2 kept orchestration in the browser",
+        "before": "In Modules 1 and 2, we kept orchestration in the browser",
         "after": "The two endpoints you work with from here",
     },
     {
@@ -289,20 +289,18 @@ def _profile_findings(
     if not isinstance(profiles, dict):
         findings.append("learning-profile.json: profiles must be an object")
     else:
-        canonical = profiles.get("canonical")
-        compact = profiles.get("compact")
-        if not isinstance(canonical, dict) or canonical.get("query") != "":
-            findings.append("learning-profile.json: canonical profile must use the unmodified course URL")
+        guided = profiles.get("guided")
         if (
-            not isinstance(compact, dict)
-            or compact.get("query") != "profile=compact"
-            or compact.get("detail") != "guided"
-            or not isinstance(compact.get("duration_minutes"), int)
+            set(profiles) != {"guided"}
+            or not isinstance(guided, dict)
+            or guided.get("query") != ""
+            or guided.get("detail") != "guided"
+            or guided.get("default") is not True
         ):
-            findings.append("learning-profile.json: compact must be the guided profile=compact overlay with a duration")
+            findings.append("learning-profile.json: Guided must be the only default profile and use canonical lesson URLs")
         forbidden = {"source_root", "content_root", "copied_tree", "lesson_tree"}
-        if isinstance(compact, dict) and forbidden.intersection(compact):
-            findings.append("learning-profile.json: compact profile must not define a copied lesson tree")
+        if isinstance(guided, dict) and forbidden.intersection(guided):
+            findings.append("learning-profile.json: Guided must not define a copied lesson tree")
 
     lessons = profile.get("lessons")
     if not isinstance(lessons, list):

@@ -39,11 +39,6 @@ function lessonId() {
   return page.match(LESSON_PAGE_RE)?.[1] || "";
 }
 
-function isCompactProfile() {
-  try { return new URLSearchParams(location.search).get("profile") === "compact"; }
-  catch (_) { return false; }
-}
-
 async function loadLearningProfile() {
   if (!profilePromise) {
     profilePromise = fetch(PROFILE_URL)
@@ -65,54 +60,29 @@ function profileWords() {
   const locale = localeKey();
   if (locale === "pt") {
     return {
-      lesson: "Lição", compact: "Rota prática compacta",
-      compactIntro: "A mesma trilha, objetivos, runtime e evidências, com os detalhes opcionais recolhidos.",
-      compactStart: "Iniciar rota compacta de 2 horas", of: "de",
+      lesson: "Lição", of: "de",
+      transparencySummary: "Conteúdo com assistência de IA · revisão humana",
+      transparencyBody: "Este curso inclui edições com assistência de IA e passa por revisão editorial humana. A publicação permanece sujeita aos controles de conteúdo da NVIDIA. Diagramas técnicos e mídias externas têm registros de procedência e licença em",
+      imageProvenance: "Procedência das imagens",
+      materialProvenance: "Procedência dos materiais",
     };
   }
   if (locale === "es") {
     return {
-      lesson: "Lección", compact: "Ruta práctica compacta",
-      compactIntro: "La misma ruta, objetivos, runtime y pruebas, con los detalles opcionales cerrados.",
-      compactStart: "Iniciar ruta compacta de 2 horas", of: "de",
+      lesson: "Lección", of: "de",
+      transparencySummary: "Contenido con asistencia de IA · revisión humana",
+      transparencyBody: "Este curso incluye ediciones asistidas por IA y pasa por revisión editorial humana. La publicación sigue sujeta a los controles de contenido de NVIDIA. Los diagramas técnicos y los recursos externos tienen registros de procedencia y licencia en",
+      imageProvenance: "Procedencia de las imágenes",
+      materialProvenance: "Procedencia de los materiales",
     };
   }
   return {
-    lesson: "Lesson", compact: "Compact hands-on path",
-    compactIntro: "The same lessons, objectives, runtime, and evidence with optional detail collapsed.",
-    compactStart: "Start the compact 2-hour path", of: "of",
+    lesson: "Lesson", of: "of",
+    transparencySummary: "AI-assisted content · human reviewed",
+    transparencyBody: "This course includes AI-assisted edits and undergoes human editorial review. Publication remains subject to NVIDIA content controls. Technical diagrams and external media have source and licensing records in",
+    imageProvenance: "Image provenance",
+    materialProvenance: "Material provenance",
   };
-}
-
-function propagateCompactLinks() {
-  if (!isCompactProfile()) return;
-  document.querySelectorAll('a[href]').forEach(link => {
-    let url;
-    try { url = new URL(link.href, location.href); } catch (_) { return; }
-    if (url.origin !== location.origin || !LESSON_PAGE_RE.test(url.pathname.split("/").pop() || "")) return;
-    url.searchParams.set("profile", "compact");
-    link.href = url.href;
-  });
-}
-
-function mountProfileHome(profile) {
-  if (document.querySelector(".learning-profile-entry")) return;
-  const moduleSection = document.querySelector(".module-grid")?.closest(".section");
-  if (!moduleSection) return;
-  const words = profileWords();
-  const section = document.createElement("section");
-  section.className = "learning-profile-entry";
-  section.dataset.learningProfile = "compact";
-  const first = profile.lessons[0];
-  const href = new URL(`${first.id}.html`, location.href);
-  href.searchParams.set("profile", "compact");
-  section.innerHTML = `
-    <div>
-      <h2>${words.compact}</h2>
-      <p>${words.compactIntro}</p>
-    </div>
-    <a class="learning-profile-start" href="${href.href}">${words.compactStart}</a>`;
-  moduleSection.before(section);
 }
 
 function mountLessonPosition(profile) {
@@ -126,18 +96,40 @@ function mountLessonPosition(profile) {
   if (eyebrow) {
     eyebrow.textContent = `Module ${lesson.module} · ${words.lesson} ${position} ${words.of} ${moduleLessons.length}`;
   }
-  document.documentElement.dataset.learningProfile = isCompactProfile() ? "compact" : "canonical";
+  document.documentElement.dataset.learningProfile = "guided";
 }
 
 async function mountLearningProfile() {
   try {
     const profile = await loadLearningProfile();
     if (lessonId()) mountLessonPosition(profile);
-    else mountProfileHome(profile);
-    propagateCompactLinks();
   } catch (error) {
     console.warn("Learning profile unavailable:", error);
   }
+}
+
+function mountContentTransparency() {
+  if (document.querySelector("[data-content-transparency]")) return;
+  const main = document.querySelector("main");
+  if (!main) return;
+  const words = profileWords();
+  const disclosure = document.createElement("details");
+  disclosure.className = "publication-disclosure";
+  disclosure.dataset.contentTransparency = "ai-assisted-human-reviewed";
+
+  const summary = document.createElement("summary");
+  summary.textContent = words.transparencySummary;
+  const body = document.createElement("p");
+  body.append(document.createTextNode(`${words.transparencyBody} `));
+  const imageLink = document.createElement("a");
+  imageLink.href = "assets/SKILL.html";
+  imageLink.textContent = words.imageProvenance;
+  const materialLink = document.createElement("a");
+  materialLink.href = "mats/SKILL.html";
+  materialLink.textContent = words.materialProvenance;
+  body.append(imageLink, document.createTextNode(" · "), materialLink, document.createTextNode("."));
+  disclosure.append(summary, body);
+  main.insertBefore(disclosure, main.querySelector(":scope > footer"));
 }
 
 export function readLearningDepth() {
@@ -268,5 +260,6 @@ export function mountLearningView() {
   try { storage()?.setItem(LEARNING_DEPTH_KEY, "guided"); } catch (_) {}
   applyLearningDepth("guided");
   mountHashReveal();
+  mountContentTransparency();
   void mountLearningProfile();
 }
