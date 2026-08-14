@@ -16,57 +16,6 @@
   <script src="vendor/codemirror-mode-htmlmixed-5.65.21.js"></script>
   <script src="vendor/codemirror-mode-python-5.65.21.js"></script>
   <style>
-    .url-pair {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin: 1em 0;
-    }
-
-    @media (max-width: 700px) {
-      .url-pair {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .url-card {
-      display: block;
-      text-decoration: none;
-      color: inherit;
-      background: var(--e1);
-      border: 1px solid var(--bd);
-      border-radius: var(--r);
-      padding: 14px 16px;
-      transition: opacity .15s;
-    }
-
-    .url-card:hover,
-    .url-card:focus-visible {
-      opacity: .8;
-    }
-
-    .url-card h3 {
-      margin: 0 0 .35em;
-      font-size: .95rem;
-      color: var(--gs);
-      font-family: var(--mono);
-    }
-
-    .url-card h3 a {
-      color: inherit;
-    }
-
-    .url-card p {
-      margin: .25em 0;
-      font-size: .84rem;
-      color: var(--td);
-      line-height: 1.55;
-    }
-
-    .url-card code {
-      font-size: .82em;
-    }
-
     figure.lp-video {
       margin: 1.4em 0;
     }
@@ -118,20 +67,30 @@
     <div class="hero">
       <div class="eyebrow">Module 3 · Part A of 3 · live calls begin</div>
       <h1>Connect the <span>NemoClaw</span> Stack</h1>
-      <p class="lead">
-        In Modules 1 and 2, we kept orchestration in the browser, and each workflow ended when the page stopped
-        carrying its messages, intermediate results, or branch state. Module 3 moves the same agent patterns into a
-        <a href="https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990" target="_blank" rel="noopener">
-        NemoClaw Brev launchable</a>. In this setup, the <strong>LLM</strong> supplies semantic responses;
-        the <strong>OpenClaw harness</strong> preserves session history, a file-backed workspace, and tool access;
-        the <strong>OpenShell sandbox</strong> limits what the running agent can reach; and the
-        <strong>NemoClaw blueprint</strong> configures OpenClaw and OpenShell to work together. From the browser,
-        you will compare the stateless model API with the persistent OpenClaw gateway.
-      </p>
+      <div class="lead">
+        <p>
+          In Modules 1 and 2, we kept orchestration in the browser, and each workflow ended when the page stopped
+          carrying its messages, intermediate results, or branch state. Module 3 moves the same agent patterns into a
+          <a href="https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990" target="_blank" rel="noopener">
+          NemoClaw Brev launchable</a>.
+        </p>
+        <p>The main functional components of this deployment are:</p>
+        <ul>
+          <li><strong>LLM endpoint.</strong> Turns prompts and tool results into semantic responses, but does not retain the agent's session state.</li>
+          <li><strong>OpenClaw harness.</strong> Preserves session history, a file-backed workspace, and tool access.</li>
+          <li><strong>OpenShell sandbox.</strong> Limits what the running agent can reach.</li>
+          <li><strong>NemoClaw blueprint.</strong> Configures OpenClaw and OpenShell to work together.</li>
+        </ul>
+        <p>
+          In this lesson, you will connect the browser to the launchable, inspect its four connection paths, use one
+          direct model call as a control, send a tool-using agent turn through the gateway, and prove that a
+          <code>sessionKey</code> restores history the client did not resend.
+        </p>
+      </div>
       <figure style="margin:1.4em 0">
         <div class="fig-embed" data-svg-src="assets/figures/03a-nemoclaw-workflow.svg" style="aspect-ratio:1200 / 620"></div>
         <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">
-          Runtime roles in the NemoClaw blueprint. Course redraw adapted from NVIDIA's
+          Runtime roles in the NemoClaw blueprint, adapted from NVIDIA's
           <a href="https://build.nvidia.com/nvidia/nemoclaw-for-openclaw/nemoclawcard?ncid=ref-dli-146986"
             target="_blank" rel="noopener">NemoClaw for OpenClaw workflow</a>.
         </figcaption>
@@ -152,43 +111,6 @@
       </figcaption>
     </figure>
     -->
-
-    <h2>The two endpoints you work with from here</h2>
-    <p>
-      The model route is stateless and uses an <code>nvapi-</code> key. The NemoClaw route keeps a
-      running OpenClaw session inside OpenShell. Compare each route's URL, credential, and state below.
-    </p>
-    <figure style="margin:1.4em 0">
-      <div class="fig-embed" data-svg-src="assets/figures/03a-kickstart-1.svg" style="aspect-ratio:1300 / 400"></div>
-      <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">Access moves from stateless model HTTP, to server-side conversation state, to standard tool protocols, to the long-lived WebSocket that streams a live OpenClaw agent session.</figcaption>
-    </figure>
-    <p>The diagram separates three interfaces:</p>
-    <ul>
-      <li><strong>REST (Representational State Transfer).</strong> One request carries all the information needed to produce one response.</li>
-      <li><strong><a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener">Model Context Protocol (MCP)</a>.</strong> A common request format lets a runtime discover and call tools.</li>
-      <li><strong>OpenClaw gateway.</strong> A <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API" target="_blank" rel="noopener">WebSocket</a> at <code>/cli/gateway</code> carries <a href="https://www.jsonrpc.org/specification" target="_blank" rel="noopener">JSON-RPC</a> events for the agent session.</li>
-    </ul>
-
-    <div class="url-pair">
-      <a class="url-card" href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener">
-        <h3>build.nvidia.com</h3>
-        <p>Call the Chat Completions API with an <code>nvapi-</code> key. Each POST carries its own
-          messages. No tool or session state is kept between calls.</p>
-        <p style="color:var(--tf);font-size:.8rem">Credential: <code>nvapi-</code> key.</p>
-      </a>
-      <a class="url-card"
-        href="https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990"
-        target="_blank" rel="noopener">
-        <h3>Launch NemoClaw on Brev</h3>
-        <p>The interface below connects to Brev hostings of OpenClaw in OpenShell.</p>
-        <p style="color:var(--tf);font-size:.8rem">Launchable access:
-          <code>_pomerium</code> or <code>CF_Authorization</code>.</p>
-      </a>
-    </div>
-    <p>Local deployments use the same gateway contract; follow the
-      <a href="https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986"
-        target="_blank" rel="noopener">NemoClaw setup playbook</a>.
-    </p>
 
     <h2>Start the launchable</h2>
     <ol>
@@ -249,50 +171,54 @@
 
     <div id="claw-raw-cell"></div>
 
-    <h2>Step 1 · Verify the model route</h2>
-    <p>The model probe checks the persistent chat route configured on the course home page or in
-      Module 1a. It remains separate from the launchable connection you verified above.</p>
+    <h2>Step 1 · Establish the model-only control</h2>
+    <p>The launchable checks above prove that the running stack is reachable. Before sending an agent
+      turn, make one direct Chat Completions request through the model route used in Modules 1 and 2.
+      This control has no OpenClaw session or gateway tools, so Step 2 can show what the harness adds.
+      It does not inspect or reconfigure the model inside your launchable.</p>
 
-    <h3>Model route settings</h3>
-    <p>The model probe is a read-only mirror of the persistent chat route configured on the course home
-      page or in Module 1a. Change it here once; the benchmark and later lessons reuse that route. The
-      NemoClaw launchable settings below remain separate.</p>
+    <h3>Confirm the direct model connection</h3>
+    <p>The settings card mirrors the course model route saved on the home page or in Module 1a. Change
+      it only if the direct probe fails. The course model route and the launchable connection retain
+      separate credentials and state.</p>
     <div id="model-route-settings"></div>
     <div id="probe-llm"></div>
 
-    <h3>Latency and time to first token across models</h3>
-    <p>Before committing to a model, measure it. The cells below pull matching
-      models from the catalog, stream a short prompt through each one, and
-      record each model's <em>time to first token</em> (TTFT) and time to
-      finish. The catalog-fetching cell starts open so the filter list is visible
-      before you run the benchmark.</p>
+    <details class="vocab-menu">
+      <summary>Optional · Compare direct model latency</summary>
+      <p>The optional benchmark pulls matching models from the catalog, streams one short prompt through
+        each, and records time to first token (TTFT) and time to finish. These are direct API measurements;
+        they do not measure the planning, tools, or session work added by the OpenClaw gateway.</p>
+      <div id="bench-llm"></div>
+    </details>
 
-    <div id="bench-llm"></div>
+    <h2>Step 2 · Operate the agent through its gateway</h2>
 
-    <h2>Step 2 · The gateway</h2>
+    <p>Step 1 established the model-only control: one Chat Completions <code>POST</code> carried the
+      model, messages, and caller authorization. OpenClaw calls its configured model inside the
+      launchable, but this page operates the running agent through a different interface.</p>
 
-    <p>The model endpoint speaks the Chat Completions API, where a single POST
-      carries everything the call needs.</p>
+    <p>The diagram compares interfaces used at different layers, not one request path:</p>
+
+    <figure style="margin:1.4em 0">
+      <div class="fig-embed" data-svg-src="assets/figures/03a-kickstart-1.svg" style="aspect-ratio:1300 / 400"></div>
+      <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">Three interfaces at different layers: bounded model HTTP, MCP tool integration inside the runtime, and the live WebSocket to the OpenClaw gateway.</figcaption>
+    </figure>
     <ul>
-      <li>The request line is a single <code>POST</code> to the completions route.</li>
-      <li>The JSON body carries <code>model</code> and <code>messages</code>.</li>
-      <li>An <code>Authorization</code> header names the caller.</li>
+      <li><strong>REST (Representational State Transfer).</strong> The direct model control in Step 1 uses one bounded HTTP request and response. An API can still identify server-side state between calls.</li>
+      <li><strong><a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener">Model Context Protocol (MCP)</a>.</strong> Inside an agent runtime, MCP standardizes tool and context discovery and invocation. It does not carry this browser's gateway traffic.</li>
+      <li><strong>OpenClaw gateway.</strong> The exercise below and the Control UI use the same <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API" target="_blank" rel="noopener"><code>/cli/gateway</code> WebSocket</a>. It carries <a href="https://www.jsonrpc.org/specification" target="_blank" rel="noopener">JSON-RPC</a> events between the browser client and the running agent.</li>
     </ul>
-    <p>OpenClaw implements that same route internally too. A separately hosted course reads its
-      metadata through the launchable access layer, then opens authenticated WebSockets directly
-      from the signed-in browser.</p>
-    <p>The channel that <em>is</em> open to you runs a different protocol, a
-      WebSocket at <code>/cli/gateway</code> speaking JSON-RPC.
-    </p>
 
+    <h3>Authorize the gateway</h3>
     <div class="callout">
-      <p>The Control UI in your browser tab does not use a special private channel.
-        It talks to the agent over the same WebSocket at <code>/cli/gateway</code> that is
-        open to you. After the browser authenticates to the launchable with its access session,
-        the Control UI authenticates gateway calls with the gateway token. A
-        <code>GET /api/agent</code> returns it under the field <code>agent.dashboardUrl</code>,
-        a read that your launchable session authorises. Leave the token field blank and
-        let the probe fill it in.</p>
+      <p>Reaching the launchable and operating its gateway require separate credentials:</p>
+      <ul>
+        <li><strong>Launchable access.</strong> The browser session reaches the host.</li>
+        <li><strong>Gateway authority.</strong> The gateway token authorizes JSON-RPC calls.</li>
+      </ul>
+      <p>After launchable authentication, <code>GET /api/agent</code> returns the gateway token under
+        <code>agent.dashboardUrl</code>. Leave the token field blank and let the probe fill it in.</p>
     </div>
 
     <p>That token carries <code>operator.admin</code> scope, the same authority
@@ -514,7 +440,7 @@ helpers.log("rendered below. Edit the config and Run.");
       const MODEL_API_BASE_URL = MODEL_API_CONFIG.url;
       mountModelEndpointProbe("#probe-llm", {
       label: "Probe active model endpoint",
-      intro: "Read-only mirror of the saved chat route. Change it in Model route settings above; it never reads or writes NemoClaw launchable values.",
+      intro: "Direct model-only control. Change the saved course route above; this never reads, writes, or configures NemoClaw launchable values.",
       defaultUrl: MODEL_API_BASE_URL,
       defaultToken: getKey() || "",
       credentials: modelRequestCredentials(MODEL_API_BASE_URL),

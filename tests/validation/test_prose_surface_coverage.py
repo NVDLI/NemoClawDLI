@@ -18,6 +18,13 @@ class ProseSurfaceCoverageTests(unittest.TestCase):
         path.write_text(body, encoding="utf-8")
         return path
 
+    def test_concept_findings_map_to_their_lesson_page(self) -> None:
+        self.assertEqual(
+            "web/nemoclaw/03a-kickstart.html",
+            validate_bundle._concept_page("03a-kickstart.html: missing prerequisite"),
+        )
+        self.assertEqual("web/nemoclaw", validate_bundle._concept_page("course-level finding"))
+
     def test_component_fields_and_comments_enter_shared_prose(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prose-components-") as temp:
             page = self.write(Path(temp), "lesson.html", '''<!doctype html><html lang="en"><body>

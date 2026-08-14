@@ -307,6 +307,21 @@ def audit_launchable_transport(surfaces: dict[str, str], connection: str, shared
     return findings
 
 
+class AnchorTargetParser(HTMLParser):
+    """Collect complete anchor targets for exact comparisons."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.targets: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag != "a":
+            return
+        href = dict(attrs).get("href")
+        if href is not None:
+            self.targets.append(href)
+
+
 def audit_launchable_learning_path(pages: dict[str, str]) -> list[str]:
     """Keep browser-session acquisition and the launchable probe ahead of model work."""
     findings: list[str] = []
@@ -325,15 +340,15 @@ def audit_launchable_learning_path(pages: dict[str, str]) -> list[str]:
         text = pages[name]
         for token in required_normal:
             _need(findings, token in text, f"{name}: normal launch path is missing {token}")
-        credential_cards = [
-            paragraph for paragraph in re.findall(r"<p\b[^>]*>.*?</p>", text, re.S | re.I)
-            if re.search(r"(?:launchable access|acceso al launchable|acesso ao launchable)", paragraph, re.I)
+        credential_boundaries = [
+            item for item in re.findall(r"<li\b[^>]*>.*?</li>", text, re.S | re.I)
+            if re.search(r"(?:browser cookie|cookie del navegador|cookie do navegador)", item, re.I)
         ]
         _need(findings, any(
             "<code>_pomerium</code>" in paragraph
             and "<code>CF_Authorization</code>" in paragraph
-            for paragraph in credential_cards
-        ), f"{name}: launchable card must name _pomerium and CF_Authorization as its access sessions")
+            for paragraph in credential_boundaries
+        ), f"{name}: launchable access guidance must name _pomerium and CF_Authorization as browser cookies")
         _need(findings, "x-openclaw-session-key" not in text,
               f"{name}: generic relay-session guidance conflates gateway and launchable credentials")
         _need(findings, re.search(
@@ -360,6 +375,24 @@ def audit_launchable_learning_path(pages: dict[str, str]) -> list[str]:
               f"{name}: browser-cookie guidance must prohibit copying the complete Cookie header")
         _need(findings, 0 <= browser_start < probe_start < raw_audit_start < model_start,
               f"{name}: browser-session guidance, connection probe, route inspection, and model setup are out of order")
+
+    english = pages["en-03a"]
+    gateway_step = english.find("Step 2 · Operate the agent through its gateway")
+    architecture_figure = english.find("03a-kickstart-1.svg")
+    authorization = english.find("Authorize the gateway")
+    operator_scope = english.find("operator.admin")
+    _need(findings, 0 <= gateway_step < architecture_figure < authorization < operator_scope,
+          "en-03a: gateway architecture, authorization, and operator capabilities must form one Step 2 sequence")
+    mcp_items = []
+    for item in re.findall(r"<li\b[^>]*>.*?</li>", english, re.S | re.I):
+        links = AnchorTargetParser()
+        links.feed(item)
+        if any(target == "https://modelcontextprotocol.io/" for target in links.targets):
+            mcp_items.append(item)
+    _need(findings, len(mcp_items) == 1 and "gateway traffic" in mcp_items[0],
+          "en-03a: MCP entry must distinguish runtime tool integration from gateway transport")
+    _need(findings, "build.nvidia.com/spark/nemoclaw-applications" not in english,
+          "en-03a: gateway lesson must not interrupt Step 2 with the separate local setup playbook")
     return findings
 
 
@@ -1941,18 +1974,23 @@ def self_test() -> list[str]:
         ("running assistant card", "my-assistant", "some-agent"),
         ("normal token discovery", "Chat with Agent", "Open Agent"),
         ("Cloudflare hostname family", "brevlab.com", "other.example"),
-        ("retired recovery disclosure", "<h2>Step 1 · Verify the model route</h2>",
-         '<details class="recovery-note">openclaw dashboard --no-open</details><h2>Step 1 · Verify the model route</h2>'),
+        ("retired recovery disclosure", "<h2>Step 1 · Establish the model-only control</h2>",
+         '<details class="recovery-note">openclaw dashboard --no-open</details><h2>Step 1 · Establish the model-only control</h2>'),
         ("credential distinction", "The gateway token authorizes JSON-RPC calls on <code>/cli/gateway</code>.",
          "The gateway token and launchable access session are interchangeable."),
         ("browser-cookie retrieval", "<strong>Firefox:</strong>", "<strong>Another browser:</strong>"),
         ("launchable probe ordering", 'id="probe-claw"', 'id="probe-claw-delayed"'),
-        ("launchable credential card", "Launchable access:\n          <code>_pomerium</code> or <code>CF_Authorization</code>.",
-         "Launchable access: Pomerium browser session or <code>CF_Authorization</code>."),
-        ("generic relay session conflation", "Launchable access:",
+        ("launchable access cookies", "The access session, an <code>_pomerium</code> or <code>CF_Authorization</code> browser cookie,",
+         "The access session, a browser cookie,"),
+        ("generic relay session conflation", "The gateway token and the launchable access session authorize different things:",
          "Gateway credential: gateway token. Session: <code>x-openclaw-session-key</code>."),
-        ("only-credential conflation", "After the browser authenticates to the launchable with its access session,",
-         "The only credential is the gateway token. After the browser authenticates to the launchable with its access session,"),
+        ("only-credential conflation", "Reaching the launchable and operating its gateway require separate credentials:",
+         "The only credential is the gateway token."),
+        ("detached MCP boundary", "It does not carry this browser's gateway traffic.", ""),
+        ("MCP lookalike link", 'href="https://modelcontextprotocol.io/"',
+         'href="https://modelcontextprotocol.io.attacker.example/"'),
+        ("local setup aside restored", "<h3>Authorize the gateway</h3>",
+         '<p>Follow <a href="https://build.nvidia.com/spark/nemoclaw-applications">the local setup playbook</a>.</p><h3>Authorize the gateway</h3>'),
     )
     for label, old, new in launch_page_mutations:
         mutated_pages = dict(runtime_pages)

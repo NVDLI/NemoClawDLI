@@ -144,7 +144,7 @@ CHECKS = [
         "page": "03a-kickstart.html",
         "label": "persistent runtime introduced from the browser-hosted workflows",
         "before": "In Modules 1 and 2, we kept orchestration in the browser",
-        "after": "The two endpoints you work with from here",
+        "after": "Start the launchable",
     },
     {
         "page": "03b-openclaw.html",

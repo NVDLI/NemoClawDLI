@@ -30,7 +30,7 @@ Usage:
   python3 scripts/validation/validate_bundle.py --no-write   # gate only, no log file
 """
 from __future__ import annotations
-import argparse, json, os, subprocess, sys
+import argparse, json, os, re, subprocess, sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -60,6 +60,11 @@ SCRIPTS = TASK1 / "scripts"
 add_script_paths(SCRIPTS)
 import link_projection as lp  # noqa: E402
 import grounding as gr  # noqa: E402
+
+
+def _concept_page(detail: str) -> str:
+    match = re.match(r"([^:]+\.html):", detail)
+    return f"web/nemoclaw/{match.group(1)}" if match else "web/nemoclaw"
 
 # prose_variety emits both buzz constructions and phrase-level redundancy in one example stream;
 # these kinds are the redundancy half, routed to the redundancy suite (the rest are buzz cadence).
@@ -935,10 +940,6 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
 
     def D(page, detail, severity, fix):
         return {"page": page, "detail": detail, "severity": severity, "fix": fix}
-
-    def _concept_page(detail):
-        match = re.match(r"([^:]+\.html):", detail)
-        return f"web/nemoclaw/{match.group(1)}" if match else "web/nemoclaw"
 
     def _interface_severity(item):
         # Structural anti-patterns are language-neutral and always block. Localized prose still

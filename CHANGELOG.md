@@ -5,6 +5,8 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Thanks to Vadim Kudlay for reviewing the final Module 3a gateway narrative and localized figure
+  captions in English, Spanish, and Brazilian Portuguese.
 - Thanks to Vadim Kudlay for reviewing the Spanish and Brazilian Portuguese localization of the
   Guided profile, AI-content disclosure, Module 3 explanation, and Course Assistant layout updates.
 - Added lesson-grounded search metadata for the released NemoClaw course, canonical and locale URL
