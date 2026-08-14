@@ -80,11 +80,17 @@ class ConceptOrderContractTests(unittest.TestCase):
             in item
                             for item in findings))
 
-    def test_compact_cannot_define_a_copied_tree(self) -> None:
+    def test_guided_cannot_define_a_copied_tree(self) -> None:
         profile = self.profile()
-        profile["profiles"]["compact"]["copied_tree"] = "web/compact"
+        profile["profiles"]["guided"]["copied_tree"] = "web/guided"
         findings = concept_order_audit.audit(profile_override=profile)
         self.assertTrue(any("must not define a copied lesson tree" in item for item in findings))
+
+    def test_query_only_duplicate_profile_is_rejected(self) -> None:
+        profile = self.profile()
+        profile["profiles"]["compact"] = {"query": "profile=compact", "detail": "guided"}
+        findings = concept_order_audit.audit(profile_override=profile)
+        self.assertTrue(any("Guided must be the only default profile" in item for item in findings))
 
     def test_required_concept_spine_cannot_move_into_optional_copy(self) -> None:
         cases = {

@@ -1,0 +1,82 @@
+<svg data-locale="es-ES" class="gfx-dark" viewBox="0 0 1200 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="NemoClaw configura el entorno de ejecución del agente OpenClaw y el sandbox de OpenShell. OpenClaw conserva la lógica del agente, las skills, la memoria y las herramientas; el LLM proporciona respuestas semánticas; OpenShell aplica la política antes de que las herramientas accedan a los recursos protegidos." preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;display:block;background:var(--gfx-bg);border:1px solid var(--gfx-line);border-radius:12px;padding:16px;max-width:1400px;margin:1.5rem auto">
+  <!-- Course redraw adapted from NVIDIA's NemoClaw for OpenClaw workflow:
+       https://assets.ngc.nvidia.com/products/api-catalog/nemoclaw/nemoclaw-for-openclaw/workflow.png -->
+  <style>
+    svg.gfx-dark{--gfx-ink:#e8eaed;--gfx-ink2:#c6cace;--gfx-sub:#9aa0a6;--gfx-faint:#6b7177;--gfx-line:#3a3f45;--gfx-panel:#17191c;--gfx-bg:#0d0d0d;--gfx-green:#9bd14a;--gfx-blue:#5aa8ff;--gfx-amber:#f2b84b;--gfx-tint-green:#1d2a12;--gfx-tint-blue:#15273d;--gfx-tint-amber:#33270f}
+  </style>
+  <defs>
+    <marker id="ncw-arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1L9 5L1 9Z" fill="var(--gfx-green)"/>
+    </marker>
+    <marker id="ncw-arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1L9 5L1 9Z" fill="var(--gfx-blue)"/>
+    </marker>
+    <marker id="ncw-arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1L9 5L1 9Z" fill="var(--gfx-amber)"/>
+    </marker>
+  </defs>
+
+  <rect x="290" y="26" width="620" height="72" rx="12" fill="var(--gfx-tint-green)" stroke="var(--gfx-green)" stroke-width="2"/>
+  <text x="600" y="58" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="800" fill="var(--gfx-green)">Blueprint de NemoClaw</text>
+  <text x="600" y="82" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="var(--gfx-ink2)">configura el entorno de ejecución y el sandbox</text>
+
+  <path d="M480 98V126H220V151" fill="none" stroke="var(--gfx-green)" stroke-width="2" marker-end="url(#ncw-arrow-green)"/>
+  <path d="M720 98V126H600V151" fill="none" stroke="var(--gfx-green)" stroke-width="2" marker-end="url(#ncw-arrow-green)"/>
+
+  <g id="openclaw-harness">
+    <rect x="55" y="158" width="330" height="126" rx="12" fill="var(--gfx-panel)" stroke="var(--gfx-green)" stroke-width="2"/>
+    <circle cx="105" cy="215" r="24" fill="var(--gfx-tint-green)" stroke="var(--gfx-green)" stroke-width="2"/>
+    <path d="M94 215a11 11 0 1 1 5 9" fill="none" stroke="var(--gfx-green)" stroke-width="3" stroke-linecap="round"/>
+    <path d="M96 225l3-9 8 5" fill="none" stroke="var(--gfx-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="145" y="205" font-family="Arial, sans-serif" font-size="19" font-weight="800" fill="var(--gfx-ink)">Entorno de OpenClaw</text>
+    <text x="145" y="235" font-family="Arial, sans-serif" font-size="15" fill="var(--gfx-sub)">sesión · workspace · herramientas</text>
+    <text x="145" y="260" font-family="Arial, sans-serif" font-size="15" fill="var(--gfx-sub)">identidad y memoria del agente</text>
+  </g>
+
+  <g id="openshell-sandbox">
+    <rect x="435" y="158" width="330" height="126" rx="12" fill="var(--gfx-panel)" stroke="var(--gfx-amber)" stroke-width="2"/>
+    <path d="M485 184l26 10v22c0 22-13 35-26 42-13-7-26-20-26-42v-22Z" fill="var(--gfx-tint-amber)" stroke="var(--gfx-amber)" stroke-width="2"/>
+    <path d="M474 219l8 8 16-19" fill="none" stroke="var(--gfx-amber)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="530" y="205" font-family="Arial, sans-serif" font-size="19" font-weight="800" fill="var(--gfx-ink)">Sandbox de OpenShell</text>
+    <text x="530" y="235" font-family="Arial, sans-serif" font-size="15" fill="var(--gfx-sub)">política · aislamiento · acceso</text>
+    <text x="530" y="260" font-family="Arial, sans-serif" font-size="15" fill="var(--gfx-sub)">aplica el límite de alcance</text>
+  </g>
+
+  <g id="llm-endpoint">
+    <rect x="815" y="158" width="330" height="126" rx="12" fill="var(--gfx-panel)" stroke="var(--gfx-blue)" stroke-width="2"/>
+    <circle cx="865" cy="220" r="23" fill="var(--gfx-tint-blue)" stroke="var(--gfx-blue)" stroke-width="2"/>
+    <circle cx="855" cy="212" r="4" fill="var(--gfx-blue)"/>
+    <circle cx="876" cy="208" r="4" fill="var(--gfx-blue)"/>
+    <circle cx="873" cy="231" r="4" fill="var(--gfx-blue)"/>
+    <path d="M858 213l14-4m3 4l-2 14m-4 1l-11-12" fill="none" stroke="var(--gfx-blue)" stroke-width="2"/>
+    <text x="910" y="205" font-family="Arial, sans-serif" font-size="19" font-weight="800" fill="var(--gfx-ink)">Endpoint del LLM</text>
+    <text x="910" y="235" font-family="Arial, sans-serif" font-size="15" fill="var(--gfx-sub)">respuestas semánticas</text>
+    <text x="910" y="260" font-family="Arial, sans-serif" font-size="15" fill="var(--gfx-sub)">modelo abierto o avanzado</text>
+  </g>
+
+  <path d="M220 284V327" fill="none" stroke="var(--gfx-green)" stroke-width="2" marker-end="url(#ncw-arrow-green)"/>
+  <path d="M600 284V327" fill="none" stroke="var(--gfx-amber)" stroke-width="2" marker-end="url(#ncw-arrow-amber)"/>
+  <path d="M980 284V327" fill="none" stroke="var(--gfx-blue)" stroke-width="2" marker-end="url(#ncw-arrow-blue)"/>
+
+  <rect x="55" y="335" width="1090" height="106" rx="14" fill="var(--gfx-panel)" stroke="var(--gfx-line)" stroke-width="2"/>
+  <text x="600" y="374" text-anchor="middle" font-family="Arial, sans-serif" font-size="27" font-weight="800" fill="var(--gfx-ink)">Lógica del agente &amp; herramientas</text>
+  <text x="600" y="408" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" fill="var(--gfx-sub)">skills · memoria · plugins · llamadas a herramientas</text>
+
+  <path d="M600 441V484" fill="none" stroke="var(--gfx-amber)" stroke-width="2" marker-end="url(#ncw-arrow-amber)"/>
+  <text x="620" y="470" font-family="Arial, sans-serif" font-size="15" fill="var(--gfx-amber)">control de políticas</text>
+
+  <g id="protected-resources">
+    <rect x="55" y="492" width="1090" height="94" rx="14" fill="none" stroke="var(--gfx-line)" stroke-width="2"/>
+    <line x1="327" y1="508" x2="327" y2="570" stroke="var(--gfx-line)"/>
+    <line x1="600" y1="508" x2="600" y2="570" stroke="var(--gfx-line)"/>
+    <line x1="873" y1="508" x2="873" y2="570" stroke="var(--gfx-line)"/>
+    <text x="191" y="535" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="700" fill="var(--gfx-ink2)">Workspace</text>
+    <text x="191" y="560" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="var(--gfx-sub)">archivos y datos</text>
+    <text x="464" y="535" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="700" fill="var(--gfx-ink2)">API &amp; servicios</text>
+    <text x="464" y="560" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="var(--gfx-sub)">herramientas de red</text>
+    <text x="736" y="535" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="700" fill="var(--gfx-ink2)">Sistemas empresariales</text>
+    <text x="736" y="560" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="var(--gfx-sub)">recursos aprobados</text>
+    <text x="1009" y="535" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="700" fill="var(--gfx-ink2)">Nube &amp; edge</text>
+    <text x="1009" y="560" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="var(--gfx-sub)">ejecución remota</text>
+  </g>
+</svg>

@@ -34,6 +34,10 @@ class PublicationIntegrityTests(unittest.TestCase):
         course.mkdir(parents=True)
         for path in COURSE.glob("*.html"):
             shutil.copy2(path, course / path.name)
+        (course / "scripts").mkdir()
+        shutil.copy2(COURSE / "scripts" / "_learning.js", course / "scripts" / "_learning.js")
+        (course / "styles").mkdir()
+        shutil.copy2(COURSE / "styles" / "_style.css", course / "styles" / "_style.css")
         return course
 
     def codes(self, findings: list[dict[str, str]]) -> set[str]:
@@ -98,6 +102,23 @@ class PublicationIntegrityTests(unittest.TestCase):
 
         deepfake = {**base, "content_origin": "course-authored", "transparency_class": "deepfake", "visible_disclosure_required": True}
         self.assertIn("media-label", self.codes(audit.audit_contract(self.contract(), provenance=(deepfake,))))
+
+    def test_learner_disclosure_contract_and_runtime_fail_closed(self) -> None:
+        data = self.contract()
+        del data["text_transparency"]["learner_disclosure"]
+        self.assertIn("text-disclosure-contract", self.codes(audit.audit_contract(data, provenance=())))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            course = self.copy_course(Path(tmp))
+            runtime = course / "scripts" / "_learning.js"
+            raw = runtime.read_text(encoding="utf-8")
+            runtime.write_text(raw.replace('imageLink.href = "assets/SKILL.html"', 'imageLink.href = "missing.html"', 1), encoding="utf-8")
+            self.assertIn("text-disclosure-runtime", self.codes(audit.audit_contract(self.contract(), course=course, provenance=())))
+
+            style = course / "styles" / "_style.css"
+            raw = style.read_text(encoding="utf-8")
+            style.write_text(raw.replace("justify-self: end", "justify-self: start", 1), encoding="utf-8")
+            self.assertIn("assistant-overview-layout", self.codes(audit.audit_contract(self.contract(), course=course, provenance=())))
 
     def test_novel_static_and_runtime_media_are_discovered(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

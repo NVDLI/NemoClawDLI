@@ -307,6 +307,45 @@ def audit_contract(
         for key, value in required_text.items():
             if text.get(key) != value:
                 out.append(finding("text-transparency", contract_path, f"text_transparency {key} must be {value!r}"))
+        learner = text.get("learner_disclosure")
+        required_learner = {
+            "surface": "shared-learning-view",
+            "selector": '[data-content-transparency="ai-assisted-human-reviewed"]',
+            "summary": "AI-assisted content · human reviewed",
+            "provenance_links": ["assets/SKILL.html", "mats/SKILL.html"],
+        }
+        if not isinstance(learner, dict):
+            out.append(finding("text-disclosure-contract", contract_path, "text_transparency must define a learner_disclosure object"))
+        else:
+            for key, value in required_learner.items():
+                if learner.get(key) != value:
+                    out.append(finding("text-disclosure-contract", contract_path, f"learner_disclosure {key} must be {value!r}"))
+
+        learning_path = course / "scripts" / "_learning.js"
+        learning = learning_path.read_text(encoding="utf-8", errors="replace") if learning_path.is_file() else ""
+        runtime_requirements = {
+            'disclosure.dataset.contentTransparency = "ai-assisted-human-reviewed"': "shared learning view must mount the classified learner disclosure",
+            'transparencySummary: "AI-assisted content · human reviewed"': "English disclosure summary must be immediately recognizable",
+            'transparencySummary: "Contenido con asistencia de IA · revisión humana"': "Spanish disclosure summary must be localized",
+            'transparencySummary: "Conteúdo com assistência de IA · revisão humana"': "Brazilian Portuguese disclosure summary must be localized",
+            'imageLink.href = "assets/SKILL.html"': "learner disclosure must link image provenance",
+            'materialLink.href = "mats/SKILL.html"': "learner disclosure must link material provenance",
+            "mountContentTransparency();": "shared learning view must mount the learner disclosure on course pages",
+        }
+        for token, detail in runtime_requirements.items():
+            if token not in learning:
+                out.append(finding("text-disclosure-runtime", f"{rel}/scripts/_learning.js", detail))
+
+        style_path = course / "styles" / "_style.css"
+        style = style_path.read_text(encoding="utf-8", errors="replace") if style_path.is_file() else ""
+        layout_requirements = {
+            "grid-template-columns: minmax(0, 3fr) minmax(max-content, 1fr)": "Course Assistant overview copy must retain about three quarters of the row",
+            ".course-assistant-entry > .help { grid-column: 1; max-width: none; margin: 0; text-align: left; }": "Course Assistant overview copy must remain left aligned",
+            ".course-assistant-entry > .course-assistant-open { grid-column: 2; justify-self: end; white-space: nowrap; }": "Course Assistant action must remain right aligned",
+        }
+        for token, detail in layout_requirements.items():
+            if token not in style:
+                out.append(finding("assistant-overview-layout", f"{rel}/styles/_style.css", detail))
 
     runtime_media = data.get("runtime_media")
     if not isinstance(runtime_media, list):
