@@ -204,7 +204,7 @@ Sources of truth are the exact lock files named in the Scope column. The same pa
 | security-tooling | msgpack | 1.2.1 | Apache-2.0 | [PyPI](https://pypi.org/pypi/msgpack/1.2.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | packageurl-python | 0.17.6 | MIT | [PyPI](https://pypi.org/pypi/packageurl-python/0.17.6/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | packaging | 26.2 | Apache-2.0 OR BSD-2-Clause | [PyPI](https://pypi.org/pypi/packaging/26.2/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
-| host-bootstrap, security-tooling | pip | 26.1.2 | MIT | [PyPI](https://pypi.org/pypi/pip/26.1.2/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock); [`docs/lab_runtime_testing.md`](docs/lab_runtime_testing.md) |
+| host-bootstrap, security-tooling | pip | 26.2.1 | MIT | [PyPI](https://pypi.org/pypi/pip/26.2.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock); [`docs/lab_runtime_testing.md`](docs/lab_runtime_testing.md) |
 | security-tooling | pip-api | 0.0.34 | Apache-2.0 | [PyPI](https://pypi.org/pypi/pip-api/0.0.34/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | pip-audit | 2.10.1 | Apache-2.0 | [PyPI](https://pypi.org/pypi/pip-audit/2.10.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | pip-requirements-parser | 32.0.1 | MIT | [PyPI](https://pypi.org/pypi/pip-requirements-parser/32.0.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
@@ -220,7 +220,7 @@ Sources of truth are the exact lock files named in the Scope column. The same pa
 | security-tooling | rfc3987-syntax | 1.1.0 | MIT | [PyPI](https://pypi.org/pypi/rfc3987-syntax/1.1.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | rich | 15.0.0 | MIT | [PyPI](https://pypi.org/pypi/rich/15.0.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | rpds-py | 2026.6.3 | MIT | [PyPI](https://pypi.org/pypi/rpds-py/2026.6.3/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
-| security-tooling | setuptools | 83.0.0 | MIT | [PyPI](https://pypi.org/pypi/setuptools/83.0.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
+| security-tooling | setuptools | 84.0.0 | MIT | [PyPI](https://pypi.org/pypi/setuptools/84.0.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | material-tooling, security-tooling | six | 1.17.0 | MIT | [PyPI](https://pypi.org/pypi/six/1.17.0/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | sortedcontainers | 2.4.0 | Apache-2.0 | [PyPI](https://pypi.org/pypi/sortedcontainers/2.4.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | material-tooling | soupsieve | 2.8.4 | MIT | [PyPI](https://pypi.org/pypi/soupsieve/2.8.4/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock) |
@@ -232,7 +232,7 @@ Sources of truth are the exact lock files named in the Scope column. The same pa
 | material-tooling, security-tooling | urllib3 | 2.7.0 | MIT | [PyPI](https://pypi.org/pypi/urllib3/2.7.0/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | webcolors | 25.10.0 | BSD-3-Clause | [PyPI](https://pypi.org/pypi/webcolors/25.10.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | wheel | 0.47.0 | MIT | [PyPI](https://pypi.org/pypi/wheel/0.47.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
-| browser-validation | playwright-core | 1.62.0 | Apache-2.0 | [npm](https://www.npmjs.com/package/playwright-core/v/1.62.0); [`scripts/runtime/pnpm-lock.yaml`](scripts/runtime/pnpm-lock.yaml) |
+| browser-validation | playwright-core | 1.62.1 | Apache-2.0 | [npm](https://www.npmjs.com/package/playwright-core/v/1.62.1); [`scripts/runtime/pnpm-lock.yaml`](scripts/runtime/pnpm-lock.yaml) |
 
 ### Less common license families and their scope
 

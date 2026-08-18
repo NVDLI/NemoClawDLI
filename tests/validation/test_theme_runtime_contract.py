@@ -230,10 +230,7 @@ class ThemeRuntimeContractTests(unittest.TestCase):
     def test_report_producer_has_the_pinned_browser_runtime(self) -> None:
         core = (ROOT / ".gitlab/ci/core.yml").read_text(encoding="utf-8")
         test_job = core_job("test", "external_integration_audit")
-        image = (
-            "mcr.microsoft.com/playwright:v1.62.0-noble@sha256:"
-            "baed2032d533817f3dbe6425de795788430ba345e819a1201337009ba17c9d07"
-        )
+        image = contribution_safety.PINNED_PLAYWRIGHT_IMAGE
         self.assertIn(f"image: {image}", test_job)
         self.assertIn('BROWSER_TOOLS_REQUIRED: "1"', test_job)
         self.assertIn('cd scripts/runtime && pnpm install --frozen-lockfile --ignore-scripts', core)
@@ -618,6 +615,7 @@ class ScaTriggerContractTests(unittest.TestCase):
     def test_browser_sca_audits_the_frozen_host_runtime(self) -> None:
         job = ci_job("security_browser_sca")
         for path in (
+            "scripts/runtime/browser-runtime.json",
             "scripts/runtime/package.json",
             "scripts/runtime/pnpm-lock.yaml",
         ):

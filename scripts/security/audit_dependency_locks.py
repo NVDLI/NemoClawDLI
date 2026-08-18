@@ -19,15 +19,34 @@ PAIRS = (
 )
 PIN = re.compile(r"^([A-Za-z0-9_.-]+)(?:\[[^\]]+\])?==([^\s;]+)(?:\s*;\s*.+)?$")
 HASH = re.compile(r"--hash=sha256:[0-9a-f]{64}")
-PLAYWRIGHT_VERSION = "1.62.0"
-PLAYWRIGHT_IMAGE = (
-    "mcr.microsoft.com/playwright:v1.62.0-noble@sha256:"
-    "baed2032d533817f3dbe6425de795788430ba345e819a1201337009ba17c9d07"
-)
 PNPM_PACKAGE_MANAGER = (
     "pnpm@10.34.5+sha512."
     "a4ee05f2f73658255bd6a89859c065a45c28a57daefae2c893a168ee2b73168c37b91e83e57ea67654ad03f03031746430e8bce38e362e042605fb8abc80192e"
 )
+
+
+def browser_runtime_contract(root: Path) -> tuple[str, str, list[str]]:
+    path = root / "scripts/runtime/browser-runtime.json"
+    errors: list[str] = []
+    try:
+        contract = json.loads(path.read_text(encoding="utf-8"))
+        version = contract["playwright_core"]
+        image = contract["playwright_image"]
+    except (OSError, KeyError, json.JSONDecodeError, TypeError):
+        return "", "", ["scripts/runtime/browser-runtime.json: invalid browser runtime contract"]
+    if contract.get("schema") != "nemoclaw-browser-runtime/v1":
+        errors.append("scripts/runtime/browser-runtime.json: unsupported schema")
+    if not isinstance(version, str) or not re.fullmatch(r"\d+\.\d+\.\d+", version):
+        errors.append("scripts/runtime/browser-runtime.json: playwright_core must be one exact version")
+        version = ""
+    expected = rf"mcr\.microsoft\.com/playwright:v{re.escape(version)}-noble@sha256:[0-9a-f]{{64}}"
+    if not isinstance(image, str) or not re.fullmatch(expected, image):
+        errors.append(
+            "scripts/runtime/browser-runtime.json: playwright_image must match the reviewed "
+            "Playwright version and use a full immutable digest"
+        )
+        image = ""
+    return version, image, errors
 
 
 def norm(name: str) -> str:
@@ -89,9 +108,21 @@ def gitlab_browser_jobs(source: str) -> list[tuple[str, str]]:
         if (
             'BROWSER_TOOLS_REQUIRED: "1"' in block
             or "skill_renderer_runtime_audit.py" in block
+            or "mcr.microsoft.com/playwright:" in block
         ):
             jobs.append((heading.group(1), block))
     return jobs
+
+
+def gitlab_ci_paths(root: Path) -> list[Path]:
+    paths = {
+        *root.glob(".gitlab/**/*.yml"),
+        *root.glob(".gitlab/**/*.yaml"),
+    }
+    root_pipeline = root / ".gitlab-ci.yml"
+    if root_pipeline.is_file():
+        paths.add(root_pipeline)
+    return sorted(paths)
 
 
 def audit(root: Path = ROOT) -> list[str]:
@@ -104,9 +135,10 @@ def audit(root: Path = ROOT) -> list[str]:
         for name, version in source.items():
             if lock.get(name) != version:
                 errors.append(f"{lock_rel}: stale direct pin {name}; expected {version}, found {lock.get(name, 'missing')}")
+    playwright_version, playwright_image, contract_errors = browser_runtime_contract(root)
+    errors.extend(contract_errors)
     runtime_package = root / "scripts/runtime/package.json"
     runtime_lock = root / "scripts/runtime/pnpm-lock.yaml"
-    gitlab_core = root / ".gitlab/ci/core.yml"
     try:
         package_data = json.loads(runtime_package.read_text(encoding="utf-8"))
         declared = package_data["devDependencies"]["playwright-core"]
@@ -114,32 +146,35 @@ def audit(root: Path = ROOT) -> list[str]:
     except (OSError, KeyError, json.JSONDecodeError):
         declared = None
         package_manager = None
-    if declared != PLAYWRIGHT_VERSION:
+    if declared != playwright_version:
         errors.append(
-            "scripts/runtime/package.json: playwright-core must remain exactly "
-            f"{PLAYWRIGHT_VERSION}; found {declared or 'missing'}"
+            "scripts/runtime/package.json: playwright-core must match the reviewed runtime contract; "
+            f"expected {playwright_version or 'missing'}, found {declared or 'missing'}"
         )
     if package_manager != PNPM_PACKAGE_MANAGER:
         errors.append("scripts/runtime/package.json: packageManager must remain exact and integrity-pinned")
     lock_text = runtime_lock.read_text(encoding="utf-8") if runtime_lock.is_file() else ""
     for token in (
-        f"specifier: {PLAYWRIGHT_VERSION}",
-        f"version: {PLAYWRIGHT_VERSION}",
-        f"playwright-core@{PLAYWRIGHT_VERSION}:",
+        f"specifier: {playwright_version}",
+        f"version: {playwright_version}",
+        f"playwright-core@{playwright_version}:",
         "resolution: {integrity: sha512-",
     ):
         if token not in lock_text:
             errors.append(f"scripts/runtime/pnpm-lock.yaml: missing locked browser-runtime token: {token}")
-    core_text = gitlab_core.read_text(encoding="utf-8") if gitlab_core.is_file() else ""
-    browser_jobs = gitlab_browser_jobs(core_text)
-    if not browser_jobs:
-        errors.append(".gitlab/ci/core.yml: no browser-consuming validation jobs discovered")
-    for job_name, block in browser_jobs:
-        if PLAYWRIGHT_IMAGE not in block:
-            errors.append(
-                f".gitlab/ci/core.yml: browser-consuming job {job_name} must use "
-                "the reviewed Playwright image and immutable digest"
-            )
+    discovered = 0
+    for path in gitlab_ci_paths(root):
+        rel = path.relative_to(root).as_posix()
+        browser_jobs = gitlab_browser_jobs(path.read_text(encoding="utf-8"))
+        discovered += len(browser_jobs)
+        for job_name, block in browser_jobs:
+            if not playwright_image or playwright_image not in block:
+                errors.append(
+                    f"{rel}: browser-consuming job {job_name} must use "
+                    "the reviewed Playwright image and immutable digest"
+                )
+    if not discovered:
+        errors.append("GitLab CI: no browser-consuming validation jobs discovered")
     return errors
 
 
@@ -154,18 +189,49 @@ def self_test() -> list[str]:
                 dst = fixture / rel
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(ROOT / rel, dst)
-        for rel in ("scripts/runtime/package.json", "scripts/runtime/pnpm-lock.yaml", ".gitlab/ci/core.yml"):
+        for rel in (
+            "scripts/runtime/browser-runtime.json",
+            "scripts/runtime/package.json",
+            "scripts/runtime/pnpm-lock.yaml",
+        ):
             dst = fixture / rel
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / rel, dst)
+        for source in gitlab_ci_paths(ROOT):
+            rel = source.relative_to(ROOT)
+            dst = fixture / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, dst)
+        playwright_version, playwright_image, contract_errors = browser_runtime_contract(fixture)
+        if contract_errors:
+            failures.extend(contract_errors)
+            return failures
         mutations = (
             ("scripts/materials/requirements.lock", "requests==2.34.2", "requests==0.0.1"),
             ("scripts/materials/requirements.lock", "requests==2.34.2 \\", "requests==2.34.2"),
             ("scripts/security/requirements-sca.lock", "pip-audit==2.10.1", "# removed pip-audit"),
-            ("scripts/runtime/package.json", '"playwright-core": "1.62.0"', '"playwright-core": "1.55.0"'),
+            (
+                "scripts/runtime/browser-runtime.json",
+                f'"playwright_core": "{playwright_version}"',
+                '"playwright_core": "1.55.0"',
+            ),
+            (
+                "scripts/runtime/browser-runtime.json",
+                playwright_image,
+                f"mcr.microsoft.com/playwright:v{playwright_version}-noble",
+            ),
+            (
+                "scripts/runtime/package.json",
+                f'"playwright-core": "{playwright_version}"',
+                '"playwright-core": "1.55.0"',
+            ),
             ("scripts/runtime/package.json", PNPM_PACKAGE_MANAGER, "pnpm@latest"),
-            ("scripts/runtime/pnpm-lock.yaml", "specifier: 1.62.0", "specifier: 1.55.0"),
-            (".gitlab/ci/core.yml", PLAYWRIGHT_IMAGE, "mcr.microsoft.com/playwright:v1.62.0-noble"),
+            (
+                "scripts/runtime/pnpm-lock.yaml",
+                f"specifier: {playwright_version}",
+                "specifier: 1.55.0",
+            ),
+            (".gitlab/ci/core.yml", playwright_image, f"mcr.microsoft.com/playwright:v{playwright_version}-noble"),
         )
         for rel, old, new in mutations:
             path = fixture / rel
@@ -190,6 +256,17 @@ def self_test() -> list[str]:
         )
         if not audit(fixture):
             failures.append("novel browser-consuming GitLab job escaped detector")
+        nested_path = fixture / ".gitlab/ci/nested/new-runtime.yml"
+        nested_path.parent.mkdir(parents=True, exist_ok=True)
+        nested_path.write_text(
+            "nested_browser_job:\n"
+            "  image: mcr.microsoft.com/playwright:v0.0.1-noble@sha256:"
+            + "0" * 64
+            + "\n  script: [\"true\"]\n",
+            encoding="utf-8",
+        )
+        if not audit(fixture):
+            failures.append("novel nested GitLab browser job escaped detector")
     return failures
 
 

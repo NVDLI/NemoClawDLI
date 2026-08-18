@@ -5,7 +5,9 @@ The repository has four dependency boundaries:
 1. `scripts/browser-vendor/package-lock.json` builds the browser code shipped to learners.
 2. `scripts/materials/requirements.lock` supports material provenance checks and is not shipped.
 3. `scripts/security/requirements-sca.lock` runs scanners and is not shipped.
-4. `scripts/runtime/pnpm-lock.yaml` pins `playwright-core` for host-browser checks and is not shipped.
+4. `scripts/runtime/browser-runtime.json`, `scripts/runtime/package.json`, and
+   `scripts/runtime/pnpm-lock.yaml` bind the reviewed Playwright API to the immutable CI image;
+   they are not shipped.
 
 There is no repository-owned application environment, service stack, or container image.
 
@@ -38,12 +40,14 @@ evidence manifest. The release workflow repeats that scan for the tagged source.
 
 1. Change the direct input and regenerate its lock with pinned `uv`, Python 3.11 resolution, and
    `--generate-hashes`; review every direct and transitive change.
-2. Run the fast checks above.
-3. Rebuild browser vendor output when the browser lock changed.
-4. Run the applicable SCA job and review the evidence rather than only its exit code. The browser
+2. For Playwright, update `browser-runtime.json` with the matching official MCR manifest digest;
+   the validator checks the package, lock, and every browser-consuming GitLab job against it.
+3. Run the fast checks above.
+4. Rebuild browser vendor output when the browser lock changed.
+5. Run the applicable SCA job and review the evidence rather than only its exit code. The browser
    job installs the frozen pnpm lock, then audits its exact Playwright declaration
    through npm's supported bulk-advisory endpoint. Both npm audit reports are retained.
-5. Record a time-bounded waiver only when a specific finding has an accountable owner and control.
+6. Record a time-bounded waiver only when a specific finding has an accountable owner and control.
 
 External isolation runs the same pinned commands and remains outside this repository's distributed
 and supported dependency scope.
