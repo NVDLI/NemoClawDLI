@@ -31,9 +31,25 @@ BROWSER_RUNTIME_CONSUMERS = (
     "runtime_integration_browser_audit.py",
     "branch_preview_runtime_audit.py",
 )
-PINNED_PLAYWRIGHT_IMAGE = (
-    "mcr.microsoft.com/playwright:v1.62.0-noble@sha256:"
-    "baed2032d533817f3dbe6425de795788430ba345e819a1201337009ba17c9d07"
+
+
+def browser_runtime_values(source: str) -> tuple[str, str]:
+    try:
+        contract = json.loads(source)
+        version = contract["playwright_core"]
+        image = contract["playwright_image"]
+    except (KeyError, json.JSONDecodeError, TypeError):
+        return "", ""
+    if contract.get("schema") != "nemoclaw-browser-runtime/v1":
+        return "", ""
+    expected = rf"mcr\.microsoft\.com/playwright:v{re.escape(str(version))}-noble@sha256:[0-9a-f]{{64}}"
+    if not re.fullmatch(r"\d+\.\d+\.\d+", str(version)) or not re.fullmatch(expected, str(image)):
+        return "", ""
+    return str(version), str(image)
+
+
+PLAYWRIGHT_VERSION, PINNED_PLAYWRIGHT_IMAGE = browser_runtime_values(
+    (ROOT / "scripts/runtime/browser-runtime.json").read_text(encoding="utf-8")
 )
 DECISION_POLICY = {
     "default": "deny",
@@ -109,6 +125,8 @@ CONTRACT_FILES = (
     "scripts/build/package_release.py",
     "scripts/materials/pull_materials.py",
     "scripts/materials/requirements.lock",
+    "scripts/runtime/browser-runtime.json",
+    "scripts/runtime/package.json",
     "scripts/security/audit_dependency_locks.py",
     "scripts/security/audit_codeql_sarif.py",
     "scripts/security/codeql-vendor-dispositions.json",
@@ -343,12 +361,15 @@ def audit_browser_runtime_jobs(
     return out
 
 
-def audit_gitlab_pages_browser_runtime(gitlab_core: str) -> list[dict[str, str]]:
+def audit_gitlab_pages_browser_runtime(
+    gitlab_core: str, pinned_image: str = PINNED_PLAYWRIGHT_IMAGE,
+) -> list[dict[str, str]]:
     """Require browser dependencies where Pages rebuilds the protected source tree."""
     pages = re.search(r"(?ms)^pages:\n(.*?)(?=^pages_smoke:\n)", gitlab_core)
     if (
         not pages
-        or PINNED_PLAYWRIGHT_IMAGE not in pages.group(1)
+        or not pinned_image
+        or pinned_image not in pages.group(1)
         or 'BROWSER_TOOLS_REQUIRED: "1"' not in pages.group(1)
         or 'NODE_PATH="$CI_PROJECT_DIR/scripts/runtime/node_modules"' not in pages.group(1)
     ):
@@ -908,6 +929,27 @@ def audit_repo(
     overrides = text_overrides or {}
     docs = {rel: overrides[rel] if rel in overrides else read(root, rel, out)
             for rel in CONTRACT_FILES}
+    playwright_version, pinned_playwright_image = browser_runtime_values(
+        docs["scripts/runtime/browser-runtime.json"]
+    )
+    if not playwright_version or not pinned_playwright_image:
+        out.append(finding(
+            "browser-runtime-contract",
+            "scripts/runtime/browser-runtime.json",
+            "browser runtime contract is invalid or lacks an immutable reviewed image",
+            "record one exact Playwright version and matching full MCR digest",
+        ))
+    try:
+        declared_playwright = json.loads(docs["scripts/runtime/package.json"])["devDependencies"]["playwright-core"]
+    except (KeyError, json.JSONDecodeError, TypeError):
+        declared_playwright = ""
+    if declared_playwright != playwright_version:
+        out.append(finding(
+            "browser-runtime-contract",
+            "scripts/runtime/package.json",
+            "playwright-core does not match the reviewed browser runtime contract",
+            "update the direct package pin, lock, reviewed image, and runtime contract together",
+        ))
     out.extend(audit_workflow_pins(root, overrides))
     out.extend(audit_workflow_trust_boundaries(root, overrides))
     out.extend(audit_trusted_contribution_boundary(
@@ -1680,7 +1722,7 @@ def audit_repo(
         out.append(finding("gitlab-pages-material-install", ".gitlab-ci.yml",
                            "Pages lacks material tooling needed by protected-root bundle validation",
                            "enable the locked material environment for every Pages build, including previews"))
-    out.extend(audit_gitlab_pages_browser_runtime(gitlab_core))
+    out.extend(audit_gitlab_pages_browser_runtime(gitlab_core, pinned_playwright_image))
     preview_fetch = 'git fetch "$preview_remote" "+refs/heads/$branch:refs/remotes/$preview_namespace/$branch" --quiet'
     if (gitlab.count(preview_fetch) != 1
             or gitlab.count('refresh_branch_ref "$preview_ref"') != 2
@@ -1693,7 +1735,7 @@ def audit_repo(
     require(gitlab, "release_gate.py --tier ship", ".gitlab-ci.yml",
             "gitlab-safety-selftest", out, "run detector mutations in GitLab CI")
     test_job = re.search(r"(?ms)^test:\n(.*?)(?=^external_integration_audit:\n)", gitlab)
-    if (not test_job or PINNED_PLAYWRIGHT_IMAGE not in test_job.group(1)
+    if (not test_job or pinned_playwright_image not in test_job.group(1)
             or 'BROWSER_TOOLS_REQUIRED: "1"' not in test_job.group(1)
             or "cd scripts/runtime && pnpm install --frozen-lockfile --ignore-scripts" not in gitlab):
         out.append(finding("gitlab-report-browser-runtime", ".gitlab-ci.yml",
@@ -1789,6 +1831,7 @@ def audit_repo(
     browser_scan = re.search(r"(?ms)^security_browser_sca:\n(.*?)(?=^[A-Za-z0-9_.-]+:\n|\Z)", gitlab_sca)
     browser_body = browser_scan.group(1) if browser_scan else ""
     for token in (
+        "scripts/runtime/browser-runtime.json",
         "scripts/runtime/pnpm-lock.yaml",
         "npm audit --prefix .cache/runtime-npm-audit --package-lock-only --audit-level=moderate",
         "scripts/security/reports/runtime-npm-audit.json",
@@ -2570,7 +2613,12 @@ def self_test() -> list[str]:
             ("gitlab-immutable-report-reuse", ".gitlab/ci/core.yml", 'bash scripts/build/build_pages.sh "$CI_PROJECT_DIR/candidate"', 'bash scripts/build/build_pages.sh "$CI_PROJECT_DIR/rebuilt-candidate"'),
             ("gitlab-protected-root-worktree", ".gitlab/ci/core.yml", 'git worktree add --quiet --detach /tmp/nemoclaw-prod-root "origin/$prod_ref"', 'git archive "origin/$prod_ref" | tar -x -C /tmp/nemoclaw-prod-root'),
             ("gitlab-image-pin", ".gitlab/ci/core.yml", "node:20-bookworm-slim@sha256:25070a03f077f5860e4f2db8d147380678ed40ead415a21eaffd5a6208f61948", "node:20-bookworm-slim"),
-            ("gitlab-report-browser-runtime", ".gitlab/ci/core.yml", "mcr.microsoft.com/playwright:v1.62.0-noble@sha256:baed2032d533817f3dbe6425de795788430ba345e819a1201337009ba17c9d07", "mcr.microsoft.com/playwright:v1.62.0-noble"),
+            (
+                "gitlab-report-browser-runtime",
+                ".gitlab/ci/core.yml",
+                PINNED_PLAYWRIGHT_IMAGE,
+                PINNED_PLAYWRIGHT_IMAGE.split("@", 1)[0],
+            ),
             ("gitlab-runtime-sca", ".gitlab/ci/sca.yml", "npm audit --prefix .cache/runtime-npm-audit --package-lock-only --audit-level=moderate", "echo runtime-audit-skipped"),
             ("gitlab-infrastructure-retry", ".gitlab/ci/core.yml", "runner_system_failure", "runner_unsupported"),
             ("gitlab-script-retry", ".gitlab/ci/core.yml", "runner_system_failure", "script_failure"),

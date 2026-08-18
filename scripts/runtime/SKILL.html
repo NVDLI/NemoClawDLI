@@ -24,6 +24,7 @@
     "scripts/runtime/test_page_runtime.js",
     "scripts/runtime/browser_runtime_test.sh",
     "scripts/runtime/host_browser.py",
+    "scripts/runtime/browser-runtime.json",
     "scripts/runtime/package.json",
     "scripts/runtime/pnpm-lock.yaml"
   ],
@@ -97,6 +98,11 @@
       "desc": "Finds Node.js, Chromium, and the pinned browser API for Python-launched browser audits."
     },
     {
+      "path": "browser-runtime.json",
+      "role": "reviewed browser runtime contract",
+      "desc": "Binds the exact Playwright API version to the immutable MCR image used by browser-consuming GitLab jobs."
+    },
+    {
       "path": "test_page_runtime.js",
       "role": "page runtime smoke test",
       "desc": "Exercises browser runtime behavior outside a full lab session, with smoke and render-only modes available through the shell wrapper."
@@ -163,6 +169,7 @@
     <a class="skill-link" href="run_node.sh"><b>run_node.sh</b><span>Node resolver. Uses NODE_BIN or host Node and reports an actionable prerequisite error otherwise.</span></a>
     <a class="skill-link" href="browser_env_probe.sh"><b>browser_env_probe.sh</b><span>Verifies host Node.js, the pinned Playwright API, and Chromium before browser checks run.</span></a>
     <a class="skill-link" href="python_env_probe.py"><b>python_env_probe.py</b><span>Fails early on incompatible Python and missing pinned material-tool imports.</span></a>
+    <a class="skill-link" href="browser-runtime.json"><b>browser-runtime.json</b><span>reviewed browser runtime contract. Binds the package pin to the immutable CI image.</span></a>
     <a class="skill-link" href="test_page_runtime.js"><b>test_page_runtime.js</b><span>page runtime smoke test. Exercises static pages, hosted gateway RPCs, live chat/tool completion, and opt-in Course Assistant artifact generation outside a full lab session.</span></a>
     <a class="skill-link" href="module_check.py"><b>module_check.py</b><span>module check. Checks module wiring and importability for page scripts.</span></a>
   </div>
