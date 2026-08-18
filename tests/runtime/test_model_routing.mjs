@@ -12,12 +12,14 @@ const {
   defaultIframeProxyModeForLocation,
   fetchRetry,
   getConfig,
+  getEmbeddingConfig,
   getModelRequestPolicy,
   normalizeModelRequestRetries,
   normalizeModelRequestTimeoutMs,
   readModelStreamChunk,
   retryDelayMs,
   setIframeProxyMode,
+  setEmbeddingApiBaseUrl,
   setModelApiBaseUrl,
   setModelRequestRetries,
   setModelRequestTimeoutMs,
@@ -126,6 +128,43 @@ test('CDN default, direct override, and custom endpoint bypass resolve consisten
     const custom = await getConfig();
     assert.equal(custom.iframeProxy, false);
     assert.equal(custom.url, 'https://models.example.test/v1');
+  } finally {
+    for (const [name, value] of Object.entries(previous)) {
+      if (value === undefined) delete globalThis[name];
+      else globalThis[name] = value;
+    }
+  }
+});
+
+test('embedding route shares relay selection but keeps its own endpoint', async () => {
+  const previous = {
+    location:globalThis.location,
+    localStorage:globalThis.localStorage,
+    sessionStorage:globalThis.sessionStorage,
+  };
+  globalThis.location = new URL('https://nvdli.github.io/NemoClawDLI/nemoclaw/02b-rag.html');
+  globalThis.localStorage = memoryStorage();
+  globalThis.sessionStorage = memoryStorage();
+  try {
+    const relayed = await getEmbeddingConfig();
+    assert.deepEqual(relayed, {
+      mode:'direct',
+      url:'https://nvidia-api-cors-proxy.experiments.courses.nvidia.com/v1',
+      model:'nvidia/llama-nemotron-embed-1b-v2',
+      needsKey:true,
+      iframeProxy:true,
+    });
+
+    setIframeProxyMode(false);
+    const direct = await getEmbeddingConfig();
+    assert.equal(direct.url, DEFAULT_MODEL_API_BASE_URL);
+    assert.equal(direct.iframeProxy, false);
+
+    setIframeProxyMode(true);
+    setEmbeddingApiBaseUrl('https://embedding.example.test/v1');
+    const custom = await getEmbeddingConfig();
+    assert.equal(custom.url, 'https://embedding.example.test/v1');
+    assert.equal(custom.iframeProxy, false);
   } finally {
     for (const [name, value] of Object.entries(previous)) {
       if (value === undefined) delete globalThis[name];
