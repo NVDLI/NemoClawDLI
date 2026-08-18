@@ -1,0 +1,188 @@
+{
+  "schema": "nemoclaw-locale-profile/1",
+  "locale": "zh-CN",
+  "url_code": "zh",
+  "label": "Simplified Chinese",
+  "native_label": "简体中文",
+  "html_lang": "zh-CN",
+  "source_language": "en",
+  "canonical_code_templates": false,
+  "reviewed_target_hashes": true,
+  "language_name": "Simplified Chinese for mainland technical learners",
+  "audience": "mainland Chinese students and software developers",
+  "generation_guidance": "Use natural, concise, professional Simplified Chinese. The exact approved course title is 使用 OpenShell 和 NemoClaw 构建安全智能体. Address the learner as 您 when direct address is needed. Follow the shared NVIDIA DLI translation rules and review each deterministic term in context. Preserve product names, code, commands, identifiers, paths, URLs, API fields, model IDs, placeholders, English author attributions such as Yao et al., and cited academic paper titles. Preserve complete model-selector display labels in English, including descriptive suffixes such as recommended, fast, and stronger. Translate learner-facing article titles in recommended-reading lists. Preserve Blueprint in English. Keep established interface labels exactly as displayed. For China-facing learner prose, use the generic English term coding agent instead of recommending Codex or Claude Code by name. Avoid literal English syntax, unnecessary English echoes in parentheses, redundant 我们, slogan cadence, and stacked noun phrases.",
+  "editorial_examples": [
+    {
+      "source": "An agent connects a model to tools, memory, and a routing decision that repeats until its task is done.",
+      "target": "智能体将模型与工具、记忆和路由决策连接起来，并不断重复这一过程，直到完成任务。"
+    },
+    {
+      "source": "Calls do not share state. Between requests the server holds nothing for you.",
+      "target": "各次调用不共享状态。两次请求之间，服务器不会替您保留任何内容。"
+    },
+    {
+      "source": "Choose the smallest technique that supplies the missing signal.",
+      "target": "选择能提供缺失信号的最小可行技术。"
+    },
+    {
+      "source": "Use its reasoning capability.",
+      "target": "使用它的推理能力。"
+    }
+  ],
+  "review_protocol": {
+    "native_editorial_signal": "The shared DLI style preferences and the requester's local review govern Chinese wording. Generated text remains a draft until the requester accepts the exact rendered target.",
+    "triage_states": ["keep", "revise", "reject"],
+    "required_dimensions": [
+      "semantic fidelity and retained information",
+      "natural mainland Simplified Chinese",
+      "technical precision and course-wide terminology consistency",
+      "consistent learner voice using 您 for direct address",
+      "Chinese punctuation and CJK-English spacing",
+      "canonical executable and document structure"
+    ],
+    "static_validation_limit": "Static checks catch known residue, blocked calques, structure drift, and protected-token defects. They do not certify natural Chinese.",
+    "acceptance_boundary": "Accept source and target hashes only after side-by-side rendered review of the exact target."
+  },
+  "terminology_sources": [
+    {
+      "url": "https://www.nvidia.cn/glossary/retrieval-augmented-generation/",
+      "use": "检索增强生成 (RAG)；大语言模型 (LLM)；检索；知识库"
+    },
+    {
+      "url": "https://images.nvidia.cn/aem-dam/zh_cn/Solutions/training/instructor-led-workshops/DLI_building-rag_ZH.pdf",
+      "use": "智能体；工作流；嵌入模型；检索增强生成；防护机制"
+    },
+    {
+      "url": "https://docs.nvidia.com/nemoclaw/latest/about/overview.html",
+      "use": "NemoClaw；OpenShell；sandbox；推理路由；策略执行；Blueprint"
+    },
+    {
+      "url": "https://docs.nvidia.com/openshell/latest/sandboxes/manage-sandboxes.html",
+      "use": "sandbox；运行时隔离；策略控制；凭据；网络数据外泄"
+    }
+  ],
+  "preferred_terms": {
+    "agent": "智能体",
+    "agentic AI": "智能体式 AI",
+    "AI agent": "AI 智能体",
+    "deep research": "深度研究",
+    "retrieval-augmented generation": "检索增强生成 (RAG)",
+    "large language model": "大语言模型 (LLM)",
+    "deployment": "部署",
+    "runtime security": "运行时安全",
+    "policy enforcement": "策略执行",
+    "guardrail": "防护机制",
+    "agent loop": "智能体循环",
+    "loop": "循环",
+    "tool call": "工具调用",
+    "tool": "工具",
+    "environment": "环境",
+    "schema": "模式",
+    "helper": "辅助函数",
+    "hidden by default": "默认隐藏",
+    "context rot": "上下文退化",
+    "array": "数组",
+    "harness": "运行框架",
+    "turn": "轮次",
+    "hard-wire": "硬编码",
+    "workflow": "工作流",
+    "framework": "框架",
+    "runtime": "运行时",
+    "sandbox": "sandbox",
+    "stack": "技术栈",
+    "prompt": "提示词",
+    "embedding": "嵌入",
+    "gateway": "网关",
+    "allowlist": "允许列表",
+    "blast radius": "影响范围",
+    "stateful": "有状态",
+    "stateless": "无状态",
+    "grounded": "有依据",
+    "routing": "路由",
+    "planner": "规划器",
+    "worker": "工作智能体",
+    "sub-agent": "子智能体"
+  },
+    "context_rules": {
+        "Blueprint": "Always preserve Blueprint in English.",
+        "Securing Agents": "Use 安全智能体 for the short course title or brand line. Keep the approved full title 使用 OpenShell 和 NemoClaw 构建安全智能体 unchanged; generic agent safety still means 智能体安全.",
+        "model selector display labels": "Preserve the complete English label, including any descriptive suffix after the model name, such as recommended, fast, or stronger. This exception applies only to model-selection dropdown labels; translate the same adjectives normally in prose.",
+        "Instrumentation": "In the helpers menu, where the section contains trace and log, use 追踪与日志 instead of 插桩. In prose, translate by function as 监测、检测 or 可观测性 rather than forcing one literal term.",
+        "sandbox": "Preserve sandbox when naming the OpenShell isolation object; use 沙箱 only in a generic explanatory phrase when it is clearer.",
+    "agent": "Use 智能体 for AI/software agents. Use 代理 only for network proxy or delegated-representation meanings.",
+    "prompt": "Use 提示词 in learner prose; preserve prompt in identifiers, UI labels that must match the source product, and code.",
+    "runtime": "Use 运行时 for the technical component and 运行期间 for the adverbial meaning at runtime.",
+    "workflow": "Use 工作流 in learner prose; preserve it only in identifiers or exact product labels."
+  },
+    "unfit_phrases": {
+        "插桩": "In this course's helpers menu use 追踪与日志; in prose translate instrumentation by its actual function.",
+        "代理式 AI": "Use 智能体式 AI.",
+    "代理 AI": "Use AI 智能体 or 智能体式 AI according to context.",
+    "代理循环": "Use 智能体循环.",
+    "工具呼叫": "Use 工具调用.",
+    "上下文腐烂": "Use 上下文退化.",
+    "检索增强的生成": "Use 检索增强生成.",
+    "大型语言模型": "Use 大语言模型.",
+    "工作流程": "Use 工作流 in this course.",
+    "爆炸半径": "Use 影响范围.",
+    "这里将": "Rewrite with a natural subject, such as 本节将, or state the action directly.",
+    "在这里，我们": "Usually remove 在这里 and use a direct Chinese sentence.",
+    "超越生成式 AI": "Use 从生成式 AI 继续延伸 or express the actual progression.",
+    "无状态的调用": "Prefer 无状态调用.",
+    "智能体的循环": "Prefer 智能体循环.",
+    "模型的响应": "Prefer 模型响应 when no contrast requires 的.",
+    "点击在": "Use 点击 or 单击 followed by the object.",
+    "检索生成增强": "Use 检索增强生成.",
+    "思维链条": "Use 思维链 or 推理链 according to context.",
+    "护栏": "Use 防护机制 in learner prose unless Guardrails is part of a product name.",
+    "蓝图": "Preserve Blueprint in English.",
+    "附着到": "For Docker attach, keep attach in English.",
+    "课件课件": "Use 课件 once.",
+    "教师模型 generation failed": "Executable code text must remain exactly as in the English source unless the repository's runnable-copy contract explicitly localizes it."
+  },
+  "editorial_patterns": [
+    {
+      "code": "locale-cjk-markdown-spacing",
+      "pattern": "[\\u3400-\\u9fff]\\s+<strong>[\\u3400-\\u9fff]",
+      "detail": "Chinese text should not add an ASCII gap before a Chinese strong-emphasis span."
+    },
+    {
+      "code": "locale-literal-here",
+      "pattern": "(?:这里将|在这里，我们)",
+      "detail": "Literal English deictic phrasing remains; rewrite the sentence naturally."
+    },
+    {
+      "code": "locale-agent-term",
+      "pattern": "(?:代理式\\s*AI|代理\\s*AI|代理循环)",
+      "detail": "Use the course terms 智能体式 AI, AI 智能体, or 智能体循环."
+    }
+  ],
+  "english_function_words": [
+    "the", "and", "that", "this", "these", "those", "with", "from", "into", "your", "you", "when", "then", "before", "after", "through", "without", "while", "where", "which", "what", "why", "how", "will", "would", "should", "could", "must", "on", "to", "of", "for", "in", "is", "are", "not", "as", "at", "by"
+  ],
+  "english_function_word_threshold": 4,
+  "foreign_function_words": [],
+  "foreign_function_word_threshold": 0,
+  "minimum_block_word_ratio": 0.08,
+  "reject_accidental_repetition": false,
+  "english_sentence_markers": [
+    "The agent ", "This course ", "These agents ", "Your agent ", "You can ", "Click the ", "Run the ", "Course home", "Learning Objectives", "What you will learn", "How it works", "Why this matters"
+  ],
+  "english_ui_markers": [
+    "Run the 'Maze engine'", "context this turn", "accumulated path", "rendered image:", "full context sent to model", "goal reached", "asking model", "no usable direction", "gave up after", "request (key redacted)", "error body", "raw response", "model's notes", "the actual answer", "Save your nvapi- key", "tool call(s)", "none this run", "What it is:", "How requests reach it:", "Running locally:", "How to get one:", "How to find it:"
+  ],
+  "canonical_english_titles": [
+    "How to Build an AI Agent",
+    "How to Build an Agentic RAG Application",
+    "How to Evaluate AI Agents",
+    "How to Customize AI Agents",
+    "How to Build Deep AI Agents",
+    "How to Build a Safer Autonomous Agent using OpenClaw"
+  ],
+  "allowed_english_tokens": [
+    "API", "Blueprint", "Blueprints", "Cloudflare", "CodeMirror", "coding agent", "Docker", "Git", "GitLab", "JavaScript", "JupyterLab", "LLM", "NemoClaw", "NVIDIA", "OpenClaw", "OpenShell", "Python", "RAG", "Studio"
+  ],
+  "orthography_rules": {},
+  "rhythm_rules": {},
+  "voice_rules": {}
+}

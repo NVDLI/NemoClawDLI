@@ -1249,6 +1249,7 @@ const FIGURE_SOURCE_LABELS = Object.freeze({
   en: "Image source",
   es: "Fuente de la imagen",
   pt: "Fonte da imagem",
+  zh: "图片来源",
 });
 
 const GOING_FURTHER_TEXT = Object.freeze({
@@ -1269,6 +1270,12 @@ const GOING_FURTHER_TEXT = Object.freeze({
     assistantButton: "Pergunte sobre o curso",
     knowledgeIntro: "O agente de índice do Módulo 2b usou um pequeno corpus na própria página. Estes recursos mostram como preparar, recuperar e proteger dados de produção.",
     interfaceHeading: "Leve a interface do navegador para outros ambientes",
+  },
+  zh: {
+    assistantPrompt: "想进一步了解本页内容，或查看某个概念在各模块中的讲解吗？",
+    assistantButton: "向课程助理提问",
+    knowledgeIntro: "模块 2b 的索引智能体使用了页面内的小型语料库。以下资源介绍如何准备、检索和保护生产数据。",
+    interfaceHeading: "将浏览器界面扩展到其它环境",
   },
 });
 

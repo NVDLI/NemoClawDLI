@@ -19,7 +19,7 @@ import re
 from pathlib import Path
 from typing import Any, Iterable
 
-from translate.code_localization import code_templates
+from translate.code_localization import code_templates, regex_literal_end
 from translate.localization_scope import translation_canonical
 from translate.translate_html_segments import PLACEHOLDER_RE, extract_segments
 
@@ -173,41 +173,6 @@ def authored_structure(source_raw: str) -> str:
     return translation_canonical(source_raw) if has_english_shell(source_raw) else source_raw
 
 
-def _regex_literal_end(body: str, index: int) -> int | None:
-    """Return the end of a JavaScript regex literal, or ``None`` for division.
-
-    The runnable-copy scanner is deliberately small, but it still must not mistake quotes in a
-    regex character class for localized strings. A slash can begin a regex only where JavaScript
-    expects an expression; the preceding significant character is sufficient for the course-cell
-    syntax and avoids swallowing ordinary division.
-    """
-    previous = index - 1
-    while previous >= 0 and body[previous].isspace():
-        previous -= 1
-    if previous >= 0 and body[previous] not in "([{:;,=!?&|":
-        return None
-    cursor = index + 1
-    in_class = False
-    while cursor < len(body):
-        char = body[cursor]
-        if char == "\\":
-            cursor += 2
-            continue
-        if char == "[":
-            in_class = True
-        elif char == "]":
-            in_class = False
-        elif char == "/" and not in_class:
-            cursor += 1
-            while cursor < len(body) and body[cursor].isalpha():
-                cursor += 1
-            return cursor
-        elif char in "\r\n":
-            return None
-        cursor += 1
-    return None
-
-
 def code_copy_segments(body: str) -> list[CodeCopySegment]:
     r"""Discover translatable copy inside runnable code without owning its syntax.
 
@@ -238,7 +203,7 @@ def code_copy_segments(body: str) -> list[CodeCopySegment]:
             index = close + 2
             continue
         if body[index] == "/":
-            regex_end = _regex_literal_end(body, index)
+            regex_end = regex_literal_end(body, index)
             if regex_end is not None:
                 index = regex_end
                 continue

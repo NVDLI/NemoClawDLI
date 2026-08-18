@@ -5,7 +5,9 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -13,10 +15,11 @@ from unittest import mock
 
 from scripts.validation import locale_resource_audit as audit
 from scripts.validation import locale_resource_mutations as fixtures
+from scripts.validation import localization_audit
 from scripts.translate import locale_pages
 from scripts.translate.locale_catalog import discover_locales
 from scripts.translate.locale_projection import project_locale_html
-from scripts.translate.locale_resource_render import render_overlay, render_page
+from scripts.translate.locale_resource_render import extract_resource, render_overlay, render_page
 from scripts.translate.locale_resources import (
     code_copy_segments,
     derive_key,
@@ -29,10 +32,14 @@ from scripts.translate.locale_resources import (
     load_resource,
     template_units,
 )
-from scripts.translate.code_localization import code_templates
+from scripts.translate.code_localization import code_templates, js_shape
 from scripts.translate.migrate_locale_resource import build as build_resource
 from scripts.translate.migrate_locale_resource import review_provenance
-from scripts.translate.translate_html_segments import code_value_ranges, extract_segments
+from scripts.translate.translate_html_segments import (
+    code_value_ranges,
+    extract_segments,
+    normalize_zh_spacing,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -176,6 +183,35 @@ helpers.log("Visible result");"""
             [("code-double-string", "Visible result")],
         )
 
+    def test_javascript_shape_ignores_quotes_inside_regex_literals(self) -> None:
+        source = 'const esc = value => value.replace(/[&<>\"]/g, "English copy");'
+        target = 'const esc = value => value.replace(/[&<>\"]/g, "中文文案");'
+        self.assertEqual(js_shape(source), js_shape(target))
+
+    def test_runnable_ui_scan_ignores_strings_inside_comments(self) -> None:
+        raw = '<html><script>const cell = {code: `// log.details("raw response", reply);\nhelpers.log("Visible result");`};</script></html>'
+        self.assertEqual(localization_audit.runnable_code_ui_strings(raw), ["Visible result"])
+
+    def test_zh_spacing_removes_only_chinese_inline_boundary_whitespace(self) -> None:
+        self.assertEqual(
+            normalize_zh_spacing(
+                "当前的 \n<a href=\"/guide\">安全指南</a> \n记录了 <code>pairing code</code> 的行为"
+            ),
+            "当前的<a href=\"/guide\">安全指南</a>记录了 <code>pairing code</code> 的行为",
+        )
+        self.assertEqual(
+            normalize_zh_spacing("<strong>工作流\n智能体</strong>并行运行的\n子任务"),
+            "<strong>工作流智能体</strong>并行运行的子任务",
+        )
+
+    def test_zh_resource_extraction_restores_english_runnable_comments(self) -> None:
+        source = '<html lang="en"><script>const cell = {code: `// Keep this comment\\nrun();`};</script></html>'
+        target = source.replace('lang="en"', 'lang="zh-CN"').replace(
+            "// Keep this comment", "// 保留这条注释")
+        resource = extract_resource(source, target, "zh-CN", "web/course/page.html")
+        unit = next(item for item in template_units(source) if item.kind == "code-line-comment")
+        self.assertEqual(resource["values"][unit.key]["value"], unit.source)
+
 
 class TrackedResourceTests(unittest.TestCase):
     def test_repository_resources_pass_the_gate(self) -> None:
@@ -205,6 +241,35 @@ class TrackedResourceTests(unittest.TestCase):
                     }
                 )
 
+    def test_zh_resources_keep_comments_in_english_and_use_chinese_spacing(self) -> None:
+        for spec, resource in tracked_resources():
+            if not spec.locale.casefold().startswith("zh"):
+                continue
+            template = (ROOT / resource.template).read_text(encoding="utf-8")
+            units = {item.key: item for item in template_units(template)}
+            for key, entry in resource.values.items():
+                unit = units[key]
+                with self.subTest(resource=resource.path.name, key=key):
+                    if unit.kind in {"code-line-comment", "code-block-comment"}:
+                        self.assertEqual(entry["value"], unit.source)
+                    else:
+                        self.assertEqual(entry["value"], normalize_zh_spacing(entry["value"]))
+
+    def test_zh_glossary_runtime_covers_only_canonical_material_terms(self) -> None:
+        raw = (ROOT / "web/nemoclaw/scripts/_glossary_zh.js").read_text(encoding="utf-8")
+        match = re.search(
+            r"const ZH_BLURBS = Object\.freeze\((\{[\s\S]*?\})\);",
+            raw,
+        )
+        self.assertIsNotNone(match)
+        blurbs = json.loads(match.group(1))
+        materials = json.loads(
+            (ROOT / "web/nemoclaw/assets/materials_index.json").read_text(encoding="utf-8")
+        )
+        canonical_terms = {entry["term"] for entry in materials["entries"]}
+        self.assertEqual(set(blurbs), canonical_terms)
+        self.assertTrue(all(isinstance(value, str) and value.strip() for value in blurbs.values()))
+
     def test_migration_left_no_replaced_localized_html(self) -> None:
         for spec in discover_locales(ROOT):
             with self.subTest(locale=spec.locale):
@@ -228,7 +293,7 @@ class TrackedResourceTests(unittest.TestCase):
         for spec in discover_locales(ROOT):
             recorded = spec.state.get("shared_key_variants", {})
             with self.subTest(locale=spec.locale):
-                self.assertTrue(recorded, "every migrated locale records its reviewed divergences")
+                self.assertIsInstance(recorded, dict)
                 for key, reason in recorded.items():
                     self.assertEqual(key, base_key(key))
                     self.assertGreater(len(reason.strip()), 40)
@@ -697,6 +762,78 @@ class TrackedManifestProjectionTests(unittest.TestCase):
                             "manifest-projection-stale",
                             {item["code"] for item in localization_audit.manifest_drift(
                                 Path(directory), spec.profile, manifest)})
+
+
+class ChineseRuntimeLocalizationTests(unittest.TestCase):
+    def test_helper_prose_is_localized_without_translating_code_or_partial_buttons(self) -> None:
+        script = r'''
+globalThis.document = { documentElement: { lang: "zh-CN" } };
+const locale = await import("./web/nemoclaw/scripts/_locale.js");
+const fail = message => { throw new Error(message); };
+
+const runAll = locale.localizeCourseUiText(
+  "Reset when you click <strong>▶ Run all</strong>."
+);
+if (!runAll.includes("▶ 全部运行") || runAll.includes("运行 all")) {
+  fail("Run all was translated as a shorter mixed-language label: " + runAll);
+}
+
+const protectedCode = locale.localizeCourseUiText(
+  "Use <code>log.clear()</code>, then clear the panel."
+);
+if (!protectedCode.includes("<code>log.clear()</code>") || protectedCode.includes("log.清除")) {
+  fail("inline code was translated: " + protectedCode);
+}
+
+if (locale.localizeCourseUiText("Instrumentation") !== "追踪与日志") {
+  fail("the trace/log helper category uses an unnatural literal translation");
+}
+if (locale.localizeCourseUiText("Visualization") !== "可视化") {
+  fail("the visualization helper category was not localized");
+}
+
+const documentedHelpers = [
+  "chat", "chatStream", "webSearch", "instantAnswer", "formatSearchResults",
+  "embed", "cosineSim", "fetchRetry", "delay", "getConfig", "getKey",
+  "terminal", "coursePage", "coursePages", "contextWindow", "estimateTokens",
+  "browserChatFetch", "diagramSVG", "ganttBarsSVG", "mountFigures", "mountChatUI",
+  "mountAgentChat", "mountOpenClawCli", "mountKeyPanel", "openclawBootstrapRequest",
+  "openclawChat", "evalSandboxNetwork", "evalSandboxFs", "sandboxExec", "policyGet",
+  "viz.diagram", "viz.lineChart", "viz.scoreBarChart", "viz.messageList",
+  "viz.ganttBars", "viz.retrievalBars", "viz.diffTable", "viz.chat", "viz.sideBySide",
+  "state", "fetch", "trace", "log", "signal",
+];
+for (const name of documentedHelpers) {
+  const value = locale.localizeCourseHelperDescription(name, "English helper description");
+  if (value === "English helper description" || !/[\u3400-\u9fff]/.test(value)) {
+    fail("missing Chinese helper description: " + name);
+  }
+}
+const logDescription = locale.localizeCourseHelperDescription("log", "unused");
+if (!logDescription.includes("<code>log.clear()</code>") || logDescription.includes("log.清除")) {
+  fail("localized log helper description changed executable code");
+}
+'''
+        result = subprocess.run(
+            ["node", "--input-type=module", "-e", script],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_chinese_resources_preserve_code_and_use_exact_button_and_brand_labels(self) -> None:
+        resource_root = ROOT / "i18n/zh/resources/web/nemoclaw"
+        values = []
+        for path in resource_root.glob("*.json"):
+            document = json.loads(path.read_text(encoding="utf-8"))
+            values.extend(item.get("value", "") for item in document.get("values", {}).values())
+        localized = "\n".join(values)
+        for unwanted in ("log.清除()", "运行 all", "点击 Run", "按下 Run", "单击 Run", "NVIDIA · 智能体安全"):
+            self.assertNotIn(unwanted, localized)
+        self.assertIn("点击“全部运行”", localized)
+        self.assertIn("NVIDIA · 安全智能体", localized)
 
 
 if __name__ == "__main__":

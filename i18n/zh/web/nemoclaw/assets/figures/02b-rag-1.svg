@@ -1,0 +1,164 @@
+<svg data-locale="zh-CN" class="gfx-dark" viewBox="0 0 1220 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="一个分为两条时间线的 RAG 架构。时间线 1 为离线运行的索引构建：对文档知识库进行预处理，通过嵌入模型生成嵌入，并存储到向量数据库中。时间线 2 为实时运行的服务：用户查询进入聊天应用，生成嵌入后与向量数据库进行匹配；检索到的上下文连同查询一起发送至 LLM 引擎，由该引擎以流式方式返回有依据的响应。" preserveAspectRatio="xMidYMid meet" style="width:100%; height:auto; display:block; background:var(--gfx-bg,#0d0d0d); border:1px solid var(--gfx-line,#2a2a2a); border-radius:8px; padding:14px; max-width:1100px; margin:1.5rem auto">
+  <defs>
+    <marker id="rag-arr-gray" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,1.5 L8,5 L0,8.5 Z" fill="var(--gfx-faint,#555555)"/>
+    </marker>
+    <marker id="rag-arr-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,1.5 L8,5 L0,8.5 Z" fill="var(--gfx-green,#76b900)"/>
+    </marker>
+
+    <linearGradient id="cylinder-db-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="var(--gfx-tint-green,#112211)"/>
+      <stop offset="50%" stop-color="var(--gfx-tint-green,#1c361c)"/>
+      <stop offset="100%" stop-color="var(--gfx-tint-green,#0f1f0f)"/>
+    </linearGradient>
+    <linearGradient id="cylinder-kb-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="var(--gfx-panel,#161616)"/>
+      <stop offset="50%" stop-color="var(--gfx-panel,#262626)"/>
+      <stop offset="100%" stop-color="var(--gfx-panel,#1a1a1a)"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="430" y="35" width="760" height="360" rx="8" fill="var(--gfx-panel,#121212)" stroke="var(--gfx-line,#222222)" stroke-width="1.5"/>
+  <text x="1170" y="58" font-family="ui-monospace, monospace" font-size="11" fill="var(--gfx-sub,#444444)" text-anchor="end" letter-spacing="0.05em">SYSTEM 运行时环境</text>
+
+  <circle cx="35" cy="55" r="11" fill="var(--gfx-green,#76b900)"/>
+  <text x="35" y="59" font-family="Arial, sans-serif" font-size="11.5" font-weight="bold" fill="var(--gfx-bg,#0d0d0d)" text-anchor="middle">1</text>
+  <text x="54" y="51" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="var(--gfx-green,#76b900)">文档检索</text>
+  <text x="54" y="65" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="var(--gfx-green,#76b900)">与摄取</text>
+
+  <g transform="translate(40, 95)">
+    <ellipse cx="45" cy="12" rx="45" ry="10" fill="url(#cylinder-kb-grad)" stroke="var(--gfx-line,#3a3a3a)" stroke-width="1.2"/>
+    <path d="M 0 12 L 0 62 A 45 10 0 0 0 90 62 L 90 12 Z" fill="url(#cylinder-kb-grad)" stroke="var(--gfx-line,#3a3a3a)" stroke-width="1.2"/>
+    <ellipse cx="45" cy="62" rx="45" ry="10" fill="none" stroke="var(--gfx-line,#3a3a3a)" stroke-width="1.2"/>
+    <path d="M 0 28 A 45 10 0 0 0 90 28" fill="none" stroke="var(--gfx-line,#3a3a3a)" stroke-width="1" stroke-dasharray="3 3"/>
+    <path d="M 0 45 A 45 10 0 0 0 90 45" fill="none" stroke="var(--gfx-line,#3a3a3a)" stroke-width="1" stroke-dasharray="3 3"/>
+
+    <line x1="30" y1="4" x2="60" y2="4" stroke="var(--gfx-faint,#555555)" stroke-width="1.5"/>
+    <line x1="25" y1="22" x2="65" y2="22" stroke="var(--gfx-sub,#444444)" stroke-width="1.2"/>
+    <line x1="25" y1="39" x2="65" y2="39" stroke="var(--gfx-sub,#444444)" stroke-width="1.2"/>
+
+    <text x="45" y="88" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="var(--gfx-ink2,#cccccc)" text-anchor="middle">知识库</text>
+  </g>
+
+  <line x1="135" y1="135" x2="185" y2="135" stroke="var(--gfx-sub,#444444)" stroke-width="1.5" marker-end="url(#rag-arr-gray)"/>
+
+  <rect x="190" y="90" width="165" height="75" rx="4" fill="var(--gfx-panel,#161616)" stroke="var(--gfx-line,#2c2c2c)" stroke-width="1.2"/>
+  <text x="272.5" y="110" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="var(--gfx-ink2,#cccccc)" text-anchor="middle">预处理文档</text>
+
+  <g transform="translate(228, 123) scale(1.2)">
+    <rect x="0" y="0" width="20" height="26" rx="1" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-sub,#444444)" stroke-width="1"/>
+    <line x1="4" y1="6" x2="16" y2="6" stroke="var(--gfx-line,#333333)" stroke-width="1"/>
+    <line x1="4" y1="12" x2="16" y2="12" stroke="var(--gfx-line,#333333)" stroke-width="1"/>
+    <line x1="4" y1="18" x2="12" y2="18" stroke="var(--gfx-line,#333333)" stroke-width="1"/>
+    <path d="M 26 13 L 34 13" fill="none" stroke="var(--gfx-green,#76b900)" stroke-width="1.2" marker-end="url(#rag-arr-green)"/>
+    <rect x="40" y="0" width="14" height="6" rx="1" fill="var(--gfx-tint-green,#1c2e1c)" stroke="var(--gfx-green,#76b900)" stroke-width="0.8"/>
+    <rect x="58" y="0" width="16" height="6" rx="1" fill="var(--gfx-tint-green,#1c2e1c)" stroke="var(--gfx-green,#76b900)" stroke-width="0.8"/>
+    <rect x="40" y="10" width="22" height="6" rx="1" fill="var(--gfx-tint-green,#1c2e1c)" stroke="var(--gfx-green,#76b900)" stroke-width="0.8"/>
+    <rect x="45" y="20" width="18" height="6" rx="1" fill="var(--gfx-tint-green,#1c2e1c)" stroke="var(--gfx-green,#76b900)" stroke-width="0.8"/>
+  </g>
+
+  <line x1="355" y1="135" x2="445" y2="135" stroke="var(--gfx-sub,#444444)" stroke-width="1.5" marker-end="url(#rag-arr-gray)"/>
+  <text x="395" y="124" font-family="Arial, sans-serif" font-size="11" font-style="italic" fill="var(--gfx-sub,#888888)" text-anchor="middle">文档</text>
+
+
+  <circle cx="35" cy="255" r="11" fill="var(--gfx-green,#76b900)"/>
+  <text x="35" y="259" font-family="Arial, sans-serif" font-size="11.5" font-weight="bold" fill="var(--gfx-bg,#0d0d0d)" text-anchor="middle">2</text>
+  <text x="54" y="251" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="var(--gfx-green,#76b900)">用户查询与</text>
+  <text x="54" y="265" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="var(--gfx-green,#76b900)">响应运行</text>
+
+  <g transform="translate(65, 290)">
+    <circle cx="20" cy="12" r="7" fill="none" stroke="var(--gfx-sub,#888888)" stroke-width="2"/>
+    <path d="M4,31 C4,23 36,23 36,31" fill="none" stroke="var(--gfx-sub,#888888)" stroke-width="2" stroke-linecap="round"/>
+    <text x="20" y="48" font-family="Arial, sans-serif" font-size="11.5" font-weight="700" fill="var(--gfx-faint,#6a6a6a)" text-anchor="middle">用户</text>
+  </g>
+
+  <line x1="135" y1="320" x2="185" y2="320" stroke="var(--gfx-sub,#444444)" stroke-width="1.5" marker-end="url(#rag-arr-gray)"/>
+
+  <rect x="190" y="280" width="165" height="75" rx="4" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-ink2,#cccccc)" stroke-width="1.5"/>
+  <line x1="190" y1="298" x2="355" y2="298" stroke="var(--gfx-ink2,#cccccc)" stroke-width="1.2"/>
+  <circle cx="200" cy="289" r="2" fill="var(--gfx-faint,#6a6a6a)"/>
+  <circle cx="208" cy="289" r="2" fill="var(--gfx-faint,#6a6a6a)"/>
+  <circle cx="216" cy="289" r="2" fill="var(--gfx-faint,#6a6a6a)"/>
+  <text x="272.5" y="322" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="var(--gfx-ink,#ffffff)" text-anchor="middle">聊天机器人</text>
+  <text x="272.5" y="337" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-sub,#888888)" text-anchor="middle">Web 应用</text>
+
+  <line x1="355" y1="320" x2="445" y2="320" stroke="var(--gfx-sub,#444444)" stroke-width="1.5" marker-end="url(#rag-arr-gray)"/>
+  <text x="395" y="309" font-family="Arial, sans-serif" font-size="11" font-style="italic" fill="var(--gfx-sub,#888888)" text-anchor="middle">用户查询</text>
+
+
+  <rect x="450" y="85" width="200" height="275" rx="6" fill="var(--gfx-tint-green,#132413)" stroke="var(--gfx-green,#76b900)" stroke-width="1.5"/>
+  <text x="550" y="225" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="var(--gfx-green,#aee23a)" text-anchor="middle">嵌入模型</text>
+
+  <g transform="translate(462, 133) scale(1.15)">
+    <rect x="5" y="20" width="44" height="20" rx="3" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-green,#334433)" stroke-width="1"/>
+    <text x="27" y="34" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-sub,#888888)" text-anchor="middle">"文本"</text>
+
+    <path d="M 64 30 L 85 30" fill="none" stroke="var(--gfx-green,#76b900)" stroke-width="1.5" marker-end="url(#rag-arr-green)"/>
+    <rect x="100" y="5" width="50" height="50" rx="4" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-green,#76b900)" stroke-width="1.2"/>
+    <line x1="105" y1="15" x2="145" y2="15" stroke="var(--gfx-green,#335533)" stroke-width="1"/>
+    <line x1="105" y1="25" x2="145" y2="25" stroke="var(--gfx-green,#335533)" stroke-width="1"/>
+    <line x1="105" y1="35" x2="145" y2="35" stroke="var(--gfx-green,#335533)" stroke-width="1"/>
+    <line x1="105" y1="45" x2="145" y2="45" stroke="var(--gfx-green,#335533)" stroke-width="1"/>
+    <circle cx="112" cy="15" r="2" fill="var(--gfx-green,#aee23a)"/><circle cx="128" cy="25" r="2" fill="var(--gfx-green,#aee23a)"/><circle cx="120" cy="35" r="2" fill="var(--gfx-green,#aee23a)"/><circle cx="138" cy="45" r="2" fill="var(--gfx-green,#aee23a)"/>
+    <line x1="112" y1="15" x2="128" y2="25" stroke="var(--gfx-faint,#555555)" stroke-width="0.8"/>
+    <line x1="128" y1="25" x2="120" y2="35" stroke="var(--gfx-faint,#555555)" stroke-width="0.8"/>
+    <line x1="120" y1="35" x2="138" y2="45" stroke="var(--gfx-faint,#555555)" stroke-width="0.8"/>
+
+    <rect x="20" y="95" width="120" height="22" rx="3" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-green,#334433)" stroke-width="1"/>
+    <text x="80" y="110" font-family="ui-monospace, monospace" font-size="11" fill="var(--gfx-green,#aee23a)" text-anchor="middle">[0.14, -0.82, ...]</text>
+  </g>
+
+  <line x1="650" y1="135" x2="745" y2="135" stroke="var(--gfx-faint,#555555)" stroke-width="1.5" marker-end="url(#rag-arr-gray)"/>
+  <text x="697" y="112" font-family="Arial, sans-serif" font-size="10.5" font-style="italic" fill="var(--gfx-sub,#888888)" text-anchor="middle">文档</text>
+  <text x="697" y="126" font-family="Arial, sans-serif" font-size="10.5" font-style="italic" fill="var(--gfx-sub,#888888)" text-anchor="middle">嵌入</text>
+
+  <line x1="650" y1="320" x2="745" y2="320" stroke="var(--gfx-green,#76b900)" stroke-width="1.5" marker-end="url(#rag-arr-green)"/>
+  <text x="697" y="297" font-family="Arial, sans-serif" font-size="10.5" font-style="italic" fill="var(--gfx-green,#aee23a)" text-anchor="middle">查询与</text>
+  <text x="697" y="311" font-family="Arial, sans-serif" font-size="10.5" font-style="italic" fill="var(--gfx-green,#aee23a)" text-anchor="middle">嵌入后的查询</text>
+
+
+  <g transform="translate(750, 79) scale(1.08)">
+    <ellipse cx="65" cy="16" rx="65" ry="14" fill="url(#cylinder-db-grad)" stroke="var(--gfx-green,#76b900)" stroke-width="1.5"/>
+    <path d="M 0 16 L 0 244 A 65 14 0 0 0 130 244 L 65 244 L 130 244 L 130 16 Z" fill="url(#cylinder-db-grad)" stroke="var(--gfx-green,#76b900)" stroke-width="1.5"/>
+    <ellipse cx="65" cy="244" rx="65" ry="14" fill="none" stroke="var(--gfx-green,#76b900)" stroke-width="1.5"/>
+    <ellipse cx="65" cy="16" rx="65" ry="14" fill="none" stroke="var(--gfx-green,#76b900)" stroke-width="1.5"/>
+
+    <text x="65" y="141" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="var(--gfx-green,#aee23a)" text-anchor="middle">向量 DB</text>
+
+    <g transform="translate(26, 156) scale(1.2)">
+      <circle cx="16" cy="16" r="14" fill="var(--gfx-tint-green,#0d140d)" stroke="var(--gfx-green,#223a22)" stroke-width="1" stroke-dasharray="2 2"/>
+      <circle cx="50" cy="36" r="14" fill="var(--gfx-tint-blue,#0a121a)" stroke="var(--gfx-tint-blue,#1d344d)" stroke-width="1" stroke-dasharray="2 2"/>
+      <circle cx="12" cy="14" r="2.5" fill="var(--gfx-green,#76b900)"/>
+      <circle cx="22" cy="20" r="2" fill="var(--gfx-green,#76b900)"/>
+      <circle cx="44" cy="32" r="2.5" fill="var(--gfx-blue,#3b82f6)"/>
+      <circle cx="54" cy="40" r="2" fill="var(--gfx-blue,#3b82f6)"/>
+      <line x1="22" y1="20" x2="44" y2="32" stroke="var(--gfx-sub,#444444)" stroke-width="1" stroke-dasharray="2 1"/>
+    </g>
+  </g>
+
+  <line x1="892" y1="320" x2="985" y2="320" stroke="var(--gfx-faint,#555555)" stroke-width="1.5" marker-end="url(#rag-arr-gray)"/>
+  <text x="942" y="297" font-family="Arial, sans-serif" font-size="10.5" font-style="italic" fill="var(--gfx-sub,#888888)" text-anchor="middle">提示词 + 查询</text>
+  <text x="942" y="311" font-family="Arial, sans-serif" font-size="10.5" font-style="italic" fill="var(--gfx-sub,#888888)" text-anchor="middle">+ 增强上下文</text>
+
+  <rect x="1000" y="259" width="175" height="95" rx="4" fill="var(--gfx-panel,#141414)" stroke="var(--gfx-line,#3a3a3a)" stroke-width="1.5"/>
+  <text x="1087.5" y="290" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="var(--gfx-ink,#ffffff)" text-anchor="middle">LLM 引擎</text>
+
+  <g transform="translate(1038, 305) scale(1.5)">
+    <circle cx="10" cy="10" r="2.5" fill="var(--gfx-sub,#444444)"/>
+    <circle cx="25" cy="5" r="2.5" fill="var(--gfx-faint,#666666)"/>
+    <circle cx="25" cy="15" r="2.5" fill="var(--gfx-faint,#666666)"/>
+    <circle cx="40" cy="10" r="2.5" fill="var(--gfx-green,#76b900)"/>
+    <line x1="12" y1="10" x2="23" y2="5" stroke="var(--gfx-line,#333333)" stroke-width="1"/>
+    <line x1="12" y1="10" x2="23" y2="15" stroke="var(--gfx-line,#333333)" stroke-width="1"/>
+    <line x1="27" y1="5" x2="38" y2="10" stroke="var(--gfx-sub,#444444)" stroke-width="1"/>
+    <line x1="27" y1="15" x2="38" y2="10" stroke="var(--gfx-sub,#444444)" stroke-width="1"/>
+    <path d="M 46 10 L 54 10" fill="none" stroke="var(--gfx-green,#76b900)" stroke-width="1" marker-end="url(#rag-arr-green)"/>
+  </g>
+
+
+  <path d="M 1087.5 355 L 1087.5 400 L 272.5 400 L 272.5 357" fill="none" stroke="var(--gfx-green,#76b900)" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#rag-arr-green)"/>
+  <text x="680" y="420" font-family="Arial, sans-serif" font-size="12" font-style="italic" fill="var(--gfx-green,#76b900)" text-anchor="middle" font-weight="700">流式文本响应（生成式）</text>
+
+
+</svg>

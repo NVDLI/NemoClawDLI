@@ -34,7 +34,7 @@ from runtime.html_document import raw_text_blocks_strict
 from translate.locale_catalog import locale_by_tag
 
 ROOT = find_repo_root(Path(__file__).resolve())
-TRANSLATION_REVISION = "locale-editorial-v5-source-draft"
+TRANSLATION_REVISION = "locale-editorial-v6-zh-spacing"
 SKIP_TEXT = {"script", "style", "pre", "code", "svg", "noscript"}
 ATTRS = {"alt", "aria-label", "placeholder", "title"}
 BLOCK_TAGS = {"p", "li", "h1", "h2", "h3", "h4", "figcaption", "button", "option", "label", "summary", "td", "th", "a"}
@@ -53,6 +53,61 @@ UI_TERNARY_RE = re.compile(r'\b(?:greeting|disabledMsg)\s*:\s*([^\n]+)')
 JS_STRING_RE = re.compile(r'(["\'])(.*?)(?<!\\)\1', re.S)
 UI_CALL_RE = re.compile(r'\b(?:helpers\.log|log(?:\.h|\.details|\.html)?|info|show)\s*\((.*?)\)\s*;', re.S)
 PLACEHOLDER_RE = re.compile(r'(?:<code\b[^>]*>.*?</code>|<kbd\b[^>]*>.*?</kbd>|\\?\$\{[^}]+\}|\{\{[^}]+\}\}|https?://[^\s<"\']+|nvapi-|&[A-Za-z0-9#]+;|<[^>]+>)', re.S | re.I)
+
+# Whitespace around inline markup is semantic in English but usually typographic noise in Chinese.
+# Keep tags untouched and remove only a whitespace run whose nearest visible characters on both
+# sides are Chinese. Block boundaries stop the lookup, while inline tags such as links and emphasis
+# are transparent. This covers both ordinary line wrapping and Markdown-derived HTML such as
+# ``中文<strong>重点</strong>内容`` without disturbing CJK/Latin boundaries.
+ZH_CONTEXT_RE = re.compile(r"[\u3400-\u9fff\u3000-\u303f\uff01-\uff65]")
+HTML_TAG_TOKEN_RE = re.compile(r"<[^>]+>", re.S)
+ZH_INLINE_TAGS = {
+    "a", "abbr", "b", "bdi", "bdo", "cite", "code", "data", "del", "dfn", "em",
+    "i", "ins", "kbd", "mark", "q", "s", "samp", "small", "span", "strong", "sub",
+    "sup", "time", "u", "var",
+}
+
+
+def _inline_tag_at(text: str, start: int, end: int) -> bool:
+    token = text[start:end]
+    match = re.match(r"<\s*/?\s*([A-Za-z][A-Za-z0-9-]*)\b", token)
+    return bool(match and match.group(1).lower() in ZH_INLINE_TAGS)
+
+
+def _visible_neighbor(text: str, position: int, direction: int) -> str | None:
+    """Find one visible neighbor, treating inline HTML tags as transparent."""
+    cursor = position
+    while 0 <= cursor < len(text):
+        if direction < 0 and text[cursor] == ">":
+            start = text.rfind("<", 0, cursor + 1)
+            if start < 0 or not _inline_tag_at(text, start, cursor + 1):
+                return None
+            cursor = start - 1
+            continue
+        if direction > 0 and text[cursor] == "<":
+            match = HTML_TAG_TOKEN_RE.match(text, cursor)
+            if match is None or not _inline_tag_at(text, match.start(), match.end()):
+                return None
+            cursor = match.end()
+            continue
+        if text[cursor].isspace():
+            cursor += direction
+            continue
+        return text[cursor]
+    return None
+
+
+def normalize_zh_spacing(text: str) -> str:
+    """Remove English authoring whitespace only at Chinese-to-Chinese inline boundaries."""
+    replacements: list[tuple[int, int]] = []
+    for match in re.finditer(r"\s+", text):
+        left = _visible_neighbor(text, match.start() - 1, -1)
+        right = _visible_neighbor(text, match.end(), 1)
+        if left and right and ZH_CONTEXT_RE.fullmatch(left) and ZH_CONTEXT_RE.fullmatch(right):
+            replacements.append((match.start(), match.end()))
+    for start, end in reversed(replacements):
+        text = text[:start] + text[end:]
+    return text
 
 
 def requests_client():
@@ -192,7 +247,10 @@ class SegmentParser(HTMLParser):
 
 def useful(text: str) -> bool:
     value = re.sub(r"\s+", " ", text).strip()
-    if len(value) < 2 or not re.search(r"[A-Za-z]", value):
+    # Source templates are English, but projection also parses rendered targets.
+    # Accept CJK text so a Simplified Chinese locale preserves the same segment
+    # topology checks already enforced for Latin-script locales.
+    if len(value) < 2 or not re.search(r"[A-Za-z\u3400-\u9fff]", value):
         return False
     if re.fullmatch(r"(?:https?://|mailto:|#|\.?\.?/)[^\s]+", value):
         return False
@@ -475,11 +533,13 @@ def valid_translation(source: str, target: str) -> bool:
     return protected_tokens(source) == protected_tokens(target)
 
 
-def clean_translation(source: str, target: str) -> str:
+def clean_translation(source: str, target: str, locale: str = "") -> str:
     if "\\n" not in source:
         target = target.replace("\\n", " ")
     if "\\t" not in source:
         target = target.replace("\\t", " ")
+    if locale.casefold().startswith("zh"):
+        target = normalize_zh_spacing(target)
     return target
 
 
@@ -533,7 +593,8 @@ def translate_page(source_path: Path, target_path: Path, profile: dict, model: s
         distinct.setdefault(key, (source_segment.text, draft) if revise else (source_segment.text,))
     missing = [(key, *values) for key, values in distinct.items()
                if key not in cache or not valid_translation(
-                   values[-1] if revise else values[0], clean_translation(values[-1] if revise else values[0], cache[key]))]
+                   values[-1] if revise else values[0], clean_translation(
+                       values[-1] if revise else values[0], cache[key], profile["locale"]))]
     label = f"{source_path.relative_to(ROOT)} ({mode})"
     print(f"{label}: {len(segments)} segments, {len(distinct)} distinct, {len(missing)} API", flush=True)
     if dry_run:
@@ -559,7 +620,11 @@ def translate_page(source_path: Path, target_path: Path, profile: dict, model: s
         for item in batch:
             item_id, source = item[:2]
             protected_source = item[2] if len(item) == 3 else source
-            target = clean_translation(protected_source, restore_protected(protected_source, translated.get(item_id, "")))
+            target = clean_translation(
+                protected_source,
+                restore_protected(protected_source, translated.get(item_id, "")),
+                profile["locale"],
+            )
             if valid_translation(protected_source, target):
                 accepted[item_id] = target
             else:
@@ -571,7 +636,11 @@ def translate_page(source_path: Path, target_path: Path, profile: dict, model: s
             for attempt in range(3):
                 try:
                     one = translate_batch([item], profile, model, key, polish, ledger, label)
-                    repaired = clean_translation(protected_source, restore_protected(protected_source, one.get(item_id, "")))
+                    repaired = clean_translation(
+                        protected_source,
+                        restore_protected(protected_source, one.get(item_id, "")),
+                        profile["locale"],
+                    )
                     if valid_translation(protected_source, repaired):
                         break
                 except (requests.RequestException, RuntimeError, ValueError, json.JSONDecodeError):
@@ -599,6 +668,7 @@ def translate_page(source_path: Path, target_path: Path, profile: dict, model: s
         value = clean_translation(
             target_segment.text,
             cache[cache_key(profile["locale"], source_segment.text, draft, mode)],
+            profile["locale"],
         )
         replacements.append((target_segment.start, target_segment.end, value))
     translated_raw = raw

@@ -3,6 +3,8 @@
 
 // Glossary helpers: ranked local webSearch plus single-term instantAnswer.
 
+import { localizeGlossaryEntries } from "./_glossary_zh.js";
+
 // Ranked local search over the vendored NVIDIA materials index.
 // Runs keyless from static pages; instantAnswer is the narrow single-term path.
 let _glossaryIndexP = null;
@@ -10,7 +12,7 @@ function _loadGlossaryIndex() {
   if (!_glossaryIndexP) {
     _glossaryIndexP = fetch("assets/glossary_index.json")
       .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
-      .then(d => Array.isArray(d.terms) ? d.terms : [])
+      .then(d => localizeGlossaryEntries(d.terms))
       .catch(e => { _glossaryIndexP = null; throw e; });   // let a later call retry
   }
   return _glossaryIndexP;
@@ -21,7 +23,7 @@ function _loadMaterialsCatalog() {
   if (!_materialsCatalogP) {
     _materialsCatalogP = fetch("assets/materials_index.json")
       .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
-      .then(d => Array.isArray(d.entries) ? d.entries : [])
+      .then(d => localizeGlossaryEntries(d.entries))
       .catch(e => { _materialsCatalogP = null; throw e; });   // let a later call retry
   }
   return _materialsCatalogP;

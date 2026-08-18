@@ -75,18 +75,40 @@ main{max-width:92rem;margin:0 auto;padding:clamp(1.4rem,4vw,3.5rem)}
 <script>
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const size=n=>n<1024?`${n} B`:n<1048576?`${(n/1024).toFixed(1)} KiB`:`${(n/1048576).toFixed(2)} MiB`;
-fetch("vendor/browser-dependencies.json").then(r=>{if(!r.ok)throw new Error(`inventory request failed: ${r.status}`);return r.json()}).then(data=>{
+const zh=document.documentElement.lang.toLowerCase().startsWith("zh");
+const tr=(en,localized)=>zh?localized:en;
+const zhInventoryText=new Map([
+  ["Transitive code included by the browser agent bundle.","浏览器智能体打包文件中包含的间接依赖代码。"],
+  ["Publisher-built Highlight.js browser distribution for course syntax highlighting.","由发布方构建的 Highlight.js 浏览器发行版，用于课程代码语法高亮。"],
+  ["Tool and message primitives used by agent exercises.","智能体练习使用的工具和消息基础组件。"],
+  ["Agent construction and checkpoint memory used by agent exercises.","智能体练习使用的智能体构建和检查点记忆功能。"],
+  ["OpenAI-compatible browser model client used by agent exercises.","智能体练习使用的 OpenAI 兼容浏览器模型客户端。"],
+  ["Editable and read-only code cells.","可编辑和只读代码单元格。"],
+  ["Parsing the live OpenShell policy returned to sandbox exercises.","解析沙箱练习返回的实时 OpenShell 策略。"],
+  ["Markdown rendering for chat output and repository documents.","渲染聊天输出和仓库文档中的 Markdown。"],
+  ["Tool argument schemas used by agent exercises.","智能体练习使用的工具参数结构定义。"],
+  ["JSON Patch comparison and application used by LangChain output parsing and tracing.","LangChain 在输出解析和追踪中使用的 JSON Patch 比较与应用功能。"],
+  ["SHA-256 hashing used by LangChain caches and indexing helpers.","LangChain 缓存和索引辅助函数使用的 SHA-256 哈希功能。"],
+  ["Streaming XML parsing used by LangChain's XML output parser.","LangChain XML 输出解析器使用的流式 XML 解析功能。"],
+  ["Compatibility fallback used by the embedded sax-js parser when String.fromCodePoint is unavailable.","内嵌 sax-js 解析器在 String.fromCodePoint 不可用时采用的兼容性回退方案。"],
+  ["LangChain does not state an upstream Fast JSON Patch release number for this copied snapshot; the exact source is pinned by the LangChain tag, commit, npm integrity, and generated source hashes.","LangChain 未注明此复制快照对应的上游 Fast JSON Patch 版本号；具体源代码由 LangChain 标签、commit、npm 完整性值和生成的源代码哈希共同锁定。"],
+  ["The copied source header identifies version 0.11.1; the exact snapshot is also pinned by the LangChain tag, commit, npm integrity, and generated source hash.","复制的源代码标头注明版本为 0.11.1；具体快照同时由 LangChain 标签、commit、npm 完整性值和生成的源代码哈希锁定。"],
+  ["LangChain does not state an upstream sax-js release number for this copied snapshot; the exact source is pinned by the LangChain tag, commit, npm integrity, and generated source hash.","LangChain 未注明此复制快照对应的上游 sax-js 版本号；具体源代码由 LangChain 标签、commit、npm 完整性值和生成的源代码哈希锁定。"],
+  ["The copied source comment identifies version 0.1.0; it is nested inside LangChain's sax-js snapshot.","复制的源代码注释注明版本为 0.1.0；该代码嵌套在 LangChain 的 sax-js 快照中。"],
+]);
+const inventoryText=value=>zh?(zhInventoryText.get(value)||value):value;
+fetch("vendor/browser-dependencies.json").then(r=>{if(!r.ok)throw new Error(`${tr("inventory request failed","清单请求失败")}: ${r.status}`);return r.json()}).then(data=>{
   const direct=data.packages.filter(p=>p.direct).length;
   const totalBytes=data.assets.reduce((sum,a)=>sum+a.bytes,0);
   document.getElementById("summary").innerHTML=[
-    [data.packages.length,"npm packages"],[data.embedded_components.length,"embedded components"],[direct,"packages selected directly"],[data.assets.length,"same-origin assets"],[size(totalBytes),"total browser bytes"]
+    [data.packages.length,tr("npm packages","个 npm 软件包")],[data.embedded_components.length,tr("embedded components","个内嵌组件")],[direct,tr("packages selected directly","个直接选用的软件包")],[data.assets.length,tr("same-origin assets","个同源资源文件")],[size(totalBytes),tr("total browser bytes","浏览器文件总大小")]
   ].map(([v,l])=>`<div class="dep-stat"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("");
-  document.querySelector("#package-table tbody").innerHTML=data.packages.map(p=>`<tr><td><a class="dep-license" href="${esc(p.package_url)}" target="_blank" rel="noopener"><code>${esc(p.name)}</code></a></td><td>${esc(p.version)}</td><td><span class="dep-kind">${p.direct?"selected by this project":"indirect dependency"}</span><br>${p.direct?"Imported by the course entry file.":`Required by ${p.required_by.map(esc).join(", ")}.`}</td><td><a class="dep-license" href="vendor/${esc(p.license_file)}">${esc(p.license)}</a></td><td>${esc(p.purpose)}</td></tr>`).join("");
-  document.querySelector("#embedded-table tbody").innerHTML=data.embedded_components.map(c=>`<tr><td><a class="dep-license" href="${esc(c.upstream_url)}" target="_blank" rel="noopener"><code>${esc(c.name)}</code></a><br><span class="dep-kind">copied into ${esc(c.parent_package)} by LangChain</span></td><td>${esc(c.version)}<br><small>${esc(c.version_note)}</small></td><td><a class="dep-license" href="vendor/${esc(c.license_file)}">${esc(c.license)}</a></td><td>${esc(c.purpose)}</td><td><a class="dep-license" href="${esc(c.langchain_source_url)}" target="_blank" rel="noopener">Pinned LangChain source</a><br><span class="dep-hash">${esc(c.source_commit)}</span></td></tr>`).join("");
+  document.querySelector("#package-table tbody").innerHTML=data.packages.map(p=>`<tr><td><a class="dep-license" href="${esc(p.package_url)}" target="_blank" rel="noopener"><code>${esc(p.name)}</code></a></td><td>${esc(p.version)}</td><td><span class="dep-kind">${p.direct?tr("selected by this project","本项目直接选用"):tr("indirect dependency","间接依赖")}</span><br>${p.direct?tr("Imported by the course entry file.","由课程入口文件导入。"):zh?`由 ${p.required_by.map(esc).join(", ")} 引入。`:`Required by ${p.required_by.map(esc).join(", ")}.`}</td><td><a class="dep-license" href="vendor/${esc(p.license_file)}">${esc(p.license)}</a></td><td>${esc(inventoryText(p.purpose))}</td></tr>`).join("");
+  document.querySelector("#embedded-table tbody").innerHTML=data.embedded_components.map(c=>`<tr><td><a class="dep-license" href="${esc(c.upstream_url)}" target="_blank" rel="noopener"><code>${esc(c.name)}</code></a><br><span class="dep-kind">${zh?`由 LangChain 复制到 ${esc(c.parent_package)}`:`copied into ${esc(c.parent_package)} by LangChain`}</span></td><td>${esc(c.version)}<br><small>${esc(inventoryText(c.version_note))}</small></td><td><a class="dep-license" href="vendor/${esc(c.license_file)}">${esc(c.license)}</a></td><td>${esc(inventoryText(c.purpose))}</td><td><a class="dep-license" href="${esc(c.langchain_source_url)}" target="_blank" rel="noopener">${tr("Pinned LangChain source","固定版本的 LangChain 源代码")}</a><br><span class="dep-hash">${esc(c.source_commit)}</span></td></tr>`).join("");
   document.querySelector("#asset-table tbody").innerHTML=data.assets.map(a=>`<tr><td><a class="dep-license" href="vendor/${esc(a.file)}"><code>${esc(a.file)}</code></a></td><td>${size(a.bytes)}</td><td>${a.packages.map(esc).join("<br>")}</td><td>${a.references.length}</td><td class="dep-hash">${esc(a.sha256)}</td></tr>`).join("");
-  document.getElementById("legal-list").innerHTML=`Comments preserved by esbuild (supplemental evidence, not the component list): ${data.legal_notices.map(n=>`<a class="dep-license" href="vendor/${esc(n.file)}"><code>${esc(n.file)}</code></a>`).join(", ")}.`;
-  document.getElementById("sbom-link").innerHTML=`Machine-readable inventory: <a class="dep-license" href="vendor/${esc(data.sbom.file)}"><code>${esc(data.sbom.file)}</code></a> (${data.sbom.component_count} npm and embedded CycloneDX components).`;
-}).catch(error=>{document.getElementById("error").textContent=`Could not load dependency inventory: ${error.message}`});
+  document.getElementById("legal-list").innerHTML=zh?`esbuild 保留的注释（补充依据，并非组件清单）：${data.legal_notices.map(n=>`<a class="dep-license" href="vendor/${esc(n.file)}"><code>${esc(n.file)}</code></a>`).join(", ")}。`:`Comments preserved by esbuild (supplemental evidence, not the component list): ${data.legal_notices.map(n=>`<a class="dep-license" href="vendor/${esc(n.file)}"><code>${esc(n.file)}</code></a>`).join(", ")}.`;
+  document.getElementById("sbom-link").innerHTML=zh?`机器可读清单：<a class="dep-license" href="vendor/${esc(data.sbom.file)}"><code>${esc(data.sbom.file)}</code></a>（包含 ${data.sbom.component_count} 个 npm 和内嵌 CycloneDX 组件）。`:`Machine-readable inventory: <a class="dep-license" href="vendor/${esc(data.sbom.file)}"><code>${esc(data.sbom.file)}</code></a> (${data.sbom.component_count} npm and embedded CycloneDX components).`;
+}).catch(error=>{document.getElementById("error").textContent=`${tr("Could not load dependency inventory","无法加载依赖项清单")}: ${error.message}`});
 </script>
 </body>
 </html>

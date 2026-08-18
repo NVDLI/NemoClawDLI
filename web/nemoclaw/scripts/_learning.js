@@ -29,6 +29,7 @@ function storage() {
 
 function localeKey() {
   const lang = document.documentElement.lang.toLowerCase();
+  if (lang.startsWith("zh")) return "zh";
   if (lang.startsWith("pt")) return "pt";
   if (lang.startsWith("es")) return "es";
   return "en";
@@ -58,6 +59,15 @@ async function loadLearningProfile() {
 
 function profileWords() {
   const locale = localeKey();
+  if (locale === "zh") {
+    return {
+      lesson: "课时", of: "/",
+      transparencySummary: "AI 辅助内容 · 人工审核",
+      transparencyBody: "本课程包含 AI 辅助编辑，并经过人工编辑审核。发布内容仍须遵守 NVIDIA 内容管控要求。技术图表和外部媒体的来源及许可记录见",
+      imageProvenance: "图片来源",
+      materialProvenance: "资料来源",
+    };
+  }
   if (locale === "pt") {
     return {
       lesson: "Lição", of: "de",
@@ -192,7 +202,9 @@ function mountCodeObserver() {
 
 function makeDepthControl() {
   const locale = document.documentElement.lang.toLowerCase();
-  const words = locale.startsWith("pt")
+  const words = locale.startsWith("zh")
+    ? { detail: "详细程度", aria: "课程详细程度", guided: "引导", applied: "实践", complete: "完整" }
+    : locale.startsWith("pt")
     ? { detail: "Detalhe", aria: "Nível de detalhe do curso", guided: "Guiado", applied: "Aplicado", complete: "Completo" }
     : locale.startsWith("es")
       ? { detail: "Detalle", aria: "Nivel de detalle del curso", guided: "Guiado", applied: "Aplicado", complete: "Completo" }

@@ -31,6 +31,7 @@ from translate.locale_projection import project_locale_html
 from translate.locale_resource_render import render_overlay
 from translate.locale_resources import (
     LocaleResourceError,
+    code_copy_segments,
     expected_resource_path,
     json_resources,
     load_resource,
@@ -276,6 +277,12 @@ def runnable_code_ui_strings(raw: str) -> list[str]:
     """
     values: list[str] = []
     for body in code_templates(raw):
+        # Comments are deliberately canonical in the Simplified Chinese course. Remove their
+        # contents before looking for learner-facing log strings, otherwise a commented-out
+        # ``log.details("...")`` example is misclassified as untranslated runtime output.
+        for segment in reversed(code_copy_segments(body)):
+            if segment.kind in {"code-line-comment", "code-block-comment"}:
+                body = body[:segment.start] + (" " * (segment.end - segment.start)) + body[segment.end:]
         values.extend(match.group(2) for match in RUNNABLE_UI_FIELD_RE.finditer(body))
         values.extend(match.group(2) for match in RUNNABLE_UI_LOG_RE.finditer(body))
         for array in RUNNABLE_UI_EXAMPLES_RE.finditer(body):
@@ -421,7 +428,7 @@ def reference_citation_titles(raw: str) -> list[tuple[str, str]]:
         if not first:
             continue
         prefix = item[:first.start()]
-        if not re.search(r"\(\d{4}\)\.", prefix) or "<em" in prefix.lower():
+        if not re.search(r"\(\d{4}\)[.。]", prefix) or "<em" in prefix.lower():
             continue
         title = html.unescape(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", first.group(2))).strip())
         if title:
@@ -642,11 +649,11 @@ def interface_findings(root: Path) -> list[dict[str, str]]:
             ) if match.group(2))
         for key in sorted(runtime_keys):
             needle = json.dumps(key, ensure_ascii=False) + ":"
-            if locale_raw.count(needle) < 2:
+            if locale_raw.count(needle) < 3:
                 out.append({
                     "code": "runtime-ui-translation",
                     "path": "web/nemoclaw/scripts/_locale.js",
-                    "detail": f"runtime UI key must have reviewed Portuguese and Spanish mappings: {key}",
+                    "detail": f"runtime UI key must have reviewed Portuguese, Spanish, and Chinese mappings: {key}",
                 })
             if key not in runtime_raw:
                 out.append({
@@ -709,7 +716,14 @@ def page_quality(source_raw: str, target_raw: str, profile: dict, *, skill: bool
                             "detail": f"segment {index} moved or changed a protected URL, path, placeholder, or code token"})
                 break
             source_words = len(re.findall(r"\b\w+\b", re.sub(r"<[^>]+>", " ", source_segment.text)))
-            target_words = len(re.findall(r"\b\w+\b", re.sub(r"<[^>]+>", " ", target_segment.text)))
+            target_plain = re.sub(r"<[^>]+>", " ", target_segment.text)
+            # CJK is not whitespace-delimited. Count Han characters as lexical
+            # units so the existing content-shortfall guard remains meaningful
+            # for Simplified Chinese rather than treating a paragraph as one word.
+            target_words = len(re.findall(r"\b\w+\b", target_plain))
+            target_words += sum(
+                len(run) - 1 for run in re.findall(r"[\u3400-\u9fff]+", target_plain)
+            )
             minimum_ratio = float(profile.get("minimum_block_word_ratio", 0.35))
             if (source_segment.kind == "block" and source_words >= 12
                     and target_words / source_words < minimum_ratio):

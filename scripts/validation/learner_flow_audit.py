@@ -342,7 +342,11 @@ def audit_launchable_learning_path(pages: dict[str, str]) -> list[str]:
             _need(findings, token in text, f"{name}: normal launch path is missing {token}")
         credential_boundaries = [
             item for item in re.findall(r"<li\b[^>]*>.*?</li>", text, re.S | re.I)
-            if re.search(r"(?:browser cookie|cookie del navegador|cookie do navegador)", item, re.I)
+            if re.search(
+                r"(?:browser cookie|cookie del navegador|cookie do navegador|浏览器\s*Cookie)",
+                item,
+                re.I,
+            )
         ]
         _need(findings, any(
             "<code>_pomerium</code>" in paragraph
@@ -371,7 +375,11 @@ def audit_launchable_learning_path(pages: dict[str, str]) -> list[str]:
             "/cli/gateway", "_pomerium", "CF_Authorization", "apps.run.brev.nvidia.com",
             "brevlab.com", "Chrome", "Firefox", "Safari",
         )), f"{name}: browser-cookie acquisition must distinguish both launchable sessions before the probe")
-        _need(findings, re.search(r"(?:not|no|não)[^.<]{0,100}<code>Cookie</code>", access_guidance, re.I) is not None,
+        _need(findings, re.search(
+            r"(?:not|no|não|不要|请勿)[^.<]{0,100}<code>Cookie</code>",
+            access_guidance,
+            re.I,
+        ) is not None,
               f"{name}: browser-cookie guidance must prohibit copying the complete Cookie header")
         _need(findings, 0 <= browser_start < probe_start < raw_audit_start < model_start,
               f"{name}: browser-session guidance, connection probe, route inspection, and model setup are out of order")

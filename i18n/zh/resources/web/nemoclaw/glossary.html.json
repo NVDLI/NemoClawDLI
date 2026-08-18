@@ -1,0 +1,494 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "zh-CN",
+  "template": "web/nemoclaw/glossary.html",
+  "values": {
+    "text.379a1db0f585": {
+      "type": "text",
+      "source": "The materials catalog behind web_search · Securing Agents",
+      "value": "web_search 背后的资料目录 · 安全智能体"
+    },
+    "text.67a5bdf2a82d": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents",
+      "value": "NVIDIA · 安全智能体"
+    },
+    "text.2ebd85574071": {
+      "type": "text",
+      "source": "Course home →",
+      "value": "课程主页 →"
+    },
+    "text.76a513cd3b05": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents · reference",
+      "value": "NVIDIA · 安全智能体 · 参考资料"
+    },
+    "rich.272ac1ac0370": {
+      "type": "rich",
+      "source": "The materials catalog behind <code>web_search</code>",
+      "value": "<code>web_search</code> 背后的资料目录"
+    },
+    "link.bff925784f94": {
+      "type": "link",
+      "source": "\n      When an agent in this course calls the <code>web_search</code> tool you wire by hand in\n      <a href=\"01c-tools.html\">Module 1c</a>, nothing ever leaves your browser. The tool ranks the\n      course's own <strong>materials catalog</strong>, a fixed and fully inspectable corpus that ships\n      inside the page itself. That catalog is organized into two tiers, and the sections below walk\n      through the whole pipeline, from loading the catalog and running the agent's own ranking against\n      it to seeing how the corpus is kept current and reading the ranking functions line by line.\n    ",
+      "value": "\n      当本课程中的智能体调用 <code>web_search</code> 工具（您会在<a href=\"01c-tools.html\">模块 1c</a>中手动接入该工具）时，任何内容都不会离开浏览器。该工具会对课程自带的<strong>资料目录</strong>进行排序；这是随页面一同发布、内容固定且完全可检查的语料库。目录分为两个层级。以下各节将完整介绍这条流水线：加载目录、运行智能体实际使用的排序逻辑、了解语料库如何保持最新，以及逐行查看排序函数。\n    "
+    },
+    "text.2434d495d900": {
+      "type": "text",
+      "source": "How the catalog is split and served",
+      "value": "目录如何划分与提供"
+    },
+    "rich.84ad02acc823": {
+      "type": "rich",
+      "source": "\n      The whole backend is one static file named <code>assets/materials_index.json</code> that holds\n      <span class=\"gx-stat\" id=\"gx-count\">…</span> entries in <span class=\"gx-stat\" id=\"gx-size\">…</span>\n      and splits them into <span class=\"gx-stat\" id=\"gx-cached\">…</span> cached and <span class=\"gx-stat\" id=\"gx-od\">…</span>\n      on-demand. Because it ships in the same bundle as the page the browser loads it same-origin with no\n      key and no CORS. <code>webSearch</code> ranks both tiers together so that one query reaches a glossary\n      definition and a paper abstract through a single shared surface.\n    ",
+      "value": "\n      整个后端就是一个静态文件 <code>assets/materials_index.json</code>，其中包含\n      <span class=\"gx-stat\" id=\"gx-count\">…</span> 个条目，总大小为 <span class=\"gx-stat\" id=\"gx-size\">…</span>，分为 <span class=\"gx-stat\" id=\"gx-cached\">…</span> 个缓存条目和 <span class=\"gx-stat\" id=\"gx-od\">…</span> 个按需条目。该文件与页面位于同一个课程包中，因此浏览器可同源加载，无须密钥，也没有 CORS 问题。<code>webSearch</code>\n      会统一对两个层级排序，使一次查询可以通过同一入口同时检索术语定义和论文摘要。\n    "
+    },
+    "text.9fcbcc30fa3b": {
+      "type": "text",
+      "source": "Cached · the NVIDIA glossary",
+      "value": "缓存层 · NVIDIA 术语表"
+    },
+    "text.c7555979fec4": {
+      "type": "text",
+      "source": "The 79-term glossary index ships in full, and seven of those terms also carry their complete\n        vendored article alongside the definition. All of that text already travels with the page so the\n        agent can quote it word for word inside the bundle without reaching across the network for a live\n        connection. The index rarely changes. Nearly every search the agent runs still draws on it and so the\n        copy riding along in the bundle earns its place in the cache many times over.",
+      "value": "79 个术语的索引会完整打包，其中 7 个术语还随附完整的本地文章及其定义。所有这些文本都会随页面一同加载，因此智能体可以直接引用课程包中的原文，无须通过网络访问实时来源。该索引很少变化，而智能体几乎每次搜索都会用到它，因此将其缓存到课程包中很划算。"
+    },
+    "text.746701200b91": {
+      "type": "text",
+      "source": "On-demand · papers and posts",
+      "value": "按需层 · 论文与文章"
+    },
+    "text.f38109334cc7": {
+      "type": "text",
+      "source": "Larger sources such as the arXiv abstracts and the posts from the NVIDIA developer blog ship\n        instead as a catalog card that carries a title, a short blurb, and the source URL but leaves out\n        the full text. The agent surfaces that card and follows the link out to the source whenever it needs\n        more than the blurb offers. Because these entries are bulky and far less likely to be reused than a\n        glossary definition the cache earns little by holding them and the agent fetches them fresh on\n        demand.",
+      "value": "arXiv 摘要和 NVIDIA 开发者博客文章等较大的来源只以目录卡片形式发布，卡片包含标题、简短介绍和来源 URL，不包含全文。需要的信息超出简介范围时，智能体会显示该卡片并通过链接访问原始来源。此类条目体积较大，而且复用频率远低于术语定义，因此不适合缓存，智能体会在需要时重新获取。"
+    },
+    "text.3a0412a3f0b4": {
+      "type": "text",
+      "source": "Vendored sources become a static catalog, then an in-memory cache, then ranked results without a live network call.",
+      "value": "本地收录的来源先形成静态目录，再进入内存缓存，最后在不发起实时网络请求的情况下生成排序结果。"
+    },
+    "text.57ffd9ca587a": {
+      "type": "text",
+      "source": "How it stays current (and how you would fix it)",
+      "value": "如何保持目录最新（以及如何修复问题）"
+    },
+    "rich.48bb0cadfcc7": {
+      "type": "rich",
+      "source": "\n      A vendored corpus drifts away from its sources over time unless something actively keeps it\n      honest. That job belongs to a single script, <code>scripts/materials/pull_materials.py</code>, which is\n      written so that any drift it finds is surfaced to everyone at once and described in exactly\n      the same words.\n    ",
+      "value": "\n      如果没有主动维护，本地收录的语料库会随时间逐渐偏离原始来源。这项工作由脚本\n      <code>scripts/materials/pull_materials.py</code> 统一完成；它会向所有人显示发现的偏差，并使用完全一致的措辞说明问题。\n    "
+    },
+    "text.19625bf182f9": {
+      "type": "text",
+      "source": "The pull script fingerprints each source, and the same drift result appears in CLI, CI, and the validator screen.",
+      "value": "拉取脚本会为每个来源生成指纹，同一份偏差结果会同时显示在 CLI、CI 和验证页面中。"
+    },
+    "rich.71a66d1bc59b": {
+      "type": "rich",
+      "source": "\n      The loop runs like this. A contributor (or the deploy build) runs the pull, and every source gets\n      fingerprinted in <code>_materials.json</code>. Passing <code>--check</code> re-fetches each source\n      and flags any drift or outage. That same status lands on the validation screen, reachable from the\n      site's landing page or reproduced locally with <code>python3 scripts/validation/validate_bundle.py</code>, and\n      it names the exact command to fix whatever broke. Nothing about the corpus is a moving target you\n      have to trust.\n    ",
+      "value": "\n      流程如下：贡献者（或部署构建）运行拉取操作，每个来源的指纹都会写入 <code>_materials.json</code>。传入 <code>--check</code> 后，脚本会重新获取各来源，并标记内容偏差或访问故障。同一状态也会显示在验证页面中；您可以从网站首页进入该页面，也可以在本地运行 <code>python3 scripts/validation/validate_bundle.py</code> 重现检查。页面会给出发生问题的具体来源和修复命令，因此语料库的当前状态始终可以自行验证。\n    "
+    },
+    "text.57112a560c18": {
+      "type": "text",
+      "source": "Run the search the agent runs",
+      "value": "运行智能体实际使用的搜索"
+    },
+    "rich.c5663ca2cd70": {
+      "type": "rich",
+      "source": "\n      The cell below shows the real pipeline behind one <code>web_search</code> call drawn as one node per\n      step. Edit the query in the first node and hit <strong>Run all</strong>. The catalog loads from cache\n      and every entry across both tiers gets scored together. The surviving top matches are then formatted\n      into the exact text block the model reads back with each match's tier marked alongside it. The scoring\n      node runs the same algorithm that <code>helpers.webSearch</code> uses. Change a weight and watch the\n      ranking move.\n    ",
+      "value": "\n      下方代码单元以每个步骤一个节点的形式展示一次真实 <code>web_search</code> 调用背后的流水线。编辑第一个节点中的查询，然后点击<strong>全部运行</strong>。目录会从缓存加载，两个层级中的每个条目会统一评分。排名靠前的结果随后会格式化为模型实际读取的文本块，并在每个匹配项旁标出所属层级。评分节点运行的算法与 <code>helpers.webSearch</code> 完全相同。修改权重即可观察排名变化。\n    "
+    },
+    "text.f3d3f704839d": {
+      "type": "text",
+      "source": "Call the functions, edit and run",
+      "value": "调用函数、编辑并运行"
+    },
+    "rich.7f6e97a4eb7b": {
+      "type": "rich",
+      "source": "\n      Two functions back the one tool contract. <code>webSearch</code> is the broad, ranked lookup over\n      the whole catalog the agent grounds answers in; <code>instantAnswer</code> is the narrow one that\n      returns a single glossary definition only when the query names a term. Both run key-less against\n      the cached catalog: edit the queries below and Run, then open the helpers tab to read each\n      function's real source, pulled live from <code>_shared.js</code> so it cannot drift from what runs.\n    ",
+      "value": "\n      两个函数共同支撑一个工具约定。<code>webSearch</code> 会对整个目录执行广泛的排序检索，为智能体的回答提供依据；\n      <code>instantAnswer</code> 的范围更窄，只有当查询明确提到某个术语时才返回一条术语定义。二者均无须密钥，直接使用缓存目录运行。编辑下方查询并点击“运行”，然后打开辅助函数选项卡查看各函数从 <code>_shared.js</code> 实时加载的源代码，确保展示内容与实际运行代码保持一致。\n    "
+    },
+    "rich.050f980fd5b3": {
+      "type": "rich",
+      "source": "Every material it can find · <span class=\"gx-stat\" id=\"gx-tcount\">…</span>",
+      "value": "可检索的全部资料 · <span class=\"gx-stat\" id=\"gx-tcount\">…</span>"
+    },
+    "rich.014ec4f7fa1b": {
+      "type": "rich",
+      "source": "\n      The list below is the full catalog that the ranking searches over. A <span class=\"gx-badge cached\">cached</span>\n      entry carries its complete text inside the bundle and a <span class=\"gx-deep\">deep</span> glossary term\n      brings its vendored article along too under <code>mats/glossary_raw/</code>, while an <span class=\"gx-badge on_demand\">on_demand</span>\n      entry appears only as a card that links out to its source. Filter it to see what the agent could ground a claim in.\n    ",
+      "value": "\n      下方列表是排序搜索覆盖的完整目录。带有 <span class=\"gx-badge cached\">cached</span> 标记的条目会在课程包中保存完整文本；标记为 <span class=\"gx-deep\">deep</span> 的术语还会在 <code>mats/glossary_raw/</code> 下随附本地文章。\n      <span class=\"gx-badge on_demand\">on_demand</span> 条目仅显示为链接到原始来源的卡片。您可以筛选列表，了解智能体能够使用哪些资料作为回答依据。\n    "
+    },
+    "attribute.0b3a38ad7c2e": {
+      "type": "attribute",
+      "source": "filter by name, tag, blurb, tier, or kind…",
+      "value": "按名称、标签、简介、层级或类型筛选…"
+    },
+    "text.616cb218a65b": {
+      "type": "text",
+      "source": "Material",
+      "value": "资料"
+    },
+    "text.cb9e8664edea": {
+      "type": "text",
+      "source": "Tier",
+      "value": "层级"
+    },
+    "text.f5387f9bb6ed": {
+      "type": "text",
+      "source": "Kind",
+      "value": "类型"
+    },
+    "text.1331275bc537": {
+      "type": "text",
+      "source": "Tags",
+      "value": "标签"
+    },
+    "text.9a7196d27d70": {
+      "type": "text",
+      "source": "Blurb",
+      "value": "简介"
+    },
+    "text.2b0c02d86219": {
+      "type": "text",
+      "source": "How the catalog reaches a search",
+      "value": "目录如何进入搜索流程"
+    },
+    "text.1983e8bb3db3": {
+      "type": "text",
+      "source": "web sources",
+      "value": "网络来源"
+    },
+    "text.9fb928e0c0e3": {
+      "type": "text",
+      "source": "glossary, arXiv, blog",
+      "value": "术语表、arXiv、博客"
+    },
+    "text.dec6d120b025": {
+      "type": "text",
+      "source": "pull_materials.py",
+      "value": "pull_materials.py",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.cdc77603ea11": {
+      "type": "text",
+      "source": "fetch + fingerprint",
+      "value": "拉取并生成指纹"
+    },
+    "text.1a6f9ac4eec1": {
+      "type": "text",
+      "source": "on build / on demand",
+      "value": "构建时 / 按需"
+    },
+    "text.2967ccc6dad8": {
+      "type": "text",
+      "source": "materials_index.json",
+      "value": "materials_index.json",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.1e7adaa16d4e": {
+      "type": "text",
+      "source": "cached + on-demand",
+      "value": "缓存 + 按需"
+    },
+    "text.58f46b0392eb": {
+      "type": "text",
+      "source": "ships in the bundle",
+      "value": "随课程包发布"
+    },
+    "text.c6162cf40019": {
+      "type": "text",
+      "source": "in-memory cache",
+      "value": "内存缓存"
+    },
+    "text.cabac78dc937": {
+      "type": "text",
+      "source": "fetched once",
+      "value": "仅拉取一次"
+    },
+    "text.7cff7f4d18ab": {
+      "type": "text",
+      "source": "webSearch",
+      "value": "webSearch",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.a09fde7f3b16": {
+      "type": "text",
+      "source": "ranks both tiers",
+      "value": "对两个层级排序"
+    },
+    "text.85b0bb9e2769": {
+      "type": "text",
+      "source": "no key, no network",
+      "value": "无须密钥或联网"
+    },
+    "text.630ba09448af": {
+      "type": "text",
+      "source": "vendor",
+      "value": "本地收录"
+    },
+    "text.10fd874b68da": {
+      "type": "text",
+      "source": "write",
+      "value": "写入"
+    },
+    "text.5dcec9338767": {
+      "type": "text",
+      "source": "fetch once",
+      "value": "拉取一次"
+    },
+    "text.7613e1bdb963": {
+      "type": "text",
+      "source": "every query",
+      "value": "每次查询"
+    },
+    "text.4efec937e50e": {
+      "type": "text",
+      "source": "Keeping the corpus honest",
+      "value": "确保语料库真实可靠"
+    },
+    "text.c5f5571c2c9c": {
+      "type": "text",
+      "source": "pull",
+      "value": "拉取"
+    },
+    "text.dec6d120b025~1": {
+      "type": "text",
+      "source": "pull_materials.py",
+      "value": "pull_materials.py",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.5799f3ba2513": {
+      "type": "text",
+      "source": "rebase to the web",
+      "value": "同步到 Web"
+    },
+    "text.8a0f1744019b": {
+      "type": "text",
+      "source": "_materials.json",
+      "value": "_materials.json",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.a3b1dde1ae37": {
+      "type": "text",
+      "source": "url + sha256",
+      "value": "URL + SHA-256"
+    },
+    "text.779b85f4e63d": {
+      "type": "text",
+      "source": "per source",
+      "value": "逐个来源"
+    },
+    "text.931bd06269ec": {
+      "type": "text",
+      "source": "--check",
+      "value": "--check",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.8012ccdf0c75": {
+      "type": "text",
+      "source": "re-fetch + compare",
+      "value": "重新获取并比较"
+    },
+    "text.4a6b2204c044": {
+      "type": "text",
+      "source": "ok / drifted / unreachable",
+      "value": "正常 / 有偏差 / 无法访问"
+    },
+    "text.e7ec5b4d2ef0": {
+      "type": "text",
+      "source": "validator screen",
+      "value": "验证页面"
+    },
+    "text.572b4ab31078": {
+      "type": "text",
+      "source": "names the source",
+      "value": "指出具体来源"
+    },
+    "text.28cf967c2dbf": {
+      "type": "text",
+      "source": "+ the fix command",
+      "value": "+ 修复命令"
+    },
+    "text.44863b03e990": {
+      "type": "text",
+      "source": "fingerprint",
+      "value": "生成指纹"
+    },
+    "text.1241626eb8ca": {
+      "type": "text",
+      "source": "compare",
+      "value": "比较"
+    },
+    "text.845e91831319": {
+      "type": "text",
+      "source": "report",
+      "value": "报告"
+    },
+    "text.f390067ed94d": {
+      "type": "text",
+      "source": "materials search · query in, ranked entries out",
+      "value": "资料搜索 · 输入查询，输出排序后的条目"
+    },
+    "text.bf6fb2d32003": {
+      "type": "text",
+      "source": "Edit the query, then run the real web_search steps over the unified catalog. This local pipeline needs no API key.",
+      "value": "编辑查询，然后对统一目录运行真实的 web_search 步骤。这条本地流水线无须 API 密钥。"
+    },
+    "text.2a9bb0a22617": {
+      "type": "text",
+      "source": "The query",
+      "value": "查询"
+    },
+    "text.f98327bb0ac4": {
+      "type": "text",
+      "source": "Sets the web_search text. Short topical phrases usually rank names and tags better than full questions.",
+      "value": "设置 web_search 的查询文本。与完整问题相比，简短的主题短语通常能更好地匹配名称和标签。"
+    },
+    "text.24834c56cfc8": {
+      "type": "text",
+      "source": "Load the cached catalog",
+      "value": "加载缓存目录"
+    },
+    "text.4595e482305e": {
+      "type": "text",
+      "source": "Loads cached glossary terms and on-demand materials from one same-origin catalog, then caches it for later queries.",
+      "value": "从同一个同源目录加载缓存的术语和按需资料，然后缓存结果供后续查询使用。"
+    },
+    "text.3095e35be8ca": {
+      "type": "text",
+      "source": "Score and rank every entry",
+      "value": "对所有条目评分并排序"
+    },
+    "text.87ad4c404501": {
+      "type": "text",
+      "source": "Scores exact and substring names first, followed by tag and blurb matches. Change a weight to move the ranking.",
+      "value": "先匹配完整名称和名称子串，再匹配标签和简介。修改权重即可改变排名。"
+    },
+    "text.26a290f0f00c": {
+      "type": "text",
+      "source": "Format for the model",
+      "value": "格式化为模型输入"
+    },
+    "text.689c318f7f8b": {
+      "type": "text",
+      "source": "Formats ranked entries as the model's numbered tool result, marking cached and on-demand sources. An empty result explicitly reports no match.",
+      "value": "将排序后的条目格式化为模型读取的编号工具结果，并标明缓存来源和按需来源。没有结果时会明确报告未找到匹配项。"
+    },
+    "text.59281a6b2935": {
+      "type": "text",
+      "source": " KB",
+      "value": " KB",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.e1ff795293b4": {
+      "type": "text",
+      "source": "one static file",
+      "value": "一个静态文件"
+    },
+    "text.87d05cd08817": {
+      "type": "text",
+      "source": " entries",
+      "value": " 个条目"
+    },
+    "text.031abfa15d71": {
+      "type": "text",
+      "source": "retrieval augmented generation",
+      "value": "retrieval augmented generation",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.9e009c3cf1b8": {
+      "type": "text",
+      "source": "query:",
+      "value": "查询："
+    },
+    "text.bef9bd61f704": {
+      "type": "text",
+      "source": "assets/materials_index.json",
+      "value": "assets/materials_index.json",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.3673014e72b6": {
+      "type": "text",
+      "source": "cached",
+      "value": "已缓存"
+    },
+    "text.bd87cd8f919d": {
+      "type": "text",
+      "source": "entries (",
+      "value": "个条目（"
+    },
+    "text.238c122ad9bf": {
+      "type": "text",
+      "source": " cached, ",
+      "value": " 个缓存，"
+    },
+    "text.9877b5c637f9": {
+      "type": "text",
+      "source": " on-demand)",
+      "value": " 个按需）"
+    },
+    "text.072f8dd7b1c9": {
+      "type": "text",
+      "source": " Same scoring as helpers.webSearch (see \"The functions, in full\" below).",
+      "value": " Same scoring as helpers.webSearch (see \"The functions, in full\" below).",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.245843abef9e": {
+      "type": "text",
+      "source": "[",
+      "value": "[",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.cfae0d4248f7": {
+      "type": "text",
+      "source": "]",
+      "value": "]",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.afba1a0ce1c8": {
+      "type": "text",
+      "source": "materials",
+      "value": "资料"
+    },
+    "text.5faad178ee7e": {
+      "type": "text",
+      "source": " webSearch ranks the whole catalog; instantAnswer returns one term's definition.",
+      "value": " webSearch ranks the whole catalog; instantAnswer returns one term's definition.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.495185664da4": {
+      "type": "text",
+      "source": " Edit the queries and Run. Open the helpers tab above to read each one's real source.",
+      "value": " Edit the queries and Run. Open the helpers tab above to read each one's real source.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.031abfa15d71~1": {
+      "type": "text",
+      "source": "retrieval augmented generation",
+      "value": "retrieval augmented generation",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.ee682e6a687d": {
+      "type": "text",
+      "source": "webSearch found ",
+      "value": "webSearch 找到 "
+    },
+    "text.e7ac0786668e": {
+      "type": "text",
+      "source": ":",
+      "value": ":",
+      "untranslated": "reviewed code punctuation remains exactly as authored in the English source"
+    },
+    "text.6c2a81736c0f": {
+      "type": "text",
+      "source": "deep agents",
+      "value": "deep agents",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.452e7d4d554a": {
+      "type": "text",
+      "source": "instantAnswer:",
+      "value": "instantAnswer："
+    }
+  }
+}

@@ -13,6 +13,35 @@ CODE_TEMPLATE_RE = re.compile(
 )
 
 
+def regex_literal_end(body: str, index: int) -> int | None:
+    """Return the end of a JavaScript regex literal, or ``None`` for division."""
+    previous = index - 1
+    while previous >= 0 and body[previous].isspace():
+        previous -= 1
+    if previous >= 0 and body[previous] not in "([{:;,=!?&|":
+        return None
+    cursor = index + 1
+    in_class = False
+    while cursor < len(body):
+        char = body[cursor]
+        if char == "\\":
+            cursor += 2
+            continue
+        if char == "[":
+            in_class = True
+        elif char == "]":
+            in_class = False
+        elif char == "/" and not in_class:
+            cursor += 1
+            while cursor < len(body) and body[cursor].isalpha():
+                cursor += 1
+            return cursor
+        elif char in "\r\n":
+            return None
+        cursor += 1
+    return None
+
+
 def js_shape(raw: str) -> str:
     """Remove comments, whitespace, and string text while retaining executable tokens."""
     out: list[str] = []
@@ -29,6 +58,12 @@ def js_shape(raw: str) -> str:
             end = raw.find("*/", index + 2)
             index = len(raw) if end < 0 else end + 2
             continue
+        if char == "/":
+            regex_end = regex_literal_end(raw, index)
+            if regex_end is not None:
+                index = regex_end
+                out.append("R")
+                continue
         if char in {'"', "'", "`"}:
             quote = char
             index += 1

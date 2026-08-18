@@ -62,7 +62,8 @@ def discover_templates(root: Path) -> dict[str, str]:
     source_resolved = source.resolve()
     templates: dict[str, str] = {}
     for path in sorted(source.rglob(f"*{TEMPLATE_SUFFIX}")) if source.is_dir() else ():
-        if path.is_symlink() or any(parent.is_symlink() for parent in path.parents):
+        nested_parents = (parent for parent in path.parents if source in parent.parents)
+        if path.is_symlink() or any(parent.is_symlink() for parent in nested_parents):
             raise LocaleResourceError(f"{path}: shared page templates must not use symlinks")
         try:
             path.resolve().relative_to(source_resolved)
@@ -664,6 +665,10 @@ def authority_findings(root: Path, spec: LocaleSpec) -> list[dict[str, str]]:
 
 def audit(root: Path = ROOT) -> list[dict[str, str]]:
     """Return every locale-resource defect across discovered locales and templates."""
+    # macOS exposes its temporary directory through /var while pathlib resolves
+    # descendants through /private/var. Normalize once so boundary checks and
+    # relative diagnostics compare the same physical root.
+    root = root.resolve()
     try:
         specs = discover_locales(root)
     except LocaleCatalogError as exc:

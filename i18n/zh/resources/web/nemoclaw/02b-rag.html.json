@@ -1,0 +1,2290 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "zh-CN",
+  "template": "web/nemoclaw/02b-rag.html",
+  "media": [
+    "web/nemoclaw/assets/figures/02b-rag-1.svg",
+    "web/nemoclaw/assets/figures/02b-rag-2.svg",
+    "web/nemoclaw/assets/figures/02b-rag-3.svg",
+    "web/nemoclaw/assets/figures/02b-retrieval-boundaries.svg",
+    "web/nemoclaw/assets/figures/rag_arch_2021.svg"
+  ],
+  "values": {
+    "link.16cbfc35d20e": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2005.11401\" target=\"_blank\" rel=\"noopener\">Lewis et al., <em>Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</em> (NeurIPS 2020)</a>. The canonical retrieve-then-generate paper; the figure above is redrawn from it.",
+      "value": "<a href=\"https://arxiv.org/abs/2005.11401\" target=\"_blank\" rel=\"noopener\">Lewis et al., <em>Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</em> (NeurIPS 2020)</a>。这篇论文奠定了先检索、后生成的经典范式；上图根据该论文重新绘制。"
+    },
+    "link.1be52ce4d6ee": {
+      "type": "link",
+      "source": "Comprehensive list at <a href=\"04c-going-further.html#refs\">Going Further · References</a>.",
+      "value": "完整列表请参阅<a href=\"04c-going-further.html#refs\">深入探索 · 参考资料</a>。"
+    },
+    "link.216694a0d897": {
+      "type": "link",
+      "source": "\n    Top-K hands back only its three best matches, so the model summarizes those three chunks while staying completely\n    blind to the other nine hundred and ninety-seven passages in the corpus. GraphRAG\n    (<a href=\"https://arxiv.org/abs/2404.16130\" target=\"_blank\" rel=\"noopener\">Edge et al. 2024</a>)\n    changes the shape of that problem instead of raising K. It spends an LLM up front at indexing time to:\n  ",
+      "value": "\n    Top-K 只返回三个最佳匹配项，因此模型只会总结这三个文本块，完全看不到语料库中的其它九百九十七个段落。GraphRAG（<a href=\"https://arxiv.org/abs/2404.16130\" target=\"_blank\" rel=\"noopener\">Edge et al. 2024</a>）并不提高 K，而是改变问题的处理方式。它会在建立索引时预先投入一次 LLM，以便：\n  "
+    },
+    "link.23685dbfb7f3": {
+      "type": "link",
+      "source": "detect the <a href=\"https://en.wikipedia.org/wiki/Community_structure\" target=\"_blank\" rel=\"noopener\">communities</a> in that graph, the clusters of densely connected entities;",
+      "value": "检测图中的<a href=\"https://en.wikipedia.org/wiki/Community_structure\" target=\"_blank\" rel=\"noopener\">社区</a>，即由紧密连接的实体组成的集群；"
+    },
+    "link.38b8cbcb92dd": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/1702.08734\" target=\"_blank\" rel=\"noopener\">Johnson, Douze &amp; Jégou, <em>Billion-scale similarity search with GPUs</em> (FAISS, 2017)</a>. The vector-index data structure used by every \"vector database\" you have ever heard of.",
+      "value": "<a href=\"https://arxiv.org/abs/1702.08734\" target=\"_blank\" rel=\"noopener\">Johnson, Douze &amp; Jégou, <em>Billion-scale similarity search with GPUs</em> (FAISS, 2017)</a>。您所了解的每种“向量数据库”都采用了这种向量索引数据结构。"
+    },
+    "link.4bee0291af08": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2004.04906\" target=\"_blank\" rel=\"noopener\">Karpukhin et al., <em>Dense Passage Retrieval</em> (EMNLP 2020)</a>. The dual-encoder formulation behind query / passage embedding asymmetry that the NVIDIA embed model enforces.",
+      "value": "<a href=\"https://arxiv.org/abs/2004.04906\" target=\"_blank\" rel=\"noopener\">Karpukhin et al., <em>Dense Passage Retrieval</em> (EMNLP 2020)</a>。该论文提出的双编码器结构是查询/段落嵌入非对称性的基础，此处的 NVIDIA 嵌入模型会执行这种区分。"
+    },
+    "link.86910e24719a": {
+      "type": "link",
+      "source": "\n        The original architecture, from <a href=\"https://arxiv.org/abs/2005.11401\" target=\"_blank\" rel=\"noopener\">Lewis et al. 2020</a>,\n        with the top-row backprop label that most systems built today leave out.\n      ",
+      "value": "\n        原始架构出自 <a href=\"https://arxiv.org/abs/2005.11401\" target=\"_blank\" rel=\"noopener\">Lewis et al. 2020</a>，其中包含如今构建的大多数系统都会省略的顶行反向传播标签。\n      "
+    },
+    "link.95575a1f2ff4": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2404.16130\" target=\"_blank\" rel=\"noopener\">Edge et al., <em>From Local to Global: A Graph RAG Approach to Query-Focused Summarization</em> (2024)</a>. Builds an LLM-derived knowledge graph and pre-summarizes its communities so global, corpus-wide questions can be answered; the pipeline figure above is redrawn from it.",
+      "value": "<a href=\"https://arxiv.org/abs/2404.16130\" target=\"_blank\" rel=\"noopener\">Edge et al., <em>From Local to Global: A Graph RAG Approach to Query-Focused Summarization</em> (2024)</a>。该方法构建由 LLM 派生的知识图谱，并预先总结其中的社区，以便回答覆盖整个语料库的全局问题；上方的工作流图根据该论文重新绘制。"
+    },
+    "link.a1a58d785b3c": {
+      "type": "link",
+      "source": "\n      Course recreation of the two-stage pipeline shown in <a href=\"https://developer.nvidia.com/blog/rag-101-demystifying-retrieval-augmented-generation-pipelines/\" target=\"_blank\" rel=\"noopener\">Hayden Wolff, <em>RAG 101</em></a> (NVIDIA, 2023)\n      and <a href=\"https://developer.nvidia.com/blog/tips-for-building-a-rag-pipeline-with-nvidia-ai-langchain-ai-endpoints/\" target=\"_blank\" rel=\"noopener\">Amit Bleiweiss, <em>tips for building a RAG pipeline</em></a> (NVIDIA, 2024).\n    ",
+      "value": "\n      本课程复现的两阶段工作流参考了 <a href=\"https://developer.nvidia.com/blog/rag-101-demystifying-retrieval-augmented-generation-pipelines/\" target=\"_blank\" rel=\"noopener\">Hayden Wolff, <em>RAG 101</em></a>（NVIDIA，2023 年）和 <a href=\"https://developer.nvidia.com/blog/tips-for-building-a-rag-pipeline-with-nvidia-ai-langchain-ai-endpoints/\" target=\"_blank\" rel=\"noopener\">Amit Bleiweiss, <em>tips for building a RAG pipeline</em></a>（NVIDIA，2024 年）。\n    "
+    },
+    "link.aa54758eba57": {
+      "type": "link",
+      "source": "\n    When\n    <a href=\"https://arxiv.org/abs/2005.11401\" target=\"_blank\" rel=\"noopener\">Lewis and colleagues</a> named\n    retrieval-augmented generation in 2020, it was not a model with a search box bolted on. The <strong>retriever and\n    the generator were trained together</strong> on the task they had to perform. Read the figure from left to\n    right before looking at the arrow across the top.\n  ",
+      "value": "\n    2020 年，\n    <a href=\"https://arxiv.org/abs/2005.11401\" target=\"_blank\" rel=\"noopener\">Lewis 及其同事</a>提出检索增强生成 (RAG) 时，它并不是一个外接搜索框的模型。<strong>检索器和生成器会针对需要执行的任务共同训练</strong>。请先从左向右阅读图示，再查看顶部横贯全图的箭头。\n  "
+    },
+    "link.b952cf87bb57": {
+      "type": "link",
+      "source": "Graph traversal (<a href=\"https://opencypher.org/\" target=\"_blank\" rel=\"noopener\">Cypher</a>, GraphQL, custom)",
+      "value": "图遍历（<a href=\"https://opencypher.org/\" target=\"_blank\" rel=\"noopener\">Cypher</a>、GraphQL、自定义方案）"
+    },
+    "link.cb79e42b3237": {
+      "type": "link",
+      "source": "\n        The GraphRAG pipeline, redrawn from <a href=\"https://arxiv.org/abs/2404.16130\" target=\"_blank\" rel=\"noopener\">Edge et al. 2024</a>'s figure. The blue stages are built once, offline, and the green stages run on every question.\n      ",
+      "value": "\n        GraphRAG 工作流，根据 <a href=\"https://arxiv.org/abs/2404.16130\" target=\"_blank\" rel=\"noopener\">Edge et al. 2024</a> 的图重新绘制。蓝色阶段离线构建一次，绿色阶段则针对每个问题运行。\n      "
+    },
+    "link.cdf062fffd4f": {
+      "type": "link",
+      "source": "\n    The \"retriever-as-tool\" shape you just wired scales straight to production.\n    Swapping the in-memory cosine function for a server-side FAISS+<a href=\"https://en.wikipedia.org/wiki/Okapi_BM25\" target=\"_blank\" rel=\"noopener\">BM25</a>+rerank pipeline\n    changes only the executor; the tool schema, the agent loop, and the final\n    answer step all stay identical.\n  ",
+      "value": "\n    您刚刚搭建的“将检索器用作工具”模式可直接扩展到生产环境。将内存中的余弦函数替换为服务器端的 FAISS+<a href=\"https://en.wikipedia.org/wiki/Okapi_BM25\" target=\"_blank\" rel=\"noopener\">BM25</a>+重排序工作流，只会改变执行器；工具模式、智能体循环和最终答案步骤均保持不变。\n  "
+    },
+    "link.d1534a401dc0": {
+      "type": "link",
+      "source": "\n    Every retriever on this page answers a <em>local</em> question whose answer sits in a handful of passages that Top-K\n    similarity can find for the model to read, the way asking what the contract says about termination or which paper\n    introduced <a href=\"https://arxiv.org/abs/2212.10496\" target=\"_blank\" rel=\"noopener\">HyDE</a> does. A whole different\n    class of question has no answer in any single passage at all. Ask what the main themes are across a thousand documents\n    and you find that the answer is too diffuse to live in any one passage and emerges only from the corpus taken as a whole.\n  ",
+      "value": "\n    本页介绍的每种检索器都用于回答<em>局部</em>问题。这类问题的答案存在于少量段落中，Top-K 相似度检索可以找到这些段落供模型阅读，例如询问合同对终止事项有何规定，或哪篇论文提出了 <a href=\"https://arxiv.org/abs/2212.10496\" target=\"_blank\" rel=\"noopener\">HyDE</a>。另一类问题的答案根本不存在于任何单独段落中。例如，询问一千份文档的主要主题时，答案过于分散，不会存在于某个段落里，只有从整个语料库中才能归纳出来。\n  "
+    },
+    "link.ddc6217b9a39": {
+      "type": "link",
+      "source": "\n    <p class=\"embedding-consequence\"><strong>Compare:</strong> <a href=\"https://en.wikipedia.org/wiki/Cosine_similarity\" target=\"_blank\" rel=\"noopener\">cosine similarity</a> over two vectors costs one dot product plus two magnitudes.</p>\n    <p class=\"embedding-consequence\"><strong>Store:</strong> a vector index organizes texts by their position in that space for efficient nearest-neighbour search.</p>\n  ",
+      "value": "\n    <p class=\"embedding-consequence\"><strong>比较：</strong>对两个向量计算<a href=\"https://en.wikipedia.org/wiki/Cosine_similarity\" target=\"_blank\" rel=\"noopener\">余弦相似度</a>，只需一次点积和两个向量的模。</p>\n    <p class=\"embedding-consequence\"><strong>存储：</strong>向量索引按照文本在该空间中的位置进行组织，以便高效执行最近邻搜索。</p>\n  "
+    },
+    "link.ee2ea807d684": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2212.10496\" target=\"_blank\" rel=\"noopener\">Gao et al., <em>HyDE: Precise Zero-Shot Dense Retrieval without Relevance Labels</em> (2022)</a>. Generates a hypothetical answer and embeds that instead of the question; a quick win for short or ambiguous queries.",
+      "value": "<a href=\"https://arxiv.org/abs/2212.10496\" target=\"_blank\" rel=\"noopener\">Gao et al., <em>HyDE: Precise Zero-Shot Dense Retrieval without Relevance Labels</em> (2022)</a>。该方法生成一个假设答案并嵌入该答案，而不是直接嵌入问题；对于简短或含义模糊的查询，通常能快速取得成效。"
+    },
+    "link.f1076151c0a9": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2010.06467\" target=\"_blank\" rel=\"noopener\">Lin et al., <em>Pretrained Transformers for Text Ranking</em> (2020)</a>. The reranker pattern that a production retrieval stack uses as its second stage.",
+      "value": "<a href=\"https://arxiv.org/abs/2010.06467\" target=\"_blank\" rel=\"noopener\">Lin et al., <em>Pretrained Transformers for Text Ranking</em> (2020)</a>。生产级检索技术栈在第二阶段采用的重排序器模式。"
+    },
+    "placeholder.1617a68ca57a": {
+      "type": "placeholder",
+      "source": "[\\${i+1}] (score \\${r.score.toFixed(3)}) \\${r.text}",
+      "value": "[\\${i+1}]（得分 \\${r.score.toFixed(3)}）\\${r.text}"
+    },
+    "rich.00e79f376c26": {
+      "type": "rich",
+      "source": "<strong>Relational / graph</strong>",
+      "value": "<strong>关系／图</strong>"
+    },
+    "rich.0524da83434c": {
+      "type": "rich",
+      "source": "<strong>For an autonomous agent</strong>, the bundle is the working memory it carries across many turns. That memory stores the agent's constraints, prior decisions, partial results, tool surfaces, and operating rules.",
+      "value": "<strong>对于自主智能体</strong>，上下文包是它在多个轮次间携带的工作记忆。其中存储智能体的约束、先前决策、阶段性结果、可用工具接口和运行规则。"
+    },
+    "rich.0a404c8d4e21": {
+      "type": "rich",
+      "source": "<strong>For an arbitrary Index Agent</strong>, the bundle returned by the agent may only house the retrieved context chunks along with their chunk sources, relevance scores, and possibly a summary. A separate internal bundle may be the flat live-request-processing pipeline from above, or a ReAct-style loop that iterates, judges retrieval relevance, and retries until it has accumulated enough context.",
+      "value": "<strong>对于任意 Index 智能体</strong>，智能体返回的上下文包可能只包含检索到的上下文块，以及相应的文本块来源、相关性分数和可能生成的摘要。另一个独立的内部上下文包可以采用上文扁平的实时请求处理工作流，也可以采用 ReAct 风格的循环：反复检索、判断检索结果的相关性并重试，直到积累足够的上下文。"
+    },
+    "rich.0abff7d3b699": {
+      "type": "rich",
+      "source": " · <span style=\"color:var(--gs,#aee23a)\">full parent returned to the LLM</span>",
+      "value": " · <span style=\"color:var(--gs,#aee23a)\">将完整父文档返回给 LLM</span>"
+    },
+    "rich.117b2652871e": {
+      "type": "rich",
+      "source": "\n    The <strong>unstructured-prose</strong> example carries a corpus through retrieval and generation\n    to a grounded answer.\n  ",
+      "value": "\n    <strong>非结构化文本</strong>示例让语料库依次经过检索和生成，最终得到有依据的答案。\n  "
+    },
+    "rich.12e5864355e5": {
+      "type": "rich",
+      "source": "<strong>Embed</strong> the query into a vector.",
+      "value": "将查询<strong>嵌入</strong>为向量。"
+    },
+    "rich.222f9e7b5570": {
+      "type": "rich",
+      "source": "<div style=\"font-size:.84rem;color:var(--td,#c9c9c9);line-height:1.55;white-space:pre-wrap\">",
+      "value": "<div style=\"font-size:.84rem;color:var(--td,#c9c9c9);line-height:1.55;white-space:pre-wrap\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.2472de096f4d": {
+      "type": "rich",
+      "source": "<div style=\"margin:3px 0;padding:5px 8px;border-radius:5px;border:1px solid ",
+      "value": "<div style=\"margin:3px 0;padding:5px 8px;border-radius:5px;border:1px solid ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.265041977d1a": {
+      "type": "rich",
+      "source": "<strong>Concatenate</strong> those passages onto the prompt.",
+      "value": "将这些段落<strong>拼接</strong>到提示词中。"
+    },
+    "rich.32482b8d4d0c": {
+      "type": "rich",
+      "source": "<strong>Relational / graph data.</strong> The agent calls a graph-traversal tool (Cypher, GraphQL, or custom) in place of a vector store. The bundle it gets back is a sub-graph whose explicit edges carry into the prompt, so the relationships between entities reach the model intact.",
+      "value": "<strong>关系数据与图数据。</strong>智能体调用图遍历工具（Cypher、GraphQL 或自定义工具），而不是向量存储。返回的数据包是一个子图，其中的显式边会随数据一起进入提示词，从而将实体间的关系完整传递给模型。"
+    },
+    "rich.3bbba8e56dcc": {
+      "type": "rich",
+      "source": "<div style=\"display:flex;gap:12px;flex-wrap:wrap;margin-top:6px\">",
+      "value": "<div style=\"display:flex;gap:12px;flex-wrap:wrap;margin-top:6px\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.3ec45ef78546": {
+      "type": "rich",
+      "source": "<div style=\"font-weight:700;color:var(--td,#c9c9c9);font-size:.9rem\">",
+      "value": "<div style=\"font-weight:700;color:var(--td,#c9c9c9);font-size:.9rem\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.41e88c3fb410": {
+      "type": "rich",
+      "source": "\n    <strong>Build the retrieval ladder in order.</strong>\n    <ol>\n      <li><strong>Generation alone</strong> answers from the model's current context and training.</li>\n      <li><strong>Traditional RAG</strong> runs a fixed retrieval step before every generated answer.</li>\n      <li><strong>Agent-controlled retrieval</strong> exposes retrieval as a tool, so the loop decides whether another lookup is needed.</li>\n    </ol>\n    The exercises keep the corpus and question visible while changing who controls retrieval.\n  ",
+      "value": "\n    <strong>按顺序构建检索阶梯。</strong>\n    <ol>\n      <li><strong>仅生成</strong>根据模型当前的上下文和训练内容作答。</li>\n      <li><strong>传统 RAG</strong> 在每次生成答案之前执行固定的检索步骤。</li>\n      <li><strong>智能体控制的检索</strong>将检索作为工具提供，由智能体循环决定是否需要再次查询。</li>\n    </ol>\n    练习会保持语料库和问题不变，只改变检索的控制方。\n  "
+    },
+    "rich.44495e89469c": {
+      "type": "rich",
+      "source": "\n    <p class=\"pipeline-stage\"><strong>Offline:</strong> build the index once by embedding every passage and storing it for fast lookup.</p>\n    <p class=\"pipeline-stage\"><strong>Live:</strong> embed the question, retrieve the top-K passages, and pass them to the model with the question.</p>\n  ",
+      "value": "\n    <p class=\"pipeline-stage\"><strong>离线：</strong>对每个段落生成嵌入并存储，以便快速查询，一次性构建索引。</p>\n    <p class=\"pipeline-stage\"><strong>实时：</strong>对问题生成嵌入，检索 top-K 个段落，再将这些段落与问题一同传给模型。</p>\n  "
+    },
+    "rich.4a0f835daa61": {
+      "type": "rich",
+      "source": "<strong>Hierarchical docs</strong>",
+      "value": "<strong>层次化文档</strong>"
+    },
+    "rich.4c58d1cefaaa": {
+      "type": "rich",
+      "source": "\n    Before picking a retrieval primitive, you should first define a <strong>bundle</strong>. The bundle is the\n    complete and bounded set of context that you intend your pipeline to pass around.\n  ",
+      "value": "\n    选择检索原语之前，您应先定义一个<strong>上下文包</strong>。上下文包是您打算在工作流中传递的一组完整且边界明确的上下文。\n  "
+    },
+    "rich.4c947a6806cd": {
+      "type": "rich",
+      "source": "<div style=\"font-size:.74rem;color:var(--tf,#8a8a8a);margin:.1em 0 .7em\">",
+      "value": "<div style=\"font-size:.74rem;color:var(--tf,#8a8a8a);margin:.1em 0 .7em\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.4e9172f73824": {
+      "type": "rich",
+      "source": "Cosine in Part 4 scores any two vectors the same way regardless of which is the\n        query, yet the NVIDIA embed model used here takes <code>input_type</code> to\n        distinguish query from passage. What does that asymmetry buy you that pure cosine\n        could not?",
+      "value": "第 4 部分中的余弦方法以相同方式计算任意两个向量的得分，不考虑哪个向量是查询；但此处使用的 NVIDIA 嵌入模型会通过 <code>input_type</code> 区分查询和段落。这种非对称性提供了哪些纯余弦方法无法提供的能力？"
+    },
+    "rich.51f0040c5876": {
+      "type": "rich",
+      "source": "\n    Both rest on a single primitive, the embedding model. This course routes embedding\n    calls through <code>helpers.embed</code>, which proxies to the hosted NVIDIA embedding endpoint\n    so everything runs in the browser without a lab path or local server.\n  ",
+      "value": "\n    两者都依赖同一种原语：嵌入模型。本课程通过 <code>helpers.embed</code> 路由嵌入调用，由它代理访问托管的 NVIDIA 嵌入 API 入口，因而所有内容都能在浏览器中运行，无需实验路径或本地服务器。\n  "
+    },
+    "rich.637b12569477": {
+      "type": "rich",
+      "source": "<strong>Unstructured prose</strong>",
+      "value": "<strong>非结构化文本</strong>"
+    },
+    "rich.745fec0fb34b": {
+      "type": "rich",
+      "source": "<strong>Search</strong> the passage index for the top-K nearest passages.",
+      "value": "在段落索引中<strong>搜索</strong> top-K 个最近邻段落。"
+    },
+    "rich.752b0fa26b3a": {
+      "type": "rich",
+      "source": "\n    <strong>Embedding API contract.</strong>\n    <p>The embeddings endpoint takes a JSON request with three fields and returns one array of vectors:</p>\n    <ul>\n      <li><code>input</code> is the batch of texts to embed, typed <code>string[]</code>.</li>\n      <li><code>model</code> names the embedding model, typed <code>string</code>.</li>\n      <li><code>input_type</code> is either <code>\"query\"</code> or <code>\"passage\"</code>.</li>\n      <li>The response carries a <code>data</code> array whose entries each hold an <code>embedding</code> of <code>number[]</code>.</li>\n    </ul>\n    <p>The NVIDIA embed models assign the same text a different vector depending on the\n    <code>input_type</code> you pass. The training objective pulls a question\n    toward the passages that answer it rather than toward texts that merely\n    repeat its words, so a cosine score between two correctly typed inputs\n    tracks relevance well. Embedding a query with the\n    <code>\"passage\"</code> type or the reverse breaks the score function\n    silently and produces lower recall with no error message.</p>\n  ",
+      "value": "\n    <strong>嵌入 API 契约。</strong>\n    <p>嵌入 API 入口接收包含三个字段的 JSON 请求，并返回一个向量数组：</p>\n    <ul>\n      <li><code>input</code> 是待嵌入的文本批次，类型为 <code>string[]</code>。</li>\n      <li><code>model</code> 指定嵌入模型，类型为 <code>string</code>。</li>\n      <li><code>input_type</code> 的值为 <code>\"query\"</code> 或 <code>\"passage\"</code>。</li>\n      <li>响应包含一个 <code>data</code> 数组，其中每个条目都包含类型为 <code>embedding</code> 的 <code>number[]</code>。</li>\n    </ul>\n    <p>NVIDIA 嵌入模型会根据您传入的\n    <code>input_type</code>，为同一文本生成不同的向量。训练目标会让问题更接近能够回答它的段落，而不是仅仅重复其用词的文本，因此，对两个类型正确的输入计算余弦分数可以很好地反映相关性。如果使用\n    <code>\"passage\"</code> 类型嵌入查询，或反过来使用错误类型，评分函数会悄无声息地失效，召回率随之降低，但不会显示错误消息。</p>\n  "
+    },
+    "rich.8031c498a438": {
+      "type": "rich",
+      "source": "<strong>Structured / governed tables.</strong> Not built in this course. The standard production pattern is a semantic layer sitting between the agent and the row-level data, exposing only the curated metrics the bundle requires.",
+      "value": "<strong>结构化表格与受治理表格。</strong>本课程不构建此模式。标准的生产模式是在智能体和行级数据之间设置语义层，仅公开该数据包所需的精选指标。"
+    },
+    "rich.83198eb03dd1": {
+      "type": "rich",
+      "source": "<div style=\"display:flex;gap:10px;flex-wrap:wrap;margin-top:6px\">",
+      "value": "<div style=\"display:flex;gap:10px;flex-wrap:wrap;margin-top:6px\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.85bd956b52d5": {
+      "type": "rich",
+      "source": "<tr>\n    <th scope=\"row\">d\\${index + 1}</th>\n    <td>\\${signLabel}</td>\n    <td><span class=\"embedding-profile-bar \\${signClass}\" style=\"width:\\${width}%\" aria-hidden=\"true\"></span></td>\n    <td><code>\\${value >= 0 ? \"+\" : \"\"}\\${value.toFixed(4)}</code></td>\n  </tr>",
+      "value": "<tr>\n    <th scope=\"row\">d\\${index + 1}</th>\n    <td>\\${signLabel}</td>\n    <td><span class=\"embedding-profile-bar \\${signClass}\" style=\"width:\\${width}%\" aria-hidden=\"true\"></span></td>\n    <td><code>\\${value >= 0 ? \"+\" : \"\"}\\${value.toFixed(4)}</code></td>\n  </tr>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.871558310ab3": {
+      "type": "rich",
+      "source": "\n    A retrieval index on its own only answers when something queries it.\n    It becomes an <strong>Index Agent</strong> once you wrap it as a tool the\n    model can choose to call, letting the model decide when retrieval is worth\n    running. The cell below does it in five steps:\n  ",
+      "value": "\n    检索索引本身只会在收到查询时给出答案。将其封装为模型可选择调用的工具后，它便成为一个<strong>索引智能体</strong>，由模型判断是否值得执行检索。下面的单元格分五步实现这一过程：\n  "
+    },
+    "rich.873cf201ef64": {
+      "type": "rich",
+      "source": "<table><tr><th>passage</th><th>cosine</th></tr>",
+      "value": "<table><tr><th>段落</th><th>余弦相似度</th></tr>"
+    },
+    "rich.87cb960075cc": {
+      "type": "rich",
+      "source": "<div style=\"font-family:var(--mono,monospace);font-size:11px;color:",
+      "value": "<div style=\"font-family:var(--mono,monospace);font-size:11px;color:",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.89d20696074b": {
+      "type": "rich",
+      "source": "<div style=\"font-size:11px;color:var(--tf,#8a8a8a);margin-bottom:5px\">",
+      "value": "<div style=\"font-size:11px;color:var(--tf,#8a8a8a);margin-bottom:5px\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.8df46f664491": {
+      "type": "rich",
+      "source": "\n    The design lives in the arrow labelled \"End-to-End Backprop through q and p<sub>&theta;</sub>\". One\n    loss updated both halves at once. The query encoder learned which passages the generator could use, and the\n    generator learned to lean on retrieved evidence over its own memory.\n  ",
+      "value": "\n    该设计的关键在标有 \"End-to-End Backprop through q and p<sub>&theta;</sub>\" 的箭头中。一个损失函数会同时更新两部分。查询编码器学习生成器可以利用哪些段落，生成器则学习更多依赖检索到的证据，而非自身记忆。\n  "
+    },
+    "rich.8ecd9b2638a3": {
+      "type": "rich",
+      "source": "<div style=\"flex:1 1 320px;border:1px solid var(--bd,#2a2a2a);border-radius:8px;background:var(--e2,#1c1f24);padding:12px;max-height:340px;overflow:auto\">",
+      "value": "<div style=\"flex:1 1 320px;border:1px solid var(--bd,#2a2a2a);border-radius:8px;background:var(--e2,#1c1f24);padding:12px;max-height:340px;overflow:auto\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.91c3b6a59090": {
+      "type": "rich",
+      "source": "\n    The exercise below builds this with three parent docs, each split into short\n    sentence-chunks, and a query that returns the matching <em>parent</em>.\n  ",
+      "value": "\n    下面的练习使用三个父文档构建这种模式。每个文档都拆分为简短的句子块，查询则返回匹配的<em>父文档</em>。\n  "
+    },
+    "rich.9524843c190d": {
+      "type": "rich",
+      "source": "<div style=\"font-weight:600;color:var(--tx,#e6edf3)\">",
+      "value": "<div style=\"font-weight:600;color:var(--tx,#e6edf3)\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.9eb42a50ff1a": {
+      "type": "rich",
+      "source": "The <span>Index</span> Agent",
+      "value": "<span>索引</span>智能体"
+    },
+    "rich.a2f615532c7f": {
+      "type": "rich",
+      "source": "\n    <strong>Failure mode: stale embeddings.</strong>\n    <p>A vector index is a cache of an embedding model's outputs. Production systems\n    have to defend against a few specific failures:</p>\n    <ul style=\"margin:8px 0 0 22px\">\n      <li>Swap the embedding model and every cached vector becomes meaningless until you re-embed every passage.</li>\n      <li>The provider silently upgrades the model, and scores drift with no error raised.</li>\n      <li>Two services share an index but pin different model ids; the index returns nonsense to one of them.</li>\n    </ul>\n    <p>A reliable index pins the embedding model id alongside each cached vector\n    and refuses to mix versions. The canonical pin for this course is\n    <code>nvidia/llama-nemotron-embed-1b-v2</code>, served through the\n    course's hosted proxy at build.nvidia.com.</p>\n  ",
+      "value": "\n    <strong>故障模式：陈旧的嵌入。</strong>\n    <p>向量索引是嵌入模型输出的缓存。生产系统必须防范以下几种特定故障：</p>\n    <ul style=\"margin:8px 0 0 22px\">\n      <li>一旦更换嵌入模型，所有缓存向量都会失去意义，直到您重新嵌入每个段落。</li>\n      <li>提供商悄悄升级模型，分数随之漂移，却不会触发任何错误。</li>\n      <li>两个服务共享同一索引，却固定使用不同的模型 ID；该索引会向其中一个服务返回毫无意义的结果。</li>\n    </ul>\n    <p>可靠的索引会为每个缓存向量同时固定嵌入模型 ID，并拒绝混用不同版本。本课程的规范固定值是\n    <code>nvidia/llama-nemotron-embed-1b-v2</code>，通过课程托管在\n    build.nvidia.com 的代理提供服务。</p>\n  "
+    },
+    "rich.a513fd73eeea": {
+      "type": "rich",
+      "source": "…</span></div></td><td style=\"font-family:var(--mono,monospace);color:var(--gs,#aee23a)\">",
+      "value": "…</span></div></td><td style=\"font-family:var(--mono,monospace);color:var(--gs,#aee23a)\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.bbab6401f6a8": {
+      "type": "rich",
+      "source": "px\"></div><span style=\"color:var(--td,#b0b0b0)\">",
+      "value": "px\"></div><span style=\"color:var(--td,#b0b0b0)\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.bc9118fe4a05": {
+      "type": "rich",
+      "source": "<figure class=\"embedding-profile\" aria-label=\"Signed values for the first sixteen embedding dimensions\">\n  <table>\n    <caption>First 16 dimensions, scaled to the largest visible magnitude</caption>\n    <thead><tr><th>dimension</th><th>sign</th><th>relative magnitude</th><th>raw value</th></tr></thead>\n    <tbody>\\${rows}</tbody>\n  </table>\n</figure>",
+      "value": "<figure class=\"embedding-profile\" aria-label=\"Signed values for the first sixteen embedding dimensions\">\n  <table>\n    <caption>前 16 个维度，按可见的最大绝对值缩放</caption>\n    <thead><tr><th>维度</th><th>符号</th><th>相对大小</th><th>原始值</th></tr></thead>\n    <tbody>\\${rows}</tbody>\n  </table>\n</figure>"
+    },
+    "rich.c4017e09d402": {
+      "type": "rich",
+      "source": "<strong>Generate</strong> an answer grounded in them.",
+      "value": "根据这些段落<strong>生成</strong>有依据的答案。"
+    },
+    "rich.c4a5900e5e9b": {
+      "type": "rich",
+      "source": "\n    <strong>The cost of the bolt-on.</strong> A retriever that never sees the generator's loss can only guess what the\n    generator needs, so retrieval quality is capped by how well the embedding model fits your data. Reranking, query\n    rewriting, and a fine-tuned embedder each buy back a little of what end-to-end training gave for free. A serious\n    retrieval stack keeps adding stages to recover the rest. Read the bolt-on as a pragmatic stand-in for a once-unified\n    system, and you can see where its ceiling sits and which knobs raise it.\n  ",
+      "value": "\n    <strong>外接式方案的代价。</strong>如果检索器从未接触生成器的损失函数，就只能猜测生成器需要什么，因此检索质量的上限取决于嵌入模型与数据的匹配程度。重排序、查询改写和经过微调的嵌入模型，都只能补回端到端训练原本自然获得的一小部分能力。完善的检索栈需要不断增加处理阶段，才能找回其余能力。将外接式方案理解为对曾经统一系统的一种务实替代，您就能看清它的能力上限，以及哪些调节手段可以提高这一上限。\n  "
+    },
+    "rich.cd6aaa4d1e36": {
+      "type": "rich",
+      "source": "<tr><td><div style=\"display:flex;align-items:center;gap:8px\"><div style=\"background:var(--g,#76b900);height:10px;border-radius:3px;width:",
+      "value": "<tr><td><div style=\"display:flex;align-items:center;gap:8px\"><div style=\"background:var(--g,#76b900);height:10px;border-radius:3px;width:",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.d3695596e0f0": {
+      "type": "rich",
+      "source": "<div style=\"flex:1 1 280px;border:1px solid ",
+      "value": "<div style=\"flex:1 1 280px;border:1px solid ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.d4ef2af3f8b5": {
+      "type": "rich",
+      "source": "\n    The bundle principle is a planning discipline: <em>define the bundle before\n    you pick the database</em>. Picking a vector store first and hoping it covers\n    everything is the origin of most \"worked in demo but failed in production\"\n    stories. The four-shape taxonomy below checks whether your\n    candidate primitive can deliver the bundle for your task.\n  ",
+      "value": "\n    上下文包原则是一种规划方法：<em>先定义上下文包，再选择数据库</em>。先选择向量存储，再期望它能涵盖一切需求，是大多数“演示中有效、生产中失效”案例的根源。下面的四类形态体系可用于检查候选原语能否为任务提供所需的上下文包。\n  "
+    },
+    "rich.dc95ae0183d1": {
+      "type": "rich",
+      "source": "<strong>Structured / governed tables</strong>",
+      "value": "<strong>结构化表格／受治理表格</strong>"
+    },
+    "rich.e0028d1232ac": {
+      "type": "rich",
+      "source": "<strong>Hierarchical docs.</strong> A chunker that preserves the heading hierarchy, plus atomic table extraction, parent pointers, and a dual index for structural and semantic search. You index the small child chunks for recall and fetch the enclosing parent on a hit, so the model reads the matched clause together with the section it belongs to.",
+      "value": "<strong>层次化文档。</strong>使用保留标题层级的文本分块器，并结合原子化表格提取、父级指针以及用于结构搜索和语义搜索的双索引。为提高召回率，对小型子文本块建立索引；命中后获取其所属父级内容，使模型能够同时阅读匹配的条款及其所在章节。"
+    },
+    "rich.e3730d43aaa8": {
+      "type": "rich",
+      "source": "<strong>For a simple single-turn question-answering system</strong>, the bundle can stay small: the user question, the few chunks retrieved to answer it, and the answer itself.",
+      "value": "<strong>对于简单的单轮问答系统</strong>，上下文包可以很小：用户问题、为回答该问题而检索到的少量文本块，以及答案本身。"
+    },
+    "rich.e6177d2839ed": {
+      "type": "rich",
+      "source": "A <code>retrieve(question, k)</code> tool is declared with a JSON schema.",
+      "value": "使用 JSON 模式声明一个 <code>retrieve(question, k)</code> 工具。"
+    },
+    "rich.e739ae251ccb": {
+      "type": "rich",
+      "source": "<div style=\"font-size:12px;color:var(--td,#b0b0b0)\">",
+      "value": "<div style=\"font-size:12px;color:var(--td,#b0b0b0)\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.f6b6b70c423e": {
+      "type": "rich",
+      "source": "<strong>Page-image retrieval for figures and charts.</strong> A dual-vector setup that embeds the rendered page image alongside its text, so a query can also pull a figure or a slide when the answer lives there.",
+      "value": "<strong>面向图形和图表的页面图像检索。</strong>采用双向量配置，同时嵌入渲染后的页面图像及其文本，使查询在答案位于图形或幻灯片中时也能将其检索出来。"
+    },
+    "text.00220ca39b2d": {
+      "type": "text",
+      "source": "Embeds every passage using the \\'passage\\' input type and stores each one as an object pairing the original text with its vector.",
+      "value": "使用 \\'passage\\' 输入类型嵌入每个段落，并将每个段落存储为由原始文本及其向量组成的对象。"
+    },
+    "text.00a1f822545e": {
+      "type": "text",
+      "source": " the prebuilt index is valid only for this model",
+      "value": " the prebuilt index is valid only for this model",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.00eb8a07f818": {
+      "type": "text",
+      "source": "Why today's RAG drops the joint training",
+      "value": "为什么如今的 RAG 不再采用联合训练"
+    },
+    "text.0417f7f4fc51": {
+      "type": "text",
+      "source": "NVIDIA Nemotron is a family of NVIDIA's open-weights reasoning models. Nano variants are small and fast; Super and Ultra are larger.",
+      "value": "NVIDIA Nemotron 是 NVIDIA 开放权重推理模型系列。Nano 变体小巧快速；Super 和 Ultra 的规模更大。"
+    },
+    "text.04f8996da763": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~1": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~2": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~3": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~4": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~5": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.053dad0a3566": {
+      "type": "text",
+      "source": "Dense vector + cross-encoder rerank",
+      "value": "稠密向量 + 交叉编码器重排序"
+    },
+    "text.0886b0510756": {
+      "type": "text",
+      "source": "passage",
+      "value": "passage",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0886b0510756~1": {
+      "type": "text",
+      "source": "passage",
+      "value": "passage",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0886b0510756~2": {
+      "type": "text",
+      "source": "passage",
+      "value": "passage",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0886b0510756~3": {
+      "type": "text",
+      "source": "passage",
+      "value": "passage",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0886b0510756~4": {
+      "type": "text",
+      "source": "passage",
+      "value": "passage",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0886b0510756~5": {
+      "type": "text",
+      "source": "passage",
+      "value": "passage",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.098650877e59": {
+      "type": "text",
+      "source": " GRAPHRAG summarizes each community (map), then answers from those",
+      "value": " GRAPHRAG summarizes each community (map), then answers from those",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.09f04951af4c": {
+      "type": "text",
+      "source": "negative",
+      "value": "负"
+    },
+    "text.0a0971500e29": {
+      "type": "text",
+      "source": "\n    The version of RAG everyone runs today drops most of what the original design did, and knowing that reframes the\n    retriever you are about to wire in.\n  ",
+      "value": "\n    如今普遍使用的 RAG 已舍弃原始设计中的大部分机制。了解这一点，会改变您对即将接入的检索器的认识。\n  "
+    },
+    "text.0b315bd9bd2f": {
+      "type": "text",
+      "source": "Divide and conquer",
+      "value": "分治算法"
+    },
+    "text.0b315bd9bd2f~1": {
+      "type": "text",
+      "source": "Divide and conquer",
+      "value": "分治算法"
+    },
+    "text.0b43da27b19e": {
+      "type": "text",
+      "source": "Choose text, then compare the signed-value profile, fixed length, and normalized magnitude. Change EXAMPLE or add your own input.",
+      "value": "选择文本，然后比较其带符号值分布、固定长度和归一化模长。修改 EXAMPLE 或添加您自己的输入。"
+    },
+    "text.0b477fabf91e": {
+      "type": "text",
+      "source": " passages for the LLM context",
+      "value": " 个段落用于 LLM 上下文"
+    },
+    "text.0b5f8a075002": {
+      "type": "text",
+      "source": "ReWOO (Reason Without Observation) is the alternative pattern. A planner LLM call writes the entire plan upfront as a list of tool calls. A deterministic executor then runs every tool, often in parallel. Finally a synthesizer LLM call reads all the gathered observations and writes the final answer. ReWOO trades adaptivity for parallelism: every tool call runs at once, but later steps cannot adjust based on earlier observations.",
+      "value": "ReWOO (Reason Without Observation) 是另一种模式。一次 planner LLM 调用会预先将完整计划写成工具调用列表。随后，确定性执行器运行所有工具，通常会并行执行。最后，综合器通过一次 LLM 调用读取收集到的全部观察结果并生成最终答案。ReWOO 以适应性换取并行能力：所有工具调用可以同时运行，但后续步骤无法根据先前的观察结果进行调整。"
+    },
+    "text.0c883d61a22a": {
+      "type": "text",
+      "source": "← Module 2a: Workflows",
+      "value": "← 模块 2a：工作流"
+    },
+    "text.0c97e48cc9eb": {
+      "type": "text",
+      "source": "When top-K is the wrong tool: GraphRAG and global questions",
+      "value": "当 Top-K 并不适用时：GraphRAG 与全局问题"
+    },
+    "text.0dca5e040901": {
+      "type": "text",
+      "source": "Floyd-Warshall computes all-pairs shortest paths by considering each vertex as an intermediate step.",
+      "value": "Floyd-Warshall 依次将每个顶点视为中间节点，从而计算所有顶点对之间的最短路径。"
+    },
+    "text.0f4f93d0eb7e": {
+      "type": "text",
+      "source": "GraphRAG · map-reduce",
+      "value": "GraphRAG · map-reduce",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.100582a1acba": {
+      "type": "text",
+      "source": "The index build embeds every corpus passage once, while the live path embeds\n        each new question. Which changes require a full re-index, and which require\n        only one new query embedding?",
+      "value": "构建索引时会对语料库中的每个段落嵌入一次，而在线处理路径会嵌入每个新问题。哪些更改需要完整地重建索引，哪些更改只需生成一个新的查询嵌入？"
+    },
+    "text.11f2df007819": {
+      "type": "text",
+      "source": "Inspect one embedding",
+      "value": "检查一个嵌入"
+    },
+    "text.14e4f7b49c92": {
+      "type": "text",
+      "source": "Wrapping the index as a tool the model decides to call",
+      "value": "将索引封装为由模型决定是否调用的工具"
+    },
+    "text.156858a25720": {
+      "type": "text",
+      "source": "\n    A bare top-K Index Agent has a recall-precision trade-off no embedding model\n    solves. You must choose between short chunks and long documents:\n  ",
+      "value": "\n    基础的 top-K Index 智能体需要权衡召回率与精确率，这不是任何嵌入模型能够解决的问题。您必须在短文本块和长文档之间做出选择：\n  "
+    },
+    "text.15c5d8dcc81c": {
+      "type": "text",
+      "source": " Try-it artifact: loads a PREBUILT vector index (corpus embedded offline by",
+      "value": " Try-it artifact: loads a PREBUILT vector index (corpus embedded offline by",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1631cc972051": {
+      "type": "text",
+      "source": " Send the prepared messages and stream the model response.",
+      "value": " Send the prepared messages and stream the model response.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.165821bb74c1": {
+      "type": "text",
+      "source": "\n    Practice settled on a simpler assembly. You take a model that already exists, freeze it, and put a retriever in\n    front of it so the prompt arrives pre-loaded with evidence and nothing is trained at all. The parts were built\n    separately and bolted together, and over time \"RAG\" came to mean that bolt-on rather than the jointly optimized\n    system the paper described.\n  ",
+      "value": "\n    实践最终采用了一种更简单的组合方式：取一个已有模型，将其冻结，再在前面接入检索器，让提示词在送达时已经载入证据，完全不进行训练。各个组件分别构建后再拼接起来。久而久之，\"RAG\" 开始指代这种外接式方案，而不再是论文所述的联合优化系统。\n  "
+    },
+    "text.17dc41954b1e": {
+      "type": "text",
+      "source": " disadvantage and the community pass should win.",
+      "value": " disadvantage and the community pass should win.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.18679f6482f8": {
+      "type": "text",
+      "source": "Where MCP fits in retrieval systems",
+      "value": "MCP 在检索系统中的定位"
+    },
+    "text.18c539566442": {
+      "type": "text",
+      "source": " A GLOBAL question: no single chunk states the answer, so top-K is at a",
+      "value": " A GLOBAL question: no single chunk states the answer, so top-K is at a",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1a5c1b1cd6ed": {
+      "type": "text",
+      "source": "model answered directly",
+      "value": "模型直接作答"
+    },
+    "text.1ac06fe34d96": {
+      "type": "text",
+      "source": "Declares the model-facing retrieve schema while hiding the cosine implementation, so the backend can change independently.",
+      "value": "声明面向模型的 retrieve 模式，同时隐藏余弦相似度的实现，使后端能够独立变更。"
+    },
+    "text.1ae2bcbc6c0f": {
+      "type": "text",
+      "source": "] ",
+      "value": "] ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1ae2bcbc6c0f~1": {
+      "type": "text",
+      "source": "] ",
+      "value": "] ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1afcec989f62": {
+      "type": "text",
+      "source": "\n    A frozen model with a top-K retriever in\n    front answers local questions well and global ones not at all. Restructuring the\n    corpus into summarized communities buys the global answer, paid for by an\n    expensive indexing pass you run once.\n  ",
+      "value": "\n    在冻结模型前设置 Top-K 检索器，可以很好地回答局部问题，却完全无法回答全局问题。将语料库重组为带摘要的社区后，便能获得全局答案，代价是执行一次成本高昂的索引构建。\n  "
+    },
+    "text.1c0af1397495": {
+      "type": "text",
+      "source": "Top-K always returns K passages, even when every score is weak. What signal\n        should the agent inspect before letting those passages enter the prompt?",
+      "value": "Top-K 始终返回 K 个段落，即使所有得分都很低。在允许这些段落进入提示词之前，智能体应检查什么信号？"
+    },
+    "text.1d0cef6ddaf6": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-1b-v2",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1d0cef6ddaf6~1": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-1b-v2",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1d0cef6ddaf6~2": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-1b-v2",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1d0cef6ddaf6~3": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-1b-v2",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1d0cef6ddaf6~4": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-1b-v2",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1d0cef6ddaf6~5": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-1b-v2",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1d0cef6ddaf6~6": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-1b-v2",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1d0cef6ddaf6~7": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-1b-v2",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1d2f4b752096": {
+      "type": "text",
+      "source": " Score bars, ordered best-first.",
+      "value": " Score bars, ordered best-first.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1eaabb881331": {
+      "type": "text",
+      "source": " the example questions are prebuilt too, so they retrieve with no embed call; anything you type embeds live",
+      "value": " the example questions are prebuilt too, so they retrieve with no embed call; anything you type embeds live",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1eb7018a6bc2": {
+      "type": "text",
+      "source": "ReAct",
+      "value": "ReAct",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1f5087db919c": {
+      "type": "text",
+      "source": "question",
+      "value": "question",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1fb69c5b7407": {
+      "type": "text",
+      "source": "Function calling exposes JSON-schema'd tools to a model; the model emits structured requests rather than free text.",
+      "value": "函数调用向模型提供采用 JSON 模式定义的工具；模型输出结构化请求，而不是自由文本。"
+    },
+    "text.1fe76d6f9e6b": {
+      "type": "text",
+      "source": "</table>",
+      "value": "</table>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.20aef30180d2": {
+      "type": "text",
+      "source": "A second LLM call writes the final answer grounded in the retrieved passages.",
+      "value": "第二次调用 LLM，依据检索到的段落撰写最终答案。"
+    },
+    "text.21cf13ed85c3": {
+      "type": "text",
+      "source": "prebuilt index was built for ",
+      "value": "预构建索引使用的模型是 "
+    },
+    "text.239d0ae13a4b": {
+      "type": "text",
+      "source": "Bellman-Ford finds shortest paths by relaxing every edge V-1 times, which also detects negative cycles.",
+      "value": "Bellman-Ford 通过对每条边执行 V-1 轮松弛来求最短路径，同时还能检测负权环。"
+    },
+    "text.23d5e5a6c7b6": {
+      "type": "text",
+      "source": "top-K versus GraphRAG, in code",
+      "value": "代码中的 Top-K 与 GraphRAG 对比"
+    },
+    "text.24513194262b": {
+      "type": "text",
+      "source": " Two retrieval strategies, same corpus, same global question.",
+      "value": " Two retrieval strategies, same corpus, same global question.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.245843abef9e": {
+      "type": "text",
+      "source": "[",
+      "value": "[",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.245843abef9e~1": {
+      "type": "text",
+      "source": "[",
+      "value": "[",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.275976081ce1": {
+      "type": "text",
+      "source": "react",
+      "value": "react",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.28a2800d7bf4": {
+      "type": "text",
+      "source": "\n    The cell below makes the difference concrete on a small corpus, and it\n    runs the real pipeline rather than playing back a script. It asks one global\n    question two ways: plain top-K retrieval, and GraphRAG's map-reduce over named\n    communities. Watch top-K answer from whichever chunks happen to match the\n    question's words while the community pass recovers the corpus-wide theme. Edit the\n    corpus, the communities, or the question and run it again.\n  ",
+      "value": "\n    下面的单元格通过一个小型语料库具体展示两者的差异，并运行真实工作流，而不是回放预设脚本。它以两种方式提出同一个全局问题：普通 Top-K 检索，以及 GraphRAG 针对命名社区执行的 MapReduce。请观察 Top-K 如何依据偶然匹配问题用词的文本块作答，而社区处理方式如何还原整个语料库的共同主题。修改语料库、社区或问题，然后再次运行。\n  "
+    },
+    "text.28f79d5aba41": {
+      "type": "text",
+      "source": "\n    MCP gives a retrieval system one boundary for discovering and calling\n    external context sources. The agent still needs a runtime that decides when to\n    retrieve, validates the result, and composes it with the rest of the active\n    task state. Other boundaries can carry other parts of the same system:\n    skills package reusable capability instructions, A2A can route work to\n    remote specialists, and UI protocols can stream the generated state back to\n    an application.\n  ",
+      "value": "\n    MCP 为检索系统提供了发现和调用外部上下文来源的一种边界。智能体仍需要运行时来决定何时检索、验证结果，并将结果与当前任务状态的其余部分组合起来。同一系统的其它部分可以通过其它边界传递：\n    skills 封装可复用的能力说明，A2A 可以将工作路由给远程专家，而 UI 协议可以将生成的状态流式传回应用。\n  "
+    },
+    "text.2958d416d08a": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2960581b8447": {
+      "type": "text",
+      "source": "\n    Index agents that manage other primitives largely take the same shape while varying the search/embed/verification logic, so don't feel intimidated to experiment with shapes that better fit your data.\n  ",
+      "value": "\n    管理其它原语的 Index 智能体大体采用相同的结构，只是搜索、嵌入和验证逻辑有所不同。因此，请大胆尝试更适合您数据的形态。\n  "
+    },
+    "text.2990ddd02365": {
+      "type": "text",
+      "source": "What is 12 times 8?",
+      "value": "12 乘以 8 等于多少？"
+    },
+    "text.29daa3e18990": {
+      "type": "text",
+      "source": " edited passage(s); the rest load from the prebuilt index",
+      "value": " 个已编辑段落；其余内容从预构建索引加载"
+    },
+    "text.2b3957deb912": {
+      "type": "text",
+      "source": "Short chunks embed precisely (the vector represents a focused idea) but lack context (one sentence is rarely enough to answer with).",
+      "value": "短文本块的嵌入更精准（向量表示的是一个聚焦的概念），但缺少上下文（仅凭一句话通常不足以作答）。"
+    },
+    "text.2dba2454d800": {
+      "type": "text",
+      "source": "integer",
+      "value": "integer",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.30e19178dd66": {
+      "type": "text",
+      "source": "\n    With that ceiling in mind, here is the whole assembly. A retriever runs in front of the frozen model across two\n    separate timelines. One timeline builds the index ahead of time so the other can serve a live request against it.\n    The figure below traces both.\n  ",
+      "value": "\n    了解这一上限后，下面来看完整的组合架构。检索器位于冻结模型之前，系统沿两条独立的时间线运行：一条时间线提前构建索引，另一条则利用该索引处理实时请求。下图展示了这两条时间线。\n  "
+    },
+    "text.31bb0d6ce485": {
+      "type": "text",
+      "source": "Long documents have context (every fact lands in its setting) but embed fuzzily (the vector is the average of many ideas).",
+      "value": "长文档具有完整的上下文（每项事实都有其所属语境），但嵌入结果较为模糊（向量是许多观点的平均表示）。"
+    },
+    "text.33a8052041c4": {
+      "type": "text",
+      "source": "Tree index with parent pointers",
+      "value": "带父节点指针的树索引"
+    },
+    "text.33e0b0708ff9": {
+      "type": "text",
+      "source": "User query",
+      "value": "用户查询"
+    },
+    "text.33e0b0708ff9~1": {
+      "type": "text",
+      "source": "User query",
+      "value": "用户查询"
+    },
+    "text.33e0b0708ff9~2": {
+      "type": "text",
+      "source": "User query",
+      "value": "用户查询"
+    },
+    "text.33e9fbc0867b": {
+      "type": "text",
+      "source": " ── 3 · render both answers side by side ────────────────────────────────────────",
+      "value": " ── 3 · render both answers side by side ────────────────────────────────────────",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3418072da751": {
+      "type": "text",
+      "source": "Parent documents",
+      "value": "父文档"
+    },
+    "text.34234a98289b": {
+      "type": "text",
+      "source": "OpenShell limits an agent's filesystem and network access.",
+      "value": "OpenShell 限制智能体对文件系统和网络的访问。"
+    },
+    "text.34ea6f3321e9": {
+      "type": "text",
+      "source": "What does this course's OpenShell sandbox block?",
+      "value": "本课程的 OpenShell 沙箱会阻止哪些操作？"
+    },
+    "text.35bf957e3770": {
+      "type": "text",
+      "source": "This course routes model and embedding calls to build.nvidia.com through a hosted Cloudflare worker proxy. No API key is required in the browser.",
+      "value": "本课程通过托管的 Cloudflare worker 代理，将模型调用和嵌入调用路由到 build.nvidia.com。浏览器中无需 API key。"
+    },
+    "text.35ed572d2732": {
+      "type": "text",
+      "source": "Dynamic programming",
+      "value": "动态规划"
+    },
+    "text.35ed572d2732~1": {
+      "type": "text",
+      "source": "Dynamic programming",
+      "value": "动态规划"
+    },
+    "text.362e316fe0fc": {
+      "type": "text",
+      "source": "Retrieve tool spec",
+      "value": "检索工具规范"
+    },
+    "text.3703a7655a85": {
+      "type": "text",
+      "source": "retrieved top 3 passages",
+      "value": "已检索相似度最高的 3 个段落"
+    },
+    "text.37415bd67ea7": {
+      "type": "text",
+      "source": " Top-K never sees the labels; GraphRAG retrieves by them.",
+      "value": " Top-K never sees the labels; GraphRAG retrieves by them.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3885ff5ae338": {
+      "type": "text",
+      "source": "&lt;",
+      "value": "&lt;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3885ff5ae338~1": {
+      "type": "text",
+      "source": "&lt;",
+      "value": "&lt;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3885ff5ae338~2": {
+      "type": "text",
+      "source": "&lt;",
+      "value": "&lt;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.39ec0ac3c731": {
+      "type": "text",
+      "source": "A tool is structured output plus an executor: the model emits a tool_calls request, your code runs the function, and the result returns as a tool message.",
+      "value": "从机制上说，工具由结构化输出和执行器组成：模型发出 tool_calls 请求，代码运行相应函数，结果再以工具消息的形式返回。"
+    },
+    "text.3cc946dc3209": {
+      "type": "text",
+      "source": " Use the prebuilt corpus index, then embed only the live question each turn.",
+      "value": " Use the prebuilt corpus index, then embed only the live question each turn.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3d89f896c158": {
+      "type": "text",
+      "source": "The transformer architecture replaced recurrent networks for sequence modeling because self-attention is parallelizable.",
+      "value": "transformer 架构取代了用于序列建模的循环网络，因为自注意力可以并行计算。"
+    },
+    "text.3ff719ffb0f7": {
+      "type": "text",
+      "source": "Three parent documents are each split into short sentence-chunks that get embedded and indexed, and a hit on any chunk returns the FULL parent document, so the precision of short chunks combines with the context of full docs.",
+      "value": "将三个父文档分别拆分为简短的句子块，然后对其进行嵌入并建立索引。命中任意文本块后都会返回 FULL 父文档，从而兼顾短文本块的精确性与完整文档的上下文。"
+    },
+    "text.40be34d0f767": {
+      "type": "text",
+      "source": "What replaced recurrent neural networks for sequence modeling?",
+      "value": "什么取代了用于序列建模的循环神经网络？"
+    },
+    "text.4285d23d69c3": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4285d23d69c3~1": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4285d23d69c3~2": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4285d23d69c3~3": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4285d23d69c3~4": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.431924b96814": {
+      "type": "text",
+      "source": "Build an in-memory vector index",
+      "value": "构建内存向量索引"
+    },
+    "text.4319a0d98186": {
+      "type": "text",
+      "source": "(the model did not produce a final answer; try Run again)",
+      "value": "（模型未生成最终答案；请尝试再次运行）"
+    },
+    "text.44136fa355b3": {
+      "type": "text",
+      "source": "{}",
+      "value": "{}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.44445751c803": {
+      "type": "text",
+      "source": "negative value",
+      "value": "负值"
+    },
+    "text.45775e9b0dd7": {
+      "type": "text",
+      "source": " The panel calls helpers.embed(), ranks with helpers.cosineSim(), then answers.",
+      "value": " The panel calls helpers.embed(), ranks with helpers.cosineSim(), then answers.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.45822f54a0d0": {
+      "type": "text",
+      "source": ": ",
+      "value": ": ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.45f979562f03": {
+      "type": "text",
+      "source": "(model answered directly but produced no text; raise max_tokens)",
+      "value": "（模型直接作答，但未生成文本；引发 max_tokens）"
+    },
+    "text.462998b37bfa": {
+      "type": "text",
+      "source": " ── 2 · GRAPHRAG map-reduce ────────────────────────────────────────────────────",
+      "value": " ── 2 · GRAPHRAG map-reduce ────────────────────────────────────────────────────",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.46d5014c0f39": {
+      "type": "text",
+      "source": "\n    Ask a question. The artifact embeds it with the same endpoint from this page and\n    ranks a small built-in corpus by cosine similarity. The bars show every score. It\n    then answers from the top passages and cites them. Change the question and watch\n    the ranking shift.\n  ",
+      "value": "\n    请输入一个问题。该交互组件会使用本页相同的 API 入口对其进行嵌入，并按余弦相似度对内置的小型语料库排序。条形图会显示所有得分。随后，组件根据排名靠前的段落作答并引用来源。修改问题，观察排名如何变化。\n  "
+    },
+    "text.46f70a7ed608": {
+      "type": "text",
+      "source": " Define the tool schema the model can choose from next.",
+      "value": " Define the tool schema the model can choose from next.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.473287f8298d": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.48f709e32856": {
+      "type": "text",
+      "source": "The agent receives the user's question. It chooses whether to call the tool.",
+      "value": "智能体接收用户的问题，并决定是否调用该工具。"
+    },
+    "text.4a1b645a477d": {
+      "type": "text",
+      "source": "Semantic layer over the source of truth",
+      "value": "构建在事实来源之上的语义层"
+    },
+    "text.4a4abd94c3b1": {
+      "type": "text",
+      "source": " No tools here: the model must synthesize from retrieved passages.",
+      "value": " No tools here: the model must synthesize from retrieved passages.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.4af3a030788e": {
+      "type": "text",
+      "source": " Steer the synthesis call: answer from these passages, no more retrieval.",
+      "value": " Steer the synthesis call: answer from these passages, no more retrieval.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.4b9f6afbee64": {
+      "type": "text",
+      "source": "Three documents on different topics sit in the store, where the full document is what the LLM eventually reads.",
+      "value": "存储中包含三份不同主题的文档，LLM 最终读取的是完整文档。"
+    },
+    "text.4ca70ee1e93c": {
+      "type": "text",
+      "source": "Using only the retrieved passages above, write the final answer now. Do not retrieve again or output any tool-call syntax.",
+      "value": "现在仅使用上方检索到的段落撰写最终答案。不要再次检索，也不要输出任何工具调用语法。"
+    },
+    "text.4d36cc6e8c59": {
+      "type": "text",
+      "source": "Every request walks the same four steps:",
+      "value": "每个请求都会经过相同的四个步骤："
+    },
+    "text.4e652ffada75": {
+      "type": "text",
+      "source": "Why use cosine similarity?",
+      "value": "为什么要使用余弦相似度？"
+    },
+    "text.4f8f774a130b": {
+      "type": "text",
+      "source": "Answer ONLY from these passages and cite them as [n]. If they do not cover the question, say so.\\\\n\\\\n",
+      "value": "仅根据这些段落回答 ONLY，并以 [n] 格式引用。如果这些段落未涵盖该问题，请明确说明。\\\\n\\\\n"
+    },
+    "text.50f2a151d15e": {
+      "type": "text",
+      "source": "retrieve",
+      "value": "retrieve",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.50f7af3bd86f": {
+      "type": "text",
+      "source": " TODO: Try another query and watch which parent document ranks first.",
+      "value": " TODO: Try another query and watch which parent document ranks first.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.513f0e5ca93c": {
+      "type": "text",
+      "source": "\n      Data comes in several shapes, and each shape wants a different retrieval\n      strategy; matching the wrong one to your data is the most common reason an\n      Index Agent fails silently in production.\n    ",
+      "value": "\n      数据有多种形态，每种形态都需要不同的检索策略；为数据匹配了错误的策略，是索引智能体在生产环境中悄然失效的最常见原因。\n    "
+    },
+    "text.515c3775ac7b": {
+      "type": "text",
+      "source": " · score ",
+      "value": " · 分数 "
+    },
+    "text.53141bafb422": {
+      "type": "text",
+      "source": "OpenClaw is an agent harness whose configuration is a folder of markdown files the harness folds into the system prompt every turn.",
+      "value": "OpenClaw 是一种智能体框架，其配置由一个 Markdown 文件夹组成；框架会在每一轮将这些文件整合到系统提示词中。"
+    },
+    "text.53e3b56fabc6": {
+      "type": "text",
+      "source": "Nemotron-3-Nano-30B-A3B is a text reasoning model with a hybrid mixture-of-experts architecture and 3 billion active parameters. Its Omni sibling, Nemotron-3-Nano-Omni-30B-A3B, is the multimodal variant that also reads images.",
+      "value": "Nemotron-3-Nano-30B-A3B 是一种采用混合专家架构、具有 30 亿个活跃参数的文本推理模型。其同系列的 Nemotron-3-Nano-Omni-30B-A3B 是还能读取图像的多模态变体。"
+    },
+    "text.542c61c43c3e": {
+      "type": "text",
+      "source": "\n    The retriever began as part of the model,\n    shaped by the task it had to perform, well before anyone described it as a search tool placed in front of one.\n  ",
+      "value": "\n    检索器最初就是模型的一部分，并由需要执行的任务塑造。直到很久以后，人们才将其描述为置于模型之前的搜索工具。\n  "
+    },
+    "text.552d45afd974": {
+      "type": "text",
+      "source": "Calls the model with retrieval exposed. tool_calls requests evidence; finish_reason 'stop' means the model answered directly.",
+      "value": "调用模型并提供检索功能。tool_calls 表示请求证据；finish_reason 'stop' 表示模型直接作答。"
+    },
+    "text.55b53787b3a8": {
+      "type": "text",
+      "source": "rewoo",
+      "value": "rewoo",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.5873062f8e05": {
+      "type": "text",
+      "source": "assets/rag_index.json",
+      "value": "assets/rag_index.json",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.588da4105320": {
+      "type": "text",
+      "source": " · ",
+      "value": " · ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.5a6b0548bd11": {
+      "type": "text",
+      "source": "Cosine similarity compares the angle between two vectors; it ignores magnitude and ranges -1 to 1.",
+      "value": "余弦相似度比较两个向量之间的夹角；它忽略向量大小，取值范围为 -1 到 1。"
+    },
+    "text.5a9b2b05f501": {
+      "type": "text",
+      "source": "The embedding, the primitive everything else is built on",
+      "value": "嵌入：构建其它一切的基础原语"
+    },
+    "text.5baf6bfe2967": {
+      "type": "text",
+      "source": "\n    You just built the unstructured-prose lane from corpus to answer. The other three are named\n    here so you can recognise them in the wild and reach for the right primitive.\n    Each one has a well-worn production pattern, sketched below.\n  ",
+      "value": "\n    您刚刚构建了从语料库到答案的非结构化文本路径。这里列出其它三种模式，帮助您在实际场景中识别它们并选用正确的基础技术。每种模式都有成熟的生产实现方式，概要如下。\n  "
+    },
+    "text.5d052c090744": {
+      "type": "text",
+      "source": "retrieved ",
+      "value": "已检索 "
+    },
+    "text.6079350a62cb": {
+      "type": "text",
+      "source": "Embeds the query with the 'query' input type, cosine-scores it against every passage, and returns the top three.",
+      "value": "使用 'query' 输入类型嵌入查询，计算它与每个段落的余弦相似度得分，并返回排名前三的段落。"
+    },
+    "text.60bb86d49f7a": {
+      "type": "text",
+      "source": "positive value",
+      "value": "正值"
+    },
+    "text.620b007c6ccc": {
+      "type": "text",
+      "source": "What model does this course use, and does it need an API key?",
+      "value": "本课程使用什么模型？是否需要 API key？"
+    },
+    "text.6243babeeebf": {
+      "type": "text",
+      "source": "Searching small chunks but returning the parent document",
+      "value": "搜索小文本块，返回其父文档"
+    },
+    "text.638ee1c3bb31": {
+      "type": "text",
+      "source": " state.query = \"what is a reranker, and when is it worth the step?\";",
+      "value": " state.query = \"what is a reranker, and when is it worth the step?\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.64f210613579": {
+      "type": "text",
+      "source": "read the corpus and extract entities and the relationships between them into a knowledge graph;",
+      "value": "读取语料库，将实体及其相互关系提取到知识图谱中；"
+    },
+    "text.67a5bdf2a82d": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents",
+      "value": "NVIDIA · 安全智能体"
+    },
+    "text.67ed8d69371b": {
+      "type": "text",
+      "source": "ReWOO writes a full plan upfront in one LLM call, then executes every tool deterministically, then synthesizes.",
+      "value": "ReWOO 先通过一次 LLM 调用完整制定计划，再以确定性方式执行所有工具，最后综合生成答案。"
+    },
+    "text.680694f37af1": {
+      "type": "text",
+      "source": "rendered below. Edit the config and Run.",
+      "value": "结果呈现在下方。编辑配置后，点击“运行”。"
+    },
+    "text.69824d3b0e70": {
+      "type": "text",
+      "source": "References",
+      "value": "参考资料"
+    },
+    "text.6b9b39597546": {
+      "type": "text",
+      "source": "Greedy methods",
+      "value": "贪心算法"
+    },
+    "text.6b9b39597546~1": {
+      "type": "text",
+      "source": "Greedy methods",
+      "value": "贪心算法"
+    },
+    "text.6cb430033569": {
+      "type": "text",
+      "source": "Final answer (LLM #2)",
+      "value": "最终答案（LLM #2）"
+    },
+    "text.6cbaad152c5d": {
+      "type": "text",
+      "source": "Return the parent of each matching chunk",
+      "value": "返回每个匹配文本块的父文档"
+    },
+    "text.6dd398e40c22": {
+      "type": "text",
+      "source": "Corpus",
+      "value": "语料库"
+    },
+    "text.6e6d472ab259": {
+      "type": "text",
+      "source": "what is the difference between react and rewoo?",
+      "value": "ReAct 和 ReWOO 有什么区别？"
+    },
+    "text.6f6745946a5f": {
+      "type": "text",
+      "source": "Embeds child chunks for precise search, then returns the matching parent document for context.",
+      "value": "嵌入子文本块以进行精确搜索，再返回匹配的父文档以提供上下文。"
+    },
+    "text.6fc569982867": {
+      "type": "text",
+      "source": "\n    A \"vector database\" dresses up a plain job the Index Agent\n    already does. It stores each passage beside its embedding and\n    returns the top-K closest passages to any query embedding by\n    cosine similarity. In the browser that fits in thirty lines\n    of JavaScript.\n  ",
+      "value": "\n    “向量数据库”只是为 Index 智能体已经完成的简单任务加了一层包装。它将每个段落与其嵌入一同存储，并根据余弦相似度，为任意查询嵌入返回最接近的 top-K 个段落。在浏览器中，只需三十行 JavaScript 即可实现。\n  "
+    },
+    "text.6ff080db0edb": {
+      "type": "text",
+      "source": "Dijkstra grows shortest paths from a source by greedily picking the nearest unvisited vertex.",
+      "value": "Dijkstra 从一个源点出发，每次贪心选择距离最近且尚未访问的顶点，逐步求出最短路径。"
+    },
+    "text.71c29e77b49f": {
+      "type": "text",
+      "source": " corpus vectors come from the prebuilt index; only passages it does not cover (edits) embed live",
+      "value": " corpus vectors come from the prebuilt index; only passages it does not cover (edits) embed live",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.734ba5e44192": {
+      "type": "text",
+      "source": " Six algorithm docs in three \"community\" families.",
+      "value": " Six algorithm docs in three \"community\" families.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.7541b8ba0eff": {
+      "type": "text",
+      "source": " ★ returned",
+      "value": " ★ 已返回"
+    },
+    "text.75603cd413b5": {
+      "type": "text",
+      "source": "The retrieve-then-generate pipeline you build",
+      "value": "您将构建的“先检索、后生成”工作流"
+    },
+    "text.7664315c438e": {
+      "type": "text",
+      "source": "\n    Each data shape calls for its own retrieval primitive. Pick the\n    wrong lane and retrieval keeps returning results that look fine while\n    quietly missing what the query wanted, with no error to warn\n    you. The table below tells you which primitive each shape calls for.\n  ",
+      "value": "\n    每种数据形态都需要相应的检索原语。如果选错路径，检索会不断返回看似合理的结果，却悄无声息地遗漏查询真正需要的信息，而且不会出现任何错误提醒您。下表列出了每种形态应使用的原语。\n  "
+    },
+    "text.77d57e39b407": {
+      "type": "text",
+      "source": "&gt;",
+      "value": "&gt;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.7808b7b34374": {
+      "type": "text",
+      "source": " Strip stray tool-call markup from models that emit it as text.",
+      "value": " Strip stray tool-call markup from models that emit it as text.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.78f9ac018e55": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.79a305988ad6": {
+      "type": "text",
+      "source": " state.query = \"what does the openshell sandbox do?\";           // single-fact lookup",
+      "value": " state.query = \"what does the openshell sandbox do?\";           // single-fact lookup",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.7a36d9ada724": {
+      "type": "text",
+      "source": "community summaries:",
+      "value": "社区摘要："
+    },
+    "text.7a8e35c31fa3": {
+      "type": "text",
+      "source": " REDUCE: answer from the community summaries only, never the raw chunks.",
+      "value": " REDUCE: answer from the community summaries only, never the raw chunks.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.7c0b40614fd5": {
+      "type": "text",
+      "source": "What does the OpenShell sandbox do?",
+      "value": "OpenShell 沙箱有什么作用？"
+    },
+    "text.7c7759d50df3": {
+      "type": "text",
+      "source": "\n      Four system boundaries around a retrieval runtime: MCP for context ingress, A2A for task delivery, and skills/runtime/UX for capability flow.\n    ",
+      "value": "\n      检索运行时周围的四种系统边界：MCP 用于上下文输入，A2A 用于任务交付，skills/runtime/UX 用于能力流转。\n    "
+    },
+    "text.7c9bbe5ec9b3": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.7ca6b5e1360b": {
+      "type": "text",
+      "source": "Notice the global theme top-K misses but the community pass recovers.",
+      "value": "请注意，top-K 遗漏了全局主题，但社区处理步骤将其找了回来。"
+    },
+    "text.7df07d63ff23": {
+      "type": "text",
+      "source": "Number of passages to return; default 3.",
+      "value": "要返回的段落数量；默认为 3。"
+    },
+    "text.7f1eca81e30b": {
+      "type": "text",
+      "source": "An agent loop wraps a stateless model in a cycle: read the messages, decide, call a tool, append the result, repeat until finish_reason is stop.",
+      "value": "智能体循环让无状态模型按以下步骤循环运行：读取消息、做出决策、调用工具、追加结果，并重复以上过程，直到 finish_reason 为 stop。"
+    },
+    "text.7f84bc51b158": {
+      "type": "text",
+      "source": "Where RAG came from: one system, trained end to end",
+      "value": "RAG 的起源：一个经过端到端训练的系统"
+    },
+    "text.7f8ed0aa0804": {
+      "type": "text",
+      "source": "Web search in this course (helpers.webSearch) ranks a glossary of NVIDIA AI terms shipped with the course, searched directly in the browser with no key; a separate helpers.instantAnswer returns one term's definition when the query names it.",
+      "value": "本课程中的 Web 搜索 (helpers.webSearch) 会对课程随附的 NVIDIA AI 术语表进行排序。搜索直接在浏览器中进行，无需密钥；另一个 helpers.instantAnswer 会在查询中明确提及某个术语时返回其定义。"
+    },
+    "text.839f5ae41929": {
+      "type": "text",
+      "source": "How the other three shapes are built",
+      "value": "其它三种模式如何构建"
+    },
+    "text.8432d1782bf6": {
+      "type": "text",
+      "source": " a reasoning model thinks before it emits the tool call; 1500 can truncate mid-thought",
+      "value": " a reasoning model thinks before it emits the tool call; 1500 can truncate mid-thought",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.851566151152": {
+      "type": "text",
+      "source": "Build index (embed all)",
+      "value": "构建索引（嵌入全部内容）"
+    },
+    "text.862310c6baa5": {
+      "type": "text",
+      "source": "</div></div>",
+      "value": "</div></div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.86b447d33d53": {
+      "type": "text",
+      "source": "Naming the context bundle before you pick a store",
+      "value": "选择存储方案前，先定义上下文包"
+    },
+    "text.87fdbd28e56c": {
+      "type": "text",
+      "source": "Otherwise answer directly.",
+      "value": "否则，请直接回答。"
+    },
+    "text.898702fa218d": {
+      "type": "text",
+      "source": "the Try-it artifact, in code",
+      "value": "“动手试试”练习代码"
+    },
+    "text.8b953ae3f431": {
+      "type": "text",
+      "source": "Kruskal builds a minimum spanning tree by adding the cheapest safe edge while avoiding cycles.",
+      "value": "Kruskal 在避免形成环的同时，不断加入代价最低且安全的边，从而构建最小生成树。"
+    },
+    "text.8bf10672e1c8": {
+      "type": "text",
+      "source": "; embedding live instead.",
+      "value": "；改为实时生成嵌入。"
+    },
+    "text.8dcb4920882b": {
+      "type": "text",
+      "source": "Chunk cosine scores · ★ is the single hit",
+      "value": "文本块余弦分数 · ★ 表示唯一命中项"
+    },
+    "text.8e90b30fb1ea": {
+      "type": "text",
+      "source": "\n    The corpus is embedded offline and shipped beside the page as a prebuilt index so that only your question gets\n    embedded live. You are watching the indexing-versus-serving split from the diagram above run here. The example\n    questions even carry prebuilt vectors and retrieve before you add a key, while editing a passage re-embeds only that\n    one passage.\n  ",
+      "value": "\n    语料库已离线嵌入，并作为预构建索引随页面一同提供，因此只有问题需要实时嵌入。您正在看到上图所示的索引构建与在线服务分离机制在此实际运行。示例问题甚至自带预构建向量，因此在您添加密钥前即可完成检索；编辑某个段落时，也只会重新嵌入该段落。\n  "
+    },
+    "text.8eb07d92065b": {
+      "type": "text",
+      "source": "Answer the question using ONLY these community summaries. Be concise.\\\\n\\\\n",
+      "value": "仅使用这些社区摘要回答问题 ONLY。答案要简洁。\\\\n\\\\n"
+    },
+    "text.8ee12e2dd870": {
+      "type": "text",
+      "source": " The top chunk is the single hit; everything below it is the rest of the distribution.",
+      "value": " The top chunk is the single hit; everything below it is the rest of the distribution.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.909da67f371d": {
+      "type": "text",
+      "source": " (★) becomes the LLM context",
+      "value": "（★）将成为 LLM 上下文"
+    },
+    "text.9106ca1e6122": {
+      "type": "text",
+      "source": " TODO: Choose a prompt that should retrieve, skip retrieval, or be ambiguous.",
+      "value": " TODO: Choose a prompt that should retrieve, skip retrieval, or be ambiguous.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.921477718a8b": {
+      "type": "text",
+      "source": "Answer the question using ONLY the passages below. Be concise.\\\\n\\\\n",
+      "value": "仅使用下方段落回答问题 ONLY。答案要简洁。\\\\n\\\\n"
+    },
+    "text.93d6ed427286": {
+      "type": "text",
+      "source": " state.query = \"how does chunking change what the model sees?\";",
+      "value": " state.query = \"how does chunking change what the model sees?\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.9465ea82e85e": {
+      "type": "text",
+      "source": "Try it · retrieval, live",
+      "value": "动手试用 · 实时检索"
+    },
+    "text.949e028383d5": {
+      "type": "text",
+      "source": "Embed chunks",
+      "value": "嵌入文本块"
+    },
+    "text.94b3201bf9e7": {
+      "type": "text",
+      "source": "\n    The cell below builds an Index Agent over a\n    handful of documents and queries it. Edit the corpus and the\n    query, then watch which passages bubble to the top and why.\n  ",
+      "value": "\n    下面的单元将基于少量文档构建一个 Index 智能体，并对其执行查询。请编辑语料库和查询，然后观察哪些段落排到了最前面，并思考其中的原因。\n  "
+    },
+    "text.951dcee3a7a4": {
+      "type": "text",
+      "source": "&",
+      "value": "&",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.96a4f1c854c2": {
+      "type": "text",
+      "source": "ReAct (Reason+Act) is the classic agent loop. The model is given the user's task plus a set of tools. At each iteration the model emits either a tool call request or a final answer. When a tool call is requested, the host code executes the tool, appends the result as an observation, and the model continues. The loop terminates when finish_reason is 'stop' and there are no tool_calls. The pattern's strength is that each step adapts to the previous step's observation; its weakness is sequential cost: N steps means N model calls in order.",
+      "value": "ReAct（Reason+Act）是经典的智能体循环。模型会收到用户任务和一组工具。在每次迭代中，模型会输出工具调用请求或最终答案。如果模型请求调用工具，宿主代码就会执行该工具，将结果作为观察追加到上下文中，然后由模型继续处理。当 finish_reason 为“stop”且不存在 tool_calls 时，循环终止。这种模式的优势在于，每一步都能根据上一步的观察结果进行调整；劣势则是顺序执行成本：N 个步骤意味着必须依次调用模型 N 次。"
+    },
+    "text.97c03c60ab6d": {
+      "type": "text",
+      "source": "An agent loop reads a finish_reason on every step; 'tool_calls' means the model wants you to run a function, 'stop' means done.",
+      "value": "智能体循环会在每一步读取 finish_reason；“tool_calls”表示模型希望您运行函数，“stop”表示任务已完成。"
+    },
+    "text.97dcdbe9a1a3": {
+      "type": "text",
+      "source": " BASIC top-K embeds and cosine-ranks, then answers from the K best chunks.",
+      "value": " BASIC top-K embeds and cosine-ranks, then answers from the K best chunks.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.98b510f9299e": {
+      "type": "text",
+      "source": "What is a tool, mechanically?",
+      "value": "从机制上说，工具是什么？"
+    },
+    "text.98d4a912de71": {
+      "type": "text",
+      "source": " MAP: summarize each community's chunks into one community summary.",
+      "value": " MAP: summarize each community's chunks into one community summary.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.995f2db432f4": {
+      "type": "text",
+      "source": "What is retrieval-augmented generation?",
+      "value": "什么是检索增强生成 (RAG)？"
+    },
+    "text.99731fd0924d": {
+      "type": "text",
+      "source": "child chunk score; FULL parent body delivered to the LLM",
+      "value": "子分块得分；将 FULL 父文档正文传递给 LLM"
+    },
+    "text.99a3d05bfc4c": {
+      "type": "text",
+      "source": ", not ",
+      "value": "，而不是 "
+    },
+    "text.9a87fac22929": {
+      "type": "text",
+      "source": "Vector databases store learned embeddings of text alongside the original passages, indexed for fast nearest-neighbour search.",
+      "value": "向量数据库将文本的学习所得嵌入与原始段落一同存储，并建立索引以支持快速近邻搜索。"
+    },
+    "text.9d7de0441056": {
+      "type": "text",
+      "source": "Nemotron Super 120B · stronger",
+      "value": "Nemotron Super 120B · stronger",
+      "untranslated": "Model selector display label; preserve the complete label in English"
+    },
+    "text.9e4c3ed72a44": {
+      "type": "text",
+      "source": "Appends the retrieved passages as a tool message, then asks the model for a grounded answer.",
+      "value": "将检索到的段落作为工具消息追加，然后要求模型给出有依据的答案。"
+    },
+    "text.9ed1afdf4237": {
+      "type": "text",
+      "source": " chars",
+      "value": " 个字符"
+    },
+    "text.9fcaea94e452": {
+      "type": "text",
+      "source": "Split into child chunks",
+      "value": "拆分为子文本块"
+    },
+    "text.a063d09b4156": {
+      "type": "text",
+      "source": "Docs, articles, code comments, transcripts",
+      "value": "文档、文章、代码注释、文字记录"
+    },
+    "text.a115b633e46f": {
+      "type": "text",
+      "source": "</td></tr>",
+      "value": "</td></tr>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a11e113fe1ae": {
+      "type": "text",
+      "source": "Merge sort splits the array in half, sorts each half, then merges the two sorted halves in linear time.",
+      "value": "归并排序将数组一分为二，分别对两半排序，再在线性时间内合并两个已排序的部分。"
+    },
+    "text.a1a033833dac": {
+      "type": "text",
+      "source": "Retrieve child chunks, return parent documents",
+      "value": "检索子文本块，返回父文档"
+    },
+    "text.a1ee009e6803": {
+      "type": "text",
+      "source": "Embed the query and rank matches",
+      "value": "嵌入查询并对匹配项排序"
+    },
+    "text.a30c3df26a31": {
+      "type": "text",
+      "source": " summaries (reduce). Edit anything below and Run to re-render.",
+      "value": " summaries (reduce). Edit anything below and Run to re-render.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.a39a7ffad4a3": {
+      "type": "text",
+      "source": "assistant",
+      "value": "assistant",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a3e690053061": {
+      "type": "text",
+      "source": "rag",
+      "value": "rag",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a3f811f5be63": {
+      "type": "text",
+      "source": "Expose retrieval as an agent tool",
+      "value": "将检索功能公开为智能体工具"
+    },
+    "text.a4282e4b2298": {
+      "type": "text",
+      "source": " of ",
+      "value": " of ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.a42e803db4a2": {
+      "type": "text",
+      "source": "Right primitive",
+      "value": "合适的原语"
+    },
+    "text.a79a71b58afe": {
+      "type": "text",
+      "source": "Before you continue",
+      "value": "继续学习之前"
+    },
+    "text.a89aed0f6cd4": {
+      "type": "text",
+      "source": " Try 0, 1, 2, or 3.",
+      "value": " Try 0, 1, 2, or 3.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.a8b771920b83": {
+      "type": "text",
+      "source": "query",
+      "value": "query",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.a8b771920b83~1": {
+      "type": "text",
+      "source": "query",
+      "value": "query",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.a8b771920b83~2": {
+      "type": "text",
+      "source": "query",
+      "value": "query",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.a8b771920b83~3": {
+      "type": "text",
+      "source": "query",
+      "value": "query",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.a8b771920b83~4": {
+      "type": "text",
+      "source": "query",
+      "value": "query",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.aa7aa58c8b92": {
+      "type": "text",
+      "source": ";border-radius:8px;padding:10px 12px\">",
+      "value": ";border-radius:8px;padding:10px 12px\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~1": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~2": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~3": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~4": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~5": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~6": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~7": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~8": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~9": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ab2cd7748892": {
+      "type": "text",
+      "source": "\">",
+      "value": "\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ab36f417fde3": {
+      "type": "text",
+      "source": "Retrieval-Augmented Generation (RAG) injects external knowledge into the model's context at inference time. A document corpus is embedded once and stored in a vector index. At query time the user's question is embedded and the top-K closest passages are retrieved. The retrieved passages are concatenated to the prompt and the model answers from that context. RAG sidesteps the model's training cutoff and lets you ground answers in private data without fine-tuning.",
+      "value": "检索增强生成（RAG）在推理时将外部知识注入模型上下文。文档语料库只需进行一次嵌入并存入向量索引。查询时，系统会对用户的问题进行嵌入，并检索最接近的 Top-K 个段落。检索到的段落会拼接到提示词中，模型再依据这些上下文作答。RAG 可以绕过模型的训练数据截止时间，并让您无需微调即可基于私有数据生成有据可依的答案。"
+    },
+    "text.abd19ab703e9": {
+      "type": "text",
+      "source": " Handle the tool-call result from the previous model turn.",
+      "value": " Handle the tool-call result from the previous model turn.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.abd19ab703e9~1": {
+      "type": "text",
+      "source": " Handle the tool-call result from the previous model turn.",
+      "value": " Handle the tool-call result from the previous model turn.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.ac4079778221": {
+      "type": "text",
+      "source": "Legal contracts, technical manuals, nested specs",
+      "value": "法律合同、技术手册、嵌套规范"
+    },
+    "text.afa6e9ab3ac6": {
+      "type": "text",
+      "source": "positive",
+      "value": "正"
+    },
+    "text.b07b3b504008": {
+      "type": "text",
+      "source": "Module 2 · Part B of 3",
+      "value": "模块 2 · 第 2/3 部分"
+    },
+    "text.b0f2eb4ac790": {
+      "type": "text",
+      "source": "Ask about anything from this course. I embed your question, rank a small corpus by cosine similarity, and answer from the best matches. Follow-ups keep the conversation (each still retrieves fresh); the 🧠 toggle clears it, and ✎ edit rewinds.",
+      "value": "可以询问本课程中的任何内容。我会嵌入问题，按余弦相似度对一个小型语料库进行排序，并根据最匹配的内容作答。后续提问会保留对话上下文，但每次仍会重新检索；🧠 开关可清除对话，✎ 编辑可回退。"
+    },
+    "text.b20914c241e1": {
+      "type": "text",
+      "source": ":\\\\n",
+      "value": ":\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b2a332d18c75": {
+      "type": "text",
+      "source": "Cosine similarity between two embedding vectors measures their semantic closeness. Ranges -1 to 1; higher means more similar.",
+      "value": "两个嵌入向量之间的余弦相似度用于衡量其语义接近程度，取值范围为 -1 到 1；数值越高，表示越相似。"
+    },
+    "text.b2be121984c9": {
+      "type": "text",
+      "source": "#rag-artifact",
+      "value": "#rag-artifact",
+      "untranslated": "kept English: exact CSS fragment identifier"
+    },
+    "text.b358631a69c0": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-super-120b-a12b",
+      "value": "nvidia/nemotron-3-super-120b-a12b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b3853e8fd1e2": {
+      "type": "text",
+      "source": "ReAct interleaves reasoning steps with tool calls, deciding what to do next after each observation.",
+      "value": "ReAct 将推理步骤与工具调用交替进行，并在每次获得观察结果后决定下一步操作。"
+    },
+    "text.b3a353ff9e82": {
+      "type": "text",
+      "source": "Basic RAG · top-",
+      "value": "基础 RAG · top-"
+    },
+    "text.b3e765e69e2c": {
+      "type": "text",
+      "source": "Agent decides",
+      "value": "智能体作出判断"
+    },
+    "text.b4935894c8ce": {
+      "type": "text",
+      "source": "…",
+      "value": "…",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b52bddb1c539": {
+      "type": "text",
+      "source": "How does the ReAct loop work?",
+      "value": "ReAct 循环如何工作？"
+    },
+    "text.b71310f2e239": {
+      "type": "text",
+      "source": " state.query = \"how do RAG and a deep-research agent compare?\"; // spans several passages",
+      "value": " state.query = \"how do RAG and a deep-research agent compare?\"; // spans several passages",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.b8e18973998f": {
+      "type": "text",
+      "source": " Load the index once; recompute vectors if the embedding model changed.",
+      "value": " Load the index once; recompute vectors if the embedding model changed.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.b94f23605ff9": {
+      "type": "text",
+      "source": "A corpus is embedded once and held in an in-memory index.",
+      "value": "语料库只需嵌入一次，并保存在内存索引中。"
+    },
+    "text.bb514aacdd84": {
+      "type": "text",
+      "source": "\n      The Index Agent applies that workflow idea to outside knowledge with a\n      developer-defined pipeline. It embeds and indexes a corpus ahead of time, then\n      retrieves matching passages and generates an answer from a bounded context bundle.\n      The build follows that path for unstructured prose before wrapping retrieval as a\n      tool that a surrounding ReAct loop can call. The other data shapes get pointers to\n      where they go deeper.\n    ",
+      "value": "\n      索引智能体通过开发者定义的工作流，将这一工作流理念应用于外部知识。它会预先对语料库进行嵌入和索引，然后检索匹配的段落，并依据范围受限的上下文包生成答案。接下来的构建先沿这一路径处理非结构化文本，再将检索封装为工具，供外层 ReAct 循环调用。对于其它数据形态，课程将提供深入学习的相关指引。\n    "
+    },
+    "text.bb8e44f7a01f": {
+      "type": "text",
+      "source": "Customer records, financial ledgers, HR tables",
+      "value": "客户记录、财务账簿、HR 表"
+    },
+    "text.bbc5e661e106": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~1": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~2": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~3": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~4": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bc2766d76007": {
+      "type": "text",
+      "source": "ReWOO",
+      "value": "ReWOO",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bc50dd2f789f": {
+      "type": "text",
+      "source": "The transformer architecture replaced recurrent neural networks for sequence modeling.",
+      "value": "transformer 架构取代了用于序列建模的循环神经网络。"
+    },
+    "text.bc8305bdd4cc": {
+      "type": "text",
+      "source": "Index the corpus, expose retrieval as a tool, and let the model decide whether the question needs evidence.",
+      "value": "为语料库建立索引，将检索功能作为工具提供，并让模型判断问题是否需要证据。"
+    },
+    "text.bdf6e83f94a2": {
+      "type": "text",
+      "source": " + name + ",
+      "value": " + name + ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.be3e049f39e5": {
+      "type": "text",
+      "source": "Embeds each passage once and stores its vector in the shared in-memory index.",
+      "value": "对每个段落执行一次嵌入，并将其向量存入共享的内存索引。"
+    },
+    "text.c02a921ea92f": {
+      "type": "text",
+      "source": "We embed and search the small child chunks, and each match hands its full parent document to the LLM.",
+      "value": "对小型子文本块进行嵌入和搜索，每个匹配项都会将其完整父文档交给 LLM。"
+    },
+    "text.c11f5c2264e1": {
+      "type": "text",
+      "source": "summarize each community on its own.",
+      "value": "分别总结每个社区。"
+    },
+    "text.c18a40d6138a": {
+      "type": "text",
+      "source": "Org charts, code dependencies, knowledge graphs",
+      "value": "组织结构图、代码依赖关系、知识图谱"
+    },
+    "text.c4338984a8b3": {
+      "type": "text",
+      "source": "If yes, cosine retrieval runs over the index; the top-K passages are appended as a tool message.",
+      "value": "如果调用，系统会在索引上执行余弦检索，并将 Top-K 段落作为工具消息追加到上下文中。"
+    },
+    "text.c4d657ded2a6": {
+      "type": "text",
+      "source": "Module 2c: Deep Agents →",
+      "value": "模块 2c：深度智能体 →"
+    },
+    "text.c6781d412ba1": {
+      "type": "text",
+      "source": "A deep or research agent plans a task, spawns sub-agents in fresh contexts, and shares work through a virtual filesystem to avoid context overflow.",
+      "value": "深度研究智能体会规划任务，在全新上下文中启动子智能体，并通过虚拟文件系统共享工作成果，以避免上下文溢出。"
+    },
+    "text.c7f377d3bcd6": {
+      "type": "text",
+      "source": "Selects the top chunk by cosine and returns its parent document. Expand the code to inspect the visualisation data.",
+      "value": "按余弦相似度选择排名最高的文本块，并返回其父文档。展开代码可检查可视化数据。"
+    },
+    "text.c8b954aefb2c": {
+      "type": "text",
+      "source": "What is a deep research agent?",
+      "value": "什么是深度研究智能体？"
+    },
+    "text.ca1748924abf": {
+      "type": "text",
+      "source": "ReAct interleaves reasoning and acting: the model thinks, optionally calls a tool, reads the observation, and re-plans before answering.",
+      "value": "ReAct 交替进行推理和行动：模型先思考，可选择调用工具，再读取观察结果，并在作答前重新规划。"
+    },
+    "text.ca2c4b34b51c": {
+      "type": "text",
+      "source": " top hit, then return that hit's parent document. The lower half renders the score bars and cards.",
+      "value": " top hit, then return that hit's parent document. The lower half renders the score bars and cards.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.cb6a27c76caa": {
+      "type": "text",
+      "source": "\">chunk ",
+      "value": "\">文本块 "
+    },
+    "text.cb98b894bcb9": {
+      "type": "text",
+      "source": "summarize each community, then answer from the summaries",
+      "value": "先汇总每个社区，再根据这些摘要作答"
+    },
+    "text.cc6b69b40bf7": {
+      "type": "text",
+      "source": "&amp;",
+      "value": "&amp;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.cc6b69b40bf7~1": {
+      "type": "text",
+      "source": "&amp;",
+      "value": "&amp;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.cd9831650291": {
+      "type": "text",
+      "source": "Community \\\\",
+      "value": "社区 \\\\"
+    },
+    "text.ce14c85536b0": {
+      "type": "text",
+      "source": "The question to look up. Use the user's exact phrasing.",
+      "value": "要查找的问题。请使用用户的原始表述。"
+    },
+    "text.ce3157056248": {
+      "type": "text",
+      "source": " Every family rides in through its summary, so the answer covers all of them.",
+      "value": " Every family rides in through its summary, so the answer covers all of them.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.cfbd94d9e633": {
+      "type": "text",
+      "source": "Use the tool for specific facts you do not already know with high confidence.",
+      "value": "对于您无法高度确定的具体事实，请使用该工具。"
+    },
+    "text.d02bc3244bc2": {
+      "type": "text",
+      "source": "Summarize this group of related documents in one sentence, naming what they have in common.",
+      "value": "用一句话概括这组相关文档，并说明它们的共同点。"
+    },
+    "text.d30a316720f8": {
+      "type": "text",
+      "source": " TOP_K below is 2, so top-K reaches two families at most, never all three.",
+      "value": " TOP_K below is 2, so top-K reaches two families at most, never all three.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.d325b33be23d": {
+      "type": "text",
+      "source": "var(--gs,#aee23a)",
+      "value": "var(--gs,#aee23a)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d3cc46b3bfa5": {
+      "type": "text",
+      "source": " chunks · ",
+      "value": " 个分块 · "
+    },
+    "text.d3ee255f981c": {
+      "type": "text",
+      "source": "Embed a small corpus once, score each query by cosine similarity, and inspect the top-K passages.",
+      "value": "对小型语料库嵌入一次，使用余弦相似度为每个查询评分，并检查 Top-K 段落。"
+    },
+    "text.d4031f9c17fa": {
+      "type": "text",
+      "source": "Defines eight varied passages. Edit one and rerun to change what the index can retrieve.",
+      "value": "定义八个内容各异的段落。编辑其中一个并重新运行，即可改变索引能够检索到的内容。"
+    },
+    "text.d515e3122b49": {
+      "type": "text",
+      "source": " the exact text handed to the model, in full",
+      "value": " the exact text handed to the model, in full",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.d64c7f64775a": {
+      "type": "text",
+      "source": "Embeds the question, scores every passage, and returns top-K while plotting the full score distribution.",
+      "value": "对问题执行嵌入，为每个段落评分并返回 top-K，同时绘制完整的分数分布。"
+    },
+    "text.d6c0f715acbd": {
+      "type": "text",
+      "source": "Look up passages in the knowledge base that are likely relevant to a question.",
+      "value": "在知识库中查找可能与问题相关的段落。"
+    },
+    "text.d6f58e8f9840": {
+      "type": "text",
+      "source": "Sets the retrieval question. The 'query' input type points its embedding toward relevant passages.",
+      "value": "设置检索问题。'query' 输入类型会使其嵌入指向相关段落。"
+    },
+    "text.d9c5795b6aab": {
+      "type": "text",
+      "source": "Explain cosine similarity in one sentence.",
+      "value": "用一句话解释余弦相似度。"
+    },
+    "text.da4b8135bfe6": {
+      "type": "text",
+      "source": " Reading guide: the retrieval happens first: embed the query, score chunks, pick the",
+      "value": " Reading guide: the retrieval happens first: embed the query, score chunks, pick the",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.dabd3aff769f": {
+      "type": "text",
+      "source": "<",
+      "value": "<",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.db37352c20ec": {
+      "type": "text",
+      "source": "You are a helpful assistant with a knowledge base accessible via the retrieve tool.",
+      "value": "您是一名乐于助人的助手，可以通过 retrieve 工具访问知识库。"
+    },
+    "text.df6c7bc8ea1c": {
+      "type": "text",
+      "source": ";background:rgba(118,185,0,.12)",
+      "value": ";background:rgba(118,185,0,.12)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.dff3393a1df0": {
+      "type": "text",
+      "source": " Seed the small dataset this retrieval example searches.",
+      "value": " Seed the small dataset this retrieval example searches.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.dff3393a1df0~1": {
+      "type": "text",
+      "source": " Seed the small dataset this retrieval example searches.",
+      "value": " Seed the small dataset this retrieval example searches.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.dff3393a1df0~2": {
+      "type": "text",
+      "source": " Seed the small dataset this retrieval example searches.",
+      "value": " Seed the small dataset this retrieval example searches.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.dff3393a1df0~3": {
+      "type": "text",
+      "source": " Seed the small dataset this retrieval example searches.",
+      "value": " Seed the small dataset this retrieval example searches.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.e0e492707f85": {
+      "type": "text",
+      "source": "Shape",
+      "value": "形态"
+    },
+    "text.e1f22c3e171c": {
+      "type": "text",
+      "source": "var(--g,#76b900)",
+      "value": "var(--g,#76b900)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e1f22c3e171c~1": {
+      "type": "text",
+      "source": "var(--g,#76b900)",
+      "value": "var(--g,#76b900)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e5c8c0d79e65": {
+      "type": "text",
+      "source": "\n    Almost nobody trains RAG that way now for two practical reasons. You cannot\n    backpropagate into a frontier model you reach through an API, and even self-hosted\n    end-to-end retrieval training is expensive and easy to destabilize.\n  ",
+      "value": "\n    如今几乎没有人再以这种方式训练 RAG，主要有两个实际原因。您无法对通过 API 访问的前沿模型执行反向传播；即使自行托管，端到端检索训练也成本高昂且很容易变得不稳定。\n  "
+    },
+    "text.e68ee04dff59": {
+      "type": "text",
+      "source": "Examples",
+      "value": "示例"
+    },
+    "text.e70bea0fa07c": {
+      "type": "text",
+      "source": "Retrieval-augmented generation embeds a query and the documents into the same vector space, retrieves the nearest chunks, and feeds them to the model as grounding.",
+      "value": "检索增强生成 (RAG) 将查询和文档嵌入同一向量空间，检索最接近的文本块，并将其作为事实依据提供给模型。"
+    },
+    "text.e76e551ac819": {
+      "type": "text",
+      "source": "var(--bd,#2a2a2a)",
+      "value": "var(--bd,#2a2a2a)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e76e551ac819~1": {
+      "type": "text",
+      "source": "var(--bd,#2a2a2a)",
+      "value": "var(--bd,#2a2a2a)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e76e5fae424b": {
+      "type": "text",
+      "source": "The question being asked, structured the same way as in the previous canvas. Edit it and re-run to see which parent document rises to the top.",
+      "value": "待回答的问题，其结构与上一个画布相同。编辑问题并重新运行，查看哪个父文档升至首位。"
+    },
+    "text.e86dd77a7ee7": {
+      "type": "text",
+      "source": "- ",
+      "value": "- ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e88247ba09bd": {
+      "type": "text",
+      "source": "A whole retriever in thirty lines of top-K cosine",
+      "value": "用三十行 top-K 余弦代码实现完整检索器"
+    },
+    "text.e9fb5459d0c3": {
+      "type": "text",
+      "source": "\n    Each unstructured-prose Index Agent starts from the same\n    primitive. An embedding is a learned numerical address for a piece of text,\n    a fixed-length vector placed so that semantically similar\n    texts land near each other in vector space. Two practical\n    consequences follow:\n  ",
+      "value": "\n    每个面向非结构化文本的 Index 智能体都从同一种原语开始。嵌入是通过学习得到的一段文本的数值地址，即一个固定长度的向量；它在向量空间中的位置使语义相近的文本彼此接近。由此产生两个实际结果：\n  "
+    },
+    "text.ed178adb3fe1": {
+      "type": "text",
+      "source": "When does each retrieval pattern beat the other?",
+      "value": "每种检索模式分别在什么情况下更胜一筹？"
+    },
+    "text.edaee9dbd099": {
+      "type": "text",
+      "source": "Cosine scores · top-",
+      "value": "余弦得分 · 前 "
+    },
+    "text.eea86d867cd1": {
+      "type": "text",
+      "source": " chunks nearest the question",
+      "value": " 个文本块作答"
+    },
+    "text.eea883905e50": {
+      "type": "text",
+      "source": "Quicksort partitions around a pivot, then recursively sorts the elements below and above it.",
+      "value": "快速排序以一个基准值进行分区，然后递归地对小于和大于该基准值的元素排序。"
+    },
+    "text.eec4aa9baed8": {
+      "type": "text",
+      "source": "A flaky pie crust needs cold butter and minimal mixing.",
+      "value": "要做出酥松的派皮，需要使用冷黄油，并尽量减少搅拌。"
+    },
+    "text.efad0c93dc35": {
+      "type": "text",
+      "source": "OpenShell is the kernel-level sandbox around the agent: netns, Landlock, seccomp, and an OPA-evaluated proxy decide what each tool call may touch.",
+      "value": "OpenShell 是智能体外围的内核级沙箱：netns、Landlock、seccomp 和 OPA-评测代理共同决定每次工具调用可以访问哪些资源。"
+    },
+    "text.efdb5576d726": {
+      "type": "text",
+      "source": "Nemotron Nano 30B · fast",
+      "value": "Nemotron Nano 30B · fast",
+      "untranslated": "Model selector display label; preserve the complete label in English"
+    },
+    "text.f111f989192f": {
+      "type": "text",
+      "source": "\n    The production pattern indexes at two levels. You embed the small chunks so retrieval stays\n    precise, and when one matches you return its parent document so the model still sees the full\n    context around it.\n  ",
+      "value": "\n    生产环境通常采用两级索引。对小文本块进行嵌入，以保持检索精度；某个文本块匹配后，则返回其父文档，使模型仍能看到该文本块周围的完整上下文。\n  "
+    },
+    "text.f11515e06bd0": {
+      "type": "text",
+      "source": "top-K retrieved:",
+      "value": "top-K 检索结果："
+    },
+    "text.f2f48e5c3f42": {
+      "type": "text",
+      "source": "var(--tf,#8a8a8a)",
+      "value": "var(--tf,#8a8a8a)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.f31ea860d27b": {
+      "type": "text",
+      "source": "Build the corpus and index",
+      "value": "构建语料库和索引"
+    },
+    "text.f3f4e9b68112": {
+      "type": "text",
+      "source": "answer from the ",
+      "value": "根据与问题最接近的 "
+    },
+    "text.f59547246f42": {
+      "type": "text",
+      "source": " Render hierarchy as HTML cards. Search chunks, then return the winning chunk's parent document.",
+      "value": " Render hierarchy as HTML cards. Search chunks, then return the winning chunk's parent document.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.f77fb5fc13e8": {
+      "type": "text",
+      "source": "RAG",
+      "value": "RAG",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.f8c38d7f6974": {
+      "type": "text",
+      "source": "The OpenAI Responses API stores conversation state server-side; subsequent calls reference a previous_response_id.",
+      "value": "OpenAI Responses API 在服务器端存储对话状态；后续调用通过 previous_response_id 引用该状态。"
+    },
+    "text.f93f83c34fb5": {
+      "type": "text",
+      "source": "Matching a retrieval primitive to the shape of your data",
+      "value": "根据数据形态选择合适的检索原语"
+    },
+    "text.fa24955a1723": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-nano-30b-a3b",
+      "value": "nvidia/nemotron-3-nano-30b-a3b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fa68764a442a": {
+      "type": "text",
+      "source": " helpers.log.json(\"complete raw embedding\", v);",
+      "value": " helpers.log.json(\"complete raw embedding\", v);",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.fb2e5d3daab2": {
+      "type": "text",
+      "source": "embedding ",
+      "value": "正在嵌入 "
+    },
+    "text.fbc225538534": {
+      "type": "text",
+      "source": "Cosine similarity scores two embedding vectors by the angle between them; closer to 1 means more semantically related.",
+      "value": "余弦相似度通过两个嵌入向量之间的夹角进行评分；分数越接近 1，表示语义相关性越高。"
+    },
+    "text.fbc35a2b0618": {
+      "type": "text",
+      "source": " Embed the text so similarity search can compare vectors.",
+      "value": " Embed the text so similarity search can compare vectors.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.fbc35a2b0618~1": {
+      "type": "text",
+      "source": " Embed the text so similarity search can compare vectors.",
+      "value": " Embed the text so similarity search can compare vectors.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.fbc35a2b0618~2": {
+      "type": "text",
+      "source": " Embed the text so similarity search can compare vectors.",
+      "value": " Embed the text so similarity search can compare vectors.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.fc6df38322ab": {
+      "type": "text",
+      "source": " TODO: Try another query and rerun to watch the ranking shift.",
+      "value": " TODO: Try another query and rerun to watch the ranking shift.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.fcc193858da0": {
+      "type": "text",
+      "source": "\n    The rest of this page builds the live path one stage at a time.\n  ",
+      "value": "\n    本页接下来的内容将逐阶段构建实时路径。\n  "
+    },
+    "text.fccbb5f1d1dc": {
+      "type": "text",
+      "source": "\n    The figure below separates those boundaries. Read it left to right to follow\n    MCP context ingress and A2A task delivery. Then read it bottom to top to follow\n    skill brokerage, runtime execution, and generated UX. Choose the boundary that\n    matches the bundle and the system state it must carry.\n  ",
+      "value": "\n    下图区分了这些边界。从左向右阅读，可了解\n    MCP 上下文输入和 A2A 任务交付；再从下向上阅读，可了解\n    skill 代理、运行时执行和生成的 UX。请选择与上下文包及其必须承载的系统状态相匹配的边界。\n  "
+    },
+    "text.fcf2df19f943": {
+      "type": "text",
+      "source": "What are the main families of algorithms in this corpus, and how do they differ?",
+      "value": "这个语料库中主要有哪些算法类别，它们有何区别？"
+    },
+    "text.fd2881e0af43": {
+      "type": "text",
+      "source": "LangChain.js provides ChatOpenAI for chat completions and OpenAIEmbeddings for embeddings; both accept a custom baseURL.",
+      "value": "LangChain.js 提供用于聊天补全的 ChatOpenAI 和用于嵌入的 OpenAIEmbeddings；二者都接受自定义 baseURL。"
+    },
+    "text.fd9be30c9959": {
+      "type": "text",
+      "source": "\n    A global question is then answered at query time, by summarizing across the relevant community summaries and\n    reducing those partial answers into one. The work is a map-reduce over structure rather than a lookup over similarity.\n  ",
+      "value": "\n    随后，在查询时通过汇总相关社区的摘要来回答全局问题，再将这些局部答案归并为一个答案。这个过程是在结构上执行 MapReduce，而不是按相似度进行查找。\n  "
+    },
+    "text.fdcd09131e3c": {
+      "type": "text",
+      "source": "The Index Agent · Securing Agents",
+      "value": "索引智能体 · 安全智能体"
+    },
+    "text.fe4831a90334": {
+      "type": "text",
+      "source": "Split each parent document into sentence chunks and retain its parent ID. The narrower units improve search precision while preserving a route back to the full document.",
+      "value": "将每个父文档拆分为句子块，并保留其父级 ID。更小的检索单元可提高搜索精度，同时保留返回完整文档的路径。"
+    },
+    "text.fe53901fd031": {
+      "type": "text",
+      "source": "Sets the question and tells the model to retrieve only when it needs specific evidence.",
+      "value": "设置问题，并指示模型仅在需要具体证据时执行检索。"
+    },
+    "text.ff16bafc68c9": {
+      "type": "text",
+      "source": "Retrieve by cosine similarity",
+      "value": "按余弦相似度检索"
+    },
+    "text.ff7048a17528": {
+      "type": "text",
+      "source": " Basic top-K: embed, rank by cosine similarity, answer from the top chunks.",
+      "value": " Basic top-K: embed, rank by cosine similarity, answer from the top chunks.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    }
+  }
+}

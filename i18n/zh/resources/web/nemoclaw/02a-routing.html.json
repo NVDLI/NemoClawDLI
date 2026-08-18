@@ -1,0 +1,1575 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "zh-CN",
+  "template": "web/nemoclaw/02a-routing.html",
+  "media": [
+    "web/nemoclaw/assets/figures/02a-routing-1.svg",
+    "web/nemoclaw/assets/figures/fig2_react.svg",
+    "web/nemoclaw/assets/figures/fig2_rewoo.svg"
+  ],
+  "values": {
+    "link.01e8e548013f": {
+      "type": "link",
+      "source": "\n    <a href=\"https://www.crewai.com/\" target=\"_blank\" rel=\"noopener\">CrewAI</a>,\n    <a href=\"https://www.langchain.com/\" target=\"_blank\" rel=\"noopener\">LangChain</a>, and\n    <a href=\"https://www.langchain.com/langgraph\" target=\"_blank\" rel=\"noopener\">LangGraph</a>\n    all expose this same factory under names that vary by framework, whether\n    <code>Agent</code> or <code>create_agent</code> or a role/goal dataclass.\n    The cell below builds two specialists from the same four parameters, an\n    arithmetic tutor and a translator that both run on one input with their replies\n    rendered side by side.\n  ",
+      "value": "\n    <a href=\"https://www.crewai.com/\" target=\"_blank\" rel=\"noopener\">CrewAI</a>、\n    <a href=\"https://www.langchain.com/\" target=\"_blank\" rel=\"noopener\">LangChain</a> 和\n    <a href=\"https://www.langchain.com/langgraph\" target=\"_blank\" rel=\"noopener\">LangGraph</a>\n    都以各框架特有的名称提供了同一种工厂，无论其名称是<code>Agent</code>、<code>create_agent</code>，还是角色/目标 dataclass。以下单元使用相同的四个参数构建两个专用智能体：一个算术辅导智能体和一个翻译智能体。两者处理同一个输入，回复并排呈现。\n  "
+    },
+    "link.088977681e2f": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al., <em>ReWOO: Decoupling Reasoning from Observations</em> (2023)</a>. The planner / worker / solver decomposition this module's Workflow Agent implements.",
+      "value": "<a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al., <em>ReWOO: Decoupling Reasoning from Observations</em> (2023)</a>。本模块的工作流智能体采用了 planner / worker / solver 分解方式。"
+    },
+    "link.139eba09e8b7": {
+      "type": "link",
+      "source": "\n        At each step the model reads the latest observation before it picks an action\n        and runs a tool, then sizes up whatever came back and chooses again. The agent\n        <em>reacts</em> to whatever the previous tool call returned, so the path\n        through the tools takes shape as it runs. That makes ReAct strong when the\n        path depends on intermediate results and weak when many steps could have\n        run at once.\n        <br><br>\n        Paper: <a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al., 2022</a>.\n      ",
+      "value": "\n        在每一步中，模型都会先读取最新观察结果，再选择行动并运行工具；随后评估返回结果，再次作出选择。智能体会对上一次工具调用的返回结果作出<em>响应</em>，因此工具使用路径是在运行过程中逐步形成的。当执行路径取决于中间结果时，ReAct 表现出色；而当多个步骤本可同时运行时，它的表现则较弱。\n        <br><br>\n        论文：<a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al., 2022</a>。\n      "
+    },
+    "link.1be52ce4d6ee": {
+      "type": "link",
+      "source": "Comprehensive list at <a href=\"04c-going-further.html#refs\">Going Further · References</a>.",
+      "value": "完整列表请参阅<a href=\"04c-going-further.html#refs\">深入探索 · 参考资料</a>。"
+    },
+    "link.3358ef3956ff": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2303.17651\" target=\"_blank\" rel=\"noopener\">Madaan et al., <em>Self-Refine: Iterative Refinement with Self-Feedback</em> (2023)</a>. The pattern behind iterative multi-pass research: an agent critiques its own output and re-runs until a quality threshold is met.",
+      "value": "<a href=\"https://arxiv.org/abs/2303.17651\" target=\"_blank\" rel=\"noopener\">Madaan et al., <em>Self-Refine: Iterative Refinement with Self-Feedback</em> (2023)</a>。迭代式多轮研究背后的模式：智能体评判自己的输出并重新运行，直到达到质量阈值。"
+    },
+    "link.39f1ebc65c2a": {
+      "type": "link",
+      "source": "\n        The model writes the full plan upfront in one LLM call before any tool runs at\n        all. A deterministic executor then runs every tool that the plan named, often in\n        parallel, and a second LLM call reads what came back to synthesize the results.\n        Because the plan never sees a tool result, the model \"reasons without observation.\"\n        That makes ReWOO strong when the steps are independent and weak when later steps\n        need to react to earlier ones.\n        <br><br>\n        Paper: <a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al., 2023</a>.\n      ",
+      "value": "\n        在任何工具开始运行之前，模型会通过一次 LLM 调用预先写出完整计划。随后，确定性执行器通常会并行运行计划中指定的所有工具，再由第二次 LLM 调用读取返回结果并进行综合。由于计划始终看不到工具结果，模型是在“无观察的情况下推理”。因此，当各步骤彼此独立时，ReWOO 表现出色；而当后续步骤需要根据前序结果作出响应时，它的表现则较弱。\n        <br><br>\n        论文：<a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al., 2023</a>。\n      "
+    },
+    "link.4f07e539a6af": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2305.04091\" target=\"_blank\" rel=\"noopener\">Wang et al., <em>Plan-and-Solve Prompting</em> (2023)</a>. The simpler ancestor: a single LLM call writes a plan, the same LLM executes step-by-step. ReWOO splits planner from executor.",
+      "value": "<a href=\"https://arxiv.org/abs/2305.04091\" target=\"_blank\" rel=\"noopener\">Wang et al., <em>Plan-and-Solve Prompting</em> (2023)</a>。这是更简单的前身：一次 LLM 调用写出计划，同一个 LLM 逐步执行计划。ReWOO 将 planner 与执行器分离。"
+    },
+    "link.6c17d60c30cb": {
+      "type": "link",
+      "source": "<strong>Tools.</strong> The <a href=\"https://json-schema.org/\" target=\"_blank\" rel=\"noopener\">JSON-Schema</a>-described functions it can call, if any.",
+      "value": "<strong>工具。</strong>它可以调用的函数（如有），这些函数使用 <a href=\"https://json-schema.org/\" target=\"_blank\" rel=\"noopener\">JSON-Schema</a> 描述。"
+    },
+    "link.edf787ed5434": {
+      "type": "link",
+      "source": "\n    The cell below runs a ReWOO pipeline against the NVIDIA glossary, using\n    <code>helpers.webSearch</code> (the ranked glossary search you met in Module 1c) for every retrieval the plan calls for. The <a href=\"glossary.html\">glossary explorer</a> shows the full index this searches and lets you run any query the planner might emit:\n  ",
+      "value": "\n    以下单元针对 NVIDIA 术语表运行 ReWOO 工作流，并对计划要求的每次检索使用 <code>helpers.webSearch</code>（您在模块 1c 中接触过的术语表排序搜索）。<a href=\"glossary.html\">术语表浏览器</a>会显示此搜索所用的完整索引，还可让您运行 planner 可能生成的任何查询：\n  "
+    },
+    "link.fa9d7cb28139": {
+      "type": "link",
+      "source": "The ReWOO pattern plans every tool call up front, runs them in parallel, then synthesizes in one final call. <a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al. (2023)</a>.",
+      "value": "ReWOO 模式会预先规划每次工具调用，并行运行这些调用，然后在最后一次调用中综合结果。<a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al. (2023)</a>。"
+    },
+    "link.fe4248389dbd": {
+      "type": "link",
+      "source": "<a href=\"https://www.langchain.com/langgraph\" target=\"_blank\" rel=\"noopener\">LangGraph</a>. The production framework that formalises the workflow / state-machine pattern this module sketches by hand.",
+      "value": "<a href=\"https://www.langchain.com/langgraph\" target=\"_blank\" rel=\"noopener\">LangGraph</a>。这是一个生产级框架，将本模块手动勾勒的工作流/状态机模式正式化。"
+    },
+    "placeholder.64118c0cac7a": {
+      "type": "placeholder",
+      "source": "### search \\${i + 1}: \"\\${s.query}\"\\\\n\\${helpers.formatSearchResults(s)}",
+      "value": "### 搜索 \\${i + 1}：\"\\${s.query}\"\\\\n\\${helpers.formatSearchResults(s)}"
+    },
+    "placeholder.8f06e2fc8b37": {
+      "type": "placeholder",
+      "source": "Topic: \\${state.plan.topic}\\\\n\\\\n\\${state.context}",
+      "value": "主题：\\${state.plan.topic}\\\\n\\\\n\\${state.context}"
+    },
+    "placeholder.c10e712af077": {
+      "type": "placeholder",
+      "source": "Topic: \\${state.topic}\\\\n\\\\nSources:\\\\n\\${state.context}\\\\n\\\\nWrite your version.",
+      "value": "主题：\\${state.topic}\\\\n\\\\n 来源：\\\\n\\${state.context}\\\\n\\\\n 请写出版本。"
+    },
+    "rich.1a12441953a2": {
+      "type": "rich",
+      "source": "Output exactly two lines: 'FR: <french>' and 'BACK: <original-language>'.",
+      "value": "严格输出两行：'FR: <french>' 和 'BACK: <original-language>'。"
+    },
+    "rich.242c5dc34093": {
+      "type": "rich",
+      "source": "<strong>Role.</strong> A short label, used for logs and routing.",
+      "value": "<strong>角色。</strong>用于日志记录和路由的简短标签。"
+    },
+    "rich.50ba04ccb0aa": {
+      "type": "rich",
+      "source": "<strong>Context bloat is real.</strong> A single agent doing everything accumulates 10000-token context. Specialists stay focused on their slice.",
+      "value": "<strong>上下文膨胀确实存在。</strong>由单个智能体包办所有工作会累积 10000-token 上下文，而各个专用智能体可以专注于各自负责的部分。"
+    },
+    "rich.58a54f63f510": {
+      "type": "rich",
+      "source": "<strong>Parallelism is possible.</strong> Two workers run concurrently, where one agent could only run them in sequence. Three independent searches finish in the time of the slowest.",
+      "value": "<strong>可以并行处理。</strong>两个工作单元可以并发运行，而单个智能体只能依次执行。三项独立搜索可在其中最慢一项所需的时间内全部完成。"
+    },
+    "rich.79e7f0a66de9": {
+      "type": "rich",
+      "source": "<strong>Specialization matters.</strong> Different workstreams need different system prompts, tools, or models. One agent forced into both roles degrades both.",
+      "value": "<strong>专业分工很重要。</strong>不同工作流需要不同的系统提示词、工具或模型。强迫一个智能体同时承担两种角色，会使两方面的表现都下降。"
+    },
+    "rich.82b2c51d66a4": {
+      "type": "rich",
+      "source": "\n    <code>Promise.all</code> is JavaScript's helper for starting several promises and waiting\n    until all of them finish. Here it is just the concurrency mechanism: it does not call\n    the model and it does not decide which searches to run.\n  ",
+      "value": "\n    <code>Promise.all</code> 是 JavaScript 中用于启动多个 promise 并等待它们全部完成的辅助函数。在这里，它只负责实现并发：既不调用模型，也不决定要运行哪些搜索。\n  "
+    },
+    "rich.8b10c8770bc6": {
+      "type": "rich",
+      "source": "\n    <strong>The next two parts carry this composition idea forward.</strong> Part B\n    (Indices) points the same idea at corpora rather than at other agents so that a\n    knowledge layer becomes an agent wrapping a body of data behind a query interface.\n    Part C (Deep Agents) takes it further still, into a planner agent that dispatches\n    sub-agents in fresh contexts and persists their working state to a virtual filesystem.\n  ",
+      "value": "\n    <strong>接下来的两个部分将继续拓展这一组合思路。</strong>B 部分（索引）将同样的思路用于语料库，而非其它智能体，使知识层成为一个智能体，通过查询接口封装一组数据。C 部分（深度智能体）会进一步构建一个 planner 智能体，由它在全新上下文中调度子智能体，并将其工作状态持久化到虚拟文件系统。\n  "
+    },
+    "rich.8b46273b0a2f": {
+      "type": "rich",
+      "source": "<strong>Synthesizer.</strong> A second LLM call reads every result and writes the brief, citing each search by index.",
+      "value": "<strong>综合器。</strong>第二次 LLM 调用读取所有结果并撰写简报，同时按索引引用每项搜索。"
+    },
+    "rich.90cf8f19cd7a": {
+      "type": "rich",
+      "source": "\n    <strong>The overhead tax in concrete terms.</strong>\n    Every agent boundary adds model-call latency and routing logic. It also creates another\n    source of malformed messages and replaces a readable timeline with a trajectory that\n    fans across workers.\n  ",
+      "value": "\n    <strong>开销具体体现在哪里。</strong>每个智能体边界都会增加模型调用延迟和路由逻辑，还会引入一个新的消息格式错误来源，并将清晰易读的时间线变成一条向多个工作单元分叉的执行轨迹。\n  "
+    },
+    "rich.b485aaf225cf": {
+      "type": "rich",
+      "source": "<strong>Invoke contract.</strong> A consistent shape (<code>specialist.run(input)</code>) that returns the final reply.",
+      "value": "<strong>调用约定。</strong>采用统一形式（<code>specialist.run(input)</code>）并返回最终回复。"
+    },
+    "rich.b78f1a0b8a39": {
+      "type": "rich",
+      "source": "\n    <strong>In practice, you can have both.</strong>\n    Many real systems borrow from each approach at once. The tools a ReAct loop calls\n    might internally run a planned, ReWOO-style pipeline, and a planner that lays its\n    work out in advance still needs sub-agents to execute each step, which are usually\n    ReAct loops in their own right. Compose these software components wherever their\n    strengths fit, reserving a Workflow Agent for tasks that split into independent workstreams.\n  ",
+      "value": "\n    <strong>在实践中，可以同时采用两者。</strong>许多实际系统会同时借鉴这两种方法。ReAct 循环所调用的工具可能会在内部运行预先规划的 ReWOO 式工作流；而通过 planner 预先安排工作的系统仍需要子智能体执行各个步骤，这些子智能体本身通常也是 ReAct 循环。请根据各自优势组合这些软件组件，并将工作流智能体用于可拆分为独立工作流的任务。\n  "
+    },
+    "rich.c89d938f1d03": {
+      "type": "rich",
+      "source": "The <span>Workflow</span> Agent",
+      "value": "<span>工作流</span>智能体"
+    },
+    "rich.d728bd0d5ae9": {
+      "type": "rich",
+      "source": "<strong>Executor.</strong> Plain JavaScript. Every query runs concurrently via <code>Promise.all</code>, with no LLM calls at this stage.",
+      "value": "<strong>执行器。</strong>使用纯 JavaScript。每个查询都通过 <code>Promise.all</code> 并发运行，此阶段不进行 LLM 调用。"
+    },
+    "rich.dcde6ae021af": {
+      "type": "rich",
+      "source": "<strong>Failure isolation helps.</strong> A crashed worker does not kill the whole task. The orchestrator retries, skips, or routes around it.",
+      "value": "<strong>故障隔离很有帮助。</strong>某个工作单元崩溃不会导致整个任务失败。编排器可以重试、跳过它或选择其它路由。"
+    },
+    "rich.dfb993bf67b0": {
+      "type": "rich",
+      "source": "<strong>System prompt.</strong> The behaviour contract: what it does, what it refuses, and how it phrases its replies.",
+      "value": "<strong>系统提示词。</strong>行为约定：它要做什么、拒绝做什么，以及如何组织回复。"
+    },
+    "rich.e3bb4592aaee": {
+      "type": "rich",
+      "source": "\n    <strong>Compare one support incident.</strong>\n    For “I was charged twice for the same subscription,” a single ReAct loop reads each lookup\n    result before choosing its next action. A structured workflow can route billing verification\n    and account-history checks into independent branches, then combine their evidence. Use the\n    loop when the next step depends on the latest observation. Use the workflow when the branches\n    and their join are known before execution.\n  ",
+      "value": "\n    <strong>对比同一个支持事件的处理方式。</strong>对于“同一订阅被重复扣费”这一问题，单个 ReAct 循环会先读取每次查询的结果，再选择下一步操作。结构化工作流可以将账单核验和账户历史记录检查路由到相互独立的分支，然后汇总各分支的证据。如果下一步取决于最新的观察结果，请使用循环。如果在执行前就已明确各个分支及其汇合方式，请使用工作流。\n  "
+    },
+    "rich.e622373c2f66": {
+      "type": "rich",
+      "source": "\n    Routing is a different shape of multi-agent in which a triage agent classifies the\n    input and hands it to one specialist. Because the classifier must emit one of a fixed\n    enum of categories, the output needs a tight contract. A <strong>fixed enum</strong>\n    is a closed list of allowed labels; if the model returns anything else, the router\n    should reject the route or retry under stricter instructions instead of guessing.\n    Each specialist downstream owns a narrow system prompt and does not need to see the\n    triage agent's reasoning.\n  ",
+      "value": "\n    路由是多智能体的另一种组织方式：分流智能体对输入进行分类，再将其交给一个专用智能体。由于分类器必须输出固定枚举中的一个类别，因此输出需要遵循严格的约定。<strong>固定枚举</strong>是一个封闭的允许标签列表；如果模型返回其它任何值，路由都应拒绝该结果或在更严格的指令下重试，而不能自行猜测。下游每个专用智能体都有范围明确的系统提示词，无需查看分流智能体的推理过程。\n  "
+    },
+    "rich.ee9574e0b7d0": {
+      "type": "rich",
+      "source": "<strong>Planner.</strong> One schema-bound LLM call emits a JSON list of 3-5 search queries.",
+      "value": "<strong>Planner。</strong>一次受 schema 约束的 LLM 调用会生成包含 3 至 5 个搜索查询的 JSON 列表。"
+    },
+    "rich.f27440ffd362": {
+      "type": "rich",
+      "source": "\n      A single ReAct loop handles most one-shot tasks, but harder problems sometimes need\n      structure that decides work before the next tool result arrives. A <strong>workflow\n      agent</strong> means an agent system where your harness controls a workflow: a graph\n      of model calls, deterministic code steps, tool calls, and specialist loops. This shape\n      helps when sub-tasks that run in parallel can share results, when a plan can be written\n      before tools run, or when routing should follow a rule instead of the last observation.\n    ",
+      "value": "\n      单个 ReAct 循环可以处理大多数一次性任务，但更困难的问题有时需要一种结构，在下一个工具结果返回之前就决定要执行的工作。<strong>工作流智能体</strong>是指由执行框架控制工作流的智能体系统：该工作流由模型调用、确定性代码步骤、工具调用和专家循环组成。以下情形适合采用这种结构：并行运行的子任务可以共享结果；可以在工具运行前制定计划；或者路由应遵循规则，而不是取决于最近一次观察结果。\n    "
+    },
+    "rich.f740f53e7b4e": {
+      "type": "rich",
+      "source": "You are an arithmetic tutor. For any math question, show your work in one or two short steps and end with FINAL: <integer>. Refuse non-math questions politely.",
+      "value": "您是一位算术辅导老师。对于任何数学问题，请用一两个简短步骤展示计算过程，并以 FINAL: <integer> 结尾。请礼貌拒绝非数学问题。"
+    },
+    "text.00f29ce34950": {
+      "type": "text",
+      "source": " Wrap replies before helpers.viz.sideBySide renders the two columns.",
+      "value": " Wrap replies before helpers.viz.sideBySide renders the two columns.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.01f6738283fc": {
+      "type": "text",
+      "source": "Answers under the selected specialist prompt, keeping the model focused on one support domain.",
+      "value": "根据所选专家提示词作答，使模型专注于一个支持领域。"
+    },
+    "text.0304523efff5": {
+      "type": "text",
+      "source": "goal",
+      "value": "goal",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.0304523efff5~1": {
+      "type": "text",
+      "source": "goal",
+      "value": "goal",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.043a718774c5": {
+      "type": "text",
+      "source": "s",
+      "value": "s",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.043a718774c5~1": {
+      "type": "text",
+      "source": "s",
+      "value": "s",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.043a718774c5~2": {
+      "type": "text",
+      "source": "s",
+      "value": "s",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.043a718774c5~3": {
+      "type": "text",
+      "source": "s",
+      "value": "s",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.04f8996da763": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~1": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~2": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~3": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~4": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~5": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~6": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~7": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.054e64f31c41": {
+      "type": "text",
+      "source": "Critic · what's missing",
+      "value": "批评者 · 缺失之处"
+    },
+    "text.07193df400d4": {
+      "type": "text",
+      "source": "queries",
+      "value": "queries",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.07eecaaedc74": {
+      "type": "text",
+      "source": " planner/search data into a diagram spec so the page can show the pipeline beside the answer.",
+      "value": " planner/search data into a diagram spec so the page can show the pipeline beside the answer.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.0a19dd69165a": {
+      "type": "text",
+      "source": " Register the specialist prompts this router can choose.",
+      "value": " Register the specialist prompts this router can choose.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.0b4bef8d3073": {
+      "type": "text",
+      "source": "I was double charged on my invoice",
+      "value": "我的发票被重复扣款了"
+    },
+    "text.0cb65a598936": {
+      "type": "text",
+      "source": "You are a help desk triage agent.",
+      "value": "您是一个帮助台分流智能体。"
+    },
+    "text.0d5e75ab410b": {
+      "type": "text",
+      "source": "Emits the triage schema through response_format. extractJson handles fenced or reasoning-channel JSON.",
+      "value": "通过 response_format 生成分流 schema。extractJson 可处理代码围栏或推理通道中的 JSON。"
+    },
+    "text.0e47a37afc94": {
+      "type": "text",
+      "source": "searches concurrently in",
+      "value": "项搜索，耗时"
+    },
+    "text.0e97879787b6": {
+      "type": "text",
+      "source": "Three specialists · wall clock vs serial total",
+      "value": "三位专家 · 实际耗时与串行总耗时对比"
+    },
+    "text.0f916789d300": {
+      "type": "text",
+      "source": "triage",
+      "value": "triage",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.115f18ada0b3": {
+      "type": "text",
+      "source": "createSpecialist",
+      "value": "createSpecialist",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.12037d0ff65d": {
+      "type": "text",
+      "source": " state.topic = \"How should an agent decide whether to call a tool?\";",
+      "value": " state.topic = \"How should an agent decide whether to call a tool?\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.13b19e6c7c17": {
+      "type": "text",
+      "source": "Planner (LLM, JSON schema)",
+      "value": "Planner（LLM，JSON schema）"
+    },
+    "text.14821c3b8a10": {
+      "type": "text",
+      "source": " Reading guide: the first block is the actual synthesis call. The rest converts the",
+      "value": " Reading guide: the first block is the actual synthesis call. The rest converts the",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.14a36170f964": {
+      "type": "text",
+      "source": "ReWOO writes the full plan before any tool runs, executes the steps without re-asking the model, then synthesizes once.",
+      "value": "ReWOO 在任何工具运行前写出完整计划，无需再次询问模型便可执行各个步骤，最后统一综合一次。"
+    },
+    "text.1605dd5aea92": {
+      "type": "text",
+      "source": "json_schema",
+      "value": "json_schema",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1605dd5aea92~1": {
+      "type": "text",
+      "source": "json_schema",
+      "value": "json_schema",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1631cc972051": {
+      "type": "text",
+      "source": " Send the prepared messages and stream the model response.",
+      "value": " Send the prepared messages and stream the model response.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1631cc972051~1": {
+      "type": "text",
+      "source": " Send the prepared messages and stream the model response.",
+      "value": " Send the prepared messages and stream the model response.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.16fae6c83604": {
+      "type": "text",
+      "source": "Route a ticket to a specialist",
+      "value": "将工单路由给专用智能体"
+    },
+    "text.183c5b703ec7": {
+      "type": "text",
+      "source": "Simple · non-technical reader",
+      "value": "简明版 · 非技术读者"
+    },
+    "text.1a35c7f4ea7c": {
+      "type": "text",
+      "source": "Plots each specialist's duration against the shared wall-clock window to show the concurrency gain.",
+      "value": "将每位专家的处理时长与共享的实际计时窗口进行对比，以展示并发带来的加速效果。"
+    },
+    "text.1af2eebe6e52": {
+      "type": "text",
+      "source": " TODO: Try a billing or account-access ticket and watch the route change.",
+      "value": " TODO: Try a billing or account-access ticket and watch the route change.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1e039f8d613c": {
+      "type": "text",
+      "source": " TODO: Give both specialists a new translation-and-arithmetic request.",
+      "value": " TODO: Give both specialists a new translation-and-arithmetic request.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1e89109d306a": {
+      "type": "text",
+      "source": "GOAL",
+      "value": "GOAL",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1fbe05d6177d": {
+      "type": "text",
+      "source": "PLANNER",
+      "value": "PLANNER",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.220dc01cde8a": {
+      "type": "text",
+      "source": "The research goal that drives the entire pipeline. Edit it and rerun to see how the planner generates a different set of queries and the synthesizer produces a different brief.",
+      "value": "驱动整个工作流的研究目标。编辑该目标并重新运行，观察 planner 如何生成一组不同的查询，以及综合器如何生成不同的简报。"
+    },
+    "text.22bca3061c25": {
+      "type": "text",
+      "source": "You are explaining to a non-technical reader. No jargon, one concrete analogy. 2-3 sentences.",
+      "value": "解释对象是非技术读者。不要使用术语，并采用一个具体的类比。用 2-3 句话作答。"
+    },
+    "text.233adff3ede0": {
+      "type": "text",
+      "source": "Running a ReWOO pipeline against the NVIDIA glossary",
+      "value": "针对 NVIDIA 术语表运行 ReWOO 工作流"
+    },
+    "text.2380b4d5d4d8": {
+      "type": "text",
+      "source": "Technical · ML engineer",
+      "value": "技术版 · ML 工程师"
+    },
+    "text.23d611a6f6f8": {
+      "type": "text",
+      "source": "topic",
+      "value": "topic",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.241932906782": {
+      "type": "text",
+      "source": "search",
+      "value": "search",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.244b84350614": {
+      "type": "text",
+      "source": "planner",
+      "value": "planner",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.244b84350614~1": {
+      "type": "text",
+      "source": "planner",
+      "value": "planner",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.244b84350614~2": {
+      "type": "text",
+      "source": "planner",
+      "value": "planner",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.245843abef9e": {
+      "type": "text",
+      "source": "[",
+      "value": "[",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.245843abef9e~1": {
+      "type": "text",
+      "source": "[",
+      "value": "[",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2561e2e3272b": {
+      "type": "text",
+      "source": "Build specialists from a factory",
+      "value": "使用工厂函数构建专家"
+    },
+    "text.25b0f3fc616f": {
+      "type": "text",
+      "source": "Classify the ticket into one category: network, hardware, software, or account.",
+      "value": "将工单归入以下一个类别：网络、硬件、软件或账号。"
+    },
+    "text.26787dd2f72c": {
+      "type": "text",
+      "source": "hardware",
+      "value": "hardware",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2714a4eb7a98": {
+      "type": "text",
+      "source": "search ",
+      "value": "搜索 "
+    },
+    "text.2799534b4c4f": {
+      "type": "text",
+      "source": "Module 2b: The Index Agent →",
+      "value": "模块 2b：索引智能体 →"
+    },
+    "text.28391d3bc64e": {
+      "type": "text",
+      "source": "of",
+      "value": "共"
+    },
+    "text.2958d416d08a": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2958d416d08a~1": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2d711642b726": {
+      "type": "text",
+      "source": "x",
+      "value": "x",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2dc2a76d2796": {
+      "type": "text",
+      "source": "Runs both specialists concurrently and renders their replies side by side. Differences trace to their prompts.",
+      "value": "并发运行两位专家，并将其回复并排呈现。回复差异源自各自的提示词。"
+    },
+    "text.3009be769fb8": {
+      "type": "text",
+      "source": "network",
+      "value": "network",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.306aec0937fe": {
+      "type": "text",
+      "source": "factory ready: createSpecialist({ role, systemPrompt, tools })",
+      "value": "工厂已就绪：createSpecialist({ role, systemPrompt, tools })"
+    },
+    "text.3092a5f0dba0": {
+      "type": "text",
+      "source": "priority",
+      "value": "priority",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3101f8d7ec67": {
+      "type": "text",
+      "source": "Runs every planned search concurrently with Promise.all. Wall time follows the slowest query instead of their sum.",
+      "value": "使用 Promise.all 并发运行所有规划的搜索。总耗时取决于最慢的查询，而不是各项查询耗时之和。"
+    },
+    "text.35390f5453e8": {
+      "type": "text",
+      "source": "software",
+      "value": "software",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.355a60db480c": {
+      "type": "text",
+      "source": "Module 2 · Part A of 3",
+      "value": "模块 2 · 第 1 部分，共 3 部分"
+    },
+    "text.36862ff11c8b": {
+      "type": "text",
+      "source": "Dispatches three prompted specialists with Promise.all. Total wall time follows the slowest response.",
+      "value": "使用 Promise.all 调度三位采用不同提示词的专家。总实际耗时取决于最慢的响应。"
+    },
+    "text.38350eb278fb": {
+      "type": "text",
+      "source": "Defines a factory over role, system prompt, and tools. Each returned specialist shares the same run loop.",
+      "value": "定义一个接收角色、系统提示词和工具的工厂函数。它返回的每位专家都共用同一个运行循环。"
+    },
+    "text.39617394a19c": {
+      "type": "text",
+      "source": " Draw worker, serial-total, wall-clock, and speedup bars from the same timings.",
+      "value": " Draw worker, serial-total, wall-clock, and speedup bars from the same timings.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3c60b978597c": {
+      "type": "text",
+      "source": " returns a category word, then calls the matching specialist. Edit the routes and rerun.",
+      "value": " returns a category word, then calls the matching specialist. Edit the routes and rerun.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3d0da3b142d1": {
+      "type": "text",
+      "source": "You are an account specialist. Answer login, profile, and security questions.",
+      "value": "您是一位账号专家。请回答登录、个人资料和安全问题。"
+    },
+    "text.3d3d17f38da2": {
+      "type": "text",
+      "source": "The triage router has a fixed enum of categories. What should the\n        router do if the model emits a category that is not in the enum? Is the JSON\n        schema enough by itself, or do you also need application-side validation?",
+      "value": "分流路由使用固定的类别枚举。如果模型生成的类别不在枚举中，路由应如何处理？仅靠 JSON schema 是否足够，还是还需要应用端验证？"
+    },
+    "text.3dd649e25c5a": {
+      "type": "text",
+      "source": " TODO: Ask a new topic and compare how each specialist frames it.",
+      "value": " TODO: Ask a new topic and compare how each specialist frames it.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3ebc4c9edf97": {
+      "type": "text",
+      "source": "Uses response_format to produce a topic and three to five search queries that the executor can iterate without free-text parsing.",
+      "value": "使用 response_format 生成一个主题和三至五个搜索查询，执行器无需解析自由文本即可迭代这些查询。"
+    },
+    "text.3f95ac878eb2": {
+      "type": "text",
+      "source": "REACTIVE · STEP-BY-STEP",
+      "value": "响应式 · STEP-BY-STEP"
+    },
+    "text.4128b8244171": {
+      "type": "text",
+      "source": " The N search queries become N tool nodes in one grid row; the planner fans out to each, each fans back into the synthesizer.",
+      "value": " The N search queries become N tool nodes in one grid row; the planner fans out to each, each fans back into the synthesizer.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.4285d23d69c3": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.43113562c2e4": {
+      "type": "text",
+      "source": "#router-artifact",
+      "value": "#router-artifact",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4727ee31216c": {
+      "type": "text",
+      "source": "Constrains triage to category, priority, and summary. The category enum gives the router a deterministic key.",
+      "value": "将分流输出限制为 category、priority 和 summary。category 枚举为路由提供确定性的键。"
+    },
+    "text.473287f8298d": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.473287f8298d~1": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.473287f8298d~2": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.473287f8298d~3": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.473287f8298d~4": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.49f5f0be58c8": {
+      "type": "text",
+      "source": "Assign priority and restate the problem in one line.",
+      "value": "确定优先级，并用一行重新表述问题。"
+    },
+    "text.4b89d17886e1": {
+      "type": "text",
+      "source": " queries",
+      "value": " 个查询"
+    },
+    "text.4c7eb49524a4": {
+      "type": "text",
+      "source": "built 2 specialists ·",
+      "value": "已构建 2 位专家 ·"
+    },
+    "text.4d15db29714e": {
+      "type": "text",
+      "source": "You translate the user's input from any language into French,",
+      "value": "请将用户以任意语言提供的输入翻译成法语，"
+    },
+    "text.4ef04778d828": {
+      "type": "text",
+      "source": "Synthesize and show the pipeline",
+      "value": "综合并显示工作流"
+    },
+    "text.4f1c1bb6d7a3": {
+      "type": "text",
+      "source": "\n    Each of the four exercises above built a small agent by hand from the same few\n    pieces of boilerplate that production code should never have to retype for every new\n    specialist. Those pieces are a role label, a system prompt, a tool list, and an\n    invocation. The factory pattern parameterises those four moving parts, so you declare\n    specialists instead of writing them:\n  ",
+      "value": "\n    上述四项练习都使用相同的几段样板代码手动构建了一个小型智能体，而生产代码不应在每次新增专用智能体时都重复编写这些内容。它们包括角色标签、系统提示词、工具列表和调用方式。工厂模式将这四个可变部分参数化，使您只需声明专用智能体，无需逐个编写：\n  "
+    },
+    "text.502bdd68cc7e": {
+      "type": "text",
+      "source": " state.ticket = \"I was charged twice for the same subscription this month.\";",
+      "value": " state.ticket = \"I was charged twice for the same subscription this month.\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.50436a2b01d3": {
+      "type": "text",
+      "source": "I want a refund for last month's subscription",
+      "value": "我想退回上个月的订阅费用"
+    },
+    "text.5555b3120209": {
+      "type": "text",
+      "source": " Show structured search hits so [search N] citations can be checked.",
+      "value": " Show structured search hits so [search N] citations can be checked.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.555ec7a6a82b": {
+      "type": "text",
+      "source": " Share one search across specialists so their claims trace to the same sources.",
+      "value": " Share one search across specialists so their claims trace to the same sources.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.569738d708d1": {
+      "type": "text",
+      "source": " Fetch evidence the specialists will use for grounded answers.",
+      "value": " Fetch evidence the specialists will use for grounded answers.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.588da4105320": {
+      "type": "text",
+      "source": " · ",
+      "value": " · ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.5a0ebe52fcca": {
+      "type": "text",
+      "source": "Specialist (LLM)",
+      "value": "专家（LLM）"
+    },
+    "text.5c65f78e4eb1": {
+      "type": "text",
+      "source": "\n    Two LLM calls total, plus N parallel glossary searches. Edit the research goal and\n    watch the planner's query list change.\n  ",
+      "value": "\n    总共进行两次 LLM 调用，外加 N 次并行术语表搜索。编辑研究目标，观察 planner 的查询列表如何变化。\n  "
+    },
+    "text.5c97bdfd9e48": {
+      "type": "text",
+      "source": " Compare the routed work against a serial baseline.",
+      "value": " Compare the routed work against a serial baseline.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.5cd5f84e9aa2": {
+      "type": "text",
+      "source": "⚠ search service unreachable for",
+      "value": "⚠ 以下搜索的服务无法访问："
+    },
+    "text.5d5cf3c0b48d": {
+      "type": "text",
+      "source": "1 LLM call · reads all ",
+      "value": "1 次 LLM 调用 · 读取全部 "
+    },
+    "text.5d7d08b35871": {
+      "type": "text",
+      "source": "Three specialists · Promise.all",
+      "value": "三位专家 · Promise.all"
+    },
+    "text.5ff0f3bacd3b": {
+      "type": "text",
+      "source": "\n      The harness can scope a workflow around a model call, a deterministic step,\n      a specialist loop, or a group of parallel branches. At each boundary, it decides\n      what context crosses, what can branch, and which results feed the next pipeline\n      stage. Fan-out and fixed routing make that control visible without replacing the\n      ReAct loop from the previous page.\n    ",
+      "value": "\n      执行框架可以围绕一次模型调用、一个确定性步骤、一个专家循环或一组并行分支界定工作流范围。在每个边界处，执行框架都会决定哪些上下文可以跨越边界、哪些部分可以分支，以及哪些结果将传入工作流的下一阶段。扇出和固定路由让这种控制清晰可见，同时保留上一页介绍的\n      ReAct 循环。\n    "
+    },
+    "text.61c44a623fcf": {
+      "type": "text",
+      "source": " state.input = \"Translate 'the square root of one hundred forty-four' and solve it.\";",
+      "value": " state.input = \"Translate 'the square root of one hundred forty-four' and solve it.\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.61e606079cdf": {
+      "type": "text",
+      "source": " This is the Try-it artifact. Each turn is two calls: one classify call that",
+      "value": " This is the Try-it artifact. Each turn is two calls: one classify call that",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.61f640b4ff46": {
+      "type": "text",
+      "source": " Instantiate one specialist with its own role, prompt, and tools.",
+      "value": " Instantiate one specialist with its own role, prompt, and tools.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.62e1a2707bb3": {
+      "type": "text",
+      "source": "The support ticket the triage agent will classify. Edit it to try different problem types and watch the router pick a different specialist each time.",
+      "value": "由分流智能体分类的支持工单。编辑工单以尝试不同的问题类型，并观察路由每次如何选择不同的专用智能体。"
+    },
+    "text.6336a21beff7": {
+      "type": "text",
+      "source": "input:",
+      "value": "输入："
+    },
+    "text.63f9ff4a3131": {
+      "type": "text",
+      "source": "billing = payments, charges, double charges, refunds, invoices, subscriptions",
+      "value": "账单 = 付款、扣款、重复扣款、退款、发票、订阅"
+    },
+    "text.650f0800373b": {
+      "type": "text",
+      "source": "You are a research planner.",
+      "value": "您是一位研究 planner。"
+    },
+    "text.67a5bdf2a82d": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents",
+      "value": "NVIDIA · 安全智能体"
+    },
+    "text.680694f37af1": {
+      "type": "text",
+      "source": "rendered below. Edit the config and Run.",
+      "value": "结果呈现在下方。编辑配置后，点击“运行”。"
+    },
+    "text.6849f140c10c": {
+      "type": "text",
+      "source": " Call the model and time the routed response.",
+      "value": " Call the model and time the routed response.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.69824d3b0e70": {
+      "type": "text",
+      "source": "References",
+      "value": "参考资料"
+    },
+    "text.6ae72180788e": {
+      "type": "text",
+      "source": "\n    Ask a support question and the artifact classifies it into one category with a\n    single model call before it routes that ticket to the matching specialist's system\n    prompt and streams the answer back in that voice. It runs the same\n    classify-then-specialist pattern shown above. The categories here are a\n    customer-support set rather than the IT help-desk enum. Its four values are billing,\n    technical, account, and other. Only the category list changes when the domain\n    changes, while the routing mechanism underneath stays identical.\n  ",
+      "value": "\n    提出一个支持问题后，该交互组件会先通过一次模型调用将其归入一个类别，再将该工单路由到匹配的专用智能体系统提示词，并以该智能体的口吻流式返回答案。它运行的正是上面所示的“先分类、后交给专用智能体”模式。这里使用客户支持类别，而非 IT 服务台枚举。四个值分别是 billing、technical、账号和其它。更换领域时，只有类别列表会变化，底层路由机制保持不变。\n  "
+    },
+    "text.6c1ff09db3a7": {
+      "type": "text",
+      "source": "low",
+      "value": "low",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.6c4124af1250": {
+      "type": "text",
+      "source": " hits",
+      "value": " 条结果"
+    },
+    "text.6e60e97688d3": {
+      "type": "text",
+      "source": " Build a node/edge spec from the plan the planner emitted, then let helpers.viz.diagram lay it out and theme it.",
+      "value": " Build a node/edge spec from the plan the planner emitted, then let helpers.viz.diagram lay it out and theme it.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.6ef7c9b15ecd": {
+      "type": "text",
+      "source": "high",
+      "value": "high",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.75d1a90c8570": {
+      "type": "text",
+      "source": "arithmetician",
+      "value": "arithmetician",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.761b7ad8ad43": {
+      "type": "text",
+      "source": "summary",
+      "value": "summary",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.7842309c9c36": {
+      "type": "text",
+      "source": "See the Gantt chart in the cell's log area: three bars (specialists) inside a dashed wall-clock window.",
+      "value": "请查看单元格日志区域中的甘特图：虚线实际耗时窗口内有三个条形，分别代表三位专家。"
+    },
+    "text.78d858c9dce6": {
+      "type": "text",
+      "source": "You are explaining to an ML engineer. Use precise terms (embedding, sinusoidal, rotary). 2-3 sentences.",
+      "value": "解释对象是 ML 工程师。请使用嵌入、正弦、旋转等精确术语。用 2-3 句话作答。"
+    },
+    "text.79372ec90883": {
+      "type": "text",
+      "source": "Decompose the goal into 3-5 short, complementary search queries over the NVIDIA glossary.",
+      "value": "围绕 NVIDIA 术语表，将目标分解为 3–5 个简短且互补的搜索查询。"
+    },
+    "text.7a1d010e7657": {
+      "type": "text",
+      "source": "The factory function takes (role, systemPrompt, tools) and returns a callable specialist, and two specialists built from it run on the same input.",
+      "value": "工厂函数接收 (role, systemPrompt, tools) 并返回可调用的专家，再让由它构建的两位专家处理同一个输入。"
+    },
+    "text.7a297aa8246b": {
+      "type": "text",
+      "source": "Translate 'thirty-seven times eleven' and then evaluate the arithmetic.",
+      "value": "翻译“thirty-seven times eleven”，然后计算该算式。"
+    },
+    "text.7bdd6103bbef": {
+      "type": "text",
+      "source": "account = login, password, profile, security, access",
+      "value": "账号 = 登录、密码、个人资料、安全、访问权限"
+    },
+    "text.7bf868b18299": {
+      "type": "text",
+      "source": "You are a general assistant. Answer the question helpfully and briefly.",
+      "value": "您是一位通用助手。请简洁且有帮助地回答问题。"
+    },
+    "text.7c9bbe5ec9b3": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.7cc78ea0b230": {
+      "type": "text",
+      "source": "ReAct interleaves a reasoning step with each tool call, reacting to every observation before deciding the next move.",
+      "value": "ReAct 在每次工具调用之间穿插一个推理步骤，先对每项观察结果作出响应，再决定下一步行动。"
+    },
+    "text.7d826b4fd46c": {
+      "type": "text",
+      "source": "You are a critic. Name one thing the sources leave out or oversimplify. 2-3 sentences.",
+      "value": "您是一位批评者。请指出来源遗漏或过度简化的一点。用 2-3 句话作答。"
+    },
+    "text.7e45c0bb247a": {
+      "type": "text",
+      "source": "You are a network support specialist. Give 3-5 concise, numbered troubleshooting steps for the network issue.",
+      "value": "您是网络支持专家。请针对网络问题给出 3-5 个简洁的编号故障排查步骤。"
+    },
+    "text.7e61847d61d6": {
+      "type": "text",
+      "source": "Topic",
+      "value": "主题"
+    },
+    "text.801d27873126": {
+      "type": "text",
+      "source": "\n    That tax is fixed regardless of the task, so the question becomes whether the work\n    returns enough to cover it. A linear job that one prompt already handles will never\n    recoup the extra calls and the routing logic that they require. The split begins to\n    earn its keep only once the task itself carries the kind of structure that a single\n    loop has no choice but to flatten down into one timeline. Any one of the conditions\n    below makes the trade pay off.\n  ",
+      "value": "\n    无论任务是什么，这项开销都是固定的，因此关键在于工作收益能否覆盖它。对于一个提示词就能处理的线性任务，额外调用及其所需的路由逻辑永远无法收回成本。只有当任务本身具备某种结构，而单一循环只能被迫将其压缩为一条时间线时，拆分才开始体现价值。只要满足以下任一条件，这项权衡就值得。\n  "
+    },
+    "text.821ca15e7360": {
+      "type": "text",
+      "source": "You are an account support specialist. Give 3-5 clear, numbered steps for account access and permission issues.",
+      "value": "您是账号支持专家。请针对账号访问和权限问题给出 3-5 个清晰的编号步骤。"
+    },
+    "text.82e2ab7b2ce9": {
+      "type": "text",
+      "source": "could not parse triage JSON; would fall back to a catch-all in production",
+      "value": "无法解析分流结果 JSON；在生产环境中将回退到兜底处理"
+    },
+    "text.8342cf28bab7": {
+      "type": "text",
+      "source": "The API returns 500 errors since this morning",
+      "value": "API 从今天早上开始返回 500 错误"
+    },
+    "text.867e503568b7": {
+      "type": "text",
+      "source": "You are a software support specialist. Give 3-5 concise, numbered steps to resolve the software issue.",
+      "value": "您是软件支持专家。请给出 3-5 个简洁的编号步骤来解决软件问题。"
+    },
+    "text.877428968433": {
+      "type": "text",
+      "source": "\n    Without independent workstreams, the coordination overhead of multi-agent\n    composition buys nothing, and one plain loop stays faster and easier\n    to debug.\n  ",
+      "value": "\n    如果没有独立工作流，组合多个智能体所产生的协调开销便不会带来任何收益，而一个普通循环反而更快、更易调试。\n  "
+    },
+    "text.88453f8fc3b5": {
+      "type": "text",
+      "source": "other = anything that fits none of the above",
+      "value": "其它 = 不属于以上任何类别的内容"
+    },
+    "text.8935b10f056e": {
+      "type": "text",
+      "source": "translator",
+      "value": "translator",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.898702fa218d": {
+      "type": "text",
+      "source": "the Try-it artifact, in code",
+      "value": "“动手试试”练习代码"
+    },
+    "text.8a5b3f9d8d16": {
+      "type": "text",
+      "source": "then back into the original language.",
+      "value": "然后再译回原始语言。"
+    },
+    "text.8c76984e15a8": {
+      "type": "text",
+      "source": " state.input = \"Evaluate twenty-five times sixteen, then translate the result into French.\";",
+      "value": " state.input = \"Evaluate twenty-five times sixteen, then translate the result into French.\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.9142243f55fb": {
+      "type": "text",
+      "source": " Define the planner output shape the model must fill in.",
+      "value": " Define the planner output shape the model must fill in.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.93582e9b8c9c": {
+      "type": "text",
+      "source": "Declaring specialists from a factory instead of hand-writing each",
+      "value": "通过工厂声明专用智能体，无需逐个手动编写"
+    },
+    "text.97e288557af0": {
+      "type": "text",
+      "source": "Fanning one shared input out to specialists at once",
+      "value": "将一个共享输入同时分发给多个专用智能体"
+    },
+    "text.999e210a2cca": {
+      "type": "text",
+      "source": "You are a research synthesizer. Write a 4-6 sentence brief grounded in the sources. Cite as [search N] when referencing a result.",
+      "value": "您是一名研究综合分析员。请根据提供的来源撰写一份 4-6 句的简报。引用搜索结果时，请使用 [search N] 格式。"
+    },
+    "text.9af211329b2f": {
+      "type": "text",
+      "source": "account",
+      "value": "账号"
+    },
+    "text.9bf4925aa80f": {
+      "type": "text",
+      "source": "Same factory · two instances · same input",
+      "value": "同一工厂 · 两个实例 · 相同输入"
+    },
+    "text.9d7de0441056": {
+      "type": "text",
+      "source": "Nemotron Super 120B · stronger",
+      "value": "Nemotron Super 120B · stronger",
+      "untranslated": "Model selector display label; preserve the complete label in English"
+    },
+    "text.9f16e67822a5": {
+      "type": "text",
+      "source": "Creates two specialists from one factory with different role labels and system prompts.",
+      "value": "使用同一个工厂函数创建两位专家，并为其设置不同的角色标签和系统提示词。"
+    },
+    "text.9f553bfd8935": {
+      "type": "text",
+      "source": "DELIBERATIVE · PLAN-THEN-EXECUTE",
+      "value": "审慎规划式 · PLAN-THEN-执行"
+    },
+    "text.a137f17a19a0": {
+      "type": "text",
+      "source": "·",
+      "value": "·",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a173dda5b621": {
+      "type": "text",
+      "source": "The app crashes every time I log in",
+      "value": "我每次登录时，应用都会崩溃"
+    },
+    "text.a295720643da": {
+      "type": "text",
+      "source": " TODO: Change the research goal and watch the planner rewrite its queries.",
+      "value": " TODO: Change the research goal and watch the planner rewrite its queries.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.a55be589cdb0": {
+      "type": "text",
+      "source": "Plan parallel glossary research",
+      "value": "规划并行术语表研究"
+    },
+    "text.a79a71b58afe": {
+      "type": "text",
+      "source": "Before you continue",
+      "value": "继续学习之前"
+    },
+    "text.a96156020752": {
+      "type": "text",
+      "source": "The factory exercise parameterises four things (role, system prompt, tools,\n        invoke). What would you add as a fifth parameter to prevent a specialist from\n        drifting into another specialist's domain when the input is ambiguous?",
+      "value": "工厂练习将四项内容参数化（角色、系统提示词、工具和调用方式）。为了防止专用智能体在输入含义模糊时偏离自身领域，您会添加什么作为第五个参数？"
+    },
+    "text.a9eecd20cb9e": {
+      "type": "text",
+      "source": "Reads the search results and writes the brief. Expand the code to inspect the pipeline diagram data.",
+      "value": "读取搜索结果并撰写简报。展开代码可检查工作流图的数据。"
+    },
+    "text.aad126e2d5a0": {
+      "type": "text",
+      "source": "Build two specialists",
+      "value": "构建两位专家"
+    },
+    "text.ab0d1732fbeb": {
+      "type": "text",
+      "source": "Maps the category to a specialist system prompt with plain JavaScript, making the route deterministic.",
+      "value": "使用纯 JavaScript 将类别映射到专家系统提示词，使路由具有确定性。"
+    },
+    "text.b05c31fd68a8": {
+      "type": "text",
+      "source": "1 LLM call · ",
+      "value": "1 次 LLM 调用 · "
+    },
+    "text.b087638b7406": {
+      "type": "text",
+      "source": "How do retrieval-augmented generation, vector databases, and AI agents fit together?",
+      "value": "检索增强生成、向量数据库和 AI 智能体如何协同工作？"
+    },
+    "text.b22c88b9d7fe": {
+      "type": "text",
+      "source": " mountChatUI renders the panel; respond() makes one classify call and one answer call. ",
+      "value": " mountChatUI renders the panel; respond() makes one classify call and one answer call. ",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.b2512ec5f9d1": {
+      "type": "text",
+      "source": "technical = errors, bugs, setup, configuration, how-to",
+      "value": "技术 = 错误、缺陷、设置、配置、操作方法"
+    },
+    "text.b2a7383fe3bd": {
+      "type": "text",
+      "source": "classifier replied: ",
+      "value": "分类器回复："
+    },
+    "text.b358631a69c0": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-super-120b-a12b",
+      "value": "nvidia/nemotron-3-super-120b-a12b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b4935894c8ce": {
+      "type": "text",
+      "source": "…",
+      "value": "…",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b4935894c8ce~1": {
+      "type": "text",
+      "source": "…",
+      "value": "…",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b4935894c8ce~2": {
+      "type": "text",
+      "source": "…",
+      "value": "…",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b541e7e34c44": {
+      "type": "text",
+      "source": " state.goal = \"How do evaluation methods differ for retrieval and generation?\";",
+      "value": " state.goal = \"How do evaluation methods differ for retrieval and generation?\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.b57eba53ae86": {
+      "type": "text",
+      "source": "A schema-bound first LLM call emits {category, priority, summary}, a plain-JS router selects a specialist system prompt from the category, and a second LLM call writes the response under that prompt.",
+      "value": "第一次受 schema 约束的 LLM 调用会生成 {category, priority, summary}；一个纯 JS 路由根据类别选择专用智能体的系统提示词；第二次 LLM 调用则依据该提示词撰写回复。"
+    },
+    "text.b5d4bbd6fd21": {
+      "type": "text",
+      "source": "You are a technical support engineer. Answer setup, error, and how-to questions with concrete steps.",
+      "value": "您是一位技术支持工程师。请通过具体步骤回答设置、错误和操作方法问题。"
+    },
+    "text.b5e96206461a": {
+      "type": "text",
+      "source": "How do I reset my password?",
+      "value": "如何重置密码？"
+    },
+    "text.b687f6c60cf0": {
+      "type": "text",
+      "source": "Ask a support question (billing, a technical error, your account…). I classify it, route it to a specialist, and answer in that voice. Follow-ups keep the conversation; the 🧠 toggle clears it, and ✎ edit rewinds.",
+      "value": "请提出一个支持问题（账单、技术错误、账号等）。我会对问题进行分类，将其路由给相应专家，并以该专家的口吻回答。后续问题会保留对话上下文；🧠 开关可清除对话，✎ 编辑可回退。"
+    },
+    "text.b6de47c69bfb": {
+      "type": "text",
+      "source": " nano reasons first; give it room to reach the word",
+      "value": " nano reasons first; give it room to reach the word",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.b75168ee3470": {
+      "type": "text",
+      "source": "Refuse non-translation requests politely.",
+      "value": "请礼貌拒绝非翻译请求。"
+    },
+    "text.b77349bf1fa9": {
+      "type": "text",
+      "source": "env",
+      "value": "env",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b7dd387e54f2": {
+      "type": "text",
+      "source": "← Module 1c: Tools at Scale",
+      "value": "← 模块 1c：规模化使用工具"
+    },
+    "text.b8798fe6a4ef": {
+      "type": "text",
+      "source": "ReAct (reasoning and action)",
+      "value": "ReAct（推理与行动）"
+    },
+    "text.bbc5e661e106": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~1": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~2": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~3": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~4": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~5": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~6": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~7": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbca6d86a57e": {
+      "type": "text",
+      "source": "\n    The ReWOO pipeline was parallel by construction, since every query it planned ran\n    concurrently against the glossary. A more common parallel pattern fans one shared\n    input out to several specialists that each carry their own system prompt and all run\n    at once. In the trace, total wall time tracks the slowest specialist while the others\n    overlap inside that window, the Gantt chart shows each specialist's duration, and all\n    specialists share one web-search result so cost stays bounded.\n  ",
+      "value": "\n    ReWOO 工作流在设计上就是并行的，因为它规划的每个查询都会针对术语表并发运行。另一种更常见的并行模式是将一个共享输入分发给多个专用智能体；每个智能体都有自己的系统提示词，并且全部同时运行。在执行轨迹中，总耗时取决于最慢的专用智能体，其它智能体则在这段时间内重叠运行。甘特图会显示每个专用智能体的运行时长，并且所有智能体共享一项网络搜索结果，从而将成本控制在一定范围内。\n  "
+    },
+    "text.bc19985b027b": {
+      "type": "text",
+      "source": "Triage schema",
+      "value": "分流 schema"
+    },
+    "text.bcdee84da1b5": {
+      "type": "text",
+      "source": "Routing a ticket to one specialist with a fixed enum",
+      "value": "使用固定枚举将工单路由给一个专用智能体"
+    },
+    "text.bfd96dc998d2": {
+      "type": "text",
+      "source": "routed → ",
+      "value": "已路由至 → "
+    },
+    "text.c082456a7766": {
+      "type": "text",
+      "source": "medium",
+      "value": "medium",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c1a8b03656c3": {
+      "type": "text",
+      "source": "A single shared search result fans out to three specialists with different system prompts that Promise.all dispatches concurrently, so the total wall time tracks the slowest specialist rather than the sum.",
+      "value": "一份共享搜索结果会分发给三位使用不同系统提示词的专家，并由 Promise.all 并发调度，因此总实际耗时取决于最慢的专家，而不是三者耗时之和。"
+    },
+    "text.c1d354aaf41c": {
+      "type": "text",
+      "source": "You are a billing specialist. Answer only billing, payment, and refund questions, crisply.",
+      "value": "您是一位账单专家。仅简洁回答账单、付款和退款问题。"
+    },
+    "text.c6d2e406d1e8": {
+      "type": "text",
+      "source": "topic = ",
+      "value": "主题 = "
+    },
+    "text.c76159a1edb6": {
+      "type": "text",
+      "source": "searches",
+      "value": "搜索结果"
+    },
+    "text.c7d0e4eb26d4": {
+      "type": "text",
+      "source": "Return JSON matching the schema.",
+      "value": "返回符合该架构的 JSON。"
+    },
+    "text.c8fc6bf296fa": {
+      "type": "text",
+      "source": "ran",
+      "value": "并发执行了"
+    },
+    "text.ca9c9a548948": {
+      "type": "text",
+      "source": "How do I update my email address?",
+      "value": "如何更新我的电子邮件地址？"
+    },
+    "text.cf558e09195f": {
+      "type": "text",
+      "source": "The ReWOO planner above emits a JSON list of queries. What is the failure\n        mode if a later query needs a fact from an earlier query's result? Which of\n        the two patterns from the top of this page do you switch to?",
+      "value": "上面的 ReWOO planner 会生成一个包含查询的 JSON 列表。如果后续查询需要使用前一项查询结果中的事实，会出现什么故障模式？您应切换到本页开头介绍的哪一种模式？"
+    },
+    "text.cfae0d4248f7": {
+      "type": "text",
+      "source": "]",
+      "value": "]",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.cfae0d4248f7~1": {
+      "type": "text",
+      "source": "]",
+      "value": "]",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.cfc481df132d": {
+      "type": "text",
+      "source": "Triage (LLM)",
+      "value": "分流（LLM）"
+    },
+    "text.d039afd40b5c": {
+      "type": "text",
+      "source": " Build one reusable specialist wrapper around a prompt and tools.",
+      "value": " Build one reusable specialist wrapper around a prompt and tools.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.d039afd40b5c~1": {
+      "type": "text",
+      "source": " Build one reusable specialist wrapper around a prompt and tools.",
+      "value": " Build one reusable specialist wrapper around a prompt and tools.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.d1d1f87cfab9": {
+      "type": "text",
+      "source": "Executor (parallel searches)",
+      "value": "执行器（并行搜索）"
+    },
+    "text.d29a0939bcb5": {
+      "type": "text",
+      "source": "(empty)",
+      "value": "（空）"
+    },
+    "text.d29a0939bcb5~1": {
+      "type": "text",
+      "source": "(empty)",
+      "value": "（空）"
+    },
+    "text.d29a0939bcb5~2": {
+      "type": "text",
+      "source": "(empty)",
+      "value": "（空）"
+    },
+    "text.d29a0939bcb5~3": {
+      "type": "text",
+      "source": "(empty)",
+      "value": "（空）"
+    },
+    "text.d463bf3e87a9": {
+      "type": "text",
+      "source": "Research goal",
+      "value": "研究目标"
+    },
+    "text.d4e8d0476113": {
+      "type": "text",
+      "source": "research_plan",
+      "value": "research_plan",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d4f0bc5a29de": {
+      "type": "text",
+      "source": "agent",
+      "value": "agent",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d4f0bc5a29de~1": {
+      "type": "text",
+      "source": "agent",
+      "value": "agent",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d5ef29a8b1ac": {
+      "type": "text",
+      "source": "Runs one web search and shares its results with every specialist, avoiding repeated retrieval cost.",
+      "value": "执行一次网络搜索，并与所有专家共享结果，避免产生重复的检索成本。"
+    },
+    "text.d9298a10d1b0": {
+      "type": "text",
+      "source": "other",
+      "value": "其它"
+    },
+    "text.da4b0fab8709": {
+      "type": "text",
+      "source": " state.goal = \"When should an agent use a tool instead of answer directly?\";",
+      "value": " state.goal = \"When should an agent use a tool instead of answer directly?\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.da5454a617a3": {
+      "type": "text",
+      "source": "queries; check your network connection and try again",
+      "value": "个查询；请检查网络连接后重试"
+    },
+    "text.dbe42cc09c16": {
+      "type": "text",
+      "source": "array",
+      "value": "array",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e09f45652ea1": {
+      "type": "text",
+      "source": "\\\\n\\\\n",
+      "value": "\\\\n\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e20554b94353": {
+      "type": "text",
+      "source": "The four-value enum picks exactly one specialist to handle the request.",
+      "value": "包含四个值的枚举会准确选择一个专用智能体来处理请求。"
+    },
+    "text.e38afff99772": {
+      "type": "text",
+      "source": "User ticket",
+      "value": "用户工单"
+    },
+    "text.e5f6b0abc127": {
+      "type": "text",
+      "source": "Try it · the triage router, live",
+      "value": "动手尝试 · 实时分流路由"
+    },
+    "text.e72cc767e3b4": {
+      "type": "text",
+      "source": "Compare timing and speedup",
+      "value": "比较耗时和加速效果"
+    },
+    "text.e7a07c1eae34": {
+      "type": "text",
+      "source": " reasoning model: leave room to think AND emit the tool call / answer",
+      "value": " reasoning model: leave room to think AND emit the tool call / answer",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.e858c3e771d3": {
+      "type": "text",
+      "source": "You are a hardware support specialist. Give 3-5 concise, numbered troubleshooting steps for the hardware problem.",
+      "value": "您是硬件支持专家。请针对硬件问题给出 3-5 个简洁的编号故障排查步骤。"
+    },
+    "text.e8c3e4faa6b2": {
+      "type": "text",
+      "source": "synth",
+      "value": "synth",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e8c3e4faa6b2~1": {
+      "type": "text",
+      "source": "synth",
+      "value": "synth",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e96be62659b6": {
+      "type": "text",
+      "source": "SYNTHESIZER",
+      "value": "综合分析器"
+    },
+    "text.ea4f0d5cafdc": {
+      "type": "text",
+      "source": "writes the 4-6 sentence brief",
+      "value": "撰写 4-6 句的简报"
+    },
+    "text.eaec3b3a8fe9": {
+      "type": "text",
+      "source": "When a single loop beats splitting into agents",
+      "value": "单一循环何时优于拆分成多个智能体"
+    },
+    "text.eba693563181": {
+      "type": "text",
+      "source": "My laptop won't connect to the VPN. I've tried restarting and re-installing the client.",
+      "value": "我的笔记本电脑无法连接到 VPN。我已经尝试过重启并重新安装客户端。"
+    },
+    "text.edb2cd3b74c9": {
+      "type": "text",
+      "source": "category",
+      "value": "category",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ef0ae91fd3d5": {
+      "type": "text",
+      "source": "Why does the transformer architecture need positional encoding?",
+      "value": "为什么 transformer 架构需要位置编码？"
+    },
+    "text.efdb5576d726": {
+      "type": "text",
+      "source": "Nemotron Nano 30B · fast",
+      "value": "Nemotron Nano 30B · fast",
+      "untranslated": "Model selector display label; preserve the complete label in English"
+    },
+    "text.f09dcd5ff7ca": {
+      "type": "text",
+      "source": "Fan out one input to specialists",
+      "value": "将一个输入分发给多位专家"
+    },
+    "text.f1dd0c2de608": {
+      "type": "text",
+      "source": " state.ticket = \"My account is locked after I changed phones.\";",
+      "value": " state.ticket = \"My account is locked after I changed phones.\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.f4c048810f1e": {
+      "type": "text",
+      "source": "Two key patterns that differ in when the model decides",
+      "value": "两种关键模式的区别在于模型何时做出决定"
+    },
+    "text.f4f55e3b3287": {
+      "type": "text",
+      "source": "Sends one question to all specialists so their prompts are the only changing input.",
+      "value": "向所有专家发送同一个问题，使他们的提示词成为唯一变化的输入。"
+    },
+    "text.f50357d99f0c": {
+      "type": "text",
+      "source": "Workflows · Securing Agents",
+      "value": "工作流 · 安全智能体"
+    },
+    "text.f6919ddd48e5": {
+      "type": "text",
+      "source": "ReWOO (Reason Without Observation)",
+      "value": "ReWOO（无观察推理）"
+    },
+    "text.f74f2c4066a4": {
+      "type": "text",
+      "source": "Router (plain JS)",
+      "value": "路由（纯 JS）"
+    },
+    "text.f7ded0c36df9": {
+      "type": "text",
+      "source": "Define the factory",
+      "value": "定义工厂函数"
+    },
+    "text.f85c97c7f341": {
+      "type": "text",
+      "source": " Define the support-ticket routing fields the model must return.",
+      "value": " Define the support-ticket routing fields the model must return.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.fa24955a1723": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-nano-30b-a3b",
+      "value": "nvidia/nemotron-3-nano-30b-a3b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fa3b6e099f45": {
+      "type": "text",
+      "source": "Shared search (1 call)",
+      "value": "共享搜索 (1 次调用)"
+    },
+    "text.fae3a6315ff5": {
+      "type": "text",
+      "source": " state.topic = \"When is retrieval more useful than fine-tuning?\";",
+      "value": " state.topic = \"When is retrieval more useful than fine-tuning?\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.fec408d93201": {
+      "type": "text",
+      "source": "Classify the user's question into one category. Reply with only the category name.",
+      "value": "将用户的问题归入一个类别。仅回复类别名称。"
+    },
+    "text.fefbdfb9d2e0": {
+      "type": "text",
+      "source": "ReWOO writes the whole plan upfront, so every tool runs without re-asking the model and one synthesis call closes it out. Edit the goal in node 1 and rerun.",
+      "value": "ReWOO 会预先写出完整计划，因此所有工具都无需再次询问模型即可运行，最后通过一次综合调用完成任务。编辑节点 1 中的目标并重新运行。"
+    },
+    "text.ff10777bbfa3": {
+      "type": "text",
+      "source": "Run both on the same input",
+      "value": "让两位专家处理同一个输入"
+    },
+    "text.ff48d12b654b": {
+      "type": "text",
+      "source": "ReWOO pipeline from plan to synthesis",
+      "value": "从计划到综合分析的 ReWOO 工作流"
+    }
+  }
+}
