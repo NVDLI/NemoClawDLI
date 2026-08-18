@@ -242,13 +242,17 @@ export async function getConfig() {
 export async function getEmbeddingConfig() {
   /* @doc <code>helpers.getEmbeddingConfig()</code> ::
        Returns the persistent embedding <code>{ url, model }</code> route. It defaults to NVIDIA's
-       hosted API and does not change when a learner selects another chat endpoint. */
+       hosted API and does not change when a learner selects another chat endpoint. Published
+       course origins use the same bounded relay selection as chat; custom embedding endpoints
+       remain direct. */
+  const embeddingApiBaseUrl = getEmbeddingApiBaseUrl();
+  const useIframeProxy = iframeProxyModeEnabled() && embeddingApiBaseUrl === DEFAULT_MODEL_API_BASE_URL;
   return {
     mode: "direct",
-    url: getEmbeddingApiBaseUrl(),
+    url: useIframeProxy ? IFRAME_PROXY_URL : embeddingApiBaseUrl,
     model: getEmbeddingModelId(),
     needsKey: true,
-    iframeProxy: false,
+    iframeProxy: useIframeProxy,
   };
 }
 
