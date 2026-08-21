@@ -55,9 +55,10 @@ function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 async function checkViewport(page, width, height) {
   await page.setViewportSize({ width, height });
   await page.goto(`http://127.0.0.1:${port}${pagePath}`, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
-  await page.waitForSelector('#studio-frame', { timeout: timeoutMs });
+  await page.waitForSelector('#studio-frame', { state: 'attached', timeout: timeoutMs });
   await wait(350);
-  const result = await page.evaluate(() => {
+  const result = await page.evaluate(async () => {
+    const { sanitizeStudioPreview } = await import('/nemoclaw/scripts/studio_main.js');
     const fillList = (sel) => {
       const el = document.querySelector(sel);
       if (!el) return;
