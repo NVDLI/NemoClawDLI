@@ -28,7 +28,7 @@ from translate.locale_resources import (
     template_units,
     validate_values,
 )
-from translate.translate_html_segments import extract_segments
+from translate.translate_html_segments import extract_segments, normalize_zh_spacing
 
 HTML_LANG_RE = re.compile(r'(<html\b[^>]*\blang=["\'])[^"\']+(["\'])', re.I)
 
@@ -74,7 +74,15 @@ def extract_resource(source_raw: str, target_raw: str, locale: str, template: st
         if [item.kind for item in source_segments] != [item.kind for item in target_segments]:
             raise LocaleResourceError(
                 f"runnable comment/string delimiters differ at template {index}")
-        target_copy.extend(target_segments)
+        target_copy.extend(
+            source_segment
+            if (
+                locale.casefold().startswith("zh")
+                and source_segment.kind in {"code-line-comment", "code-block-comment"}
+            )
+            else target_segment
+            for source_segment, target_segment in zip(source_segments, target_segments)
+        )
     units = template_units(source_raw)
     reviewed = [segment.text for segment in translated] + [
         segment.text for segment in target_copy]
@@ -85,8 +93,20 @@ def extract_resource(source_raw: str, target_raw: str, locale: str, template: st
         )
     values: dict[str, dict[str, str]] = {}
     for unit, target_text in zip(units, reviewed):
+        if (
+            locale.casefold().startswith("zh")
+            and unit.kind in {"code-line-comment", "code-block-comment"}
+        ):
+            target_text = unit.source
+            comment_reason = (
+                "runnable code comments remain exactly as authored in the English source"
+            )
+        else:
+            comment_reason = None
+            if locale.casefold().startswith("zh"):
+                target_text = normalize_zh_spacing(target_text)
         _record(values, unit.key, unit.value_type, unit.source, target_text,
-                (untranslated_reasons or {}).get(unit.key), provenance_reason)
+                (untranslated_reasons or {}).get(unit.key) or comment_reason, provenance_reason)
     return {"schema": "nemoclaw-locale-resource/1", "locale": locale,
             "template": template, "values": values}
 

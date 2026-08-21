@@ -1,0 +1,3729 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "zh-CN",
+  "template": "web/nemoclaw/01a-loop.html",
+  "media": [
+    "web/nemoclaw/assets/figures/01a-agent-environment.svg",
+    "web/nemoclaw/assets/figures/01a-loop-1.svg",
+    "web/nemoclaw/assets/figures/01a-loop-2.svg",
+    "web/nemoclaw/assets/figures/01a-loop-3.svg"
+  ],
+  "values": {
+    "link.352d85a4d532": {
+      "type": "link",
+      "source": "Four agent architectures, from direct input-to-action rules to an agent that improves its rules. Adapted from Russell and Norvig's <a href=\"https://aima.cs.berkeley.edu/\" target=\"_blank\" rel=\"noopener\">Artificial Intelligence: A Modern Approach</a> (Ch 1).",
+      "value": "四种智能体架构，从输入直接映射到行动的规则，到能够改进自身规则的智能体。改编自 Russell 和 Norvig 的 <a href=\"https://aima.cs.berkeley.edu/\" target=\"_blank\" rel=\"noopener\">Artificial Intelligence: A Modern Approach</a>（第 1 章）。"
+    },
+    "link.45c391295392": {
+      "type": "link",
+      "source": "The cell below sends one chat-completion to the model. It needs an\n     <a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NVIDIA API key</a>,\n     though the free tier covers every exercise. You enter it once, and the course then\n     keeps it in your browser and reuses it on every page so you never paste it twice.",
+      "value": "下面的单元格会向模型发送一次聊天补全请求。该请求需要一个\n     <a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NVIDIA API key</a>，不过免费套餐足以完成所有练习。您只需输入一次，课程便会将其保存在浏览器中，并在每个页面重复使用，无需再次粘贴。"
+    },
+    "link.4ba247503225": {
+      "type": "link",
+      "source": "\n    This course uses the\n    <a href=\"https://platform.openai.com/docs/api-reference/chat\" target=\"_blank\" rel=\"noopener\">Chat Completions API</a>\n    throughout: you keep the conversation as a <code>messages[]</code> array in your own code and resend\n    the full array on every turn. The newer\n    <a href=\"https://platform.openai.com/docs/api-reference/responses\" target=\"_blank\" rel=\"noopener\">Responses API</a>\n    can hold the thread server-side instead, so you send only the new input and a reference to the prior\n    turn. Either way the model stays stateless and unchanged between calls. The conversation lives outside\n    it, in state your code or the server keeps.\n  ",
+      "value": "\n    本课程始终使用\n    <a href=\"https://platform.openai.com/docs/api-reference/chat\" target=\"_blank\" rel=\"noopener\">Chat Completions API</a>：您需要在自己的代码中以 <code>messages[]</code> 数组保存对话，并在每一轮重新发送完整数组。较新的\n    <a href=\"https://platform.openai.com/docs/api-reference/responses\" target=\"_blank\" rel=\"noopener\">Responses API</a>\n    则可以在服务器端保存对话线程，因此您只需发送新输入以及对上一轮的引用。无论采用哪种方式，模型在各次调用之间都保持无状态且不会发生改变。对话存在于模型之外，由代码或服务器维护相应状态。\n  "
+    },
+    "link.5537840cabb5": {
+      "type": "link",
+      "source": "\n    Classic agent designs differ at the decision step. Russell and Norvig's\n    <a href=\"https://aima.cs.berkeley.edu/\" target=\"_blank\" rel=\"noopener\">Artificial Intelligence: A Modern Approach</a>\n    arranges them as a spectrum, from a bare reflex agent up to a learning agent that improves its own\n    rules. This course starts with rigid logic, then adds a language model and engineered context\n    to move toward a model-based, goal-oriented loop. Later modules keep that loop running over\n    changing state, which is the pattern learning agents build on.\n  ",
+      "value": "\n    经典智能体设计的区别在于决策步骤。Russell 和 Norvig 的\n    <a href=\"https://aima.cs.berkeley.edu/\" target=\"_blank\" rel=\"noopener\">Artificial Intelligence: A Modern Approach</a>\n    将这些设计排列成一条谱系：从仅具备反射机制的智能体，到能够改进自身规则的学习型智能体。本课程先从固定逻辑入手，再加入语言模型和经过设计的上下文，逐步构建基于模型、以目标为导向的循环。后续模块会让这一循环在不断变化的状态下持续运行，这正是学习型智能体赖以发展的模式。\n  "
+    },
+    "link.74c5f51a795b": {
+      "type": "link",
+      "source": "\n  <strong>Two things that call is quietly doing, and why.</strong> Neither is\n  magic, and both are worth understanding before you trust them.\n  <ul>\n    <li><strong>Your request may go through a proxy.</strong> If you selected the \n        learning management system/iframe setting when you put in your API key, your \n        request does not hit <code>build.nvidia.com</code> directly. That\n        endpoint does not return the <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS\" target=\"_blank\" rel=\"noopener\">cross-origin (CORS)</a> headers a browser\n        <code>fetch</code> requires, so the call is routed through a small\n        pass-through proxy that adds them. The proxy also adds a course attribution\n        header so DLI can identify traffic from this resource. The lesson sends your\n        API key with that request without storing it or substituting another key.</li>\n    <li><strong>Streaming is wrapped in a helper.</strong>\n        <code>chatStream()</code> sends the same chat request with streaming enabled,\n        then parses the returned event stream into answer text, reasoning text,\n        usage metadata, and the final done signal. The helper also connects those\n        pieces to the lesson panel and Stop button, so the cell can focus on the\n        concept instead of the streaming plumbing. You can open the helper source\n        from the cell menu to inspect exactly what it does.</li>\n    </ul>\n  ",
+      "value": "\n  <strong>这次调用还在悄然完成两件事，以及这样做的原因。</strong>这两件事都不神秘，在您信任它们之前，都值得先了解清楚。\n  <ul>\n    <li><strong>请求可能会经过代理。</strong>如果您在输入 API key 时选择了学习管理系统/iframe 设置，请求就不会直接发往 <code>build.nvidia.com</code>。该入口不会返回<a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS\" target=\"_blank\" rel=\"noopener\">跨源 (CORS)</a> 标头，而浏览器 <code>fetch</code> 要求必须提供这些标头，因此调用会经由一个小型直通代理转发，由代理添加这些标头。代理还会添加课程归属标头，以便 DLI 识别来自本资源的流量。课程会随该请求发送\n        API key，但不会存储它，也不会替换为其它密钥。</li>\n    <li><strong>流式处理封装在辅助函数中。</strong>\n        <code>chatStream()</code> 会发送同一个聊天请求并启用流式传输，然后将返回的事件流解析为回答文本、推理文本、用量元数据和最终完成信号。该辅助函数还会把这些内容连接到课程面板和 Stop 按钮，使单元格可以专注于概念，无需处理流式传输的底层细节。可以从单元格菜单中打开辅助函数源代码，查看它具体执行了哪些操作。</li>\n    </ul>\n  "
+    },
+    "link.88007657e487": {
+      "type": "link",
+      "source": "<a href=\"https://en.wikipedia.org/wiki/A*_search_algorithm\" target=\"_blank\" rel=\"noopener\">A*</a> biases those same rings toward the goal.",
+      "value": "<a href=\"https://en.wikipedia.org/wiki/A*_search_algorithm\" target=\"_blank\" rel=\"noopener\">A*</a> 会让同样的逐层扩展偏向终点。"
+    },
+    "link.917d52288863": {
+      "type": "link",
+      "source": "<a href=\"https://en.wikipedia.org/wiki/Depth-first_search\" target=\"_blank\" rel=\"noopener\">DFS</a> dives and backtracks out of dead ends.",
+      "value": "<a href=\"https://en.wikipedia.org/wiki/Depth-first_search\" target=\"_blank\" rel=\"noopener\">DFS</a> 会深入探索，并从死路回溯。"
+    },
+    "link.f95ca5a5bac1": {
+      "type": "link",
+      "source": "<a href=\"https://en.wikipedia.org/wiki/Breadth-first_search\" target=\"_blank\" rel=\"noopener\">BFS</a> fans out in rings before walking the shortest path.",
+      "value": "<a href=\"https://en.wikipedia.org/wiki/Breadth-first_search\" target=\"_blank\" rel=\"noopener\">BFS</a> 会逐层向外扩展，然后沿最短路径前进。"
+    },
+    "placeholder.018ce3b9cf1b": {
+      "type": "placeholder",
+      "source": "BFS searching · \\${explored.size} of \\${exploreOrder.length} cells",
+      "value": "BFS 正在搜索 · 已搜索 \\${explored.size}/\\${exploreOrder.length} 个单元格"
+    },
+    "placeholder.31d36f2b8740": {
+      "type": "placeholder",
+      "source": "\\${npos[0]},\\${npos[1]}",
+      "value": "\\${npos[0]},\\${npos[1]}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.31d36f2b8740~1": {
+      "type": "placeholder",
+      "source": "\\${npos[0]},\\${npos[1]}",
+      "value": "\\${npos[0]},\\${npos[1]}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.31d36f2b8740~2": {
+      "type": "placeholder",
+      "source": "\\${npos[0]},\\${npos[1]}",
+      "value": "\\${npos[0]},\\${npos[1]}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.31d36f2b8740~3": {
+      "type": "placeholder",
+      "source": "\\${npos[0]},\\${npos[1]}",
+      "value": "\\${npos[0]},\\${npos[1]}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.42a413ba566a": {
+      "type": "placeholder",
+      "source": "\\${nx},\\${ny}",
+      "value": "\\${nx},\\${ny}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.42a413ba566a~1": {
+      "type": "placeholder",
+      "source": "\\${nx},\\${ny}",
+      "value": "\\${nx},\\${ny}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.42a413ba566a~2": {
+      "type": "placeholder",
+      "source": "\\${nx},\\${ny}",
+      "value": "\\${nx},\\${ny}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.42a413ba566a~3": {
+      "type": "placeholder",
+      "source": "\\${nx},\\${ny}",
+      "value": "\\${nx},\\${ny}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.56cc4bd92009": {
+      "type": "placeholder",
+      "source": "BFS walking · step \\${steps + 1} of \\${path.length}",
+      "value": "BFS 正在行进 · 第 \\${steps + 1}/\\${path.length} 步"
+    },
+    "placeholder.87867a0c7834": {
+      "type": "placeholder",
+      "source": "\\${pos[0]},\\${pos[1]}",
+      "value": "\\${pos[0]},\\${pos[1]}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.a738c10e312f": {
+      "type": "placeholder",
+      "source": "'always \\${dir}' · move \\${moves + 1}",
+      "value": "'始终向\\${dir}' · 第 \\${moves + 1} 步"
+    },
+    "placeholder.a842020d678a": {
+      "type": "placeholder",
+      "source": "\\${steps} steps · solved: \\${won}",
+      "value": "\\${steps} 步 · 已解决：\\${won}"
+    },
+    "placeholder.aaf43dac5082": {
+      "type": "placeholder",
+      "source": "\\${cell[0]},\\${cell[1]}",
+      "value": "\\${cell[0]},\\${cell[1]}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.b7d0bdf410ec": {
+      "type": "placeholder",
+      "source": "BFS · \\${steps} steps path · \\${exploreOrder.length} cells searched",
+      "value": "BFS · 路径共 \\${steps} 步 · 搜索了 \\${exploreOrder.length} 个单元格"
+    },
+    "placeholder.ce4d97ac114a": {
+      "type": "placeholder",
+      "source": "A* · \\${steps} steps · Manhattan heuristic · same path as BFS: \\${steps === state.bfsSteps}",
+      "value": "A* · \\${steps} 步 · 曼哈顿启发式 · 与 BFS 的路径相同：\\${steps === state.bfsSteps}"
+    },
+    "placeholder.d5ae86cda673": {
+      "type": "placeholder",
+      "source": "DFS · \\${stepCount} total steps (incl. backtracks)",
+      "value": "DFS · 共 \\${stepCount} 步（含回溯）"
+    },
+    "placeholder.dc780b9645fd": {
+      "type": "placeholder",
+      "source": "\\${start[0]},\\${start[1]}",
+      "value": "\\${start[0]},\\${start[1]}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.dc780b9645fd~1": {
+      "type": "placeholder",
+      "source": "\\${start[0]},\\${start[1]}",
+      "value": "\\${start[0]},\\${start[1]}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.dc780b9645fd~2": {
+      "type": "placeholder",
+      "source": "\\${start[0]},\\${start[1]}",
+      "value": "\\${start[0]},\\${start[1]}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.e4e4b383a0fd": {
+      "type": "placeholder",
+      "source": "DFS · step \\${stepCount + 1}",
+      "value": "DFS · 第 \\${stepCount + 1} 步"
+    },
+    "placeholder.e6eb43780767": {
+      "type": "placeholder",
+      "source": "A* · step \\${steps + 1} of \\${path.length}",
+      "value": "A* · 第 \\${steps + 1}/\\${path.length} 步"
+    },
+    "placeholder.ed29bdcf595e": {
+      "type": "placeholder",
+      "source": "step \\${i + 1}",
+      "value": "第 \\${i + 1} 步"
+    },
+    "placeholder.ef45f851820b": {
+      "type": "placeholder",
+      "source": "\\${x},\\${y}",
+      "value": "\\${x},\\${y}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.ef45f851820b~1": {
+      "type": "placeholder",
+      "source": "\\${x},\\${y}",
+      "value": "\\${x},\\${y}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.ef45f851820b~2": {
+      "type": "placeholder",
+      "source": "\\${x},\\${y}",
+      "value": "\\${x},\\${y}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.ef45f851820b~3": {
+      "type": "placeholder",
+      "source": "\\${x},\\${y}",
+      "value": "\\${x},\\${y}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.ef45f851820b~4": {
+      "type": "placeholder",
+      "source": "\\${x},\\${y}",
+      "value": "\\${x},\\${y}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.ef45f851820b~5": {
+      "type": "placeholder",
+      "source": "\\${x},\\${y}",
+      "value": "\\${x},\\${y}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.ef45f851820b~6": {
+      "type": "placeholder",
+      "source": "\\${x},\\${y}",
+      "value": "\\${x},\\${y}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.ef45f851820b~7": {
+      "type": "placeholder",
+      "source": "\\${x},\\${y}",
+      "value": "\\${x},\\${y}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.ef45f851820b~8": {
+      "type": "placeholder",
+      "source": "\\${x},\\${y}",
+      "value": "\\${x},\\${y}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "placeholder.f7635f35cc40": {
+      "type": "placeholder",
+      "source": "'always \\${dir}' stalls after \\${moves} move\\${moves === 1 ? '' : 's'} · a fixed heading cannot solve a maze",
+      "value": "'始终向\\${dir}'在移动 \\${moves} 步后受阻 · 固定方向无法解开迷宫"
+    },
+    "rich.0048e9b82c70": {
+      "type": "rich",
+      "source": "The <strong>environment</strong> (wall positions, current\n        position) lives in <code>state.env</code>, while the agent's intrinsics\n        (its direction) live in <code>state.agent</code>. Keeping them\n        separate means a different agent with different intrinsic state\n        can operate in the same environment cleanly.",
+      "value": "<strong>环境</strong>（墙壁位置和当前位置）存储在 <code>state.env</code> 中，而智能体的内在状态（移动方向）存储在 <code>state.agent</code>中。将二者分开后，具有不同内在状态的其它智能体也能在同一环境中正常运行。"
+    },
+    "rich.01b4b75c60a7": {
+      "type": "rich",
+      "source": "<code>chat()</code> is a convenience wrapper around one ordinary HTTP\n     <code>POST</code> in the OpenAI-compatible wire format. That request carries three things:",
+      "value": "<code>chat()</code> 是一个便捷封装函数，封装了采用 OpenAI 兼容传输格式的普通 HTTP\n     <code>POST</code>。该请求包含三项内容："
+    },
+    "rich.023adf5b9eb6": {
+      "type": "rich",
+      "source": "\n    Look closely at the middle of that list. The <strong>perceive-to-act step is a single\n    stateless text-to-text mapping</strong> in which a full engineered context goes in and\n    an intent signal comes back. The model only transforms text, so perceiving the world\n    and turning an intent into a real change remain your code's job on both sides of that mapping.\n  ",
+      "value": "\n    请仔细观察该列表的中间部分。<strong>从感知到行动的步骤是一次无状态的文本到文本映射</strong>：输入完整的工程化上下文，返回一个意图信号。模型只负责转换文本，因此在这次映射的两端，感知环境以及将意图转化为实际变化仍然是代码需要完成的工作。\n  "
+    },
+    "rich.03ec858ee52a": {
+      "type": "rich",
+      "source": "\" style=\"margin:0 0 10px\"><button style=\"padding:4px 12px;border:1px solid #555;border-radius:4px;background:#1a1a1a;color:#ccc;cursor:pointer\">stop</button></div>",
+      "value": "\" style=\"margin:0 0 10px\"><button style=\"padding:4px 12px;border:1px solid #555;border-radius:4px;background:#1a1a1a;color:#ccc;cursor:pointer\">停止</button></div>"
+    },
+    "rich.0658e511afda": {
+      "type": "rich",
+      "source": "an <code>Authorization</code> header carrying your key,",
+      "value": "一个携带密钥的 <code>Authorization</code> 标头；"
+    },
+    "rich.09a6c8d57290": {
+      "type": "rich",
+      "source": "<span style=\"color:#9cf\">honored text-form call → ",
+      "value": "<span style=\"color:#9cf\">已执行文本形式调用 → "
+    },
+    "rich.0a55f05dca9c": {
+      "type": "rich",
+      "source": "<div style=\"color:#9ab;margin-top:3px\">text map:</div><pre style=\"margin:2px 0;color:#cdd;white-space:pre;font:11px/1.2 ui-monospace,monospace\">",
+      "value": "<div style=\"color:#9ab;margin-top:3px\">文本地图：</div><pre style=\"margin:2px 0;color:#cdd;white-space:pre;font:11px/1.2 ui-monospace,monospace\">"
+    },
+    "rich.0c690a5a6058": {
+      "type": "rich",
+      "source": "<br>extra_body: ",
+      "value": "<br>extra_body："
+    },
+    "rich.100db3aaf248": {
+      "type": "rich",
+      "source": "<div style=\"display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start\">\n  <div id=\"\\${corrId}\" style=\"flex:0 0 auto\"></div>\n  <div id=\"\\${randId}\" style=\"flex:0 0 auto\"></div>\n</div>",
+      "value": "<div style=\"display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start\">\n  <div id=\"\\${corrId}\" style=\"flex:0 0 auto\"></div>\n  <div id=\"\\${randId}\" style=\"flex:0 0 auto\"></div>\n</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.11dfd9be3000": {
+      "type": "rich",
+      "source": "Run the editable maze-agent node below. <code>DIRECTIVE</code> is the core system instruction, and the options object controls the model, maze size, text map, image attachment, move history, coordinate trail, and repeated tool schema.",
+      "value": "运行下面可编辑的迷宫智能体节点。<code>DIRECTIVE</code> 是核心系统指令，选项对象则控制模型、迷宫大小、文本地图、图像附件、移动历史、坐标轨迹以及重复提供的工具模式。"
+    },
+    "rich.1321937faebf": {
+      "type": "rich",
+      "source": "<div style=\"font:12px/1.6 ui-monospace,monospace;color:#aaa;margin:1px 0\">",
+      "value": "<div style=\"font:12px/1.6 ui-monospace,monospace;color:#aaa;margin:1px 0\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.1882b0d40cee": {
+      "type": "rich",
+      "source": "<div id=\"",
+      "value": "<div id=\"",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.1882b0d40cee~1": {
+      "type": "rich",
+      "source": "<div id=\"",
+      "value": "<div id=\"",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.1882b0d40cee~2": {
+      "type": "rich",
+      "source": "<div id=\"",
+      "value": "<div id=\"",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.1e575efbd2b5": {
+      "type": "rich",
+      "source": "<strong>Perception</strong> gives the agent everything it knows about its environment.\n        A thermostat reads a single number: the current temperature. A self-driving car fuses\n        cameras, radar, and a map into a model of the road. Whatever perception captures is all\n        the agent has to work from, since nothing downstream ever touches the world directly. A\n        gap in perception becomes a gap the rest of the agent cannot see around.",
+      "value": "<strong>感知</strong>为智能体提供它对环境的全部认知。恒温器只读取一个数值：当前温度。自动驾驶汽车则融合摄像头、雷达和地图信息，构建道路模型。感知所捕获的信息就是智能体能够利用的全部信息，因为后续环节都不会直接接触现实世界。感知中的盲区会成为智能体其它部分无法弥补的盲区。"
+    },
+    "rich.1eb3245c1303": {
+      "type": "rich",
+      "source": "<details style=\"margin:2px 0\"><summary style=\"cursor:pointer;color:#6a9;font-size:11px\">→ full context sent to model (",
+      "value": "<details style=\"margin:2px 0\"><summary style=\"cursor:pointer;color:#6a9;font-size:11px\">→ 发送给模型的完整上下文（"
+    },
+    "rich.26b8b58940d2": {
+      "type": "rich",
+      "source": "<span style=\"color:#f87171\">error: ",
+      "value": "<span style=\"color:#f87171\">错误："
+    },
+    "rich.26fa1b3522c4": {
+      "type": "rich",
+      "source": "\n    <strong>The reasoning step is replaceable.</strong> Perception and action do\n    not care which decision function sits between them. A simple rule, a decision tree,\n    a search routine, or a neural network can drive the same loop. Building the loop\n    once as a fixed frame keeps two questions cleanly apart: how capable the reasoning is,\n    and how far the actions reach.\n  ",
+      "value": "\n    <strong>推理步骤可以替换。</strong>感知和行动并不关心二者之间采用的是哪一种决策函数。简单规则、决策树、搜索程序或神经网络都可以驱动同一个循环。只需构建一次固定的循环框架，就能清楚区分两个问题：推理能力有多强，以及行动能够影响多大范围。\n  "
+    },
+    "rich.2773aff3958b": {
+      "type": "rich",
+      "source": "<div style=\"color:#9ab\">accumulated path: ",
+      "value": "<div style=\"color:#9ab\">累计路径："
+    },
+    "rich.2c7d294e2f85": {
+      "type": "rich",
+      "source": "<details open style=\"margin:2px 0\">",
+      "value": "<details open style=\"margin:2px 0\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.33a4a9e54725": {
+      "type": "rich",
+      "source": "\n    That leaves the green box below as the <em>only</em> piece you did not write. An agent\n    therefore has just two choices: what you feed into its context, and what you do with\n    the intent it returns.\n  ",
+      "value": "\n    因此，下面的绿色框是<em>唯一</em>并非由您编写的部分。智能体实际上只有两个选择：您向其上下文中提供什么，以及您如何处理它返回的意图。\n  "
+    },
+    "rich.37d03bd6f8c5": {
+      "type": "rich",
+      "source": "<div style=\"color:#ccd;margin-left:2px\">",
+      "value": "<div style=\"color:#ccd;margin-left:2px\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.39bbf061500a": {
+      "type": "rich",
+      "source": "Start with the working defaults. Then turn on <code>includeImage</code> to test the rendered maze, switch <code>model</code> to compare models, or set <code>advanced</code> to grow the maze after the simple case works.",
+      "value": "先使用可正常工作的默认设置。然后开启 <code>includeImage</code> 测试渲染后的迷宫，切换 <code>model</code> 比较不同模型，或者在简单情形运行成功后设置 <code>advanced</code>，扩大迷宫。"
+    },
+    "rich.3c8fa340472a": {
+      "type": "rich",
+      "source": "<strong>Action</strong> changes the environment for itself and other participants.\n        An action can be as small as flipping a relay or as involved as steering a car. Later pages call\n        code exposed to the model a <strong>tool</strong>, because from the model's side it is just another\n        available action. Calling a tool means invoking that exposed code as the action. It also marks\n        the outer edge of an agent's reach, because however sharp the reasoning, the agent affects the\n        world only through its action space.",
+      "value": "<strong>行动</strong>会改变智能体自身及其它参与者所处的环境。行动可以简单到切换继电器，也可以复杂到操控汽车。后续页面会将暴露给模型的代码称为<strong>工具</strong>，因为从模型的角度看，它只是另一种可用的行动。调用工具，就是将执行这段暴露的代码作为行动。行动空间也界定了智能体能力所及的最外边界，因为无论推理能力多强，智能体都只能通过行动空间影响现实世界。"
+    },
+    "rich.49f3d7618407": {
+      "type": "rich",
+      "source": "<strong style=\"color:#eee\">decision ",
+      "value": "<strong style=\"color:#eee\">决策 "
+    },
+    "rich.4e92d3ff686b": {
+      "type": "rich",
+      "source": "<strong>Locally-act.</strong> The model maps that text to more text: an\n        <em>intent signal</em>, ideally a typed tool call like\n        <code>{ \"move\": \"east\" }</code> rather than free prose. The intent only requests\n        an action, and it never performs one. Your code reads it and applies one\n        bounded update to the environment (<code>doMove(...)</code>), validating it\n        first.",
+      "value": "<strong>局部行动。</strong>模型将这些文本映射为更多文本：一个<em>意图信号</em>。理想情况下，它是类似\n        <code>{ \"move\": \"east\" }</code> 的类型化工具调用，而不是自由文本。该意图只是在请求执行动作，本身从不执行任何操作。代码会读取它，在验证后对环境应用一次范围受限的更新 (<code>doMove(...)</code>)。"
+    },
+    "rich.4ffc4e4481ae": {
+      "type": "rich",
+      "source": "<div id=\"\\${UID}\" style=\"margin:6px 0\"></div>",
+      "value": "<div id=\"\\${UID}\" style=\"margin:6px 0\"></div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.4ffc4e4481ae~1": {
+      "type": "rich",
+      "source": "<div id=\"\\${UID}\" style=\"margin:6px 0\"></div>",
+      "value": "<div id=\"\\${UID}\" style=\"margin:6px 0\"></div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.4ffc4e4481ae~2": {
+      "type": "rich",
+      "source": "<div id=\"\\${UID}\" style=\"margin:6px 0\"></div>",
+      "value": "<div id=\"\\${UID}\" style=\"margin:6px 0\"></div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.5179f45aa8dd": {
+      "type": "rich",
+      "source": "\n    You now have both halves of an agent, and the stateless <code>chat()</code> function above will pair nicely\n    with the previous reflex agent's perceive-reason-act loop. Before\n    wiring the model into that loop, it helps to watch the decision step use routines\n    that are <em>not</em> language models first.\n  ",
+      "value": "\n    您现在已经具备智能体的两个组成部分；上面的无状态 <code>chat()</code> 函数可以很好地与前一个反射式智能体的感知—推理—行动循环结合。在将模型接入这个循环之前，不妨先观察决策步骤如何使用并非语言模型的例程。\n  "
+    },
+    "rich.5bc02b4cf26e": {
+      "type": "rich",
+      "source": "<div style=\"white-space:pre-wrap\">",
+      "value": "<div style=\"white-space:pre-wrap\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.5bc02b4cf26e~1": {
+      "type": "rich",
+      "source": "<div style=\"white-space:pre-wrap\">",
+      "value": "<div style=\"white-space:pre-wrap\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.5f90993bb5a3": {
+      "type": "rich",
+      "source": "\n    The smallest artifact in the course is a single <code>chat()</code> call with no tools\n    and no memory wrapped around it. Each message you send stands on its own, running the\n    bare stateless function that the loop will later wrap. Type something below and watch\n    the reply stream back.\n  ",
+      "value": "\n    本课程中最小的构件只是一次 <code>chat()</code> 调用，外围没有工具，也没有记忆。您发送的每条消息都相互独立，运行的是循环稍后将封装的基础无状态函数。在下方输入内容，观察回复以流式方式返回。\n  "
+    },
+    "rich.603238e8e2ed": {
+      "type": "rich",
+      "source": "What <code>chat()</code> actually sends",
+      "value": "<code>chat()</code> 实际发送的内容"
+    },
+    "rich.64255fa1b56b": {
+      "type": "rich",
+      "source": "<span style=\"color:#fbbf24\"><strong>search state:</strong> every branch at this junction has been explored. The model must choose the allowed backtrack and continue.</span>",
+      "value": "<span style=\"color:#fbbf24\"><strong>搜索状态：</strong>此岔路口的每条分支均已探索。模型必须选择允许的回溯路径并继续。</span>"
+    },
+    "rich.65f94b857e23": {
+      "type": "rich",
+      "source": "\n    Place the <code>chat()</code> call inside the loop that re-sends history, and a single\n    turn of any LLM agent in this course takes the same four-stage shape. Name the stages\n    now, because every security and reliability question later traces back to one of these\n    four arrows.\n  ",
+      "value": "\n    将 <code>chat()</code> 调用放入会重新发送历史记录的循环后，本课程中任意 LLM 智能体的单轮运行都会呈现相同的四阶段结构。现在请记住这些阶段的名称，因为后续的每个安全性和可靠性问题都可以追溯到这四个箭头之一。\n  "
+    },
+    "rich.6c6713e8d95e": {
+      "type": "rich",
+      "source": "<span style=\"color:#76b900\">goal reached while auto-walking</span>",
+      "value": "<span style=\"color:#76b900\">自动前行时到达目标</span>"
+    },
+    "rich.6de0576a50cb": {
+      "type": "rich",
+      "source": "<div style=\"color:#778;margin-bottom:4px\">raw messages · ",
+      "value": "<div style=\"color:#778;margin-bottom:4px\">原始消息 · "
+    },
+    "rich.6f722b80156f": {
+      "type": "rich",
+      "source": "<img src=\"",
+      "value": "<img src=\"",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.7466487cb59b": {
+      "type": "rich",
+      "source": "<strong>Take the text away from the multimodal model.</strong>\n        Set <code>includeText:false</code> and <code>includeImage:true</code>, then rerun.\n        The model now sees only the rendered picture of the maze. Does it still reach\n        the goal, and does it take more decisions than the text-plus-image run did?",
+      "value": "<strong>不向多模态模型提供文本。</strong>设置 <code>includeText:false</code> 和 <code>includeImage:true</code>，然后重新运行。此时模型只能看到渲染后的迷宫图像。它仍能抵达终点吗？与同时使用文本和图像的运行相比，它是否需要作出更多次决策？"
+    },
+    "rich.74ddf95e4fa6": {
+      "type": "rich",
+      "source": "The <span>Agent</span>",
+      "value": "<span>智能体</span>"
+    },
+    "rich.7a23cade9bbf": {
+      "type": "rich",
+      "source": "<strong>Calls do not share state.</strong> Between requests the\n        server holds nothing for you. If you want the model to\n        remember the previous turn, you send that turn again.\n        The \"memory\" of a conversation is a list of messages your code\n        maintains and re-sends each time.",
+      "value": "<strong>各次调用不共享状态。</strong>两次请求之间，服务器不会替您保留任何内容。如果希望模型记住上一轮对话，您需要再次发送该轮内容。对话的“记忆”就是由代码维护，并在每次调用时重新发送的消息列表。"
+    },
+    "rich.7d329bb7d9d4": {
+      "type": "rich",
+      "source": "<think>",
+      "value": "<think>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.7dc2a1948635": {
+      "type": "rich",
+      "source": "<strong>The output has two channels.</strong> Reasoning models\n        return their working notes in\n        <code>reasoning_content</code> and their final answer in\n        <code>content</code>. You inspect those working notes during\n        development, while the next stage of the loop reads and acts on the\n        answer in <code>content</code>.",
+      "value": "<strong>输出包含两个通道。</strong>推理模型会将推理过程记录在\n        <code>reasoning_content</code> 中，并将最终答案放在\n        <code>content</code> 中。开发期间，可以检查这些推理记录；循环的下一阶段则读取 <code>content</code> 中的答案并据此行动。"
+    },
+    "rich.7f1e2f630b48": {
+      "type": "rich",
+      "source": "<div style=\"font:11px/1.4 ui-monospace,monospace;color:#888;margin-bottom:5px\">\\${title}</div>",
+      "value": "<div style=\"font:11px/1.4 ui-monospace,monospace;color:#888;margin-bottom:5px\">\\${title}</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.7f1e2f630b48~1": {
+      "type": "rich",
+      "source": "<div style=\"font:11px/1.4 ui-monospace,monospace;color:#888;margin-bottom:5px\">\\${title}</div>",
+      "value": "<div style=\"font:11px/1.4 ui-monospace,monospace;color:#888;margin-bottom:5px\">\\${title}</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.7f833e160191": {
+      "type": "rich",
+      "source": "The smallest decision function is a single <code>if</code>\n     statement. Here it drives a one-dimensional track bounded by walls at positions 0\n     and 9, which leaves the whole agent about as stripped down as one can get. Press Run\n     and watch the position number bounce between those two walls as the loop runs.",
+      "value": "最简单的决策函数只需一条 <code>if</code>\n     语句。此处，它驱动智能体在一条一维轨道上移动，轨道两端的墙壁分别位于位置 0\n     和 9，整个智能体已精简到近乎最小形态。点击“全部运行”，随着循环运行，观察位置数值如何在两堵墙之间来回变化。"
+    },
+    "rich.800c436a3853": {
+      "type": "rich",
+      "source": "\n    The maze loop still samples the world and applies one validated move. Only the\n    decision step changes. Instead of DFS, BFS, or A*, the model reads the rendered maze\n    and asks your code to call <code>choose_direction</code>.\n  ",
+      "value": "\n    迷宫循环仍会对环境进行采样，并执行一个经过验证的移动动作。只有决策步骤发生变化。模型不再使用 DFS、BFS 或 A*，而是读取呈现出的迷宫，并请求代码调用 <code>choose_direction</code>。\n  "
+    },
+    "rich.85272f9ac1ba": {
+      "type": "rich",
+      "source": "The <strong>reasoning step</strong> is one <code>if</code>\n        statement. Replacing it with something more powerful, whether a\n        decision tree, a neural network, or a language model, only\n        requires changing what sits between perception and action. The\n        loop structure, the state layout, and the action step all\n        remain identical.",
+      "value": "<strong>推理步骤</strong>只有一条 <code>if</code>\n        语句。要将其替换为更强大的机制，无论是决策树、神经网络还是语言模型，只需更改感知与行动之间的部分。循环结构、状态布局和行动步骤都保持不变。"
+    },
+    "rich.89768fee415b": {
+      "type": "rich",
+      "source": "\n    <strong>The decision step is the only part that varies.</strong>\n    DFS, BFS, and A* all read the current maze state and return a move. One line in the\n    last node chooses the decision function; the loop below runs the same way for each\n    choice. The <code>chat()</code> call you just ran can fill that\n    same step. It changes two edges: your code renders perception as text, and the\n    model returns a tool call that your code applies. The next section zooms in on those\n    two edges.\n  ",
+      "value": "\n    <strong>只有决策步骤会发生变化。</strong>\n    DFS、BFS 和 A* 都会读取当前迷宫状态并返回一个移动动作。最后一个节点中的一行代码用于选择决策函数；无论选择哪一个，下面的循环都会以相同方式运行。您刚刚运行的\n    <code>chat()</code> 调用也可以承担同一个步骤。它改变了两处衔接：代码将感知结果呈现为文本，模型则返回由代码执行的工具调用。下一节将具体讲解这两处衔接。\n  "
+    },
+    "rich.8bc911477eec": {
+      "type": "rich",
+      "source": "moved: <code style=\"color:#76b900;background:#0d1f00;padding:1px 4px;border-radius:3px\">",
+      "value": "已移动：<code style=\"color:#76b900;background:#0d1f00;padding:1px 4px;border-radius:3px\">"
+    },
+    "rich.8df13f4265ae": {
+      "type": "rich",
+      "source": "<strong>Reasoning</strong> turns a perception into a decision, which can vary widely between agents.\n        A thermostat compares the temperature against a target and\n        stops there, while a chess engine searches millions of moves and a self-driving car runs a\n        learned policy. The agents you build here reason by calling a language model, and almost\n        everything the course adds later (tools/memory/planning) hangs off this single step.",
+      "value": "<strong>推理</strong>将感知结果转化为决策，不同智能体的推理方式可能大不相同。恒温器只需将当前温度与目标温度进行比较，而国际象棋引擎会搜索数百万种走法，自动驾驶汽车则会运行学习得到的策略。您将在此构建的智能体通过调用语言模型进行推理，而本课程后续添加的几乎所有能力（工具、记忆和规划）都依托于这一步。"
+    },
+    "rich.917ac3ffc692": {
+      "type": "rich",
+      "source": "<details style=\"margin:2px 0\"><summary style=\"cursor:pointer;color:#555;font-size:11px\">reasoning (",
+      "value": "<details style=\"margin:2px 0\"><summary style=\"cursor:pointer;color:#555;font-size:11px\">推理过程（"
+    },
+    "rich.94efa28023b8": {
+      "type": "rich",
+      "source": "<div style=\"margin-top:6px;font-size:10px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;color:",
+      "value": "<div style=\"margin-top:6px;font-size:10px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;color:",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.961183259ea9": {
+      "type": "rich",
+      "source": " qwen puts reasoning in <think>...</think>",
+      "value": " qwen puts reasoning in <think>...</think>",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "rich.982e7c6eb75d": {
+      "type": "rich",
+      "source": "<strong>Locally-perceive.</strong> That slice is rendered into a full\n        engineered context: the system prompt, the running <code>messages[]</code>\n        history, prior tool results, and the slice you just sampled. All of it is plain\n        text. For an LLM agent, perception <em>is</em> context engineering.",
+      "value": "<strong>局部感知。</strong>该切片会被呈现为完整的工程化上下文：系统提示词、持续累积的 <code>messages[]</code>\n        历史记录、先前的工具结果，以及您刚刚采样的切片。所有内容都是纯文本。对于 LLM 智能体，感知<em>就是</em>上下文工程。"
+    },
+    "rich.9d60ee03ea3a": {
+      "type": "rich",
+      "source": "The cell below makes that call by hand and shows both sides. Open <em>request</em> to\n     see what leaves your browser with the key redacted, and <em>raw response</em> to see\n     the full object <code>chat()</code> hands back.",
+      "value": "下面的单元格会手动发起该调用，并展示请求和响应两端的内容。打开 <em>request</em>，查看隐藏密钥后从浏览器发出的内容；打开 <em>raw response</em>，查看\n     <code>chat()</code> 返回的完整对象。"
+    },
+    "rich.9e4527fb137f": {
+      "type": "rich",
+      "source": "<div>",
+      "value": "<div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.a8f816300f65": {
+      "type": "rich",
+      "source": " Pull inline <think> reasoning out before parsing the answer.",
+      "value": " Pull inline <think> reasoning out before parsing the answer.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "rich.aab394d8f84a": {
+      "type": "rich",
+      "source": "<strong>Remove the strategy hint from the DIRECTIVE.</strong>\n        Delete the line that says to prefer unvisited branches over visited cells, then\n        rerun the same cell. Count the decisions against the run with the hint in place.\n        How much of the model's competence came from that one sentence?",
+      "value": "<strong>从 DIRECTIVE 中移除策略提示。</strong>删除要求优先选择未访问分支而非已访问单元格的那一行，然后重新运行同一单元格。将决策次数与保留该提示时的运行结果进行比较。模型的能力有多少来自这一句话？"
+    },
+    "rich.b01585f706cb": {
+      "type": "rich",
+      "source": "\\${hdr}<style>.mgrid{display:grid;gap:2px;background:#0a0a0f;padding:8px;border-radius:8px;width:fit-content;margin:4px 0}.mc{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:3px;font:13px/1 ui-monospace,monospace}</style><div class=\"mgrid\" style=\"grid-template-columns:repeat(\\${W},26px)\">\\${cells}</div>",
+      "value": "\\${hdr}<style>.mgrid{display:grid;gap:2px;background:#0a0a0f;padding:8px;border-radius:8px;width:fit-content;margin:4px 0}.mc{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:3px;font:13px/1 ui-monospace,monospace}</style><div class=\"mgrid\" style=\"grid-template-columns:repeat(\\${W},26px)\">\\${cells}</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.b01585f706cb~1": {
+      "type": "rich",
+      "source": "\\${hdr}<style>.mgrid{display:grid;gap:2px;background:#0a0a0f;padding:8px;border-radius:8px;width:fit-content;margin:4px 0}.mc{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:3px;font:13px/1 ui-monospace,monospace}</style><div class=\"mgrid\" style=\"grid-template-columns:repeat(\\${W},26px)\">\\${cells}</div>",
+      "value": "\\${hdr}<style>.mgrid{display:grid;gap:2px;background:#0a0a0f;padding:8px;border-radius:8px;width:fit-content;margin:4px 0}.mc{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:3px;font:13px/1 ui-monospace,monospace}</style><div class=\"mgrid\" style=\"grid-template-columns:repeat(\\${W},26px)\">\\${cells}</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.b8c4d5c6124a": {
+      "type": "rich",
+      "source": "<div style=\"color:#9ab\">rendered image:</div><img src=\"",
+      "value": "<div style=\"color:#9ab\">渲染图像：</div><img src=\""
+    },
+    "rich.b91f4addbbbb": {
+      "type": "rich",
+      "source": "<div style=\"color:#76b900;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase\">context this turn</div>",
+      "value": "<div style=\"color:#76b900;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase\">本轮上下文</div>"
+    },
+    "rich.bb1a9d84d17d": {
+      "type": "rich",
+      "source": "<div style=\"color:#9ab\">position: (",
+      "value": "<div style=\"color:#9ab\">位置：("
+    },
+    "rich.bd0d6e461bb0": {
+      "type": "rich",
+      "source": "<span style=\"color:#f87171\">gave up after ",
+      "value": "<span style=\"color:#f87171\">经过 "
+    },
+    "rich.bf5f03d26588": {
+      "type": "rich",
+      "source": " chars)</summary><div style=\"font:11px/1.5 ui-monospace,monospace;color:#7a9;background:#040d08;padding:8px;border-radius:4px;max-height:200px;overflow:auto;white-space:pre-wrap\">",
+      "value": " 个字符）</summary><div style=\"font:11px/1.5 ui-monospace,monospace;color:#7a9;background:#040d08;padding:8px;border-radius:4px;max-height:200px;overflow:auto;white-space:pre-wrap\">"
+    },
+    "rich.c2ccb83487c8": {
+      "type": "rich",
+      "source": "<strong>finish_reason is the loop's exit condition.</strong>\n        <code>\"stop\"</code> means the model has written its final\n        answer. <code>\"tool_calls\"</code> means it wants your code to\n        run a named function and report the result back.\n        <code>\"length\"</code> means the token budget ran out before\n        the model finished. A loop that drives an LLM-based agent is\n        built entirely around reading this one field and deciding what\n        to do next.",
+      "value": "<strong>finish_reason 是循环的退出条件。</strong>\n        <code>\"stop\"</code> 表示模型已生成最终答案。<code>\"tool_calls\"</code> 表示模型希望代码运行指定函数，并将结果返回给它。\n        <code>\"length\"</code> 表示模型尚未完成时，token 预算已耗尽。驱动基于 LLM 的智能体时，整个循环都围绕读取这一个字段并决定下一步操作来构建。"
+    },
+    "rich.c4617e9ae323": {
+      "type": "rich",
+      "source": "<br>tools: ",
+      "value": "<br>工具："
+    },
+    "rich.c4e29ed3017c": {
+      "type": "rich",
+      "source": "<span style=\"color:#fbbf24\">guardrail: ",
+      "value": "<span style=\"color:#fbbf24\">防护机制："
+    },
+    "rich.c6791c9d7c9c": {
+      "type": "rich",
+      "source": "<span style=\"color:#76b900\">goal in ",
+      "value": "<span style=\"color:#76b900\">到达目标，共 "
+    },
+    "rich.c815f005e12d": {
+      "type": "rich",
+      "source": "<hr style=\"border:0;border-top:1px solid #1b2530;margin:8px 0\">",
+      "value": "<hr style=\"border:0;border-top:1px solid #1b2530;margin:8px 0\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.c83c268aee08": {
+      "type": "rich",
+      "source": "\n      An <strong>agent</strong> is an entity that interacts with an environment at any meaningful level.\n      A person going about their day is an agent in this sense, and so is a thermostat holding a\n      room at temperature or a self-driving car making its way through traffic.\n    ",
+      "value": "\n      <strong>智能体</strong>是指能够在任何有意义的层面上与环境交互的实体。从这个意义上说，处理日常事务的人是智能体，将房间维持在设定温度的恒温器，以及在车流中行驶的自动驾驶汽车，同样也是智能体。\n    "
+    },
+    "rich.c98c35890a39": {
+      "type": "rich",
+      "source": "and a JSON body with <code>model</code> and <code>messages</code>.",
+      "value": "以及包含 <code>model</code> 和 <code>messages</code> 的 JSON 正文。"
+    },
+    "rich.cbedb97a7e0c": {
+      "type": "rich",
+      "source": "<span style=\"color:#777\">stopped</span>",
+      "value": "<span style=\"color:#777\">已停止</span>"
+    },
+    "rich.cea2b64a5fbd": {
+      "type": "rich",
+      "source": "\n      All of them <b>perceive</b> their environment through sensors and <b>act</b> on it through actuators.\n      Because each action feeds the next observation, perceiving and acting fold into one continuous cycle,\n      a <strong>perceive-reason-act loop</strong>, that lasts as long as the agent continues to interact.\n      The agents you will build all adopt the same cycle and are set apart only by how much they can perceive\n      and how far their actions reach.\n    ",
+      "value": "\n      它们都会通过传感器<b>感知</b>环境，并通过执行器对环境采取<b>行动</b>。每次行动都会产生下一次观察，因此感知和行动会连成一个持续运转的周期，即<strong>感知—推理—行动循环</strong>。只要智能体仍在交互，这个循环就会持续。您将构建的所有智能体都采用同一循环，区别仅在于它们能感知多少信息，以及行动能够影响多大范围。\n    "
+    },
+    "rich.d0625f8a63c2": {
+      "type": "rich",
+      "source": "<span style=\"color:#fbbf24\">hint: the image was rejected on this turn. Try again, set includeImage:false to send text alone, or pick another multimodal model (vision / qwenVision).</span>",
+      "value": "<span style=\"color:#fbbf24\">提示：本轮中的图像被拒绝。请重试、设置 includeImage:false 以仅发送文本，或选择其它多模态模型（vision / qwenVision）。</span>"
+    },
+    "rich.d106759c1b2d": {
+      "type": "rich",
+      "source": "<strong>Locally-sample.</strong> Your code reads a slice of the\n        environment, which might be the maze cell and its valid moves, or the latest user\n        message, or the contents of a file. It never reaches for the whole world at once,\n        because all the turn requires is the narrow piece of state the model needs to act on\n        this time around.",
+      "value": "<strong>局部采样。</strong>代码读取环境的一个局部切片，例如迷宫中的当前单元格及其有效移动方向、最新的用户消息，或某个文件的内容。它不会试图一次获取整个世界，因为当前这一轮只需要模型此次行动所需的那一小部分状态。"
+    },
+    "rich.d362383be48a": {
+      "type": "rich",
+      "source": "\n    <strong>Each pass of the loop acts only locally.</strong> The model reads one small\n    piece of the world such as a single maze cell and hands back one bounded action before the stateless text-to-text step between them forgets everything it just saw. An agent\n    that accomplishes a great deal is only this modest cycle repeated many times while the\n    environment carries the state forward from one pass to the next.\n    Module 1b builds that cycle in code where you can watch the context grow with each turn.\n  ",
+      "value": "\n    <strong>循环的每一轮都只在局部行动。</strong>模型读取环境中的一小部分，例如一个迷宫单元格，然后返回一个范围受限的动作；两者之间的无状态文本到文本步骤随即忘记刚才看到的一切。一个能够完成大量工作的智能体，本质上只是多次重复这个简单循环，同时由环境将状态从一轮传递到下一轮。模块 1b 将用代码构建这个循环，让您看到上下文如何随每轮运行而增长。\n  "
+    },
+    "rich.d3689c04407c": {
+      "type": "rich",
+      "source": "\n    <strong>A schema turns the answer into a typed action.</strong> The constant rule\n    returned a string. BFS handed back a list. <code>choose_direction</code> gives the\n    model the same contract but enforces it through a JSON Schema, so the loop reads a\n    typed value instead of parsing free prose. With it, a language model can take the\n    decision step that BFS and A* held a moment ago.\n  ",
+      "value": "\n    <strong>模式将回答转换为类型化动作。</strong>固定规则返回一个字符串，BFS 返回一个列表。<code>choose_direction</code> 为模型提供相同的契约，但通过 JSON Schema 强制执行该契约，使循环读取类型化值，而不是解析自由文本。有了它，语言模型便可接管刚才由\n    BFS 和 A* 承担的决策步骤。\n  "
+    },
+    "rich.d45434b3ac87": {
+      "type": "rich",
+      "source": "<strong style=\"color:#76b900\">",
+      "value": "<strong style=\"color:#76b900\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.d58b97ef9d7d": {
+      "type": "rich",
+      "source": "<span style=\"color:#76b900\">goal reached in the opening corridor (no LLM needed)</span>",
+      "value": "<span style=\"color:#76b900\">已在起始通道中到达目标（无需 LLM）</span>"
+    },
+    "rich.d7ebde9e18e3": {
+      "type": "rich",
+      "source": "<div class=\"mc\" style=\"\\${s}\">\\${i}</div>",
+      "value": "<div class=\"mc\" style=\"\\${s}\">\\${i}</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.d7ebde9e18e3~1": {
+      "type": "rich",
+      "source": "<div class=\"mc\" style=\"\\${s}\">\\${i}</div>",
+      "value": "<div class=\"mc\" style=\"\\${s}\">\\${i}</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.dd148bb715cd": {
+      "type": "rich",
+      "source": "<strong>Swap the decision model.</strong>\n        Change <code>model:\"vision\"</code> to <code>model:\"super\"</code> and rerun.\n        The loop, maze, perception, and action do not change. Only the model making\n        the move does. Does the larger text model reach the goal in fewer decisions?",
+      "value": "<strong>更换决策模型。</strong>将 <code>model:\"vision\"</code> 改为 <code>model:\"super\"</code>，然后重新运行。循环、迷宫、感知和行动均保持不变，只有负责选择移动动作的模型发生变化。更大的文本模型能否用更少的决策抵达终点？"
+    },
+    "rich.e283eb73ab78": {
+      "type": "rich",
+      "source": "<div style=\"color:#7a9\">tool_calls: ",
+      "value": "<div style=\"color:#7a9\">tool_calls："
+    },
+    "rich.e38e71e69125": {
+      "type": "rich",
+      "source": "<strong>Locally-impact.</strong> The update changes the world. Nothing\n        persisted inside the model. The only durable state is the environment and\n        the context your code will rebuild. The next turn's locally-sample reads\n        the changed world, and the cycle repeats.",
+      "value": "<strong>局部影响。</strong>更新会改变环境。模型内部不会持久保留任何内容。唯一持久的状态是环境，以及代码将重新构建的上下文。下一轮的局部采样会读取已改变的环境，随后循环再次开始。"
+    },
+    "rich.e7777a9069d7": {
+      "type": "rich",
+      "source": "<summary style=\"cursor:pointer;color:#555;font-size:11px\">thinking…</summary>",
+      "value": "<summary style=\"cursor:pointer;color:#555;font-size:11px\">思考中…</summary>"
+    },
+    "rich.e8c7c45cbffd": {
+      "type": "rich",
+      "source": "<div style=\"font:11px/1.5 ui-monospace,monospace;margin:4px 0;background:#070b0f;padding:8px;border-radius:4px;max-height:420px;overflow:auto\">",
+      "value": "<div style=\"font:11px/1.5 ui-monospace,monospace;margin:4px 0;background:#070b0f;padding:8px;border-radius:4px;max-height:420px;overflow:auto\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.f5e43b53e5e0": {
+      "type": "rich",
+      "source": "\n    <strong>About <code>chat()</code>.</strong> It is the course-provided wrapper\n    you run live a little further down this page. The snippet below previews its\n    call shape and the fields it returns, so the names are familiar by the time\n    you reach the runnable cell.\n  ",
+      "value": "\n    <strong>关于 <code>chat()</code>。</strong>这是课程提供的封装函数，您稍后将在本页下方实时运行它。下面的代码片段会预先展示其调用形式和返回字段，让您在进入运行时单元格时已熟悉这些名称。\n  "
+    },
+    "rich.ff7983460283": {
+      "type": "rich",
+      "source": "Run the engine node first. It exports the maze utilities and one shared controller, <code>state.runMaze</code>, that walks corridors automatically and calls the model only at junctions.",
+      "value": "先运行引擎节点。它会导出迷宫实用工具和一个共享控制器 <code>state.runMaze</code>；该控制器会自动穿过走廊，仅在岔路口调用模型。"
+    },
+    "text.0025924aa8eb": {
+      "type": "text",
+      "source": "The same call as above is written by hand as a raw HTTP request so every field is visible, with the request and response tucked into details blocks you can open to read the exact payloads.",
+      "value": "上面的同一调用在此手动写成原始 HTTP 请求，使每个字段都清晰可见。请求和响应收纳在可展开的详细信息区块中，可以打开它们查看确切的载荷。"
+    },
+    "text.00f7737d51ed": {
+      "type": "text",
+      "source": "A* reasoner",
+      "value": "A* 推理器"
+    },
+    "text.0188c12ef0bf": {
+      "type": "text",
+      "source": "#7fa8d8",
+      "value": "#7fa8d8",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.0347fa288f10": {
+      "type": "text",
+      "source": " imageUrl is passed in (and shown in renderRequest) so we render the PNG only once.",
+      "value": " imageUrl is passed in (and shown in renderRequest) so we render the PNG only once.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.04b4151d28dc": {
+      "type": "text",
+      "source": "#76b900",
+      "value": "#76b900",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.04f8996da763": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~1": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~2": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~3": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~4": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~5": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~6": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.05529e9fe8b9": {
+      "type": "text",
+      "source": "HTTP ",
+      "value": "HTTP ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.0589d92254ef": {
+      "type": "text",
+      "source": " ── modality / context knobs (all optional) ───────────────────────────────",
+      "value": " ── modality / context knobs (all optional) ───────────────────────────────",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.064211f8f9e8": {
+      "type": "text",
+      "source": "My name is Ada. Remember it.",
+      "value": "我叫 Ada。请记住。"
+    },
+    "text.06a6fc720b74": {
+      "type": "text",
+      "source": " junction (2+) or stuck (0)",
+      "value": " junction (2+) or stuck (0)",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.086a519fdeed": {
+      "type": "text",
+      "source": " at ",
+      "value": "，位置 "
+    },
+    "text.091551db6957": {
+      "type": "text",
+      "source": ")</div>",
+      "value": ")</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.0959cf6545aa": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+      "value": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.0a06aa375815": {
+      "type": "text",
+      "source": " helpers.getConfig() keeps this web page on the course's browser-safe endpoint.",
+      "value": " helpers.getConfig() keeps this web page on the course's browser-safe endpoint.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.0a07f6594619": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0a07f6594619~1": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0a07f6594619~2": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0a07f6594619~3": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0a07f6594619~4": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0a07f6594619~5": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0a07f6594619~6": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0a07f6594619~7": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0a07f6594619~8": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0a4e4c29432e": {
+      "type": "text",
+      "source": "usage",
+      "value": "usage",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.0c82ea7deddd": {
+      "type": "text",
+      "source": " multimodal model; try \"super\", \"omni\", or \"qwenVision\" to compare",
+      "value": " multimodal model; try \"super\", \"omni\", or \"qwenVision\" to compare",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.0cd59804b5ed": {
+      "type": "text",
+      "source": "STRATEGY: prefer unvisited branches (-) over visited cells (·); head toward G when you can see it.",
+      "value": "策略：优先选择未探索的分支 (-)，而不是已访问的单元格 (·)；看到 G 时，向它前进。"
+    },
+    "text.0d5bdc247344": {
+      "type": "text",
+      "source": "#161b22",
+      "value": "#161b22",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.0e2b2f8708d8": {
+      "type": "text",
+      "source": "Maze engine ready.",
+      "value": "迷宫引擎已就绪。"
+    },
+    "text.0f2552acfc09": {
+      "type": "text",
+      "source": " ── Shared maze controller (one copy; the run node calls it) ────────────────",
+      "value": " ── Shared maze controller (one copy; the run node calls it) ────────────────",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1061a269a981": {
+      "type": "text",
+      "source": " decisions · ",
+      "value": " 次决策 · "
+    },
+    "text.115049a29853": {
+      "type": "text",
+      "source": "What is the capital of France?",
+      "value": "法国的首都是哪里？"
+    },
+    "text.126781de188e": {
+      "type": "text",
+      "source": " A fixed heading stalls in the maze because it cannot turn after the first wall.",
+      "value": " A fixed heading stalls in the maze because it cannot turn after the first wall.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.127e09d848ed": {
+      "type": "text",
+      "source": ", then hit a wall going ",
+      "value": "，随后朝此方向撞墙："
+    },
+    "text.12ee86cf2056": {
+      "type": "text",
+      "source": " list every coordinate travelled",
+      "value": " list every coordinate travelled",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.137ed942db0b": {
+      "type": "text",
+      "source": " ctx.history holds prior turns when memory is on.",
+      "value": " ctx.history holds prior turns when memory is on.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.140bedbf9c3f": {
+      "type": "text",
+      "source": "none",
+      "value": "none",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.140bedbf9c3f~1": {
+      "type": "text",
+      "source": "none",
+      "value": "none",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.140bedbf9c3f~2": {
+      "type": "text",
+      "source": "none",
+      "value": "none",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.140bedbf9c3f~3": {
+      "type": "text",
+      "source": "none",
+      "value": "none",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.1416f5412361": {
+      "type": "text",
+      "source": "This is the editable maze run. Edit DIRECTIVE first, then change one option at a time: model, advanced, includeText, includeImage, includeHistory, includeCoords, or toolSpecInSystem.",
+      "value": "这是可编辑的迷宫运行。先编辑 DIRECTIVE，然后每次只更改一个选项：model、advanced、includeText、includeImage、includeHistory、includeCoords 或 toolSpecInSystem。"
+    },
+    "text.14499d2b39e3": {
+      "type": "text",
+      "source": "A direction already tried from this junction is an exhausted branch. Do not choose it again.",
+      "value": "从当前岔路口尝试过的方向属于已经走尽的分支，请勿再次选择。"
+    },
+    "text.146dcd8c2e75": {
+      "type": "text",
+      "source": "Maze:",
+      "value": "迷宫："
+    },
+    "text.151add038097": {
+      "type": "text",
+      "source": " accumulated turns (used only when includeHistory)",
+      "value": " accumulated turns (used only when includeHistory)",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.15a87f287dd8": {
+      "type": "text",
+      "source": " OpenAI-compatible \"wire format\", written out by hand here.",
+      "value": " OpenAI-compatible \"wire format\", written out by hand here.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.15fb593692ac": {
+      "type": "text",
+      "source": "Run the loop for 25 ticks",
+      "value": "运行循环 25 个 tick"
+    },
+    "text.162a9c17a9d8": {
+      "type": "text",
+      "source": "goal in corridor · ",
+      "value": "目标位于通道中 · "
+    },
+    "text.16b99cb82fed": {
+      "type": "text",
+      "source": " default: from sendImage",
+      "value": " default: from sendImage",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.16cb3b07866a": {
+      "type": "text",
+      "source": "In one sentence: who runs you?",
+      "value": "用一句话回答：谁在运行您？"
+    },
+    "text.179e7b256bba": {
+      "type": "text",
+      "source": "&#9689;",
+      "value": "&#9689;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.183960d1c652": {
+      "type": "text",
+      "source": " Parse text-form choose_direction(...) calls from models without structured tool calls.",
+      "value": " Parse text-form choose_direction(...) calls from models without structured tool calls.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.186240e875d7": {
+      "type": "text",
+      "source": "ready · ",
+      "value": "就绪 · "
+    },
+    "text.18ac3e7343f0": {
+      "type": "text",
+      "source": "d",
+      "value": "d",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1987c5ef6f55": {
+      "type": "text",
+      "source": "The Agent · Securing Agents",
+      "value": "智能体 · 安全智能体"
+    },
+    "text.1a115e1ce860": {
+      "type": "text",
+      "source": "background:#1e3a5f;color:#53c0f0",
+      "value": "background:#1e3a5f;color:#53c0f0",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1a115e1ce860~1": {
+      "type": "text",
+      "source": "background:#1e3a5f;color:#53c0f0",
+      "value": "background:#1e3a5f;color:#53c0f0",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1aae696a9712": {
+      "type": "text",
+      "source": " attach the rendered PNG each turn. Try true on \"omni\" and \"vision\"",
+      "value": " attach the rendered PNG each turn. Try true on \"omni\" and \"vision\"",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1b443979f03b": {
+      "type": "text",
+      "source": " mazeToDataURL: paint a maze state to a PNG data URL (the \"graphic\" channel).",
+      "value": " mazeToDataURL: paint a maze state to a PNG data URL (the \"graphic\" channel).",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1bc003d6120b": {
+      "type": "text",
+      "source": "gave up after ",
+      "value": "经过 "
+    },
+    "text.1c20decc3a9c": {
+      "type": "text",
+      "source": "An agent with no language model",
+      "value": "不使用语言模型的智能体"
+    },
+    "text.1d8bc293353e": {
+      "type": "text",
+      "source": "DIRECTIONS: N=up(-Y)  S=down(+Y)  E=right(+X)  W=left(-X)",
+      "value": "方向：N=上 (-Y)  S=下 (+Y)  E=右 (+X)  W=左 (-X)"
+    },
+    "text.1e2fc9dae033": {
+      "type": "text",
+      "source": "#0a0a0f",
+      "value": "#0a0a0f",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1f30a0ad952b": {
+      "type": "text",
+      "source": "</div></details>",
+      "value": "</div></details>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1f30a0ad952b~1": {
+      "type": "text",
+      "source": "</div></details>",
+      "value": "</div></details>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2043472b2a1c": {
+      "type": "text",
+      "source": "background:#0d2030",
+      "value": "background:#0d2030",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.216c311b32f1": {
+      "type": "text",
+      "source": "###################",
+      "value": "###################",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.216c311b32f1~1": {
+      "type": "text",
+      "source": "###################",
+      "value": "###################",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.217a48008a25": {
+      "type": "text",
+      "source": "Module 1 · Part A of 3",
+      "value": "模块 1 · 第 1 部分，共 3 部分"
+    },
+    "text.21993e4f3f22": {
+      "type": "text",
+      "source": " The same loop that ran DFS, BFS, and A* now drives a language model over this maze.",
+      "value": " The same loop that ran DFS, BFS, and A* now drives a language model over this maze.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.236b57c0c119": {
+      "type": "text",
+      "source": " -",
+      "value": " -",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.23f0072689c8": {
+      "type": "text",
+      "source": ", then auto-walked to the goal.",
+      "value": "，随后自动前行至目标。"
+    },
+    "text.25b3595f5bcc": {
+      "type": "text",
+      "source": " REASON",
+      "value": " REASON",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.26c57b085498": {
+      "type": "text",
+      "source": "★",
+      "value": "★",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.26e338f6ec5e": {
+      "type": "text",
+      "source": " opts.directive overrides just the editable core; opts.systemPrompt overrides the whole thing.",
+      "value": " opts.directive overrides just the editable core; opts.systemPrompt overrides the whole thing.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.280393f38ee1": {
+      "type": "text",
+      "source": " corridor: follow it",
+      "value": " corridor: follow it",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.2958d416d08a": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.298e8d39a158": {
+      "type": "text",
+      "source": "openai/gpt-oss-120b",
+      "value": "openai/gpt-oss-120b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.29ba2f877f53": {
+      "type": "text",
+      "source": " move list, including backtracking moves, then replays that list as an animation.",
+      "value": " move list, including backtracking moves, then replays that list as an animation.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.2a1cec988d3e": {
+      "type": "text",
+      "source": " Then corridors/dead-ends were auto-walked for you.",
+      "value": " 随后已为您自动走过走廊和死路。"
+    },
+    "text.2c674ca9ee6e": {
+      "type": "text",
+      "source": "] · ",
+      "value": "] · ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2d0e04914f69": {
+      "type": "text",
+      "source": "A real call, in your browser",
+      "value": "在浏览器中进行真实调用"
+    },
+    "text.2d495a171213": {
+      "type": "text",
+      "source": "POST /v1/chat/completions · the wire format under chat()",
+      "value": "POST /v1/chat/completions · chat() 底层的传输格式"
+    },
+    "text.2d68c3e4a8a3": {
+      "type": "text",
+      "source": " Ask the model only at real junctions; auto-walk corridors and dead ends.",
+      "value": " Ask the model only at real junctions; auto-walk corridors and dead ends.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.2daa8d4a05df": {
+      "type": "text",
+      "source": "south",
+      "value": "south",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2daa8d4a05df~1": {
+      "type": "text",
+      "source": "south",
+      "value": "south",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2e7d2c03a950": {
+      "type": "text",
+      "source": "c",
+      "value": "c",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2f5a41cfbfd0": {
+      "type": "text",
+      "source": "Run the nodes in order. Compare fixed search strategies before the language model takes over; expand a decision rule when you want its implementation.",
+      "value": "按顺序运行各节点。在语言模型接管之前，先比较固定搜索策略；若要查看某个决策规则的实现，请展开该规则。"
+    },
+    "text.30615e803a22": {
+      "type": "text",
+      "source": " false = simple 11x9 maze. true = larger 15x11 maze with more loops",
+      "value": " false = simple 11x9 maze. true = larger 15x11 maze with more loops",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.31112e63c66a": {
+      "type": "text",
+      "source": "You call the chat-completions interface like any other function: hand\n     it a list of messages and a model name, and it hands back one\n     assistant message plus metadata.",
+      "value": "可以像调用其它函数一样调用聊天补全接口：向它传入消息列表和模型名称，它会返回一条助手消息及元数据。"
+    },
+    "text.3114191e298c": {
+      "type": "text",
+      "source": " Optional visibility: uncomment to inspect the complete provider response.",
+      "value": " Optional visibility: uncomment to inspect the complete provider response.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3184c044fd8c": {
+      "type": "text",
+      "source": "#c89bd6",
+      "value": "#c89bd6",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.31e57e985bd2": {
+      "type": "text",
+      "source": "← Setup",
+      "value": "← 设置"
+    },
+    "text.3298bee0bdcb": {
+      "type": "text",
+      "source": " lcg is a tiny seeded random-number generator, so a given seed always builds the same maze (reproducible runs).",
+      "value": " lcg is a tiny seeded random-number generator, so a given seed always builds the same maze (reproducible runs).",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3298bee0bdcb~1": {
+      "type": "text",
+      "source": " lcg is a tiny seeded random-number generator, so a given seed always builds the same maze (reproducible runs).",
+      "value": " lcg is a tiny seeded random-number generator, so a given seed always builds the same maze (reproducible runs).",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.32ebb1abcc1c": {
+      "type": "text",
+      "source": "(",
+      "value": "(",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.32ebb1abcc1c~1": {
+      "type": "text",
+      "source": "(",
+      "value": "(",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.32ebb1abcc1c~2": {
+      "type": "text",
+      "source": "(",
+      "value": "(",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.330aed143db8": {
+      "type": "text",
+      "source": "A single trip around the loop runs through three parts, each with a plain name and a\n     distinct job.",
+      "value": "循环每运行一轮都会经过三个环节，每个环节都有直观的名称和明确的职责。"
+    },
+    "text.333e0a1e2781": {
+      "type": "text",
+      "source": "G",
+      "value": "G",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.333e0a1e2781~1": {
+      "type": "text",
+      "source": "G",
+      "value": "G",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.333e0a1e2781~2": {
+      "type": "text",
+      "source": "G",
+      "value": "G",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.333e0a1e2781~3": {
+      "type": "text",
+      "source": "G",
+      "value": "G",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.333e0a1e2781~4": {
+      "type": "text",
+      "source": "G",
+      "value": "G",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.333e0a1e2781~5": {
+      "type": "text",
+      "source": "G",
+      "value": "G",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.333e0a1e2781~6": {
+      "type": "text",
+      "source": "G",
+      "value": "G",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.333e0a1e2781~7": {
+      "type": "text",
+      "source": "G",
+      "value": "G",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~1": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~10": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~11": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~12": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~13": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~14": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~15": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~16": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~17": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~18": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~19": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~2": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~20": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~21": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~22": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~3": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~4": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~5": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~6": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~7": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~8": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.334359b90efe~9": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.339f8ea3216c": {
+      "type": "text",
+      "source": " Run the loop and collect a step-by-step trace.",
+      "value": " Run the loop and collect a step-by-step trace.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.33c2604cd3e2": {
+      "type": "text",
+      "source": "error body",
+      "value": "错误正文"
+    },
+    "text.34d77418d824": {
+      "type": "text",
+      "source": "Setup builds the environment and the agent's intrinsics, tick runs one perceive-reason-act cycle, and run repeats that tick 25 times so you can watch the position number bounce between the walls.",
+      "value": "Setup 构建环境和智能体的内部属性，tick 运行一次感知—推理—行动循环，run 则将该 tick 重复 25 次，让您观察位置数值如何在两堵墙之间来回反弹。"
+    },
+    "text.35217c2db25b": {
+      "type": "text",
+      "source": "AbortError",
+      "value": "AbortError",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.35217c2db25b~1": {
+      "type": "text",
+      "source": "AbortError",
+      "value": "AbortError",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.35217c2db25b~2": {
+      "type": "text",
+      "source": "AbortError",
+      "value": "AbortError",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3596ee8710cc": {
+      "type": "text",
+      "source": "-> (",
+      "value": "-> (",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.35d700c7ed68": {
+      "type": "text",
+      "source": "What does 'stateless' mean for an LLM API?",
+      "value": "对于 LLM API，“无状态”是什么意思？"
+    },
+    "text.35e5a9632e18": {
+      "type": "text",
+      "source": "Bearer ",
+      "value": "Bearer ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.363d049490fc": {
+      "type": "text",
+      "source": "finish_reason:",
+      "value": "finish_reason："
+    },
+    "text.376683ec4dac": {
+      "type": "text",
+      "source": " mountChatUI renders the chat view; this cell supplies respond().",
+      "value": " mountChatUI renders the chat view; this cell supplies respond().",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3885ff5ae338": {
+      "type": "text",
+      "source": "&lt;",
+      "value": "&lt;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3931e2f2982c": {
+      "type": "text",
+      "source": "\\\\nPath travelled (move into each cell): ",
+      "value": "\\\\n 已走路径（依次进入每个单元格）："
+    },
+    "text.3973e022e932": {
+      "type": "text",
+      "source": "-",
+      "value": "-",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3973e022e932~1": {
+      "type": "text",
+      "source": "-",
+      "value": "-",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3a53db8a2c8a": {
+      "type": "text",
+      "source": "abort",
+      "value": "abort",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3aa976e49f49": {
+      "type": "text",
+      "source": " · tool-spec in system: ",
+      "value": " · 系统中的工具规范："
+    },
+    "text.3ac846b39133": {
+      "type": "text",
+      "source": " Use tool feedback only after a real tool_call; otherwise use a user message.",
+      "value": " Use tool feedback only after a real tool_call; otherwise use a user message.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3be8cb16e5e9": {
+      "type": "text",
+      "source": " Reading guide: most of this block is support code.",
+      "value": " Reading guide: most of this block is support code.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3c018fc532b2": {
+      "type": "text",
+      "source": "\\\\nPick your next move.",
+      "value": "\\\\n 请选择下一步。"
+    },
+    "text.3c4bb8edfba7": {
+      "type": "text",
+      "source": " reads images (needs room to reach the tool call)",
+      "value": " reads images (needs room to reach the tool call)",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3d87838859da": {
+      "type": "text",
+      "source": "\" style=\"max-width:220px;border:1px solid #2a2a2a;border-radius:4px;margin:4px 0;display:block\"/>",
+      "value": "\" style=\"max-width:220px;border:1px solid #2a2a2a;border-radius:4px;margin:4px 0;display:block\"/>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3e23e8160039": {
+      "type": "text",
+      "source": "b",
+      "value": "b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3f0f4a71bf60": {
+      "type": "text",
+      "source": "the endpoint to send to,",
+      "value": "请求发送到的入口；"
+    },
+    "text.3f4addd501d6": {
+      "type": "text",
+      "source": " opts.advanced swaps in the bigger, loopier maze.",
+      "value": " opts.advanced swaps in the bigger, loopier maze.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.40e307855768": {
+      "type": "text",
+      "source": "Set up the maze and fixed rule",
+      "value": "设置迷宫和固定规则"
+    },
+    "text.411fdb22d8d9": {
+      "type": "text",
+      "source": "</span>",
+      "value": "</span>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.411fdb22d8d9~1": {
+      "type": "text",
+      "source": "</span>",
+      "value": "</span>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.411fdb22d8d9~2": {
+      "type": "text",
+      "source": "</span>",
+      "value": "</span>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.411fdb22d8d9~3": {
+      "type": "text",
+      "source": "</span>",
+      "value": "</span>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.42381f6af4f2": {
+      "type": "text",
+      "source": "white-space:pre-wrap\"></div></details>",
+      "value": "white-space:pre-wrap\"></div></details>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4285d23d69c3": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4285d23d69c3~1": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4285d23d69c3~2": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4285d23d69c3~3": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4285d23d69c3~4": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.428766856084": {
+      "type": "text",
+      "source": " Start near the bottom where state.fn is assigned, then read the two animations.",
+      "value": " Start near the bottom where state.fn is assigned, then read the two animations.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.432459c3a208": {
+      "type": "text",
+      "source": "  #  wall   .  passage   @  you   ·  visited   -  unvisited branch   G  goal",
+      "value": "  #  墙壁   .  通道   @  您   ·  已访问   -  未探索的分支   G  目标"
+    },
+    "text.44136fa355b3": {
+      "type": "text",
+      "source": "{}",
+      "value": "{}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4413de2d8a60": {
+      "type": "text",
+      "source": " Turn memory off to make respond a pure, stateless function.",
+      "value": " Turn memory off to make respond a pure, stateless function.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.454349e422f0": {
+      "type": "text",
+      "source": "r",
+      "value": "r",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.455cf7301d57": {
+      "type": "text",
+      "source": " the shortest path that came back from fn.bfsExplore(...).",
+      "value": " the shortest path that came back from fn.bfsExplore(...).",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.45822f54a0d0": {
+      "type": "text",
+      "source": ": ",
+      "value": ": ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.4633bdd356aa": {
+      "type": "text",
+      "source": "BFS code is collapsed by default. If you expand it, read the two phases: first it marks every cell the search examined, then it walks the shortest path BFS found.",
+      "value": "BFS 代码默认处于折叠状态。展开后，请留意两个阶段：首先标记搜索检查过的每个单元格，然后沿 BFS 找到的最短路径前进。"
+    },
+    "text.473287f8298d": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.473287f8298d~1": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.473287f8298d~2": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.475ad64997bc": {
+      "type": "text",
+      "source": "</think>",
+      "value": "</think>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.483ba8ca86c7": {
+      "type": "text",
+      "source": "Run the cells in this order, then vary one control at a time:",
+      "value": "按以下顺序运行单元格，然后每次只调整一个控制项："
+    },
+    "text.485b0c2c3b23": {
+      "type": "text",
+      "source": "</pre>",
+      "value": "</pre>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4d9ebf6d2744": {
+      "type": "text",
+      "source": ", which is not allowed on this turn. ",
+      "value": "，本轮不允许这样移动。"
+    },
+    "text.4dc8ce7ef7a4": {
+      "type": "text",
+      "source": " SYS_REFERENCE holds the fixed map key; runMaze sends directive, reference, tool spec.",
+      "value": " SYS_REFERENCE holds the fixed map key; runMaze sends directive, reference, tool spec.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.4e652cef5a62": {
+      "type": "text",
+      "source": " default: keep conversation",
+      "value": " default: keep conversation",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.4e8b2c7e6258": {
+      "type": "text",
+      "source": "finish_reason",
+      "value": "finish_reason",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4ea712f11bca": {
+      "type": "text",
+      "source": "Two things worth examining in the code above:",
+      "value": "上面的代码有两点值得关注："
+    },
+    "text.4f5a2ada1166": {
+      "type": "text",
+      "source": " (",
+      "value": "（"
+    },
+    "text.503465224091": {
+      "type": "text",
+      "source": "Try it · the model as a pure function",
+      "value": "动手试试 · 将模型视为纯函数"
+    },
+    "text.50d9f42a0e82": {
+      "type": "text",
+      "source": "Exports state.runMaze, the shared solver used by the editable run node. Expand it to inspect the browser plumbing.",
+      "value": "导出 state.runMaze，即可编辑运行节点使用的共享求解器。展开它即可查看浏览器底层处理。"
+    },
+    "text.510047b5e771": {
+      "type": "text",
+      "source": "Run the 'Maze + constant reasoner' node first.",
+      "value": "请先运行“Maze + constant reasoner”节点。"
+    },
+    "text.510047b5e771~1": {
+      "type": "text",
+      "source": "Run the 'Maze + constant reasoner' node first.",
+      "value": "请先运行“Maze + constant reasoner”节点。"
+    },
+    "text.510047b5e771~2": {
+      "type": "text",
+      "source": "Run the 'Maze + constant reasoner' node first.",
+      "value": "请先运行“Maze + constant reasoner”节点。"
+    },
+    "text.52a62334e286": {
+      "type": "text",
+      "source": "background:#161b22",
+      "value": "background:#161b22",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.52a62334e286~1": {
+      "type": "text",
+      "source": "background:#161b22",
+      "value": "background:#161b22",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.53076af3cd39": {
+      "type": "text",
+      "source": "&#9733;",
+      "value": "&#9733;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.535826fffd42": {
+      "type": "text",
+      "source": " One call. No loop, no memory.",
+      "value": " One call. No loop, no memory.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.53806e20174f": {
+      "type": "text",
+      "source": "Repeats the perceive-reason-act cycle 25 times and plots the bouncing position.",
+      "value": "重复执行感知—推理—行动循环 25 次，并绘制来回反弹的位置。"
+    },
+    "text.54936f10dfa9": {
+      "type": "text",
+      "source": "choose_direction",
+      "value": "choose_direction",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.54936f10dfa9~1": {
+      "type": "text",
+      "source": "choose_direction",
+      "value": "choose_direction",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.552e423045fc": {
+      "type": "text",
+      "source": "(none)",
+      "value": "（无）"
+    },
+    "text.552e423045fc~1": {
+      "type": "text",
+      "source": "(none)",
+      "value": "（无）"
+    },
+    "text.552e423045fc~2": {
+      "type": "text",
+      "source": "(none)",
+      "value": "（无）"
+    },
+    "text.552e423045fc~3": {
+      "type": "text",
+      "source": "(none)",
+      "value": "（无）"
+    },
+    "text.5588e024a661": {
+      "type": "text",
+      "source": " decisions",
+      "value": " 次决策后放弃"
+    },
+    "text.55a4bc5be68e": {
+      "type": "text",
+      "source": "tick",
+      "value": "时刻"
+    },
+    "text.5733c5730597": {
+      "type": "text",
+      "source": "Reads the track, chooses a direction with one if statement, and updates the position.",
+      "value": "读取轨道，通过一条 if 语句选择方向，然后更新位置。"
+    },
+    "text.576d30007f28": {
+      "type": "text",
+      "source": " Phase 2: walk the path",
+      "value": " Phase 2: walk the path",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.5807075108e2": {
+      "type": "text",
+      "source": "#aaa",
+      "value": "#aaa",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.58466ebdd352": {
+      "type": "text",
+      "source": "rm",
+      "value": "rm",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.588da4105320": {
+      "type": "text",
+      "source": " · ",
+      "value": " · ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.588da4105320~1": {
+      "type": "text",
+      "source": " · ",
+      "value": " · ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.588da4105320~2": {
+      "type": "text",
+      "source": " · ",
+      "value": " · ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.5944ae849448": {
+      "type": "text",
+      "source": "vision",
+      "value": "vision",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.594ab50e9d04": {
+      "type": "text",
+      "source": " toAscii: marks visited path as ·, unexplored adjacent open cells as -, current as @.",
+      "value": " toAscii: marks visited path as ·, unexplored adjacent open cells as -, current as @.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.5a452459503b": {
+      "type": "text",
+      "source": "position",
+      "value": "位置"
+    },
+    "text.5acdb958f858": {
+      "type": "text",
+      "source": "nvidia/nemotron-nano-12b-v2-vl",
+      "value": "nvidia/nemotron-nano-12b-v2-vl",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.5aeef1888b44": {
+      "type": "text",
+      "source": " full context BEFORE the model responds",
+      "value": " full context BEFORE the model responds",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.5bbba28b2100": {
+      "type": "text",
+      "source": " Alternate input: uncomment to compare the same wire request with another prompt.",
+      "value": " Alternate input: uncomment to compare the same wire request with another prompt.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.5bd1b4c87140": {
+      "type": "text",
+      "source": "◉",
+      "value": "◉",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.5ccc943c2a34": {
+      "type": "text",
+      "source": " msgs)</summary>",
+      "value": " 条消息)</summary>"
+    },
+    "text.5ccfe0af2f69": {
+      "type": "text",
+      "source": "decision ",
+      "value": "决策 "
+    },
+    "text.5ccfe0af2f69~1": {
+      "type": "text",
+      "source": "decision ",
+      "value": "决策 "
+    },
+    "text.5cec3fe5c6f6": {
+      "type": "text",
+      "source": "#8fd09a",
+      "value": "#8fd09a",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.5d3254c10817": {
+      "type": "text",
+      "source": "Module 1b: The ReAct Loop →",
+      "value": "模块 1b：ReAct 循环 →"
+    },
+    "text.5e67ca6ee079": {
+      "type": "text",
+      "source": " The reasoner nodes below swap a real search routine into the same slot.",
+      "value": " The reasoner nodes below swap a real search routine into the same slot.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.5f40f77013e5": {
+      "type": "text",
+      "source": "DFS reasoner",
+      "value": "DFS 推理器"
+    },
+    "text.5f74841b9ff4": {
+      "type": "text",
+      "source": "The agent loop with a swappable reasoning step",
+      "value": "推理步骤可替换的智能体循环"
+    },
+    "text.5ff3953a0121": {
+      "type": "text",
+      "source": "You are navigating a maze. You are called only at JUNCTIONS, the places where 2+ forward paths branch.",
+      "value": "您正在探索一座迷宫。只有到达岔路口（即前方有两条或更多路径分支的位置）时，系统才会调用您。"
+    },
+    "text.6105d6cc76af": {
+      "type": "text",
+      "source": "image",
+      "value": "image",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.62e99eff7e44": {
+      "type": "text",
+      "source": " A* reuses the same animation loop shape as BFS. The planner changed, not the",
+      "value": " A* reuses the same animation loop shape as BFS. The planner changed, not the",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.633b13c5725e": {
+      "type": "text",
+      "source": " untried: [",
+      "value": " 未尝试：["
+    },
+    "text.63503102043f": {
+      "type": "text",
+      "source": " reasoning model. Give it room to think and call tools",
+      "value": " reasoning model. Give it room to think and call tools",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.65adfd47d54e": {
+      "type": "text",
+      "source": "The agent perceives the environment through observations and acts on it through actions. The decision step between them can change.",
+      "value": "智能体通过观察感知环境，并通过行动作用于环境。两者之间的决策步骤可以替换。"
+    },
+    "text.6602ec19e678": {
+      "type": "text",
+      "source": " ── interpret the reply ───────────────────────────────────────────────",
+      "value": " ── interpret the reply ───────────────────────────────────────────────",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.67a5bdf2a82d": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents",
+      "value": "NVIDIA · 安全智能体"
+    },
+    "text.680694f37af1": {
+      "type": "text",
+      "source": "rendered below. Edit the config and Run.",
+      "value": "结果呈现在下方。编辑配置后，点击“运行”。"
+    },
+    "text.6923a489c475": {
+      "type": "text",
+      "source": "Initialises a 1-D track and the agent's position and direction. Environment and agent state remain separate so the reasoning rule can change independently.",
+      "value": "初始化一维轨道以及智能体的位置和方向。环境状态与智能体状态保持分离，使推理规则可以独立更改。"
+    },
+    "text.69e63406cfc4": {
+      "type": "text",
+      "source": "Exports the shared maze helpers and animations. Expand it only when you want the browser plumbing.",
+      "value": "导出共享的迷宫辅助函数和动画。只有在需要查看浏览器底层处理时才展开它。"
+    },
+    "text.6a89dad0efaf": {
+      "type": "text",
+      "source": "Choose one of: ",
+      "value": "请选择以下选项之一："
+    },
+    "text.6b8c8cc96725": {
+      "type": "text",
+      "source": " send the ASCII map alongside the picture",
+      "value": " send the ASCII map alongside the picture",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.6bdb262b0201": {
+      "type": "text",
+      "source": "east",
+      "value": "east",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.6bdb262b0201~1": {
+      "type": "text",
+      "source": "east",
+      "value": "east",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.6bdb262b0201~2": {
+      "type": "text",
+      "source": "east",
+      "value": "east",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.6bdb262b0201~3": {
+      "type": "text",
+      "source": "east",
+      "value": "east",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.6db9cd5cc167": {
+      "type": "text",
+      "source": "    - ",
+      "value": "    - ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.6dc76a191103": {
+      "type": "text",
+      "source": "  ·  temp: ",
+      "value": "  ·  温度："
+    },
+    "text.6eaeb8333aaa": {
+      "type": "text",
+      "source": "One perceive-reason-act cycle",
+      "value": "一次感知—推理—行动循环"
+    },
+    "text.6eda084d043d": {
+      "type": "text",
+      "source": " The run node below is the editing surface; expand this to inspect its supporting plumbing.",
+      "value": " The run node below is the editing surface; expand this to inspect its supporting plumbing.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.720a54ca7438": {
+      "type": "text",
+      "source": " 2) Send it, then read what comes BACK.",
+      "value": " 2) Send it, then read what comes BACK.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.73b80325d868": {
+      "type": "text",
+      "source": " promptFormat(ctx) describes each maze turn; opts.promptFormat can replace it.",
+      "value": " promptFormat(ctx) describes each maze turn; opts.promptFormat can replace it.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.73d848c08008": {
+      "type": "text",
+      "source": "background:#0d1117",
+      "value": "background:#0d1117",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.73d848c08008~1": {
+      "type": "text",
+      "source": "background:#0d1117",
+      "value": "background:#0d1117",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.741fe8ffa232": {
+      "type": "text",
+      "source": " Set up the tiny world the loop will inspect.",
+      "value": " Set up the tiny world the loop will inspect.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.757302eb77e9": {
+      "type": "text",
+      "source": "Current maze:",
+      "value": "当前迷宫："
+    },
+    "text.7618fea52fb5": {
+      "type": "text",
+      "source": "</code>",
+      "value": "</code>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.76a796208b71": {
+      "type": "text",
+      "source": "west",
+      "value": "west",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.76a796208b71~1": {
+      "type": "text",
+      "source": "west",
+      "value": "west",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.770b4e8f739e": {
+      "type": "text",
+      "source": " PERCEIVE",
+      "value": " PERCEIVE",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.77d57e39b407": {
+      "type": "text",
+      "source": "&gt;",
+      "value": "&gt;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.7865b7e6b9d2": {
+      "type": "text",
+      "source": "sw",
+      "value": "sw",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.78f9ac018e55": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.799d97fba63e": {
+      "type": "text",
+      "source": " editable core of the system message (above)",
+      "value": " editable core of the system message (above)",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.7a6c4fac6c5c": {
+      "type": "text",
+      "source": "walk",
+      "value": "walk",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.7a6c4fac6c5c~1": {
+      "type": "text",
+      "source": "walk",
+      "value": "walk",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.7aee49ce3574": {
+      "type": "text",
+      "source": " ── Side-by-side animation: corridor and random maze run together ────────────",
+      "value": " ── Side-by-side animation: corridor and random maze run together ────────────",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.7b7762465e9f": {
+      "type": "text",
+      "source": "A reflex agent on a 1-D track · no LLM, just an if-statement",
+      "value": "一维轨道上的反射式智能体 · 不使用 LLM，只有一条 if 语句"
+    },
+    "text.7b8099610bff": {
+      "type": "text",
+      "source": "Each question is answerable by editing a knob in the LLM-maze cell above and rerunning it.",
+      "value": "只需编辑上方 LLM 迷宫单元格中的一个设置并重新运行，即可回答每个问题。"
+    },
+    "text.7c9bbe5ec9b3": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.7d563ce8aa26": {
+      "type": "text",
+      "source": " ACT",
+      "value": " ACT",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.7e2ac9450b05": {
+      "type": "text",
+      "source": "#1e3a5f",
+      "value": "#1e3a5f",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.7e2b11773250": {
+      "type": "text",
+      "source": " body.messages[0].content = \"In one sentence: what is an agent loop?\";",
+      "value": " body.messages[0].content = \"In one sentence: what is an agent loop?\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.7eef139a67b6": {
+      "type": "text",
+      "source": " reasoning + tools",
+      "value": " reasoning + tools",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.809e41b9bb1e": {
+      "type": "text",
+      "source": "request (key redacted)",
+      "value": "请求（密钥已隐去）"
+    },
+    "text.80cf00cc3aa5": {
+      "type": "text",
+      "source": " Add a few extra openings so the maze has forks and junctions.",
+      "value": " Add a few extra openings so the maze has forks and junctions.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.80cf00cc3aa5~1": {
+      "type": "text",
+      "source": " Add a few extra openings so the maze has forks and junctions.",
+      "value": " Add a few extra openings so the maze has forks and junctions.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.84dfb5be1f00": {
+      "type": "text",
+      "source": " decisions without reaching the goal. Inspect the visible move history, then try a different model or directive.",
+      "value": " 次决策后停止，但尚未到达目标。请检查可见的移动历史记录，然后尝试其它模型或指令。"
+    },
+    "text.8543094d7a81": {
+      "type": "text",
+      "source": " steps) · path: ",
+      "value": " 步）· 路径："
+    },
+    "text.854dff3a4484": {
+      "type": "text",
+      "source": "model: ",
+      "value": "模型："
+    },
+    "text.8599bb1a4163": {
+      "type": "text",
+      "source": " a reasoning model spends tokens thinking first. Leave room for the answer",
+      "value": " a reasoning model spends tokens thinking first. Leave room for the answer",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.85e35748af32": {
+      "type": "text",
+      "source": "\" style=\"font:11px/1.5 ui-monospace,monospace;color:#5a8;",
+      "value": "\" style=\"font:11px/1.5 ui-monospace,monospace;color:#5a8;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.85eb00994d09": {
+      "type": "text",
+      "source": "Content-Type",
+      "value": "Content-Type",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8671ef1e788a": {
+      "type": "text",
+      "source": " default: restate tool format in system",
+      "value": " default: restate tool format in system",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.87b8a295857e": {
+      "type": "text",
+      "source": " +1 = right, -1 = left",
+      "value": " +1 = right, -1 = left",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.881126f754cd": {
+      "type": "text",
+      "source": "\\xb7",
+      "value": "\\xb7",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.881126f754cd~1": {
+      "type": "text",
+      "source": "\\xb7",
+      "value": "\\xb7",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.898702fa218d": {
+      "type": "text",
+      "source": "the Try-it artifact, in code",
+      "value": "“动手试试”练习代码"
+    },
+    "text.89dda5f8c973": {
+      "type": "text",
+      "source": " memory:true keeps the conversation: ctx.history holds the earlier turns and each call",
+      "value": " memory:true keeps the conversation: ctx.history holds the earlier turns and each call",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.8a1449d1939f": {
+      "type": "text",
+      "source": "The model chose ",
+      "value": "模型选择了 "
+    },
+    "text.8a5edab28263": {
+      "type": "text",
+      "source": "/",
+      "value": "/",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8a5edab28263~1": {
+      "type": "text",
+      "source": "/",
+      "value": "/",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8a798890fe93": {
+      "type": "text",
+      "source": "yes",
+      "value": "是"
+    },
+    "text.8a8de823d5ed": {
+      "type": "text",
+      "source": "?",
+      "value": "?",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.8b2cad3796ba": {
+      "type": "text",
+      "source": " makeReasonStream: returns an onReasoning callback that streams thinking tokens into a live div",
+      "value": " makeReasonStream: returns an onReasoning callback that streams thinking tokens into a live div",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.8b778ca56fed": {
+      "type": "text",
+      "source": " Add the tool spec to the prompt so smaller models call it correctly.",
+      "value": " Add the tool spec to the prompt so smaller models call it correctly.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.8bef5564eee0": {
+      "type": "text",
+      "source": " Image-capable entries are marked below; pass one key to runMaze, e.g. { model: \"vision\" }.",
+      "value": " Image-capable entries are marked below; pass one key to runMaze, e.g. { model: \"vision\" }.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.8c51e6f6dd25": {
+      "type": "text",
+      "source": ". Available: ",
+      "value": "。可选方向："
+    },
+    "text.8c9a9d373abb": {
+      "type": "text",
+      "source": "The collapsed dfs(pos) function records a forward step on branch entry and its reverse during backtracking. Expand the node to inspect that recursion.",
+      "value": "折叠的 dfs(pos) 函数会在进入分支时记录一次前进，并在回溯时记录对应的反向移动。展开节点即可查看这一递归过程。"
+    },
+    "text.8ce86a6ae65d": {
+      "type": "text",
+      "source": "N",
+      "value": "N",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8ce86a6ae65d~1": {
+      "type": "text",
+      "source": "N",
+      "value": "N",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8ce86a6ae65d~2": {
+      "type": "text",
+      "source": "N",
+      "value": "N",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8d32b26ed89f": {
+      "type": "text",
+      "source": "Run the 'Maze engine' node first.",
+      "value": "请先运行“迷宫引擎”节点。"
+    },
+    "text.8dccf256f6d5": {
+      "type": "text",
+      "source": ". ",
+      "value": ". ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.8de0b3c47f11": {
+      "type": "text",
+      "source": "S",
+      "value": "S",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8de0b3c47f11~1": {
+      "type": "text",
+      "source": "S",
+      "value": "S",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8de0b3c47f11~2": {
+      "type": "text",
+      "source": "S",
+      "value": "S",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8de0b3c47f11~3": {
+      "type": "text",
+      "source": "S",
+      "value": "S",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8de0b3c47f11~4": {
+      "type": "text",
+      "source": "S",
+      "value": "S",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8de0b3c47f11~5": {
+      "type": "text",
+      "source": "S",
+      "value": "S",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8de0b3c47f11~6": {
+      "type": "text",
+      "source": "S",
+      "value": "S",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8de0b3c47f11~7": {
+      "type": "text",
+      "source": "S",
+      "value": "S",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8e672fb8cb81": {
+      "type": "text",
+      "source": "You are navigating a maze.\nYou are called only at JUNCTIONS (2+ open directions).\nYou get an ASCII map; turn on includeImage below if you also want a picture.\nCorridors are auto-walked, so your position can jump several cells between calls.\nChoose ONE direction from \"Allowed moves this turn\" and call choose_direction().\nDo not repeat a direction listed under \"Already tried here.\"\nWhen every branch is exhausted, take the allowed backtrack and continue.\nPrefer unvisited branches (-) over visited cells (·), and head toward G when you can see it.\nMinimize reasoning efforts and make immediate moves.",
+      "value": "您正在探索一个迷宫。仅在岔路口（有 2 个以上可行方向）才会调用您。您会收到一幅 ASCII 地图；如果还需要图片，请在下方启用 includeImage。系统会自动走过走廊，因此两次调用之间，位置可能会跨越多个单元格。从“Allowed moves this turn”中选择 ONE 个方向，然后调用 choose_direction()。不要重复“Already tried here.”下列出的方向。当所有分支都已探索完毕时，请沿允许的回退方向移动并继续探索。优先选择未访问的分支（-），而不是已访问的单元格（·）；看到 G 时，请朝它前进。尽量减少推理，立即移动。"
+    },
+    "text.8ee662902f2b": {
+      "type": "text",
+      "source": " reads images + tools",
+      "value": " reads images + tools",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.8f527220a0b5": {
+      "type": "text",
+      "source": " Check HTTP status before parsing so failures show the real response body.",
+      "value": " Check HTTP status before parsing so failures show the real response body.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.8fb3dfe77573": {
+      "type": "text",
+      "source": "What is my name?",
+      "value": "我叫什么名字？"
+    },
+    "text.9019f5c1cec8": {
+      "type": "text",
+      "source": "#S...............G#",
+      "value": "#S...............G#",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.91a45bd811a1": {
+      "type": "text",
+      "source": "qwen/qwen3.5-122b-a10b",
+      "value": "qwen/qwen3.5-122b-a10b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9353bfb7fb04": {
+      "type": "text",
+      "source": "Runs A* through the same animation loop as BFS so you can compare only the planner.",
+      "value": "通过与 BFS 相同的动画循环运行 A*，使可以只比较 planner。"
+    },
+    "text.9390298f3fb0": {
+      "type": "text",
+      "source": "no",
+      "value": "否"
+    },
+    "text.93c4abe27cf1": {
+      "type": "text",
+      "source": "direction",
+      "value": "direction",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.947f2e4e4489": {
+      "type": "text",
+      "source": " steps",
+      "value": " 步"
+    },
+    "text.947f2e4e4489~1": {
+      "type": "text",
+      "source": " steps",
+      "value": " 步"
+    },
+    "text.947f2e4e4489~2": {
+      "type": "text",
+      "source": " steps",
+      "value": " 步"
+    },
+    "text.95448bcbb5d1": {
+      "type": "text",
+      "source": " decisions</span>",
+      "value": " 次决策后放弃</span>"
+    },
+    "text.95e2113deee5": {
+      "type": "text",
+      "source": "</strong> · ",
+      "value": "</strong> · ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.96485abcb672": {
+      "type": "text",
+      "source": "image/png",
+      "value": "image/png",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9659325a94b1": {
+      "type": "text",
+      "source": "Run the engine first to export the maze utilities and state.runMaze. Then use the editable maze-agent node: begin with DIRECTIVE and change one option at a time, including model, advanced, text, image, history, coordinates, or tool schema.",
+      "value": "先运行引擎，导出迷宫实用工具和 state.runMaze。然后使用可编辑的迷宫智能体节点：从 DIRECTIVE 开始，每次只更改一个选项，包括 model、advanced、text、image、history、coordinates 或 tool schema。"
+    },
+    "text.9739e9e246b8": {
+      "type": "text",
+      "source": "goal via corridor · ",
+      "value": "经走廊到达目标 · "
+    },
+    "text.97f7a9baf7f0": {
+      "type": "text",
+      "source": "\\\\nAllowed moves this turn: ",
+      "value": "\\\\n 本轮允许的移动方向："
+    },
+    "text.982d9e3eb996": {
+      "type": "text",
+      "source": "text",
+      "value": "text",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.982d9e3eb996~1": {
+      "type": "text",
+      "source": "text",
+      "value": "text",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.982d9e3eb996~2": {
+      "type": "text",
+      "source": "text",
+      "value": "text",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.982d9e3eb996~3": {
+      "type": "text",
+      "source": "text",
+      "value": "text",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.99134bf34c7c": {
+      "type": "text",
+      "source": "simple 11x9 maze",
+      "value": "简单 11x9 迷宫"
+    },
+    "text.99f784fabe72": {
+      "type": "text",
+      "source": "/chat/completions",
+      "value": "/chat/completions",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9aee6b1bcdf6": {
+      "type": "text",
+      "source": "POST",
+      "value": "POST",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9d7de0441056": {
+      "type": "text",
+      "source": "Nemotron Super 120B · stronger",
+      "value": "Nemotron Super 120B · stronger",
+      "untranslated": "Model selector display label; preserve the complete label in English"
+    },
+    "text.9d8a7d595009": {
+      "type": "text",
+      "source": " Auto-walk before feedback so the model sees the actual new position.",
+      "value": " Auto-walk before feedback so the model sees the actual new position.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.9e91f7e93ceb": {
+      "type": "text",
+      "source": " Now at ",
+      "value": " 当前位置："
+    },
+    "text.9ea3e4fbe08f": {
+      "type": "text",
+      "source": " All knobs are optional. opts.model defaults to the multimodal omni model.",
+      "value": " All knobs are optional. opts.model defaults to the multimodal omni model.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.9edefa8b0fdd": {
+      "type": "text",
+      "source": " DFS is the depth-first version of the same agent loop. It first builds a full",
+      "value": " DFS is the depth-first version of the same agent loop. It first builds a full",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.9ee73a58ec1c": {
+      "type": "text",
+      "source": "Maze agent · editable run",
+      "value": "迷宫智能体 · 可编辑运行"
+    },
+    "text.9eedaed729e9": {
+      "type": "text",
+      "source": " The model sees exactly this tool at every junction, one call per decision point.",
+      "value": " The model sees exactly this tool at every junction, one call per decision point.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.9f30cb07757e": {
+      "type": "text",
+      "source": "advanced 15x11 maze",
+      "value": "高级 15x11 迷宫"
+    },
+    "text.9ff0408aae8d": {
+      "type": "text",
+      "source": "Each call: study the maze, choose ONE direction from the allowed moves, and call choose_direction().",
+      "value": "每次调用时：研究迷宫，从允许的移动方向中选择 ONE 个方向，然后调用 choose_direction()。"
+    },
+    "text.a137f17a19a0": {
+      "type": "text",
+      "source": "·",
+      "value": "·",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a2629afe15ea": {
+      "type": "text",
+      "source": "What changes when reasoning calls an LLM",
+      "value": "推理调用 LLM 后会发生什么变化"
+    },
+    "text.a28aae31c25d": {
+      "type": "text",
+      "source": "#0d1117",
+      "value": "#0d1117",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a2d1c681df8f": {
+      "type": "text",
+      "source": "aborted",
+      "value": "已中止"
+    },
+    "text.a2d1c681df8f~1": {
+      "type": "text",
+      "source": "aborted",
+      "value": "已中止"
+    },
+    "text.a30ef43a08bd": {
+      "type": "text",
+      "source": " include the history of past moves",
+      "value": " include the history of past moves",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.a318c24216de": {
+      "type": "text",
+      "source": "+",
+      "value": "+",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a32b0753bf8e": {
+      "type": "text",
+      "source": " runMaze: one corridor-walk + LLM-at-junctions controller, shared by the run node.",
+      "value": " runMaze: one corridor-walk + LLM-at-junctions controller, shared by the run node.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.a387d52fa7d9": {
+      "type": "text",
+      "source": " BFS is split into two readable phases: show the expanding frontier, then walk",
+      "value": " BFS is split into two readable phases: show the expanding frontier, then walk",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.a39a7ffad4a3": {
+      "type": "text",
+      "source": "assistant",
+      "value": "assistant",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a3c516d762d9": {
+      "type": "text",
+      "source": " The search nodes reuse these maze and movement helpers with different decision rules.",
+      "value": " The search nodes reuse these maze and movement helpers with different decision rules.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.a457e8f04aa7": {
+      "type": "text",
+      "source": "canvas",
+      "value": "canvas",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a51a69ecb502": {
+      "type": "text",
+      "source": " build one user turn from the current frame, honoring includeText / includeImage.",
+      "value": " build one user turn from the current frame, honoring includeText / includeImage.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.a52e5f6fd492": {
+      "type": "text",
+      "source": "OUTPUT FORMAT. Reply ONLY by calling this function (no prose, no plain text):",
+      "value": "OUTPUT FORMAT。请调用此函数回复 ONLY（不要使用说明性文字或纯文本）："
+    },
+    "text.a59ed181e426": {
+      "type": "text",
+      "source": " multimodal reasoning model (reads images)",
+      "value": " multimodal reasoning model (reads images)",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.a5b08a6829bb": {
+      "type": "text",
+      "source": " What goes OUT, with the key redacted so a screenshot never leaks it.",
+      "value": " What goes OUT, with the key redacted so a screenshot never leaks it.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.a5bf3a30fd2b": {
+      "type": "text",
+      "source": "You are at (",
+      "value": "您位于 ("
+    },
+    "text.a6cbb77572fd": {
+      "type": "text",
+      "source": "sample → perceive → (text → text) → act → impact",
+      "value": "采样 → 感知 →（文本 → 文本）→ 行动 → 影响"
+    },
+    "text.a79a71b58afe": {
+      "type": "text",
+      "source": "Before you continue",
+      "value": "继续学习之前"
+    },
+    "text.a9f51566bd67": {
+      "type": "text",
+      "source": "E",
+      "value": "E",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a9f51566bd67~1": {
+      "type": "text",
+      "source": "E",
+      "value": "E",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a9f51566bd67~2": {
+      "type": "text",
+      "source": "E",
+      "value": "E",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aa12f65dcf9f": {
+      "type": "text",
+      "source": "Run the nodes in order. Each puts a different decision rule into the same maze-solving loop:",
+      "value": "按顺序运行各节点。每个节点都会将不同的决策规则放入同一个迷宫求解循环："
+    },
+    "text.aa88a0a85757": {
+      "type": "text",
+      "source": "with history",
+      "value": "包含历史记录"
+    },
+    "text.aac32651b10f": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~1": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~2": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~3": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~4": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~5": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~6": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~7": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aac32651b10f~8": {
+      "type": "text",
+      "source": "</div>",
+      "value": "</div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ab2cd7748892": {
+      "type": "text",
+      "source": "\">",
+      "value": "\">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.acb6051294c5": {
+      "type": "text",
+      "source": "Press Run to send a single request. It stands entirely on its own, with no loop wrapped\n     around it and nothing from an earlier turn carried along.",
+      "value": "点击“运行”发送单次请求。该请求完全独立，外部没有循环，也不会携带先前轮次的任何内容。"
+    },
+    "text.ace768703af0": {
+      "type": "text",
+      "source": "Every turn: emit exactly one ",
+      "value": "每轮：仅发出一个 "
+    },
+    "text.ad9bf818e087": {
+      "type": "text",
+      "source": "Three facts about that function shape how agents built on top of it have to work:",
+      "value": "该函数的三个特征决定了基于它构建的智能体必须如何运行："
+    },
+    "text.af1064dd7886": {
+      "type": "text",
+      "source": "Memory is on, so I follow the whole conversation. Tell me your name, then ask what it is. Flip 🧠 memory off and I answer each message cold, a stateless function with no recall of the last.",
+      "value": "记忆已开启，因此我会依据完整对话作答。请先告诉我名字，然后问我它是什么。关闭 🧠 memory 后，我会将每条消息都视为全新的输入来回答，成为无法回忆上一条消息的无状态函数。"
+    },
+    "text.afc1367bd45c": {
+      "type": "text",
+      "source": "solved · ",
+      "value": "已解开 · "
+    },
+    "text.b2eef2ab0d7f": {
+      "type": "text",
+      "source": " msgs",
+      "value": " 条消息"
+    },
+    "text.b358631a69c0": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-super-120b-a12b",
+      "value": "nvidia/nemotron-3-super-120b-a12b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b358631a69c0~1": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-super-120b-a12b",
+      "value": "nvidia/nemotron-3-super-120b-a12b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b39f2870695c": {
+      "type": "text",
+      "source": " log.details(\"raw response\", reply);",
+      "value": " log.details(\"raw response\", reply);",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.b4b28b8ac166": {
+      "type": "text",
+      "source": "background:#040d08;padding:8px;border-radius:4px;max-height:180px;overflow:auto;",
+      "value": "background:#040d08;padding:8px;border-radius:4px;max-height:180px;overflow:auto;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b5580fc061f7": {
+      "type": "text",
+      "source": "Both interfaces wrap the same stateless call. They differ only in who keeps the conversation between turns.",
+      "value": "两个接口封装的是同一种无状态调用，区别仅在于由谁保存各轮之间的对话。"
+    },
+    "text.b5eaefb0d0b3": {
+      "type": "text",
+      "source": " repeat the tool spec in the system message when the server does not inject it clearly",
+      "value": " repeat the tool spec in the system message when the server does not inject it clearly",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.b6f5d9db0428": {
+      "type": "text",
+      "source": " must send something",
+      "value": " must send something",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.b6ff421d969a": {
+      "type": "text",
+      "source": ": asking model...",
+      "value": "：正在询问模型..."
+    },
+    "text.b70997a92d60": {
+      "type": "text",
+      "source": ").\\\\n",
+      "value": ").\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b71b35ec9c2a": {
+      "type": "text",
+      "source": "→ POST ",
+      "value": "→ POST ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b72bc9d38aec": {
+      "type": "text",
+      "source": "image_url",
+      "value": "image_url",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b72bc9d38aec~1": {
+      "type": "text",
+      "source": "image_url",
+      "value": "image_url",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b81775cc5ae5": {
+      "type": "text",
+      "source": " direction letter taken into visited[i] (actions[i-1]); parallel to visited",
+      "value": " direction letter taken into visited[i] (actions[i-1]); parallel to visited",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.b9499193cd85": {
+      "type": "text",
+      "source": "stateless",
+      "value": "无状态"
+    },
+    "text.b9a205e02c1d": {
+      "type": "text",
+      "source": " Phase 1: animate frontier expanding",
+      "value": " Phase 1: animate frontier expanding",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.ba5ec51d07a4": {
+      "type": "text",
+      "source": ")",
+      "value": ")",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.ba5ec51d07a4~1": {
+      "type": "text",
+      "source": ")",
+      "value": ")",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.ba5ec51d07a4~2": {
+      "type": "text",
+      "source": ")",
+      "value": ")",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.ba5ec51d07a4~3": {
+      "type": "text",
+      "source": ")",
+      "value": ")",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.ba66bb471e9b": {
+      "type": "text",
+      "source": "The constant \"always east\" rule reaches the goal on a straight corridor, then stalls at the first wall in the maze, since a fixed heading cannot turn.",
+      "value": "固定的“始终向东”规则可以在笔直走廊中抵达终点，但会在迷宫的第一堵墙前停滞，因为固定朝向无法转弯。"
+    },
+    "text.baa75d19c4c6": {
+      "type": "text",
+      "source": "(start)",
+      "value": "（起点）"
+    },
+    "text.bacb769b46f6": {
+      "type": "text",
+      "source": "application/json",
+      "value": "application/json",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.baf4a24dd35c": {
+      "type": "text",
+      "source": "The loop, drawn locally",
+      "value": "在本地绘制循环"
+    },
+    "text.bb175ed1ddd8": {
+      "type": "text",
+      "source": "Set up the world and agent",
+      "value": "设置环境和智能体"
+    },
+    "text.bb940641b5d0": {
+      "type": "text",
+      "source": "  required: ",
+      "value": "  必需参数："
+    },
+    "text.bbc5e661e106": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~1": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbf6f4310964": {
+      "type": "text",
+      "source": "Bearer nvapi-...redacted",
+      "value": "Bearer nvapi-...redacted",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.be1bef0a0fb1": {
+      "type": "text",
+      "source": "reasoning_content (model's notes)",
+      "value": "reasoning_content（模型的思考记录）"
+    },
+    "text.bff6b118ff89": {
+      "type": "text",
+      "source": "background:#76b900;color:#000;font-weight:bold",
+      "value": "background:#76b900;color:#000;font-weight:bold",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bff6b118ff89~1": {
+      "type": "text",
+      "source": "background:#76b900;color:#000;font-weight:bold",
+      "value": "background:#76b900;color:#000;font-weight:bold",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c00058560b33": {
+      "type": "text",
+      "source": "The model returned several moves instead of one. ",
+      "value": "模型返回了多个移动方向，而不是一个。"
+    },
+    "text.c05eb745cdff": {
+      "type": "text",
+      "source": "BFS reasoner",
+      "value": "BFS 推理器"
+    },
+    "text.c222cb42e1d2": {
+      "type": "text",
+      "source": "Every endpoint in this course speaks this same format, including the OpenClaw agent\n     runtime in Module 3.",
+      "value": "本课程中的每个入口都采用相同的格式，包括模块 3 中的 OpenClaw 智能体运行时。"
+    },
+    "text.c23ca11f0198": {
+      "type": "text",
+      "source": " ── Edit this freely: it becomes the CORE of the system message. ──",
+      "value": " ── Edit this freely: it becomes the CORE of the system message. ──",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.c32b9f383c65": {
+      "type": "text",
+      "source": " Model choices for this tool-calling maze task; every entry supports tool calls.",
+      "value": " Model choices for this tool-calling maze task; every entry supports tool calls.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.c3641f8544d7": {
+      "type": "text",
+      "source": "@",
+      "value": "@",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c384b3fecff4": {
+      "type": "text",
+      "source": " text reasoning model",
+      "value": " text reasoning model",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.c4310c128f97": {
+      "type": "text",
+      "source": "#d6a86a",
+      "value": "#d6a86a",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c510e5c9b326": {
+      "type": "text",
+      "source": "rsn",
+      "value": "rsn",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c6f15b19934c": {
+      "type": "text",
+      "source": "No move was executed. Choose exactly one of: ",
+      "value": "未执行任何移动。请从以下方向中恰好选择一个："
+    },
+    "text.c7770c4e4cd0": {
+      "type": "text",
+      "source": "← HTTP ",
+      "value": "← HTTP ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c7b912e05212": {
+      "type": "text",
+      "source": "The maze stopped after ",
+      "value": "迷宫在经过 "
+    },
+    "text.c82b342c38fb": {
+      "type": "text",
+      "source": "MAP KEY:",
+      "value": "MAP KEY："
+    },
+    "text.ca2d622740a5": {
+      "type": "text",
+      "source": "Executed ",
+      "value": "已执行 "
+    },
+    "text.ca2d622740a5~1": {
+      "type": "text",
+      "source": "Executed ",
+      "value": "已执行 "
+    },
+    "text.ca2d622740a5~2": {
+      "type": "text",
+      "source": "Executed ",
+      "value": "已执行 "
+    },
+    "text.ca978112ca1b": {
+      "type": "text",
+      "source": "a",
+      "value": "a",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.cb7af6500708": {
+      "type": "text",
+      "source": "Explain the agent loop in two sentences",
+      "value": "用两句话解释智能体循环"
+    },
+    "text.cbff69acfd2c": {
+      "type": "text",
+      "source": "The model did not return a usable direction. ",
+      "value": "模型未返回可用的方向。"
+    },
+    "text.cc2e5fd6ccc2": {
+      "type": "text",
+      "source": " 1) The request: an endpoint, headers, and a JSON body.",
+      "value": " 1) The request: an endpoint, headers, and a JSON body.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.cc3bfa85b357": {
+      "type": "text",
+      "source": "  col=X increases → (east)   row=Y increases ↓ (south)   top-left=(0,0)",
+      "value": "  列=X 向右递增 →（东）行=Y 向下递增 ↓（南）左上角=(0,0)"
+    },
+    "text.cc6b69b40bf7": {
+      "type": "text",
+      "source": "&amp;",
+      "value": "&amp;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.cdb4ee2aea69": {
+      "type": "text",
+      "source": ".",
+      "value": ".",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.cdb4ee2aea69~1": {
+      "type": "text",
+      "source": ".",
+      "value": ".",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.cdb4ee2aea69~10": {
+      "type": "text",
+      "source": ".",
+      "value": ".",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.cdb4ee2aea69~11": {
+      "type": "text",
+      "source": ".",
+      "value": ".",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.cdb4ee2aea69~2": {
+      "type": "text",
+      "source": ".",
+      "value": ".",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.cdb4ee2aea69~3": {
+      "type": "text",
+      "source": ".",
+      "value": ".",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.cdb4ee2aea69~4": {
+      "type": "text",
+      "source": ".",
+      "value": ".",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.cdb4ee2aea69~5": {
+      "type": "text",
+      "source": ".",
+      "value": ".",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.cdb4ee2aea69~6": {
+      "type": "text",
+      "source": ".",
+      "value": ".",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.cdb4ee2aea69~7": {
+      "type": "text",
+      "source": ".",
+      "value": ".",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.cdb4ee2aea69~8": {
+      "type": "text",
+      "source": ".",
+      "value": ".",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.cdb4ee2aea69~9": {
+      "type": "text",
+      "source": ".",
+      "value": ".",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.ce2d18c4d3ae": {
+      "type": "text",
+      "source": "One stateless chat completion · a real call to the model",
+      "value": "一次无状态聊天补全 · 对模型的真实调用"
+    },
+    "text.cfc6b34af5d7": {
+      "type": "text",
+      "source": " normalizeDir: accept letters OR words ('E', 'EEN', 'east', 'east north') and return NSEW letters.",
+      "value": " normalizeDir: accept letters OR words ('E', 'EEN', 'east', 'east north') and return NSEW letters.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.d03502c43d74": {
+      "type": "text",
+      "source": ",",
+      "value": ",",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d03502c43d74~1": {
+      "type": "text",
+      "source": ",",
+      "value": ",",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d03502c43d74~2": {
+      "type": "text",
+      "source": ",",
+      "value": ",",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d03502c43d74~3": {
+      "type": "text",
+      "source": ",",
+      "value": ",",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d03502c43d74~4": {
+      "type": "text",
+      "source": ",",
+      "value": ",",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d03502c43d74~5": {
+      "type": "text",
+      "source": ",",
+      "value": ",",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d03502c43d74~6": {
+      "type": "text",
+      "source": ",",
+      "value": ",",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d11775b7ccf1": {
+      "type": "text",
+      "source": " The three fields you actually use: the text, why it stopped, and the token bill.",
+      "value": " The three fields you actually use: the text, why it stopped, and the token bill.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.d2c70da7bcef": {
+      "type": "text",
+      "source": "background:#1e2a1e;color:#4a7a4a",
+      "value": "background:#1e2a1e;color:#4a7a4a",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d3b0941aca31": {
+      "type": "text",
+      "source": " surrounding perceive-act loop that displays each move.",
+      "value": " surrounding perceive-act loop that displays each move.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.d43cedfbcfb5": {
+      "type": "text",
+      "source": "#loop-artifact",
+      "value": "#loop-artifact",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d456536c81cc": {
+      "type": "text",
+      "source": "Reached G. Done.",
+      "value": "已到达 G。完成。"
+    },
+    "text.d52469ae5801": {
+      "type": "text",
+      "source": " A fixed heading is enough on a straight corridor, so 'always east' walks it straight to the goal.",
+      "value": " A fixed heading is enough on a straight corridor, so 'always east' walks it straight to the goal.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.d552bf71a61a": {
+      "type": "text",
+      "source": " Explicit \"what the model sees this turn\" block: text map, accumulated path, image.",
+      "value": " Explicit \"what the model sees this turn\" block: text map, accumulated path, image.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.d64e6184998f": {
+      "type": "text",
+      "source": " The run node surfaces it as a DIRECTIVE constant a student can rewrite.",
+      "value": " The run node surfaces it as a DIRECTIVE constant a student can rewrite.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.d6a7cd2a7371": {
+      "type": "text",
+      "source": "any",
+      "value": "any",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d6d4d362ecf2": {
+      "type": "text",
+      "source": " Reading guide: this is infrastructure, not a required coding exercise.",
+      "value": " Reading guide: this is infrastructure, not a required coding exercise.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.d84064ac3e29": {
+      "type": "text",
+      "source": "At each junction, return NSEW moves. Execution stops at a wall or goal, then walks any corridor automatically.",
+      "value": "在每个岔路口返回 NSEW 步。执行将在遇到墙壁或目标时停止，随后自动走过所有走廊。"
+    },
+    "text.d8980a134cfd": {
+      "type": "text",
+      "source": "raw response",
+      "value": "原始响应"
+    },
+    "text.d8ee694aee37": {
+      "type": "text",
+      "source": " then hit a wall going ",
+      "value": "，随后朝此方向撞墙："
+    },
+    "text.d9ce6856ee22": {
+      "type": "text",
+      "source": " reasoning models think first, so give the answer room past the reasoning_content",
+      "value": " reasoning models think first, so give the answer room past the reasoning_content",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.d9d14e3cf058": {
+      "type": "text",
+      "source": "Position by tick",
+      "value": "各时刻的位置"
+    },
+    "text.d9ddb139f728": {
+      "type": "text",
+      "source": " SYS_DIRECTIVE is the editable \"core\" of the system message.",
+      "value": " SYS_DIRECTIVE is the editable \"core\" of the system message.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.daa6a64e67ad": {
+      "type": "text",
+      "source": "): ",
+      "value": "): ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.db6b064f4fab": {
+      "type": "text",
+      "source": "\" style=\"max-width:240px;border:1px solid #2a2a2a;border-radius:4px;margin:3px 0;display:block\"/>",
+      "value": "\" style=\"max-width:240px;border:1px solid #2a2a2a;border-radius:4px;margin:3px 0;display:block\"/>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.dc365e79d41c": {
+      "type": "text",
+      "source": "north",
+      "value": "north",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.dc365e79d41c~1": {
+      "type": "text",
+      "source": "north",
+      "value": "north",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.de9c609c0263": {
+      "type": "text",
+      "source": " call with a non-empty argument.",
+      "value": " 调用，并提供非空参数。"
+    },
+    "text.e09f45652ea1": {
+      "type": "text",
+      "source": "\\\\n\\\\n",
+      "value": "\\\\n\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e09f45652ea1~1": {
+      "type": "text",
+      "source": "\\\\n\\\\n",
+      "value": "\\\\n\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e09f45652ea1~2": {
+      "type": "text",
+      "source": "\\\\n\\\\n",
+      "value": "\\\\n\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e15ffa80f805": {
+      "type": "text",
+      "source": " decisions (",
+      "value": " 次决策（"
+    },
+    "text.e46e7bc3db04": {
+      "type": "text",
+      "source": "Swapping the reasoning step while the loop stays fixed",
+      "value": "保持循环不变，替换推理步骤"
+    },
+    "text.e5a7bbae3d8d": {
+      "type": "text",
+      "source": "\" style=\"margin:6px 0\"></div>",
+      "value": "\" style=\"margin:6px 0\"></div>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e612e0890a62": {
+      "type": "text",
+      "source": "Using a language model to choose maze moves",
+      "value": "使用语言模型选择迷宫移动动作"
+    },
+    "text.e8c84d27732d": {
+      "type": "text",
+      "source": "Pressing Run returns whatever the model produced for that single call, and running it again may give a different response because each call is independent with no shared state between them.",
+      "value": "点击“运行”会返回模型为该次调用生成的内容；再次运行可能得到不同的回答，因为各次调用彼此独立，不共享任何状态。"
+    },
+    "text.e9cc834b3bdb": {
+      "type": "text",
+      "source": "Why does an agent need a loop instead of one call?",
+      "value": "为什么智能体需要循环，而不能只调用一次？"
+    },
+    "text.ea19349dea2e": {
+      "type": "text",
+      "source": "  ·  max_tokens: ",
+      "value": "  ·  max_tokens："
+    },
+    "text.eb4011e61dc6": {
+      "type": "text",
+      "source": "The three parts on the loop",
+      "value": "循环的三个环节"
+    },
+    "text.ebb7e9352fec": {
+      "type": "text",
+      "source": "You are a terse assistant. One sentence.",
+      "value": "您是一名言简意赅的助手。只用一句话回答。"
+    },
+    "text.ec18dd89b333": {
+      "type": "text",
+      "source": "(no content; the model used its whole budget thinking, so raise max_tokens)",
+      "value": "（没有内容；模型用完了全部预算进行思考，请增大 max_tokens）"
+    },
+    "text.ec2ad799783a": {
+      "type": "text",
+      "source": " · history",
+      "value": " · 历史记录"
+    },
+    "text.ec70467033e1": {
+      "type": "text",
+      "source": "#f0a500",
+      "value": "#f0a500",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ec8f7a4d14bd": {
+      "type": "text",
+      "source": "</strong> · input: ",
+      "value": "</strong> · 输入："
+    },
+    "text.ed7002b439e9": {
+      "type": "text",
+      "source": "content",
+      "value": "content",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ed756b1193e8": {
+      "type": "text",
+      "source": "LLM maze run · model chooses moves",
+      "value": "LLM 迷宫运行 · 模型选择移动动作"
+    },
+    "text.ee01943c656e": {
+      "type": "text",
+      "source": " ── model selection (pick a key from state.MAZE_MODELS, an id string, or an object) ──",
+      "value": " ── model selection (pick a key from state.MAZE_MODELS, an id string, or an object) ──",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.eef7a51540c1": {
+      "type": "text",
+      "source": "Maze engine",
+      "value": "迷宫引擎"
+    },
+    "text.efdb5576d726": {
+      "type": "text",
+      "source": "Nemotron Nano 30B · fast",
+      "value": "Nemotron Nano 30B · fast",
+      "untranslated": "Model selector display label; preserve the complete label in English"
+    },
+    "text.f096753f7dee": {
+      "type": "text",
+      "source": " chat() is a wrapper. Underneath, it makes one ordinary HTTP POST in the",
+      "value": " chat() is a wrapper. Underneath, it makes one ordinary HTTP POST in the",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.f350044e5ca4": {
+      "type": "text",
+      "source": "content (the actual answer)",
+      "value": "content（实际答案）"
+    },
+    "text.f41e8a67ffb4": {
+      "type": "text",
+      "source": " Once every branch at a junction has been explored, expose only the corridor we",
+      "value": " Once every branch at a junction has been explored, expose only the corridor we",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.f4b4157a02a6": {
+      "type": "text",
+      "source": "Save your nvapi- key on the course home page first.",
+      "value": "请先在课程主页上保存 nvapi- 密钥。"
+    },
+    "text.f532b77281f0": {
+      "type": "text",
+      "source": " the same loop-exit signal Module 1b builds on",
+      "value": " the same loop-exit signal Module 1b builds on",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.f57d330cbd4a": {
+      "type": "text",
+      "source": "Corridors (one forward option) are walked for you automatically, so between calls your position can JUMP several cells. The exact list of coordinates you have already travelled is given to you every turn. Use it to connect your moves to where you ended up.",
+      "value": "系统会替您自动走过走廊（只有一个前进选项），因此两次调用之间，位置可能会 JUMP 多个单元格。每一轮都会向您提供您已经走过的完整坐标列表。请用它将移动与最终到达的位置对应起来。"
+    },
+    "text.f5a631b8a5f0": {
+      "type": "text",
+      "source": " · stateless",
+      "value": " · 无状态"
+    },
+    "text.f69b2e7e0c8d": {
+      "type": "text",
+      "source": " dead end: reverse out",
+      "value": " dead end: reverse out",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.f86b4d3007fd": {
+      "type": "text",
+      "source": "2d",
+      "value": "2d",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.f94f864ca363": {
+      "type": "text",
+      "source": "NSEW sequence such as 'E' or 'EEN'; direction words also work.",
+      "value": "NSEW 序列，例如 'E' 或 'EEN'；也可使用方向词。"
+    },
+    "text.f956b9e6ef93": {
+      "type": "text",
+      "source": " arrived through. The model still has to choose that backtrack and continue its search.",
+      "value": " arrived through. The model still has to choose that backtrack and continue its search.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.fa1171877ea1": {
+      "type": "text",
+      "source": " Show the exact model request in a collapsible panel before each call.",
+      "value": " Show the exact model request in a collapsible panel before each call.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.fa24955a1723": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-nano-30b-a3b",
+      "value": "nvidia/nemotron-3-nano-30b-a3b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fa24955a1723~1": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-nano-30b-a3b",
+      "value": "nvidia/nemotron-3-nano-30b-a3b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fa24955a1723~2": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-nano-30b-a3b",
+      "value": "nvidia/nemotron-3-nano-30b-a3b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fcb5f40df9be": {
+      "type": "text",
+      "source": "W",
+      "value": "W",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fcb5f40df9be~1": {
+      "type": "text",
+      "source": "W",
+      "value": "W",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fcb5f40df9be~2": {
+      "type": "text",
+      "source": "W",
+      "value": "W",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fd09da605e58": {
+      "type": "text",
+      "source": "corridor",
+      "value": "通道"
+    },
+    "text.fd0d7c825612": {
+      "type": "text",
+      "source": "background:#f0a500;color:#000;font-weight:bold",
+      "value": "background:#f0a500;color:#000;font-weight:bold",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fd0d7c825612~1": {
+      "type": "text",
+      "source": "background:#f0a500;color:#000;font-weight:bold",
+      "value": "background:#f0a500;color:#000;font-weight:bold",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fdf91ea11fea": {
+      "type": "text",
+      "source": "When every branch is exhausted, use the allowed backtrack to continue the search.",
+      "value": "当所有分支都已走尽时，请使用允许的回溯方向继续搜索。"
+    },
+    "text.fe79b26d0e6a": {
+      "type": "text",
+      "source": " default: list every coordinate travelled",
+      "value": " default: list every coordinate travelled",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.ff4ec4732159": {
+      "type": "text",
+      "source": " ── Store shared state ──────────────────────────────────────────────────────",
+      "value": " ── Store shared state ──────────────────────────────────────────────────────",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.ff92027f46cf": {
+      "type": "text",
+      "source": " default: send ASCII map",
+      "value": " default: send ASCII map",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.ffbcd23cb803": {
+      "type": "text",
+      "source": "\\\\nAlready tried here: ",
+      "value": "\\\\n 已在此处尝试："
+    }
+  }
+}

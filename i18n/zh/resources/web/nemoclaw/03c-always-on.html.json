@@ -1,0 +1,1212 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "zh-CN",
+  "template": "web/nemoclaw/03c-always-on.html",
+  "media": [
+    "web/nemoclaw/assets/figures/03c-always-on-1.svg"
+  ],
+  "values": {
+    "link.0091943cf98e": {
+      "type": "link",
+      "source": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">Anthropic, <em>Agent Skills</em></a>. The production skill-folder layout this page's <code>skills/&lt;name&gt;.md</code> drop-in mirrors.",
+      "value": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">Anthropic, <em>Agent Skills</em></a>。面向生产环境的技能文件夹布局，本页的 <code>skills/&lt;name&gt;.md</code> 即插即用机制沿用了这一布局。"
+    },
+    "link.05beb079092b": {
+      "type": "link",
+      "source": "<a href=\"https://langchain-ai.github.io/langgraph/concepts/persistence/\" target=\"_blank\" rel=\"noopener\">LangGraph, <em>Persistence</em> (checkpointers)</a>. Checkpointed graphs as the same save-and-resume primitive in a different production shape.",
+      "value": "<a href=\"https://langchain-ai.github.io/langgraph/concepts/persistence/\" target=\"_blank\" rel=\"noopener\">LangGraph, <em>Persistence</em> (checkpointers)</a>。带检查点的图以另一种生产形态提供了相同的保存和恢复原语。"
+    },
+    "link.1be52ce4d6ee": {
+      "type": "link",
+      "source": "Comprehensive list at <a href=\"04c-going-further.html#refs\">Going Further · References</a>.",
+      "value": "完整列表请参阅<a href=\"04c-going-further.html#refs\">深入探索 · 参考资料</a>。"
+    },
+    "link.3312a49bb3b7": {
+      "type": "link",
+      "source": "\n    OpenClaw cron can bind a job to the\n    <a href=\"https://docs.openclaw.ai/cron-vs-heartbeat\" target=\"_blank\" rel=\"noopener\">main, isolated, current, or a named session</a>.\n    This course uses isolated cron runs so each demonstration starts clean. You run the skill\n    and the cron job on this page. Heartbeat and the sub-agent\n    <code>delegate()</code> call are covered here only as table entries;\n    no cell on this page fires them, so do not wait for one.\n  ",
+      "value": "\n    OpenClaw cron 可以将作业绑定到<a href=\"https://docs.openclaw.ai/cron-vs-heartbeat\" target=\"_blank\" rel=\"noopener\">主会话、隔离会话、当前会话或命名会话</a>。本课程使用隔离的 cron 运行，确保每次演示都从全新状态开始。您将在本页运行技能和 cron 作业。心跳和子智能体的\n    <code>delegate()</code> 调用仅作为表格条目在此介绍；本页没有单元会触发它们，因此不必等待。\n  "
+    },
+    "link.3802464628f8": {
+      "type": "link",
+      "source": "<a href=\"https://en.wikipedia.org/wiki/Cron\" target=\"_blank\" rel=\"noopener\">cron(8)</a>. The canonical reference for the scheduling primitive the cron drop-in borrows.",
+      "value": "<a href=\"https://en.wikipedia.org/wiki/Cron\" target=\"_blank\" rel=\"noopener\">cron(8)</a>。cron 即插即用机制所借鉴的调度原语之权威参考资料。"
+    },
+    "link.3ed5860a7638": {
+      "type": "link",
+      "source": "\n    Public\n    <a href=\"https://github.com/NousResearch/hermes-agent\" target=\"_blank\" rel=\"noopener\">Hermes</a>\n    repository exposes the same broad capability categories: reusable skills, persistent\n    memory, scheduled work, and a messaging gateway. Its implementation and defaults differ\n    from OpenClaw, so compare the security boundary and session behavior rather than assuming\n    that matching feature names imply matching risk controls.\n  ",
+      "value": "\n    公开的\n    <a href=\"https://github.com/NousResearch/hermes-agent\" target=\"_blank\" rel=\"noopener\">Hermes</a>\n    代码库提供了相同的几类广泛能力：可复用技能、持久化记忆、计划任务和消息网关。其实现方式和默认设置与 OpenClaw 不同，因此应比较两者的安全边界和会话行为，而不能因为功能名称相同，就认定风险控制措施也相同。\n  "
+    },
+    "link.5e103bc8aec7": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2305.16291\" target=\"_blank\" rel=\"noopener\">Wang et al., <em>Voyager: An Open-Ended Embodied Agent</em> (2023)</a>. The skill-library / memoised-trajectory mechanic this page builds on, demonstrated in a Minecraft agent.",
+      "value": "<a href=\"https://arxiv.org/abs/2305.16291\" target=\"_blank\" rel=\"noopener\">Wang et al., <em>Voyager: An Open-Ended Embodied Agent</em> (2023)</a>。本页所基于的技能库和记忆化轨迹机制，该论文通过 Minecraft 智能体进行了演示。"
+    },
+    "link.61debfba3ff7": {
+      "type": "link",
+      "source": "<a href=\"https://hermes-agent.nousresearch.com/docs/user-guide/security/\" target=\"_blank\" rel=\"noopener\">Hermes Agent, <em>Security</em></a>. Pairing and allowlist behavior for messaging-gateway callers.",
+      "value": "<a href=\"https://hermes-agent.nousresearch.com/docs/user-guide/security/\" target=\"_blank\" rel=\"noopener\">Hermes Agent, <em>Security</em></a>。消息网关调用方的配对和允许列表行为。"
+    },
+    "link.6bfaa61838ef": {
+      "type": "link",
+      "source": "\n    <strong>Hermes gates its messaging surface.</strong> Its current\n    <a href=\"https://hermes-agent.nousresearch.com/docs/user-guide/security/\" target=\"_blank\" rel=\"noopener\">security guide</a>\n    documents pairing codes and platform or global user allowlists, with\n    <code>default: deny</code> when no allow rule matches. Those application controls decide who\n    may talk to the agent. An operating-system sandbox separately bounds what its tools can reach.\n  ",
+      "value": "\n    <strong>Hermes 会限制其消息入口。</strong>Hermes 的<a href=\"https://hermes-agent.nousresearch.com/docs/user-guide/security/\" target=\"_blank\" rel=\"noopener\">最新安全指南</a>介绍了配对码，以及平台级或全局用户允许列表；没有匹配的允许规则时采用\n    <code>default: deny</code>。这些应用层控制决定谁可以与智能体通信。操作系统沙箱则另行限制其工具能够访问的资源。\n  "
+    },
+    "link.74e63addb6df": {
+      "type": "link",
+      "source": "<a href=\"https://langchain-ai.github.io/langgraph/concepts/persistence/\" target=\"_blank\" rel=\"noopener\">LangGraph Persistence</a>. Checkpointed graphs as save-and-resume.",
+      "value": "<a href=\"https://langchain-ai.github.io/langgraph/concepts/persistence/\" target=\"_blank\" rel=\"noopener\">LangGraph Persistence</a>。利用带检查点的图实现保存和恢复。"
+    },
+    "link.a7f487335f4c": {
+      "type": "link",
+      "source": "<a href=\"https://github.com/NousResearch/hermes-agent\" target=\"_blank\" rel=\"noopener\">Hermes Agent</a>. Agent application with self-improving skills, persistent memory, cron, and a messaging gateway; NVIDIA's DGX Spark playbooks list Hermes and NemoClaw as separate setup paths.",
+      "value": "<a href=\"https://github.com/NousResearch/hermes-agent\" target=\"_blank\" rel=\"noopener\">Hermes Agent</a>。一种智能体应用，具有可自我改进的技能、持久化记忆、cron 和消息网关；NVIDIA 的 DGX Spark 操作手册将 Hermes 和 NemoClaw 列为不同的设置路径。"
+    },
+    "link.ccd55146aa60": {
+      "type": "link",
+      "source": "<a href=\"https://docs.openclaw.ai/cron-vs-heartbeat\" target=\"_blank\" rel=\"noopener\">OpenClaw, <em>Automation &amp; Tasks</em></a>. Current session and trigger semantics for cron, heartbeat, hooks, and background tasks.",
+      "value": "<a href=\"https://docs.openclaw.ai/cron-vs-heartbeat\" target=\"_blank\" rel=\"noopener\">OpenClaw, <em>Automation &amp; Tasks</em></a>。cron、心跳、钩子和后台任务当前的会话及触发语义。"
+    },
+    "link.ce49744af0d5": {
+      "type": "link",
+      "source": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">Anthropic, <em>Agent Skills</em></a>. The production skill-folder layout.",
+      "value": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">Anthropic, <em>Agent Skills</em></a>。面向生产环境的技能文件夹布局。"
+    },
+    "link.e643d6b4c824": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2305.16291\" target=\"_blank\" rel=\"noopener\">Wang et al., <em>Voyager</em> (2023)</a>. The research origin, demonstrated in a Minecraft agent.",
+      "value": "<a href=\"https://arxiv.org/abs/2305.16291\" target=\"_blank\" rel=\"noopener\">Wang et al., <em>Voyager</em> (2023)</a>。这一理念的研究起源，通过 Minecraft 智能体得到演示。"
+    },
+    "link.f4c2f34199c4": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2304.03442\" target=\"_blank\" rel=\"noopener\">Park et al., <em>Generative Agents</em> (2023)</a>. Multi-day autonomous-agent simulation; the reflection and memory-consolidation patterns an always-on loop reuses.",
+      "value": "<a href=\"https://arxiv.org/abs/2304.03442\" target=\"_blank\" rel=\"noopener\">Park et al., <em>Generative Agents</em> (2023)</a>。多日自主智能体模拟；持续运行的循环会复用其中的反思和记忆整合模式。"
+    },
+    "link.fb4b5ca57979": {
+      "type": "link",
+      "source": "\n      Module 3b ran the agent when you sent a message. OpenClaw can also start work\n      from skills, heartbeats,\n      <a href=\"https://en.wikipedia.org/wiki/Cron\" target=\"_blank\" rel=\"noopener\">cron</a>\n      jobs, and sub-agents. Each path still enters the same agent loop and OpenShell\n      sandbox; the session, directive, and trigger determine what runs. You will install\n      a skill and observe a cron-fired write.\n    ",
+      "value": "\n      模块 3b 会在您发送消息时运行智能体。OpenClaw 还可以通过技能、心跳、\n      <a href=\"https://en.wikipedia.org/wiki/Cron\" target=\"_blank\" rel=\"noopener\">cron</a>\n      作业和子智能体开始工作。每条路径仍会进入同一个智能体循环和 OpenShell\n      沙箱；具体运行内容由会话、指令和触发器决定。您将安装一项技能，并观察一次由 cron 触发的写入操作。\n    "
+    },
+    "rich.0eef1cbc1306": {
+      "type": "rich",
+      "source": "inline string at <code>delegate()</code> time",
+      "value": "调用 <code>delegate()</code> 时传入的内联字符串"
+    },
+    "rich.229fe069e4dc": {
+      "type": "rich",
+      "source": "A skill starts as a markdown file placed under <code>skills/</code>, usually with a\n     short front-matter or heading block that lets the runtime decide when to reveal it.\n     The agent does not load every instruction at once; it progressively discloses the\n     matching skill when the next turn asks for it. You do not restart it, redeploy it,\n     or touch the system prompt yourself.",
+      "value": "技能最初是放置在 <code>skills/</code> 目录下的 markdown 文件，通常包含一段简短的\n     front matter 或标题块，供运行时决定何时将其呈现给智能体。智能体不会一次性加载所有指令；当下一轮请求与某项技能匹配时，它会渐进式加载该技能。您无需重启或重新部署智能体，也无需亲自修改系统提示词。"
+    },
+    "rich.2b8de00d4ba0": {
+      "type": "rich",
+      "source": "Heartbeat <span style=\"color:var(--tf);font-weight:400;font-style:italic\">(concept only)</span>",
+      "value": "心跳<span style=\"color:var(--tf);font-weight:400;font-style:italic\">（仅介绍概念）</span>"
+    },
+    "rich.2baab5567c2e": {
+      "type": "rich",
+      "source": "It installs a demo job that fires every minute and appends a line to\n        <code>MEMORY.md</code>.",
+      "value": "它会安装一个每分钟触发一次的演示作业，并向\n        <code>MEMORY.md</code> 追加一行内容。"
+    },
+    "rich.38dcc796eece": {
+      "type": "rich",
+      "source": "\n    <p><strong>Same runtime as Kickstart.</strong> You are driving the same OpenClaw\n       agent you connected on the Kickstart page.</p>\n  ",
+      "value": "\n    <p><strong>与 Kickstart 使用同一个运行时。</strong>您正在操作的就是在 Kickstart 页面上连接的那个 OpenClaw 智能体。</p>\n  "
+    },
+    "rich.4bd435c75ac7": {
+      "type": "rich",
+      "source": "The next cell reads the tail of <code>MEMORY.md</code> off the sandbox, so\n        you see the line the cron-fired agent wrote while nothing was driving it.",
+      "value": "下一个单元会从沙箱中读取 <code>MEMORY.md</code> 的末尾内容，让您看到无人操作时由 cron 触发的智能体所写入的那一行。"
+    },
+    "rich.7b4bac4ca438": {
+      "type": "rich",
+      "source": "Scheduled jobs live on the gateway rather than behind an HTTP REST route, so the\n     same WebSocket connection the Control UI uses is also where you list and manage them\n     through the cron methods <code>cron.list</code> <code>cron.add</code> and\n     <code>cron.remove</code>. A cron job lets an always-on agent act with no human in\n     the loop because scheduled work fires on its own timer. The course runtime creates\n     an isolated session for this demonstration. OpenClaw can instead bind scheduled work\n     to another supported session mode when continuity is more important than isolation.",
+      "value": "调度作业位于网关上，而不是某个 HTTP REST 路由之后。因此，\n     Control UI 使用的同一个 WebSocket 连接，也是您通过 cron 方法\n     <code>cron.list</code>、<code>cron.add</code> 和 <code>cron.remove</code>\n     列出和管理这些作业的通道。cron 作业按照自身计时器触发，使持续运行的智能体无需人工介入即可执行操作。课程运行时会为本次演示创建隔离会话。如果连续性比隔离性更重要，OpenClaw 也可以将调度工作绑定到其它受支持的会话模式。"
+    },
+    "rich.7bbd2a38941b": {
+      "type": "rich",
+      "source": "<code>workspace/skills/&lt;name&gt;.md</code>",
+      "value": "<code>workspace/skills/&lt;name&gt;.md</code>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.8b88944cb07a": {
+      "type": "rich",
+      "source": "Sub-agent <span style=\"color:var(--tf);font-weight:400;font-style:italic\">(concept only)</span>",
+      "value": "子智能体<span style=\"color:var(--tf);font-weight:400;font-style:italic\">（仅介绍概念）</span>"
+    },
+    "rich.ad93e39f19e4": {
+      "type": "rich",
+      "source": "\n    <strong>Cron jobs run unattended.</strong> A scheduled directive\n    that asks the agent to \"send the daily report\" will fire whether\n    you are watching or not. The course selects an isolated session for\n    each fire, so a bug in one run cannot poison the next run's transcript.\n    Other cron configurations can retain or bind session context between fires.\n    Module 4a adds a kernel-level containment layer on\n    top of this. Every filesystem access and network connection the\n    cron-fired agent attempts passes through an explicit allow-list\n    before the syscall runs. A misbehaving scheduled job can then only\n    reach what the policy permits.\n  ",
+      "value": "\n    <strong>Cron 作业会在无人值守的情况下运行。</strong>如果某条调度指令要求智能体“发送每日报告”，无论您是否正在查看，它都会按时触发。课程会为每次触发选择一个隔离会话，因此某次运行中的错误不会污染下一次运行的记录。其它 cron 配置则可以在多次触发之间保留或绑定会话上下文。模块 4a 会在此基础上添加内核级隔离层。由 cron 触发的智能体尝试进行的每次文件系统访问和网络连接，都必须在系统调用执行前通过明确的允许列表检查。这样，即使调度作业行为异常，也只能访问策略允许的资源。\n  "
+    },
+    "rich.aea1813d87bb": {
+      "type": "rich",
+      "source": "The <strong>trigger</strong> decides when a run starts.",
+      "value": "<strong>触发器</strong>决定何时开始运行。"
+    },
+    "rich.b6494b933012": {
+      "type": "rich",
+      "source": "The <strong>session</strong> sets whose context a run inherits.",
+      "value": "<strong>会话</strong>决定一次运行继承谁的上下文。"
+    },
+    "rich.be1429b4dcb8": {
+      "type": "rich",
+      "source": "The <strong>directive</strong> is the markdown file that tells the agent what to do.",
+      "value": "<strong>指令</strong>是告诉智能体该做什么的 markdown 文件。"
+    },
+    "rich.c3333a5924c5": {
+      "type": "rich",
+      "source": "Skill <span style=\"color:var(--gs);font-weight:400;font-style:italic\">(run below)</span>",
+      "value": "技能<span style=\"color:var(--gs);font-weight:400;font-style:italic\">（下方运行）</span>"
+    },
+    "rich.c89b7a662800": {
+      "type": "rich",
+      "source": "The <span>Always-On</span> Agent",
+      "value": "<span>持续运行的</span>智能体"
+    },
+    "rich.cb7f93d66d47": {
+      "type": "rich",
+      "source": "Cron <span style=\"color:var(--gs);font-weight:400;font-style:italic\">(run below)</span>",
+      "value": "Cron <span style=\"color:var(--gs);font-weight:400;font-style:italic\">（下方运行）</span>"
+    },
+    "rich.f3f8fb3efecf": {
+      "type": "rich",
+      "source": "<code>HEARTBEAT.md</code>",
+      "value": "<code>HEARTBEAT.md</code>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.ffdb41c88010": {
+      "type": "rich",
+      "source": "JSON drop-in <code>prompt</code> field",
+      "value": "JSON 即用型<code>prompt</code>字段"
+    },
+    "text.00bbde564f6a": {
+      "type": "text",
+      "source": "echo '=== MEMORY.md (tail) ==='; tail -n 8 .openclaw/workspace/MEMORY.md 2>/dev/null || echo '(no MEMORY.md yet)'",
+      "value": "echo '=== MEMORY.md（末尾）==='; tail -n 8 .openclaw/workspace/MEMORY.md 2>/dev/null || echo '（尚无 MEMORY.md）'"
+    },
+    "text.043a718774c5": {
+      "type": "text",
+      "source": "s",
+      "value": "s",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.0450f60529f3": {
+      "type": "text",
+      "source": "Install a skill, then trigger it",
+      "value": "安装并触发技能"
+    },
+    "text.04afcc65e34c": {
+      "type": "text",
+      "source": "Always-On · Securing Agents",
+      "value": "持续运行 · 安全智能体"
+    },
+    "text.04d1047bd3b2": {
+      "type": "text",
+      "source": " This is the Try-it artifact. Paste an incident and the live agent picks up a",
+      "value": " This is the Try-it artifact. Paste an incident and the live agent picks up a",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.05634343b15a": {
+      "type": "text",
+      "source": "🧹 cleared session memory: ",
+      "value": "🧹 已清除会话记忆："
+    },
+    "text.05b5b092b65b": {
+      "type": "text",
+      "source": "quick-3c-demo is already absent",
+      "value": "quick-3c-demo 已不存在"
+    },
+    "text.073c1634c496": {
+      "type": "text",
+      "source": "status",
+      "value": "status",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.08270e9d9759": {
+      "type": "text",
+      "source": "removed quick-3c-demo (",
+      "value": "已删除 quick-3c-demo（"
+    },
+    "text.08dc692c5bff": {
+      "type": "text",
+      "source": "The last cell removes the job so nothing lingers.",
+      "value": "最后一个单元会移除该作业，避免留下任何内容。"
+    },
+    "text.0925ba1e2dec": {
+      "type": "text",
+      "source": "Directive lives in",
+      "value": "指令所在位置"
+    },
+    "text.0a07f6594619": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0a07f6594619~1": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0a07f6594619~2": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0b593b2990d3": {
+      "type": "text",
+      "source": "Turn 1 · install the skill",
+      "value": "第 1 轮 · 安装技能"
+    },
+    "text.0f56e9ba6c09": {
+      "type": "text",
+      "source": " Alternate mode: change AUTO_WATCH to true to poll for up to 90 seconds.",
+      "value": " Alternate mode: change AUTO_WATCH to true to poll for up to 90 seconds.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.10fd874b68da": {
+      "type": "text",
+      "source": "write",
+      "value": "写入"
+    },
+    "text.11d0b394cff7": {
+      "type": "text",
+      "source": "NO HUMAN IN THE LOOP",
+      "value": "NO HUMAN IN THE LOOP",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.132ed326f2d3": {
+      "type": "text",
+      "source": "When the user asks about a production incident, or pastes a log line\nsuggesting one, do these things in order:\n\n1. Confirm the affected service and the time window.\n2. Open the runbook for that service from /sandbox/runbooks/.\n3. Suggest the smallest reversible mitigation; do not run it yourself.\n4. Ask the user before opening a Jira ticket.",
+      "value": "当用户询问生产事故或粘贴可能表明发生事故的日志行时，请按以下顺序操作：\n\n1. 确认受影响的服务和时间范围。\n2. 从 /sandbox/runbooks/. 打开该服务的运行手册。\n3. 建议最小且可逆的缓解措施；不要自行执行。\n4. 创建 Jira 工单前先询问用户。"
+    },
+    "text.16e4ab430622": {
+      "type": "text",
+      "source": "← final chat frame",
+      "value": "← 最终聊天帧"
+    },
+    "text.16fae831674d": {
+      "type": "text",
+      "source": "No completed run was reported within 90s.",
+      "value": "90 秒内未报告任何已完成的运行。"
+    },
+    "text.19bd8f28c63f": {
+      "type": "text",
+      "source": "skill steps echoed in the reply: ",
+      "value": "回复中体现的技能步骤："
+    },
+    "text.1a2303ede074": {
+      "type": "text",
+      "source": "Connect",
+      "value": "Connect",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1a2303ede074~1": {
+      "type": "text",
+      "source": "Connect",
+      "value": "Connect",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1a7fe5e70bb5": {
+      "type": "text",
+      "source": "Call cron.remove with the server-assigned id from cron.add. If the page reloaded, recover that id by name before removing the job.",
+      "value": "使用 cron.add 返回的服务器分配 ID 调用 cron.remove。如果页面已重新加载，请先按名称找回该 ID，再移除作业。"
+    },
+    "text.1c69972915aa": {
+      "type": "text",
+      "source": " Check once by default so the lesson never traps you in a 90-second wait.",
+      "value": " Check once by default so the lesson never traps you in a 90-second wait.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1cec0fa1fffc": {
+      "type": "text",
+      "source": "* * * * *",
+      "value": "* * * * *",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1d649f27527b": {
+      "type": "text",
+      "source": "cron.runs",
+      "value": "cron.runs",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1d649f27527b~1": {
+      "type": "text",
+      "source": "cron.runs",
+      "value": "cron.runs",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1e32847769dc": {
+      "type": "text",
+      "source": "jira",
+      "value": "jira",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2063fe956de5": {
+      "type": "text",
+      "source": " · check ",
+      "value": " · 第 "
+    },
+    "text.218ff052b960": {
+      "type": "text",
+      "source": "No human prompted that write. The cron schedule drove it on its own, doing\n     real work on the agent's behalf while you were away.",
+      "value": "这次写入并非由人工提示触发，而是由 cron 调度自动驱动。即使您不在场，它也能代表智能体完成实际工作。"
+    },
+    "text.2861c8bf0af9": {
+      "type": "text",
+      "source": "Step 2 · Inspect your running agent",
+      "value": "第 2 步 · 检查正在运行的智能体"
+    },
+    "text.29d6788145a1": {
+      "type": "text",
+      "source": "aria-live",
+      "value": "aria-live",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2a6dfb45ef8c": {
+      "type": "text",
+      "source": "How would you triage a sudden latency spike?",
+      "value": "您会如何分流处理突发的延迟峰值？"
+    },
+    "text.2c40f2845cfc": {
+      "type": "text",
+      "source": " The panel is helpers.mountChatUI and it streams through helpers.openclawChat; open the helpers tab above to read either one's source.",
+      "value": " The panel is helpers.mountChatUI and it streams through helpers.openclawChat; open the helpers tab above to read either one's source.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.2e0ff22be30a": {
+      "type": "text",
+      "source": "art-",
+      "value": "art-",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2edc662499c4": {
+      "type": "text",
+      "source": "What skills are you configured with?",
+      "value": "您配置了哪些技能？"
+    },
+    "text.3042b7c86a98": {
+      "type": "text",
+      "source": "logs and artifacts",
+      "value": "日志和产物"
+    },
+    "text.3127c9f9a663": {
+      "type": "text",
+      "source": "then repeats",
+      "value": "然后重复"
+    },
+    "text.31a2b0e3d089": {
+      "type": "text",
+      "source": "reversible",
+      "value": "可逆"
+    },
+    "text.3316348dbadf": {
+      "type": "text",
+      "source": "read",
+      "value": "读取"
+    },
+    "text.349b6dcd7ce7": {
+      "type": "text",
+      "source": "# skills/triage-incident.md",
+      "value": "# skills/triage-incident.md",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.374e9a63460e": {
+      "type": "text",
+      "source": "cron.remove",
+      "value": "cron.remove",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3ad54adb06f1": {
+      "type": "text",
+      "source": "Append one short line to MEMORY.md noting the current UTC minute, then exit.",
+      "value": "向 MEMORY.md 追加一行简短内容，记录当前的 UTC 分钟，然后退出。"
+    },
+    "text.3b2c44d4f70c": {
+      "type": "text",
+      "source": "The always-on loop",
+      "value": "持续运行的循环"
+    },
+    "text.3bac5905b6a8": {
+      "type": "text",
+      "source": "The same skills-as-memoised-trajectories pattern appears across the ecosystem\n     under other names and shapes:",
+      "value": "这种将技能作为记忆化轨迹的模式，在整个生态系统中还以其它名称和形式出现："
+    },
+    "text.3c56eae7e1f4": {
+      "type": "text",
+      "source": "Connect OpenClaw in Module 3a, then run the cron setup nodes first.",
+      "value": "请先在模块 3a 中连接 OpenClaw，然后运行 cron 设置节点。"
+    },
+    "text.3d45554c507b": {
+      "type": "text",
+      "source": "watching for a completed cron run · polling every 5s",
+      "value": "正在等待 cron 运行完成 · 每 5 秒轮询一次"
+    },
+    "text.3d4fd0c2462e": {
+      "type": "text",
+      "source": "Gateway · cron management",
+      "value": "网关 · cron 管理"
+    },
+    "text.3ee87c37aacb": {
+      "type": "text",
+      "source": "cron.runs is unavailable; polling cron.list runtime state instead.",
+      "value": "cron.runs 不可用；改为轮询 cron.list 的运行时状态。"
+    },
+    "text.3f267c2ab422": {
+      "type": "text",
+      "source": "confirm",
+      "value": "确认"
+    },
+    "text.404d5ff0859b": {
+      "type": "text",
+      "source": " so it does not keep running in the background…",
+      "value": "，以免它继续在后台运行…"
+    },
+    "text.465b77719d41": {
+      "type": "text",
+      "source": "checkout-service is throwing 502s in us-east-1",
+      "value": "us-east-1 中的 checkout-service 出现 502 错误"
+    },
+    "text.4b168d88dc87": {
+      "type": "text",
+      "source": "role",
+      "value": "role",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4bd714641363": {
+      "type": "text",
+      "source": "Connect your launchable in Module 3a first. This panel needs its URL and token.",
+      "value": "请先在模块 3a 中连接可启动实例，并提供该实例的 URL 和 token。"
+    },
+    "text.4d84cb3e1046": {
+      "type": "text",
+      "source": "Where to take this",
+      "value": "后续应用方向"
+    },
+    "text.4dfb2f544ef6": {
+      "type": "text",
+      "source": "agentTurn",
+      "value": "agentTurn",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4ec948a2c720": {
+      "type": "text",
+      "source": " matching skill mid-turn, the same machinery a heartbeat or cron fire uses.",
+      "value": " matching skill mid-turn, the same machinery a heartbeat or cron fire uses.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.4f5a2ada1166": {
+      "type": "text",
+      "source": " (",
+      "value": "（"
+    },
+    "text.51391bf0ab33": {
+      "type": "text",
+      "source": "wake",
+      "value": "唤醒"
+    },
+    "text.51532eca537f": {
+      "type": "text",
+      "source": "Module 4a: OpenShell in NemoClaw →",
+      "value": "模块 4a：NemoClaw 中的 OpenShell →"
+    },
+    "text.52187f63b6de": {
+      "type": "text",
+      "source": "checking cron run status once",
+      "value": "正在检查一次 cron 运行状态"
+    },
+    "text.552e423045fc": {
+      "type": "text",
+      "source": "(none)",
+      "value": "（无）"
+    },
+    "text.55e52b3fd362": {
+      "type": "text",
+      "source": "installed ",
+      "value": "已安装 "
+    },
+    "text.56944f48d4a4": {
+      "type": "text",
+      "source": "⛔ aborting the run on ",
+      "value": "⛔ 正在中止运行，停止位置："
+    },
+    "text.588da4105320": {
+      "type": "text",
+      "source": " · ",
+      "value": " · ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.58b309444f3e": {
+      "type": "text",
+      "source": "Step 1 · Add a Skill",
+      "value": "第 1 步 · 添加技能"
+    },
+    "text.5a4c8eb4f8f0": {
+      "type": "text",
+      "source": "Run Connect first.",
+      "value": "请先运行 Connect。"
+    },
+    "text.5a4c8eb4f8f0~1": {
+      "type": "text",
+      "source": "Run Connect first.",
+      "value": "请先运行 Connect。"
+    },
+    "text.5a4c8eb4f8f0~2": {
+      "type": "text",
+      "source": "Run Connect first.",
+      "value": "请先运行 Connect。"
+    },
+    "text.5a4c8eb4f8f0~3": {
+      "type": "text",
+      "source": "Run Connect first.",
+      "value": "请先运行 Connect。"
+    },
+    "text.5b13b3747318": {
+      "type": "text",
+      "source": "openshell sandbox connect ",
+      "value": "openshell sandbox connect ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.5bdb477f4329": {
+      "type": "text",
+      "source": "workspace / logs",
+      "value": "工作区 / 日志"
+    },
+    "text.5cbd90513f75": {
+      "type": "text",
+      "source": " Use the gateway socket to list scheduled jobs without changing anything.",
+      "value": " Use the gateway socket to list scheduled jobs without changing anything.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.5d706be1abcb": {
+      "type": "text",
+      "source": "cron or heartbeat",
+      "value": "cron 或心跳"
+    },
+    "text.5dc5be4c91c9": {
+      "type": "text",
+      "source": "No new run yet. Re-run this node after the scheduled minute, or enable AUTO_WATCH.",
+      "value": "尚无新的运行结果。请在计划执行的分钟过去后重新运行此节点，或启用 AUTO_WATCH。"
+    },
+    "text.5f4b71189dde": {
+      "type": "text",
+      "source": "   A tool is hung or the model is looping. The ⚙️ rows above show the exact tool + args it got stuck on.",
+      "value": "   某个工具已卡住，或模型陷入了循环。上方的 ⚙️ 行显示了卡住时的确切工具及其参数。"
+    },
+    "text.5f72005e81c4": {
+      "type": "text",
+      "source": "schedule",
+      "value": "调度"
+    },
+    "text.601f06e314ca": {
+      "type": "text",
+      "source": "cron.add",
+      "value": "cron.add",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.62dd7cd9e6ae": {
+      "type": "text",
+      "source": "Connect on the Kickstart page, then send something that matches a skill, such as “checkout-service is throwing 502s in us-east-1, what do I do?”",
+      "value": "请先在 Kickstart 页面连接，然后发送一条与某项技能匹配的消息，例如“us-east-1 中的 checkout-service 出现 502 错误，我该怎么办？”"
+    },
+    "text.64371a28dc46": {
+      "type": "text",
+      "source": "Summarize what you would do if paged at 3am",
+      "value": "概述一下，如果凌晨 3 点收到告警，您会怎么做"
+    },
+    "text.64d4866d0eda": {
+      "type": "text",
+      "source": "raw cron.list",
+      "value": "cron.list 原始结果"
+    },
+    "text.64d4866d0eda~1": {
+      "type": "text",
+      "source": "raw cron.list",
+      "value": "cron.list 原始结果"
+    },
+    "text.64d4866d0eda~2": {
+      "type": "text",
+      "source": "raw cron.list",
+      "value": "cron.list 原始结果"
+    },
+    "text.651fb2fa70d0": {
+      "type": "text",
+      "source": " Edit the greeting, examples, or respond logic, then Run to re-render.",
+      "value": " Edit the greeting, examples, or respond logic, then Run to re-render.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.6678f8435c0b": {
+      "type": "text",
+      "source": "Remove the demo cron",
+      "value": "移除演示 cron 作业"
+    },
+    "text.67a5bdf2a82d": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents",
+      "value": "NVIDIA · 安全智能体"
+    },
+    "text.67ddaa5fe58b": {
+      "type": "text",
+      "source": "The widget below asks the agent to install that exact skill, then fires a\n     chat completion designed to match it. Matching is automatic. The agent\n     compares your request against the description of every skill in its workspace,\n     so your prompt never has to name the one you want. Watch the agent reach for the\n     new skill on its second turn.",
+      "value": "下方组件会要求智能体安装上述技能，然后发起一次专门设计为与其匹配的聊天补全。匹配过程自动完成。智能体会将请求与工作区中每项技能的描述进行比较，因此无需在提示词中指明所需技能。请观察智能体如何在第二轮使用这项新技能。"
+    },
+    "text.680694f37af1": {
+      "type": "text",
+      "source": "rendered below. Edit the config and Run.",
+      "value": "结果呈现在下方。编辑配置后，点击“运行”。"
+    },
+    "text.6918acd830ff": {
+      "type": "text",
+      "source": "agent reply",
+      "value": "智能体回复"
+    },
+    "text.6959b4159575": {
+      "type": "text",
+      "source": "Session",
+      "value": "会话"
+    },
+    "text.69824d3b0e70": {
+      "type": "text",
+      "source": "References",
+      "value": "参考资料"
+    },
+    "text.6a0c735d09d6": {
+      "type": "text",
+      "source": "configured session",
+      "value": "已配置的会话"
+    },
+    "text.71f1393b546a": {
+      "type": "text",
+      "source": "Check run status, then read MEMORY.md",
+      "value": "检查运行状态，然后读取 MEMORY.md"
+    },
+    "text.72c1e9a26b8f": {
+      "type": "text",
+      "source": "main session here",
+      "value": "此处为主会话"
+    },
+    "text.737d627d1029": {
+      "type": "text",
+      "source": " helpers.log.json(\"cron observation\", observed);",
+      "value": " helpers.log.json(\"cron observation\", observed);",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.742fd75c704f": {
+      "type": "text",
+      "source": "raw cron.remove",
+      "value": "原始 cron.remove 结果"
+    },
+    "text.75246e7908b5": {
+      "type": "text",
+      "source": " WebSocket frames)",
+      "value": " 个 WebSocket 帧）"
+    },
+    "text.78f9ac018e55": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.79f42a2505c9": {
+      "type": "text",
+      "source": "raw transcript (",
+      "value": "原始记录（"
+    },
+    "text.7a6eb285461a": {
+      "type": "text",
+      "source": "Turn 2 · trigger it",
+      "value": "第 2 轮 · 触发技能"
+    },
+    "text.7c9bbe5ec9b3": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.7c9bbe5ec9b3~1": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.7e5f76c94a63": {
+      "type": "text",
+      "source": "UTC",
+      "value": "UTC",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.82ac6ce1b5a4": {
+      "type": "text",
+      "source": "Writes skills/triage-incident.md to the workspace so the agent can use it on the next turn without changing the system prompt.",
+      "value": "将 skills/triage-incident.md 写入工作区，使智能体无需更改系统提示词即可在下一轮使用该技能。"
+    },
+    "text.8470682eb4d6": {
+      "type": "text",
+      "source": " Optional visibility: uncomment to inspect the raw cron observation.",
+      "value": " Optional visibility: uncomment to inspect the raw cron observation.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.88a7b1944d8e": {
+      "type": "text",
+      "source": "cron schedule, per-minute precision",
+      "value": "cron 调度，精确到分钟"
+    },
+    "text.88ba7f47fa0c": {
+      "type": "text",
+      "source": "How triggers choose context and instructions",
+      "value": "触发器如何选择上下文和指令"
+    },
+    "text.898702fa218d": {
+      "type": "text",
+      "source": "the Try-it artifact, in code",
+      "value": "“动手试试”练习代码"
+    },
+    "text.8a83ac80811a": {
+      "type": "text",
+      "source": "not observed",
+      "value": "未观测到"
+    },
+    "text.8b85dd3b89d3": {
+      "type": "text",
+      "source": "quick-3c-skill",
+      "value": "quick-3c-skill",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8b9c643731c9": {
+      "type": "text",
+      "source": "Trigger",
+      "value": "触发器"
+    },
+    "text.8e0de681339e": {
+      "type": "text",
+      "source": "reading MEMORY.md from sandbox '",
+      "value": "正在从沙盒 '"
+    },
+    "text.8f1f2752d4c9": {
+      "type": "text",
+      "source": "Send an incident question that matches the skill's trigger conditions. The prompt doesn't name the skill; the agent matches it against the skill descriptions in its workspace.",
+      "value": "发送一个符合该技能触发条件的事故问题。提示词不会指定技能名称；智能体会将问题与工作区中的技能描述进行匹配。"
+    },
+    "text.91aae794df4d": {
+      "type": "text",
+      "source": "List current crons",
+      "value": "列出当前的 cron 任务"
+    },
+    "text.91e9bacf28f6": {
+      "type": "text",
+      "source": " Inspect the latest reply for signs that the skill recipe shaped it.",
+      "value": " Inspect the latest reply for signs that the skill recipe shaped it.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.9297d8f48d42": {
+      "type": "text",
+      "source": "cron jobs remaining: ",
+      "value": "剩余 cron 任务："
+    },
+    "text.92cc5cc5650a": {
+      "type": "text",
+      "source": "reuses the caller's",
+      "value": "复用调用方的会话"
+    },
+    "text.9557eb114e8a": {
+      "type": "text",
+      "source": "\n    That is the same machinery a heartbeat or a cron fire would use, only driven by\n    your own message instead of by a timer.\n  ",
+      "value": "\n    心跳或 cron 触发时使用的也是同一套机制，只不过这次由您发送的消息驱动，而不是由计时器驱动。\n  "
+    },
+    "text.9a801933a552": {
+      "type": "text",
+      "source": " (fires every minute)",
+      "value": "（每分钟触发一次）"
+    },
+    "text.9c045a2048b7": {
+      "type": "text",
+      "source": "Install a demo cron",
+      "value": "安装一个 cron 演示任务"
+    },
+    "text.9c3a4a55111a": {
+      "type": "text",
+      "source": "not completed yet",
+      "value": "尚未完成"
+    },
+    "text.9c4373945b48": {
+      "type": "text",
+      "source": "s · ~",
+      "value": "秒 · 约"
+    },
+    "text.9ca21b949770": {
+      "type": "text",
+      "source": "Open the gateway WebSocket and authenticate.",
+      "value": "打开网关 WebSocket 并完成身份验证。"
+    },
+    "text.9d8113609f46": {
+      "type": "text",
+      "source": "Did it follow the recipe?",
+      "value": "它是否遵循了操作步骤？"
+    },
+    "text.9f388b8826f4": {
+      "type": "text",
+      "source": " check",
+      "value": " 次检查"
+    },
+    "text.a0e8ecd245c1": {
+      "type": "text",
+      "source": "quick-3c-demo",
+      "value": "quick-3c-demo",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a0e8ecd245c1~1": {
+      "type": "text",
+      "source": "quick-3c-demo",
+      "value": "quick-3c-demo",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a0e8ecd245c1~2": {
+      "type": "text",
+      "source": "quick-3c-demo",
+      "value": "quick-3c-demo",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a4282e4b2298": {
+      "type": "text",
+      "source": " of ",
+      "value": " of ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.a7a61da92bf3": {
+      "type": "text",
+      "source": "Scan the agent's reply for the four steps in the skill: confirming scope, opening the runbook, proposing a reversible mitigation, pausing before Jira.",
+      "value": "检查智能体的回复是否包含技能中的四个步骤：确认影响范围、打开运行手册、提出可撤销的缓解措施，以及在创建 Jira 工单前暂停并征求同意。"
+    },
+    "text.aa0d15b6637f": {
+      "type": "text",
+      "source": "Manage scheduled jobs over the gateway WebSocket: list, add, poll run history, compare MEMORY.md, and remove. The completed flow leaves visible evidence of an unattended write.",
+      "value": "通过网关 WebSocket 管理计划任务：列出任务、添加任务、轮询运行历史记录、比较 MEMORY.md，然后移除任务。流程完成后，会留下无人值守写入操作的可见证据。"
+    },
+    "text.ab2eb66448fc": {
+      "type": "text",
+      "source": "Module 3 · Part C of 3",
+      "value": "模块 3 · 第 3 部分（共 3 部分）"
+    },
+    "text.ae4393aca911": {
+      "type": "text",
+      "source": "Any harness that can write reusable instructions, schedule work, and accept remote\n     messages can persist a compromised directive beyond one conversation. Module 4 separates\n     those application controls from the sandbox controls that bound filesystem, process, and\n     network access.\n  ",
+      "value": "任何能够写入可复用指令、计划任务并接收远程消息的执行框架，都可能让受入侵指令在一次对话结束后继续存在。模块 4 会区分这些应用层控制与沙箱控制；后者用于限制文件系统、进程和网络访问。\n  "
+    },
+    "text.afed2f77cefe": {
+      "type": "text",
+      "source": "isolated",
+      "value": "isolated",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b4ff3b8e5265": {
+      "type": "text",
+      "source": "It waits about seventy seconds so the job can cross a minute boundary and\n        run on its own.",
+      "value": "它会等待约七十秒，让作业跨过分钟边界并自动运行。"
+    },
+    "text.b55aff9f45b2": {
+      "type": "text",
+      "source": "model plans, calls tools",
+      "value": "模型制定计划并调用工具"
+    },
+    "text.b70ae5753752": {
+      "type": "text",
+      "source": "Try it · trigger a skill in conversation",
+      "value": "动手实践 · 在对话中触发技能"
+    },
+    "text.b736dc17b7b5": {
+      "type": "text",
+      "source": "cron jobs now: ",
+      "value": "当前 cron 作业数："
+    },
+    "text.b9a719abe442": {
+      "type": "text",
+      "source": "fires on a timer",
+      "value": "按计时器触发"
+    },
+    "text.ba5ec51d07a4": {
+      "type": "text",
+      "source": ")",
+      "value": ")",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.ba5ec51d07a4~1": {
+      "type": "text",
+      "source": ")",
+      "value": ")",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.badde3144c2f": {
+      "type": "text",
+      "source": "Call cron.list to see what is already scheduled. Each job carries a server-assigned id, a structured schedule, and a structured payload.",
+      "value": "调用 cron.list 查看已安排的任务。每个任务都包含服务器分配的 id、结构化调度配置和结构化负载。"
+    },
+    "text.bb3f116c30cb": {
+      "type": "text",
+      "source": "⚠ DEGRADED: started ",
+      "value": "⚠ 性能下降：已启动 "
+    },
+    "text.bbfc0a11d4b0": {
+      "type": "text",
+      "source": "cron.add returned no job id",
+      "value": "cron.add 未返回作业 ID"
+    },
+    "text.c112409bced9": {
+      "type": "text",
+      "source": "isolated here; fresh per fire",
+      "value": "此处使用隔离会话；每次触发都会新建"
+    },
+    "text.c25f5a42d424": {
+      "type": "text",
+      "source": "parent agent decides mid-turn",
+      "value": "父智能体在轮次进行期间决定"
+    },
+    "text.c2c0dd8cc3e3": {
+      "type": "text",
+      "source": "\n    Chat with your live agent over the gateway. If you installed the\n    triage-incident skill in Step 1, paste an incident and watch the agent pick the\n    skill up mid-turn without you ever naming it.\n  ",
+      "value": "\n    通过网关与正在运行的智能体对话。如果您已在步骤 1 中安装\n    triage-incident 技能，请粘贴一段事故信息，观察智能体如何在对话过程中自行选用该技能，无需您说出技能名称。\n  "
+    },
+    "text.c3398b6e7c81": {
+      "type": "text",
+      "source": "(no cron jobs installed)",
+      "value": "（未安装 cron 作业）"
+    },
+    "text.c374eea599bb": {
+      "type": "text",
+      "source": "cron",
+      "value": "cron",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c374eea599bb~1": {
+      "type": "text",
+      "source": "cron",
+      "value": "cron",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c6bc2129d4f7": {
+      "type": "text",
+      "source": "Check cron once and return immediately. Re-run after the scheduled minute, or opt into the commented watch mode when you specifically want automatic polling.",
+      "value": "检查一次 cron 后立即返回。请在预定分钟过后重新运行；仅当您明确需要自动轮询时，才启用注释掉的监视模式。"
+    },
+    "text.c94ba9f13391": {
+      "type": "text",
+      "source": "In one session the agent writes the skill to disk, answers a matching question, then checks its reply against the skill's recipe. It picks the skill up by reading its own workspace, finding it without any prompt from you.",
+      "value": "在同一个会话中，智能体会将技能写入磁盘、回答与该技能匹配的问题，然后依据技能中的操作步骤检查自己的回复。它通过读取自身工作区找到并选用该技能，无需您在提示词中提供任何指引。"
+    },
+    "text.c95b3b01ea0e": {
+      "type": "text",
+      "source": "⚠ frame-handler error: ",
+      "value": "⚠ 帧处理程序错误："
+    },
+    "text.c9bd9f04800b": {
+      "type": "text",
+      "source": " Install one short-lived demo cron job so the unattended path is visible.",
+      "value": " Install one short-lived demo cron job so the unattended path is visible.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.cad2a80df44e": {
+      "type": "text",
+      "source": "polite",
+      "value": "polite",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ce71b5b7b33b": {
+      "type": "text",
+      "source": " tok · ",
+      "value": " token · "
+    },
+    "text.cec0c36b6239": {
+      "type": "text",
+      "source": "gateway timer, ~30 min by default",
+      "value": "网关计时器，默认约 30 分钟"
+    },
+    "text.d6e0f32b212d": {
+      "type": "text",
+      "source": "The table shows the course configuration. Use the same three fields to classify other\n     trigger types; OpenClaw also exposes additional session modes.",
+      "value": "下表展示了课程所用的配置。可以使用同样的三个字段对其它触发器类型进行分类；OpenClaw 还提供了其它会话模式。"
+    },
+    "text.d7d21c20fde8": {
+      "type": "text",
+      "source": "model picks it mid-turn when the directive matches the user's ask",
+      "value": "当指令与用户请求匹配时，模型会在轮次进行期间选择该技能"
+    },
+    "text.dcd1d5223f73": {
+      "type": "text",
+      "source": "Name",
+      "value": "名称"
+    },
+    "text.de115745db34": {
+      "type": "text",
+      "source": "my-assistant",
+      "value": "my-assistant",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.de235cc46ffa": {
+      "type": "text",
+      "source": "Walk me through your incident runbook",
+      "value": "逐步讲解事件响应手册"
+    },
+    "text.de583190d4da": {
+      "type": "text",
+      "source": "Every mechanism on this page is described by the same three knobs:",
+      "value": "本页中的每种机制都由以下三个参数描述："
+    },
+    "text.dee9df394086": {
+      "type": "text",
+      "source": "   Run the 🩺 Health check (it flags toolSearch) + 🛠 Recover; for a deeper look, the 📜 logs cell tails the runtime.",
+      "value": "   请运行 🩺 Health check（它会标记 toolSearch）和 🛠 Recover；如需深入排查，📜 logs 单元会持续显示运行时日志的末尾内容。"
+    },
+    "text.defac695e57e": {
+      "type": "text",
+      "source": "#alwayson-artifact",
+      "value": "#alwayson-artifact",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e0239388d585": {
+      "type": "text",
+      "source": "(none this run)",
+      "value": "（本次运行无）"
+    },
+    "text.e19bfda33e96": {
+      "type": "text",
+      "source": "The widget below walks the full lifecycle of a cron job:",
+      "value": "下方组件将带您完成 cron 作业的整个生命周期："
+    },
+    "text.e45e30665e96": {
+      "type": "text",
+      "source": " Remove the demo cron so the launchable does not keep running it.",
+      "value": " Remove the demo cron so the launchable does not keep running it.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.e6fbbdbff6d7": {
+      "type": "text",
+      "source": "✓ cron run reported · ",
+      "value": "✓ 已报告 cron 运行结果 · "
+    },
+    "text.e7d8b0bf6e13": {
+      "type": "text",
+      "source": " tool call(s) but none returned a result or answer.",
+      "value": " 次工具调用，但均未返回结果或答案。"
+    },
+    "text.e95a2edc459c": {
+      "type": "text",
+      "source": "runbook",
+      "value": "响应手册"
+    },
+    "text.e9e5e8db1767": {
+      "type": "text",
+      "source": "Open a WebSocket to the gateway and authenticate. This flow stores its connection in state.call so the next three nodes can send chat turns without re-connecting.",
+      "value": "打开连接到网关的 WebSocket 并完成身份验证。此流程会将连接存入 state.call，供接下来的三个节点发送对话轮次，无需重新连接。"
+    },
+    "text.ea0577a4abeb": {
+      "type": "text",
+      "source": "It connects and lists the crons already installed.",
+      "value": "它会建立连接，并列出已安装的 cron 作业。"
+    },
+    "text.eb355ee8bd0a": {
+      "type": "text",
+      "source": "gateway loop",
+      "value": "网关循环"
+    },
+    "text.ecfab0951aeb": {
+      "type": "text",
+      "source": "What cron jobs do you have scheduled?",
+      "value": "您安排了哪些 cron 作业？"
+    },
+    "text.ed5eb9a37e2d": {
+      "type": "text",
+      "source": "now",
+      "value": "now",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ee1dd38122c8": {
+      "type": "text",
+      "source": " cron.list state is the compatibility fallback for older runtimes.",
+      "value": " cron.list state is the compatibility fallback for older runtimes.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.ef5e40048c83": {
+      "type": "text",
+      "source": " · first token ",
+      "value": " · 首个 token "
+    },
+    "text.f092e8cc73ba": {
+      "type": "text",
+      "source": "raw cron.add",
+      "value": "原始 cron.add"
+    },
+    "text.f4c6436033d8": {
+      "type": "text",
+      "source": "' over the operator terminal …",
+      "value": "' 中通过 operator 终端读取 operator.md …"
+    },
+    "text.f612a61bab20": {
+      "type": "text",
+      "source": " your agent's name, from GET /api/agent on the Kickstart page",
+      "value": " your agent's name, from GET /api/agent on the Kickstart page",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.fa21f62f1f1f": {
+      "type": "text",
+      "source": " as ",
+      "value": "，ID 为 "
+    },
+    "text.fb1086c1826b": {
+      "type": "text",
+      "source": "fresh, parent holds the handle",
+      "value": "新建会话，父智能体持有句柄"
+    },
+    "text.fceccf80b82b": {
+      "type": "text",
+      "source": "Call cron.add with a name, structured schedule, isolated-session target, and agent-turn payload. The gateway assigns the id used for later removal.",
+      "value": "调用 cron.add，并提供名称、结构化调度配置、隔离会话目标和智能体轮次负载。网关会分配一个 id，供后续移除任务时使用。"
+    },
+    "text.fd37b8febd57": {
+      "type": "text",
+      "source": "cron.list",
+      "value": "cron.list",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fd37b8febd57~1": {
+      "type": "text",
+      "source": "cron.list",
+      "value": "cron.list",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fd37b8febd57~2": {
+      "type": "text",
+      "source": "cron.list",
+      "value": "cron.list",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fd37b8febd57~3": {
+      "type": "text",
+      "source": "cron.list",
+      "value": "cron.list",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fd37b8febd57~4": {
+      "type": "text",
+      "source": "cron.list",
+      "value": "cron.list",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fd37b8febd57~5": {
+      "type": "text",
+      "source": "cron.list",
+      "value": "cron.list",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fe1ee8635685": {
+      "type": "text",
+      "source": "MEMORY.md",
+      "value": "MEMORY.md",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ff095fb49905": {
+      "type": "text",
+      "source": "← Module 3b: OpenClaw",
+      "value": "← 模块 3b：OpenClaw"
+    }
+  }
+}

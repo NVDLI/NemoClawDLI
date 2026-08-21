@@ -5,6 +5,7 @@
 // Leaf module: it imports the registries and primitives from _shared.js but references them only inside function bodies, so the import cycle stays load-safe.
 import { HELPER_FNS, REASONING_MODEL, SPECIALS, VIZ_BUILDERS, _labOnlyService, _stepLabOnly, browserChatFetch, chat, chatStream, contextWindow, cosineSim, coursePage, coursePages, diagramSVG, embed, estimateTokens, evalSandboxFs, evalSandboxNetwork, fetchRetry, formatSearchResults, ganttBarsSVG, getConfig, getKey, instantAnswer, mountAgentChat, mountChatUI, mountKeyPanel, openclawChat, sandboxExec, terminal, webSearch, wireFigureZoom } from "./_shared.js";
 import { makeViz } from "./_viz.js";
+import { localizeCourseHelperDescription, localizeCourseUiText } from "./_locale.js";
 
 // ── Cmd-/ · Ctrl-/ : toggle `// ` line comments on the selection ─────────────────
 // The page loads CodeMirror core and the javascript mode but not the comment addon, so this fills in the toggle: comment the selected lines unless all are already commented, else uncomment.
@@ -343,7 +344,7 @@ export function mountCanvasFlow(targetSel, opts) {
             const _d = _docFor(r.row);
             const _s = SPECIALS[r.row] || {};
             const sig = _d.sig || _s.sig || `<code>helpers.${r.row}(…)</code>`;
-            const desc = _d.desc || _s.desc || "";
+            const desc = localizeCourseHelperDescription(r.row, _d.desc || _s.desc || "");
             return `<tr data-helper="${r.row}"${r.extra ? ' data-x="1" style="display:none"' : ''}><td>${sig}</td><td>${desc}</td></tr>
               <tr class="cf-helpers-source-row" data-helper-source="${r.row}" hidden>
                 <td colspan="2">
@@ -1458,17 +1459,17 @@ function _buildHelperRows(allow) {
   for (const [head, names] of HELPER_CATEGORIES) {
     const inU = names.filter(n => universe.has(n));
     if (!inU.length) continue;
-    out.push({ sectionHead: head, extra: inU.every(n => !inScope(n)) });
+    out.push({ sectionHead: localizeCourseUiText(head), extra: inU.every(n => !inScope(n)) });
     inU.forEach(n => out.push(rowFor(n)));
   }
   if (vizNames.length) {
-    out.push({ sectionHead: "Visualization · <code>helpers.viz.*</code>", extra: vizNames.every(n => !inScope(n)) });
+    out.push({ sectionHead: `${localizeCourseUiText("Visualization")} · <code>helpers.viz.*</code>`, extra: vizNames.every(n => !inScope(n)) });
     vizNames.forEach(n => out.push(rowFor(n)));
   }
   const orphans = helperMenuOrphans();
   if (orphans.length) {
     console.warn("[helpers menu] uncategorized helpers (add to HELPER_CATEGORIES):", orphans);
-    out.push({ sectionHead: "Other", extra: orphans.every(n => !inScope(n)) });
+    out.push({ sectionHead: localizeCourseUiText("Other"), extra: orphans.every(n => !inScope(n)) });
     orphans.forEach(n => out.push(rowFor(n)));
   }
   return out;
@@ -1517,7 +1518,7 @@ export function mountRunCell(targetSel, opts) {
             if (r.sectionHead) return `<tr class="cf-helpers-section-head"${r.extra ? ' data-x="1" style="display:none"' : ''}><td colspan="2">${r.sectionHead}</td></tr>`;
             const _d = _docFor(r.row), _s = SPECIALS[r.row] || {};
             const sig = _d.sig || _s.sig || `<code>helpers.${r.row}(…)</code>`;
-            const desc = _d.desc || _s.desc || "";
+            const desc = localizeCourseHelperDescription(r.row, _d.desc || _s.desc || "");
             return `<tr data-helper="${r.row}"${r.extra ? ' data-x="1" style="display:none"' : ''}><td>${sig}</td><td>${desc}</td></tr>
               <tr class="cf-helpers-source-row" data-helper-source="${r.row}" hidden><td colspan="2"><textarea class="cf-helpers-src-editor" data-src-for="${r.row}" spellcheck="false" readonly style="width:100%;min-height:120px;max-height:320px;font-family:ui-monospace,monospace;font-size:.78rem;"></textarea></td></tr>`;
           }).join("")}

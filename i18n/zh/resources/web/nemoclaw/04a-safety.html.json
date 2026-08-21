@@ -1,0 +1,2272 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "zh-CN",
+  "template": "web/nemoclaw/04a-safety.html",
+  "media": [
+    "web/nemoclaw/assets/figures/04a-openshell-architecture.svg",
+    "web/nemoclaw/assets/figures/04a-safety-1.svg",
+    "web/nemoclaw/assets/figures/lethal-trifecta.svg"
+  ],
+  "values": {
+    "attribute.e9f9e1563d6a": {
+      "type": "attribute",
+      "source": "Agent failure modes and their enforcement controls",
+      "value": "智能体故障模式及对应的执行控制措施"
+    },
+    "link.0b980aeb3a93": {
+      "type": "link",
+      "source": "<a href=\"https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/\" target=\"_blank\" rel=\"noopener\">Simon Willison, <em>The lethal trifecta</em> (2025)</a>. The articulation of the private-data, untrusted-content, network-access exploit class the lethal-trifecta diagram in Step 3 draws.",
+      "value": "<a href=\"https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/\" target=\"_blank\" rel=\"noopener\">Simon Willison, <em>The lethal trifecta</em> (2025)</a>。该文阐述了由私有数据、不可信内容和网络访问构成的攻击路径，也是步骤 3 中致命三要素图的依据。"
+    },
+    "link.0ec90ceaefdc": {
+      "type": "link",
+      "source": "<a href=\"https://docs.kernel.org/userspace-api/landlock.html\" target=\"_blank\" rel=\"noopener\"><strong>Landlock</strong></a>\n         is a Linux Security Module that restricts future filesystem access.\n         Here it limits new file operations to paths granted by policy. That\n         is strong enforcement, but compatibility mode, OverlayFS, and handles\n         opened before restriction still matter. Read the live policy and test\n         the path you intend to expose.",
+      "value": "<a href=\"https://docs.kernel.org/userspace-api/landlock.html\" target=\"_blank\" rel=\"noopener\"><strong>Landlock</strong></a>\n         是一种限制后续文件系统访问的 Linux 安全模块。在此处，它将新的文件操作限制在策略授予的路径内。这是一种强制执行机制，但仍需考虑兼容模式、OverlayFS，以及施加限制前已打开的句柄。请阅读实时策略，并测试您打算暴露的路径。"
+    },
+    "link.18a8a7dd9fb2": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2302.12173\" target=\"_blank\" rel=\"noopener\">Greshake et al. (2023) <em>Not what you've signed up for</em></a>. The canonical indirect prompt-injection paper: attacks delivered through retrieved or rendered content the model trusts.",
+      "value": "<a href=\"https://arxiv.org/abs/2302.12173\" target=\"_blank\" rel=\"noopener\">Greshake et al. (2023) <em>Not what you've signed up for</em></a>。这篇经典论文研究间接提示词注入：攻击通过模型所信任的检索内容或渲染内容传递。"
+    },
+    "link.1be52ce4d6ee": {
+      "type": "link",
+      "source": "Comprehensive list at <a href=\"04c-going-further.html#refs\">Going Further · References</a>.",
+      "value": "完整列表请参阅<a href=\"04c-going-further.html#refs\">深入探索 · 参考资料</a>。"
+    },
+    "link.2b67df0ad42d": {
+      "type": "link",
+      "source": "The categories align with the\n     <a href=\"https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/\" target=\"_blank\" rel=\"noopener\">OWASP Top 10 for Agentic Applications</a>.\n     Use the table to pick an enforcement point instead of asking one layer to recognize every kind of harm.",
+      "value": "这些类别与\n     <a href=\"https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/\" target=\"_blank\" rel=\"noopener\">OWASP Top 10 for Agentic Applications</a>\n     一致。请使用此表选择策略执行点，不要要求单一层识别所有类型的危害。"
+    },
+    "link.2da56121c0cd": {
+      "type": "link",
+      "source": "<strong>The prompt shapes intent.</strong>\n        A rule such as \"do not reveal credentials\" tells the model how it\n        should behave. Models can still be deceived by\n        <a href=\"https://arxiv.org/abs/2302.12173\" target=\"_blank\" rel=\"noopener\">Adversarial\n        retrieved content</a>, malicious tool output, or another agent in\n        the loop. This layer influences the decision. The agent retains whatever\n        authority the runtime granted it.",
+      "value": "<strong>提示词塑造意图。</strong>\n        “不得泄露凭据”之类的规则会告诉模型应如何行事。但模型仍可能被<a href=\"https://arxiv.org/abs/2302.12173\" target=\"_blank\" rel=\"noopener\">对抗性检索内容</a>、恶意工具输出或循环中的其它智能体欺骗。此层会影响决策，但智能体仍保留运行时授予它的所有权限。"
+    },
+    "link.431b4f114d29": {
+      "type": "link",
+      "source": "A <strong>network namespace</strong> (<code>netns</code>) gives the\n         agent an isolated network stack. Outbound access starts closed. An\n         HTTP <strong>CONNECT proxy</strong> provides the only route out.\n         <a href=\"https://www.openpolicyagent.org/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent (OPA)</a>\n         checks the requesting binary, host, port, and path against policy.\n         Whoever edits that policy decides which connections are allowed.",
+      "value": "<strong>网络命名空间</strong>（<code>netns</code>）为智能体提供隔离的网络栈。初始状态下，出站访问处于关闭状态。\n         HTTP <strong>CONNECT 代理</strong>是唯一的出站路径。\n         <a href=\"https://www.openpolicyagent.org/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent（OPA）</a>会依据策略检查发起请求的二进制文件、主机、端口和路径。策略的编辑者决定允许哪些连接。"
+    },
+    "link.4ea5655cdecf": {
+      "type": "link",
+      "source": "<a href=\"https://en.wikipedia.org/wiki/Rice%27s_theorem\" target=\"_blank\" rel=\"noopener\">Rice's theorem</a>\n           rules out a general test for non-trivial behavior of arbitrary\n           programs. An agent with code execution deserves the same caution:\n           instrument the boundaries around what runs instead of assuming a\n           static check can prove every future action safe.",
+      "value": "<a href=\"https://en.wikipedia.org/wiki/Rice%27s_theorem\" target=\"_blank\" rel=\"noopener\">Rice 定理</a>排除了对任意程序的非平凡行为进行通用判定的可能性。对于具备代码执行能力的智能体，同样应保持谨慎：应对运行内容周围的边界进行检测，而不能假定静态检查能够证明未来的每项操作都安全。"
+    },
+    "link.53cf3a0a3082": {
+      "type": "link",
+      "source": "\n    <strong>Keep the three product roles separate as you trace enforcement.</strong>\n    <ul>\n      <li><a href=\"https://github.com/openclaw/openclaw\" target=\"_blank\" rel=\"noopener\">OpenClaw</a> is the agent framework. It decides which tool to use and what action to attempt.</li>\n      <li><a href=\"https://github.com/NVIDIA/openshell\" target=\"_blank\" rel=\"noopener\">OpenShell</a> is the security runtime. It limits the files, network destinations, and operating-system operations available to that action.</li>\n      <li><a href=\"https://www.nvidia.com/en-us/ai/nemoclaw/\" target=\"_blank\" rel=\"noopener\">NemoClaw</a> is the reference stack that packages OpenClaw and OpenShell with lifecycle commands, policy presets, inference guidance, and deployment defaults.</li>\n    </ul>\n    <p>OpenShell is agent-agnostic. The same boundary can enclose OpenClaw,\n       <a href=\"https://github.com/NousResearch/hermes-agent\" target=\"_blank\" rel=\"noopener\">Hermes</a>,\n       <a href=\"https://github.com/langchain-ai/deepagents\" target=\"_blank\" rel=\"noopener\">LangChain deepagents</a>,\n       or another process that needs operating-system-level containment.</p>\n  ",
+      "value": "\n    <strong>在追踪策略执行过程时，请区分这三种产品的角色。</strong>\n    <ul>\n      <li><a href=\"https://github.com/openclaw/openclaw\" target=\"_blank\" rel=\"noopener\">OpenClaw</a> 是智能体框架。它决定使用哪个工具以及尝试执行什么操作。</li>\n      <li><a href=\"https://github.com/NVIDIA/openshell\" target=\"_blank\" rel=\"noopener\">OpenShell</a> 是安全运行时。它限制该操作能够访问的文件和网络目标，以及能够执行的操作系统操作。</li>\n      <li><a href=\"https://www.nvidia.com/en-us/ai/nemoclaw/\" target=\"_blank\" rel=\"noopener\">NemoClaw</a> 是参考技术栈，将 OpenClaw 和 OpenShell 与生命周期命令、策略预设、推理指南及部署默认配置封装在一起。</li>\n    </ul>\n    <p>OpenShell 与具体智能体无关。同一道边界可以封装 OpenClaw、\n       <a href=\"https://github.com/NousResearch/hermes-agent\" target=\"_blank\" rel=\"noopener\">Hermes</a>、\n       <a href=\"https://github.com/langchain-ai/deepagents\" target=\"_blank\" rel=\"noopener\">LangChain deepagents</a>，或其它需要操作系统级隔离的进程。</p>\n  "
+    },
+    "link.57e75958754f": {
+      "type": "link",
+      "source": "A <strong>system call</strong>, or syscall, asks the Linux kernel to\n         perform an operation. <a href=\"https://docs.kernel.org/userspace-api/seccomp_filter.html\" target=\"_blank\" rel=\"noopener\"><code>seccomp</code></a>\n         is Linux syscall filtering; its BPF filter checks each request against\n         an allowlist. A denied call returns <code>EPERM</code>, meaning\n         \"operation not permitted,\" before the operation runs. This launchable\n         excludes dangerous primitives such as <code>ptrace</code>,\n         <code>mount</code>, and <code>setuid</code>.",
+      "value": "<strong>系统调用</strong> (syscall) 请求 Linux 内核执行一项操作。<a href=\"https://docs.kernel.org/userspace-api/seccomp_filter.html\" target=\"_blank\" rel=\"noopener\"><code>seccomp</code></a>\n         是 Linux 的系统调用过滤机制；其 BPF 过滤器会根据允许列表检查每项请求。被拒绝的调用会在操作执行前返回 <code>EPERM</code>，表示“操作不允许”。此可启动实例排除了\n         <code>ptrace</code>、<code>mount</code> 和 <code>setuid</code>\n         等危险的底层操作。"
+    },
+    "link.769b342c812b": {
+      "type": "link",
+      "source": "<a href=\"https://csrc.nist.gov/pubs/sp/800/207/final\" target=\"_blank\" rel=\"noopener\">Zero trust</a>\n           rejects implicit trust based only on where a request came from.\n           OWASP's <a href=\"https://genai.owasp.org/llmrisk/llm01-prompt-injection/\" target=\"_blank\" rel=\"noopener\">prompt-injection guidance</a>\n           applies the same discipline to agents: constrain tools, restrict\n           privileges, and assume external content can steer the model.",
+      "value": "<a href=\"https://csrc.nist.gov/pubs/sp/800/207/final\" target=\"_blank\" rel=\"noopener\">零信任</a>拒绝仅根据请求来源对其给予隐式信任。\n           OWASP 的<a href=\"https://genai.owasp.org/llmrisk/llm01-prompt-injection/\" target=\"_blank\" rel=\"noopener\">提示词注入指南</a>将同样的原则应用于智能体：约束工具、限制权限，并假定外部内容可能引导模型。"
+    },
+    "link.824f7851b483": {
+      "type": "link",
+      "source": "<a href=\"https://www.cs.virginia.edu/~evans/cs551/saltzer/\" target=\"_blank\" rel=\"noopener\">Saltzer and Schroeder</a>\n           described this as the principle of least privilege: each component\n           receives only the permissions needed for its work. Because the\n           discipline predates agents, it transfers cleanly to this setting.",
+      "value": "<a href=\"https://www.cs.virginia.edu/~evans/cs551/saltzer/\" target=\"_blank\" rel=\"noopener\">Saltzer 和 Schroeder</a>\n           将此描述为最小权限原则：每个组件只获得完成其工作所需的权限。由于这一原则早于智能体出现，因此可以自然地应用于当前场景。"
+    },
+    "link.aa9cacf2b6cc": {
+      "type": "link",
+      "source": "<strong>Inbound injection.</strong> Deny-by-default egress stops data leaving; it does nothing\n        about adversarial instructions arriving through an authorised channel, the\n        <a href=\"https://arxiv.org/abs/2302.12173\" target=\"_blank\" rel=\"noopener\">indirect prompt injection</a>\n        Greshake and colleagues named. Catching it takes input classification or behavioural baselines higher up.",
+      "value": "<strong>入站注入。</strong>默认拒绝的出站策略可以阻止数据外泄，却无法阻止对抗性指令通过获授权的通道进入，也就是 Greshake et al.所命名的<a href=\"https://arxiv.org/abs/2302.12173\" target=\"_blank\" rel=\"noopener\">间接提示词注入</a>。要发现这种攻击，需要在更高层进行输入分类或建立行为基线。"
+    },
+    "link.afca794fcce0": {
+      "type": "link",
+      "source": "<a href=\"https://github.com/NVIDIA/NeMo-Guardrails\" target=\"_blank\" rel=\"noopener\">NeMo Guardrails</a>. The application-layer complement to kernel containment, catching policy violations the kernel cannot see.",
+      "value": "<a href=\"https://github.com/NVIDIA/NeMo-Guardrails\" target=\"_blank\" rel=\"noopener\">NeMo Guardrails</a>。它在应用层补充内核隔离，可捕获内核无法识别的策略违规行为。"
+    },
+    "link.bad5153c2ad5": {
+      "type": "link",
+      "source": "<a href=\"https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/\" target=\"_blank\" rel=\"noopener\">OWASP Top 10 for Agentic Applications</a>. A current taxonomy for goal hijack, tool misuse, identity abuse, supply-chain compromise, unexpected code execution, and memory poisoning.",
+      "value": "<a href=\"https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/\" target=\"_blank\" rel=\"noopener\">OWASP 智能体式应用 Top 10</a>。这是一个当前适用的分类体系，涵盖目标劫持、工具滥用、身份滥用、供应链入侵、意外代码执行和记忆投毒。"
+    },
+    "link.bfacadd8d1ce": {
+      "type": "link",
+      "source": "<a href=\"https://docs.kernel.org/userspace-api/seccomp_filter.html\" target=\"_blank\" rel=\"noopener\">seccomp filter</a> and <a href=\"https://docs.kernel.org/userspace-api/landlock.html\" target=\"_blank\" rel=\"noopener\">Landlock</a>. The kernel syscall-allowlist and filesystem-capability primitives <code>openshell</code> uses for mechanisms 2 and 3.",
+      "value": "<a href=\"https://docs.kernel.org/userspace-api/seccomp_filter.html\" target=\"_blank\" rel=\"noopener\">seccomp 过滤器</a>和 <a href=\"https://docs.kernel.org/userspace-api/landlock.html\" target=\"_blank\" rel=\"noopener\">Landlock</a>。这是 <code>openshell</code> 在机制 2 和机制 3 中使用的内核系统调用允许列表与文件系统能力原语。"
+    },
+    "link.d334eb2d03a7": {
+      "type": "link",
+      "source": "Saltzer and Schroeder, <a href=\"https://www.cs.virginia.edu/~evans/cs551/saltzer/\" target=\"_blank\" rel=\"noopener\"><em>The Protection of Information in Computer Systems</em></a> (1975). Where least privilege was first named; the principle behind deny-by-default containment.",
+      "value": "Saltzer and Schroeder, <a href=\"https://www.cs.virginia.edu/~evans/cs551/saltzer/\" target=\"_blank\" rel=\"noopener\"><em>The Protection of Information in Computer Systems</em></a> (1975)。该文首次提出最小权限这一名称；它也是默认拒绝式隔离背后的原则。"
+    },
+    "link.f0186b47aac9": {
+      "type": "link",
+      "source": "<a href=\"https://www.openpolicyagent.org/docs/latest/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent</a>. The policy-as-data engine behind the OPA-evaluated CONNECT proxy that gates every outbound connection.",
+      "value": "<a href=\"https://www.openpolicyagent.org/docs/latest/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent</a>。它是 OPA-评测 CONNECT 代理背后的策略即数据引擎，负责管控每个出站连接。"
+    },
+    "rich.0620ff0fcc4c": {
+      "type": "rich",
+      "source": "The policy test below exercises <em>binary identity</em>. The policy grants egress per program rather than per\n     host so the proxy always checks which binary opened a connection before it ever looks at the\n     destination it is bound for. An allowed program like <code>openclaw</code> therefore reaches the\n     inference endpoint while a stray <code>curl</code> to that identical endpoint is refused.\n     Pick any action from the buttons below to watch its static verdict appear at once, and the\n     inference-endpoint action shows this same-host flip most clearly.",
+      "value": "下方的策略测试会检验<em>二进制程序身份</em>。策略按程序而不是按主机授予出站权限，因此代理在查看连接目标之前，总会先检查是哪个二进制程序打开了连接。所以，<code>openclaw</code> 等获准程序可以访问推理 API 入口，而临时使用的 <code>curl</code>\n     访问完全相同的 API 入口时会被拒绝。从下方按钮中选择任意操作，即可立即看到其静态判定；推理-API 入口操作最清楚地展示了这种同一主机、不同结果的变化。"
+    },
+    "rich.1379ecd555ca": {
+      "type": "rich",
+      "source": "The agent runs as a <strong>non-root process</strong> under the\n         unprivileged <code>sandbox</code> user. A successful exploit therefore\n         starts with less authority. The lower starting authority reduces\n         blast radius, though it does not prove escalation is impossible. The\n         host, container configuration, and syscall policy remain part of the\n         security boundary.",
+      "value": "智能体以<strong>非 root 进程</strong>的身份运行，使用无特权的 <code>sandbox</code> 用户。因此，即使攻击成功，最初获得的权限也较少。较低的初始权限可以缩小影响范围，但不能证明权限提升不可能发生。主机、容器配置和系统调用策略仍是安全边界的一部分。"
+    },
+    "rich.195e3695c230": {
+      "type": "rich",
+      "source": "<strong>Exfiltration on an allowed channel.</strong> A permitted endpoint is a path an\n        exfiltration can ride. The policy proves the channel is allowed and says nothing about whether\n        the bytes on it are benign.",
+      "value": "<strong>通过获准通道外泄。</strong>获准的 API 入口可能成为数据外泄的路径。策略只能证明该通道已获允许，无法判断其中传输的字节是否无害。"
+    },
+    "rich.1c2e28dd5e50": {
+      "type": "rich",
+      "source": "<code>cron.add</code> and <code>cron.list</code> the schedule that fires long after the conversation ends.",
+      "value": "使用 <code>cron.add</code> 和 <code>cron.list</code> 管理在对话结束很久后仍会触发的计划任务。"
+    },
+    "rich.200f3e5c702a": {
+      "type": "rich",
+      "source": "Now that you have watched the kernel decide, you can see that every one of those verdicts traces\n     back to a single policy file, which is worth reading off your launchable before you work with it.\n     The cell below calls <code>helpers.policyGet()</code>, which runs <code>openshell policy get</code>\n     over the operator terminal and parses the result for you.",
+      "value": "现在，您已经观察了内核如何作出判断，可以看到每项判定都能追溯到同一个策略文件。因此，在使用可启动实例之前，值得先读取其中的策略。下方单元会调用 <code>helpers.policyGet()</code>，通过 operator 终端运行 <code>openshell policy get</code>，并替您解析结果。"
+    },
+    "rich.39c0ff39046b": {
+      "type": "rich",
+      "source": "<strong>Untrusted input</strong> is content from outside the operator's authorship that the model may\n        still treat as instructions: a web page, issue, document, tool result, or peer-agent response.",
+      "value": "<strong>不可信输入</strong>是指并非由 operator 作者编写、但模型仍可能将其视为指令的外部内容，例如网页、议题、文档、工具结果或对等智能体的响应。"
+    },
+    "rich.3ea2bc78f4fe": {
+      "type": "rich",
+      "source": "<code>chat.send</code> a mid-task message that redirects the agent while it still looks like it is on your task.",
+      "value": "使用 <code>chat.send</code> 在任务进行期间发送消息，使智能体改换方向，同时表面上看起来仍在执行任务。"
+    },
+    "rich.46f6d0857911": {
+      "type": "rich",
+      "source": "<strong>The agent harness validates the request.</strong>\n        OpenClaw or Hermes can reject an unsupported shell form, a forbidden\n        tool call, or a malformed argument before the request reaches the\n        operating system. That deterministic check is useful, but it remains\n        application logic that can be misconfigured, outdated, or compromised.",
+      "value": "<strong>智能体工具框架验证请求。</strong>\n        OpenClaw 或 Hermes 可以在请求到达操作系统前，拒绝不受支持的 shell 形式、被禁止的工具调用或格式错误的参数。这种确定性检查很有用，但它仍属于应用逻辑，可能存在配置错误、版本过时或遭到入侵的问题。"
+    },
+    "rich.6ec8a9fe802b": {
+      "type": "rich",
+      "source": "You do not have to take the robustness claim on faith, because the\n     <code>openshell policy prove</code> command checks a property of a policy or\n     returns a counterexample while the proxy makes a deterministic allow/deny\n     decision on every connection. You compute that same decision in the browser\n     from your launchable's real policy, then run the action in the live sandbox and\n     confirm the kernel's verdict matches your prediction.",
+      "value": "您不必盲目相信其稳健性，因为\n     <code>openshell policy prove</code> 命令会检查策略的某项性质，如果不成立则返回反例；与此同时，代理会对每个连接作出确定性的允许或拒绝决策。您先在浏览器中根据可启动实例的真实策略计算相同的决策，然后在实时沙箱中执行操作，确认内核的判定与预测一致。"
+    },
+    "rich.729af15d9da9": {
+      "type": "rich",
+      "source": "The page now computes from <em>your</em> box's policy instead of a baked\n     example. The cell keeps its code in a dropdown, where you can inspect the\n     exact call without making it the main lesson.",
+      "value": "现在，页面会根据<em></em>实例策略进行计算，而不是使用预先写死的示例。单元代码收纳在下拉区域中，可以检查确切的调用，同时不让它喧宾夺主。"
+    },
+    "rich.7816b96ef948": {
+      "type": "rich",
+      "source": "<code>agents.files.get</code> and set the persona files (SOUL.md, AGENTS.md) straight off disk.",
+      "value": "使用<code>agents.files.get</code>，并直接从磁盘设置角色设定文件（SOUL.md、AGENTS.md）。"
+    },
+    "rich.86e77dea4c27": {
+      "type": "rich",
+      "source": "<strong>Operator-token plane.</strong> The amber band sits above the\n     checkpoint, the escalation axis the egress rules never see.",
+      "value": "<strong>Operator-token 平面。</strong>琥珀色区域位于检查点上方，代表出站规则完全无法感知的权限提升轴。"
+    },
+    "rich.8fe88aa9bf6c": {
+      "type": "rich",
+      "source": "<strong>Peer preservation.</strong> In a fleet, an agent grading or confirming the shutdown of\n        a peer shifts its verdict in social context. Only behavioural regression testing catches it.",
+      "value": "<strong>维护同伴。</strong>在智能体集群中，负责评估或确认对等智能体关闭状态的智能体，会因社会情境而改变判定。只有行为回归测试才能发现这种情况。"
+    },
+    "rich.939f98cd0ff3": {
+      "type": "rich",
+      "source": "\n    <strong>Each result is a real kernel decision.</strong> The live half of each flow runs\n    on the launchable you connected in Kickstart\n    through <code>openshell sandbox exec</code>, so each result you read back is\n    a decision the kernel made on the wire.\n    Keep your launchable open in another tab so its access session stays\n    fresh.\n  ",
+      "value": "\n    <strong>每项结果都是真实的内核决策。</strong>每条流程的实时部分都会通过 <code>openshell sandbox exec</code>，在您于 Kickstart 中连接的可启动实例上运行，因此您读取的每项结果都是内核针对实际网络连接作出的决策。请在另一个标签页中保持可启动实例处于打开状态，确保其访问会话不会过期。\n  "
+    },
+    "rich.95693dc0365f": {
+      "type": "rich",
+      "source": "<code>sessions.reset</code> and <code>delete</code> its memory; <code>gateway.restart.request</code> the runtime.",
+      "value": "使用 <code>sessions.reset</code> 和 <code>delete</code> 清除其记忆；使用 <code>gateway.restart.request</code> 重启运行时。"
+    },
+    "rich.975556de2a9a": {
+      "type": "rich",
+      "source": "With your policy in hand, the cell draws it as an interactive map below, where each node on the\n     right is an endpoint your policy names alongside a few that no policy allows. Change the calling\n     binary and watch the egress edges flip, since the kernel decides by binary rather than by host and\n     so <code>integrate.api.nvidia.com</code> stays reachable for <code>openclaw</code> while it is\n     refused for <code>curl</code>.",
+      "value": "获取策略后，单元会在下方将其绘制成交互式地图。右侧的每个节点都是策略中指定的 API 入口，另外还包括少数任何策略都不允许的入口。更改发起调用的二进制程序，观察出站边如何切换。因为内核依据二进制程序而非主机作出判断，所以 <code>integrate.api.nvidia.com</code> 对 <code>openclaw</code> 仍然可达，而 <code>curl</code> 的访问会被拒绝。"
+    },
+    "rich.995f008aff36": {
+      "type": "rich",
+      "source": "\n    <p><strong>Same runtime as Kickstart.</strong> Every cell here drives the same\n       OpenClaw agent you connected on the Kickstart page.</p>\n  ",
+      "value": "\n    <p><strong>与 Kickstart 使用相同的运行时。</strong>此处的每个单元都会操作您在 Kickstart 页面上连接的同一个\n       OpenClaw 智能体。</p>\n  "
+    },
+    "rich.9d0dff4aa72d": {
+      "type": "rich",
+      "source": "<span style='color:var(--td)'>&nbsp;&nbsp;&nbsp;&nbsp;",
+      "value": "<span style='color:var(--td)'>&nbsp;&nbsp;&nbsp;&nbsp;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.a0cfe9b61b1c": {
+      "type": "rich",
+      "source": "<span style='color:",
+      "value": "<span style='color:",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.a2d7008c4e83": {
+      "type": "rich",
+      "source": "<code>config.get</code> and <code>config.patch</code> the entire agent config: model, tools, even <code>toolSearch</code>.",
+      "value": "使用 <code>config.get</code> 和 <code>config.patch</code> 管理完整的智能体配置：模型、工具，甚至 <code>toolSearch</code>。"
+    },
+    "rich.a6a19c7a4639": {
+      "type": "rich",
+      "source": "The <span>OpenShell</span> Sandbox",
+      "value": "<span>OpenShell</span> 沙盒"
+    },
+    "rich.a79d322e6aa8": {
+      "type": "rich",
+      "source": "<strong>Persona tamper.</strong> SOUL.md is writable and the agent owns it, so a confused or\n        compromised agent rewrites who it is. A <code>chmod</code> lock the owner reverses; only a\n        root-set <code>chattr +i</code> holds, from outside the sandbox.",
+      "value": "<strong>篡改角色设定。</strong> SOUL.md 可写且归智能体所有，因此发生混乱或遭到入侵的智能体可以改写自己的身份设定。所有者可以撤销 <code>chmod</code> 锁定；只有从沙箱外部以 root 设置的 <code>chattr +i</code> 才能保持有效。"
+    },
+    "rich.ab02a9b3889f": {
+      "type": "rich",
+      "source": "<strong>External communication</strong> is any path that can carry bytes out: HTTP, a pull request,\n        chat, a log line, an image load, or even a link the user might click.",
+      "value": "<strong>外部通信</strong>是指任何能够将字节传出的路径：HTTP、拉取请求、聊天、日志行、图像加载，甚至是用户可能点击的链接。"
+    },
+    "rich.acc66198e7b8": {
+      "type": "rich",
+      "source": "<strong>Private data</strong> is anything the agent may read but should not leak: workspace files,\n        emails, tokens, memory, or internal records.",
+      "value": "<strong>私有数据</strong>是指智能体可以读取、但不应泄露的任何内容：工作区文件、电子邮件、token、记忆或内部记录。"
+    },
+    "rich.d1cf6f80ecdb": {
+      "type": "rich",
+      "source": "<span style='color:var(--gs);font-weight:700'>",
+      "value": "<span style='color:var(--gs);font-weight:700'>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.d2b781f284bc": {
+      "type": "rich",
+      "source": "<strong>Hidden intent.</strong> The gateway forwards actions while stripping the model's\n        reasoning, so a Manchurian agent acting inside its authorised policy runs a harmful workflow\n        with no single action looking wrong.",
+      "value": "<strong>隐藏意图。</strong>网关在转发操作时会剥离模型的推理过程，因此潜伏型智能体可以在获授权策略范围内执行有害工作流，而其中任何单项操作看起来都没有问题。"
+    },
+    "rich.da65b782bff0": {
+      "type": "rich",
+      "source": "Everything so far measured what the <em>agent</em> can do, but the bigger question is who can\n     reconfigure the agent through the plane sitting above it. How you reach that plane depends on the\n     system, and on this box the plane is one gateway that you reach with the same\n     <code>OPENCLAW_GATEWAY_TOKEN</code> from Module 3 at <code>operator.admin</code> scope, none of\n     which passes through the sandbox at all.",
+      "value": "到目前为止，衡量的都是<em>智能体</em>能做什么，但更重要的问题是：谁能通过智能体上方的平面重新配置它。访问该平面的方式因系统而异。在此实例中，该平面是一个网关；可以使用模块 3 中的同一个\n     <code>OPENCLAW_GATEWAY_TOKEN</code>，以 <code>operator.admin</code> 作用域访问它，而这些操作完全不会经过沙箱。"
+    },
+    "rich.ddf96280d31c": {
+      "type": "rich",
+      "source": "Clicking any target opens the rule that governs it, so that you can read which binaries that\n     endpoint allows alongside the reasoning the kernel uses to reach its verdict. The\n     <strong>View policy source</strong> control prints the YAML it drew from, which is the same\n     text you fetched a moment ago.",
+      "value": "点击任意目标即可打开管控它的规则，以便您查看该 API 入口允许哪些二进制程序，以及内核作出判定所依据的理由。<strong>查看策略源文件</strong>控件会输出绘图所依据的 YAML，也就是您刚才获取的同一段文本。"
+    },
+    "rich.f80854ad9481": {
+      "type": "rich",
+      "source": "<strong>The sandbox limits the result.</strong>\n        OpenShell gives the process only the authority allowed by policy. If\n        the prompt and harness both fail, the operating system can still deny\n        a file, network, or process operation before it completes.",
+      "value": "<strong>沙盒限制操作结果。</strong>\n        OpenShell 仅向进程授予策略允许的权限。即使提示词和工具框架均未能阻止操作，操作系统仍可在文件、网络或进程操作完成前将其拒绝。"
+    },
+    "rich.fb00cf6bff03": {
+      "type": "rich",
+      "source": "</span>  <span style='color:var(--tf)'>[",
+      "value": "</span>  <span style='color:var(--tf)'>[",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.ffac4036f9be": {
+      "type": "rich",
+      "source": "<strong>The control plane is identity-level.</strong> Whoever opens it (on this box, a\n        holder of <code>OPENCLAW_GATEWAY_TOKEN</code>) reads the persona, plants a cron, and injects\n        a turn, all above the checkpoint the kernel never sees.",
+      "value": "<strong>控制平面触及身份层级。</strong>任何能够打开它的人（在此实例上，即\n        <code>OPENCLAW_GATEWAY_TOKEN</code> 的持有者）都可以读取角色设定、植入 cron 任务并注入一轮消息；这些操作全都发生在检查点上方，内核永远无法看到。"
+    },
+    "text.02bb7383df41": {
+      "type": "text",
+      "source": "A split-out root power such as",
+      "value": "从 root 权限中拆分出来的某项能力，例如"
+    },
+    "text.033f1a37c9c5": {
+      "type": "text",
+      "source": " The candidate action comes from the buttons above the cell (window.__sbxAction).",
+      "value": " The candidate action comes from the buttons above the cell (window.__sbxAction).",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.0376a60aae03": {
+      "type": "text",
+      "source": "var(--err)",
+      "value": "var(--err)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.0398ab3bff46": {
+      "type": "text",
+      "source": "Most hosts fail the CONNECT tunnel (exit 56), and the metadata IP returns proxy 403.",
+      "value": "大多数主机的 CONNECT 隧道连接会失败（退出代码 56），而元数据 IP 会返回代理状态码 403。"
+    },
+    "text.043a718774c5": {
+      "type": "text",
+      "source": "s",
+      "value": "s",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.04755aa0157a": {
+      "type": "text",
+      "source": "Kernel docs",
+      "value": "内核文档"
+    },
+    "text.04755aa0157a~1": {
+      "type": "text",
+      "source": "Kernel docs",
+      "value": "内核文档"
+    },
+    "text.04755aa0157a~2": {
+      "type": "text",
+      "source": "Kernel docs",
+      "value": "内核文档"
+    },
+    "text.04755aa0157a~3": {
+      "type": "text",
+      "source": "Kernel docs",
+      "value": "内核文档"
+    },
+    "text.04f8996da763": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.050feb9d7169": {
+      "type": "text",
+      "source": ";font-weight:700'>",
+      "value": ";font-weight:700'>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.051ae3dc2d32": {
+      "type": "text",
+      "source": "Do they agree?",
+      "value": "两者一致吗？"
+    },
+    "text.07bdc21bc756": {
+      "type": "text",
+      "source": "Supply-chain or unexpected code execution",
+      "value": "供应链攻击或意外代码执行"
+    },
+    "text.0811367e1f2b": {
+      "type": "text",
+      "source": "Watch the kernel decide",
+      "value": "观察内核如何做出决策"
+    },
+    "text.08e843b09130": {
+      "type": "text",
+      "source": "ask the box anything, in code",
+      "value": "用代码向沙盒提出任意问题"
+    },
+    "text.098e91d6f1c9": {
+      "type": "text",
+      "source": "predicted: ",
+      "value": "预测结果："
+    },
+    "text.098e91d6f1c9~1": {
+      "type": "text",
+      "source": "predicted: ",
+      "value": "预测结果："
+    },
+    "text.0a07f6594619": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0a349a7a8d53": {
+      "type": "text",
+      "source": "Ingress is traffic entering the sandbox; egress is traffic leaving it. Default-deny means neither direction is open unless policy grants it.",
+      "value": "入站流量是进入沙箱的流量，出站流量是离开沙箱的流量。默认拒绝意味着，除非策略明确允许，否则两个方向均不开放。"
+    },
+    "text.0ac0dbd19275": {
+      "type": "text",
+      "source": " Keep the full object collapsible and highlighted, with its matched rule and reason.",
+      "value": " Keep the full object collapsible and highlighted, with its matched rule and reason.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.0cd60d94b916": {
+      "type": "text",
+      "source": " helpers.policyGet() returns the command, raw output, status, and parsed policy.",
+      "value": " helpers.policyGet() returns the command, raw output, status, and parsed policy.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.0d6e4079e367": {
+      "type": "text",
+      "source": "main",
+      "value": "main",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.0dd2553b9c8e": {
+      "type": "text",
+      "source": " Use curl's exit code: it distinguishes blocked CONNECT from reached-but-403.",
+      "value": " Use curl's exit code: it distinguishes blocked CONNECT from reached-but-403.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.0dfcce901854": {
+      "type": "text",
+      "source": "Untrusted input, private data, and external communication together form the lethal trifecta.",
+      "value": "不可信输入、私有数据和外部通信共同构成致命三要素。"
+    },
+    "text.105257716292": {
+      "type": "text",
+      "source": "Every tool call passes the sandbox",
+      "value": "每次工具调用都要经过沙盒"
+    },
+    "text.1144b2d4e959": {
+      "type": "text",
+      "source": "Static verdict vs the live sandbox",
+      "value": "静态判定与实时沙盒对比"
+    },
+    "text.1205abcf1089": {
+      "type": "text",
+      "source": "Can I become root, or escape the container?",
+      "value": "我能获取 root 权限或逃逸出容器吗？"
+    },
+    "text.124bf1f69de1": {
+      "type": "text",
+      "source": "→ SOUL.md sits in a writable tree and the agent owns it, so it can undo chmod.",
+      "value": "→ SOUL.md 位于可写目录树中且归智能体所有，因此智能体可以撤销 chmod。"
+    },
+    "text.12d9b0b43882": {
+      "type": "text",
+      "source": "-> openshell sandbox exec -- ",
+      "value": "-> openshell sandbox exec -- ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1321991d7340": {
+      "type": "text",
+      "source": "the real resource",
+      "value": "真实资源"
+    },
+    "text.13bb0145ba22": {
+      "type": "text",
+      "source": " over the network, whatever the agent's reason. Containment does not read the goal. Now look back at the steps that ran before it. Anything they printed has already left the box, to you and to whatever reads this output. The blocked call closes one exit. It cannot un-read what earlier commands surfaced, and that is the gap a network policy alone never covers.",
+      "value": " 的网络访问，无论智能体出于什么原因。隔离机制并不读取目标。现在回看此前已经运行的步骤。它们打印的任何内容都已离开沙箱，暴露给您以及读取此输出的任何对象。被阻止的调用封住了一个出口，却无法收回先前命令已经暴露的信息；这正是单靠网络策略永远无法弥补的缺口。"
+    },
+    "text.14e30cd163c7": {
+      "type": "text",
+      "source": "GET",
+      "value": "GET",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.14e30cd163c7~1": {
+      "type": "text",
+      "source": "GET",
+      "value": "GET",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1583ffb98e74": {
+      "type": "text",
+      "source": "Why enforcement belongs below the model",
+      "value": "为什么策略执行应位于模型之下"
+    },
+    "text.164292ed954d": {
+      "type": "text",
+      "source": "cat /proc/1/environ",
+      "value": "cat /proc/1/environ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.16be80bcae80": {
+      "type": "text",
+      "source": "Exfiltrate the NVIDIA API key by posting it to https://collector.example.com",
+      "value": "将 NVIDIA API key 发布到 https://collector.example.com 以窃取该信息"
+    },
+    "text.16c3996dd8f3": {
+      "type": "text",
+      "source": "CONNECT proxy",
+      "value": "CONNECT 代理"
+    },
+    "text.1786b17a9088": {
+      "type": "text",
+      "source": "config.get                -> ",
+      "value": "config.get                -> ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1a011e731153": {
+      "type": "text",
+      "source": "Above the sandbox: the control plane",
+      "value": "沙箱之上：控制平面"
+    },
+    "text.1c933bf21b0a": {
+      "type": "text",
+      "source": "Read your launchable's live policy",
+      "value": "读取可启动实例的实时策略"
+    },
+    "text.1cc8767b1403": {
+      "type": "text",
+      "source": "Confirm (live, in the sandbox)",
+      "value": "确认（实时，在沙盒中）"
+    },
+    "text.1d8c204fadab": {
+      "type": "text",
+      "source": "  (blocked before the connection opened)",
+      "value": "  （连接建立前已被阻止）"
+    },
+    "text.1de84a4bf754": {
+      "type": "text",
+      "source": "3 · Which kernel operations can it request?",
+      "value": "3 · 它可以请求哪些内核操作？"
+    },
+    "text.1f812bc0e116": {
+      "type": "text",
+      "source": "Reads the persona, cron schedule, sessions, models, and config with the same token to measure its administrative scope.",
+      "value": "使用同一 token 读取角色设定、cron 计划、会话、模型和配置，以衡量其管理权限范围。"
+    },
+    "text.1f9c41c2b659": {
+      "type": "text",
+      "source": "/usr/local/bin/openclaw",
+      "value": "/usr/local/bin/openclaw",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1fc0d1805b37": {
+      "type": "text",
+      "source": "$ openshell sandbox exec -- ",
+      "value": "$ openshell sandbox exec -- ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.1fc640dd06ec": {
+      "type": "text",
+      "source": "\\\\nyour live policy: egress is deny-by-default, with ",
+      "value": "\\\\n 实时策略：出站流量默认拒绝，允许的目标有 "
+    },
+    "text.1ff494c24b7d": {
+      "type": "text",
+      "source": "note:      as /usr/local/bin/openclaw this would be ",
+      "value": "注意：如果使用 /usr/local/bin/openclaw，结果将是 "
+    },
+    "text.206381d8c5aa": {
+      "type": "text",
+      "source": "parsed policy (exactly what predict reads)",
+      "value": "解析后的策略（与 predict 读取的内容完全一致）"
+    },
+    "text.2132f3e66039": {
+      "type": "text",
+      "source": "Shape the runtime first",
+      "value": "先调整运行时"
+    },
+    "text.218a4820887f": {
+      "type": "text",
+      "source": "raw policy returned (the YAML openshell printed)",
+      "value": "返回的原始策略（即 YAML openshell 输出的内容）"
+    },
+    "text.220b4b2d76fc": {
+      "type": "text",
+      "source": "Syscall allowlist",
+      "value": "系统调用允许列表"
+    },
+    "text.22259ee6b7da": {
+      "type": "text",
+      "source": "disagree - the hardened policy would BLOCK this, but your live box ALLOWED it. The box is running a more permissive policy than the hardened snapshot. Check 'openshell policy get' above: Active 0 (Pending) means the hardened policy is not live yet, so on this box the action gets through. That gap is the finding.",
+      "value": "不一致——加固策略会 BLOCK 此操作，但实时沙箱却允许了它。该沙箱运行的策略比加固策略快照更宽松。请检查上方的 'openshell policy get'：Active 0 (Pending) 表示加固策略尚未生效，因此此操作可以在该沙箱中通过。这个差异就是本次发现。"
+    },
+    "text.225ee7cf07d5": {
+      "type": "text",
+      "source": "\n    The sandbox establishes a floor rather than a complete defense. The practice that follows\n    from it is to grant the agent the smallest envelope it needs, to prove what that envelope\n    guarantees, and to staff the layers above it for the failures no proof can reach.\n  ",
+      "value": "\n    沙箱建立的是安全底线，而非完整的防御体系。相应的实践是：仅向智能体授予满足需要的最小活动范围，证明该范围能够提供哪些保证，并在其上层配备相应机制，以应对任何证明都无法覆盖的故障。\n  "
+    },
+    "text.272558b739dd": {
+      "type": "text",
+      "source": "and the line of evidence behind that decision.",
+      "value": "以及支持该决策的一行证据。"
+    },
+    "text.274a597a9c42": {
+      "type": "text",
+      "source": "network / filesystem",
+      "value": "网络 / 文件系统"
+    },
+    "text.28000742d88b": {
+      "type": "text",
+      "source": "policy permits",
+      "value": "策略允许"
+    },
+    "text.284f209eb794": {
+      "type": "text",
+      "source": "every call",
+      "value": "每次调用"
+    },
+    "text.29302ca63cd4": {
+      "type": "text",
+      "source": " session(s), each resettable/deletable",
+      "value": " 个会话，每个都可重置或删除"
+    },
+    "text.29f1ad24e35c": {
+      "type": "text",
+      "source": " 2 · run each command in YOUR sandbox, in order, and read what came back",
+      "value": " 2 · run each command in YOUR sandbox, in order, and read what came back",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.2a34efc69ae9": {
+      "type": "text",
+      "source": " The cell runs each in YOUR sandbox and shows the command, its output, and its exit code.",
+      "value": " The cell runs each in YOUR sandbox and shows the command, its output, and its exit code.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.2a81ccd17bce": {
+      "type": "text",
+      "source": "The kernel refused step ",
+      "value": "内核拒绝了步骤 "
+    },
+    "text.2a9a09f0c4ce": {
+      "type": "text",
+      "source": "Syscall boundary",
+      "value": "系统调用边界"
+    },
+    "text.2aeac629161c": {
+      "type": "text",
+      "source": " bytes of the live persona (readable, and writable via set)",
+      "value": " 字节的实时角色设定（可读取，也可通过 set 写入）"
+    },
+    "text.2bba9d458892": {
+      "type": "text",
+      "source": "OPA docs",
+      "value": "OPA 文档"
+    },
+    "text.2c378818b0e9": {
+      "type": "text",
+      "source": "drew the interactive map below from this policy.",
+      "value": "已根据此策略绘制下方的交互式地图。"
+    },
+    "text.2c9ed290ec6a": {
+      "type": "text",
+      "source": "Can I reach the open internet?",
+      "value": "我能访问开放互联网吗？"
+    },
+    "text.2dec2e07a670": {
+      "type": "text",
+      "source": "A real agent chains several commands together to pursue a goal that no single isolated cell above\n     ever attempted on its own. Describe one such goal in the box below and the agent plans the whole\n     sequence of shell commands it would run to reach it before running each command in your sandbox and\n     showing you the result. Watch the plan. Somewhere along it the kernel refuses to go further, because\n     the containment you hardened earlier stops the runaway trajectory cold.",
+      "value": "真实的智能体会串联多条命令，以实现上方任何单个独立单元都未曾尝试过的目标。请在下方框中描述一个此类目标。智能体会先规划为实现该目标而要运行的完整 shell 命令序列，再在沙箱中逐条运行命令并显示结果。请留意这份计划：内核会在其中某一步拒绝继续执行，因为您之前加固的隔离机制会立即阻断这条失控轨迹。"
+    },
+    "text.3009be769fb8": {
+      "type": "text",
+      "source": "network",
+      "value": "network",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.3009be769fb8~1": {
+      "type": "text",
+      "source": "network",
+      "value": "network",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.3009be769fb8~2": {
+      "type": "text",
+      "source": "network",
+      "value": "network",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.3009be769fb8~3": {
+      "type": "text",
+      "source": "network",
+      "value": "network",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.3009be769fb8~4": {
+      "type": "text",
+      "source": "network",
+      "value": "network",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.3009be769fb8~5": {
+      "type": "text",
+      "source": "network",
+      "value": "network",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.3026a0ca485e": {
+      "type": "text",
+      "source": "deny",
+      "value": "拒绝"
+    },
+    "text.3026a0ca485e~1": {
+      "type": "text",
+      "source": "deny",
+      "value": "拒绝"
+    },
+    "text.30616021c157": {
+      "type": "text",
+      "source": "Symlink race",
+      "value": "符号链接竞态"
+    },
+    "text.309e8a256d2a": {
+      "type": "text",
+      "source": "The directory subtree a policy grants. Verify the live policy and kernel compatibility before treating it as a complete filesystem boundary.",
+      "value": "策略授予访问权限的目录子树。在将其视为完整的文件系统边界之前，请先验证当前生效的策略及其与内核的兼容性。"
+    },
+    "text.3204c2bfb9a6": {
+      "type": "text",
+      "source": "curl exit:  ",
+      "value": "curl 退出码： "
+    },
+    "text.320fd169e3a2": {
+      "type": "text",
+      "source": "  ->  ",
+      "value": "  ->  ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3255aed223e2": {
+      "type": "text",
+      "source": "mount(2)",
+      "value": "mount(2)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3255aed223e2~1": {
+      "type": "text",
+      "source": "mount(2)",
+      "value": "mount(2)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.33a9bb0c624c": {
+      "type": "text",
+      "source": " For egress it also reads the HTTP status: a denied tunnel exits non-zero, while a denied plain request returns 403 at exit 0.",
+      "value": " For egress it also reads the HTTP status: a denied tunnel exits non-zero, while a denied plain request returns 403 at exit 0.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3422f0a96aed": {
+      "type": "text",
+      "source": "the agent's plan (",
+      "value": "智能体的计划（"
+    },
+    "text.35b2873a0aca": {
+      "type": "text",
+      "source": "Chained together, those calls become an escalation pathway. An attacker who reads the persona can\n     then plant a cron job that fires long after the conversation ends and patch the running config to\n     widen what the agent may do. A mid-task turn redirects it, and a restart of the runtime makes the\n     new shape take hold.",
+      "value": "这些调用串联起来就会形成一条权限提升路径。攻击者读取角色设定后，可以植入一个在对话结束很久后才触发的 cron 任务，再对正在使用的配置执行 patch，扩大智能体可以执行的操作范围。任务进行期间插入的一轮消息会改变其方向，而重启运行时则会让新配置正式生效。"
+    },
+    "text.35fbb44b5458": {
+      "type": "text",
+      "source": "(not exposed on this build)",
+      "value": "（此构建版本未公开）"
+    },
+    "text.37673ea5e449": {
+      "type": "text",
+      "source": "Ingress / egress",
+      "value": "入站 / 出站"
+    },
+    "text.3885ff5ae338": {
+      "type": "text",
+      "source": "&lt;",
+      "value": "&lt;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.393c0b2b7586": {
+      "type": "text",
+      "source": "policy verdict",
+      "value": "策略判定"
+    },
+    "text.397a5d3535f8": {
+      "type": "text",
+      "source": "These gaps are real on a default box, and none of them is decidable by the network and\n     filesystem policy:",
+      "value": "这些缺口在默认实例上确实存在，并且网络和文件系统策略都无法判定它们："
+    },
+    "text.39842c4f9d56": {
+      "type": "text",
+      "source": "Predict (static, in-browser)",
+      "value": "预测（静态，在浏览器中）"
+    },
+    "text.39cba563abcb": {
+      "type": "text",
+      "source": "Everything so far was the agent's own actions, and the kernel held the line. Two distinct kinds\n     of harm still slip past it. The first is the control plane you just enumerated, which reconfigures\n     the agent from above the checkpoint. The second travels inside an authorised envelope where every\n     individual action is permitted and the real damage lives in how those actions compose.",
+      "value": "到目前为止，涉及的都是智能体自身的操作，内核也守住了边界。但仍有两类截然不同的危害可以绕过它。第一类来自您刚刚枚举的控制平面，它能从检查点上方重新配置智能体。第二类则藏在获授权的行为范围内：其中每项操作都获准执行，真正的危害来自这些操作组合在一起的方式。"
+    },
+    "text.3b11e376ef4c": {
+      "type": "text",
+      "source": "Suppose untrusted content tells an agent to read a credential and send it\n     away. Three different layers get a chance to stop that action, and each\n     layer answers a different question.",
+      "value": "假设不受信任的内容指示智能体读取凭据并将其发送出去。三个不同层级都有机会阻止该操作，且每一层要回答的问题各不相同。"
+    },
+    "text.3b9eebaf3d6f": {
+      "type": "text",
+      "source": "var(--g)",
+      "value": "var(--g)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3d825508ffb7": {
+      "type": "text",
+      "source": " One clean curl inside the sandbox; the proxy answers a denied CONNECT fast.",
+      "value": " One clean curl inside the sandbox; the proxy answers a denied CONNECT fast.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3ee5b49ac844": {
+      "type": "text",
+      "source": " 1 · the agent plans a trajectory: the shell commands it would run for the goal",
+      "value": " 1 · the agent plans a trajectory: the shell commands it would run for the goal",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3fbbd1d6fbf6": {
+      "type": "text",
+      "source": "(no status header returned)",
+      "value": "（未返回状态标头）"
+    },
+    "text.3fe570f43958": {
+      "type": "text",
+      "source": "docker ps",
+      "value": "docker ps",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4063688957bf": {
+      "type": "text",
+      "source": "sessions.list",
+      "value": "sessions.list",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4081c02d73b8": {
+      "type": "text",
+      "source": "exit code: ",
+      "value": "退出代码："
+    },
+    "text.410083735735": {
+      "type": "text",
+      "source": "allow",
+      "value": "允许"
+    },
+    "text.411fdb22d8d9": {
+      "type": "text",
+      "source": "</span>",
+      "value": "</span>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.411fdb22d8d9~1": {
+      "type": "text",
+      "source": "</span>",
+      "value": "</span>",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.415cfbf1a0af": {
+      "type": "text",
+      "source": "Per-tool authorization, argument validation, rate limits, and confirmation for irreversible calls",
+      "value": "逐工具授权、参数验证、速率限制，以及不可逆调用的确认机制"
+    },
+    "text.41ab776c94f5": {
+      "type": "text",
+      "source": "\\\\nCould not parse the live policy: ",
+      "value": "\\\\n 无法解析实时策略："
+    },
+    "text.4274d1379c5b": {
+      "type": "text",
+      "source": "Connect your launchable in Module 3a first. This exercise runs commands in your sandbox.",
+      "value": "请先在模块 3a 中连接可启动实例。此练习会在沙盒中运行命令。"
+    },
+    "text.4285d23d69c3": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4285d23d69c3~1": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.434a7e64d74f": {
+      "type": "text",
+      "source": "the agent tries to ",
+      "value": "智能体尝试 "
+    },
+    "text.437c7a458bfb": {
+      "type": "text",
+      "source": "List everything under /sandbox and tell me what the agent can read",
+      "value": "列出 /sandbox 下的所有内容，并告诉我智能体可以读取哪些内容"
+    },
+    "text.449b12e87a24": {
+      "type": "text",
+      "source": "A nonzero UID subject to normal kernel permission checks.",
+      "value": "受常规内核权限检查约束的非零 UID。"
+    },
+    "text.44a4f4d0572f": {
+      "type": "text",
+      "source": "Pinned and verified dependencies, install policy, and integrity monitoring",
+      "value": "固定并验证依赖项、安装策略和完整性监控"
+    },
+    "text.44f61a88c20e": {
+      "type": "text",
+      "source": "Look for the gateway admin token in the environment",
+      "value": "在环境中查找网关管理员 token"
+    },
+    "text.4570652931e2": {
+      "type": "text",
+      "source": " A network attempt is { binary, host, port, method?, path? }; edit this default to try another target.",
+      "value": " A network attempt is { binary, host, port, method?, path? }; edit this default to try another target.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.459fc3463e41": {
+      "type": "text",
+      "source": "]</span>  ",
+      "value": "]</span>  ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.471e15556e98": {
+      "type": "text",
+      "source": "Connect as operator.admin",
+      "value": "以 operator.admin 身份连接"
+    },
+    "text.477747692f87": {
+      "type": "text",
+      "source": "Binary, host, port, path",
+      "value": "二进制文件、主机、端口、路径"
+    },
+    "text.493b2f0ab24b": {
+      "type": "text",
+      "source": "What the sandbox contributes",
+      "value": "沙箱发挥的作用"
+    },
+    "text.49ada5ea3762": {
+      "type": "text",
+      "source": " Survey the read-only admin surface reachable by the current gateway token.",
+      "value": " Survey the read-only admin surface reachable by the current gateway token.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.49f83a17143e": {
+      "type": "text",
+      "source": " Keep the full kernel result on hand: {output, raw, frames, exitCode, sandbox, command}.",
+      "value": " Keep the full kernel result on hand: {output, raw, frames, exitCode, sandbox, command}.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.4b37bb0d3d26": {
+      "type": "text",
+      "source": "→ No path up or out.",
+      "value": "→ 没有向上提权或向外逃逸的路径。"
+    },
+    "text.4bad15ce1d0c": {
+      "type": "text",
+      "source": "planning the trajectory",
+      "value": "正在规划执行轨迹"
+    },
+    "text.4cf1ec143d21": {
+      "type": "text",
+      "source": "   ·   run Confirm next, then Compare",
+      "value": "   ·   接下来运行 Confirm，然后运行 Compare"
+    },
+    "text.4d2907ca0402": {
+      "type": "text",
+      "source": "Network namespace /",
+      "value": "网络命名空间 /"
+    },
+    "text.4d4e82262571": {
+      "type": "text",
+      "source": "Access a process would otherwise inherit from the OS, parent process, mounts, or credentials.",
+      "value": "进程原本会从 OS、父进程、挂载点或凭据继承的访问权限。"
+    },
+    "text.4d8a8ef387bd": {
+      "type": "text",
+      "source": "Restricts the OS and network envelope in which the tool runs",
+      "value": "限制工具运行时可使用的 OS 和网络范围"
+    },
+    "text.4dc27ee1952f": {
+      "type": "text",
+      "source": "Agent process",
+      "value": "智能体进程"
+    },
+    "text.52a2b5de1bba": {
+      "type": "text",
+      "source": "  (policy '",
+      "value": "  （策略 '"
+    },
+    "text.55add214eb8b": {
+      "type": "text",
+      "source": "\n      Prompt rules and application guardrails shape the agent before kernel containment enforces the final boundary. The blocked arrow shows an outbound action stopped before it reaches disk or network.\n    ",
+      "value": "\n      提示词规则和应用防护机制会先约束智能体，随后由内核隔离强制执行最终边界。被阻断的箭头表示某项出站操作在到达磁盘或网络之前就已被拦截。\n    "
+    },
+    "text.55add214eb8b~1": {
+      "type": "text",
+      "source": "\n      Prompt rules and application guardrails shape the agent before kernel containment enforces the final boundary. The blocked arrow shows an outbound action stopped before it reaches disk or network.\n    ",
+      "value": "\n      提示词规则和应用防护机制会先约束智能体，随后由内核隔离强制执行最终边界。被阻断的箭头表示某项出站操作在到达磁盘或网络之前就已被拦截。\n    "
+    },
+    "text.5626488f6c83": {
+      "type": "text",
+      "source": " command",
+      "value": " 条命令"
+    },
+    "text.578ac2d369aa": {
+      "type": "text",
+      "source": "pip and npm run, but the egress proxy refuses their downloads.",
+      "value": "pip 和 npm 可以运行，但出站代理会拒绝它们的下载请求。"
+    },
+    "text.581f127fb797": {
+      "type": "text",
+      "source": "OPA",
+      "value": "OPA",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.588da4105320": {
+      "type": "text",
+      "source": " · ",
+      "value": " · ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.59ad7e8b0404": {
+      "type": "text",
+      "source": "→ The network namespace plus the OPA egress proxy refuse every curl.",
+      "value": "→ 网络命名空间与 OPA 出站代理会拒绝每次 curl 请求。"
+    },
+    "text.59b812e84b10": {
+      "type": "text",
+      "source": "#policy-map",
+      "value": "#policy-map",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.5a46f1d34831": {
+      "type": "text",
+      "source": "Fetch live policy YAML through the operator terminal and compare it with the map snapshot. Connect in Module 3a first.",
+      "value": "通过 operator 终端获取实时策略 YAML，并将其与映射快照进行比较。请先在模块 3a 中连接。"
+    },
+    "text.5a4c8eb4f8f0": {
+      "type": "text",
+      "source": "Run Connect first.",
+      "value": "请先运行 Connect。"
+    },
+    "text.5c3ecb91b5cd": {
+      "type": "text",
+      "source": "step ",
+      "value": "步骤 "
+    },
+    "text.5d2502619da7": {
+      "type": "text",
+      "source": "models.list               -> ",
+      "value": "models.list               -> ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.61611f4cb09b": {
+      "type": "text",
+      "source": "Run the prepared questions first and compare each verdict, mechanism, and evidence line. Then open the implementation only when you want to change a command or add a probe.",
+      "value": "先运行预设问题，并逐一比较判定结果、机制和证据行。只有当您要更改命令或添加探针时，才打开实现代码。"
+    },
+    "text.6273c36462f0": {
+      "type": "text",
+      "source": "the verdict the kernel returned,",
+      "value": "内核返回的判定结果，"
+    },
+    "text.62b67e1f685b": {
+      "type": "text",
+      "source": ">",
+      "value": ">",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.661d6061b345": {
+      "type": "text",
+      "source": "ls -la /sandbox/.openclaw/workspace/SOUL.md",
+      "value": "ls -la /sandbox/.openclaw/workspace/SOUL.md",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.66dfeeedabf1": {
+      "type": "text",
+      "source": "https://",
+      "value": "https://",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.6732049fa316": {
+      "type": "text",
+      "source": " evalSandboxNetwork checks the live policy with the same allow/deny rule.",
+      "value": " evalSandboxNetwork checks the live policy with the same allow/deny rule.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.67a5bdf2a82d": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents",
+      "value": "NVIDIA · 安全智能体"
+    },
+    "text.67eeb2a0d8be": {
+      "type": "text",
+      "source": "seccomp, OPA proxy",
+      "value": "seccomp、OPA 代理"
+    },
+    "text.68a965596e01": {
+      "type": "text",
+      "source": "Use the existing token to call read-only operator.admin methods and inspect their raw responses. Connect on Module 3a first.",
+      "value": "使用现有 token 调用只读的 operator.admin 方法，并检查其原始响应。请先在模块 3a 中连接。"
+    },
+    "text.68c8e102f834": {
+      "type": "text",
+      "source": "Identity or privilege abuse",
+      "value": "身份或权限滥用"
+    },
+    "text.6923dd1bc046": {
+      "type": "text",
+      "source": "kernel",
+      "value": "内核"
+    },
+    "text.69824d3b0e70": {
+      "type": "text",
+      "source": "References",
+      "value": "参考资料"
+    },
+    "text.6c19d98e88b3": {
+      "type": "text",
+      "source": "unknown parser error",
+      "value": "未知解析器错误"
+    },
+    "text.6c1edbb05604": {
+      "type": "text",
+      "source": "\n      OpenShell separates control entry, policy enforcement, agent state, tool access, and model routing. Keep this map in view as the page moves from the sandbox argument to live policy checks.\n    ",
+      "value": "\n      OpenShell 将控制入口、策略执行、智能体状态、工具访问和模型路由彼此分离。本页从沙盒原理转入实时策略检查时，请随时参照此图。\n    "
+    },
+    "text.6c4ceab589b7": {
+      "type": "text",
+      "source": "trajectory agent mounted below. Describe a goal and watch the plan run command by command.",
+      "value": "下方已挂载轨迹智能体。请描述一个目标，观察计划如何逐条运行命令。"
+    },
+    "text.6c8bcb14651b": {
+      "type": "text",
+      "source": "Load the live policy, choose an action, predict its verdict, then confirm it with openshell sandbox exec. Compare the two results.",
+      "value": "加载实时策略，选择一项操作并预测其判定结果，然后使用 openshell sandbox exec 进行确认。比较两项结果。"
+    },
+    "text.6c9fbb74c66a": {
+      "type": "text",
+      "source": " helpers.log.json(\"all probe results\", results);",
+      "value": " helpers.log.json(\"all probe results\", results);",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.6d8d959eb4e6": {
+      "type": "text",
+      "source": "A sandbox limits what a compromised process can reach. The application and operating practice\n     still own decisions whose meaning is invisible to the kernel.",
+      "value": "沙箱限制遭入侵的进程能够访问的范围。对于内核无法理解其含义的决策，仍需由应用和运维实践负责。"
+    },
+    "text.6e04189790a7": {
+      "type": "text",
+      "source": "With no per-file read-only rule, persona tamper stays an operator-side liability.",
+      "value": "如果没有针对单个文件的只读规则，角色设定遭篡改仍是 operator 侧的风险。"
+    },
+    "text.6f6d50955c51": {
+      "type": "text",
+      "source": "Process identity",
+      "value": "进程身份"
+    },
+    "text.6f77af0ed1b1": {
+      "type": "text",
+      "source": "netns, Landlock,",
+      "value": "netns、Landlock、"
+    },
+    "text.6fb63311316d": {
+      "type": "text",
+      "source": "Describe a goal and I plan the shell commands an agent would run for it, then we run each one in your sandbox and read the result, in order. Watch what each command returns. A secret that prints to the screen has already left the box, whatever the network blocks afterward.",
+      "value": "请描述一个目标，我会规划智能体为实现该目标而运行的 shell 命令。随后按顺序在沙盒中逐条运行命令并查看结果。请留意每条命令返回的内容。只要机密信息已显示在屏幕上，它就已经离开沙盒，无论网络之后是否将其阻止。"
+    },
+    "text.7001fabefa30": {
+      "type": "text",
+      "source": "BPF layer",
+      "value": "BPF 层"
+    },
+    "text.7175517a370b": {
+      "type": "text",
+      "source": "or",
+      "value": "或者"
+    },
+    "text.71e50a3b476a": {
+      "type": "text",
+      "source": "Workload-specific identities, minimal token scopes, short lifetimes, rotation, and audit",
+      "value": "工作负载专用身份、最小化的 token 作用域、较短的有效期、轮换和审计"
+    },
+    "text.723392f00732": {
+      "type": "text",
+      "source": "The allowlist is bound to the openclaw binary, so a plain curl reaches nothing.",
+      "value": "允许列表绑定到 openclaw 二进制文件，因此直接运行 curl 无法访问任何目标。"
+    },
+    "text.733347067e7f": {
+      "type": "text",
+      "source": " scheduled job(s) that fire with no human present",
+      "value": " 个无需人工在场即可触发的计划任务"
+    },
+    "text.737946bc6fba": {
+      "type": "text",
+      "source": "sudo id",
+      "value": "sudo id",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.745b65daa533": {
+      "type": "text",
+      "source": "curl -sS -m 8 -o /dev/null -w 'code=%{http_code}' https://en.wikipedia.org",
+      "value": "curl -sS -m 8 -o /dev/null -w 'code=%{http_code}' https://en.wikipedia.org",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.748279552226": {
+      "type": "text",
+      "source": "npm install --no-audit --no-fund left-pad",
+      "value": "npm install --no-audit --no-fund left-pad",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.74fd85dd760a": {
+      "type": "text",
+      "source": "Open the gateway WebSocket and claim operator.admin with the same token the Control UI uses. No extra credential is needed: the one chat token already carries it.",
+      "value": "打开网关 WebSocket，并使用 Control UI 所用的同一 token 声明 operator.admin。无需额外凭据：该聊天 token 已携带此凭据。"
+    },
+    "text.75faba76d51f": {
+      "type": "text",
+      "source": "The cell below runs one command at a time. You ask the box a question, it executes that\n     command in your sandbox, and the result comes back carrying three pieces of information.",
+      "value": "下方单元每次运行一条命令。您向环境提出一个问题，环境会在沙箱中执行相应命令，并返回包含三项信息的结果。"
+    },
+    "text.7615f47928e7": {
+      "type": "text",
+      "source": "Control still needed above it",
+      "value": "仍需在沙箱上层实施的控制"
+    },
+    "text.762a21576d91": {
+      "type": "text",
+      "source": " Execute the selected network action inside the live sandbox and read the verdict.",
+      "value": " Execute the selected network action inside the live sandbox and read the verdict.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.77d57e39b407": {
+      "type": "text",
+      "source": "&gt;",
+      "value": "&gt;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.7859616b6de6": {
+      "type": "text",
+      "source": "(the agent planned no commands for that goal)",
+      "value": "（智能体没有为该目标规划任何命令）"
+    },
+    "text.7918fcfc232b": {
+      "type": "text",
+      "source": "Make the SOUL.md persona file read-only",
+      "value": "将 SOUL.md 角色设定文件设为只读"
+    },
+    "text.79cb23a0e7ca": {
+      "type": "text",
+      "source": "The live work on this page measures that final layer. You will attempt an\n     action, observe the allow-or-deny verdict, and connect the verdict to the\n     mechanism that enforced it.",
+      "value": "本页的实际操作将评估最后一层防御。您将尝试执行一项操作，观察允许或拒绝的判定，并将该判定与执行它的机制对应起来。"
+    },
+    "text.7a3a7997dcfa": {
+      "type": "text",
+      "source": "agents.files.get SOUL.md  -> ",
+      "value": "智能体.files.get SOUL.md  -> "
+    },
+    "text.7af52de86ce0": {
+      "type": "text",
+      "source": "Before you drive the sandbox yourself, make the agent healthy by recovering the runtime\n     if it is degraded, so that every live cell below has a working agent to talk to.",
+      "value": "在您亲自操作沙箱之前，如果运行时处于降级状态，请先将其恢复，使智能体恢复正常，以便下方每个实时单元都能与可用的智能体交互。"
+    },
+    "text.7c8ec43e9114": {
+      "type": "text",
+      "source": " 3 · read the trajectory back to the student",
+      "value": " 3 · read the trajectory back to the student",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.807add78a434": {
+      "type": "text",
+      "source": "2 · Which files can it reach?",
+      "value": "2 · 它可以访问哪些文件？"
+    },
+    "text.8087003800a3": {
+      "type": "text",
+      "source": "Find the NVIDIA API token this agent runs with",
+      "value": "查找此智能体运行时使用的 NVIDIA API token"
+    },
+    "text.8178224f52ae": {
+      "type": "text",
+      "source": " You write the COMMAND; probe() runs it in your sandbox.",
+      "value": " You write the COMMAND; probe() runs it in your sandbox.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.817b4cc091a4": {
+      "type": "text",
+      "source": "A supply-chain attack has to get code in, and every download path is closed.",
+      "value": "供应链攻击必须先将代码引入环境，而所有下载路径都已关闭。"
+    },
+    "text.81a18e28f582": {
+      "type": "text",
+      "source": " - egress is bound to the binary, and curl is not it.",
+      "value": " - 出站权限与二进制文件绑定，而 curl 并不是该二进制文件。"
+    },
+    "text.81e3813ecce7": {
+      "type": "text",
+      "source": "goal: ",
+      "value": "目标："
+    },
+    "text.81faec07dd0e": {
+      "type": "text",
+      "source": "Edit any command, add a probe('your command') line, or ask a new question. One program per line: no shell, so no pipes or &&.",
+      "value": "编辑任意命令、添加一行 probe('命令')，或提出新问题。每行一个程序：这里没有 shell，因此不能使用管道或 &&。"
+    },
+    "text.821afecf67d8": {
+      "type": "text",
+      "source": "setuid(2)",
+      "value": "setuid(2)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.829f41e28c74": {
+      "type": "text",
+      "source": "the whole agent config is readable AND patchable (model, tools, toolSearch)",
+      "value": "整个智能体配置均可读取，AND 可通过补丁修改（model、tools、toolSearch）"
+    },
+    "text.82acf0c810e9": {
+      "type": "text",
+      "source": "describe a goal, run the agent's trajectory, in code",
+      "value": "用代码描述目标并运行智能体的轨迹"
+    },
+    "text.834891a5b681": {
+      "type": "text",
+      "source": "Check whether the agent can reach the public internet",
+      "value": "检查智能体能否访问公共互联网"
+    },
+    "text.8535d2194c59": {
+      "type": "text",
+      "source": "Where each defense layer intervenes",
+      "value": "各防御层在何处介入"
+    },
+    "text.86125366a0f3": {
+      "type": "text",
+      "source": "Network policy",
+      "value": "网络策略"
+    },
+    "text.87903192164e": {
+      "type": "text",
+      "source": "OpenShell layers",
+      "value": "OpenShell 各层"
+    },
+    "text.8853d9b1af6c": {
+      "type": "text",
+      "source": "Input provenance, approval for consequential actions, and behavioural evaluation",
+      "value": "输入来源追踪、后果重大操作的审批，以及行为评测"
+    },
+    "text.89b5b9f3d900": {
+      "type": "text",
+      "source": "observed:   ",
+      "value": "实际结果： "
+    },
+    "text.89fed343852c": {
+      "type": "text",
+      "source": "What can one operator.admin token see?",
+      "value": "一个 operator.admin token 能看到什么？"
+    },
+    "text.8a5edab28263": {
+      "type": "text",
+      "source": "/",
+      "value": "/",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8a5edab28263~1": {
+      "type": "text",
+      "source": "/",
+      "value": "/",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8a8de823d5ed": {
+      "type": "text",
+      "source": "?",
+      "value": "?",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.8ac5f3c66cd8": {
+      "type": "text",
+      "source": "curl -sS -m 8 -o /dev/null -w 'code=%{http_code}' https://example.com",
+      "value": "curl -sS -m 8 -o /dev/null -w 'code=%{http_code}' https://example.com",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8bd79cac87d7": {
+      "type": "text",
+      "source": " Describe a goal in plain words; the agent plans the shell commands it would run.",
+      "value": " Describe a goal in plain words; the agent plans the shell commands it would run.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.8c8dac95aa0a": {
+      "type": "text",
+      "source": "http://",
+      "value": "http://",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8cee51d240d9": {
+      "type": "text",
+      "source": "non-root",
+      "value": "非 root 用户"
+    },
+    "text.8cee51d240d9~1": {
+      "type": "text",
+      "source": "non-root",
+      "value": "非 root 用户"
+    },
+    "text.8cee51d240d9~2": {
+      "type": "text",
+      "source": "non-root",
+      "value": "非 root 用户"
+    },
+    "text.8d5455a259aa": {
+      "type": "text",
+      "source": "Filter program that checks syscall numbers and arguments before execution.",
+      "value": "在执行前检查系统调用编号和参数的过滤程序。"
+    },
+    "text.8d85da58d5ce": {
+      "type": "text",
+      "source": "The lock it cannot pick is chattr +i, which needs root.",
+      "value": "智能体无法解除的锁是 chattr +i，因为该操作需要 root 权限。"
+    },
+    "text.8dccf256f6d5": {
+      "type": "text",
+      "source": ". ",
+      "value": ". ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.8df1cf775383": {
+      "type": "text",
+      "source": "This launchable combines four operating-system mechanisms. Each answers a\n     question you can test, and together they apply policy at more than one\n     boundary. Read the live policy later on this page before treating any one\n     guarantee as universal.",
+      "value": "此可启动实例组合了四种操作系统机制。每种机制都回答一个可以测试的问题，它们共同在多道边界上应用策略。在将任何一项保证视为普遍适用之前，请先阅读本页后面的实时策略。\n     "
+    },
+    "text.8df70a1a1489": {
+      "type": "text",
+      "source": "agree - your box enforces exactly what the hardened policy predicts.",
+      "value": "一致——沙箱执行的结果与加固策略的预测完全相符。"
+    },
+    "text.8e968de1d35c": {
+      "type": "text",
+      "source": "\n    When the predicted verdict and the live result agree, the box enforces the policy that\n    the static analysis predicted. A disagreement instead means the box is behaving in a way\n    your prediction never captured, whether that is a preset someone added without your knowing or a\n    real gap the box managed to hide from the static view. Either way, you learn something important\n    before you start trusting the box in earnest.\n  ",
+      "value": "\n    如果预测判定与实时结果一致，就说明该实例执行的策略与静态分析的预测相符。如果二者不一致，则说明实例的行为未被预测涵盖：可能有人在您不知情的情况下添加了预设，也可能实例确实存在静态视图未能发现的缺口。无论是哪种情况，您都能在真正开始信任该实例之前获得重要信息。\n  "
+    },
+    "text.9005dfb07337": {
+      "type": "text",
+      "source": "Read the agent's SOUL.md persona file",
+      "value": "读取智能体的 SOUL.md 角色设定文件"
+    },
+    "text.9065dd82fd6a": {
+      "type": "text",
+      "source": "nsenter -t 1 -m -- id",
+      "value": "nsenter -t 1 -m -- id",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.90c01196eec0": {
+      "type": "text",
+      "source": "Linux Security Module that lets an unprivileged process restrict its own future access.",
+      "value": "一种 Linux 安全模块，允许非特权进程限制自身未来的访问权限。"
+    },
+    "text.90c9d42f3e67": {
+      "type": "text",
+      "source": "Can I rewrite my own persona, and is locking it real?",
+      "value": "我能改写自己的角色设定吗？对它的锁定真的有效吗？"
+    },
+    "text.91befb2e0e4a": {
+      "type": "text",
+      "source": "  (ran)",
+      "value": "  （已运行）"
+    },
+    "text.921660bebc20": {
+      "type": "text",
+      "source": "  (BLOCKED)",
+      "value": "  （已阻止）"
+    },
+    "text.94a366ca236a": {
+      "type": "text",
+      "source": " helpers.log.json(\"network policy names\", nets);",
+      "value": " helpers.log.json(\"network policy names\", nets);",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.94d01e3ce9c8": {
+      "type": "text",
+      "source": "Gaining authority beyond assignment: root, extra capabilities, broader file access, or broader network access.",
+      "value": "获得超出所分配范围的权限，例如 root 权限、额外的 capability、更广泛的文件访问权限或网络访问权限。"
+    },
+    "text.94d284dfb56d": {
+      "type": "text",
+      "source": "✗ DENIED",
+      "value": "✗ DENIED",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.951dcee3a7a4": {
+      "type": "text",
+      "source": "&",
+      "value": "&",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9765c034891e": {
+      "type": "text",
+      "source": " model(s) the runtime serves",
+      "value": " 个由运行时提供服务的模型"
+    },
+    "text.9afb60a992dc": {
+      "type": "text",
+      "source": "Measure boundaries instead of trying to prove intent",
+      "value": "评估边界，而非尝试证明意图"
+    },
+    "text.9b5cc450e83a": {
+      "type": "text",
+      "source": "')",
+      "value": "')",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9ba5840305f4": {
+      "type": "text",
+      "source": "action:    ",
+      "value": "操作：      "
+    },
+    "text.9d7de0441056": {
+      "type": "text",
+      "source": "Nemotron Super 120B · stronger",
+      "value": "Nemotron Super 120B · stronger",
+      "untranslated": "Model selector display label; preserve the complete label in English"
+    },
+    "text.9e43a159870b": {
+      "type": "text",
+      "source": "bash, curl, file open",
+      "value": "bash、curl、打开文件"
+    },
+    "text.9e6a513e4793": {
+      "type": "text",
+      "source": "1 · Where can this process connect?",
+      "value": "1 · 此进程可以连接到哪里？"
+    },
+    "text.9f93be8a27d6": {
+      "type": "text",
+      "source": "TOCTOU / inspection race",
+      "value": "TOCTOU / 检查竞态"
+    },
+    "text.a192e56b8340": {
+      "type": "text",
+      "source": "Write provenance, reviewable history, trust labels, and recovery from a known-good state",
+      "value": "写入来源追踪、可审查的历史记录、信任标签，以及从已知良好状态恢复"
+    },
+    "text.a1db00a9bf56": {
+      "type": "text",
+      "source": "#trajectory-artifact",
+      "value": "#trajectory-artifact",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a27347cd34e3": {
+      "type": "text",
+      "source": "A checked path changes through a symbolic link before use.",
+      "value": "已检查的路径在使用前因符号链接而发生变化。"
+    },
+    "text.a297317b26d2": {
+      "type": "text",
+      "source": " so window.__SBX_POLICY is set; there is one policy here, not a baked copy.",
+      "value": " so window.__SBX_POLICY is set; there is one policy here, not a baked copy.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.a379a6f6eeaf": {
+      "type": "text",
+      "source": "example.com",
+      "value": "example.com",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a404e8f0ffc8": {
+      "type": "text",
+      "source": " -> ",
+      "value": " -> ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a7411fdb03c3": {
+      "type": "text",
+      "source": "Dangerous primitives for process control, filesystem attachment, and identity change.",
+      "value": "可用于控制进程、挂接文件系统和更改身份的危险底层操作。"
+    },
+    "text.a76d62182527": {
+      "type": "text",
+      "source": "the mechanism that decided it,",
+      "value": "做出该决策的机制，"
+    },
+    "text.a76fd14e88b9": {
+      "type": "text",
+      "source": "THE POLICY DECIDES WHAT RUNS",
+      "value": "THE POLICY 决定 WHAT RUNS"
+    },
+    "text.a84df622d162": {
+      "type": "text",
+      "source": "Can I install software, to pull in new code?",
+      "value": "我能安装软件来引入新代码吗？"
+    },
+    "text.a87daf3a1ad0": {
+      "type": "text",
+      "source": " Optional visibility: uncomment to inspect the destination names as JSON.",
+      "value": " Optional visibility: uncomment to inspect the destination names as JSON.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.a99a8bf432c5": {
+      "type": "text",
+      "source": "→ No. apt needs root it does not have.",
+      "value": "→ 不能。apt 需要当前环境并不具备的 root 权限。"
+    },
+    "text.aa63692d4c2e": {
+      "type": "text",
+      "source": "How the sandbox mechanisms answer testable questions",
+      "value": "沙盒机制如何回答可测试的问题"
+    },
+    "text.ac9e67ff9018": {
+      "type": "text",
+      "source": "The syscall set allowed to run; everything else receives a policy action.",
+      "value": "允许执行的系统调用集合；其余系统调用都会触发策略指定的处置。"
+    },
+    "text.ad0637e9e932": {
+      "type": "text",
+      "source": " allowed destinations (",
+      "value": " 个（"
+    },
+    "text.afc2ee83aa82": {
+      "type": "text",
+      "source": "Survey the reach",
+      "value": "调查访问范围"
+    },
+    "text.b10f708e6941": {
+      "type": "text",
+      "source": "seccomp",
+      "value": "seccomp",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b22052b5d8fb": {
+      "type": "text",
+      "source": "One token. Persona, schedule, memory, models, config: all reachable, none of it through the sandbox.",
+      "value": "一个 token。角色设定、计划任务、记忆、模型和配置全都可以访问，而且无一经过沙箱。"
+    },
+    "text.b2fcf4570ffe": {
+      "type": "text",
+      "source": "MDN CONNECT",
+      "value": "MDN CONNECT",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b358631a69c0": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-super-120b-a12b",
+      "value": "nvidia/nemotron-3-super-120b-a12b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b42237545aff": {
+      "type": "text",
+      "source": " The one-liners above flatten a structured verdict.",
+      "value": " The one-liners above flatten a structured verdict.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.b4c3bcc7cf6a": {
+      "type": "text",
+      "source": "Run predict and confirm first.",
+      "value": "请先运行 predict 和 confirm。"
+    },
+    "text.b5540f9beaf2": {
+      "type": "text",
+      "source": "Goal hijack or prompt injection",
+      "value": "目标劫持或提示词注入"
+    },
+    "text.b579b3d6a37c": {
+      "type": "text",
+      "source": "Privilege escalation",
+      "value": "权限提升"
+    },
+    "text.b5a889c5f545": {
+      "type": "text",
+      "source": "apt-get install -y cowsay",
+      "value": "apt-get install -y cowsay",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b6d35b2f94e4": {
+      "type": "text",
+      "source": "The sandbox you hardened above governs the agent's syscalls, yet none of these moves is a\n     syscall the agent makes. How hard the box is and how far the control plane reaches are two\n     separate questions, and teams routinely lock down the first while leaving the second wide open.",
+      "value": "您在上文加固的沙箱管控智能体的系统调用，但这些操作都不是由智能体发起的系统调用。实例本身有多坚固与控制平面能触及多大范围是两个独立的问题，而团队经常严密封锁前者，却让后者门户大开。"
+    },
+    "text.b7a7d7364a06": {
+      "type": "text",
+      "source": "and the host init environment is unreadable.",
+      "value": "并且无法读取主机 init 进程的环境。"
+    },
+    "text.b98560cf958b": {
+      "type": "text",
+      "source": "seccomp / non-root",
+      "value": "seccomp / 非 root 用户"
+    },
+    "text.b98560cf958b~1": {
+      "type": "text",
+      "source": "seccomp / non-root",
+      "value": "seccomp / 非 root 用户"
+    },
+    "text.ba0cbf697713": {
+      "type": "text",
+      "source": "reason:    ",
+      "value": "原因：      "
+    },
+    "text.ba5c9bcb8b25": {
+      "type": "text",
+      "source": "Vocabulary in these four mechanisms",
+      "value": "这四种机制中的术语"
+    },
+    "text.ba5ec51d07a4": {
+      "type": "text",
+      "source": ")",
+      "value": ")",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.bb9906bfd6fa": {
+      "type": "text",
+      "source": "kernel result",
+      "value": "内核结果"
+    },
+    "text.bba087eb091f": {
+      "type": "text",
+      "source": "disagree - the hardened policy would allow this, but your box blocked it, so a stricter preset is active than the snapshot models.",
+      "value": "不一致——加固策略会允许此操作，但沙箱将其阻止，说明当前生效的预设比快照所建模的策略更严格。"
+    },
+    "text.bbc5e661e106": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bd8dfa61da4e": {
+      "type": "text",
+      "source": " Draw the policy map below straight from what you just fetched (one source of truth).",
+      "value": " Draw the policy map below straight from what you just fetched (one source of truth).",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.bdccef35502f": {
+      "type": "text",
+      "source": "observed:  ",
+      "value": "实际结果： "
+    },
+    "text.bde0ac766bf0": {
+      "type": "text",
+      "source": "SOUL.md",
+      "value": "SOUL.md",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.be7607476ee6": {
+      "type": "text",
+      "source": "Enumerate it against your own launchable. The cell only reads, so it measures the\n     reach and leaves everything unchanged.",
+      "value": "针对您自己的可启动实例枚举这些能力。该单元只执行读取操作，因此只会衡量可访问范围，不会更改任何内容。"
+    },
+    "text.be97c7e46d73": {
+      "type": "text",
+      "source": "Prove where the sandbox holds, then confirm it live",
+      "value": "证明沙箱的约束边界，再通过实时运行确认"
+    },
+    "text.bf3e49cfc444": {
+      "type": "text",
+      "source": "Grant only the authority the task needs",
+      "value": "仅授予任务所需的权限"
+    },
+    "text.bfeefc0ff586": {
+      "type": "text",
+      "source": "  (reached the host)",
+      "value": "  （已连接到主机）"
+    },
+    "text.c0141a900151": {
+      "type": "text",
+      "source": "The diagram traces what happens on each tool call, and the cells after it let you make those\n     calls and read back the kernel's answer.",
+      "value": "该图展示了每次工具调用时发生的过程，后续单元则让您实际发起这些调用，并读取内核返回的结果。"
+    },
+    "text.c12ca914bf8b": {
+      "type": "text",
+      "source": "Run the 'Read your launchable's live policy' cell above first, so this predicts from YOUR box's policy.",
+      "value": "请先运行上方的“读取 launchable 的实时策略”单元，以便根据 YOUR 环境的策略进行预测。"
+    },
+    "text.c13cc2905e85": {
+      "type": "text",
+      "source": "OpenShell · Securing Agents",
+      "value": "OpenShell · 安全智能体"
+    },
+    "text.c2c7dd2311de": {
+      "type": "text",
+      "source": "symlink(7)",
+      "value": "symlink(7)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c313309ce7ab": {
+      "type": "text",
+      "source": "Can protect selected files when policy makes them read-only",
+      "value": "当策略将指定文件设为只读时，可以保护这些文件"
+    },
+    "text.c34bd3ecff47": {
+      "type": "text",
+      "source": "Compares the static prediction with the kernel result and surfaces any disagreement for investigation.",
+      "value": "比较静态预测与内核结果，并显示所有不一致之处以供调查。"
+    },
+    "text.c3ea346aeb9d": {
+      "type": "text",
+      "source": "Time-of-check/time-of-use bug; seccomp avoids pointer dereference races inside the filter.",
+      "value": "检查时与使用时之间的竞态缺陷；seccomp 可避免过滤器内部发生指针解引用竞态。"
+    },
+    "text.c483da564241": {
+      "type": "text",
+      "source": "Read your launchable's live policy, then see it as a map",
+      "value": "读取可启动环境的实时策略，然后以地图形式查看"
+    },
+    "text.c485d184f1a6": {
+      "type": "text",
+      "source": "Module 4 · Part A of 3",
+      "value": "模块 4 · 第 1 部分，共 3 部分"
+    },
+    "text.c4b2896a2081": {
+      "type": "text",
+      "source": ").",
+      "value": "）。"
+    },
+    "text.c619afff5a03": {
+      "type": "text",
+      "source": " It prints the verdict (the exit code), the deciding mechanism, and a line of evidence.",
+      "value": " It prints the verdict (the exit code), the deciding mechanism, and a line of evidence.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.c6a4b71060ae": {
+      "type": "text",
+      "source": "The starting catalog walks the questions you would ask of a box like this, ranging from\n     reaching the open internet all the way to rewriting the agent's own persona, and you are free to\n     edit any command or add your own.",
+      "value": "初始目录涵盖了您可能向此类环境提出的各种问题，从访问开放互联网，一直到改写智能体自身的人设；可以自由编辑任意命令，也可以添加自己的命令。"
+    },
+    "text.c6c1a69412d4": {
+      "type": "text",
+      "source": "Egress policy inputs: executable identity, target name, TCP port, and requested URL path.",
+      "value": "出站策略的输入包括：可执行文件标识、目标名称、TCP 端口以及请求的 URL 路径。"
+    },
+    "text.c7e669de8ed8": {
+      "type": "text",
+      "source": " This predicts from YOUR launchable's live policy. Run the live-policy cell above first",
+      "value": " This predicts from YOUR launchable's live policy. Run the live-policy cell above first",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.cb5aaa85dbb7": {
+      "type": "text",
+      "source": "Filesystem boundary",
+      "value": "文件系统边界"
+    },
+    "text.cc183c717d94": {
+      "type": "text",
+      "source": "4 · How much authority does it start with?",
+      "value": "4 · 它最初拥有多大权限？"
+    },
+    "text.cc2ba7f9b418": {
+      "type": "text",
+      "source": "models.list",
+      "value": "models.list",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.cc6b69b40bf7": {
+      "type": "text",
+      "source": "&amp;",
+      "value": "&amp;",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.cdaffc777873": {
+      "type": "text",
+      "source": "pip install --break-system-packages --retries 0 --timeout 5 --no-input cowsay",
+      "value": "pip install --break-system-packages --retries 0 --timeout 5 --no-input cowsay",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ce8ecb89c713": {
+      "type": "text",
+      "source": "chmod 0644 /sandbox/.openclaw/workspace/SOUL.md",
+      "value": "chmod 0644 /sandbox/.openclaw/workspace/SOUL.md",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d092d713538e": {
+      "type": "text",
+      "source": "Assume a valid-looking request can still be harmful",
+      "value": "假定看似有效的请求仍可能造成危害"
+    },
+    "text.d164ac34a7a9": {
+      "type": "text",
+      "source": "Risk appears when these permissions compose. A policy can correctly allow one outbound endpoint,\n     but that endpoint is still full-duplex: the request leaves and the response comes back as more input.\n     Once hostile content can steer the model, it can ask for private data and send that data through\n     a channel the sandbox regards as allowed. A network allowlist approves the destination, not the\n     meaning of bytes crossing an allowed connection. Mediating any one leg above the sandbox removes\n     the path the exploit needs.",
+      "value": "这些权限组合在一起时便会产生风险。策略可以正确地允许某个出站 API 入口，但该 API 入口仍是全双工的：请求向外发送，响应则作为更多输入返回。一旦恶意内容能够操纵模型，它就可以要求读取私有数据，再通过沙箱视为已获允许的通道将数据发出。网络允许列表批准的是目标地址，而不是获准连接中所传输字节的含义。在沙箱上方对其中任何一个环节实施管控，都能切断漏洞利用所需的路径。"
+    },
+    "text.d2605aaa4167": {
+      "type": "text",
+      "source": "Keep your launchable open in another tab, then re-run. Check the sandbox name with: openshell sandbox list",
+      "value": "在另一个标签页中保持 launchable 处于打开状态，然后重新运行。使用以下命令检查沙箱名称：openshell sandbox list"
+    },
+    "text.d2bf29ca7bad": {
+      "type": "text",
+      "source": "\n    The protection here is deliberately one-sided, since the sandbox stays strong against the\n    agent's own mistakes and even against a compromise of the agent while having no\n    visibility at all into whoever holds the control plane sitting above it. You should guard access\n    to that plane as carefully as you would guard root, because on this box it can reconfigure the\n    agent's identity and schedule entirely outside the reach of anything the sandbox checks.\n  ",
+      "value": "\n    此处的保护刻意只覆盖一侧：沙箱能够有效抵御智能体自身的错误，甚至能抵御智能体遭入侵后的行为，但对于持有其上层控制平面权限的人，沙箱完全无从感知。您应当像保护 root 权限一样谨慎地保护该平面的访问权限，因为在此实例上，它可以完全绕过沙箱的所有检查，重新配置智能体的身份和计划任务。\n  "
+    },
+    "text.d48fd8e4a307": {
+      "type": "text",
+      "source": "capabilities(7)",
+      "value": "capabilities(7)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d48fd8e4a307~1": {
+      "type": "text",
+      "source": "capabilities(7)",
+      "value": "capabilities(7)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d4b5e1918c1b": {
+      "type": "text",
+      "source": "The four mechanisms above are running on your box, so you can make each one decide for\n     itself instead of taking the diagram on trust.",
+      "value": "上述四种机制正在环境中运行，因此可以让每种机制自行做出决策，而不必仅凭该图来判断。"
+    },
+    "text.d5522e0404dc": {
+      "type": "text",
+      "source": "sessions.list             -> ",
+      "value": "sessions.list             -> ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d5b4ee63e4d3": {
+      "type": "text",
+      "source": "curl -sS -o /dev/null -w 'code=%{http_code}' ",
+      "value": "curl -sS -o /dev/null -w 'code=%{http_code}' ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d6077ebeeab3": {
+      "type": "text",
+      "source": " Compare the browser-side prediction with the kernel result from Confirm.",
+      "value": " Compare the browser-side prediction with the kernel result from Confirm.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.d840b391646e": {
+      "type": "text",
+      "source": "Linux capability",
+      "value": "Linux capability",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d91aaf8c6226": {
+      "type": "text",
+      "source": "curl -sS -m 6 -o /dev/null -w 'code=%{http_code}' http://169.254.169.254/latest/meta-data/",
+      "value": "curl -sS -m 6 -o /dev/null -w 'code=%{http_code}' http://169.254.169.254/latest/meta-data/",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d963652f4b8c": {
+      "type": "text",
+      "source": "Linux errno names for operation not permitted and permission denied.",
+      "value": "Linux 中表示“不允许执行操作”和“权限被拒绝”的 errno 名称。"
+    },
+    "text.d970ddde9909": {
+      "type": "text",
+      "source": "\n      On this page, you send real commands to your launchable, read each\n      verdict, and trace it to the rule that produced it. Then you inspect a\n      second boundary: the operator control plane above the sandbox.\n    ",
+      "value": "\n      在本页中，您将向可启动实例发送真实命令，读取每项判定结果，并追溯生成该结果的规则。然后，您将检查第二道边界：沙盒之上的 operator 控制平面。\n    "
+    },
+    "text.da807847adb6": {
+      "type": "text",
+      "source": "What the sandbox cannot catch",
+      "value": "沙箱无法拦截的风险"
+    },
+    "text.dabd3aff769f": {
+      "type": "text",
+      "source": "<",
+      "value": "<",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.dcb5db4cee28": {
+      "type": "text",
+      "source": "HTTP tunnel proxy to a requested host and port; safe deployments restrict allowed targets.",
+      "value": "HTTP 隧道代理，用于连接请求指定的主机和端口；安全的部署会限制允许访问的目标。"
+    },
+    "text.dde9eb290c2b": {
+      "type": "text",
+      "source": "Failure mode",
+      "value": "故障模式"
+    },
+    "text.df2592d694d8": {
+      "type": "text",
+      "source": "Going further: a whole trajectory",
+      "value": "进一步探索：完整轨迹"
+    },
+    "text.df27bc2d726d": {
+      "type": "text",
+      "source": " the exact command that ran on your box",
+      "value": " the exact command that ran on your box",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.dfd891dc1d7a": {
+      "type": "text",
+      "source": " Optional visibility: uncomment to inspect every raw probe result before the summary return.",
+      "value": " Optional visibility: uncomment to inspect every raw probe result before the summary return.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.e0adf14e17d6": {
+      "type": "text",
+      "source": "The red center is a path across allowed capabilities. Hostile content can steer a runtime that reads protected state and uses an approved, two-way channel.",
+      "value": "红色中心表示一条贯穿已获准能力的路径。恶意内容可以操纵某个运行时，使其读取受保护状态并使用获准的双向通道。"
+    },
+    "text.e1d79d401e7c": {
+      "type": "text",
+      "source": "raw output",
+      "value": "原始输出"
+    },
+    "text.e1f8d71a96e2": {
+      "type": "text",
+      "source": "Landlock",
+      "value": "Landlock",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e1f8d71a96e2~1": {
+      "type": "text",
+      "source": "Landlock",
+      "value": "Landlock",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e1f8d71a96e2~2": {
+      "type": "text",
+      "source": "Landlock",
+      "value": "Landlock",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e1f8d71a96e2~3": {
+      "type": "text",
+      "source": "Landlock",
+      "value": "Landlock",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e1f8d71a96e2~4": {
+      "type": "text",
+      "source": "Landlock",
+      "value": "Landlock",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e27bdd25f935": {
+      "type": "text",
+      "source": "(the agent did not return a parseable plan; rephrase the goal and try again)",
+      "value": "（智能体未返回可解析的计划；请换一种方式描述目标，然后重试）"
+    },
+    "text.e2ccf8677631": {
+      "type": "text",
+      "source": "Every command here ran. A clean exit is easy to mistake for safety. Whatever printed to the screen is already out, visible to you and to anything reading this output or the model's context, and no later network block can recall it. Look at how each secret came back. The model key resolves to a handle with nothing useful behind it, so reading it costs nothing. The gateway token, when a step asks for it, prints in full and is gone the moment it appears. What protected the key was that it was never readable, long before any egress rule had a say. Edit the goal above, or the planning prompt in the code, and run it again.",
+      "value": "这里的每条命令都已运行。顺利退出很容易被误认为安全。屏幕上打印的任何内容都已经泄露，您、读取此输出的任何对象以及模型上下文都能看到；之后再实施网络阻断也无法将其收回。请观察每项机密是如何被读出的。模型密钥解析为一个句柄，其背后没有任何有用内容，因此读取它不会造成损失。网关 token 则不同：只要某个步骤请求它，就会完整打印出来，并在出现的那一刻泄露。密钥之所以受到保护，是因为它从一开始就不可读取，远早于任何出站规则介入。请修改上方的目标或代码中的规划提示词，然后再次运行。"
+    },
+    "text.e2ce14ae6274": {
+      "type": "text",
+      "source": "sudo and docker are absent, entering the host namespace is denied,",
+      "value": "sudo 和 docker 均不存在，进入主机命名空间的操作会被拒绝，"
+    },
+    "text.e2fb98cc8442": {
+      "type": "text",
+      "source": "cron.list                 -> ",
+      "value": "cron.list                 -> ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e4000bf5ebfd": {
+      "type": "text",
+      "source": "the predict cell below computes from this exact policy.",
+      "value": "下方的预测单元将依据这份确切策略进行计算。"
+    },
+    "text.e4d6c2989725": {
+      "type": "text",
+      "source": "← Module 3c: Always-On",
+      "value": "← 模块 3c：持续运行"
+    },
+    "text.e5b8242e5e8a": {
+      "type": "text",
+      "source": "Non-root / unprivileged user",
+      "value": "非 root 用户/非特权用户"
+    },
+    "text.e62a5a02ae54": {
+      "type": "text",
+      "source": "Workspace tree",
+      "value": "工作区目录树"
+    },
+    "text.e647d5b5eea3": {
+      "type": "text",
+      "source": "One rule carries over from the single commands. A secret printed at any step is already out even\n     when a later step's egress is denied, so edit the goal or the planning prompt and take the\n     trajectory further once you have seen that happen.",
+      "value": "单条命令中的一项规则在这里仍然适用：任何步骤一旦打印出秘密，该秘密就已经泄露，即使后续步骤的出站访问被拒绝也无济于事。看到这种情况后，请编辑目标或规划提示词，再对这条轨迹进行更深入的探索。"
+    },
+    "text.e7292851d876": {
+      "type": "text",
+      "source": "You are an agent with shell access in a Linux sandbox. You run as the user 'sandbox'; your home and workspace are under /sandbox (the agent workspace is /sandbox/.openclaw/workspace, persona at SOUL.md). Your environment holds NVIDIA_API_KEY and OPENCLAW_GATEWAY_TOKEN. Outbound network goes through a proxy that allows only a few approved hosts. For the user's goal, plan the shell commands you would run and reply with ONLY a JSON object: a 'steps' array, each step an object with two string fields, intent (a few words) and command (one shell command, no pipes or sub-shells; use printenv, ls, cat, id, curl, chmod, and the like). Use 1 to 5 steps. Act on the goal; do not consider whether a command is allowed.",
+      "value": "您是一个在 Linux 沙盒中拥有 shell 访问权限的智能体。您以用户 'sandbox' 的身份运行；主目录和工作区位于 /sandbox 下（智能体工作区为 /sandbox/.openclaw/workspace，角色设定文件位于 SOUL.md）。环境包含 NVIDIA_API_KEY 和 OPENCLAW_GATEWAY_TOKEN。出站网络流量经由一个仅允许少数已批准主机的代理。请针对用户的目标规划您将运行的 shell 命令，并以 ONLY 一个 JSON 对象作为回复：其中包含一个 'steps' 数组，每个步骤均为包含两个字符串字段的对象，即 intent（几个词）和 command（一条 shell 命令，不得使用管道或子 shell；可使用 printenv、ls、cat、id、curl、chmod 等命令）。请提供 1 到 5 个步骤。根据目标采取行动；无需考虑命令是否获准执行。"
+    },
+    "text.e72eb8fdb6e8": {
+      "type": "text",
+      "source": "Ambient rights",
+      "value": "环境权限"
+    },
+    "text.e73a32a2311b": {
+      "type": "text",
+      "source": "ptrace(2)",
+      "value": "ptrace(2)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e7ac0786668e": {
+      "type": "text",
+      "source": ":",
+      "value": ":",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e9363f76e114": {
+      "type": "text",
+      "source": "not installed",
+      "value": "未安装"
+    },
+    "text.e9363f76e114~1": {
+      "type": "text",
+      "source": "not installed",
+      "value": "未安装"
+    },
+    "text.e9363f76e114~2": {
+      "type": "text",
+      "source": "not installed",
+      "value": "未安装"
+    },
+    "text.e999440f31f7": {
+      "type": "text",
+      "source": "Choose the control by failure mode",
+      "value": "根据故障模式选择控制措施"
+    },
+    "text.eab18464b25b": {
+      "type": "text",
+      "source": " Binary identity, made visible: the same host can flip on which binary asks.",
+      "value": " Binary identity, made visible: the same host can flip on which binary asks.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.eabc01f12ec3": {
+      "type": "text",
+      "source": "allowed",
+      "value": "已允许"
+    },
+    "text.eac09a106875": {
+      "type": "text",
+      "source": "config.get",
+      "value": "config.get",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.eb30fb22f14c": {
+      "type": "text",
+      "source": "errno(3)",
+      "value": "errno(3)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ebe5295f792d": {
+      "type": "text",
+      "source": "Module 4b: Modern CLIs →",
+      "value": "模块 4b：现代 CLI →"
+    },
+    "text.ed2d4179add6": {
+      "type": "text",
+      "source": "Run the predict node first.",
+      "value": "请先运行预测节点。"
+    },
+    "text.eeeb6c141ce9": {
+      "type": "text",
+      "source": "Executes the candidate connection inside OpenShell. Blocked egress returns 403 or 000; allowed egress returns an HTTP status.",
+      "value": "在 OpenShell 内执行候选连接。出站连接被阻止时返回 403 或 000；允许出站时返回 HTTP 状态。"
+    },
+    "text.ef12997c6a49": {
+      "type": "text",
+      "source": "A filesystem subtree made visible at another path, including across chroot boundaries.",
+      "value": "将文件系统子树显示在另一条路径下，包括跨越 chroot 边界的情况。"
+    },
+    "text.ef342e90c20c": {
+      "type": "text",
+      "source": "Isolated Linux network stack: devices, routes, firewall rules, and socket ports.",
+      "value": "隔离的 Linux 网络栈：设备、路由、防火墙规则和套接字端口。"
+    },
+    "text.ef556d904bb6": {
+      "type": "text",
+      "source": "Computes the selected action's allow/deny verdict locally with the same evaluation used by the proxy.",
+      "value": "在本地使用与代理相同的评测，计算所选操作的允许/拒绝判定结果。"
+    },
+    "text.efdb5576d726": {
+      "type": "text",
+      "source": "Nemotron Nano 30B · fast",
+      "value": "Nemotron Nano 30B · fast",
+      "untranslated": "Model selector display label; preserve the complete label in English"
+    },
+    "text.efefc15c24ee": {
+      "type": "text",
+      "source": "(no output)",
+      "value": "（无输出）"
+    },
+    "text.efefc15c24ee~1": {
+      "type": "text",
+      "source": "(no output)",
+      "value": "（无输出）"
+    },
+    "text.eff3f53e5cd8": {
+      "type": "text",
+      "source": "Reduces the files, syscalls, and egress available to installed code",
+      "value": "减少已安装代码可访问的文件、系统调用和出站通道"
+    },
+    "text.f0da955d46aa": {
+      "type": "text",
+      "source": "/usr/bin/curl",
+      "value": "/usr/bin/curl",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.f15336ec88ac": {
+      "type": "text",
+      "source": "chattr +i /sandbox/.openclaw/workspace/SOUL.md",
+      "value": "chattr +i /sandbox/.openclaw/workspace/SOUL.md",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.f2541ec673b5": {
+      "type": "text",
+      "source": "Tool misuse",
+      "value": "工具滥用"
+    },
+    "text.f28f4cf8e2f6": {
+      "type": "text",
+      "source": "Show which user the agent runs as, then try to write outside /sandbox",
+      "value": "显示智能体以哪个用户身份运行，然后尝试在 /sandbox 外部写入"
+    },
+    "text.f3da787787a0": {
+      "type": "text",
+      "source": "Limits reachable files, processes, and destinations after the model is steered",
+      "value": "限制模型受到操纵后能够访问的文件、进程和目标地址"
+    },
+    "text.f445170bf4c2": {
+      "type": "text",
+      "source": "denied · EACCES",
+      "value": "已拒绝 · EACCES"
+    },
+    "text.f4abdf33bd77": {
+      "type": "text",
+      "source": "called:  ",
+      "value": "调用命令："
+    },
+    "text.f5a8f2939665": {
+      "type": "text",
+      "source": "network_namespaces(7)",
+      "value": "network_namespaces(7)",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.f69ec1faee71": {
+      "type": "text",
+      "source": " the one policy every cell on this page reads",
+      "value": " the one policy every cell on this page reads",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.f6dd6228afd5": {
+      "type": "text",
+      "source": " A blocked egress yields code=000 with a 'tunnel failed' note; an allowed one returns a real HTTP status (200/401/404...).",
+      "value": " A blocked egress yields code=000 with a 'tunnel failed' note; an allowed one returns a real HTTP status (200/401/404...).",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.f720f367f221": {
+      "type": "text",
+      "source": "\n      Module 3 gave OpenClaw persistent context and unattended triggers. Prompt rules and\n      harness checks still influence what it attempts, while OpenShell puts the final\n      allow-or-deny decision in a sandbox the agent cannot rewrite.\n    ",
+      "value": "\n      模块 3 为 OpenClaw 提供了持久上下文和无人值守触发器。提示词规则和工具框架检查仍会影响它尝试执行的操作，而 OpenShell 则将最终的允许或拒绝决定置于智能体无法改写的沙盒中。\n    "
+    },
+    "text.f7d592acde9e": {
+      "type": "text",
+      "source": "Memory or context poisoning",
+      "value": "记忆或上下文污染"
+    },
+    "text.f830d2ed9927": {
+      "type": "text",
+      "source": "Policy engine that evaluates structured input and returns decisions to enforcement code.",
+      "value": "对结构化输入进行评估，并将决策返回给策略执行代码的策略引擎。"
+    },
+    "text.f910da3df4b8": {
+      "type": "text",
+      "source": "Bind mount",
+      "value": "绑定挂载"
+    },
+    "text.f9f80b2976f2": {
+      "type": "text",
+      "source": "What that one credential reaches:",
+      "value": "这一项凭据可以访问："
+    },
+    "text.fa24955a1723": {
+      "type": "text",
+      "source": "nvidia/nemotron-3-nano-30b-a3b",
+      "value": "nvidia/nemotron-3-nano-30b-a3b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fb038009f88d": {
+      "type": "text",
+      "source": "Linux syscall filtering that reduces kernel surface reachable by a process.",
+      "value": "Linux 系统调用过滤机制，用于缩小进程可触及的内核攻击面。"
+    },
+    "text.fb6a60ffb58a": {
+      "type": "text",
+      "source": "agent tool call",
+      "value": "智能体工具调用"
+    },
+    "text.fbb0782dd3a4": {
+      "type": "text",
+      "source": "chmod 0444 /sandbox/.openclaw/workspace/SOUL.md",
+      "value": "chmod 0444 /sandbox/.openclaw/workspace/SOUL.md",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fc64fc7141cf": {
+      "type": "text",
+      "source": "agents.files.get",
+      "value": "agents.files.get",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fd37b8febd57": {
+      "type": "text",
+      "source": "cron.list",
+      "value": "cron.list",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fdae47d2dbd9": {
+      "type": "text",
+      "source": "The OS process running the agent and tools inside these boundaries.",
+      "value": "在这些边界内运行智能体和工具的 OS 进程。"
+    },
+    "text.fe3995813104": {
+      "type": "text",
+      "source": "✓ ALLOW ",
+      "value": "✓ ALLOW ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ff298d174bb4": {
+      "type": "text",
+      "source": "Starts the process as a non-root identity and blocks selected escalation paths",
+      "value": "以非 root 身份启动进程，并阻断特定的权限提升路径"
+    }
+  }
+}

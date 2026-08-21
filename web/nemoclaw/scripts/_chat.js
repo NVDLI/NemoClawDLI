@@ -119,9 +119,12 @@ function markLiveArtifact(el) {
   if (!el.id.endsWith("-artifact")) return;
   el.classList.add("course-artifact");
   if (!el.dataset.artifactLabel) {
-    el.dataset.artifactLabel = document.documentElement.lang.toLowerCase().startsWith("pt")
-      ? "Artefato interativo"
-      : "Live artifact";
+    const language = document.documentElement.lang.toLowerCase();
+    el.dataset.artifactLabel = language.startsWith("zh")
+      ? "交互页面"
+      : language.startsWith("pt")
+        ? "Artefato interativo"
+        : "Live artifact";
   }
 }
 

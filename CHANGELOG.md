@@ -5,6 +5,7 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Thanks to Leo Huang for contributing and reviewing the Simplified Chinese localization.
 - Thanks to Vadim Kudlay for reviewing the final Module 3a gateway narrative and localized figure
   captions in English, Spanish, and Brazilian Portuguese.
 - Thanks to Vadim Kudlay for reviewing the Spanish and Brazilian Portuguese localization of the

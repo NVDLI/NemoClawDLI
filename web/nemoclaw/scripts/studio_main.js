@@ -3,6 +3,144 @@
 
 import { chat, getConfig, hasKey } from './_shared.js';
 
+const STUDIO_ZH = document.documentElement.lang.toLowerCase().startsWith('zh');
+const STUDIO_ZH_TEXT = Object.freeze({
+  '01a · The Agent Loop': '01a · 智能体循环',
+  '01b · ReAct Loop': '01b · ReAct 循环',
+  '01c · Tools at Scale': '01c · 规模化工具调用',
+  '02a · Workflows': '02a · 工作流',
+  '02b · Index Agent': '02b · 索引智能体',
+  '02c · Deep Agents': '02c · 深度智能体',
+  '03a · Kickstart': '03a · 快速上手',
+  '03c · Always-On': '03c · 持久在线',
+  '04b · Modern CLIs': '04b · 现代 CLI',
+  '04c · Going Further': '04c · 延伸学习',
+  'Static studio contract': 'Studio 静态约定',
+  'Helper notebook static contract': '辅助 notebook 静态约定',
+  'Helper notebook browser contract': '辅助 notebook 浏览器约定',
+  'Cell UI source/browser contract': '代码单元 UI 源文件/浏览器约定',
+  'Cell UI production bundle contract': '代码单元 UI 生产课程包约定',
+  'Studio responsive contract': 'Studio 响应式约定',
+  'Browser environment probe': '浏览器环境探测',
+  'Browser runtime smoke': '浏览器运行时冒烟测试',
+  'Static browser render': '静态浏览器渲染',
+  'no lab stack': '无实验环境栈',
+  'host Chromium, no lab stack': '宿主机 Chromium，无实验环境栈',
+  'host prerequisites': '宿主机前置条件',
+  'Checks studio controls, self-hosted assets, read-only fallback, and script SKILL testing docs.': '检查 Studio 控件、自托管资源、只读回退和脚本 SKILL 测试文档。',
+  'Checks helper notebook examples, validation command parity, syntax asset hooks, and CanvasFlow versus RunCell helper surfaces.': '检查辅助 notebook 示例、验证命令一致性、语法资源挂钩，以及 CanvasFlow 与 RunCell 的辅助函数界面。',
+  'Clicks every helper notebook run control and verifies CodeMirror, highlighted JSON logs, table layout, and page overflow.': '点击辅助 notebook 中的每个运行控件，并检查 CodeMirror、JSON 日志高亮、表格布局和页面溢出。',
+  'Checks CanvasFlow and RunCell across desktop/mobile and dark/light themes; verifies unified buttons, JS chips, syntax highlighting, hidden-code heuristics, and captures screenshots.': '在桌面端、移动端及深色/浅色主题下检查 CanvasFlow 和 RunCell；验证统一按钮、JS 标记、语法高亮和隐藏代码启发式规则，并截取屏幕截图。',
+  'Run after BUILD_PAGES_LANGS=0 scripts/build/build_pages.sh; repeats the cell UI browser suite against public/ to prove the shipped bundle keeps the contract.': '在运行 BUILD_PAGES_LANGS=0 scripts/build/build_pages.sh 后执行；针对 public/ 重复代码单元 UI 浏览器测试，验证发布课程包仍满足约定。',
+  'Stress-tests narrow and short Studio viewports for topbar scrolling, usable controls, sidebar list floors, and internal scrolling.': '对窄屏和低高度 Studio 视口进行压力测试，检查顶部栏滚动、控件可用性、侧边栏列表最小高度和内部滚动。',
+  'Verifies host Node.js, the pinned Playwright API, and Chromium before browser checks run.': '在浏览器检查前验证宿主机 Node.js、固定版本的 Playwright API 和 Chromium。',
+  'Runs the direct Node/Playwright/Chromium smoke test.': '运行直接调用 Node/Playwright/Chromium 的冒烟测试。',
+  'Runs host Chromium against a static course page.': '使用宿主机 Chromium 渲染静态课程页面。',
+  'Copy': '复制',
+  'Copied': '已复制',
+  'Copy failed': '复制失败',
+  'Dark': '深色',
+  'Light': '浅色',
+  'Switch back to dark lab mode': '切换回深色实验模式',
+  'Toggle light export mode': '切换浅色导出模式',
+  'Read-only static preview: Jupyter contents API not available on this origin.': '静态预览为只读：当前来源无法使用 Jupyter contents API。',
+  'Read-only preview: Jupyter contents API not available on this origin.': '预览为只读：当前来源无法使用 Jupyter contents API。',
+  'References unavailable for this frame.': '无法获取此框架中的引用。',
+  'No page references found.': '本页未找到引用。',
+  'Read-only static preview': '静态预览为只读',
+  'No module loaded.': '尚未加载模块。',
+  'No comments for this page.': '本页暂无批注。',
+  '(page-level)': '（页面级）',
+  'resolve': '解决',
+  'resolved': '已解决',
+  '(page-level comment)': '（页面级批注）',
+  'No runnable blocks on this page.': '本页没有可运行的内容块。',
+  'Annotate': '注解',
+  'Ask the LLM to annotate this output': '让 LLM 注解此输出',
+  'no output': '无输出',
+  'Annotating': '正在注解',
+  'Studio Annotation': 'Studio 注解',
+  'annotating': '正在注解',
+  '(no response)': '（无响应）',
+  'Save cell': '保存代码单元',
+  "Save this cell's code to the source file (only this cell)": '仅将此代码单元的代码保存到源文件',
+  'no change': '无变更',
+  'saving': '正在保存',
+  'saved': '已保存',
+  'No pending edits.': '暂无待保存的编辑。',
+  'Save checked': '保存已勾选项',
+  'external': '外部',
+  'material': '资料',
+  'page': '页面',
+  'asset': '资源',
+  'link': '链接',
+});
+
+function studioText(value) {
+  if (!STUDIO_ZH || typeof value !== 'string') return value;
+  if (STUDIO_ZH_TEXT[value]) return STUDIO_ZH_TEXT[value];
+  const patterns = [
+    [/^loading (.+)$/, '正在加载 $1'],
+    [/^loaded · (.+)$/, '已加载 · $1'],
+    [/^Write access: Jupyter contents API at (.+)$/, '写入权限：Jupyter contents API 位于 $1'],
+    [/^Last modified: (.+) UTC$/, '最后修改时间：$1 UTC'],
+    [/^On: "(.+)"$/, '定位到：“$1”'],
+    [/^running (\d+\/\d+) runnable block\(s\)$/, '正在运行 $1 个可运行内容块'],
+    [/^running (\d+\/\d+): (.+)$/, '正在运行 $1：$2'],
+    [/^stopped at (\d+\/\d+): (.+)$/, '在 $1 处停止：$2'],
+    [/^ran (\d+\/\d+) runnable block\(s\) · (\d+) failed$/, '已运行 $1 个可运行内容块 · $2 个失败'],
+    [/^LLM unavailable: (.+)$/, 'LLM 不可用：$1'],
+    [/^(\d+) changed section\(s\)\. Use the sidebar to jump$/, '$1 个章节有变更。请使用侧边栏跳转'],
+    [/^saved (\d+) change\(s\)$/, '已保存 $1 项变更'],
+    [/^save failed: (.+)$/, '保存失败：$1'],
+  ];
+  for (const [pattern, replacement] of patterns) {
+    if (pattern.test(value)) return value.replace(pattern, replacement);
+  }
+  return value;
+}
+
+function localizeStudioNode(root) {
+  if (!STUDIO_ZH || !root) return;
+  const doc = root.nodeType === Node.DOCUMENT_NODE ? root : root.ownerDocument;
+  const scope = root.nodeType === Node.DOCUMENT_NODE ? root.documentElement : root;
+  if (!doc || !scope) return;
+  const walker = doc.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node => {
+    if (node.parentElement?.closest('code,pre,textarea,script,style')) return;
+    const raw = node.nodeValue || '';
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+    const translated = studioText(trimmed);
+    if (translated !== trimmed) node.nodeValue = raw.replace(trimmed, translated);
+  });
+  scope.querySelectorAll?.('[title],[aria-label],[placeholder]').forEach(element => {
+    for (const name of ['title', 'aria-label', 'placeholder']) {
+      if (!element.hasAttribute(name)) continue;
+      const current = element.getAttribute(name);
+      const translated = studioText(current);
+      if (translated !== current) element.setAttribute(name, translated);
+    }
+  });
+}
+
+function observeStudioUi(root) {
+  if (!STUDIO_ZH || !root || root._studioZhObserver) return;
+  localizeStudioNode(root);
+  const scope = root.nodeType === Node.DOCUMENT_NODE ? root.documentElement : root;
+  const observer = new MutationObserver(records => {
+    records.forEach(record => {
+      if (record.type === 'characterData') localizeStudioNode(record.target.parentElement);
+      record.addedNodes.forEach(node => localizeStudioNode(
+        node.nodeType === Node.TEXT_NODE ? node.parentElement : node));
+    });
+  });
+  observer.observe(scope, {childList:true, characterData:true, subtree:true});
+  root._studioZhObserver = observer;
+}
+
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════
@@ -92,7 +230,7 @@ function esc(s) {
     .replace(/'/g,'&#39;');
 }
 function setStatus(msg, cls='') {
-  tbStatus.textContent = msg;
+  tbStatus.textContent = studioText(msg);
   tbStatus.className = 'tb-status' + (cls ? ' '+cls : '');
 }
 function getIdoc() {
@@ -756,6 +894,7 @@ frame.addEventListener('load', () => {
     // Always inject per-panel annotate buttons and save buttons
     injectAnnotateBtns(idoc);
     if (editActive) injectSaveBtns(idoc);
+    observeStudioUi(idoc);
 
     // Diff highlight
     if (diffSnap) {
@@ -1612,6 +1751,7 @@ document.querySelectorAll('.sb-head[data-sec]').forEach(head=>{
 // ═══════════════════════════════════════════════════════════════
 
 async function init() {
+  observeStudioUi(document);
   await resolveContentApi(MODULES[0]?.file || 'index.html');
   await loadComments();
   renderTestCommands();
