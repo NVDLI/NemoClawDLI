@@ -663,8 +663,11 @@ function safeStudioUrl(raw, attribute) {
   return value.startsWith("#") ? value : null;
 }
 
-function sanitizeStudioPreview(source) {
-  const parsed = new DOMParser().parseFromString(String(source), "text/html");
+export function sanitizeStudioPreview(source) {
+  if (typeof Document.parseHTML !== "function") {
+    throw new Error("Secure HTML preview is unavailable in this browser.");
+  }
+  const parsed = Document.parseHTML(String(source));
   parsed.querySelectorAll("script,iframe,object,embed,base,link,style,meta[http-equiv]").forEach(node => node.remove());
   const urlAttributes = new Set(["href", "src", "xlink:href", "action", "formaction", "poster", "background", "cite", "data"]);
   parsed.querySelectorAll("*").forEach(node => {
