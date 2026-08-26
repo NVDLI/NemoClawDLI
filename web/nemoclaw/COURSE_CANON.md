@@ -4,7 +4,7 @@ This file is canonical for the English source course. The title, abstract, and l
 
 ## Abstract
 
-Modern agents are everywhere, and they’re conceptually simple: a model wired to tools, memory, and a routing decision that keeps running until the task is done. This course starts by building such a system from scratch, then connects those ideas to modern frameworks used by software engineers and non‑technical users alike. You’ll go from a single API call to agent coordination, grounded retrieval, deep planning, and safe deployment using NVIDIA OpenClaw and NemoClaw™.
+Modern agents are everywhere, and they’re conceptually simple: a model wired to tools, memory, and a routing decision that keeps running until the task is done. This course starts by building such a system from scratch, then connects those ideas to modern frameworks used by software engineers and non‑technical users alike. You’ll go from a single API call to agent coordination, grounded retrieval, deep planning, and safe deployment using NVIDIA OpenClaw and NVIDIA NemoClaw™.
 
 ## Learning Objectives
 

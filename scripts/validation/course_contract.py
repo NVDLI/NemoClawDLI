@@ -28,7 +28,7 @@ FOYER = ROOT / "web" / "index.html"
 # but this required gate must not trust a mutable data file as its only source of truth.
 CANONICAL = {
     "title": "Securing Agents with OpenShell and NemoClaw",
-    "abstract": "Modern agents are everywhere, and they’re conceptually simple: a model wired to tools, memory, and a routing decision that keeps running until the task is done. This course starts by building such a system from scratch, then connects those ideas to modern frameworks used by software engineers and non‑technical users alike. You’ll go from a single API call to agent coordination, grounded retrieval, deep planning, and safe deployment using NVIDIA OpenClaw and NemoClaw™.",
+    "abstract": "Modern agents are everywhere, and they’re conceptually simple: a model wired to tools, memory, and a routing decision that keeps running until the task is done. This course starts by building such a system from scratch, then connects those ideas to modern frameworks used by software engineers and non‑technical users alike. You’ll go from a single API call to agent coordination, grounded retrieval, deep planning, and safe deployment using NVIDIA OpenClaw and NVIDIA NemoClaw™.",
     "learning_objectives_intro": "Upon completion of this course, students will be able to:",
     "learning_objectives": [
         "Build a basic agent loop and identify its core components.",
