@@ -5,6 +5,8 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Thanks to Kevin McFall for reviewing the Spanish, Brazilian Portuguese, and Simplified Chinese
+  localization source synchronization for the NVIDIA NemoClaw branding correction.
 - Thanks to Leo Huang for contributing and reviewing the Simplified Chinese localization.
 - Thanks to Vadim Kudlay for reviewing the final Module 3a gateway narrative and localized figure
   captions in English, Spanish, and Brazilian Portuguese.
