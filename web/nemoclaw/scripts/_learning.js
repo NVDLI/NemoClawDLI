@@ -124,7 +124,7 @@ function mountContentTransparency() {
   if (!main) return;
   const words = profileWords();
   const disclosure = document.createElement("details");
-  disclosure.className = "publication-disclosure";
+  disclosure.className = "course-disclosure publication-disclosure";
   disclosure.dataset.contentTransparency = "ai-assisted-human-reviewed";
 
   const summary = document.createElement("summary");
@@ -140,6 +140,25 @@ function mountContentTransparency() {
   body.append(imageLink, document.createTextNode(" · "), materialLink, document.createTextNode("."));
   disclosure.append(summary, body);
   main.insertBefore(disclosure, main.querySelector(":scope > footer"));
+}
+
+function mountHoverNoteDisclosures(root = document) {
+  root.querySelectorAll("[data-hover-note]").forEach(host => {
+    const anchor = host.closest(".sys-grid") || host;
+    if (anchor.nextElementSibling?.hasAttribute("data-hover-note-disclosure")) return;
+    const title = host.querySelector(".sys-name")?.textContent.trim();
+    const copy = host.dataset.hoverNote?.trim();
+    if (!title || !copy) return;
+    const disclosure = root.createElement("details");
+    disclosure.className = "course-disclosure hover-note-disclosure";
+    disclosure.dataset.hoverNoteDisclosure = "";
+    const summary = root.createElement("summary");
+    summary.textContent = title.endsWith("*") ? title : `${title}*`;
+    const body = root.createElement("p");
+    body.textContent = copy;
+    disclosure.append(summary, body);
+    anchor.insertAdjacentElement("afterend", disclosure);
+  });
 }
 
 export function readLearningDepth() {
@@ -273,5 +292,6 @@ export function mountLearningView() {
   applyLearningDepth("guided");
   mountHashReveal();
   mountContentTransparency();
+  mountHoverNoteDisclosures();
   void mountLearningProfile();
 }
