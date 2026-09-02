@@ -371,15 +371,33 @@ async function waitText(locator, pattern) {
   const offerCard = overviewPage.locator('[data-hover-note]');
   const offerTitle = offerCard.locator('.sys-name');
   const offerTooltip = offerCard.locator('[role="tooltip"]');
+  const offerDisclosure = overviewPage.locator('[data-hover-note-disclosure]');
+  const offerCopy = offerDisclosure.locator('p');
   const expectedOffer = '*NVIDIA is waiving the fee for the Brev launchable for a limited time to the first 25K users (limited to one redemption per user). Once launched, the user will see a $1.00 credit added to their account, enabling them to complete all 4 modules (~4 hours).';
   await offerTooltip.waitFor({ state:'attached' });
-  if ((await offerTitle.innerText()).trim() !== 'NemoClaw launchable on Brev*' || (await offerTooltip.textContent()).trim() !== expectedOffer) throw new Error('Brev offer marker or approved notice drifted');
+  const offerStyles = await offerDisclosure.locator('summary').evaluate(summary => ({
+    fontFamily:getComputedStyle(summary).fontFamily,
+    bodyFontFamily:getComputedStyle(document.body).fontFamily,
+    copyMaxWidth:getComputedStyle(summary.nextElementSibling).maxWidth,
+  }));
+  if ((await offerTitle.innerText()).trim() !== 'NemoClaw launchable on Brev*' ||
+      (await offerTooltip.textContent()).trim() !== expectedOffer ||
+      (await offerCopy.textContent()).trim() !== expectedOffer ||
+      await offerCard.getAttribute('data-hover-note') !== expectedOffer ||
+      (await offerDisclosure.locator('summary').innerText()).trim() !== 'NemoClaw launchable on Brev*') throw new Error('Brev offer disclosure has duplicate or drifting copy');
+  if (offerStyles.fontFamily !== offerStyles.bodyFontFamily || offerStyles.copyMaxWidth !== 'none') throw new Error(`shared disclosure typography regressed: ${JSON.stringify(offerStyles)}`);
+  if (await offerDisclosure.getAttribute('open') !== null) throw new Error('Brev offer disclosure should start collapsed');
+  await offerDisclosure.locator('summary').click();
+  if (!await offerCopy.isVisible()) throw new Error('Brev offer disclosure does not open inline');
   if (await offerTooltip.isVisible()) throw new Error('Brev offer notice is visible before hover or focus');
   await offerTitle.hover();
   if (!await offerTooltip.isVisible()) throw new Error('Brev offer notice does not open on hover');
   await overviewPage.mouse.move(0, 0);
   await offerCard.focus();
   if (!await offerTooltip.isVisible() || await offerCard.getAttribute('aria-describedby') !== await offerTooltip.getAttribute('id')) throw new Error('Brev offer notice is not keyboard-described');
+  await overviewPage.setViewportSize({ width:390, height:844 });
+  const tooltipBox = await offerTooltip.boundingBox();
+  if (!tooltipBox || tooltipBox.x < 0 || tooltipBox.x + tooltipBox.width > 390) throw new Error(`Brev offer tooltip escapes the narrow viewport: ${JSON.stringify(tooltipBox)}`);
   const assistantEntry = overviewPage.locator('.course-assistant-entry');
   await assistantEntry.waitFor({ state:'visible' });
   if (!/session stays in this browser/i.test(await assistantEntry.innerText()) || !/assistant on every lesson/i.test(await assistantEntry.innerText())) {
