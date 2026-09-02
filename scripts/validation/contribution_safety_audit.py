@@ -721,10 +721,11 @@ def audit_workflow_trust_boundaries(
     return out
 
 
-def audit_trusted_contribution_boundary(workflow: str) -> list[dict[str, str]]:
+def audit_trusted_contribution_boundary(
+    workflow: str, out: list[dict[str, str]],
+) -> None:
     """Keep the sole pull_request_target workflow base-owned and candidate-inert."""
     rel = ".github/workflows/contribution-boundary.yml"
-    out: list[dict[str, str]] = []
     if (
         not workflow_has_trigger(workflow, "pull_request_target")
         or workflow_has_trigger(workflow, "pull_request")
@@ -859,7 +860,6 @@ def audit_trusted_contribution_boundary(workflow: str) -> list[dict[str, str]]:
                 "scope the read-only token to the fetch step so the scan runs without it",
             ))
             break
-    return out
 
 
 def release_status_findings(status: dict) -> list[dict[str, str]]:
@@ -952,9 +952,9 @@ def audit_repo(
         ))
     out.extend(audit_workflow_pins(root, overrides))
     out.extend(audit_workflow_trust_boundaries(root, overrides))
-    out.extend(audit_trusted_contribution_boundary(
-        docs[".github/workflows/contribution-boundary.yml"]
-    ))
+    audit_trusted_contribution_boundary(
+        docs[".github/workflows/contribution-boundary.yml"], out,
+    )
     for rel in RETIRED_GUIDANCE:
         if (root / rel).exists():
             out.append(finding("retired-guidance", rel,
