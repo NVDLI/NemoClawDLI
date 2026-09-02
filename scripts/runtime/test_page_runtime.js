@@ -10,6 +10,17 @@ const fs = require('fs');
 const http = require('http');
 const path = require('path');
 
+function courseDefaultModel() {
+  const source = fs.readFileSync(
+    path.resolve(__dirname, '../../web/nemoclaw/scripts/_shared.js'), 'utf8',
+  );
+  const match = source.match(/export const DEFAULT_MODEL = "([^"]+)";/);
+  if (!match) throw new Error('Course DEFAULT_MODEL is missing');
+  return match[1];
+}
+
+const COURSE_DEFAULT_MODEL = courseDefaultModel();
+
 const args = process.argv.slice(2);
 const smoke = args.includes('--smoke');
 const renderOnly = args.includes('--render-only');
@@ -540,7 +551,7 @@ function findChrome() {
       await panel.waitFor({ state:'visible' });
       const chat = panel.locator('.course-assistant-body');
       const model = await chat.locator('.chatui-model').inputValue();
-      if (!/nemotron-3-super-120b/i.test(model)) throw new Error(`Course Assistant artifact default is not the validated model: ${model}`);
+      if (model !== COURSE_DEFAULT_MODEL) throw new Error(`Course Assistant artifact default is not the validated model: ${model}`);
       await chat.locator('.chatui-text').fill(prompts[index]);
       const send = chat.locator('.chatui-send');
       await send.click();

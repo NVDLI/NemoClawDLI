@@ -358,7 +358,8 @@ def mixed_language_quality(text: str, profile: dict) -> list[dict[str, str]]:
     threshold = int(profile.get("english_function_word_threshold", 0))
     if not words or not threshold:
         return []
-    for sentence in re.split(r"(?<=[.!?])\s+", text):
+    # CJK prose normally has no whitespace after its full-width sentence terminators.
+    for sentence in re.split(r"(?<=[.!?。！？])", text):
         tokens = re.findall(r"\b[A-Za-z]+\b", sentence.lower())
         matches = [token for token in tokens if token in words]
         if len(matches) >= threshold:
@@ -1186,6 +1187,7 @@ def accept(root: Path, locale: str, paths: list[str]) -> list[str]:
     reviews = state.setdefault("reviews", {})
     asset_reviews = state.setdefault("asset_reviews", {})
     for rel in paths:
+        reviewed_untranslated: tuple[str, ...] = ()
         source, target = root / rel, locale_root / rel
         if not source.is_file():
             errors.append(f"{rel}: canonical source missing")
@@ -1201,6 +1203,11 @@ def accept(root: Path, locale: str, paths: list[str]) -> list[str]:
                     raise LocaleResourceError(
                         f"resource identity does not match locale={spec.locale}, template={rel}")
                 target_raw = render_overlay(source_raw, resource.values, spec.html_lang)
+                reviewed_untranslated = tuple(
+                    entry["value"]
+                    for entry in resource.values.values()
+                    if isinstance(entry.get("untranslated"), str)
+                )
             except LocaleResourceError as exc:
                 errors.append(f"{rel}: localized HTML target missing and resource is invalid: {exc}")
                 continue
@@ -1210,7 +1217,8 @@ def accept(root: Path, locale: str, paths: list[str]) -> list[str]:
         style_reference = profile.get("review_protocol", {}).get("style_reference")
         quality = (svg_quality(source_raw, target_raw, profile) if source.suffix == ".svg" else
                    page_quality(source_raw, target_raw, profile, skill=source.name == "SKILL.html",
-                                enforce_editorial_patterns=rel != style_reference))
+                                enforce_editorial_patterns=rel != style_reference,
+                                reviewed_untranslated=reviewed_untranslated))
         if quality:
             errors.append(f"{rel}: " + "; ".join(item["detail"] for item in quality))
             continue
@@ -1490,6 +1498,13 @@ def self_test() -> list[str]:
         if "locale-mixed-language" not in {
                 item["code"] for item in page_quality(source_raw, mixed_target, mixed_profile)}:
             failures.append("short English residue escaped density detector")
+        cjk_separated = "连接 the 服务。检查 and 结果。"
+        if mixed_language_quality(cjk_separated, mixed_profile):
+            failures.append("CJK sentence boundaries accumulated unrelated English residue")
+        cjk_residue = "连接 the agent and continue。"
+        if "locale-mixed-language" not in {
+                item["code"] for item in mixed_language_quality(cjk_residue, mixed_profile)}:
+            failures.append("English residue inside one CJK sentence escaped density detector")
         foreign_profile = {**profile,
                            "foreign_function_words": ["você", "não", "depois"],
                            "foreign_function_word_threshold": 2}

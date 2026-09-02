@@ -219,7 +219,7 @@ window.DEEP_AGENT_MAX_TOKENS = 8196;
 
 const PAGES = helpers.coursePages();
 const INDEX = PAGES.map(p => "  " + p.id + " · " + p.title).join("\n");
-const FAST  = "nvidia/nemotron-3-nano-30b-a3b";   // sub-agents are cheap workers: always the fast model
+const FAST  = "nvidia/nemotron-3.5-lightning-30b-a3b";   // sub-agents are cheap workers: always the fast model
 const MATERIAL_TOPICS = [
   "AI Agents", "Deep Agents", "Multi-Agent Systems", "Chain of Thought Prompting",
   "Retrieval-Augmented Generation (RAG)", "Large Language Models",
@@ -229,8 +229,7 @@ const MATERIAL_TOPICS = [
 
 helpers.mountChatUI("#deep-artifact", {
   models: [
-    { id: "nvidia/nemotron-3-nano-30b-a3b",    label: "Nemotron Nano 30B · fast" },
-    { id: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron Super 120B · stronger" },
+    { id: "nvidia/nemotron-3.5-lightning-30b-a3b", label: "Nemotron 3.5 Lightning 30B · fast" },
   ],
   greeting: (
     "I'm a deep research agent. Ask me something and I'll plan a few parallel sub-investigations"

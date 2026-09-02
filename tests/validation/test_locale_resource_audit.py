@@ -649,6 +649,44 @@ class ResourceBuildTests(unittest.TestCase):
 
 
 class ResourceLocalizationContinuityTests(unittest.TestCase):
+    def test_accept_reuses_reviewed_untranslated_resource_reasons(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="locale-resource-acceptance-") as directory:
+            root = Path(directory)
+            fixtures.build_fixture(root)
+            resource_path = fixtures.resource_path(root)
+            resource = json.loads(resource_path.read_text(encoding="utf-8"))
+            entry = next(
+                item for item in resource["values"].values()
+                if item["source"].strip() == "The agent loop"
+            )
+            entry["value"] = entry["source"]
+            entry["untranslated"] = "Exact interface label retained after rendered locale review"
+            resource_path.write_text(
+                json.dumps(resource, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+            profile_path = (
+                root / "scripts" / "translate" / "locales" / fixtures.LOCALE / "profile.json"
+            )
+            profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            profile["reviewed_target_hashes"] = True
+            profile["english_sentence_markers"] = ["The agent loop"]
+            profile_path.write_text(json.dumps(profile), encoding="utf-8")
+
+            self.assertEqual(
+                localization_audit.accept(root, fixtures.LOCALE, [fixtures.TEMPLATE]),
+                [],
+            )
+
+            del entry["untranslated"]
+            resource_path.write_text(
+                json.dumps(resource, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+            self.assertTrue(
+                localization_audit.accept(root, fixtures.LOCALE, [fixtures.TEMPLATE])
+            )
+
     def test_resource_style_reference_keeps_its_editorial_pin(self) -> None:
         from scripts.translate.localization_scope import editorial_sha
         from scripts.validation import localization_audit
@@ -678,6 +716,22 @@ class ResourceLocalizationContinuityTests(unittest.TestCase):
             fixtures.edit_value(root, "text", lambda value: value + " cambiado")
             findings, _ = localization_audit.scan(root, fixtures.LOCALE)
             self.assertIn("style-reference-drift", {item["code"] for item in findings})
+
+    def test_explicit_editorial_pin_ignores_plumbing_but_not_style_prose(self) -> None:
+        from scripts.translate.localization_scope import editorial_sha
+
+        source = (
+            '<html><p data-editorial-pin="1">Pinned editorial voice.</p>'
+            '<p>Runtime-facing exercise copy.</p><script>const model = "old";</script></html>'
+        )
+        plumbing = source.replace("Runtime-facing exercise copy.", "Updated exercise copy.") \
+            .replace('"old"', '"current"')
+        editorial = source.replace("Pinned editorial voice.", "Changed editorial voice.")
+        missing_beacon = source.replace(' data-editorial-pin="1"', "")
+
+        self.assertEqual(editorial_sha(source), editorial_sha(plumbing))
+        self.assertNotEqual(editorial_sha(source), editorial_sha(editorial))
+        self.assertNotEqual(editorial_sha(source), editorial_sha(missing_beacon))
 
     def test_resource_only_page_rebinds_review_and_manifest_availability(self) -> None:
         from scripts.translate.localization_scope import translation_sha

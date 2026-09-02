@@ -598,6 +598,7 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
     findings: list[str] = []
     contract = {
         'import { mountAgentChat } from "./_chat.js";': "page assistant must reuse the tested ReAct artifact",
+        'const modelOptions = defaultModel => [': "Course Assistant must accept its default model from the shared runtime",
         'const language = document.documentElement.lang.toLowerCase()': "page assistant must localize itself from the document language",
         'const es = language.startsWith("es")': "page assistant must recognize Spanish",
         'assistant: "ASSISTENTE DO CURSO"': "page assistant needs Brazilian Portuguese chrome",
@@ -668,7 +669,9 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
         'ctx.history = ctx.replaceHistory([': "Course Assistant compaction must replace old history with durable memory",
         'ctx.thread = ctx.rotateThread()': "Course Assistant compaction must rotate to a fresh bounded agent thread",
         'name: "queue_course_artifact"': "Course Assistant must queue generated browser code into a real artifact view",
-        'Nemotron Super 120B · recommended': "Course Assistant artifact requests must default to the model validated for tool use",
+        '{ id: defaultModel,': "Course Assistant artifact requests must use the shared default model",
+        'models: modelOptions(runtime.defaultModel)': "Course Assistant must bind its model menu to the injected default",
+        'mountCourseAssistant({ embed, defaultModel: DEFAULT_MODEL });': "shared runtime must inject its default into Course Assistant",
         'export function parseInlineCourseSourceIntent': "Course Assistant must detect source arguments emitted as plain JSON",
         'recoverInlineToolIntent: async answer =>': "Course Assistant must recover a model that prints source arguments instead of invoking its tool",
         'export function artifactFromMarkdown': "Course Assistant must detect generated HTML/JavaScript without model tool compliance",
@@ -738,7 +741,7 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
     ) is not None, "shared agent chat must replace empty tool-only output before synthesis")
     _need(findings, COURSE_SOURCE_URI_RE.search(assistant) is not None,
           "lesson code index must expose stable page-qualified source URIs")
-    _need(findings, "mountCourseAssistant({ embed });" in shared,
+    _need(findings, "mountCourseAssistant({ embed, defaultModel: DEFAULT_MODEL });" in shared,
           "shared chrome must mount the page assistant on every course page")
     _need(findings, "initialContext" in chat and "ctx.view.tool(label" in chat,
           "shared ReAct artifact must expose initial page context as a source chip")
@@ -1423,7 +1426,7 @@ def audit_assistant_artifact_harness(runtime: str, wrapper: str, docs: str, skil
     contract = {
         "const assistantArtifacts = args.includes('--assistant-artifacts')": "Course Assistant artifacts need an explicit live runtime mode",
         "if (!NVIDIA_API_KEY) throw new Error('--assistant-artifacts requires NVIDIA_API_KEY')": "live artifact generation must fail closed without a model credential",
-        "nemotron-3-super-120b": "live artifact validation must verify the supported default model",
+        "if (model !== COURSE_DEFAULT_MODEL)": "live artifact validation must verify the supported default model",
         "toolBodies.some(text => /Validated and queued browser artifact/": "live artifact validation must require an accepted tool result",
         "!validated || !sourceChars || !controlCount || !changed": "live artifact validation must require source, controls, and a state transition",
         "nemoclaw_iframe_proxy_opt_in": "localhost artifact tests must use the configured model relay instead of a CORS-incompatible direct route",
@@ -1677,7 +1680,8 @@ def self_test() -> list[str]:
         ("shared chat drops artifact capture", assistant, shared, chat.replace('onAssistantMessage: opts.onAssistantMessage', 'onAssistantMessage: null', 1), css, "deterministic artifact capture"),
         ("shared chat races artifact capture", assistant, shared, chat.replace('await opts.onAssistantMessage(answer, ctx)', 'opts.onAssistantMessage(answer, ctx)', 1), css, "await deterministic answer capture"),
         ("assistant loses artifact queue", assistant.replace('name: "queue_course_artifact"', 'name: "missing_artifact_queue"', 1), shared, chat, css, "queue generated browser code"),
-        ("assistant defaults artifact work to weak model", assistant.replace('Nemotron Super 120B · recommended', 'Nemotron Super 120B · optional', 1), shared, chat, css, "model validated for tool use"),
+        ("assistant bypasses shared default model", assistant.replace('{ id: defaultModel,', '{ id: "retired/model",', 1), shared, chat, css, "shared default model"),
+        ("shared boot drops assistant default", assistant, shared.replace('mountCourseAssistant({ embed, defaultModel: DEFAULT_MODEL });', 'mountCourseAssistant({ embed });', 1), chat, css, "inject its default"),
         ("assistant loses 120B source recovery", assistant.replace('recoverInlineToolIntent: async answer =>', 'recoverLostIntent: async answer =>', 1), shared, chat, css, "prints source arguments"),
         ("shared chat preserves raw generated code", assistant, shared, chat.replace('if (opts.recoverInlineArtifact) {', 'if (false) {', 1), css, "replace raw generated code"),
         ("assistant disables bounded artifact correction", assistant.replace('artifactCorrectionLimit: 2', 'artifactCorrectionLimit: 0', 1), shared, chat, css, "bound generated-artifact correction attempts"),
@@ -1732,6 +1736,7 @@ def self_test() -> list[str]:
     assistant_harness_cases = [
         ("live artifact mode removed", assistant_runtime.replace("const assistantArtifacts = args.includes('--assistant-artifacts')", "const assistantArtifacts = false", 1), runtime_wrapper, runtime_docs, runtime_skill, "explicit live runtime mode"),
         ("live artifact accepts unvalidated tool", assistant_runtime.replace("toolBodies.some(text => /Validated and queued browser artifact/", "toolBodies.some(text => /Queued/", 1), runtime_wrapper, runtime_docs, runtime_skill, "accepted tool result"),
+        ("live artifact bypasses shared default model", assistant_runtime.replace("if (model !== COURSE_DEFAULT_MODEL)", "if (false)", 1), runtime_wrapper, runtime_docs, runtime_skill, "supported default model"),
         ("live artifact skips interactions", assistant_runtime.replace("!validated || !sourceChars || !controlCount || !changed", "!validated || !sourceChars", 1), runtime_wrapper, runtime_docs, runtime_skill, "source, controls, and a state transition"),
         ("live artifact wrapper removed", assistant_runtime, runtime_wrapper.replace('--assistant-artifacts) assistant_artifacts=1', '--removed) assistant_artifacts=1', 1), runtime_docs, runtime_skill, "wrapper must expose"),
         ("localhost embedding relay removed", assistant_runtime.replace('localStorage.setItem("nemoclaw_embedding_api_base_url_v1", apiUrl);', '', 1), runtime_wrapper, runtime_docs, runtime_skill, "independent embedding endpoint"),

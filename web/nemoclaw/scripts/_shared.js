@@ -26,8 +26,8 @@ export const DEFAULT_MODEL_REQUEST_RETRIES = 0;
 // Billing attribution is sent on direct and iframe-proxy calls.
 const BILLING_INVOKE_ORIGIN = "dli-nemoclaw-web";
 // Web-cell model contract. All repository explorers delegate to this one default.
-export const DEFAULT_MODEL = "nvidia/nemotron-3-nano-30b-a3b";
-export const DEFAULT_EMBEDDING_MODEL = "nvidia/llama-nemotron-embed-1b-v2";
+export const DEFAULT_MODEL = "nvidia/nemotron-3.5-lightning-30b-a3b";
+export const DEFAULT_EMBEDDING_MODEL = "nvidia/llama-nemotron-embed-vl-1b-v2";
 export const REASONING_MODEL = DEFAULT_MODEL;
 
 // ── Lab-only step detection ─────────────────────────────────────────────────
@@ -204,7 +204,10 @@ export function setIframeProxyMode(enabled) {
 export function defaultIframeProxyModeForLocation(locationLike) {
   try {
     const url = new URL(String(locationLike?.href || locationLike?.origin || locationLike));
-    return url.protocol === "file:" || MODEL_RELAY_DEFAULT_ORIGINS.has(url.origin);
+    const localPreview = ["http:", "https:"].includes(url.protocol)
+      && (["127.0.0.1", "::1"].includes(url.hostname)
+        || url.hostname === "localhost" || url.hostname.endsWith(".localhost"));
+    return url.protocol === "file:" || localPreview || MODEL_RELAY_DEFAULT_ORIGINS.has(url.origin);
   } catch (_) { return false; }
 }
 
@@ -212,8 +215,8 @@ export async function getConfig() {
   /* @doc <code>helpers.getConfig()</code> ::
        Returns the active chat config <code>{ mode, url, model, needsKey, iframeProxy }</code>.
        A learner can save one compatible chat endpoint and model on the course home page.
-       Embeddings retain their own route. The published course origins and local file previews
-       default to the bounded NVIDIA DLI relay; other origins stay direct, and a custom chat
+       Embeddings retain their own route. The published course origins, localhost previews, and
+       local file previews default to the bounded NVIDIA DLI relay; other origins stay direct, and a custom chat
        endpoint always bypasses the relay. */
   if (_cfgPromise) return _cfgPromise;
   _cfgPromise = (async () => {
@@ -1515,7 +1518,7 @@ export function mountHeadingLinks() {
 // Auto-mount on any page that ships a topbar (the lab and the full standalone).
 if (typeof document !== "undefined") {
   mountCourseFavicon();
-  const _boot = () => { mountLearningView(); mountThemeToggle(); mountLanguageMenu(); mountLearningPathCards(); mountResourceFigures(); mountGoingFurtherLayout(); mountHeadingLinks(); mountFigures(); markLiveArtifacts(); mountCourseLicenseNote(); mountCourseAssistant({ embed }); };
+  const _boot = () => { mountLearningView(); mountThemeToggle(); mountLanguageMenu(); mountLearningPathCards(); mountResourceFigures(); mountGoingFurtherLayout(); mountHeadingLinks(); mountFigures(); markLiveArtifacts(); mountCourseLicenseNote(); mountCourseAssistant({ embed, defaultModel: DEFAULT_MODEL }); };
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", _boot);
   } else {

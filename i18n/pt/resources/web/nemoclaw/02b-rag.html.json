@@ -149,6 +149,11 @@
       "source": "<strong>Concatenate</strong> those passages onto the prompt.",
       "value": "<strong>Concatenar</strong> essas passagens ao prompt."
     },
+    "rich.3139cc57cb17": {
+      "type": "rich",
+      "source": "\n    <strong>Failure mode: stale embeddings.</strong>\n    <p>A vector index is a cache of an embedding model's outputs. Production systems\n    have to defend against a few specific failures:</p>\n    <ul style=\"margin:8px 0 0 22px\">\n      <li>Swap the embedding model and every cached vector becomes meaningless until you re-embed every passage.</li>\n      <li>The provider silently upgrades the model, and scores drift with no error raised.</li>\n      <li>Two services share an index but pin different model ids; the index returns nonsense to one of them.</li>\n    </ul>\n    <p>A reliable index pins the embedding model id alongside each cached vector\n    and refuses to mix versions. The canonical pin for this course is\n    <code>nvidia/llama-nemotron-embed-vl-1b-v2</code>, served through the\n    course's hosted proxy at build.nvidia.com.</p>\n  ",
+      "value": "\n <strong>Modo de falha: embeddings desatualizados.</strong>\n <p>Um índice vetorial armazena em cache as saídas de um modelo de incorporação. Sistemas de produção precisam se proteger contra falhas específicas:</p>\n <ul style=\"margin:8px 0 0 22px\">\n <li>Ao trocar o modelo de incorporação, cada vetor em cache perde o significado até que todas as passagens sejam incorporadas novamente.</li>\n <li>Se o provedor atualizar o modelo silenciosamente, as pontuações podem mudar sem erro.</li>\n <li>Se dois serviços compartilharem um índice, mas fixarem IDs de modelo diferentes, o índice produzirá resultados inválidos para um deles.</li>\n </ul>\n <p>Um índice confiável registra o ID do modelo de incorporação ao lado de cada vetor em cache e se recusa a misturar versões. O modelo fixado neste curso é\n <code>nvidia/llama-nemotron-embed-vl-1b-v2</code>, servido por meio do proxy hospedado do curso em build.nvidia.com.</p>\n "
+    },
     "rich.32482b8d4d0c": {
       "type": "rich",
       "source": "<strong>Relational / graph data.</strong> The agent calls a graph-traversal tool (Cypher, GraphQL, or custom) in place of a vector store. The bundle it gets back is a sub-graph whose explicit edges carry into the prompt, so the relationships between entities reach the model intact.",
@@ -283,11 +288,6 @@
       "type": "rich",
       "source": "The <span>Index</span> Agent",
       "value": "O <span>Agente de Índice</span>"
-    },
-    "rich.a2f615532c7f": {
-      "type": "rich",
-      "source": "\n    <strong>Failure mode: stale embeddings.</strong>\n    <p>A vector index is a cache of an embedding model's outputs. Production systems\n    have to defend against a few specific failures:</p>\n    <ul style=\"margin:8px 0 0 22px\">\n      <li>Swap the embedding model and every cached vector becomes meaningless until you re-embed every passage.</li>\n      <li>The provider silently upgrades the model, and scores drift with no error raised.</li>\n      <li>Two services share an index but pin different model ids; the index returns nonsense to one of them.</li>\n    </ul>\n    <p>A reliable index pins the embedding model id alongside each cached vector\n    and refuses to mix versions. The canonical pin for this course is\n    <code>nvidia/llama-nemotron-embed-1b-v2</code>, served through the\n    course's hosted proxy at build.nvidia.com.</p>\n  ",
-      "value": "\n <strong>Modo de falha: embeddings desatualizados.</strong>\n <p>Um índice vetorial armazena em cache as saídas de um modelo de incorporação. Sistemas de produção precisam se proteger contra falhas específicas:</p>\n <ul style=\"margin:8px 0 0 22px\">\n <li>Ao trocar o modelo de incorporação, cada vetor em cache perde o significado até que todas as passagens sejam incorporadas novamente.</li>\n <li>Se o provedor atualizar o modelo silenciosamente, as pontuações podem mudar sem erro.</li>\n <li>Se dois serviços compartilharem um índice, mas fixarem IDs de modelo diferentes, o índice produzirá resultados inválidos para um deles.</li>\n </ul>\n <p>Um índice confiável registra o ID do modelo de incorporação ao lado de cada vetor em cache e se recusa a misturar versões. O modelo fixado neste curso é\n <code>nvidia/llama-nemotron-embed-1b-v2</code>, servido por meio do proxy hospedado do curso em build.nvidia.com.</p>\n "
     },
     "rich.a513fd73eeea": {
       "type": "rich",
@@ -618,54 +618,6 @@
       "source": "Top-K always returns K passages, even when every score is weak. What signal\n        should the agent inspect before letting those passages enter the prompt?",
       "value": "Top-K sempre retorna K passagens, mesmo quando todas as pontuações são fracas. Qual sinal o agente deve verificar antes de incluir essas passagens no prompt?"
     },
-    "text.1d0cef6ddaf6": {
-      "type": "text",
-      "source": "nvidia/llama-nemotron-embed-1b-v2",
-      "value": "nvidia/llama-nemotron-embed-1b-v2",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
-    },
-    "text.1d0cef6ddaf6~1": {
-      "type": "text",
-      "source": "nvidia/llama-nemotron-embed-1b-v2",
-      "value": "nvidia/llama-nemotron-embed-1b-v2",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
-    },
-    "text.1d0cef6ddaf6~2": {
-      "type": "text",
-      "source": "nvidia/llama-nemotron-embed-1b-v2",
-      "value": "nvidia/llama-nemotron-embed-1b-v2",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
-    },
-    "text.1d0cef6ddaf6~3": {
-      "type": "text",
-      "source": "nvidia/llama-nemotron-embed-1b-v2",
-      "value": "nvidia/llama-nemotron-embed-1b-v2",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
-    },
-    "text.1d0cef6ddaf6~4": {
-      "type": "text",
-      "source": "nvidia/llama-nemotron-embed-1b-v2",
-      "value": "nvidia/llama-nemotron-embed-1b-v2",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
-    },
-    "text.1d0cef6ddaf6~5": {
-      "type": "text",
-      "source": "nvidia/llama-nemotron-embed-1b-v2",
-      "value": "nvidia/llama-nemotron-embed-1b-v2",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
-    },
-    "text.1d0cef6ddaf6~6": {
-      "type": "text",
-      "source": "nvidia/llama-nemotron-embed-1b-v2",
-      "value": "nvidia/llama-nemotron-embed-1b-v2",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
-    },
-    "text.1d0cef6ddaf6~7": {
-      "type": "text",
-      "source": "nvidia/llama-nemotron-embed-1b-v2",
-      "value": "nvidia/llama-nemotron-embed-1b-v2",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
-    },
     "text.1d2f4b752096": {
       "type": "text",
       "source": " Score bars, ordered best-first.",
@@ -978,6 +930,11 @@
       "source": "negative value",
       "value": "valor negativo"
     },
+    "text.4575d9a0bb39": {
+      "type": "text",
+      "source": "Nemotron 3.5 Lightning 30B · fast",
+      "value": "Nemotron 3.5 Lightning 30B · rápido"
+    },
     "text.45775e9b0dd7": {
       "type": "text",
       "source": " The panel calls helpers.embed(), ranks with helpers.cosineSim(), then answers.",
@@ -1117,6 +1074,12 @@
       "type": "text",
       "source": "rewoo",
       "value": "rewoo",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.57b7e204b183": {
+      "type": "text",
+      "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
     },
     "text.5873062f8e05": {
@@ -1534,11 +1497,6 @@
       "value": "Vector databases store learned embeddings of text alongside the original passages, indexed for fast nearest-neighbour search.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
     },
-    "text.9d7de0441056": {
-      "type": "text",
-      "source": "Nemotron Super 120B · stronger",
-      "value": "Nemotron Super 120B · mais forte"
-    },
     "text.9e4c3ed72a44": {
       "type": "text",
       "source": "Appends the retrieved passages as a tool message, then asks the model for a grounded answer.",
@@ -1786,12 +1744,6 @@
       "value": "#rag-artifact",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
     },
-    "text.b358631a69c0": {
-      "type": "text",
-      "source": "nvidia/nemotron-3-super-120b-a12b",
-      "value": "nvidia/nemotron-3-super-120b-a12b",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
-    },
     "text.b3853e8fd1e2": {
       "type": "text",
       "source": "ReAct interleaves reasoning steps with tool calls, deciding what to do next after each observation.",
@@ -1941,6 +1893,54 @@
       "type": "text",
       "source": "Selects the top chunk by cosine and returns its parent document. Expand the code to inspect the visualisation data.",
       "value": "Pega o pedaço superior por similaridade cosseno e retorna seu documento pai completo. O código está colapsado por padrão porque a etapa de recuperação é curta e o restante constrói barras de pontuação e cartões de hierarquia."
+    },
+    "text.c8626a8ee758": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.c8626a8ee758~1": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.c8626a8ee758~2": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.c8626a8ee758~3": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.c8626a8ee758~4": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.c8626a8ee758~5": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.c8626a8ee758~6": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.c8626a8ee758~7": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
     },
     "text.c8b954aefb2c": {
       "type": "text",
@@ -2220,11 +2220,6 @@
       "value": "OpenShell is the kernel-level sandbox around the agent: netns, Landlock, seccomp, and an OPA-evaluated proxy decide what each tool call may touch.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
     },
-    "text.efdb5576d726": {
-      "type": "text",
-      "source": "Nemotron Nano 30B · fast",
-      "value": "Nemotron Nano 30B · rápido"
-    },
     "text.f111f989192f": {
       "type": "text",
       "source": "\n    The production pattern indexes at two levels. You embed the small chunks so retrieval stays\n    precise, and when one matches you return its parent document so the model still sees the full\n    context around it.\n  ",
@@ -2273,12 +2268,6 @@
       "type": "text",
       "source": "Matching a retrieval primitive to the shape of your data",
       "value": "Associando um primitivo de recuperação à forma dos seus dados"
-    },
-    "text.fa24955a1723": {
-      "type": "text",
-      "source": "nvidia/nemotron-3-nano-30b-a3b",
-      "value": "nvidia/nemotron-3-nano-30b-a3b",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
     },
     "text.fa68764a442a": {
       "type": "text",

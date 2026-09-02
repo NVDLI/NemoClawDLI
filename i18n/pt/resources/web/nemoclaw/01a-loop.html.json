@@ -284,11 +284,6 @@
       "value": "<div style=\"display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start\">\n  <div id=\"\\${corrId}\" style=\"flex:0 0 auto\"></div>\n  <div id=\"\\${randId}\" style=\"flex:0 0 auto\"></div>\n</div>",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "rich.11dfd9be3000": {
-      "type": "rich",
-      "source": "Run the editable maze-agent node below. <code>DIRECTIVE</code> is the core system instruction, and the options object controls the model, maze size, text map, image attachment, move history, coordinate trail, and repeated tool schema.",
-      "value": "Execute o nó editável do agente. <code>DIRECTIVE</code> é a instrução central do sistema; o objeto de opções controla modelo, tamanho, mapa textual, imagem, histórico de movimentos, trilha de coordenadas e repetição do schema da ferramenta."
-    },
     "rich.1321937faebf": {
       "type": "rich",
       "source": "<div style=\"font:12px/1.6 ui-monospace,monospace;color:#aaa;margin:1px 0\">",
@@ -344,6 +339,11 @@
       "value": "<details open style=\"margin:2px 0\">",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
+    "rich.30a9a921292e": {
+      "type": "rich",
+      "source": "Run the editable maze-agent node below. <code>DIRECTIVE</code> is the core system instruction, and the options object controls the model, maze size, text map, move history, coordinate trail, and repeated tool schema.",
+      "value": "Execute o nó editável do agente de labirinto abaixo. <code>DIRECTIVE</code> é a instrução central do sistema; o objeto de opções controla o modelo, o tamanho do labirinto, o mapa textual, o histórico de movimentos, a trilha de coordenadas e a repetição do schema da ferramenta."
+    },
     "rich.33a4a9e54725": {
       "type": "rich",
       "source": "\n    That leaves the green box below as the <em>only</em> piece you did not write. An agent\n    therefore has just two choices: what you feed into its context, and what you do with\n    the intent it returns.\n  ",
@@ -354,11 +354,6 @@
       "source": "<div style=\"color:#ccd;margin-left:2px\">",
       "value": "<div style=\"color:#ccd;margin-left:2px\">",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "rich.39bbf061500a": {
-      "type": "rich",
-      "source": "Start with the working defaults. Then turn on <code>includeImage</code> to test the rendered maze, switch <code>model</code> to compare models, or set <code>advanced</code> to grow the maze after the simple case works.",
-      "value": "Use primeiro os padrões funcionais. Depois, ative <code>includeImage</code>, troque <code>model</code> para comparar modelos ou defina <code>advanced</code> para ampliar o labirinto."
     },
     "rich.3c8fa340472a": {
       "type": "rich",
@@ -398,6 +393,11 @@
       "source": "\n    You now have both halves of an agent, and the stateless <code>chat()</code> function above will pair nicely\n    with the previous reflex agent's perceive-reason-act loop. Before\n    wiring the model into that loop, it helps to watch the decision step use routines\n    that are <em>not</em> language models first.\n  ",
       "value": "\n    Você agora tem as duas metades de um agente. A função sem estado <code>chat()</code> combina\n    com o ciclo perceber, raciocinar e agir do agente reflexo anterior. Antes de conectar o\n    modelo ao ciclo, observe a etapa de decisão com rotinas que <em>não</em> são modelos de linguagem.\n  "
     },
+    "rich.52b5eb95e4b8": {
+      "type": "rich",
+      "source": "<span style=\"color:#fbbf24\">hint: the image was rejected on this turn. Retry once, or set includeImage:false and compare the text-only reasoning and omni profiles.</span>",
+      "value": "<span style=\"color:#fbbf24\">dica: a imagem foi rejeitada neste turno. Tente novamente uma vez ou defina includeImage:false e compare os perfis reasoning e omni, que usam apenas texto.</span>"
+    },
     "rich.5bc02b4cf26e": {
       "type": "rich",
       "source": "<div style=\"white-space:pre-wrap\">",
@@ -414,6 +414,11 @@
       "type": "rich",
       "source": "\n    The smallest artifact in the course is a single <code>chat()</code> call with no tools\n    and no memory wrapped around it. Each message you send stands on its own, running the\n    bare stateless function that the loop will later wrap. Type something below and watch\n    the reply stream back.\n  ",
       "value": "\n    O menor artefato do curso é uma única chamada <code>chat()</code> sem ferramentas e sem memória ao redor. Cada mensagem que você envia se sustenta sozinha, executando a função pura e sem estado que o laço vai depois envolver. Digite algo abaixo e observe a resposta chegar em streaming.\n  "
+    },
+    "rich.5ffcc82fdbeb": {
+      "type": "rich",
+      "source": "<strong>Take the move history away.</strong>\n        Set <code>includeHistory:false</code>, then rerun with the same model and maze.\n        Does the agent repeat explored branches or need more junction decisions without prior turns?",
+      "value": "<strong>Remova o histórico de movimentos.</strong>\n        Defina <code>includeHistory:false</code> e execute novamente com o mesmo modelo e labirinto.\n        Sem os turnos anteriores, o agente repete ramos já explorados ou precisa tomar mais decisões nos cruzamentos?"
     },
     "rich.603238e8e2ed": {
       "type": "rich",
@@ -445,11 +450,6 @@
       "source": "<img src=\"",
       "value": "<img src=\"",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "rich.7466487cb59b": {
-      "type": "rich",
-      "source": "<strong>Take the text away from the multimodal model.</strong>\n        Set <code>includeText:false</code> and <code>includeImage:true</code>, then rerun.\n        The model now sees only the rendered picture of the maze. Does it still reach\n        the goal, and does it take more decisions than the text-plus-image run did?",
-      "value": "<strong>Tire o texto do modelo multimodal.</strong>\n        Defina <code>includeText:false</code> e <code>includeImage:true</code> e execute novamente.\n        Agora o modelo vê somente a imagem do labirinto. Ele ainda alcança o objetivo? Precisa de\n        mais decisões do que na execução com texto e imagem?"
     },
     "rich.74ddf95e4fa6": {
       "type": "rich",
@@ -575,6 +575,11 @@
       "source": "<div style=\"color:#9ab\">rendered image:</div><img src=\"",
       "value": "<div style=\"color:#9ab\">imagem renderizada:</div><img src=\""
     },
+    "rich.b9195912551e": {
+      "type": "rich",
+      "source": "<strong>Swap the decision model.</strong>\n        Change <code>model:\"reasoning\"</code> to <code>model:\"omni\"</code> and rerun.\n        The loop, maze, perception, and action do not change. Only the model making\n        the move does. Does the multimodal fallback reach the goal in fewer decisions?",
+      "value": "<strong>Troque o modelo de decisão.</strong>\n        Altere <code>model:\"reasoning\"</code> para <code>model:\"omni\"</code> e execute novamente.\n        O ciclo, o labirinto, a percepção e a ação não mudam. Apenas o modelo que escolhe o movimento muda. O perfil multimodal alternativo chega ao objetivo com menos decisões?"
+    },
     "rich.b91f4addbbbb": {
       "type": "rich",
       "source": "<div style=\"color:#76b900;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase\">context this turn</div>",
@@ -643,11 +648,6 @@
       "source": "\n      All of them <b>perceive</b> their environment through sensors and <b>act</b> on it through actuators.\n      Because each action feeds the next observation, perceiving and acting fold into one continuous cycle,\n      a <strong>perceive-reason-act loop</strong>, that lasts as long as the agent continues to interact.\n      The agents you will build all adopt the same cycle and are set apart only by how much they can perceive\n      and how far their actions reach.\n    ",
       "value": "\n      Todos eles <b>percebem</b> o ambiente por meio de sensores e <b>agem</b> sobre ele por meio de atuadores.\n      Como cada ação alimenta a observação seguinte, percepção e ação formam um ciclo contínuo,\n      o <strong>ciclo perceber, raciocinar e agir</strong>, que dura enquanto o agente interage.\n      Todos os agentes construídos no curso seguem esse ciclo. O que muda é quanto conseguem perceber\n      e até onde suas ações alcançam.\n    "
     },
-    "rich.d0625f8a63c2": {
-      "type": "rich",
-      "source": "<span style=\"color:#fbbf24\">hint: the image was rejected on this turn. Try again, set includeImage:false to send text alone, or pick another multimodal model (vision / qwenVision).</span>",
-      "value": "<span style=\"color:#fbbf24\">dica: a imagem foi rejeitada neste turno. Tente novamente, use includeImage:false para enviar somente texto ou escolha outro modelo multimodal (vision / qwenVision).</span>"
-    },
     "rich.d106759c1b2d": {
       "type": "rich",
       "source": "<strong>Locally-sample.</strong> Your code reads a slice of the\n        environment, which might be the maze cell and its valid moves, or the latest user\n        message, or the contents of a file. It never reaches for the whole world at once,\n        because all the turn requires is the narrow piece of state the model needs to act on\n        this time around.",
@@ -686,10 +686,10 @@
       "value": "<div class=\"mc\" style=\"\\${s}\">\\${i}</div>",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "rich.dd148bb715cd": {
+    "rich.dcf8966e9571": {
       "type": "rich",
-      "source": "<strong>Swap the decision model.</strong>\n        Change <code>model:\"vision\"</code> to <code>model:\"super\"</code> and rerun.\n        The loop, maze, perception, and action do not change. Only the model making\n        the move does. Does the larger text model reach the goal in fewer decisions?",
-      "value": "<strong>Troque o modelo de decisão.</strong>\n        Mude <code>model:\"vision\"</code> para <code>model:\"super\"</code> e execute novamente.\n        Ciclo, labirinto, percepção e ação permanecem iguais; somente o modelo muda. O modelo de\n        texto maior alcança o objetivo com menos decisões?"
+      "source": "Start with the working defaults. Then switch <code>model</code> to compare capability-checked routes, remove history, or set <code>advanced</code> to grow the maze after the simple case works.",
+      "value": "Comece com os padrões funcionais. Depois, altere <code>model</code> para comparar rotas com capacidades verificadas, remova o histórico ou defina <code>advanced</code> para ampliar o labirinto quando o caso simples funcionar."
     },
     "rich.e283eb73ab78": {
       "type": "rich",
@@ -739,6 +739,12 @@
       "source": "#7fa8d8",
       "value": "#7fa8d8",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "text.01d291da7303": {
+      "type": "text",
+      "source": " Pass one key to runMaze, e.g. { model: \"reasoning\" }.",
+      "value": " Pass one key to runMaze, e.g. { model: \"reasoning\" }.",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
     },
     "text.0347fa288f10": {
       "type": "text",
@@ -822,6 +828,11 @@
       "source": " at ",
       "value": " em "
     },
+    "text.08e35b8f3c4c": {
+      "type": "text",
+      "source": "Unknown maze model profile: ",
+      "value": "Perfil de modelo do labirinto desconhecido: "
+    },
     "text.091551db6957": {
       "type": "text",
       "source": ")</div>",
@@ -900,11 +911,11 @@
       "value": "usage",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.0c82ea7deddd": {
+    "text.0c4d01e81bb3": {
       "type": "text",
-      "source": " multimodal model; try \"super\", \"omni\", or \"qwenVision\" to compare",
-      "value": " multimodal model; try \"super\", \"omni\", or \"qwenVision\" to compare",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "source": "reasoning",
+      "value": "reasoning",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
     },
     "text.0cd59804b5ed": {
       "type": "text",
@@ -922,6 +933,12 @@
       "type": "text",
       "source": "Maze engine ready.",
       "value": "Motor do labirinto pronto."
+    },
+    "text.0e73b79fc00b": {
+      "type": "text",
+      "source": " All knobs are optional. opts.model defaults to the text reasoning model.",
+      "value": " All knobs are optional. opts.model defaults to the text reasoning model.",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
     },
     "text.0f2552acfc09": {
       "type": "text",
@@ -986,11 +1003,6 @@
       "value": "none",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.1416f5412361": {
-      "type": "text",
-      "source": "This is the editable maze run. Edit DIRECTIVE first, then change one option at a time: model, advanced, includeText, includeImage, includeHistory, includeCoords, or toolSpecInSystem.",
-      "value": "Esta é a execução editável. Altere primeiro DIRECTIVE e depois uma opção por vez: model, advanced, includeText, includeImage, includeHistory, includeCoords ou toolSpecInSystem."
-    },
     "text.14499d2b39e3": {
       "type": "text",
       "source": "A direction already tried from this junction is an exhausted branch. Do not choose it again.",
@@ -1035,11 +1047,22 @@
       "value": "In one sentence: who runs you?",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
+    "text.1751e3a7d73b": {
+      "type": "text",
+      "source": " ── model selection (pick a capability-probed key from state.MAZE_MODELS) ──",
+      "value": " ── model selection (pick a capability-probed key from state.MAZE_MODELS) ──",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
     "text.179e7b256bba": {
       "type": "text",
       "source": "&#9689;",
       "value": "&#9689;",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "text.17d1ce588ebb": {
+      "type": "text",
+      "source": "Maze model profile ",
+      "value": "O perfil de modelo do labirinto "
     },
     "text.183960d1c652": {
       "type": "text",
@@ -1073,12 +1096,6 @@
       "type": "text",
       "source": "background:#1e3a5f;color:#53c0f0",
       "value": "background:#1e3a5f;color:#53c0f0",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.1aae696a9712": {
-      "type": "text",
-      "source": " attach the rendered PNG each turn. Try true on \"omni\" and \"vision\"",
-      "value": " attach the rendered PNG each turn. Try true on \"omni\" and \"vision\"",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
     "text.1b443979f03b": {
@@ -1127,6 +1144,11 @@
       "value": "background:#0d2030",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
+    "text.20a6d4d08e9a": {
+      "type": "text",
+      "source": " does not accept image input.",
+      "value": " não aceita entrada de imagem."
+    },
     "text.216c311b32f1": {
       "type": "text",
       "source": "###################",
@@ -1148,6 +1170,12 @@
       "type": "text",
       "source": " The same loop that ran DFS, BFS, and A* now drives a language model over this maze.",
       "value": " O mesmo ciclo de DFS, BFS e A* agora conduz um modelo de linguagem pelo labirinto."
+    },
+    "text.228e9f0cdd12": {
+      "type": "text",
+      "source": " capability-checked default; compare with \"omni\"",
+      "value": " capability-checked default; compare with \"omni\"",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
     },
     "text.236b57c0c119": {
       "type": "text",
@@ -1188,12 +1216,6 @@
       "type": "text",
       "source": "object",
       "value": "object",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.298e8d39a158": {
-      "type": "text",
-      "source": "openai/gpt-oss-120b",
-      "value": "openai/gpt-oss-120b",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
     "text.29ba2f877f53": {
@@ -1617,12 +1639,6 @@
       "value": "\\\\nPick your next move.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.3c4bb8edfba7": {
-      "type": "text",
-      "source": " reads images (needs room to reach the tool call)",
-      "value": " reads images (needs room to reach the tool call)",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
     "text.3d87838859da": {
       "type": "text",
       "source": "\" style=\"max-width:220px;border:1px solid #2a2a2a;border-radius:4px;margin:4px 0;display:block\"/>",
@@ -1746,6 +1762,11 @@
       "value": " the shortest path that came back from fn.bfsExplore(...).",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
+    "text.4575d9a0bb39": {
+      "type": "text",
+      "source": "Nemotron 3.5 Lightning 30B · fast",
+      "value": "Nemotron 3.5 Lightning 30B · rápido"
+    },
     "text.45822f54a0d0": {
       "type": "text",
       "source": ": ",
@@ -1797,6 +1818,18 @@
       "source": ", which is not allowed on this turn. ",
       "value": ", que não é permitido neste turno. "
     },
+    "text.4dac34f0aa75": {
+      "type": "text",
+      "source": "reasoning-metadata",
+      "value": "reasoning-metadata",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.4dac34f0aa75~1": {
+      "type": "text",
+      "source": "reasoning-metadata",
+      "value": "reasoning-metadata",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
     "text.4dc8ce7ef7a4": {
       "type": "text",
       "source": " SYS_REFERENCE holds the fixed map key; runMaze sends directive, reference, tool spec.",
@@ -1830,6 +1863,12 @@
       "type": "text",
       "source": "Try it · the model as a pure function",
       "value": "Experimente · o modelo como uma função pura"
+    },
+    "text.505e9ccbd2b5": {
+      "type": "text",
+      "source": "vision-tool-calling",
+      "value": "vision-tool-calling",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
     },
     "text.50d9f42a0e82": {
       "type": "text",
@@ -1935,6 +1974,24 @@
       "value": " Phase 2: walk the path",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
+    "text.57b7e204b183": {
+      "type": "text",
+      "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "text.57b7e204b183~1": {
+      "type": "text",
+      "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "text.57b7e204b183~2": {
+      "type": "text",
+      "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
     "text.5807075108e2": {
       "type": "text",
       "source": "#aaa",
@@ -1968,6 +2025,12 @@
       "type": "text",
       "source": "vision",
       "value": "vision",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.5944ae849448~1": {
+      "type": "text",
+      "source": "vision",
+      "value": "vision",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
     "text.594ab50e9d04": {
@@ -1980,12 +2043,6 @@
       "type": "text",
       "source": "position",
       "value": "posição"
-    },
-    "text.5acdb958f858": {
-      "type": "text",
-      "source": "nvidia/nemotron-nano-12b-v2-vl",
-      "value": "nvidia/nemotron-nano-12b-v2-vl",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
     "text.5aeef1888b44": {
       "type": "text",
@@ -2068,12 +2125,6 @@
       "type": "text",
       "source": " untried: [",
       "value": " ainda não tentadas: ["
-    },
-    "text.63503102043f": {
-      "type": "text",
-      "source": " reasoning model. Give it room to think and call tools",
-      "value": " reasoning model. Give it room to think and call tools",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
     "text.65adfd47d54e": {
       "type": "text",
@@ -2221,6 +2272,11 @@
       "source": " PERCEIVE",
       "value": " PERCEBER"
     },
+    "text.77c4ae7830e1": {
+      "type": "text",
+      "source": "This is the editable maze run. Edit DIRECTIVE first, then change one option at a time: model, advanced, includeText, includeHistory, includeCoords, or toolSpecInSystem.",
+      "value": "Esta é a execução editável do labirinto. Altere primeiro DIRECTIVE e depois uma opção por vez: model, advanced, includeText, includeHistory, includeCoords ou toolSpecInSystem."
+    },
     "text.77d57e39b407": {
       "type": "text",
       "source": "&gt;",
@@ -2294,12 +2350,6 @@
       "type": "text",
       "source": " body.messages[0].content = \"In one sentence: what is an agent loop?\";",
       "value": " body.messages[0].content = \"Em uma frase: o que é um loop de agente?\";"
-    },
-    "text.7eef139a67b6": {
-      "type": "text",
-      "source": " reasoning + tools",
-      "value": " reasoning + tools",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
     "text.809e41b9bb1e": {
       "type": "text",
@@ -2398,12 +2448,6 @@
       "value": "/",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.8a5edab28263~1": {
-      "type": "text",
-      "source": "/",
-      "value": "/",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
     "text.8a798890fe93": {
       "type": "text",
       "source": "yes",
@@ -2425,12 +2469,6 @@
       "type": "text",
       "source": " Add the tool spec to the prompt so smaller models call it correctly.",
       "value": " Add the tool spec to the prompt so smaller models call it correctly.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.8bef5564eee0": {
-      "type": "text",
-      "source": " Image-capable entries are marked below; pass one key to runMaze, e.g. { model: \"vision\" }.",
-      "value": " Image-capable entries are marked below; pass one key to runMaze, e.g. { model: \"vision\" }.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
     "text.8c51e6f6dd25": {
@@ -2521,17 +2559,6 @@
       "value": "S",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.8e672fb8cb81": {
-      "type": "text",
-      "source": "You are navigating a maze.\nYou are called only at JUNCTIONS (2+ open directions).\nYou get an ASCII map; turn on includeImage below if you also want a picture.\nCorridors are auto-walked, so your position can jump several cells between calls.\nChoose ONE direction from \"Allowed moves this turn\" and call choose_direction().\nDo not repeat a direction listed under \"Already tried here.\"\nWhen every branch is exhausted, take the allowed backtrack and continue.\nPrefer unvisited branches (-) over visited cells (·), and head toward G when you can see it.\nMinimize reasoning efforts and make immediate moves.",
-      "value": "You are navigating a maze.\nYou are called only at JUNCTIONS (2+ open directions).\nYou get an ASCII map; turn on includeImage below if you also want a picture.\nCorridors are auto-walked, so your position can jump several cells between calls.\nChoose ONE direction from \"Movimentos permitidos neste turno\" and call choose_direction().\nDo not repeat a direction listed under \"Already tried here.\"\nWhen every branch is exhausted, take the allowed backtrack and continue.\nPrefer unvisited branches (-) over visited cells (·), and head toward G when you can see it.\nMinimize reasoning efforts and make immediate moves."
-    },
-    "text.8ee662902f2b": {
-      "type": "text",
-      "source": " reads images + tools",
-      "value": " reads images + tools",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
     "text.8f527220a0b5": {
       "type": "text",
       "source": " Check HTTP status before parsing so failures show the real response body.",
@@ -2549,11 +2576,11 @@
       "value": "#S...............G#",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.91a45bd811a1": {
+    "text.919ee417a7c9": {
       "type": "text",
-      "source": "qwen/qwen3.5-122b-a10b",
-      "value": "qwen/qwen3.5-122b-a10b",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "source": " Capability-checked choices for this tool-calling maze task.",
+      "value": " Capability-checked choices for this tool-calling maze task.",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
     },
     "text.9353bfb7fb04": {
       "type": "text",
@@ -2608,6 +2635,18 @@
       "source": "Run the engine first to export the maze utilities and state.runMaze. Then use the editable maze-agent node: begin with DIRECTIVE and change one option at a time, including model, advanced, text, image, history, coordinates, or tool schema.",
       "value": "Execute primeiro o mecanismo para exportar os utilitários e state.runMaze. Depois use o nó editável do agente: comece por DIRECTIVE e altere uma opção por vez, como modelo, modo avançado, texto, imagem, histórico, coordenadas ou schema da ferramenta."
     },
+    "text.96d0c6a06c95": {
+      "type": "text",
+      "source": "tool-calling",
+      "value": "tool-calling",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.96d0c6a06c95~1": {
+      "type": "text",
+      "source": "tool-calling",
+      "value": "tool-calling",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
     "text.9739e9e246b8": {
       "type": "text",
       "source": "goal via corridor · ",
@@ -2659,11 +2698,6 @@
       "value": "POST",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.9d7de0441056": {
-      "type": "text",
-      "source": "Nemotron Super 120B · stronger",
-      "value": "Nemotron Super 120B · mais forte"
-    },
     "text.9d8a7d595009": {
       "type": "text",
       "source": " Auto-walk before feedback so the model sees the actual new position.",
@@ -2674,12 +2708,6 @@
       "type": "text",
       "source": " Now at ",
       "value": " Now at ",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.9ea3e4fbe08f": {
-      "type": "text",
-      "source": " All knobs are optional. opts.model defaults to the multimodal omni model.",
-      "value": " All knobs are optional. opts.model defaults to the multimodal omni model.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
     "text.9edefa8b0fdd": {
@@ -2789,12 +2817,6 @@
       "type": "text",
       "source": "OUTPUT FORMAT. Reply ONLY by calling this function (no prose, no plain text):",
       "value": "OUTPUT FORMAT. Reply ONLY by calling this function (no prose, no plain text):",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.a59ed181e426": {
-      "type": "text",
-      "source": " multimodal reasoning model (reads images)",
-      "value": " multimodal reasoning model (reads images)",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
     "text.a5b08a6829bb": {
@@ -2938,17 +2960,17 @@
       "source": " msgs",
       "value": " mensagens"
     },
-    "text.b358631a69c0": {
+    "text.b304adc33719": {
       "type": "text",
-      "source": "nvidia/nemotron-3-super-120b-a12b",
-      "value": "nvidia/nemotron-3-super-120b-a12b",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "source": "streaming",
+      "value": "streaming",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
     },
-    "text.b358631a69c0~1": {
+    "text.b304adc33719~1": {
       "type": "text",
-      "source": "nvidia/nemotron-3-super-120b-a12b",
-      "value": "nvidia/nemotron-3-super-120b-a12b",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "source": "streaming",
+      "value": "streaming",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
     },
     "text.b39f2870695c": {
       "type": "text",
@@ -2982,6 +3004,11 @@
       "type": "text",
       "source": ": asking model...",
       "value": ": consultando o modelo..."
+    },
+    "text.b70882637398": {
+      "type": "text",
+      "source": "You are navigating a maze.\nYou are called only at JUNCTIONS (2+ open directions).\nYou get an ASCII map that marks walls, explored cells, your position, and the goal.\nCorridors are auto-walked, so your position can jump several cells between calls.\nChoose ONE direction from \"Allowed moves this turn\" and call choose_direction().\nDo not repeat a direction listed under \"Already tried here.\"\nWhen every branch is exhausted, take the allowed backtrack and continue.\nPrefer unvisited branches (-) over visited cells (·), and head toward G when you can see it.\nMinimize reasoning efforts and make immediate moves.",
+      "value": "You are navigating a maze.\nYou are called only at JUNCTIONS (2+ open directions).\nYou get an ASCII map that marks walls, explored cells, your position, and the goal.\nCorridors are auto-walked, so your position can jump several cells between calls.\nChoose ONE direction from \"Movimentos permitidos neste turno\" and call choose_direction().\nDo not repeat a direction listed under \"Already tried here.\"\nWhen every branch is exhausted, take the allowed backtrack and continue.\nPrefer unvisited branches (-) over visited cells (·), and head toward G when you can see it.\nMinimize reasoning efforts and make immediate moves."
     },
     "text.b70997a92d60": {
       "type": "text",
@@ -3136,22 +3163,10 @@
       "value": " ── Edit this freely: it becomes the CORE of the system message. ──",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.c32b9f383c65": {
-      "type": "text",
-      "source": " Model choices for this tool-calling maze task; every entry supports tool calls.",
-      "value": " Model choices for this tool-calling maze task; every entry supports tool calls.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
     "text.c3641f8544d7": {
       "type": "text",
       "source": "@",
       "value": "@",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.c384b3fecff4": {
-      "type": "text",
-      "source": " text reasoning model",
-      "value": " text reasoning model",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
     "text.c4310c128f97": {
@@ -3523,6 +3538,18 @@
       "source": "Using a language model to choose maze moves",
       "value": "Como usar um modelo de linguagem para escolher movimentos"
     },
+    "text.e661f4c935e8": {
+      "type": "text",
+      "source": "generation",
+      "value": "generation",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.e661f4c935e8~1": {
+      "type": "text",
+      "source": "generation",
+      "value": "generation",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
     "text.e8c84d27732d": {
       "type": "text",
       "source": "Pressing Run returns whatever the model produced for that single call, and running it again may give a different response because each call is independent with no shared state between them.",
@@ -3583,21 +3610,10 @@
       "source": "LLM maze run · model chooses moves",
       "value": "Execução do labirinto com LLM · o modelo escolhe movimentos"
     },
-    "text.ee01943c656e": {
-      "type": "text",
-      "source": " ── model selection (pick a key from state.MAZE_MODELS, an id string, or an object) ──",
-      "value": " ── model selection (pick a key from state.MAZE_MODELS, an id string, or an object) ──",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
     "text.eef7a51540c1": {
       "type": "text",
       "source": "Maze engine",
       "value": "Motor do labirinto"
-    },
-    "text.efdb5576d726": {
-      "type": "text",
-      "source": "Nemotron Nano 30B · fast",
-      "value": "Nemotron Nano 30B · rápido"
     },
     "text.f096753f7dee": {
       "type": "text",
@@ -3661,24 +3677,6 @@
       "type": "text",
       "source": " Show the exact model request in a collapsible panel before each call.",
       "value": " Show the exact model request in a collapsible panel before each call.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.fa24955a1723": {
-      "type": "text",
-      "source": "nvidia/nemotron-3-nano-30b-a3b",
-      "value": "nvidia/nemotron-3-nano-30b-a3b",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.fa24955a1723~1": {
-      "type": "text",
-      "source": "nvidia/nemotron-3-nano-30b-a3b",
-      "value": "nvidia/nemotron-3-nano-30b-a3b",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.fa24955a1723~2": {
-      "type": "text",
-      "source": "nvidia/nemotron-3-nano-30b-a3b",
-      "value": "nvidia/nemotron-3-nano-30b-a3b",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
     "text.fcb5f40df9be": {

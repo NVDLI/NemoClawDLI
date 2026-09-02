@@ -109,6 +109,29 @@ class InterfaceInventoryAuditTests(unittest.TestCase):
         findings, _ = audit.audit(root)
         self.assertTrue(any("live_capabilities" in item and "model-stream" in item for item in findings))
 
+    def test_embedding_capability_discovers_novel_renamed_and_deleted_sources(self) -> None:
+        root = self.fixture()
+        nested = root / "web/sample/runtime/transport.js"
+        nested.parent.mkdir()
+        nested.write_text('fetch(`${base}/v1/embeddings`, {method: "POST"})', encoding="utf-8")
+        findings, _ = audit.audit(root)
+        self.assertTrue(any("embedding-request" in item for item in findings))
+
+        nested.rename(nested.with_name("model-client.mjs"))
+        findings, _ = audit.audit(root)
+        self.assertTrue(any("embedding-request" in item for item in findings))
+
+        nested.with_name("model-client.mjs").unlink()
+        findings, _ = audit.audit(root)
+        self.assertFalse(any("embedding-request" in item for item in findings))
+
+    def test_embedding_capability_rejects_malformed_near_match(self) -> None:
+        root = self.fixture()
+        page = root / "web/sample/lesson.html"
+        page.write_text(page.read_text() + '<script>fetch("/v1/embeddings-old")</script>')
+        findings, _ = audit.audit(root)
+        self.assertFalse(any("embedding-request" in item for item in findings))
+
     def test_browser_harness_denies_candidate_egress_and_checks_every_expanded_instance(self) -> None:
         source = browser_audit.RUNTIME
         self.assertIn("serviceWorkers:'block'", source)

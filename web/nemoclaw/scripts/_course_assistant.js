@@ -8,9 +8,8 @@ import {
   courseRuntimeFiles, courseRuntimeSource,
 } from "./_langchain.js";
 
-const MODELS = [
-  { id: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron Super 120B · recommended" },
-  { id: "nvidia/nemotron-3-nano-30b-a3b", label: "Nemotron Nano 30B · fast" },
+const modelOptions = defaultModel => [
+  { id: defaultModel, label: "Nemotron 3.5 Lightning 30B · fast" },
 ];
 const ASSISTANT_WIDTH_KEY = "nemoclaw_course_assistant_width_v1";
 const ASSISTANT_SESSIONS_KEY = "nemoclaw_course_assistant_sessions_v1";
@@ -944,7 +943,7 @@ export function mountCourseAssistant(runtime = {}) {
       `浏览器当前位于 ${page.id}“${title}”。${attachedPage && attachedPage.id !== page.id ? `已保存的会话始于 ${attachedPage.id}“${attachedTitle}”，但“此页面”和“当前页面”始终指 ${page.id}。` : "此会话已关联到当前页面。"}`,
     );
     chatApi = await mountAgentChat(body, {
-      models: MODELS,
+      models: modelOptions(runtime.defaultModel),
       memory: true,
       initialHistory: session.history,
       initialActivity: session.activity,

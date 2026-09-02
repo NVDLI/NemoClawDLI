@@ -30,7 +30,7 @@
 <main>
   <div id="journey-map"></div>
 
-  <div class="hero">
+  <div class="hero" data-editorial-pin="1">
     <div class="eyebrow">Module 1 · Part A of 3</div>
     <h1>The <span>Agent</span></h1>
     <p class="lead">
@@ -151,7 +151,7 @@
   </div>
 
 <pre><code class="language-js">const reply = await chat({
-  model:    "nvidia/nemotron-3-nano-30b-a3b",
+  model:    "nvidia/nemotron-3.5-lightning-30b-a3b",
   messages: [{ role: "user", content: "Hi" }],
 });
 // reply.choices[0].message  → { content, reasoning_content }
@@ -298,8 +298,8 @@
   <p>Run the cells in this order, then vary one control at a time:</p>
   <ol>
     <li>Run the engine node first. It exports the maze utilities and one shared controller, <code>state.runMaze</code>, that walks corridors automatically and calls the model only at junctions.</li>
-    <li>Run the editable maze-agent node below. <code>DIRECTIVE</code> is the core system instruction, and the options object controls the model, maze size, text map, image attachment, move history, coordinate trail, and repeated tool schema.</li>
-    <li>Start with the working defaults. Then turn on <code>includeImage</code> to test the rendered maze, switch <code>model</code> to compare models, or set <code>advanced</code> to grow the maze after the simple case works.</li>
+    <li>Run the editable maze-agent node below. <code>DIRECTIVE</code> is the core system instruction, and the options object controls the model, maze size, text map, move history, coordinate trail, and repeated tool schema.</li>
+    <li>Start with the working defaults. Then switch <code>model</code> to compare capability-checked routes, remove history, or set <code>advanced</code> to grow the maze after the simple case works.</li>
   </ol>
 
   <div id="cell-llm-maze"></div>
@@ -368,18 +368,17 @@
   <h2>Before you continue</h2>
   <p>Each question is answerable by editing a knob in the LLM-maze cell above and rerunning it.</p>
   <ol>
-    <li><strong>Take the text away from the multimodal model.</strong>
-        Set <code>includeText:false</code> and <code>includeImage:true</code>, then rerun.
-        The model now sees only the rendered picture of the maze. Does it still reach
-        the goal, and does it take more decisions than the text-plus-image run did?</li>
+    <li><strong>Take the move history away.</strong>
+        Set <code>includeHistory:false</code>, then rerun with the same model and maze.
+        Does the agent repeat explored branches or need more junction decisions without prior turns?</li>
     <li><strong>Remove the strategy hint from the DIRECTIVE.</strong>
         Delete the line that says to prefer unvisited branches over visited cells, then
         rerun the same cell. Count the decisions against the run with the hint in place.
         How much of the model's competence came from that one sentence?</li>
     <li><strong>Swap the decision model.</strong>
-        Change <code>model:"vision"</code> to <code>model:"super"</code> and rerun.
+        Change <code>model:"reasoning"</code> to <code>model:"omni"</code> and rerun.
         The loop, maze, perception, and action do not change. Only the model making
-        the move does. Does the larger text model reach the goal in fewer decisions?</li>
+        the move does. Does the multimodal fallback reach the goal in fewer decisions?</li>
   </ol>
   </div>
   </details>
@@ -405,8 +404,7 @@ helpers.mountChatUI("#loop-artifact", {
   memory: true,
   greeting: "Memory is on, so I follow the whole conversation. Tell me your name, then ask what it is. Flip 🧠 memory off and I answer each message cold, a stateless function with no recall of the last.",
   models: [
-    { id: "nvidia/nemotron-3-nano-30b-a3b",    label: "Nemotron Nano 30B · fast" },
-    { id: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron Super 120B · stronger" },
+    { id: "nvidia/nemotron-3.5-lightning-30b-a3b", label: "Nemotron 3.5 Lightning 30B · fast" },
   ],
   examples: ["My name is Ada. Remember it.", "What is my name?", "What is the capital of France?", "Explain the agent loop in two sentences", "Why does an agent need a loop instead of one call?"],
   respond: async (text, ctx) => {
@@ -1072,18 +1070,13 @@ state.SYS_REFERENCE = [
 
 state.SYS = state.SYS_DIRECTIVE + "\\n\\n" + state.SYS_REFERENCE;
 
-// Model choices for this tool-calling maze task; every entry supports tool calls.
-// Image-capable entries are marked below; pass one key to runMaze, e.g. { model: "vision" }.
+// Capability-checked choices for this tool-calling maze task.
+// Pass one key to runMaze, e.g. { model: "reasoning" }.
 state.MAZE_MODELS = {
-
-  omni:       { id: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning", maxTok: 16384, temp: 0.6,  // multimodal reasoning model (reads images)
+  reasoning:  { id: "nvidia/nemotron-3.5-lightning-30b-a3b", capabilities: ["generation", "reasoning-metadata", "streaming", "tool-calling"], maxTok: 16384, temp: 1.0,
                 extra_body: { reasoning_budget: 4096, chat_template_kwargs: { enable_thinking: true } } },
-  reasoning:  { id: "nvidia/nemotron-3-nano-30b-a3b", maxTok: 16384, temp: 0.6,       // text reasoning model
-                extra_body: { reasoning_budget: 4096, chat_template_kwargs: { enable_thinking: true } } },
-  vision:     { id: "nvidia/nemotron-nano-12b-v2-vl", maxTok: 4096, temp: 0.3 },     // reads images (needs room to reach the tool call)
-  qwenVision: { id: "qwen/qwen3.5-122b-a10b", maxTok: 4096, temp: 0.4 },             // reads images + tools
-  super:      { id: "nvidia/nemotron-3-super-120b-a12b", maxTok: 16384, temp: 0.4 }, // reasoning model. Give it room to think and call tools
-  gptOss:     { id: "openai/gpt-oss-120b", maxTok: 16384, temp: 0.5 }                // reasoning + tools
+  omni:       { id: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning", capabilities: ["generation", "reasoning-metadata", "streaming", "tool-calling", "vision", "vision-tool-calling"], maxTok: 20480, temp: 0.6,
+                extra_body: { reasoning_budget: 4096, chat_template_kwargs: { enable_thinking: true } } }
 
 };
 
@@ -1141,7 +1134,7 @@ state.mazeToDataURL = function(grid, pos, goal, visited, cell) {
 
 
 // runMaze: one corridor-walk + LLM-at-junctions controller, shared by the run node.
-// All knobs are optional. opts.model defaults to the multimodal omni model.
+// All knobs are optional. opts.model defaults to the text reasoning model.
 // opts.advanced swaps in the bigger, loopier maze.
 
 state.runMaze = async function(h, state, opts) {
@@ -1156,18 +1149,17 @@ state.runMaze = async function(h, state, opts) {
   var includeCoords  = opts.includeCoords  !== false;                                        // default: list every coordinate travelled
   if (!includeText && !includeImage) includeText = true;                                     // must send something
 
-  // ── model selection (pick a key from state.MAZE_MODELS, an id string, or an object) ──
+  // ── model selection (pick a capability-probed key from state.MAZE_MODELS) ──
   var MODELS = state.MAZE_MODELS;
   function resolveModel(m) {
-    if (!m) return MODELS.omni;
-    if (typeof m === 'string') {
-      if (MODELS[m]) return MODELS[m];
-      if (m.indexOf('/') >= 0) return { id: m, maxTok: 2048, temp: 0.6 };
-      return MODELS.omni;
-    }
-    return m;
+    if (!m) return MODELS.reasoning;
+    if (typeof m === 'string' && MODELS[m]) return MODELS[m];
+    throw new Error('Unknown maze model profile: ' + String(m));
   }
   var MODEL = resolveModel(opts.model);
+  if (includeImage && MODEL.capabilities.indexOf('vision') < 0) {
+    throw new Error('Maze model profile ' + opts.model + ' does not accept image input.');
+  }
 
   var cfg = advanced
     ? { w: 15, h: 11, seed: 99, loop: 0.55, max: 40 }
@@ -1410,7 +1402,7 @@ state.runMaze = async function(h, state, opts) {
         if (e.name === 'AbortError' || sig.aborted) { info('<span style="color:#777">stopped</span>'); break; }
         info('<span style="color:#f87171">error: ' + e.message + '</span>');
         if (includeImage && /image|vision|multimodal|content/i.test(e.message))
-          info('<span style="color:#fbbf24">hint: the image was rejected on this turn. Try again, set includeImage:false to send text alone, or pick another multimodal model (vision / qwenVision).</span>');
+          info('<span style="color:#fbbf24">hint: the image was rejected on this turn. Retry once, or set includeImage:false and compare the text-only reasoning and omni profiles.</span>');
         runError = e;
         break;
       }
@@ -1526,13 +1518,13 @@ log("Maze engine ready.");
       id: "run", icon: "🧭", title: "Maze agent · editable run",
       x: 1, y: 0,
       showCode: true,
-      summary: "This is the editable maze run. Edit DIRECTIVE first, then change one option at a time: model, advanced, includeText, includeImage, includeHistory, includeCoords, or toolSpecInSystem.",
+      summary: "This is the editable maze run. Edit DIRECTIVE first, then change one option at a time: model, advanced, includeText, includeHistory, includeCoords, or toolSpecInSystem.",
       code: `if (!state.runMaze) { helpers.log("Run the 'Maze engine' node first."); return; }
 
 // ── Edit this freely: it becomes the CORE of the system message. ──
 const DIRECTIVE = \`You are navigating a maze.
 You are called only at JUNCTIONS (2+ open directions).
-You get an ASCII map; turn on includeImage below if you also want a picture.
+You get an ASCII map that marks walls, explored cells, your position, and the goal.
 Corridors are auto-walked, so your position can jump several cells between calls.
 Choose ONE direction from "Allowed moves this turn" and call choose_direction().
 Do not repeat a direction listed under "Already tried here."
@@ -1542,11 +1534,10 @@ Minimize reasoning efforts and make immediate moves.\`;
 
 return await state.runMaze(helpers, state, {
 
-  model:           "vision",   // multimodal model; try "super", "omni", or "qwenVision" to compare
+  model:           "reasoning", // capability-checked default; compare with "omni"
   directive:        DIRECTIVE,  // editable core of the system message (above)
   advanced:         false,      // false = simple 11x9 maze. true = larger 15x11 maze with more loops
   includeText:      true,       // send the ASCII map alongside the picture
-  includeImage:     false,      // attach the rendered PNG each turn. Try true on "omni" and "vision"
   includeHistory:   true,       // include the history of past moves
   includeCoords:    true,       // list every coordinate travelled
   toolSpecInSystem: true,       // repeat the tool spec in the system message when the server does not inject it clearly
@@ -1568,7 +1559,7 @@ mountRunCell("#cell-onecall", {
   intro: "Pressing Run returns whatever the model produced for that single call, and running it again may give a different response because each call is independent with no shared state between them.",
   code: `// One call. No loop, no memory.
 const reply = await chat({
-  model: "nvidia/nemotron-3-nano-30b-a3b",
+  model: "nvidia/nemotron-3.5-lightning-30b-a3b",
   messages: [
     { role: "system", content: "You are a terse assistant. One sentence." },
     { role: "user",   content: "What does 'stateless' mean for an LLM API?" },

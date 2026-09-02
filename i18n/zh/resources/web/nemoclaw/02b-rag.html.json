@@ -147,6 +147,11 @@
       "source": "<strong>Concatenate</strong> those passages onto the prompt.",
       "value": "将这些段落<strong>拼接</strong>到提示词中。"
     },
+    "rich.3139cc57cb17": {
+      "type": "rich",
+      "source": "\n    <strong>Failure mode: stale embeddings.</strong>\n    <p>A vector index is a cache of an embedding model's outputs. Production systems\n    have to defend against a few specific failures:</p>\n    <ul style=\"margin:8px 0 0 22px\">\n      <li>Swap the embedding model and every cached vector becomes meaningless until you re-embed every passage.</li>\n      <li>The provider silently upgrades the model, and scores drift with no error raised.</li>\n      <li>Two services share an index but pin different model ids; the index returns nonsense to one of them.</li>\n    </ul>\n    <p>A reliable index pins the embedding model id alongside each cached vector\n    and refuses to mix versions. The canonical pin for this course is\n    <code>nvidia/llama-nemotron-embed-vl-1b-v2</code>, served through the\n    course's hosted proxy at build.nvidia.com.</p>\n  ",
+      "value": "\n    <strong>故障模式：陈旧的嵌入。</strong>\n    <p>向量索引是嵌入模型输出的缓存。生产系统必须防范以下几种特定故障：</p>\n    <ul style=\"margin:8px 0 0 22px\">\n      <li>一旦更换嵌入模型，所有缓存向量都会失去意义，直到您重新嵌入每个段落。</li>\n      <li>提供商悄悄升级模型，分数随之漂移，却不会触发任何错误。</li>\n      <li>两个服务共享同一索引，却固定使用不同的模型 ID；该索引会向其中一个服务返回毫无意义的结果。</li>\n    </ul>\n    <p>可靠的索引会为每个缓存向量同时固定嵌入模型 ID，并拒绝混用不同版本。本课程的规范固定值是\n    <code>nvidia/llama-nemotron-embed-vl-1b-v2</code>，通过课程托管在\n    build.nvidia.com 的代理提供服务。</p>\n  "
+    },
     "rich.32482b8d4d0c": {
       "type": "rich",
       "source": "<strong>Relational / graph data.</strong> The agent calls a graph-traversal tool (Cypher, GraphQL, or custom) in place of a vector store. The bundle it gets back is a sub-graph whose explicit edges carry into the prompt, so the relationships between entities reach the model intact.",
@@ -280,11 +285,6 @@
       "type": "rich",
       "source": "The <span>Index</span> Agent",
       "value": "<span>索引</span>智能体"
-    },
-    "rich.a2f615532c7f": {
-      "type": "rich",
-      "source": "\n    <strong>Failure mode: stale embeddings.</strong>\n    <p>A vector index is a cache of an embedding model's outputs. Production systems\n    have to defend against a few specific failures:</p>\n    <ul style=\"margin:8px 0 0 22px\">\n      <li>Swap the embedding model and every cached vector becomes meaningless until you re-embed every passage.</li>\n      <li>The provider silently upgrades the model, and scores drift with no error raised.</li>\n      <li>Two services share an index but pin different model ids; the index returns nonsense to one of them.</li>\n    </ul>\n    <p>A reliable index pins the embedding model id alongside each cached vector\n    and refuses to mix versions. The canonical pin for this course is\n    <code>nvidia/llama-nemotron-embed-1b-v2</code>, served through the\n    course's hosted proxy at build.nvidia.com.</p>\n  ",
-      "value": "\n    <strong>故障模式：陈旧的嵌入。</strong>\n    <p>向量索引是嵌入模型输出的缓存。生产系统必须防范以下几种特定故障：</p>\n    <ul style=\"margin:8px 0 0 22px\">\n      <li>一旦更换嵌入模型，所有缓存向量都会失去意义，直到您重新嵌入每个段落。</li>\n      <li>提供商悄悄升级模型，分数随之漂移，却不会触发任何错误。</li>\n      <li>两个服务共享同一索引，却固定使用不同的模型 ID；该索引会向其中一个服务返回毫无意义的结果。</li>\n    </ul>\n    <p>可靠的索引会为每个缓存向量同时固定嵌入模型 ID，并拒绝混用不同版本。本课程的规范固定值是\n    <code>nvidia/llama-nemotron-embed-1b-v2</code>，通过课程托管在\n    build.nvidia.com 的代理提供服务。</p>\n  "
     },
     "rich.a513fd73eeea": {
       "type": "rich",
@@ -607,54 +607,6 @@
       "source": "Top-K always returns K passages, even when every score is weak. What signal\n        should the agent inspect before letting those passages enter the prompt?",
       "value": "Top-K 始终返回 K 个段落，即使所有得分都很低。在允许这些段落进入提示词之前，智能体应检查什么信号？"
     },
-    "text.1d0cef6ddaf6": {
-      "type": "text",
-      "source": "nvidia/llama-nemotron-embed-1b-v2",
-      "value": "nvidia/llama-nemotron-embed-1b-v2",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.1d0cef6ddaf6~1": {
-      "type": "text",
-      "source": "nvidia/llama-nemotron-embed-1b-v2",
-      "value": "nvidia/llama-nemotron-embed-1b-v2",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.1d0cef6ddaf6~2": {
-      "type": "text",
-      "source": "nvidia/llama-nemotron-embed-1b-v2",
-      "value": "nvidia/llama-nemotron-embed-1b-v2",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.1d0cef6ddaf6~3": {
-      "type": "text",
-      "source": "nvidia/llama-nemotron-embed-1b-v2",
-      "value": "nvidia/llama-nemotron-embed-1b-v2",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.1d0cef6ddaf6~4": {
-      "type": "text",
-      "source": "nvidia/llama-nemotron-embed-1b-v2",
-      "value": "nvidia/llama-nemotron-embed-1b-v2",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.1d0cef6ddaf6~5": {
-      "type": "text",
-      "source": "nvidia/llama-nemotron-embed-1b-v2",
-      "value": "nvidia/llama-nemotron-embed-1b-v2",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.1d0cef6ddaf6~6": {
-      "type": "text",
-      "source": "nvidia/llama-nemotron-embed-1b-v2",
-      "value": "nvidia/llama-nemotron-embed-1b-v2",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.1d0cef6ddaf6~7": {
-      "type": "text",
-      "source": "nvidia/llama-nemotron-embed-1b-v2",
-      "value": "nvidia/llama-nemotron-embed-1b-v2",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
     "text.1d2f4b752096": {
       "type": "text",
       "source": " Score bars, ordered best-first.",
@@ -953,6 +905,12 @@
       "source": "negative value",
       "value": "负值"
     },
+    "text.4575d9a0bb39": {
+      "type": "text",
+      "source": "Nemotron 3.5 Lightning 30B · fast",
+      "value": "Nemotron 3.5 Lightning 30B · fast",
+      "untranslated": "Model selector display label; preserve the complete label in English"
+    },
     "text.45775e9b0dd7": {
       "type": "text",
       "source": " The panel calls helpers.embed(), ranks with helpers.cosineSim(), then answers.",
@@ -1086,6 +1044,12 @@
       "type": "text",
       "source": "rewoo",
       "value": "rewoo",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.57b7e204b183": {
+      "type": "text",
+      "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
     "text.5873062f8e05": {
@@ -1477,12 +1441,6 @@
       "source": "Vector databases store learned embeddings of text alongside the original passages, indexed for fast nearest-neighbour search.",
       "value": "向量数据库将文本的学习所得嵌入与原始段落一同存储，并建立索引以支持快速近邻搜索。"
     },
-    "text.9d7de0441056": {
-      "type": "text",
-      "source": "Nemotron Super 120B · stronger",
-      "value": "Nemotron Super 120B · stronger",
-      "untranslated": "Model selector display label; preserve the complete label in English"
-    },
     "text.9e4c3ed72a44": {
       "type": "text",
       "source": "Appends the retrieved passages as a tool message, then asks the model for a grounded answer.",
@@ -1725,12 +1683,6 @@
       "value": "#rag-artifact",
       "untranslated": "kept English: exact CSS fragment identifier"
     },
-    "text.b358631a69c0": {
-      "type": "text",
-      "source": "nvidia/nemotron-3-super-120b-a12b",
-      "value": "nvidia/nemotron-3-super-120b-a12b",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
     "text.b3853e8fd1e2": {
       "type": "text",
       "source": "ReAct interleaves reasoning steps with tool calls, deciding what to do next after each observation.",
@@ -1875,6 +1827,54 @@
       "type": "text",
       "source": "Selects the top chunk by cosine and returns its parent document. Expand the code to inspect the visualisation data.",
       "value": "按余弦相似度选择排名最高的文本块，并返回其父文档。展开代码可检查可视化数据。"
+    },
+    "text.c8626a8ee758": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c8626a8ee758~1": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c8626a8ee758~2": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c8626a8ee758~3": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c8626a8ee758~4": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c8626a8ee758~5": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c8626a8ee758~6": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c8626a8ee758~7": {
+      "type": "text",
+      "source": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "value": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
     "text.c8b954aefb2c": {
       "type": "text",
@@ -2135,12 +2135,6 @@
       "source": "OpenShell is the kernel-level sandbox around the agent: netns, Landlock, seccomp, and an OPA-evaluated proxy decide what each tool call may touch.",
       "value": "OpenShell 是智能体外围的内核级沙箱：netns、Landlock、seccomp 和 OPA-评测代理共同决定每次工具调用可以访问哪些资源。"
     },
-    "text.efdb5576d726": {
-      "type": "text",
-      "source": "Nemotron Nano 30B · fast",
-      "value": "Nemotron Nano 30B · fast",
-      "untranslated": "Model selector display label; preserve the complete label in English"
-    },
     "text.f111f989192f": {
       "type": "text",
       "source": "\n    The production pattern indexes at two levels. You embed the small chunks so retrieval stays\n    precise, and when one matches you return its parent document so the model still sees the full\n    context around it.\n  ",
@@ -2188,12 +2182,6 @@
       "type": "text",
       "source": "Matching a retrieval primitive to the shape of your data",
       "value": "根据数据形态选择合适的检索原语"
-    },
-    "text.fa24955a1723": {
-      "type": "text",
-      "source": "nvidia/nemotron-3-nano-30b-a3b",
-      "value": "nvidia/nemotron-3-nano-30b-a3b",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
     "text.fa68764a442a": {
       "type": "text",

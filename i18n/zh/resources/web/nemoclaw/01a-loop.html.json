@@ -282,11 +282,6 @@
       "value": "<div style=\"display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start\">\n  <div id=\"\\${corrId}\" style=\"flex:0 0 auto\"></div>\n  <div id=\"\\${randId}\" style=\"flex:0 0 auto\"></div>\n</div>",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "rich.11dfd9be3000": {
-      "type": "rich",
-      "source": "Run the editable maze-agent node below. <code>DIRECTIVE</code> is the core system instruction, and the options object controls the model, maze size, text map, image attachment, move history, coordinate trail, and repeated tool schema.",
-      "value": "运行下面可编辑的迷宫智能体节点。<code>DIRECTIVE</code> 是核心系统指令，选项对象则控制模型、迷宫大小、文本地图、图像附件、移动历史、坐标轨迹以及重复提供的工具模式。"
-    },
     "rich.1321937faebf": {
       "type": "rich",
       "source": "<div style=\"font:12px/1.6 ui-monospace,monospace;color:#aaa;margin:1px 0\">",
@@ -342,6 +337,11 @@
       "value": "<details open style=\"margin:2px 0\">",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
+    "rich.30a9a921292e": {
+      "type": "rich",
+      "source": "Run the editable maze-agent node below. <code>DIRECTIVE</code> is the core system instruction, and the options object controls the model, maze size, text map, move history, coordinate trail, and repeated tool schema.",
+      "value": "运行下面可编辑的迷宫智能体节点。<code>DIRECTIVE</code> 是核心系统指令，选项对象用于控制模型、迷宫大小、文本地图、移动历史、坐标轨迹以及重复提供的工具模式。"
+    },
     "rich.33a4a9e54725": {
       "type": "rich",
       "source": "\n    That leaves the green box below as the <em>only</em> piece you did not write. An agent\n    therefore has just two choices: what you feed into its context, and what you do with\n    the intent it returns.\n  ",
@@ -352,11 +352,6 @@
       "source": "<div style=\"color:#ccd;margin-left:2px\">",
       "value": "<div style=\"color:#ccd;margin-left:2px\">",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "rich.39bbf061500a": {
-      "type": "rich",
-      "source": "Start with the working defaults. Then turn on <code>includeImage</code> to test the rendered maze, switch <code>model</code> to compare models, or set <code>advanced</code> to grow the maze after the simple case works.",
-      "value": "先使用可正常工作的默认设置。然后开启 <code>includeImage</code> 测试渲染后的迷宫，切换 <code>model</code> 比较不同模型，或者在简单情形运行成功后设置 <code>advanced</code>，扩大迷宫。"
     },
     "rich.3c8fa340472a": {
       "type": "rich",
@@ -396,6 +391,11 @@
       "source": "\n    You now have both halves of an agent, and the stateless <code>chat()</code> function above will pair nicely\n    with the previous reflex agent's perceive-reason-act loop. Before\n    wiring the model into that loop, it helps to watch the decision step use routines\n    that are <em>not</em> language models first.\n  ",
       "value": "\n    您现在已经具备智能体的两个组成部分；上面的无状态 <code>chat()</code> 函数可以很好地与前一个反射式智能体的感知—推理—行动循环结合。在将模型接入这个循环之前，不妨先观察决策步骤如何使用并非语言模型的例程。\n  "
     },
+    "rich.52b5eb95e4b8": {
+      "type": "rich",
+      "source": "<span style=\"color:#fbbf24\">hint: the image was rejected on this turn. Retry once, or set includeImage:false and compare the text-only reasoning and omni profiles.</span>",
+      "value": "<span style=\"color:#fbbf24\">提示：本轮中的图像被拒绝。请重试一次，或设置 includeImage:false，并比较仅使用文本的 reasoning 与 omni 配置。</span>"
+    },
     "rich.5bc02b4cf26e": {
       "type": "rich",
       "source": "<div style=\"white-space:pre-wrap\">",
@@ -412,6 +412,11 @@
       "type": "rich",
       "source": "\n    The smallest artifact in the course is a single <code>chat()</code> call with no tools\n    and no memory wrapped around it. Each message you send stands on its own, running the\n    bare stateless function that the loop will later wrap. Type something below and watch\n    the reply stream back.\n  ",
       "value": "\n    本课程中最小的构件只是一次 <code>chat()</code> 调用，外围没有工具，也没有记忆。您发送的每条消息都相互独立，运行的是循环稍后将封装的基础无状态函数。在下方输入内容，观察回复以流式方式返回。\n  "
+    },
+    "rich.5ffcc82fdbeb": {
+      "type": "rich",
+      "source": "<strong>Take the move history away.</strong>\n        Set <code>includeHistory:false</code>, then rerun with the same model and maze.\n        Does the agent repeat explored branches or need more junction decisions without prior turns?",
+      "value": "<strong>移除移动历史。</strong>设置 <code>includeHistory:false</code>，然后使用相同的模型和迷宫重新运行。没有之前的轮次时，智能体是否会重复已探索的分支，或者需要在岔路口作出更多次决策？"
     },
     "rich.603238e8e2ed": {
       "type": "rich",
@@ -443,11 +448,6 @@
       "source": "<img src=\"",
       "value": "<img src=\"",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "rich.7466487cb59b": {
-      "type": "rich",
-      "source": "<strong>Take the text away from the multimodal model.</strong>\n        Set <code>includeText:false</code> and <code>includeImage:true</code>, then rerun.\n        The model now sees only the rendered picture of the maze. Does it still reach\n        the goal, and does it take more decisions than the text-plus-image run did?",
-      "value": "<strong>不向多模态模型提供文本。</strong>设置 <code>includeText:false</code> 和 <code>includeImage:true</code>，然后重新运行。此时模型只能看到渲染后的迷宫图像。它仍能抵达终点吗？与同时使用文本和图像的运行相比，它是否需要作出更多次决策？"
     },
     "rich.74ddf95e4fa6": {
       "type": "rich",
@@ -573,6 +573,11 @@
       "source": "<div style=\"color:#9ab\">rendered image:</div><img src=\"",
       "value": "<div style=\"color:#9ab\">渲染图像：</div><img src=\""
     },
+    "rich.b9195912551e": {
+      "type": "rich",
+      "source": "<strong>Swap the decision model.</strong>\n        Change <code>model:\"reasoning\"</code> to <code>model:\"omni\"</code> and rerun.\n        The loop, maze, perception, and action do not change. Only the model making\n        the move does. Does the multimodal fallback reach the goal in fewer decisions?",
+      "value": "<strong>更换决策模型。</strong>将 <code>model:\"reasoning\"</code> 改为 <code>model:\"omni\"</code>，然后重新运行。循环、迷宫、感知和行动均保持不变，只有负责选择移动动作的模型发生变化。多模态备用配置能否用更少的决策抵达终点？"
+    },
     "rich.b91f4addbbbb": {
       "type": "rich",
       "source": "<div style=\"color:#76b900;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase\">context this turn</div>",
@@ -639,11 +644,6 @@
       "source": "\n      All of them <b>perceive</b> their environment through sensors and <b>act</b> on it through actuators.\n      Because each action feeds the next observation, perceiving and acting fold into one continuous cycle,\n      a <strong>perceive-reason-act loop</strong>, that lasts as long as the agent continues to interact.\n      The agents you will build all adopt the same cycle and are set apart only by how much they can perceive\n      and how far their actions reach.\n    ",
       "value": "\n      它们都会通过传感器<b>感知</b>环境，并通过执行器对环境采取<b>行动</b>。每次行动都会产生下一次观察，因此感知和行动会连成一个持续运转的周期，即<strong>感知—推理—行动循环</strong>。只要智能体仍在交互，这个循环就会持续。您将构建的所有智能体都采用同一循环，区别仅在于它们能感知多少信息，以及行动能够影响多大范围。\n    "
     },
-    "rich.d0625f8a63c2": {
-      "type": "rich",
-      "source": "<span style=\"color:#fbbf24\">hint: the image was rejected on this turn. Try again, set includeImage:false to send text alone, or pick another multimodal model (vision / qwenVision).</span>",
-      "value": "<span style=\"color:#fbbf24\">提示：本轮中的图像被拒绝。请重试、设置 includeImage:false 以仅发送文本，或选择其它多模态模型（vision / qwenVision）。</span>"
-    },
     "rich.d106759c1b2d": {
       "type": "rich",
       "source": "<strong>Locally-sample.</strong> Your code reads a slice of the\n        environment, which might be the maze cell and its valid moves, or the latest user\n        message, or the contents of a file. It never reaches for the whole world at once,\n        because all the turn requires is the narrow piece of state the model needs to act on\n        this time around.",
@@ -682,10 +682,10 @@
       "value": "<div class=\"mc\" style=\"\\${s}\">\\${i}</div>",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "rich.dd148bb715cd": {
+    "rich.dcf8966e9571": {
       "type": "rich",
-      "source": "<strong>Swap the decision model.</strong>\n        Change <code>model:\"vision\"</code> to <code>model:\"super\"</code> and rerun.\n        The loop, maze, perception, and action do not change. Only the model making\n        the move does. Does the larger text model reach the goal in fewer decisions?",
-      "value": "<strong>更换决策模型。</strong>将 <code>model:\"vision\"</code> 改为 <code>model:\"super\"</code>，然后重新运行。循环、迷宫、感知和行动均保持不变，只有负责选择移动动作的模型发生变化。更大的文本模型能否用更少的决策抵达终点？"
+      "source": "Start with the working defaults. Then switch <code>model</code> to compare capability-checked routes, remove history, or set <code>advanced</code> to grow the maze after the simple case works.",
+      "value": "先使用可正常工作的默认设置。然后切换 <code>model</code> 以比较经过能力验证的路由，移除历史记录，或在简单情形运行成功后设置 <code>advanced</code> 以扩大迷宫。"
     },
     "rich.e283eb73ab78": {
       "type": "rich",
@@ -733,6 +733,12 @@
       "source": "#7fa8d8",
       "value": "#7fa8d8",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.01d291da7303": {
+      "type": "text",
+      "source": " Pass one key to runMaze, e.g. { model: \"reasoning\" }.",
+      "value": " Pass one key to runMaze, e.g. { model: \"reasoning\" }.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.0347fa288f10": {
       "type": "text",
@@ -816,6 +822,11 @@
       "source": " at ",
       "value": "，位置 "
     },
+    "text.08e35b8f3c4c": {
+      "type": "text",
+      "source": "Unknown maze model profile: ",
+      "value": "未知的迷宫模型配置："
+    },
     "text.091551db6957": {
       "type": "text",
       "source": ")</div>",
@@ -894,10 +905,10 @@
       "value": "usage",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.0c82ea7deddd": {
+    "text.0c4d01e81bb3": {
       "type": "text",
-      "source": " multimodal model; try \"super\", \"omni\", or \"qwenVision\" to compare",
-      "value": " multimodal model; try \"super\", \"omni\", or \"qwenVision\" to compare",
+      "source": "reasoning",
+      "value": "reasoning",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.0cd59804b5ed": {
@@ -915,6 +926,12 @@
       "type": "text",
       "source": "Maze engine ready.",
       "value": "迷宫引擎已就绪。"
+    },
+    "text.0e73b79fc00b": {
+      "type": "text",
+      "source": " All knobs are optional. opts.model defaults to the text reasoning model.",
+      "value": " All knobs are optional. opts.model defaults to the text reasoning model.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.0f2552acfc09": {
       "type": "text",
@@ -979,11 +996,6 @@
       "value": "none",
       "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
     },
-    "text.1416f5412361": {
-      "type": "text",
-      "source": "This is the editable maze run. Edit DIRECTIVE first, then change one option at a time: model, advanced, includeText, includeImage, includeHistory, includeCoords, or toolSpecInSystem.",
-      "value": "这是可编辑的迷宫运行。先编辑 DIRECTIVE，然后每次只更改一个选项：model、advanced、includeText、includeImage、includeHistory、includeCoords 或 toolSpecInSystem。"
-    },
     "text.14499d2b39e3": {
       "type": "text",
       "source": "A direction already tried from this junction is an exhausted branch. Do not choose it again.",
@@ -1027,11 +1039,22 @@
       "source": "In one sentence: who runs you?",
       "value": "用一句话回答：谁在运行您？"
     },
+    "text.1751e3a7d73b": {
+      "type": "text",
+      "source": " ── model selection (pick a capability-probed key from state.MAZE_MODELS) ──",
+      "value": " ── model selection (pick a capability-probed key from state.MAZE_MODELS) ──",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
     "text.179e7b256bba": {
       "type": "text",
       "source": "&#9689;",
       "value": "&#9689;",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.17d1ce588ebb": {
+      "type": "text",
+      "source": "Maze model profile ",
+      "value": "迷宫模型配置 "
     },
     "text.183960d1c652": {
       "type": "text",
@@ -1066,12 +1089,6 @@
       "source": "background:#1e3a5f;color:#53c0f0",
       "value": "background:#1e3a5f;color:#53c0f0",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.1aae696a9712": {
-      "type": "text",
-      "source": " attach the rendered PNG each turn. Try true on \"omni\" and \"vision\"",
-      "value": " attach the rendered PNG each turn. Try true on \"omni\" and \"vision\"",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.1b443979f03b": {
       "type": "text",
@@ -1118,6 +1135,11 @@
       "value": "background:#0d2030",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
+    "text.20a6d4d08e9a": {
+      "type": "text",
+      "source": " does not accept image input.",
+      "value": " 不接受图像输入。"
+    },
     "text.216c311b32f1": {
       "type": "text",
       "source": "###################",
@@ -1139,6 +1161,12 @@
       "type": "text",
       "source": " The same loop that ran DFS, BFS, and A* now drives a language model over this maze.",
       "value": " The same loop that ran DFS, BFS, and A* now drives a language model over this maze.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.228e9f0cdd12": {
+      "type": "text",
+      "source": " capability-checked default; compare with \"omni\"",
+      "value": " capability-checked default; compare with \"omni\"",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.236b57c0c119": {
@@ -1180,12 +1208,6 @@
       "type": "text",
       "source": "object",
       "value": "object",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.298e8d39a158": {
-      "type": "text",
-      "source": "openai/gpt-oss-120b",
-      "value": "openai/gpt-oss-120b",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
     "text.29ba2f877f53": {
@@ -1606,12 +1628,6 @@
       "source": "\\\\nPick your next move.",
       "value": "\\\\n 请选择下一步。"
     },
-    "text.3c4bb8edfba7": {
-      "type": "text",
-      "source": " reads images (needs room to reach the tool call)",
-      "value": " reads images (needs room to reach the tool call)",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
     "text.3d87838859da": {
       "type": "text",
       "source": "\" style=\"max-width:220px;border:1px solid #2a2a2a;border-radius:4px;margin:4px 0;display:block\"/>",
@@ -1735,6 +1751,12 @@
       "value": " the shortest path that came back from fn.bfsExplore(...).",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
+    "text.4575d9a0bb39": {
+      "type": "text",
+      "source": "Nemotron 3.5 Lightning 30B · fast",
+      "value": "Nemotron 3.5 Lightning 30B · fast",
+      "untranslated": "Model selector display label; preserve the complete label in English"
+    },
     "text.45822f54a0d0": {
       "type": "text",
       "source": ": ",
@@ -1786,6 +1808,18 @@
       "source": ", which is not allowed on this turn. ",
       "value": "，本轮不允许这样移动。"
     },
+    "text.4dac34f0aa75": {
+      "type": "text",
+      "source": "reasoning-metadata",
+      "value": "reasoning-metadata",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.4dac34f0aa75~1": {
+      "type": "text",
+      "source": "reasoning-metadata",
+      "value": "reasoning-metadata",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
     "text.4dc8ce7ef7a4": {
       "type": "text",
       "source": " SYS_REFERENCE holds the fixed map key; runMaze sends directive, reference, tool spec.",
@@ -1818,6 +1852,12 @@
       "type": "text",
       "source": "Try it · the model as a pure function",
       "value": "动手试试 · 将模型视为纯函数"
+    },
+    "text.505e9ccbd2b5": {
+      "type": "text",
+      "source": "vision-tool-calling",
+      "value": "vision-tool-calling",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
     },
     "text.50d9f42a0e82": {
       "type": "text",
@@ -1921,6 +1961,24 @@
       "value": " Phase 2: walk the path",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
+    "text.57b7e204b183": {
+      "type": "text",
+      "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.57b7e204b183~1": {
+      "type": "text",
+      "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.57b7e204b183~2": {
+      "type": "text",
+      "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
     "text.5807075108e2": {
       "type": "text",
       "source": "#aaa",
@@ -1955,6 +2013,12 @@
       "type": "text",
       "source": "vision",
       "value": "vision",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.5944ae849448~1": {
+      "type": "text",
+      "source": "vision",
+      "value": "vision",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
     "text.594ab50e9d04": {
@@ -1967,12 +2031,6 @@
       "type": "text",
       "source": "position",
       "value": "位置"
-    },
-    "text.5acdb958f858": {
-      "type": "text",
-      "source": "nvidia/nemotron-nano-12b-v2-vl",
-      "value": "nvidia/nemotron-nano-12b-v2-vl",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
     "text.5aeef1888b44": {
       "type": "text",
@@ -2055,12 +2113,6 @@
       "type": "text",
       "source": " untried: [",
       "value": " 未尝试：["
-    },
-    "text.63503102043f": {
-      "type": "text",
-      "source": " reasoning model. Give it room to think and call tools",
-      "value": " reasoning model. Give it room to think and call tools",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.65adfd47d54e": {
       "type": "text",
@@ -2209,6 +2261,11 @@
       "value": " PERCEIVE",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
+    "text.77c4ae7830e1": {
+      "type": "text",
+      "source": "This is the editable maze run. Edit DIRECTIVE first, then change one option at a time: model, advanced, includeText, includeHistory, includeCoords, or toolSpecInSystem.",
+      "value": "这是可编辑的迷宫运行。先编辑 DIRECTIVE，然后每次只更改一个选项：model、advanced、includeText、includeHistory、includeCoords 或 toolSpecInSystem。"
+    },
     "text.77d57e39b407": {
       "type": "text",
       "source": "&gt;",
@@ -2283,12 +2340,6 @@
       "type": "text",
       "source": " body.messages[0].content = \"In one sentence: what is an agent loop?\";",
       "value": " body.messages[0].content = \"In one sentence: what is an agent loop?\";",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
-    "text.7eef139a67b6": {
-      "type": "text",
-      "source": " reasoning + tools",
-      "value": " reasoning + tools",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.809e41b9bb1e": {
@@ -2387,12 +2438,6 @@
       "value": "/",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.8a5edab28263~1": {
-      "type": "text",
-      "source": "/",
-      "value": "/",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
     "text.8a798890fe93": {
       "type": "text",
       "source": "yes",
@@ -2414,12 +2459,6 @@
       "type": "text",
       "source": " Add the tool spec to the prompt so smaller models call it correctly.",
       "value": " Add the tool spec to the prompt so smaller models call it correctly.",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
-    "text.8bef5564eee0": {
-      "type": "text",
-      "source": " Image-capable entries are marked below; pass one key to runMaze, e.g. { model: \"vision\" }.",
-      "value": " Image-capable entries are marked below; pass one key to runMaze, e.g. { model: \"vision\" }.",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.8c51e6f6dd25": {
@@ -2509,17 +2548,6 @@
       "value": "S",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.8e672fb8cb81": {
-      "type": "text",
-      "source": "You are navigating a maze.\nYou are called only at JUNCTIONS (2+ open directions).\nYou get an ASCII map; turn on includeImage below if you also want a picture.\nCorridors are auto-walked, so your position can jump several cells between calls.\nChoose ONE direction from \"Allowed moves this turn\" and call choose_direction().\nDo not repeat a direction listed under \"Already tried here.\"\nWhen every branch is exhausted, take the allowed backtrack and continue.\nPrefer unvisited branches (-) over visited cells (·), and head toward G when you can see it.\nMinimize reasoning efforts and make immediate moves.",
-      "value": "您正在探索一个迷宫。仅在岔路口（有 2 个以上可行方向）才会调用您。您会收到一幅 ASCII 地图；如果还需要图片，请在下方启用 includeImage。系统会自动走过走廊，因此两次调用之间，位置可能会跨越多个单元格。从“Allowed moves this turn”中选择 ONE 个方向，然后调用 choose_direction()。不要重复“Already tried here.”下列出的方向。当所有分支都已探索完毕时，请沿允许的回退方向移动并继续探索。优先选择未访问的分支（-），而不是已访问的单元格（·）；看到 G 时，请朝它前进。尽量减少推理，立即移动。"
-    },
-    "text.8ee662902f2b": {
-      "type": "text",
-      "source": " reads images + tools",
-      "value": " reads images + tools",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
     "text.8f527220a0b5": {
       "type": "text",
       "source": " Check HTTP status before parsing so failures show the real response body.",
@@ -2537,11 +2565,11 @@
       "value": "#S...............G#",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.91a45bd811a1": {
+    "text.919ee417a7c9": {
       "type": "text",
-      "source": "qwen/qwen3.5-122b-a10b",
-      "value": "qwen/qwen3.5-122b-a10b",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "source": " Capability-checked choices for this tool-calling maze task.",
+      "value": " Capability-checked choices for this tool-calling maze task.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.9353bfb7fb04": {
       "type": "text",
@@ -2596,6 +2624,18 @@
       "source": "Run the engine first to export the maze utilities and state.runMaze. Then use the editable maze-agent node: begin with DIRECTIVE and change one option at a time, including model, advanced, text, image, history, coordinates, or tool schema.",
       "value": "先运行引擎，导出迷宫实用工具和 state.runMaze。然后使用可编辑的迷宫智能体节点：从 DIRECTIVE 开始，每次只更改一个选项，包括 model、advanced、text、image、history、coordinates 或 tool schema。"
     },
+    "text.96d0c6a06c95": {
+      "type": "text",
+      "source": "tool-calling",
+      "value": "tool-calling",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.96d0c6a06c95~1": {
+      "type": "text",
+      "source": "tool-calling",
+      "value": "tool-calling",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
     "text.9739e9e246b8": {
       "type": "text",
       "source": "goal via corridor · ",
@@ -2647,12 +2687,6 @@
       "value": "POST",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.9d7de0441056": {
-      "type": "text",
-      "source": "Nemotron Super 120B · stronger",
-      "value": "Nemotron Super 120B · stronger",
-      "untranslated": "Model selector display label; preserve the complete label in English"
-    },
     "text.9d8a7d595009": {
       "type": "text",
       "source": " Auto-walk before feedback so the model sees the actual new position.",
@@ -2663,12 +2697,6 @@
       "type": "text",
       "source": " Now at ",
       "value": " 当前位置："
-    },
-    "text.9ea3e4fbe08f": {
-      "type": "text",
-      "source": " All knobs are optional. opts.model defaults to the multimodal omni model.",
-      "value": " All knobs are optional. opts.model defaults to the multimodal omni model.",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.9edefa8b0fdd": {
       "type": "text",
@@ -2776,12 +2804,6 @@
       "type": "text",
       "source": "OUTPUT FORMAT. Reply ONLY by calling this function (no prose, no plain text):",
       "value": "OUTPUT FORMAT。请调用此函数回复 ONLY（不要使用说明性文字或纯文本）："
-    },
-    "text.a59ed181e426": {
-      "type": "text",
-      "source": " multimodal reasoning model (reads images)",
-      "value": " multimodal reasoning model (reads images)",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.a5b08a6829bb": {
       "type": "text",
@@ -2922,17 +2944,17 @@
       "source": " msgs",
       "value": " 条消息"
     },
-    "text.b358631a69c0": {
+    "text.b304adc33719": {
       "type": "text",
-      "source": "nvidia/nemotron-3-super-120b-a12b",
-      "value": "nvidia/nemotron-3-super-120b-a12b",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "source": "streaming",
+      "value": "streaming",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
     },
-    "text.b358631a69c0~1": {
+    "text.b304adc33719~1": {
       "type": "text",
-      "source": "nvidia/nemotron-3-super-120b-a12b",
-      "value": "nvidia/nemotron-3-super-120b-a12b",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "source": "streaming",
+      "value": "streaming",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
     },
     "text.b39f2870695c": {
       "type": "text",
@@ -2967,6 +2989,11 @@
       "type": "text",
       "source": ": asking model...",
       "value": "：正在询问模型..."
+    },
+    "text.b70882637398": {
+      "type": "text",
+      "source": "You are navigating a maze.\nYou are called only at JUNCTIONS (2+ open directions).\nYou get an ASCII map that marks walls, explored cells, your position, and the goal.\nCorridors are auto-walked, so your position can jump several cells between calls.\nChoose ONE direction from \"Allowed moves this turn\" and call choose_direction().\nDo not repeat a direction listed under \"Already tried here.\"\nWhen every branch is exhausted, take the allowed backtrack and continue.\nPrefer unvisited branches (-) over visited cells (·), and head toward G when you can see it.\nMinimize reasoning efforts and make immediate moves.",
+      "value": "您正在探索一个迷宫。仅在岔路口（有 2 个以上可行方向）才会调用您。您会收到一幅标出墙壁、已探索单元格、当前位置和终点的 ASCII 地图。系统会自动走过走廊，因此两次调用之间，位置可能会跨越多个单元格。从“Allowed moves this turn”中选择 ONE 个方向，然后调用 choose_direction()。不要重复“Already tried here.”下列出的方向。当所有分支都已探索完毕时，请沿允许的回退方向移动并继续探索。优先选择未访问的分支（-），而不是已访问的单元格（·）；看到 G 时，请朝它前进。尽量减少推理，立即移动。"
     },
     "text.b70997a92d60": {
       "type": "text",
@@ -3120,23 +3147,11 @@
       "value": " ── Edit this freely: it becomes the CORE of the system message. ──",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
-    "text.c32b9f383c65": {
-      "type": "text",
-      "source": " Model choices for this tool-calling maze task; every entry supports tool calls.",
-      "value": " Model choices for this tool-calling maze task; every entry supports tool calls.",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
     "text.c3641f8544d7": {
       "type": "text",
       "source": "@",
       "value": "@",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.c384b3fecff4": {
-      "type": "text",
-      "source": " text reasoning model",
-      "value": " text reasoning model",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.c4310c128f97": {
       "type": "text",
@@ -3503,6 +3518,18 @@
       "source": "Using a language model to choose maze moves",
       "value": "使用语言模型选择迷宫移动动作"
     },
+    "text.e661f4c935e8": {
+      "type": "text",
+      "source": "generation",
+      "value": "generation",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.e661f4c935e8~1": {
+      "type": "text",
+      "source": "generation",
+      "value": "generation",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
     "text.e8c84d27732d": {
       "type": "text",
       "source": "Pressing Run returns whatever the model produced for that single call, and running it again may give a different response because each call is independent with no shared state between them.",
@@ -3560,22 +3587,10 @@
       "source": "LLM maze run · model chooses moves",
       "value": "LLM 迷宫运行 · 模型选择移动动作"
     },
-    "text.ee01943c656e": {
-      "type": "text",
-      "source": " ── model selection (pick a key from state.MAZE_MODELS, an id string, or an object) ──",
-      "value": " ── model selection (pick a key from state.MAZE_MODELS, an id string, or an object) ──",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
     "text.eef7a51540c1": {
       "type": "text",
       "source": "Maze engine",
       "value": "迷宫引擎"
-    },
-    "text.efdb5576d726": {
-      "type": "text",
-      "source": "Nemotron Nano 30B · fast",
-      "value": "Nemotron Nano 30B · fast",
-      "untranslated": "Model selector display label; preserve the complete label in English"
     },
     "text.f096753f7dee": {
       "type": "text",
@@ -3643,24 +3658,6 @@
       "source": " Show the exact model request in a collapsible panel before each call.",
       "value": " Show the exact model request in a collapsible panel before each call.",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
-    "text.fa24955a1723": {
-      "type": "text",
-      "source": "nvidia/nemotron-3-nano-30b-a3b",
-      "value": "nvidia/nemotron-3-nano-30b-a3b",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.fa24955a1723~1": {
-      "type": "text",
-      "source": "nvidia/nemotron-3-nano-30b-a3b",
-      "value": "nvidia/nemotron-3-nano-30b-a3b",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.fa24955a1723~2": {
-      "type": "text",
-      "source": "nvidia/nemotron-3-nano-30b-a3b",
-      "value": "nvidia/nemotron-3-nano-30b-a3b",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
     "text.fcb5f40df9be": {
       "type": "text",

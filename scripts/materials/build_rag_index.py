@@ -35,7 +35,7 @@ EMBED_BASE_URL = os.environ.get(
 ).rstrip("/")
 EMBED_URL = f"{EMBED_BASE_URL}/embeddings"
 API_KEY = os.environ.get("NVIDIA_API_KEY", "").strip()
-MODEL = "nvidia/llama-nemotron-embed-1b-v2"
+MODEL = "nvidia/llama-nemotron-embed-vl-1b-v2"
 OUT = ROOT / "web" / "nemoclaw" / "assets" / "rag_index.json"
 
 # Source of truth for the DEFAULT corpus + examples. Mirror these in #rag-cell verbatim.

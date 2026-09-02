@@ -97,24 +97,52 @@ def translation_sha(raw: str) -> str:
 
 
 class EditorialText(HTMLParser):
-    """Hash learner-visible wording while excluding executable runtime implementation."""
+    """Hash an explicit style sample, or all visible prose for legacy references."""
 
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.skip_depth = 0
-        self.parts: list[str] = []
+        self.pin_depth = 0
+        self.pin_seen = False
+        self.stack: list[tuple[str, bool, bool]] = []
+        self.all_parts: list[str] = []
+        self.pinned_parts: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag in {"script", "style"}:
+        values = {key: value or "" for key, value in attrs}
+        skipped = tag in {"script", "style"}
+        pinned = values.get("data-editorial-pin") == "1"
+        if skipped:
             self.skip_depth += 1
+        if pinned:
+            self.pin_depth += 1
+            self.pin_seen = True
+        if tag not in VOID_ELEMENTS:
+            self.stack.append((tag, skipped, pinned))
 
     def handle_endtag(self, tag: str) -> None:
-        if tag in {"script", "style"} and self.skip_depth:
-            self.skip_depth -= 1
+        index = next(
+            (index for index in range(len(self.stack) - 1, -1, -1)
+             if self.stack[index][0] == tag),
+            -1,
+        )
+        if index < 0:
+            return
+        removed = self.stack[index:]
+        del self.stack[index:]
+        self.skip_depth = max(0, self.skip_depth - sum(item[1] for item in removed))
+        self.pin_depth = max(0, self.pin_depth - sum(item[2] for item in removed))
 
     def handle_data(self, data: str) -> None:
         if not self.skip_depth and data.strip():
-            self.parts.append(" ".join(data.split()))
+            text = " ".join(data.split())
+            self.all_parts.append(text)
+            if self.pin_depth:
+                self.pinned_parts.append(text)
+
+    @property
+    def parts(self) -> list[str]:
+        return self.pinned_parts if self.pin_seen else self.all_parts
 
 
 def editorial_sha(raw: str) -> str:
