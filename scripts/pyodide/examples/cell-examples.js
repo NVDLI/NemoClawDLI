@@ -244,7 +244,7 @@ if websocket_url:
 
 request = {
     "base_url": inputs.get("base_url", "https://integrate.api.nvidia.com/v1"),
-    "model": inputs.get("model", "nvidia/nemotron-3-nano-30b-a3b"),
+    "model": inputs.get("model", "nvidia/nemotron-3.5-lightning-30b-a3b"),
     "messages": [{"role": "user", "content": user_message}],
     "max_tokens": 120,
 }

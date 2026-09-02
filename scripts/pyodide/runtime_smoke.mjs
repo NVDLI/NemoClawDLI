@@ -98,7 +98,7 @@ for (const example of EXAMPLES) {
     user_input: example.input,
     history: [],
     base_url: "https://integrate.api.nvidia.com/v1",
-    model: "nvidia/nemotron-3-nano-30b-a3b",
+    model: "nvidia/nemotron-3.5-lightning-30b-a3b",
   });
   if (!reply.ok || reply.value?.example !== example.id) {
     throw new Error(`Progressive cell failed: ${example.id}: ${reply.stderr || JSON.stringify(reply.value)}`);

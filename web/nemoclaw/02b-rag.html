@@ -315,7 +315,7 @@
     </ul>
     <p>A reliable index pins the embedding model id alongside each cached vector
     and refuses to mix versions. The canonical pin for this course is
-    <code>nvidia/llama-nemotron-embed-1b-v2</code>, served through the
+    <code>nvidia/llama-nemotron-embed-vl-1b-v2</code>, served through the
     course's hosted proxy at build.nvidia.com.</p>
   </div>
 
@@ -473,8 +473,8 @@ const TOP_K = 2;
 
 
 // Basic top-K: embed, rank by cosine similarity, answer from the top chunks.
-const chunkVecs = await helpers.embed(CORPUS.map(d => d.text), { model: "nvidia/llama-nemotron-embed-1b-v2", inputType: "passage" });
-const [qVec]    = await helpers.embed(QUESTION, { model: "nvidia/llama-nemotron-embed-1b-v2", inputType: "query" });
+const chunkVecs = await helpers.embed(CORPUS.map(d => d.text), { model: "nvidia/llama-nemotron-embed-vl-1b-v2", inputType: "passage" });
+const [qVec]    = await helpers.embed(QUESTION, { model: "nvidia/llama-nemotron-embed-vl-1b-v2", inputType: "query" });
 
 const ranked = CORPUS
   .map((d, i) => ({ ...d, score: helpers.cosineSim(qVec, chunkVecs[i]) }))
@@ -606,7 +606,7 @@ helpers.log("Notice the global theme top-K misses but the community pass recover
       autorun: true,
       code: `// Try-it artifact: loads a PREBUILT vector index (corpus embedded offline by
 // Use the prebuilt corpus index, then embed only the live question each turn.
-const MODEL_PIN = "nvidia/llama-nemotron-embed-1b-v2";   // the prebuilt index is valid only for this model
+const MODEL_PIN = "nvidia/llama-nemotron-embed-vl-1b-v2";   // the prebuilt index is valid only for this model
 const CORPUS = [
   "An agent loop wraps a stateless model in a cycle: read the messages, decide, call a tool, append the result, repeat until finish_reason is stop.",
   "ReAct interleaves reasoning and acting: the model thinks, optionally calls a tool, reads the observation, and re-plans before answering.",
@@ -639,8 +639,7 @@ helpers.mountChatUI("#rag-artifact", {
   memory: true,
   greeting: "Ask about anything from this course. I embed your question, rank a small corpus by cosine similarity, and answer from the best matches. Follow-ups keep the conversation (each still retrieves fresh); the 🧠 toggle clears it, and ✎ edit rewinds.",
   models: [
-    { id: "nvidia/nemotron-3-nano-30b-a3b",    label: "Nemotron Nano 30B · fast" },
-    { id: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron Super 120B · stronger" },
+    { id: "nvidia/nemotron-3.5-lightning-30b-a3b", label: "Nemotron 3.5 Lightning 30B · fast" },
   ],
   examples: ["What is retrieval-augmented generation?", "Why use cosine similarity?", "How does the ReAct loop work?", "What is a tool, mechanically?", "What does the OpenShell sandbox do?", "What is a deep research agent?"],
   respond: async (text, ctx) => {
@@ -704,7 +703,7 @@ const EXAMPLE = 0; // Try 0, 1, 2, or 3.
 const text = EXAMPLES[EXAMPLE];
 
 const [v] = await helpers.embed(text, {
-  model:     "nvidia/llama-nemotron-embed-1b-v2",
+  model:     "nvidia/llama-nemotron-embed-vl-1b-v2",
   inputType: "passage",
 });
 const preview = v.slice(0, 16).map(x => +x.toFixed(4));
@@ -769,7 +768,7 @@ return { n_docs: state.corpus.length };
       summary: "Embeds every passage using the \'passage\' input type and stores each one as an object pairing the original text with its vector.",
       code: `// Embed the text so similarity search can compare vectors.
 const vecs = await helpers.embed(state.corpus, {
-  model:     "nvidia/llama-nemotron-embed-1b-v2",
+  model:     "nvidia/llama-nemotron-embed-vl-1b-v2",
   inputType: "passage",
 });
 state.index = state.corpus.map((text, i) => ({ text, vector: vecs[i] }));
@@ -791,7 +790,7 @@ return state.query;
       summary: "Embeds the query with the 'query' input type, cosine-scores it against every passage, and returns the top three.",
       code: `// Embed the text so similarity search can compare vectors.
 const [qv] = await helpers.embed(state.query, {
-  model:     "nvidia/llama-nemotron-embed-1b-v2",
+  model:     "nvidia/llama-nemotron-embed-vl-1b-v2",
   inputType: "query",
 });
 state.qv = qv;
@@ -852,7 +851,7 @@ return { n_chunks: state.chunks.length, per_doc: state.docs.map(d => ({ id: d.id
       summary: "Embeds child chunks for precise search, then returns the matching parent document for context.",
       code: `// Embed the text so similarity search can compare vectors.
 const vecs = await helpers.embed(state.chunks.map(c => c.text), {
-  model:     "nvidia/llama-nemotron-embed-1b-v2",
+  model:     "nvidia/llama-nemotron-embed-vl-1b-v2",
   inputType: "passage",
 });
 state.chunkIndex = state.chunks.map((c, i) => ({ ...c, vector: vecs[i] }));
@@ -876,7 +875,7 @@ return state.query;
       code: `// Reading guide: the retrieval happens first: embed the query, score chunks, pick the
 // top hit, then return that hit's parent document. The lower half renders the score bars and cards.
 const [qv] = await helpers.embed(state.query, {
-  model:     "nvidia/llama-nemotron-embed-1b-v2",
+  model:     "nvidia/llama-nemotron-embed-vl-1b-v2",
   inputType: "query",
 });
 const scored = state.chunkIndex.map(c => ({ ...c, score: helpers.cosineSim(qv, c.vector) }));

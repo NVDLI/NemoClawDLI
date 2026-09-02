@@ -224,6 +224,8 @@ def _live_capabilities(course: Path) -> list[str]:
     capabilities: set[str] = set()
     if re.search(r"https://integrate\.api\.nvidia\.com(?:/|[\"'])", text, re.I) or "X-BILLING-INVOKE-ORIGIN" in text:
         capabilities.update(("model-request", "model-stream"))
+    if re.search(r"/(?:v1/)?embeddings(?=[\"'`/?#\s])", text, re.I):
+        capabilities.add("embedding-request")
     if "/cli/gateway" in text:
         capabilities.add("openclaw-gateway")
     if "/ws/terminal" in text:

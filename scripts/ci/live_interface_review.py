@@ -30,10 +30,19 @@ MODEL_ENDPOINTS = {
     "direct": "https://integrate.api.nvidia.com/v1/chat/completions",
     "relay": "https://nvidia-api-cors-proxy.experiments.courses.nvidia.com/v1/chat/completions",
 }
-MODELS = ("nvidia/nemotron-nano-12b-v2-vl", "nvidia/nemotron-3-nano-30b-a3b")
+EMBEDDING_ENDPOINTS = {
+    "direct": "https://integrate.api.nvidia.com/v1/embeddings",
+    "relay": "https://nvidia-api-cors-proxy.experiments.courses.nvidia.com/v1/embeddings",
+}
+MODELS = (
+    "nvidia/nemotron-3.5-lightning-30b-a3b",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+)
+EMBEDDING_MODEL = "nvidia/llama-nemotron-embed-vl-1b-v2"
 CDN_ORIGIN = "https://cdn.dli.learn.nvidia.com"
 CAPABILITY_PROBES = {
     "assessment": "candidate-required-gate",
+    "embedding-request": "trusted-live-model",
     "model-request": "trusted-live-model",
     "model-stream": "trusted-live-model",
     "openclaw-chat": "trusted-live-runtime",
@@ -225,49 +234,87 @@ def _valid_model_body(data: bytes, stream: bool) -> bool:
 
 def _model(
     name: str, endpoint: str, key: str, browser_origin: str,
-    attribution: str, stream: bool,
+    attribution: str, stream: bool, model: str,
 ) -> dict[str, object]:
     started = time.monotonic()
     last_status = 0
-    for model in MODELS:
-        body = json.dumps({
-            "model": model,
-            "messages": [{"role": "user", "content": "Reply OK."}],
-            "temperature": 0,
-            "max_tokens": 2,
-            "stream": stream,
-        }).encode()
-        request = urllib.request.Request(endpoint, data=body, method="POST", headers={
-            "Authorization": f"Bearer {key}",
-            "Content-Type": "application/json",
-            "Accept": "text/event-stream" if stream else "application/json",
-            "Origin": browser_origin,
-            "X-BILLING-INVOKE-ORIGIN": attribution,
-        })
-        try:
-            with MODEL_OPENER.open(request, timeout=60) as response:
-                last_status = response.status
-                data = response.read(1_048_577)
-                allowed_origin = response.headers.get("Access-Control-Allow-Origin", "")
-                if (
-                    len(data) <= 1_048_576 and response.status == 200
-                    and allowed_origin in {"*", browser_origin}
-                    and _valid_model_body(data, stream)
-                ):
-                    return {
-                        "id": name, "ok": True,
-                        "duration_ms": int((time.monotonic() - started) * 1000),
-                        "status_class": 2,
-                    }
-        except urllib.error.HTTPError as exc:
-            last_status = exc.code
-        except (OSError, TimeoutError):
-            last_status = 0
+    body = json.dumps({
+        "model": model,
+        "messages": [{"role": "user", "content": "Reply with the single word OK."}],
+        "temperature": 0,
+        "max_tokens": 2048,
+        "stream": stream,
+    }).encode()
+    request = urllib.request.Request(endpoint, data=body, method="POST", headers={
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "Accept": "text/event-stream" if stream else "application/json",
+        "Origin": browser_origin,
+        "X-BILLING-INVOKE-ORIGIN": attribution,
+    })
+    try:
+        with MODEL_OPENER.open(request, timeout=120) as response:
+            last_status = response.status
+            data = response.read(1_048_577)
+            allowed_origin = response.headers.get("Access-Control-Allow-Origin", "")
+            if (
+                len(data) <= 1_048_576 and response.status == 200
+                and allowed_origin in {"*", browser_origin}
+                and _valid_model_body(data, stream)
+            ):
+                return {
+                    "id": name, "ok": True,
+                    "duration_ms": int((time.monotonic() - started) * 1000),
+                    "status_class": 2,
+                }
+    except urllib.error.HTTPError as exc:
+        last_status = exc.code
+    except (OSError, TimeoutError):
+        last_status = 0
     return {
         "id": name, "ok": False,
         "duration_ms": int((time.monotonic() - started) * 1000),
         "status_class": last_status // 100,
     }
+
+
+def _embedding(
+    name: str, endpoint: str, key: str, browser_origin: str, attribution: str,
+) -> dict[str, object]:
+    started = time.monotonic()
+    status = 0
+    body = json.dumps({
+        "model": EMBEDDING_MODEL,
+        "input": ["live embedding probe"],
+        "input_type": "query",
+        "encoding_format": "float",
+    }).encode()
+    request = urllib.request.Request(endpoint, data=body, method="POST", headers={
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "Origin": browser_origin,
+        "X-BILLING-INVOKE-ORIGIN": attribution,
+    })
+    try:
+        with MODEL_OPENER.open(request, timeout=120) as response:
+            status = response.status
+            data = response.read(1_048_577)
+            payload = json.loads(data)
+            rows = payload.get("data") if isinstance(payload, dict) else None
+            vector = rows[0].get("embedding") if isinstance(rows, list) and rows and isinstance(rows[0], dict) else None
+            ok = (
+                len(data) <= 1_048_576 and status == 200
+                and response.headers.get("Access-Control-Allow-Origin", "") in {"*", browser_origin}
+                and isinstance(vector, list) and len(vector) == 2048
+                and all(isinstance(value, (int, float)) for value in vector)
+            )
+            if ok:
+                return {"id": name, "ok": True, "duration_ms": int((time.monotonic() - started) * 1000), "status_class": 2}
+    except urllib.error.HTTPError as exc:
+        status = exc.code
+    except (OSError, TimeoutError, json.JSONDecodeError, TypeError):
+        status = 0
+    return {"id": name, "ok": False, "duration_ms": int((time.monotonic() - started) * 1000), "status_class": status // 100}
 
 
 def review(request: dict[str, object], retain: Path | None = None) -> list[dict[str, object]]:
@@ -277,14 +324,22 @@ def review(request: dict[str, object], retain: Path | None = None) -> list[dict[
     results = [
         _preflight("model-direct-cdn-cors", MODEL_ENDPOINTS["direct"], CDN_ORIGIN),
         _preflight("model-relay-pages-cors", MODEL_ENDPOINTS["relay"], project_pages_origin),
+        _preflight("embedding-direct-cdn-cors", EMBEDDING_ENDPOINTS["direct"], CDN_ORIGIN),
+        _preflight("embedding-relay-pages-cors", EMBEDDING_ENDPOINTS["relay"], project_pages_origin),
     ]
     for route, endpoint in MODEL_ENDPOINTS.items():
         browser_origin = CDN_ORIGIN if route == "direct" else project_pages_origin
-        for stream in (False, True):
-            results.append(_model(
-                f"nemoclaw-model-{route}-{'stream' if stream else 'request'}",
-                endpoint, api_key, browser_origin, "dli-nemoclaw-web", stream,
-            ))
+        for model in MODELS:
+            model_label = model.replace("/", "-").replace(".", "-")
+            for stream in (False, True):
+                results.append(_model(
+                    f"nemoclaw-model-{route}-{model_label}-{'stream' if stream else 'request'}",
+                    endpoint, api_key, browser_origin, "dli-nemoclaw-web", stream, model,
+                ))
+        results.append(_embedding(
+            f"nemoclaw-embedding-{route}", EMBEDDING_ENDPOINTS[route], api_key,
+            browser_origin, "dli-nemoclaw-web",
+        ))
 
     targets = request.get("targets")
     if not isinstance(targets, list) or not targets:

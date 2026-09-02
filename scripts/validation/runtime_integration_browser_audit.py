@@ -238,7 +238,7 @@ async function open(browser, pageName, init) {
       const shared = await import('./scripts/_shared.js?route-audit=' + Date.now());
       const rag = await import('./scripts/_rag.js?route-audit=' + Date.now());
       await shared.chat({
-        model: 'nvidia/nemotron-3-nano-30b-a3b',
+        model: 'nvidia/nemotron-3.5-lightning-30b-a3b',
         messages: [{ role: 'user', content: 'route check' }],
         max_tokens: 8,
       });
@@ -247,7 +247,7 @@ async function open(browser, pageName, init) {
       shared.setEmbeddingApiBaseUrl('https://embedding.example.test/v1');
       shared.setEmbeddingModelId('embedding/provider-model');
       shared.setEmbeddingKey('test-embedding-key');
-      await rag.embed('custom embedding route', { model: 'nvidia/llama-nemotron-embed-1b-v2' });
+      await rag.embed('custom embedding route', { model: 'nvidia/llama-nemotron-embed-vl-1b-v2' });
       let jupyterError = '';
       try { shared.normalizeModelApiBaseUrl('https://jupyter-example.brevlab.com/lab'); }
       catch (error) { jupyterError = error.message; }
@@ -269,7 +269,7 @@ async function open(browser, pageName, init) {
     const embedding = results.modelRoutes.requests.find(item => item.url === 'https://integrate.api.nvidia.com/v1/embeddings');
     const customEmbedding = results.modelRoutes.requests.find(item => item.url === 'https://embedding.example.test/v1/embeddings');
     if (results.modelRoutes.chat.model !== 'nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8' ||
-        results.modelRoutes.embedding.model !== 'nvidia/llama-nemotron-embed-1b-v2' ||
+        results.modelRoutes.embedding.model !== 'nvidia/llama-nemotron-embed-vl-1b-v2' ||
         results.modelRoutes.customEmbedding.model !== 'embedding/provider-model' ||
         !/Jupyter \/lab URL is not a model API/.test(results.modelRoutes.jupyterError) ||
         custom.some(item => item.credentials !== 'include' ||
@@ -287,6 +287,40 @@ async function open(browser, pageName, init) {
       fail('persistent model route handoff failed: ' + JSON.stringify(results.modelRoutes));
     }
     if (errors.length) fail('model route browser errors: ' + JSON.stringify(errors));
+    await page.close();
+  }
+
+  // Original 2b RAG route: exact model pin, vector shape, and semantic anchor.
+  {
+    const { page, errors } = await open(browser, '02b-rag.html');
+    results.prebuiltRagIndex = await page.evaluate(async () => {
+      const rag = await import('./scripts/_rag.js?prebuilt-index-audit=' + Date.now());
+      const response = await fetch('./assets/rag_index.json');
+      const index = await response.json();
+      const query = index.queries.find(row => row.text === 'What is retrieval-augmented generation?');
+      const ranked = index.docs
+        .map(row => ({ text:row.text, score:rag.cosineSim(query.vec, row.vec) }))
+        .sort((left, right) => right.score - left.score);
+      return {
+        status: response.status,
+        model: index.model,
+        dim: index.dim,
+        docs: index.docs.length,
+        queries: index.queries.length,
+        shapesValid: [...index.docs, ...index.queries].every(row => row.vec.length === index.dim),
+        topText: ranked[0]?.text || '',
+        topScore: ranked[0]?.score ?? null,
+      };
+    });
+    if (results.prebuiltRagIndex.status !== 200 ||
+        results.prebuiltRagIndex.model !== 'nvidia/llama-nemotron-embed-vl-1b-v2' ||
+        results.prebuiltRagIndex.dim !== 2048 ||
+        results.prebuiltRagIndex.docs !== 8 || results.prebuiltRagIndex.queries !== 6 ||
+        !results.prebuiltRagIndex.shapesValid ||
+        !results.prebuiltRagIndex.topText.startsWith('Retrieval-augmented generation embeds')) {
+      fail('prebuilt RAG index browser contract failed: ' + JSON.stringify(results.prebuiltRagIndex));
+    }
+    if (errors.length) fail('prebuilt RAG index browser errors: ' + JSON.stringify(errors));
     await page.close();
   }
 

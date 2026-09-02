@@ -39,10 +39,15 @@ test('the model relay default covers only the exact published course origins and
     ['https://cdn.dli.learn.nvidia.com/course-static/nemoclaw/', true],
     ['https://nvdli.github.io/NemoClawDLI/nemoclaw/', true],
     ['file:course-preview.html', true],
+    ['http://127.0.0.1:4173/nemoclaw/', true],
+    ['http://localhost:8000/nemoclaw/', true],
+    ['http://staging.localhost:8000/nemoclaw/', true],
+    ['https://localhost:8443/nemoclaw/', true],
     ['http://cdn.dli.learn.nvidia.com/course-static/nemoclaw/', false],
     ['https://cdn.dli.learn.nvidia.com.example.invalid/', false],
     ['http://nvdli.github.io/NemoClawDLI/nemoclaw/', false],
     ['https://nvdli.github.io.example.invalid/NemoClawDLI/', false],
+    ['http://localhost.example.invalid/nemoclaw/', false],
     ['https://example.com/', false],
     ['data:text/html,course', false],
   ];
@@ -150,7 +155,7 @@ test('embedding route shares relay selection but keeps its own endpoint', async 
     assert.deepEqual(relayed, {
       mode:'direct',
       url:'https://nvidia-api-cors-proxy.experiments.courses.nvidia.com/v1',
-      model:'nvidia/llama-nemotron-embed-1b-v2',
+      model:'nvidia/llama-nemotron-embed-vl-1b-v2',
       needsKey:true,
       iframeProxy:true,
     });

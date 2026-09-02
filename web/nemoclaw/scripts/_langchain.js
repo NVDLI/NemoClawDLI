@@ -211,10 +211,10 @@ export async function coursePage(pageId) {
 
 // Advertised context windows for the models the artifacts expose.
 // The chat uses these to show how full the window is and warn before it overflows.
-// Both Nemotron-3 models ship a 256K window.
+// Advertised model-card context windows for course models.
 export const CONTEXT_WINDOWS = {
-  "nvidia/nemotron-3-nano-30b-a3b":    262144,
-  "nvidia/nemotron-3-super-120b-a12b": 262144,
+  "nvidia/nemotron-3.5-lightning-30b-a3b": 1000000,
+  "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": 262144,
 };
 export function contextWindow(model) {
   /* @doc <code>helpers.contextWindow(model)</code> returns a model's advertised context-window size in tokens.

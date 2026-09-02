@@ -274,7 +274,7 @@ const pages = helpers.coursePages();
 state.pages = pages.slice(0, 5);
 const overview = await helpers.coursePage("overview");
 const snippet = String(overview).slice(0, 1200);
-const modelWindow = helpers.contextWindow("nvidia/nemotron-3-nano-30b-a3b");
+const modelWindow = helpers.contextWindow("nvidia/nemotron-3.5-lightning-30b-a3b");
 helpers.log("first pages", state.pages);
 helpers.log({ estimatedTokens: helpers.estimateTokens(snippet), contextWindow: modelWindow, chars: snippet.length });
 helpers.log.details("coursePage usage", 'Use helpers.coursePage("01a-loop") from lesson pages; this scripts page uses "overview" because it is nested one directory deeper.');

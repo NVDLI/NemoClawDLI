@@ -185,6 +185,7 @@ class LiveReviewBoundaryTests(unittest.TestCase):
         result = live_interface_review._model(
             "model", "https://integrate.api.nvidia.com/v1/chat/completions", "key",
             "https://cdn.dli.learn.nvidia.com", "dli-nemoclaw-web", False,
+            "nvidia/nemotron-3.5-lightning-30b-a3b",
         )
         request = model_open.call_args.args[0]
         headers = {name.lower(): value for name, value in request.header_items()}
@@ -198,6 +199,7 @@ class LiveReviewBoundaryTests(unittest.TestCase):
         result = live_interface_review._model(
             "model", "https://integrate.api.nvidia.com/v1/chat/completions", "key",
             "https://cdn.dli.learn.nvidia.com", "dli-nemoclaw-web", False,
+            "nvidia/nemotron-3.5-lightning-30b-a3b",
         )
         self.assertFalse(result["ok"])
 
@@ -210,8 +212,21 @@ class LiveReviewBoundaryTests(unittest.TestCase):
         result = live_interface_review._model(
             "model", "https://integrate.api.nvidia.com/v1/chat/completions", "key",
             "https://cdn.dli.learn.nvidia.com", "dli-nemoclaw-web", False,
+            "nvidia/nemotron-3.5-lightning-30b-a3b",
         )
         self.assertFalse(result["ok"])
+
+    @patch("scripts.ci.live_interface_review.MODEL_OPENER.open")
+    def test_embedding_probe_requires_exact_vector_shape(self, model_open) -> None:
+        body = json.dumps({"data": [{"embedding": [0.0] * 2048}]}).encode()
+        model_open.return_value = _Response(body, headers={"Access-Control-Allow-Origin": "*"})
+        result = live_interface_review._embedding(
+            "embedding", "https://integrate.api.nvidia.com/v1/embeddings", "key",
+            "https://cdn.dli.learn.nvidia.com", "dli-nemoclaw-web",
+        )
+        request = model_open.call_args.args[0]
+        self.assertTrue(result["ok"])
+        self.assertEqual(live_interface_review.EMBEDDING_MODEL, json.loads(request.data)["model"])
 
     def test_model_body_contract_requires_assistant_content_and_complete_sse(self) -> None:
         self.assertTrue(live_interface_review._valid_model_body(

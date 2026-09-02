@@ -299,7 +299,7 @@ mountRunCell("#cell-finish-reason", {
   intro: "Compare a direct answer with a tool request. Watch finish_reason change before building the complete loop.",
   code: `// MODEL is the swappable brain. Change it and rerun to see whether a stronger model
 // stops or asks for the tool on these same two questions.
-const MODEL = "nvidia/nemotron-3-nano-30b-a3b";   // or "nvidia/nemotron-3-super-120b-a12b" for a stronger brain
+const MODEL = "nvidia/nemotron-3.5-lightning-30b-a3b";
 
 // Call 1 · no tools offered. The model can answer, so it stops on its own.
 const r1 = await chat({
@@ -384,7 +384,7 @@ return state.execTool("get_current_time");
       summary: "Runs the ReAct cycle until finish_reason is 'stop'. Edit MODEL to compare another model.",
       code: `// MODEL is the swappable brain in the reasoning slot. Change it and rerun to drive the
 // same loop with a different model.
-const MODEL = "nvidia/nemotron-3-nano-30b-a3b";   // or "nvidia/nemotron-3-super-120b-a12b" for a stronger brain
+const MODEL = "nvidia/nemotron-3.5-lightning-30b-a3b";
 // Backstop for runaway tool loops during the demo.
 const max_steps = 12;
 
@@ -476,8 +476,7 @@ function getAgent(model) {
 helpers.mountChatUI(document.getElementById("react-artifact"), {
   modules: PAGES,
   models: [
-    { id: "nvidia/nemotron-3-nano-30b-a3b",    label: "Nemotron Nano 30B · fast" },
-    { id: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron Super 120B · stronger" },
+    { id: "nvidia/nemotron-3.5-lightning-30b-a3b", label: "Nemotron 3.5 Lightning 30B · fast" },
   ],
   greeting: "Ask me anything about the course. I read the relevant pages before I answer.",
   examples: [

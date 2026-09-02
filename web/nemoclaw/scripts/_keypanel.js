@@ -107,7 +107,7 @@ export function mountKeyPanel(container, opts = {}) {
                  placeholder="https://integrate.api.nvidia.com/v1" autocomplete="off" spellcheck="false"/>
           <label>Embedding model ID</label>
           <input type="text" class="embedding-model-id" value="${_attr(embeddingModelId)}"
-                 placeholder="nvidia/llama-nemotron-embed-1b-v2" autocomplete="off" spellcheck="false"/>
+                 placeholder="nvidia/llama-nemotron-embed-vl-1b-v2" autocomplete="off" spellcheck="false"/>
           <label>Embedding API bearer key</label>
           <input type="password" class="embedding-api-key" placeholder="${getEmbeddingKey() ? "saved separately" : "nvapi-&hellip;"}" autocomplete="off" spellcheck="false"/>
         </details>
