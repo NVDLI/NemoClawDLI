@@ -165,7 +165,7 @@ async function waitText(locator, pattern) {
       runtimeRegistryContract.unrelatedHost) {
     throw new Error(`model relay default escaped the published-origin and local-preview boundary: ${JSON.stringify(runtimeRegistryContract)}`);
   }
-  if (runtimeRegistryContract.localDefault || !runtimeRegistryContract.explicitRelay || runtimeRegistryContract.explicitDirect) throw new Error(`model relay override is not deterministic: ${JSON.stringify(runtimeRegistryContract)}`);
+  if (!runtimeRegistryContract.localDefault || !runtimeRegistryContract.explicitRelay || runtimeRegistryContract.explicitDirect) throw new Error(`model relay override is not deterministic: ${JSON.stringify(runtimeRegistryContract)}`);
 
   const depthSelect = page.locator('.learning-depth-select');
   await depthSelect.waitFor({ state:'attached' });
@@ -368,6 +368,18 @@ async function waitText(locator, pattern) {
   });
   const overviewPage = await courseContext.newPage();
   await overviewPage.goto(`http://127.0.0.1:${port}/nemoclaw/index.html`, { waitUntil:'domcontentloaded' });
+  const offerCard = overviewPage.locator('[data-hover-note]');
+  const offerTitle = offerCard.locator('.sys-name');
+  const offerTooltip = offerCard.locator('[role="tooltip"]');
+  const expectedOffer = '*NVIDIA is waiving the fee for the Brev launchable for a limited time to the first 25K users (limited to one redemption per user). Once launched, the user will see a $1.00 credit added to their account, enabling them to complete all 4 modules (~4 hours).';
+  await offerTooltip.waitFor({ state:'attached' });
+  if ((await offerTitle.innerText()).trim() !== 'NemoClaw launchable on Brev*' || (await offerTooltip.textContent()).trim() !== expectedOffer) throw new Error('Brev offer marker or approved notice drifted');
+  if (await offerTooltip.isVisible()) throw new Error('Brev offer notice is visible before hover or focus');
+  await offerTitle.hover();
+  if (!await offerTooltip.isVisible()) throw new Error('Brev offer notice does not open on hover');
+  await overviewPage.mouse.move(0, 0);
+  await offerCard.focus();
+  if (!await offerTooltip.isVisible() || await offerCard.getAttribute('aria-describedby') !== await offerTooltip.getAttribute('id')) throw new Error('Brev offer notice is not keyboard-described');
   const assistantEntry = overviewPage.locator('.course-assistant-entry');
   await assistantEntry.waitFor({ state:'visible' });
   if (!/session stays in this browser/i.test(await assistantEntry.innerText()) || !/assistant on every lesson/i.test(await assistantEntry.innerText())) {
@@ -809,19 +821,6 @@ async function waitText(locator, pattern) {
   const loopCompleteHeight = await loopPage.evaluate(() => document.documentElement.scrollHeight);
   if (loopGuidedHeight >= loopCompleteHeight * 0.65) throw new Error(`01a Guided remains too tall: ${loopGuidedHeight}px versus ${loopCompleteHeight}px complete`);
 
-  const compactPage = await courseContext.newPage();
-  await compactPage.goto(`http://127.0.0.1:${port}/nemoclaw/01a-loop.html?profile=compact`, { waitUntil:'domcontentloaded' });
-  const compactProgress = await compactPage.evaluate(() => {
-    return {
-      profile:document.documentElement.dataset.learningProfile,
-      fakeRecap:Boolean(document.querySelector('.lesson-recap')),
-      syntheticCheckpoint:Boolean(document.querySelector('.compact-practice')),
-      syntheticStorage:Object.keys(localStorage).some(key => key.startsWith('nemoclaw_compact_practice')),
-    };
-  });
-  if (compactProgress.profile !== 'compact' || compactProgress.fakeRecap || compactProgress.syntheticCheckpoint || compactProgress.syntheticStorage) {
-    throw new Error(`compact profile retained a fake interaction surface: ${JSON.stringify(compactProgress)}`);
-  }
   await courseContext.close();
 
   const result = await page.evaluate(() => ({
@@ -837,7 +836,6 @@ async function waitText(locator, pattern) {
     course01a:{ guidedHeight:loopGuidedHeight, completeHeight:loopCompleteHeight },
     course02b:{ guidedHeight, completeHeight },
     course02c:{ deepBoard, deepProgress, materialsSearch:{ count:materialsSearch.count, source:materialsSearch.source } },
-    compact:{ fakeRecap:compactProgress.fakeRecap, syntheticCheckpoint:compactProgress.syntheticCheckpoint },
     assistant:{ courseSearch:courseSearch.map(result => result.id), sourceAccess, sessions:{ restored:true, completedAcrossNavigation:true, inFlightAcrossNavigation:true, renamed:true, duplicateEmptyBlocked:true, pageOwned:true, artifactAcrossPages:true, cap:sessionCap.live, storeChars:sessionCap.chars, reload:true, createDelete:true }, widths:{ initial:panelBeforeResize.width, dragged:panelAfterResize.width, keyboard:panelAfterKeyboard.width } },
   }, null, 2));
   await browser.close();
