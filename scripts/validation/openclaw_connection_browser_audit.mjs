@@ -123,7 +123,7 @@ try {
               runId, state: 'final', message: { content: [{ text: 'final-only answer' }] },
             } }, 5); return;
           }
-          const noise = '/bin/bash: 1: cannot create /proc/self/oom_score_adj: Permission denied';
+          const noise = '/usr/bin/sh: 1: cannot create /proc/self/oom_score_adj: Permission denied';
           this.emit(frame('tool', { phase: 'start', toolCallId: 'tool-1', name: 'dir_list', args: {} }), 5);
           this.emit(frame('tool', { phase: 'result', toolCallId: 'tool-1', name: 'dir_list', isError: true,
             result: { content: [{ text: `Validation failed for tool "dir_list": required properties node, path\n${noise}\nretry with exec` }] } }), 10);
