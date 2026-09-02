@@ -1480,6 +1480,26 @@ export function mountCourseFavicon(root = document) {
   root.head?.append(link);
 }
 
+export function mountHoverNotes(root = document) {
+  root.querySelectorAll("[data-hover-note]").forEach((host, index) => {
+    const title = host.querySelector(".sys-name");
+    const copy = host.dataset.hoverNote?.trim();
+    if (!title || !copy || host.dataset.hoverNoteMounted) return;
+    const id = `hover-note-${index + 1}`;
+    title.classList.add("hover-note-title");
+    title.append("*");
+    const tooltip = root.createElement("span");
+    tooltip.className = "hover-note-tooltip";
+    tooltip.id = id;
+    tooltip.role = "tooltip";
+    tooltip.textContent = copy;
+    host.append(tooltip);
+    host.setAttribute("aria-label", title.textContent.trim());
+    host.setAttribute("aria-describedby", [host.getAttribute("aria-describedby"), id].filter(Boolean).join(" "));
+    host.dataset.hoverNoteMounted = "true";
+  });
+}
+
 export function mountHeadingLinks() {
   const main = document.querySelector("main");
   if (!main) return;
@@ -1518,7 +1538,7 @@ export function mountHeadingLinks() {
 // Auto-mount on any page that ships a topbar (the lab and the full standalone).
 if (typeof document !== "undefined") {
   mountCourseFavicon();
-  const _boot = () => { mountLearningView(); mountThemeToggle(); mountLanguageMenu(); mountLearningPathCards(); mountResourceFigures(); mountGoingFurtherLayout(); mountHeadingLinks(); mountFigures(); markLiveArtifacts(); mountCourseLicenseNote(); mountCourseAssistant({ embed, defaultModel: DEFAULT_MODEL }); };
+  const _boot = () => { mountLearningView(); mountThemeToggle(); mountLanguageMenu(); mountHoverNotes(); mountLearningPathCards(); mountResourceFigures(); mountGoingFurtherLayout(); mountHeadingLinks(); mountFigures(); markLiveArtifacts(); mountCourseLicenseNote(); mountCourseAssistant({ embed, defaultModel: DEFAULT_MODEL }); };
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", _boot);
   } else {

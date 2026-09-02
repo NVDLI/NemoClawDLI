@@ -114,6 +114,17 @@ body {
 .language-menu-popover a:hover, .language-menu-popover a:focus { background: var(--e2); color: var(--gs); outline: none; }
 .language-menu-popover a[aria-current="page"]::before { content: "✓"; color: var(--g); margin-right: 3px; }
 .language-menu-popover small { color: var(--tf); font-size: .68rem; }
+.hover-note-title { display: inline-block; }
+[data-hover-note] { position: relative; }
+.hover-note-tooltip {
+  position: absolute; inset-inline-end: 0; bottom: calc(100% + 8px); z-index: 20;
+  width: min(32rem, calc(100vw - 2rem)); padding: 10px 12px;
+  border: 1px solid var(--bd); border-radius: 8px; background: var(--e1); color: var(--tx);
+  box-shadow: 0 12px 32px rgba(0,0,0,.35); font: 400 .82rem/1.45 var(--sans); text-align: start;
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+.hover-note-title:hover ~ .hover-note-tooltip,
+[data-hover-note]:focus .hover-note-tooltip { opacity: 1; visibility: visible; }
 .language-fallback-badge {
   display: inline-flex; align-items: center; margin-left: .35rem; padding: .05rem .3rem;
   border: 1px solid var(--bd); border-radius: 4px; color: var(--tf); background: var(--e2);
