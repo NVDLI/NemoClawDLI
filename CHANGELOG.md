@@ -6,7 +6,7 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 ## Unreleased
 
 - Thanks to Vadim Kudlay for reviewing the Spanish, Brazilian Portuguese, and Simplified Chinese
-  learner guidance updated by the supported NVIDIA model-role migration.
+  learner guidance for the supported NVIDIA model-role migration and course-wide runtime localization.
 - Thanks to Kevin McFall for reviewing the Spanish, Brazilian Portuguese, and Simplified Chinese
   localization source synchronization for the NVIDIA NemoClaw branding correction.
 - Thanks to Leo Huang for contributing and reviewing the Simplified Chinese localization.
