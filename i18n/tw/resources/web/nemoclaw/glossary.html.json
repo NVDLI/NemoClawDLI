@@ -1,0 +1,494 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "zh-TW",
+  "template": "web/nemoclaw/glossary.html",
+  "values": {
+    "text.379a1db0f585": {
+      "type": "text",
+      "source": "The materials catalog behind web_search · Securing Agents",
+      "value": "web_search 背後的資料目錄 · 安全代理程式"
+    },
+    "text.67a5bdf2a82d": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents",
+      "value": "NVIDIA · 安全代理程式"
+    },
+    "text.2ebd85574071": {
+      "type": "text",
+      "source": "Course home →",
+      "value": "課程首頁 →"
+    },
+    "text.76a513cd3b05": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents · reference",
+      "value": "NVIDIA · 安全代理程式 · 參考資料"
+    },
+    "rich.272ac1ac0370": {
+      "type": "rich",
+      "source": "The materials catalog behind <code>web_search</code>",
+      "value": "<code>web_search</code> 背後的資料目錄"
+    },
+    "link.bff925784f94": {
+      "type": "link",
+      "source": "\n      When an agent in this course calls the <code>web_search</code> tool you wire by hand in\n      <a href=\"01c-tools.html\">Module 1c</a>, nothing ever leaves your browser. The tool ranks the\n      course's own <strong>materials catalog</strong>, a fixed and fully inspectable corpus that ships\n      inside the page itself. That catalog is organized into two tiers, and the sections below walk\n      through the whole pipeline, from loading the catalog and running the agent's own ranking against\n      it to seeing how the corpus is kept current and reading the ranking functions line by line.\n    ",
+      "value": "\n      當本課程中的代理程式呼叫 <code>web_search</code> 工具（您會在<a href=\"01c-tools.html\">模組 1c</a>中手動接入該工具）時，任何內容都不會離開瀏覽器。該工具會對課程自帶的<strong>資料目錄</strong>進行排序；這是隨頁面一同釋出、內容固定且完全可檢查的語料庫。目錄分為兩個層級。以下各節將完整介紹這條流水線：載入目錄、執行代理程式實際使用的排序邏輯、瞭解語料庫如何保持最新，以及逐行檢視排序函式。\n    "
+    },
+    "text.2434d495d900": {
+      "type": "text",
+      "source": "How the catalog is split and served",
+      "value": "目錄如何劃分與提供"
+    },
+    "rich.84ad02acc823": {
+      "type": "rich",
+      "source": "\n      The whole backend is one static file named <code>assets/materials_index.json</code> that holds\n      <span class=\"gx-stat\" id=\"gx-count\">…</span> entries in <span class=\"gx-stat\" id=\"gx-size\">…</span>\n      and splits them into <span class=\"gx-stat\" id=\"gx-cached\">…</span> cached and <span class=\"gx-stat\" id=\"gx-od\">…</span>\n      on-demand. Because it ships in the same bundle as the page the browser loads it same-origin with no\n      key and no CORS. <code>webSearch</code> ranks both tiers together so that one query reaches a glossary\n      definition and a paper abstract through a single shared surface.\n    ",
+      "value": "\n      整個後端就是一個靜態檔案 <code>assets/materials_index.json</code>，其中包含\n      <span class=\"gx-stat\" id=\"gx-count\">…</span> 個條目，總大小為 <span class=\"gx-stat\" id=\"gx-size\">…</span>，分為 <span class=\"gx-stat\" id=\"gx-cached\">…</span> 個快取條目和 <span class=\"gx-stat\" id=\"gx-od\">…</span> 個按需條目。該檔案與頁面位於同一個課程包中，因此瀏覽器可同源載入，無須金鑰，也沒有 CORS 問題。<code>webSearch</code>\n      會統一對兩個層級排序，使一次查詢可以透過同一入口同時檢索術語定義和論文摘要。\n    "
+    },
+    "text.9fcbcc30fa3b": {
+      "type": "text",
+      "source": "Cached · the NVIDIA glossary",
+      "value": "快取層 · NVIDIA 術語表"
+    },
+    "text.c7555979fec4": {
+      "type": "text",
+      "source": "The 79-term glossary index ships in full, and seven of those terms also carry their complete\n        vendored article alongside the definition. All of that text already travels with the page so the\n        agent can quote it word for word inside the bundle without reaching across the network for a live\n        connection. The index rarely changes. Nearly every search the agent runs still draws on it and so the\n        copy riding along in the bundle earns its place in the cache many times over.",
+      "value": "79 個術語的索引會完整打包，其中 7 個術語還隨附完整的本機文章及其定義。所有這些文字都會隨頁面一同載入，因此代理程式可以直接引用課程包中的原文，無須透過網路存取即時來源。該索引很少變化，而代理程式幾乎每次搜尋都會用到它，因此將其快取到課程包中很划算。"
+    },
+    "text.746701200b91": {
+      "type": "text",
+      "source": "On-demand · papers and posts",
+      "value": "按需層 · 論文與文章"
+    },
+    "text.f38109334cc7": {
+      "type": "text",
+      "source": "Larger sources such as the arXiv abstracts and the posts from the NVIDIA developer blog ship\n        instead as a catalog card that carries a title, a short blurb, and the source URL but leaves out\n        the full text. The agent surfaces that card and follows the link out to the source whenever it needs\n        more than the blurb offers. Because these entries are bulky and far less likely to be reused than a\n        glossary definition the cache earns little by holding them and the agent fetches them fresh on\n        demand.",
+      "value": "arXiv 摘要和 NVIDIA 開發者部落格文章等較大的來源只以目錄卡片形式釋出，卡片包含標題、簡短介紹和來源 URL，不包含全文。需要的資訊超出簡介範圍時，代理程式會顯示該卡片並透過連結存取原始來源。此類條目體積較大，而且複用頻率遠低於術語定義，因此不適合快取，代理程式會在需要時重新獲取。"
+    },
+    "text.3a0412a3f0b4": {
+      "type": "text",
+      "source": "Vendored sources become a static catalog, then an in-memory cache, then ranked results without a live network call.",
+      "value": "本機收錄的來源先形成靜態目錄，再進入記憶體快取，最後在不發起即時網路請求的情況下生成排序結果。"
+    },
+    "text.57ffd9ca587a": {
+      "type": "text",
+      "source": "How it stays current (and how you would fix it)",
+      "value": "如何保持目錄最新（以及如何修復問題）"
+    },
+    "rich.48bb0cadfcc7": {
+      "type": "rich",
+      "source": "\n      A vendored corpus drifts away from its sources over time unless something actively keeps it\n      honest. That job belongs to a single script, <code>scripts/materials/pull_materials.py</code>, which is\n      written so that any drift it finds is surfaced to everyone at once and described in exactly\n      the same words.\n    ",
+      "value": "\n      如果沒有主動維護，本機收錄的語料庫會隨時間逐漸偏離原始來源。這項工作由指令碼\n      <code>scripts/materials/pull_materials.py</code> 統一完成；它會向所有人顯示發現的偏差，並使用完全一致的措辭說明問題。\n    "
+    },
+    "text.19625bf182f9": {
+      "type": "text",
+      "source": "The pull script fingerprints each source, and the same drift result appears in CLI, CI, and the validator screen.",
+      "value": "拉取指令碼會為每個來源生成指紋，同一份偏差結果會同時顯示在 CLI、CI 和驗證頁面中。"
+    },
+    "rich.71a66d1bc59b": {
+      "type": "rich",
+      "source": "\n      The loop runs like this. A contributor (or the deploy build) runs the pull, and every source gets\n      fingerprinted in <code>_materials.json</code>. Passing <code>--check</code> re-fetches each source\n      and flags any drift or outage. That same status lands on the validation screen, reachable from the\n      site's landing page or reproduced locally with <code>python3 scripts/validation/validate_bundle.py</code>, and\n      it names the exact command to fix whatever broke. Nothing about the corpus is a moving target you\n      have to trust.\n    ",
+      "value": "\n      流程如下：貢獻者（或部署建置）執行拉取操作，每個來源的指紋都會寫入 <code>_materials.json</code>。傳入 <code>--check</code> 後，指令碼會重新獲取各來源，並標記內容偏差或存取故障。同一狀態也會顯示在驗證頁面中；您可以從網站首頁進入該頁面，也可以在本機執行 <code>python3 scripts/validation/validate_bundle.py</code> 重現檢查。頁面會給出發生問題的具體來源和修復命令，因此語料庫的當前狀態始終可以自行驗證。\n    "
+    },
+    "text.57112a560c18": {
+      "type": "text",
+      "source": "Run the search the agent runs",
+      "value": "執行代理程式實際使用的搜尋"
+    },
+    "rich.c5663ca2cd70": {
+      "type": "rich",
+      "source": "\n      The cell below shows the real pipeline behind one <code>web_search</code> call drawn as one node per\n      step. Edit the query in the first node and hit <strong>Run all</strong>. The catalog loads from cache\n      and every entry across both tiers gets scored together. The surviving top matches are then formatted\n      into the exact text block the model reads back with each match's tier marked alongside it. The scoring\n      node runs the same algorithm that <code>helpers.webSearch</code> uses. Change a weight and watch the\n      ranking move.\n    ",
+      "value": "\n      下方程式碼單元以每個步驟一個節點的形式展示一次真實 <code>web_search</code> 呼叫背後的流水線。編輯第一個節點中的查詢，然後選取<strong>全部執行</strong>。目錄會從快取載入，兩個層級中的每個條目會統一評分。排名靠前的結果隨後會格式化為模型實際讀取的文字塊，並在每個匹配項旁標出所屬層級。評分節點執行的演算法與 <code>helpers.webSearch</code> 完全相同。修改權重即可觀察排名變化。\n    "
+    },
+    "text.f3d3f704839d": {
+      "type": "text",
+      "source": "Call the functions, edit and run",
+      "value": "呼叫函式、編輯並執行"
+    },
+    "rich.7f6e97a4eb7b": {
+      "type": "rich",
+      "source": "\n      Two functions back the one tool contract. <code>webSearch</code> is the broad, ranked lookup over\n      the whole catalog the agent grounds answers in; <code>instantAnswer</code> is the narrow one that\n      returns a single glossary definition only when the query names a term. Both run key-less against\n      the cached catalog: edit the queries below and Run, then open the helpers tab to read each\n      function's real source, pulled live from <code>_shared.js</code> so it cannot drift from what runs.\n    ",
+      "value": "\n      兩個函式共同支撐一個工具約定。<code>webSearch</code> 會對整個目錄執行廣泛的排序檢索，為代理程式的回答提供依據；\n      <code>instantAnswer</code> 的範圍更窄，只有當查詢明確提到某個術語時才傳回一條術語定義。二者均無須金鑰，直接使用快取目錄執行。編輯下方查詢並選取“執行”，然後開啟輔助函式選項卡檢視各函式從 <code>_shared.js</code> 即時載入的原始碼，確保展示內容與實際執行程式碼保持一致。\n    "
+    },
+    "rich.050f980fd5b3": {
+      "type": "rich",
+      "source": "Every material it can find · <span class=\"gx-stat\" id=\"gx-tcount\">…</span>",
+      "value": "可檢索的全部資料 · <span class=\"gx-stat\" id=\"gx-tcount\">…</span>"
+    },
+    "rich.014ec4f7fa1b": {
+      "type": "rich",
+      "source": "\n      The list below is the full catalog that the ranking searches over. A <span class=\"gx-badge cached\">cached</span>\n      entry carries its complete text inside the bundle and a <span class=\"gx-deep\">deep</span> glossary term\n      brings its vendored article along too under <code>mats/glossary_raw/</code>, while an <span class=\"gx-badge on_demand\">on_demand</span>\n      entry appears only as a card that links out to its source. Filter it to see what the agent could ground a claim in.\n    ",
+      "value": "\n      下方列表是排序搜尋覆蓋的完整目錄。帶有 <span class=\"gx-badge cached\">cached</span> 標記的條目會在課程包中儲存完整文字；標記為 <span class=\"gx-deep\">deep</span> 的術語還會在 <code>mats/glossary_raw/</code> 下隨附本機文章。\n      <span class=\"gx-badge on_demand\">on_demand</span> 條目僅顯示為連結到原始來源的卡片。您可以篩選列表，瞭解代理程式能夠使用哪些資料作為回答依據。\n    "
+    },
+    "attribute.0b3a38ad7c2e": {
+      "type": "attribute",
+      "source": "filter by name, tag, blurb, tier, or kind…",
+      "value": "按名稱、標籤、簡介、層級或型別篩選…"
+    },
+    "text.616cb218a65b": {
+      "type": "text",
+      "source": "Material",
+      "value": "資料"
+    },
+    "text.cb9e8664edea": {
+      "type": "text",
+      "source": "Tier",
+      "value": "層級"
+    },
+    "text.f5387f9bb6ed": {
+      "type": "text",
+      "source": "Kind",
+      "value": "型別"
+    },
+    "text.1331275bc537": {
+      "type": "text",
+      "source": "Tags",
+      "value": "標籤"
+    },
+    "text.9a7196d27d70": {
+      "type": "text",
+      "source": "Blurb",
+      "value": "簡介"
+    },
+    "text.2b0c02d86219": {
+      "type": "text",
+      "source": "How the catalog reaches a search",
+      "value": "目錄如何進入搜尋流程"
+    },
+    "text.1983e8bb3db3": {
+      "type": "text",
+      "source": "web sources",
+      "value": "網路來源"
+    },
+    "text.9fb928e0c0e3": {
+      "type": "text",
+      "source": "glossary, arXiv, blog",
+      "value": "術語表、arXiv、部落格"
+    },
+    "text.dec6d120b025": {
+      "type": "text",
+      "source": "pull_materials.py",
+      "value": "pull_materials.py",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.cdc77603ea11": {
+      "type": "text",
+      "source": "fetch + fingerprint",
+      "value": "拉取並生成指紋"
+    },
+    "text.1a6f9ac4eec1": {
+      "type": "text",
+      "source": "on build / on demand",
+      "value": "建置時 / 按需"
+    },
+    "text.2967ccc6dad8": {
+      "type": "text",
+      "source": "materials_index.json",
+      "value": "materials_index.json",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.1e7adaa16d4e": {
+      "type": "text",
+      "source": "cached + on-demand",
+      "value": "快取 + 按需"
+    },
+    "text.58f46b0392eb": {
+      "type": "text",
+      "source": "ships in the bundle",
+      "value": "隨課程包釋出"
+    },
+    "text.c6162cf40019": {
+      "type": "text",
+      "source": "in-memory cache",
+      "value": "記憶體快取"
+    },
+    "text.cabac78dc937": {
+      "type": "text",
+      "source": "fetched once",
+      "value": "僅拉取一次"
+    },
+    "text.7cff7f4d18ab": {
+      "type": "text",
+      "source": "webSearch",
+      "value": "webSearch",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.a09fde7f3b16": {
+      "type": "text",
+      "source": "ranks both tiers",
+      "value": "對兩個層級排序"
+    },
+    "text.85b0bb9e2769": {
+      "type": "text",
+      "source": "no key, no network",
+      "value": "無須金鑰或聯網"
+    },
+    "text.630ba09448af": {
+      "type": "text",
+      "source": "vendor",
+      "value": "本機收錄"
+    },
+    "text.10fd874b68da": {
+      "type": "text",
+      "source": "write",
+      "value": "寫入"
+    },
+    "text.5dcec9338767": {
+      "type": "text",
+      "source": "fetch once",
+      "value": "拉取一次"
+    },
+    "text.7613e1bdb963": {
+      "type": "text",
+      "source": "every query",
+      "value": "每次查詢"
+    },
+    "text.4efec937e50e": {
+      "type": "text",
+      "source": "Keeping the corpus honest",
+      "value": "確保語料庫真實可靠"
+    },
+    "text.c5f5571c2c9c": {
+      "type": "text",
+      "source": "pull",
+      "value": "拉取"
+    },
+    "text.dec6d120b025~1": {
+      "type": "text",
+      "source": "pull_materials.py",
+      "value": "pull_materials.py",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.5799f3ba2513": {
+      "type": "text",
+      "source": "rebase to the web",
+      "value": "同步到 Web"
+    },
+    "text.8a0f1744019b": {
+      "type": "text",
+      "source": "_materials.json",
+      "value": "_materials.json",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.a3b1dde1ae37": {
+      "type": "text",
+      "source": "url + sha256",
+      "value": "URL + SHA-256"
+    },
+    "text.779b85f4e63d": {
+      "type": "text",
+      "source": "per source",
+      "value": "逐個來源"
+    },
+    "text.931bd06269ec": {
+      "type": "text",
+      "source": "--check",
+      "value": "--check",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.8012ccdf0c75": {
+      "type": "text",
+      "source": "re-fetch + compare",
+      "value": "重新獲取並比較"
+    },
+    "text.4a6b2204c044": {
+      "type": "text",
+      "source": "ok / drifted / unreachable",
+      "value": "正常 / 有偏差 / 無法存取"
+    },
+    "text.e7ec5b4d2ef0": {
+      "type": "text",
+      "source": "validator screen",
+      "value": "驗證頁面"
+    },
+    "text.572b4ab31078": {
+      "type": "text",
+      "source": "names the source",
+      "value": "指出具體來源"
+    },
+    "text.28cf967c2dbf": {
+      "type": "text",
+      "source": "+ the fix command",
+      "value": "+ 修復命令"
+    },
+    "text.44863b03e990": {
+      "type": "text",
+      "source": "fingerprint",
+      "value": "生成指紋"
+    },
+    "text.1241626eb8ca": {
+      "type": "text",
+      "source": "compare",
+      "value": "比較"
+    },
+    "text.845e91831319": {
+      "type": "text",
+      "source": "report",
+      "value": "報告"
+    },
+    "text.f390067ed94d": {
+      "type": "text",
+      "source": "materials search · query in, ranked entries out",
+      "value": "資料搜尋 · 輸入查詢，輸出排序後的條目"
+    },
+    "text.bf6fb2d32003": {
+      "type": "text",
+      "source": "Edit the query, then run the real web_search steps over the unified catalog. This local pipeline needs no API key.",
+      "value": "編輯查詢，然後對統一目錄執行真實的 web_search 步驟。這條本機流水線無須 API 金鑰。"
+    },
+    "text.2a9bb0a22617": {
+      "type": "text",
+      "source": "The query",
+      "value": "查詢"
+    },
+    "text.f98327bb0ac4": {
+      "type": "text",
+      "source": "Sets the web_search text. Short topical phrases usually rank names and tags better than full questions.",
+      "value": "設定 web_search 的查詢文字。與完整問題相比，簡短的主題短語通常能更好地匹配名稱和標籤。"
+    },
+    "text.24834c56cfc8": {
+      "type": "text",
+      "source": "Load the cached catalog",
+      "value": "載入快取目錄"
+    },
+    "text.4595e482305e": {
+      "type": "text",
+      "source": "Loads cached glossary terms and on-demand materials from one same-origin catalog, then caches it for later queries.",
+      "value": "從同一個同源目錄載入快取的術語和按需資料，然後快取結果供後續查詢使用。"
+    },
+    "text.3095e35be8ca": {
+      "type": "text",
+      "source": "Score and rank every entry",
+      "value": "對所有條目評分並排序"
+    },
+    "text.87ad4c404501": {
+      "type": "text",
+      "source": "Scores exact and substring names first, followed by tag and blurb matches. Change a weight to move the ranking.",
+      "value": "先匹配完整名稱和名稱子串，再匹配標籤和簡介。修改權重即可改變排名。"
+    },
+    "text.26a290f0f00c": {
+      "type": "text",
+      "source": "Format for the model",
+      "value": "格式化為模型輸入"
+    },
+    "text.689c318f7f8b": {
+      "type": "text",
+      "source": "Formats ranked entries as the model's numbered tool result, marking cached and on-demand sources. An empty result explicitly reports no match.",
+      "value": "將排序後的條目格式化為模型讀取的編號工具結果，並標明快取來源和按需來源。沒有結果時會明確報告未找到匹配項。"
+    },
+    "text.59281a6b2935": {
+      "type": "text",
+      "source": " KB",
+      "value": " KB",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.e1ff795293b4": {
+      "type": "text",
+      "source": "one static file",
+      "value": "一個靜態檔案"
+    },
+    "text.87d05cd08817": {
+      "type": "text",
+      "source": " entries",
+      "value": " 個條目"
+    },
+    "text.031abfa15d71": {
+      "type": "text",
+      "source": "retrieval augmented generation",
+      "value": "retrieval augmented generation",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.9e009c3cf1b8": {
+      "type": "text",
+      "source": "query:",
+      "value": "查詢："
+    },
+    "text.bef9bd61f704": {
+      "type": "text",
+      "source": "assets/materials_index.json",
+      "value": "assets/materials_index.json",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.3673014e72b6": {
+      "type": "text",
+      "source": "cached",
+      "value": "已快取"
+    },
+    "text.bd87cd8f919d": {
+      "type": "text",
+      "source": "entries (",
+      "value": "個條目（"
+    },
+    "text.238c122ad9bf": {
+      "type": "text",
+      "source": " cached, ",
+      "value": " 個快取，"
+    },
+    "text.9877b5c637f9": {
+      "type": "text",
+      "source": " on-demand)",
+      "value": " 個按需）"
+    },
+    "text.072f8dd7b1c9": {
+      "type": "text",
+      "source": " Same scoring as helpers.webSearch (see \"The functions, in full\" below).",
+      "value": " Same scoring as helpers.webSearch (see \"The functions, in full\" below).",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.245843abef9e": {
+      "type": "text",
+      "source": "[",
+      "value": "[",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.cfae0d4248f7": {
+      "type": "text",
+      "source": "]",
+      "value": "]",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.afba1a0ce1c8": {
+      "type": "text",
+      "source": "materials",
+      "value": "資料"
+    },
+    "text.5faad178ee7e": {
+      "type": "text",
+      "source": " webSearch ranks the whole catalog; instantAnswer returns one term's definition.",
+      "value": " webSearch ranks the whole catalog; instantAnswer returns one term's definition.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.495185664da4": {
+      "type": "text",
+      "source": " Edit the queries and Run. Open the helpers tab above to read each one's real source.",
+      "value": " Edit the queries and Run. Open the helpers tab above to read each one's real source.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.031abfa15d71~1": {
+      "type": "text",
+      "source": "retrieval augmented generation",
+      "value": "retrieval augmented generation",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.ee682e6a687d": {
+      "type": "text",
+      "source": "webSearch found ",
+      "value": "webSearch 找到 "
+    },
+    "text.e7ac0786668e": {
+      "type": "text",
+      "source": ":",
+      "value": ":",
+      "untranslated": "reviewed code punctuation remains exactly as authored in the English source"
+    },
+    "text.6c2a81736c0f": {
+      "type": "text",
+      "source": "deep agents",
+      "value": "deep agents",
+      "untranslated": "reviewed technical identifier, file path, code token, or example query remains in English"
+    },
+    "text.452e7d4d554a": {
+      "type": "text",
+      "source": "instantAnswer:",
+      "value": "instantAnswer："
+    }
+  }
+}

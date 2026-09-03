@@ -1,0 +1,853 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "zh-TW",
+  "template": "web/nemoclaw/03b-openclaw.html",
+  "media": [
+    "web/nemoclaw/assets/figures/03b-openclaw-1.svg"
+  ],
+  "values": {
+    "link.05536e0e6c7f": {
+      "type": "link",
+      "source": "\n    <p><strong>Same runtime as Kickstart.</strong> These cells reuse the launchable\n      connected in 3a. The course exposes its gateway rather than the internal\n      <code>/v1/chat/completions</code> route. If a cell logs <code>⚠ DEGRADED</code>\n      or stalls, run Recover once for that fresh instance. A local deployment can use the\n      <a href=\"https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NemoClaw setup playbook</a>\n      and the same gateway contract.</p>\n  ",
+      "value": "\n    <p><strong>與快速入門使用相同的執行階段。</strong>這些單元會複用\n      3a 中連線的可啟動執行個體。課程開放的是執行個體閘道，而不是內部\n      <code>/v1/chat/completions</code> 路由。如果單元記錄 <code>⚠ DEGRADED</code>\n      或停滯不動，請為該新執行個體執行一次 Recover。本機部署可以使用\n      <a href=\"https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NemoClaw 設定指南</a>和相同的閘道契約。</p>\n  "
+    },
+    "link.1be52ce4d6ee": {
+      "type": "link",
+      "source": "Comprehensive list at <a href=\"04c-going-further.html#refs\">Going Further · References</a>.",
+      "value": "完整列表請參閱<a href=\"04c-going-further.html#refs\">深入探索 · 參考資料</a>。"
+    },
+    "link.30fc00714736": {
+      "type": "link",
+      "source": "<a href=\"https://docs.anthropic.com/en/docs/claude-code/overview\" target=\"_blank\" rel=\"noopener\">Claude Code</a>. The production CLI agent; live reference for how a workspace directory, persistent memory, and a tool surface fit together at scale.",
+      "value": "<a href=\"https://docs.anthropic.com/en/docs/claude-code/overview\" target=\"_blank\" rel=\"noopener\">Claude Code</a>。生產級 CLI 代理程式；可作為即時參考，瞭解工作區目錄、持久記憶和工具介面如何大規模協同工作。"
+    },
+    "link.80a3a52bed5f": {
+      "type": "link",
+      "source": "<a href=\"https://modelcontextprotocol.io\" target=\"_blank\" rel=\"noopener\">Model Context Protocol (MCP)</a>. The cross-vendor wire format CLI agents use to discover tools at runtime instead of hard-coded registration.",
+      "value": "<a href=\"https://modelcontextprotocol.io\" target=\"_blank\" rel=\"noopener\">Model Context Protocol (MCP)</a>。CLI 代理程式用於在執行階段發現工具而不採用硬編碼註冊的跨廠商通訊格式。"
+    },
+    "link.8f4288d80763": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2310.08560\" target=\"_blank\" rel=\"noopener\">Packer et al., <em>MemGPT: Towards LLMs as Operating Systems</em> (2023)</a>. The explicit-memory hierarchy behind the MEMORY.md write-and-recall loop on this page.",
+      "value": "<a href=\"https://arxiv.org/abs/2310.08560\" target=\"_blank\" rel=\"noopener\">Packer et al., <em>MemGPT: Towards LLMs as Operating Systems</em> (2023)</a>。本頁 MEMORY.md 寫入與回憶迴圈所依據的顯式記憶層次結構。"
+    },
+    "link.99f0616fbf2f": {
+      "type": "link",
+      "source": "<a href=\"https://docs.kernel.org/userspace-api/landlock.html\" target=\"_blank\" rel=\"noopener\">Landlock LSM</a>. The kernel filesystem-sandbox primitive that bounds the blast radius when the agent writes its own context.",
+      "value": "<a href=\"https://docs.kernel.org/userspace-api/landlock.html\" target=\"_blank\" rel=\"noopener\">Landlock LSM</a>。代理程式寫入自身上下文時，用於限制影響範圍的核心檔案系統沙盒原語。"
+    },
+    "link.9e7f1dc6aaac": {
+      "type": "link",
+      "source": "<a href=\"https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-safer-autonomous-agent-using-openclaw\" target=\"_blank\" rel=\"noopener\">NVIDIA, <em>How to Build a Safer Autonomous Agent using OpenClaw</em></a>. The course companion reference for OpenClaw, OpenShell, and the sandboxed-agent shape used here.",
+      "value": "<a href=\"https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-safer-autonomous-agent-using-openclaw\" target=\"_blank\" rel=\"noopener\">NVIDIA, <em>How to Build a Safer Autonomous Agent using OpenClaw</em></a>。本課程有關 OpenClaw、OpenShell 及此處所用沙盒化代理程式架構的配套參考資料。"
+    },
+    "link.a32c63c257b5": {
+      "type": "link",
+      "source": "\n    <strong>The voice is in the file.</strong> Both replies differ because the\n    runtime folded a different SOUL definition into each prompt. To change the\n    persona for real you edit that file or add a <a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">skill bundle</a> and the next turn\n    sees the change. Step 1b already had you read the live SOUL.md off the sandbox,\n    so editing it runs that same path in reverse.\n  ",
+      "value": "\n    <strong>表達風格由檔案決定。</strong>兩個回覆之所以不同，是因為執行階段將不同的\n    SOUL 定義分別納入了各自的提示詞。要真正更改角色，可以編輯該檔案或新增<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">技能包</a>，下一輪互動就會看到變化。步驟 1b 已讓您從沙盒讀取即時 SOUL.md，因此編輯該檔案就是反向執行同一條路徑。\n  "
+    },
+    "link.a87b60eb0a28": {
+      "type": "link",
+      "source": "<a href=\"https://man7.org/linux/man-pages/man2/seccomp.2.html\" target=\"_blank\" rel=\"noopener\">seccomp (man 2)</a>. The syscall-filtering layer in the kernel sandbox you meet in Module 4.",
+      "value": "<a href=\"https://man7.org/linux/man-pages/man2/seccomp.2.html\" target=\"_blank\" rel=\"noopener\">seccomp (man 2)</a>。模組 4 將介紹的核心沙盒系統呼叫過濾層。"
+    },
+    "link.c30d0b1a4d21": {
+      "type": "link",
+      "source": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">Anthropic, <em>Claude Skills</em> (docs)</a>. The file-as-context pattern OpenClaw uses: a markdown file the runtime folds into the system prompt becomes a callable agent capability.",
+      "value": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">Anthropic, <em>Claude Skills</em> (docs)</a>。OpenClaw 使用的“檔案即上下文”模式：執行階段將一個 Markdown 檔案納入系統提示詞後，該檔案便會成為可呼叫的代理程式能力。"
+    },
+    "link.cd14bf8a5e57": {
+      "type": "link",
+      "source": "Memory comes in <a href=\"https://arxiv.org/abs/2310.08560\" target=\"_blank\" rel=\"noopener\">two tiers</a>. The agent appends raw notes to a dated file\n     under <code>memory/</code> as it works, then distils the parts that\n     should persist into its curated long-term store, <code>MEMORY.md</code>.\n     The runtime loads <code>MEMORY.md</code> in the main session and leaves\n     it out of any shared or group context, so personal notes stay private.\n     You will read both straight off the live sandbox a few steps down.",
+      "value": "記憶分為<a href=\"https://arxiv.org/abs/2310.08560\" target=\"_blank\" rel=\"noopener\">兩個層級</a>。代理程式工作時會將原始筆記追加到\n     <code>memory/</code> 下按日期命名的檔案中，再把應當長期保留的內容提煉到整理後的長期儲存 <code>MEMORY.md</code> 中。執行階段會在主會話中載入 <code>MEMORY.md</code>，但不會將其納入任何共享或群組上下文，因而個人筆記仍保持私密。稍後幾個步驟中，您將直接從即時沙盒讀取這兩類檔案。"
+    },
+    "rich.358f62e56c19": {
+      "type": "rich",
+      "source": "Those stores differ in reach. Session history belongs to its session.\n     <code>MEMORY.md</code> can carry a saved fact into a new session whose transcript starts empty.",
+      "value": "這兩種儲存的作用範圍不同。會話歷史只屬於相應會話。\n     <code>MEMORY.md</code> 可以將已儲存的資訊帶入一個對話記錄為空的新會話。"
+    },
+    "rich.37cc9edf3743": {
+      "type": "rich",
+      "source": "<code>helpers.terminal(\"bash\")</code> opens the host VM shell, where\n        you can run <code>openshell sandbox list</code>.",
+      "value": "<code>helpers.terminal(\"bash\")</code> 開啟主機的 VM shell，可以在其中執行\n        <code>openshell sandbox list</code>。"
+    },
+    "rich.37dfaa1ff6d5": {
+      "type": "rich",
+      "source": "\n    <strong>The launchable has two planes of authority.</strong> The first is the\n    terminal, which runs as the operator above the sandbox boundary and can\n    therefore read every file and list the sandboxes. The agent occupies the second\n    plane. It shares the machine with the terminal but runs under the narrower\n    OpenShell policy tested in Module 4.\n  ",
+      "value": "\n    <strong>該可啟動執行個體有兩個權限平面。</strong>第一個是終端機，它以沙盒邊界上層的\n    operator 身分執行，因此能夠讀取所有檔案並列出沙盒。代理程式位於第二個平面。它與終端機共享同一臺機器，但受模組 4 中所測試的、更嚴格的 OpenShell 策略約束。\n  "
+    },
+    "rich.62e61aecc4b3": {
+      "type": "rich",
+      "source": "\n    <strong>Treat self-report as evidence.</strong> Ask the agent what its prompt contains,\n    then compare the answer with the live workspace in Step 1b:\n    <ul>\n      <li>which persona rules are active,</li>\n      <li>what is on its tool list,</li>\n      <li>or what it remembers about you.</li>\n    </ul>\n  ",
+      "value": "\n    <strong>將代理程式的自述視為證據。</strong>詢問代理程式的提示詞包含哪些內容，然後在步驟 1b 中將答案與即時工作區進行比較：\n    <ul>\n      <li>當前啟用了哪些角色規則，</li>\n      <li>工具列表中有哪些工具，</li>\n      <li>或它記得哪些資訊。</li>\n    </ul>\n  "
+    },
+    "rich.7a5c772b689c": {
+      "type": "rich",
+      "source": "Step 1 asked the agent to <em>describe</em> its files, and you do not have\n     to take its word for it. Until now your only channel has been the gateway\n     that carries your messages to the agent.",
+      "value": "步驟 1 要求代理程式<em>描述</em>自己的檔案，但您不必完全相信它的說法。到目前為止，您唯一的通道是將訊息傳遞給代理程式的閘道。"
+    },
+    "rich.8ba8b5ae8e2b": {
+      "type": "rich",
+      "source": "\n      Module 3a connected the browser to a persistent runtime. OpenClaw is the\n      <em>agent harness</em> inside that NemoClaw stack: it combines a model and tools\n      with a server-side session and a file-backed workspace.\n    ",
+      "value": "\n      模組 3a 將瀏覽器連線到了持久執行階段。OpenClaw 是該 NemoClaw 技術堆疊中的<em>代理程式框架</em>：它將模型和工具與伺服器端會話及檔案支援的工作區結合起來。\n    "
+    },
+    "rich.b75e18caa928": {
+      "type": "rich",
+      "source": "The <span>OpenClaw</span> Agent",
+      "value": "<span>OpenClaw</span> 代理程式"
+    },
+    "rich.ba804a4d7ef6": {
+      "type": "rich",
+      "source": "The launchable also exposes an operator terminal, a shell on the host\n     <em>above</em> the agent's sandbox that Cloudflare puts in front of every\n     launchable. The <code>helpers.terminal()</code> helper opens that shell\n     straight from this page through two entry points:",
+      "value": "該可啟動執行個體還提供 operator 終端機，即代理程式沙盒<em>上層</em>的主機 shell；\n     Cloudflare 會將它置於每個可啟動執行個體之前。\n     <code>helpers.terminal()</code> 輔助函式可透過兩個入口直接從本頁開啟該 shell："
+    },
+    "rich.da8874fc113d": {
+      "type": "rich",
+      "source": "\n    <strong>The session-key routing here is a lab affordance.</strong> NemoClaw's\n    image ships a stash of pre-built SOUL variants and wires a session-key suffix\n    to one of them, only so this page can show two voices in one click. Outside\n    the lab the gateway has no such stash, so two session keys would read the one\n    SOUL.md you have and return two identical replies. In production you change\n    the persona by editing SOUL.md.\n  ",
+      "value": "\n    <strong>此處基於會話鍵的路由是實驗專用功能。</strong>NemoClaw 映象附帶一組預先建置的\n    SOUL 變體，並將會話鍵字尾路由到其中一個變體，這只是為了讓本頁能夠一鍵展示兩種表達風格。在實驗之外，閘道沒有這組變體，因此兩個會話鍵都會讀取您唯一的\n    SOUL.md，並傳回兩個相同的回覆。在生產環境中，您需要透過編輯 SOUL.md 來更改角色。\n  "
+    },
+    "rich.db0dcea49173": {
+      "type": "rich",
+      "source": "<code>helpers.terminal(\"openshell sandbox connect &lt;agent&gt;\")</code>\n        drops you <em>inside</em> the sandbox the agent runs in, where the\n        workspace lives.",
+      "value": "<code>helpers.terminal(\"openshell sandbox connect &lt;agent&gt;\")</code>\n        會讓您進入代理程式執行的沙盒<em>內部</em>，工作區就位於其中。"
+    },
+    "rich.e2ab07568e06": {
+      "type": "rich",
+      "source": "OpenShell is the kernel-level sandbox that holds the agent. For now you can\n     treat it as the boundary between operator and agent that Module 4 goes on to\n     define in full and to test directly. The agent's name in the connect command\n     comes from <code>GET /api/agent</code>, the same call the Kickstart page made\n     to discover your launchable.",
+      "value": "OpenShell 是容納代理程式的核心級沙盒。目前，可以將它視為 operator 與代理程式之間的邊界；模組 4 將完整定義並直接測試該邊界。連線命令中的代理程式名稱來自 <code>GET /api/agent</code>，即快速入門頁面用於發現可啟動執行個體的同一呼叫。"
+    },
+    "rich.eb2a3738197c": {
+      "type": "rich",
+      "source": "\n    <strong>This split matters directly for safety.</strong> Because the agent can\n    rewrite its own context, the containment layer beneath it has to stop any bad write\n    from doing real harm. OpenClaw freely modifies the markdown in its own workspace,\n    while the OpenShell sandbox beneath it blocks that same write from ever reaching:\n    <ul>\n      <li>the host filesystem,</li>\n      <li>the wider network,</li>\n      <li>or a neighbouring agent's workspace.</li>\n    </ul>\n    <p>You will see that boundary tested directly in the next module, where a deliberately\n    over-privileged agent tries to cross it.</p>\n  ",
+      "value": "\n    <strong>這種劃分對安全至關重要。</strong>由於代理程式能夠重寫自己的上下文，它下方的隔離層必須阻止任何不當寫入造成實際損害。OpenClaw 可以自由修改自己工作區中的 Markdown，而下層的 OpenShell 沙盒會阻止同樣的寫入觸及：\n    <ul>\n      <li>主機檔案系統，</li>\n      <li>更廣泛的網路，</li>\n      <li>或相鄰代理程式的工作區。</li>\n    </ul>\n    <p>您將在下一模組中直接測試這條邊界：一個被刻意賦予過高權限的代理程式將嘗試越過它。</p>\n  "
+    },
+    "rich.ecd302405be8": {
+      "type": "rich",
+      "source": "Asking it to summarise the same doc gets you a risk list plus\n         pointed questions about what's <em>not</em> in the doc.",
+      "value": "讓它概述同一份文件時，您會得到一份風險清單，以及針對文件中<em>未包含</em>內容的尖銳問題。"
+    },
+    "text.04e6c67cfa69": {
+      "type": "text",
+      "source": "quick-3b-soul-auditor",
+      "value": "quick-3b-soul-auditor",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.088879d8c28c": {
+      "type": "text",
+      "source": "The cell below connects into the sandbox and reads three files off the\n     running instance: SOUL.md alongside the daily memory and the curated\n     MEMORY.md. Edit the command list and re-run to poke at anything you like.",
+      "value": "下面的單元會連線到沙盒，並從執行中的執行個體讀取三個檔案：\n     SOUL.md、每日記憶檔案以及整理後的 MEMORY.md。可以隨意編輯命令列表並重新執行，以探索任何感興趣的內容。"
+    },
+    "text.0f0b7dcb85b3": {
+      "type": "text",
+      "source": "What is in your AGENTS.md?",
+      "value": "AGENTS.md 中包含什麼？"
+    },
+    "text.12c5d074d292": {
+      "type": "text",
+      "source": "← Module 3a: Connect NemoClaw",
+      "value": "← 模組 3a：連線 NemoClaw"
+    },
+    "text.156a4206e78c": {
+      "type": "text",
+      "source": "Save a note to your memory, then read it back",
+      "value": "將一條備註儲存到記憶中，然後將其讀回"
+    },
+    "text.15d447b3717c": {
+      "type": "text",
+      "source": " ── what to read (edit freely; these run as shell lines INSIDE the sandbox) ──",
+      "value": " ── what to read (edit freely; these run as shell lines INSIDE the sandbox) ──",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.17643270cf44": {
+      "type": "text",
+      "source": "\\u2699\\ufe0f ",
+      "value": "\\u2699\\ufe0f ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.17df8b94e2c7": {
+      "type": "text",
+      "source": "Open the launchable's /ws/terminal WebSocket and read sandbox configuration without a model call. Edit the command list to explore.",
+      "value": "開啟 launchable 的 /ws/terminal WebSocket，無需呼叫模型即可讀取沙箱設定。編輯命令列表以進一步探索。"
+    },
+    "text.18087b062677": {
+      "type": "text",
+      "source": "quick-3b-memory",
+      "value": "quick-3b-memory",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.18087b062677~1": {
+      "type": "text",
+      "source": "quick-3b-memory",
+      "value": "quick-3b-memory",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.198411dc2ef7": {
+      "type": "text",
+      "source": "opening operator terminal → sandbox '",
+      "value": "正在開啟 operator 終端機 → 沙箱 '"
+    },
+    "text.1b8157052c93": {
+      "type": "text",
+      "source": "Asks what the agent remembers in a fresh turn, then checks that the saved preference returned through session and file state.",
+      "value": "在新一輪中詢問代理程式記得什麼，然後檢查已儲存的偏好是否透過會話狀態和檔案狀態成功傳回。"
+    },
+    "text.1bf6b4904ad6": {
+      "type": "text",
+      "source": "into the prompt",
+      "value": "到提示詞中"
+    },
+    "text.1ca4db6555cf": {
+      "type": "text",
+      "source": "Asking it to summarise a doc gets you a tight summary plus a\n         note about what tools it would reach for next.",
+      "value": "讓它概述文件時，您會得到一份精煉的摘要，以及它接下來會選用哪些工具的說明。"
+    },
+    "text.207bee365d84": {
+      "type": "text",
+      "source": "Step 1b · Read the workspace yourself",
+      "value": "步驟 1b · 自行讀取工作區"
+    },
+    "text.214802d1d9cc": {
+      "type": "text",
+      "source": "Try it · chat with your live agent",
+      "value": "動手試試 · 與即時代理程式對話"
+    },
+    "text.219ed7a7e6b4": {
+      "type": "text",
+      "source": "workspace files",
+      "value": "工作區檔案"
+    },
+    "text.25d7d2a63c19": {
+      "type": "text",
+      "source": "A real edit is slow to watch, so the cell below fakes the swap. It sends\n     two tagged sessions and your launchable maps each session key to a pre-built\n     SOUL variant that it keeps on hand. The upshot is one question answered by\n     two configurations with no editing on your part.",
+      "value": "實際編輯的過程不便快速演示，因此下面的單元會模擬替換操作。它會傳送兩個帶標記的會話，可啟動執行個體則將每個會話鍵對映到預先建置並儲存的\n     SOUL 變體。這樣無需您編輯檔案，就能看到兩種設定對同一個問題的回答。"
+    },
+    "text.2605f97a4542": {
+      "type": "text",
+      "source": " tool(s) but got no result. Shape the runtime in Kickstart (3a): Health check + Recover.",
+      "value": " 個工具，但未獲得結果。請在快速入門 (3a) 中調整執行階段：執行“執行狀態檢查 + 恢復”。"
+    },
+    "text.26b5bc082777": {
+      "type": "text",
+      "source": "Use exec to run ls -la /sandbox/.openclaw/workspace, then explain each file",
+      "value": "使用 exec 執行 ls -la /sandbox/.openclaw/workspace，然後逐一說明每個檔案"
+    },
+    "text.272dfff911df": {
+      "type": "text",
+      "source": "THE DIRECTORY IS THE CONFIGURATION",
+      "value": "THE 目錄 IS THE 設定"
+    },
+    "text.2926a80aa6c0": {
+      "type": "text",
+      "source": "✗ no recall this run",
+      "value": "✗ 本次執行未能回想起來"
+    },
+    "text.293c1ebed009": {
+      "type": "text",
+      "source": "read a file,",
+      "value": "讀取檔案，"
+    },
+    "text.2c40f2845cfc": {
+      "type": "text",
+      "source": " The panel is helpers.mountChatUI and it streams through helpers.openclawChat; open the helpers tab above to read either one's source.",
+      "value": " The panel is helpers.mountChatUI and it streams through helpers.openclawChat; open the helpers tab above to read either one's source.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.2e0ff22be30a": {
+      "type": "text",
+      "source": "art-",
+      "value": "art-",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2f04e594ed7b": {
+      "type": "text",
+      "source": "Module 3c: Always-On →",
+      "value": "模組 3c：持續執行 →"
+    },
+    "text.3012e1f18c15": {
+      "type": "text",
+      "source": "daily logs, one file per day",
+      "value": "每日日誌，每天一個檔案"
+    },
+    "text.36cc7e3d6f62": {
+      "type": "text",
+      "source": "the model",
+      "value": "模型"
+    },
+    "text.3a5eedf1bc52": {
+      "type": "text",
+      "source": "SOUL.md, AGENTS.md,",
+      "value": "SOUL.md、AGENTS.md、"
+    },
+    "text.3bb1d67f065e": {
+      "type": "text",
+      "source": "\\u2717",
+      "value": "\\u2717",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3bb4de0b7650": {
+      "type": "text",
+      "source": "name, creature, vibe, emoji",
+      "value": "名稱、生物設定、風格、表情符號"
+    },
+    "text.3bfd1fe13bf6": {
+      "type": "text",
+      "source": "Read the live workspace over the operator terminal",
+      "value": "透過 operator 終端機讀取即時工作區"
+    },
+    "text.3c1e086d7432": {
+      "type": "text",
+      "source": "── default ──",
+      "value": "── 預設 ──"
+    },
+    "text.3c251a8ff3fe": {
+      "type": "text",
+      "source": "What tools do you have access to?",
+      "value": "可以使用哪些工具？"
+    },
+    "text.3f9cc9146c6f": {
+      "type": "text",
+      "source": " Ask the same session what it retained after the write turn.",
+      "value": " Ask the same session what it retained after the write turn.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3fc1f12a4eb1": {
+      "type": "text",
+      "source": "Scenario A · Default SOUL.md",
+      "value": "場景 A · 預設 SOUL.md"
+    },
+    "text.415e24e50bf9": {
+      "type": "text",
+      "source": "per-skill markdown bundles (next page)",
+      "value": "各技能的 Markdown 檔案包（下一頁）"
+    },
+    "text.423f27b5bde7": {
+      "type": "text",
+      "source": "\\\\n── auditor ──",
+      "value": "\\\\n── 稽核者 ──"
+    },
+    "text.4906a6ec2e78": {
+      "type": "text",
+      "source": "persona, boundaries, tone, values",
+      "value": "角色、邊界、語氣、價值觀"
+    },
+    "text.4bd714641363": {
+      "type": "text",
+      "source": "Connect your launchable in Module 3a first. This panel needs its URL and token.",
+      "value": "請先在模組 3a 中連線可啟動執行個體，並提供該執行個體的 URL 和 token。"
+    },
+    "text.4dc85c153733": {
+      "type": "text",
+      "source": "ls .openclaw/workspace",
+      "value": "ls .openclaw/workspace",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4f5336ead79e": {
+      "type": "text",
+      "source": "Run one turn, then compare the answer with the live workspace in Step 1b.",
+      "value": "執行一輪，然後將回答與步驟 1b 中的即時工作區進行比較。"
+    },
+    "text.521f8cf7b893": {
+      "type": "text",
+      "source": "Ask the agent to write a preference to MEMORY.md, then ask it back on the\n     next turn. The model itself has no persistent state, so the second turn can\n     only answer because the runtime carried the preference forward through the\n     session history it holds and through the MEMORY.md the agent saved.",
+      "value": "讓代理程式將一項偏好寫入 MEMORY.md，然後在下一輪詢問該偏好。模型本身沒有持久狀態，因此第二輪之所以能夠回答，只是因為執行階段透過其儲存的會話歷史以及代理程式所儲存的 MEMORY.md，將該偏好傳遞到了下一輪。"
+    },
+    "text.55d3bc8af29a": {
+      "type": "text",
+      "source": "read every turn",
+      "value": "每輪都會讀取"
+    },
+    "text.57331f7795ba": {
+      "type": "text",
+      "source": "Please remember that I prefer numbered code review feedback and care most about race conditions. Save this to MEMORY.md for the next session.",
+      "value": "請記住，我希望程式碼審查反饋採用編號形式，並且最關注競態條件。請將此偏好儲存到 MEMORY.md，供下個會話使用。"
+    },
+    "text.5782b18687e6": {
+      "type": "text",
+      "source": "reply",
+      "value": "回覆"
+    },
+    "text.583509574233": {
+      "type": "text",
+      "source": "quick-3b-soul-default",
+      "value": "quick-3b-soul-default",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.595b8f18e370": {
+      "type": "text",
+      "source": "periodic autonomous-task checklist",
+      "value": "週期性自主任務清單"
+    },
+    "text.5b13b3747318": {
+      "type": "text",
+      "source": "openshell sandbox connect ",
+      "value": "openshell sandbox connect ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.5e13b1ec1721": {
+      "type": "text",
+      "source": "echo '=== daily memory ==='; ls -1 .openclaw/workspace/memory/ 2>/dev/null",
+      "value": "echo '=== 每日記憶 ==='; ls -1 .openclaw/workspace/memory/ 2>/dev/null"
+    },
+    "text.627ae925a6bc": {
+      "type": "text",
+      "source": "Because the gateway folds the folder into the prompt before every turn, editing a file changes the next reply.",
+      "value": "由於閘道會在每一輪互動前將該資料夾的內容納入提示詞，編輯檔案會改變下一次回覆。"
+    },
+    "text.67a5bdf2a82d": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents",
+      "value": "NVIDIA · 安全代理程式"
+    },
+    "text.680694f37af1": {
+      "type": "text",
+      "source": "rendered below. Edit the config and Run.",
+      "value": "結果呈現在下方。編輯設定後，選取“執行”。"
+    },
+    "text.686bc26b7e61": {
+      "type": "text",
+      "source": " your launchable, over the gateway. Tool chips fire as it works.",
+      "value": " your launchable, over the gateway. Tool chips fire as it works.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.68c888aa3a7d": {
+      "type": "text",
+      "source": "HEARTBEAT.md",
+      "value": "HEARTBEAT.md",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.69824d3b0e70": {
+      "type": "text",
+      "source": "References",
+      "value": "參考資料"
+    },
+    "text.6a6d6612372e": {
+      "type": "text",
+      "source": "Auditor SOUL",
+      "value": "審計員 SOUL"
+    },
+    "text.70313152d2ca": {
+      "type": "text",
+      "source": "Chat with your live agent (connect on the Kickstart page first). Try asking it to inspect the workspace with exec or read SOUL.md.",
+      "value": "與即時代理程式對話（請先在快速入門頁面連線）。可以讓它使用 exec 檢查工作區，或讀取 SOUL.md。"
+    },
+    "text.7032421e369e": {
+      "type": "text",
+      "source": "\\u26a0 DEGRADED: started ",
+      "value": "\\u26a0 效能下降：已啟動 "
+    },
+    "text.7052f0ac228b": {
+      "type": "text",
+      "source": "✓ recalled the preference (carried by the session plus the MEMORY.md it saved)",
+      "value": "✓ 已回想起該偏好（由會話及其儲存的 MEMORY.md 共同保留）"
+    },
+    "text.707b45eeb0be": {
+      "type": "text",
+      "source": "Step 3 · The agent edits its own context",
+      "value": "步驟 3 · 代理程式編輯自己的上下文"
+    },
+    "text.75246e7908b5": {
+      "type": "text",
+      "source": " WebSocket frames)",
+      "value": " 個 WebSocket 幀）"
+    },
+    "text.7803644101da": {
+      "type": "text",
+      "source": "Module 3 · Part B of 3",
+      "value": "模組 3 · 第 2 部分（共 3 部分）"
+    },
+    "text.78f9ac018e55": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.78f9ac018e55~1": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.79f42a2505c9": {
+      "type": "text",
+      "source": "raw transcript (",
+      "value": "原始記錄（"
+    },
+    "text.7c72e610551c": {
+      "type": "text",
+      "source": "Turn 1 · ask it to remember",
+      "value": "第 1 輪 · 讓它記住"
+    },
+    "text.7c9bbe5ec9b3": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.7c9bbe5ec9b3~1": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.7ee8dad6314b": {
+      "type": "text",
+      "source": "The agent writes to MEMORY.md, then reads it back",
+      "value": "代理程式先寫入 MEMORY.md，再將其讀回"
+    },
+    "text.806f3d0616e1": {
+      "type": "text",
+      "source": "TOOLS.md",
+      "value": "TOOLS.md",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8455cea8022b": {
+      "type": "text",
+      "source": "IDENTITY.md",
+      "value": "IDENTITY.md",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.867193307f82": {
+      "type": "text",
+      "source": "echo '=== MEMORY.md ==='; cat .openclaw/workspace/MEMORY.md 2>/dev/null || echo '(no curated MEMORY.md yet; the agent writes it in a main session)'",
+      "value": "echo '=== MEMORY.md ==='; cat .openclaw/workspace/MEMORY.md 2>/dev/null || echo '（尚無整理後的 MEMORY.md；代理程式會在主會話中寫入該檔案）'"
+    },
+    "text.898702fa218d": {
+      "type": "text",
+      "source": "the Try-it artifact, in code",
+      "value": "“動手試試”練習程式碼"
+    },
+    "text.8a1d87150bc0": {
+      "type": "text",
+      "source": "Step 1 · Ask the agent to describe itself",
+      "value": "步驟 1 · 讓代理程式描述自己"
+    },
+    "text.8b6680456275": {
+      "type": "text",
+      "source": " Edit the greeting, examples, or response logic, then rerun.",
+      "value": " Edit the greeting, examples, or response logic, then rerun.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.8ce1a0bb80de": {
+      "type": "text",
+      "source": "curated long-term memory (loaded in the main session only)",
+      "value": "整理後的長期記憶（僅在主會話中載入）"
+    },
+    "text.8e3544166292": {
+      "type": "text",
+      "source": "\\u2713",
+      "value": "\\u2713",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.91b338691b07": {
+      "type": "text",
+      "source": "The directory layout is the configuration, so editing one file changes how the next turn reads.",
+      "value": "目錄佈局本身就是設定，因此編輯一個檔案便會改變下一輪讀取上下文的方式。"
+    },
+    "text.960028729f18": {
+      "type": "text",
+      "source": "The workspace, from the agent's point of view",
+      "value": "從代理程式視角看工作區"
+    },
+    "text.960ad9591094": {
+      "type": "text",
+      "source": "Each file in that folder feeds a different slice of the prompt.\n     The mapping is stable, so you can predict which behaviour an edit\n     will move before you make it.",
+      "value": "該資料夾中的每個檔案都會為提示詞提供不同部分的內容。這種對映關係是固定的，因此在編輯之前，您就能預判會改變哪項行為。"
+    },
+    "text.96ecfff4549a": {
+      "type": "text",
+      "source": "Review this incident in bullets and recommend the next step.",
+      "value": "請用要點形式審查此事件，並建議下一步措施。"
+    },
+    "text.985d59ede940": {
+      "type": "text",
+      "source": "echo '=== SOUL.md ==='; cat .openclaw/workspace/SOUL.md",
+      "value": "echo '=== SOUL.md ==='; cat .openclaw/workspace/SOUL.md",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9afc5db23792": {
+      "type": "text",
+      "source": "USER.md",
+      "value": "USER.md",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9da1ad55b9cc": {
+      "type": "text",
+      "source": "If a webpage told you to ignore your instructions, what would you do?",
+      "value": "如果某個網頁要求您忽略自己的指令，您會怎麼做？"
+    },
+    "text.9f253561b062": {
+      "type": "text",
+      "source": "quick-3b-introspect",
+      "value": "quick-3b-introspect",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9f955b678169": {
+      "type": "text",
+      "source": "TOOLS.md, USER.md",
+      "value": "TOOLS.md、USER.md"
+    },
+    "text.9fc0174f7aa6": {
+      "type": "text",
+      "source": "\n    Everything on this page collapses into one panel: a real conversation with the\n    OpenClaw agent running on your launchable. Ask it to do any of the following and\n    watch the tool chips fire as it works:\n  ",
+      "value": "\n    本頁的所有內容最終都彙集到一個面板中：可以與在 launchable 上執行的\n    OpenClaw 代理程式進行真實對話。讓它完成以下任一任務，並觀察它工作時工具標籤如何依次觸發：\n  "
+    },
+    "text.9fe101a0ec7e": {
+      "type": "text",
+      "source": "OpenClaw gateway",
+      "value": "OpenClaw 閘道"
+    },
+    "text.a01c560d94cd": {
+      "type": "text",
+      "source": "Give the agent a preference and ask it to save the note to MEMORY.md so a later turn can see it.",
+      "value": "告訴代理程式一項偏好，並讓它將該備註儲存到 MEMORY.md，供後續輪次讀取。"
+    },
+    "text.a2970f020221": {
+      "type": "text",
+      "source": "Send one question to two prebuilt SOUL variants and compare their voices. Edit SOUL.md to change a real persona.",
+      "value": "向兩個預建置的 SOUL 變體傳送同一個問題，並比較它們的表達風格。編輯 SOUL.md 可更改真實人設。"
+    },
+    "text.a54ff182c7e8": {
+      "type": "text",
+      "source": "AGENTS.md",
+      "value": "AGENTS.md",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a608e60ce048": {
+      "type": "text",
+      "source": "Two SOUL personas, same question",
+      "value": "兩個 SOUL 人設，同一個問題"
+    },
+    "text.a7efa8894b51": {
+      "type": "text",
+      "source": "' …",
+      "value": "' …",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.abf7ac2b5da5": {
+      "type": "text",
+      "source": "reads, then answers",
+      "value": "讀取後作答"
+    },
+    "text.ae3f53994b15": {
+      "type": "text",
+      "source": "memory/",
+      "value": "memory/",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.af7a8c35f687": {
+      "type": "text",
+      "source": "Scenario B · \"Auditor\" SOUL.md",
+      "value": "場景 B · “審計員”SOUL.md"
+    },
+    "text.afc623d04635": {
+      "type": "text",
+      "source": "Turn 2 · ask it back",
+      "value": "第 2 輪 · 向它詢問"
+    },
+    "text.b0c2537fa19b": {
+      "type": "text",
+      "source": "#openclaw-artifact",
+      "value": "#openclaw-artifact",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b187e515c100": {
+      "type": "text",
+      "source": "What do you remember about how I like to receive code review?",
+      "value": "您還記得我希望以什麼方式接收程式碼審查反饋嗎？"
+    },
+    "text.b18b38b731e5": {
+      "type": "text",
+      "source": "Read SOUL.md and summarize who you are",
+      "value": "讀取 SOUL.md，並總結身分"
+    },
+    "text.b48ca5820def": {
+      "type": "text",
+      "source": " Reuses state.question + state.turn from the Default-SOUL node above. Run that first.",
+      "value": " Reuses state.question + state.turn from the Default-SOUL node above. Run that first.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.baa90a8826ea": {
+      "type": "text",
+      "source": "Ask OpenClaw to describe its workspace",
+      "value": "讓 OpenClaw 描述其工作區"
+    },
+    "text.bd470823a182": {
+      "type": "text",
+      "source": "Step 2 · Two scenarios, side by side",
+      "value": "步驟 2 · 並排比較兩個場景"
+    },
+    "text.bde0ac766bf0": {
+      "type": "text",
+      "source": "SOUL.md",
+      "value": "SOUL.md",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bfd5e33cda5d": {
+      "type": "text",
+      "source": "Save a preference to MEMORY.md, then ask for it in a fresh turn on the same session. The model weights remain unchanged.",
+      "value": "將一項偏好儲存到 MEMORY.md，然後在同一會話的新一輪中詢問該偏好。模型權重保持不變。"
+    },
+    "text.c32fb0c268e2": {
+      "type": "text",
+      "source": "Default SOUL",
+      "value": "預設 SOUL"
+    },
+    "text.c83753bb3d9a": {
+      "type": "text",
+      "source": "Connect OpenClaw in Module 3a, then run Default SOUL first.",
+      "value": "請在模組 3a 中連線 OpenClaw，然後先執行 Default SOUL。"
+    },
+    "text.c847f3b22727": {
+      "type": "text",
+      "source": "\n    Edit a workspace file, and the agent's next reply changes.\n  ",
+      "value": "\n    編輯工作區檔案後，代理程式下一次的回覆也會隨之改變。\n  "
+    },
+    "text.cb7800161898": {
+      "type": "text",
+      "source": "Send the question under the default SOUL session, a friendly, concise persona that reaches for tools when they are relevant.",
+      "value": "在預設 SOUL 會話中傳送問題。該人設友好而簡潔，並會在適當時使用工具。"
+    },
+    "text.cfd45dac6e8a": {
+      "type": "text",
+      "source": "folds the folder",
+      "value": "將資料夾內容整合"
+    },
+    "text.d0661956e3de": {
+      "type": "text",
+      "source": "or run a command.",
+      "value": "或執行命令。"
+    },
+    "text.d448951728b3": {
+      "type": "text",
+      "source": "Sends the same question under the auditor SOUL, which surfaces risks and cites its subject. Compare both replies.",
+      "value": "在審計員 SOUL 中傳送同一個問題。它會指出風險，並引用所審查的內容。請比較兩者的回覆。"
+    },
+    "text.d6471f83468f": {
+      "type": "text",
+      "source": "In one turn the cell below asks OpenClaw to list its own workspace\n     files and explain what each one does. Its answer reflects whatever the\n     harness folds into its prompt together with whatever its tools can see,\n     so editing a file and re-running changes the report.",
+      "value": "下面的單元會在一輪互動中要求 OpenClaw 列出自己的工作區檔案，並說明每個檔案的作用。它的回答既反映框架納入提示詞的內容，也反映其工具能夠看到的內容。因此，編輯檔案後重新執行，報告也會隨之改變。"
+    },
+    "text.d83b58bdc785": {
+      "type": "text",
+      "source": " \\u23ce ",
+      "value": " \\u23ce ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.dae703e59b2d": {
+      "type": "text",
+      "source": "describe its workspace,",
+      "value": "描述其工作區，"
+    },
+    "text.dbf81b6f944b": {
+      "type": "text",
+      "source": "OpenClaw · Securing Agents",
+      "value": "OpenClaw · 安全代理程式"
+    },
+    "text.de115745db34": {
+      "type": "text",
+      "source": "my-assistant",
+      "value": "my-assistant",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e0197ea5d618": {
+      "type": "text",
+      "source": "A persona slotted in for code review: it refuses to run code\n         until it has named the risk surface, and it cites the file it\n         is reviewing on every claim.",
+      "value": "一種為程式碼審查設定的角色：在明確風險面之前，它會拒絕執行程式碼；提出每項判斷時，它都會引用正在審查的檔案。"
+    },
+    "text.e16202309c92": {
+      "type": "text",
+      "source": "system prompt",
+      "value": "系統提示詞"
+    },
+    "text.e1ecda70e34f": {
+      "type": "text",
+      "source": "per-tool usage notes",
+      "value": "各工具的使用說明"
+    },
+    "text.e30fed6c7b9c": {
+      "type": "text",
+      "source": "An admin cron job copies production rows to staging without a row-count guardrail and duplicated four hours of data.",
+      "value": "某個管理員 cron 作業在沒有行數防護機制的情況下，將生產環境中的資料行復制到預釋出環境，導致四個小時的資料發生重複。"
+    },
+    "text.e3e438e9ffe1": {
+      "type": "text",
+      "source": " This is the Try-it artifact: a real conversation with the OpenClaw agent on",
+      "value": " This is the Try-it artifact: a real conversation with the OpenClaw agent on",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.e932beada909": {
+      "type": "text",
+      "source": "writes back",
+      "value": "寫回"
+    },
+    "text.e984cf5736d2": {
+      "type": "text",
+      "source": "Briefly list the files in your workspace and explain each in one bullet without dumping file contents.",
+      "value": "簡要列出工作區中的檔案，用一個專案符號說明每個檔案，不要輸出檔案內容。"
+    },
+    "text.ea3fb2768572": {
+      "type": "text",
+      "source": "Connect OpenClaw in Module 3a, then run Turn 1 first.",
+      "value": "請在模組 3a 中連線 OpenClaw，然後先執行第 1 輪。"
+    },
+    "text.eac85dac0bb9": {
+      "type": "text",
+      "source": "raw notes the agent appends as it works",
+      "value": "代理程式工作時追加的原始筆記"
+    },
+    "text.ed7445d4d6f1": {
+      "type": "text",
+      "source": "Because the persona is just a file, swapping the SOUL definition changes the\n     agent's voice. The real mechanic behind that swap is writing the file itself,\n     where you save a new persona definition and the next turn picks it up on its own.",
+      "value": "由於角色只是一個檔案，替換 SOUL 定義就會改變代理程式的表達風格。這一替換背後的實際機制是寫入檔案：您儲存新的角色定義後，下一輪互動會自動讀取它。"
+    },
+    "text.f123a0c1152f": {
+      "type": "text",
+      "source": "What shapes each reply",
+      "value": "每次回覆由什麼決定"
+    },
+    "text.f1e8d760c12c": {
+      "type": "text",
+      "source": "skills/",
+      "value": "skills/",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.f37a9421f20b": {
+      "type": "text",
+      "source": "operating instructions and rules",
+      "value": "操作指令和規則"
+    },
+    "text.f612a61bab20": {
+      "type": "text",
+      "source": " your agent's name, from GET /api/agent on the Kickstart page",
+      "value": " your agent's name, from GET /api/agent on the Kickstart page",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.f6a8216eadbb": {
+      "type": "text",
+      "source": "who the human is, preferences",
+      "value": "使用者身分和偏好"
+    },
+    "text.f8bc87e24651": {
+      "type": "text",
+      "source": "2026-06-11.md",
+      "value": "2026-06-11.md",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.fb9ef9e8f372": {
+      "type": "text",
+      "source": "Stock OpenClaw: friendly, terse, and willing to use any tool the\n         policy permits, which makes it a good fit for development.",
+      "value": "原版 OpenClaw：友好、簡潔，並願意使用策略允許的任何工具，因而非常適合開發場景。"
+    },
+    "text.fe1ee8635685": {
+      "type": "text",
+      "source": "MEMORY.md",
+      "value": "MEMORY.md",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ff5d8859e7af": {
+      "type": "text",
+      "source": "\n      NemoClaw supplies the blueprint that packages this harness with OpenShell\n      and deployment policy. OpenClaw, rather than a separate Python orchestrator, drives each\n      turn and reads its workspace files into the active context. You will inspect those files,\n      compare two persona configurations, and save memory that survives beyond the model call.\n    ",
+      "value": "\n      NemoClaw 提供 blueprint，將此框架與 OpenShell\n      及部署策略打包在一起。每一輪互動都由 OpenClaw 驅動，而非單獨的 Python 編排器；它還會將工作區檔案讀入當前上下文。您將檢查這些檔案、比較兩種角色設定，並儲存能夠在模型呼叫結束後繼續保留的記憶。\n    "
+    }
+  }
+}
