@@ -37,6 +37,11 @@ body {
   min-height: 100vh;
 }
 
+/* Page scroll remains normal; every descendant that becomes a scroll container
+ * keeps wheel/touch momentum from chaining into the document. */
+html, body { overscroll-behavior: auto; }
+body * { overscroll-behavior: contain; }
+
 /* ── Top bar ────────────────────────────────────────────────────────────────── */
 /* Minimal: brand on the left, key-pill on the right, nothing in between.
  * All in-course navigation lives in the journey-map widget below this bar.

@@ -2,10 +2,12 @@
 # Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Browser-check the language menu and same-branch Localization Studio."""
+"""Discover and browser-check every built learner page in every locale."""
 from __future__ import annotations
 
 import argparse
+import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -14,99 +16,328 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from scripts.runtime.host_browser import BrowserRuntimeError, environment, run_node
+from scripts.translate.locale_catalog import discover_locales
+
 
 RUNTIME = r"""
-const http=require('http'),fs=require('fs'),path=require('path');
-const {chromium}=require('playwright-core');
-const root=process.env.SITE_ROOT,shots=process.env.SHOTS,port=4197;
-const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.svg':'image/svg+xml','.ico':'image/x-icon'};
-const server=http.createServer((req,res)=>{let p=path.resolve(root,decodeURIComponent(req.url.split('?')[0]).replace(/^\/+/,''));if(!p.startsWith(path.resolve(root))){res.writeHead(403);return res.end();}if(fs.existsSync(p)&&fs.statSync(p).isDirectory())p=path.join(p,'index.html');fs.readFile(p,(e,d)=>{if(e){res.writeHead(404);return res.end('not found');}res.writeHead(200,{'content-type':mime[path.extname(p)]||'application/octet-stream'});res.end(d);});});
-function ok(value,message){if(!value)throw new Error(message)}
-async function open(page,url){const errors=[];page.removeAllListeners('console');page.removeAllListeners('pageerror');page.removeAllListeners('response');page.on('console',m=>{if(m.type()==='error')errors.push(`console: ${m.text()}`)});page.on('pageerror',e=>errors.push(`pageerror: ${e.message}`));page.on('response',r=>{if(r.status()>=400)errors.push(`HTTP ${r.status()}: ${r.url()}`)});await page.goto(`http://127.0.0.1:${port}${url}`,{waitUntil:'domcontentloaded'});await page.waitForTimeout(500);ok(!errors.length,`${url} browser errors: ${errors.join('; ')}`)}
-async function textOverlaps(locator){await locator.evaluate(root=>{const disclosure=root.closest('details');if(disclosure)disclosure.open=true});return locator.evaluate(root=>{const labels=[...root.querySelectorAll('svg text')].map(el=>({text:el.textContent.trim(),rect:el.getBoundingClientRect()})).filter(x=>x.text&&x.rect.width>0&&x.rect.height>0);const out=[];for(let i=0;i<labels.length;i++)for(let j=i+1;j<labels.length;j++){const a=labels[i],b=labels[j],w=Math.min(a.rect.right,b.rect.right)-Math.max(a.rect.left,b.rect.left),h=Math.min(a.rect.bottom,b.rect.bottom)-Math.max(a.rect.top,b.rect.top);if(w>1&&h>1)out.push(`${a.text} <> ${b.text}`)}return out})}
-async function textEscapesCard(locator){return locator.evaluate(root=>{const svg=root.querySelector('svg'),rects=[...svg.querySelectorAll('rect')].filter(el=>{const stroke=el.getAttribute('stroke');return el.hasAttribute('rx')||el.hasAttribute('ry')||(stroke&&stroke!=='none')}).map(el=>({el,box:el.getBoundingClientRect()}));return[...svg.querySelectorAll('text')].flatMap(el=>{const b=el.getBoundingClientRect(),cx=b.left+b.width/2,cy=b.top+b.height/2;const containers=rects.filter(x=>x.box.left<=cx&&cx<=x.box.right&&x.box.top<=cy&&cy<=x.box.bottom).sort((a,b)=>(a.box.width*a.box.height)-(b.box.width*b.box.height));if(!containers.length)return[];const box=containers[0].box;return b.left<box.left-2||b.right>box.right+2||b.top<box.top-2||b.bottom>box.bottom+2?[el.textContent.trim()]:[]})})}
-function localizedFigurePages(prefix){const base=path.join(root,prefix,'nemoclaw'),pages=[];function walk(dir,rel=''){for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const nextRel=path.join(rel,entry.name),next=path.join(dir,entry.name);if(entry.isDirectory())walk(next,nextRel);else if(entry.name.endsWith('.html')&&fs.readFileSync(next,'utf8').includes('data-svg-src='))pages.push(nextRel.split(path.sep).join('/'))}}walk(base);return pages.sort()}
-async function auditLocalizedFigureCards(page,prefix,label){for(const file of localizedFigurePages(prefix)){await open(page,`/${prefix}/nemoclaw/${file}`);const figures=page.locator('[data-svg-src]');for(let i=0;i<await figures.count();i++){const figure=figures.nth(i);if(!await figure.locator('svg').count())continue;const name=(await figure.getAttribute('data-svg-src'))||`${file} figure ${i+1}`;const escaped=await textEscapesCard(figure);ok(!escaped.length,`${label} ${name} has labels outside their cards: ${escaped.join(', ')}`)}}}
-(async()=>{await new Promise(r=>server.listen(port,'127.0.0.1',r));const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_BIN});const page=await browser.newPage({viewport:{width:1280,height:900}});await page.route('https://integrate.api.nvidia.com/**',route=>route.fulfill({status:200,contentType:'application/json',body:'{"data":[{"embedding":[0.1,0.2,0.3]}],"usage":{"prompt_tokens":1,"total_tokens":1}}'}));
-await open(page,'/nemoclaw/01a-loop.html');await page.waitForSelector('.language-menu-button');await page.click('.language-menu-button');let links=await page.$$eval('.language-menu-popover a',xs=>xs.map(x=>({text:x.textContent.trim(),href:x.href,current:x.getAttribute('aria-current')})));ok(links.some(x=>x.text.includes('Português')&&x.href.endsWith('/pt/nemoclaw/01a-loop.html')),'English 01a lacks same-page Portuguese target');ok(await page.$$eval('.language-menu-popover a',xs=>xs.every(x=>{const r=x.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight&&r.left>=0&&r.right<=innerWidth})),'English language-menu entries are clipped');
-await page.screenshot({path:path.join(shots,'english-01a-language-menu.png'),fullPage:false});
-await open(page,'/nemoclaw/01b-react.html');await page.waitForSelector('.language-menu-button');await page.click('.language-menu-button');links=await page.$$eval('.language-menu-popover a',xs=>xs.map(x=>({text:x.textContent.trim(),href:x.href})));ok(links.some(x=>x.text.includes('Português')&&x.href.endsWith('/pt/nemoclaw/01b-react.html')),'English 01b lacks same-page Portuguese target');
-ok(links.some(x=>x.text.includes('Español')&&x.href.endsWith('/es/nemoclaw/01b-react.html')),'English 01b lacks same-page Spanish target');
-await open(page,'/es/nemoclaw/index.html');{
-  const first=page.locator('.module-card').first(),title=first.locator('h3'),main=first.locator('a.mc-main');
-  ok(await title.innerText()==='Conceptos básicos de agentes · Bucle · ReAct · Herramientas','Spanish Module 1 card retains the old Foundations label');
-  ok(await title.locator('a').count()===0,'linked card heading received a nested/self permalink');
-  ok((await main.getAttribute('href'))==='./01a-loop.html','Spanish Module 1 card destination changed');
-  await page.screenshot({path:path.join(shots,'spanish-home-light.png'),fullPage:false});
-  await page.evaluate(()=>{localStorage.setItem('theme','dark');document.documentElement.dataset.theme='dark'});
-  await page.screenshot({path:path.join(shots,'spanish-home-dark.png'),fullPage:false});
-  await title.click();
-  await page.waitForURL(url=>url.pathname.endsWith('/es/nemoclaw/01a-loop.html'));
+const http = require('http'), fs = require('fs'), path = require('path');
+const { chromium } = require('playwright-core');
+const root = path.resolve(process.env.SITE_ROOT), shots = process.env.SHOTS, port = 4197;
+const profiles = JSON.parse(process.env.LOCALE_PROFILES);
+const learnerPages = JSON.parse(process.env.LEARNER_PAGES);
+const mime = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.svg':'image/svg+xml','.ico':'image/x-icon'};
+const server = http.createServer((req, res) => {
+  let file = path.resolve(root, decodeURIComponent(req.url.split('?')[0]).replace(/^\/+/, ''));
+  if (!file.startsWith(root)) { res.writeHead(403); return res.end(); }
+  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
+  fs.readFile(file, (error, data) => {
+    if (error) { res.writeHead(404); return res.end('not found'); }
+    res.writeHead(200, {'content-type': mime[path.extname(file)] || 'application/octet-stream'}); res.end(data);
+  });
+});
+const findings = [];
+const record = (code, route, detail) => findings.push({code, route, detail});
+async function capture(code, route, run) {
+  try { return await run(); }
+  catch (error) { record(code, route, error.stack || String(error)); return null; }
 }
-const spanishPages=[['01a-loop.html','Agente'],['01b-react.html','El bucle ReAct'],['01c-tools.html','Herramientas a escala'],['02a-routing.html','El agente de flujo de trabajo'],['02b-rag.html','Un agente de indexación'],['02c-deep.html','Agentes de investigación profunda'],['03a-kickstart.html','Conecta el stack de NemoClaw'],['03b-openclaw.html','El agente OpenClaw'],['03c-always-on.html','El agente siempre activo'],['04a-safety.html','El sandbox de OpenShell'],['04b-modern-clis.html','Agentes de CLI modernos'],['04c-going-further.html','Cómo profundizar en el tema']];for(const [file,heading] of spanishPages){await open(page,`/es/nemoclaw/${file}`);ok(await page.getAttribute('html','lang')==='es-ES',`${file} lang is not es-ES`);const title=(await page.textContent('h1')).replace(/\s+/g,' ').trim();ok(title.toLowerCase()===heading.toLowerCase(),`${file} Spanish heading mismatch: ${title}`);const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);ok(overflow<=2,`${file} Spanish page overflows by ${overflow}px`);const englishControls=await page.$$eval('.cf-btn-run,.rc-run,.chatui-send,.cf-btn-reset,.rc-reset',xs=>xs.map(x=>x.textContent.trim()).filter(x=>/\b(?:Run|Reset|Send)\b/.test(x)));ok(!englishControls.length,`${file} retains English controls: ${englishControls.join(', ')}`);const svg=await page.evaluate(async()=>{const refs=[...document.querySelectorAll('.fig-embed[data-svg-src],img[src*=".svg"]')].map(el=>el.dataset.svgSrc||el.getAttribute('src'));const raw=await Promise.all(refs.map(async ref=>await(await fetch(ref)).text()));const clipped=[...document.querySelectorAll('.fig-embed svg')].flatMap(root=>{const box=root.viewBox.baseVal;return[...root.querySelectorAll('text')].filter(el=>{const b=el.getBBox(),m=root.getScreenCTM().inverse().multiply(el.getScreenCTM());const pts=[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].map(([x,y])=>new DOMPoint(x,y).matrixTransform(m));return Math.min(...pts.map(p=>p.x))<box.x-2||Math.max(...pts.map(p=>p.x))>box.x+box.width+2||Math.min(...pts.map(p=>p.y))<box.y-2||Math.max(...pts.map(p=>p.y))>box.y+box.height+2}).map(el=>el.textContent.trim())});return{raw,clipped}});ok(svg.raw.every(item=>item.includes('data-locale="es-ES"')),`${file} uses an English SVG asset`);ok(!svg.clipped.length,`${file} clips Spanish SVG labels: ${svg.clipped.join(', ')}`);await page.screenshot({path:path.join(shots,`spanish-${file.replace('.html','')}.png`),fullPage:false})}
-const spanishBlocks={'01a-loop.html':5,'01b-react.html':3,'01c-tools.html':4,'02a-routing.html':2,'02b-rag.html':8,'02c-deep.html':2,'03a-kickstart.html':0,'03b-openclaw.html':1,'03c-always-on.html':0,'04a-safety.html':1,'04b-modern-clis.html':2,'04c-going-further.html':2};for(const [file,count] of Object.entries(spanishBlocks)){await open(page,`/es/nemoclaw/${file}`);const blocks=await page.locator('details.learning-block').count();ok(blocks===count,`${file} lost presentation shells: ${blocks}/${count}`);ok(await page.locator('details.learning-block[open]:not([data-learning-always-open])').count()===0,`${file} does not start in Guided collapsed mode`);const referenceCount=await page.locator('details.learning-block[data-learning-always-open]').count();const openReferenceCount=await page.locator('details.learning-block[data-learning-always-open][open]').count();ok(referenceCount===openReferenceCount,`${file} collapsed an always-open reference disclosure`);const shell=await page.locator('summary .learning-question').allTextContents();ok(shell.length===count&&!shell.some(x=>/Explore|Run the|Compare|Inspect|Map the|Need the|Trace|Review the|Swap|Hide/.test(x)),`${file} has missing or English shell prompts: ${shell.join(' | ')}`)}
-await open(page,'/es/nemoclaw/01a-loop.html');await page.waitForSelector('.key-panel');{const panel=page.locator('.key-panel'),text=await panel.innerText(),build=panel.locator('a[href^="https://build.nvidia.com/"]');ok(text.includes('URL base de la API de chat')&&text.includes('Clave bearer de la API de chat')&&text.includes('Ruta de embeddings')&&text.includes('API Keys')&&await build.count()===1,'Spanish endpoint setup is incomplete');ok(!/Chat API base URL|Chat API bearer key|Embedding route|Brev fallback|Using Tunnels|(?:port|puerto) 5000|\\bEMPTY\\b|[?&](?:model_)?base_url=|A presenter|Use the NVIDIA DLI browser relay/i.test(text),`Spanish endpoint setup retains unsupported or English copy: ${text}`)}
-await open(page,'/es/nemoclaw/03a-kickstart.html');await page.waitForSelector('.claw-connection-audit');{const text=await page.textContent('#probe-claw');ok(text.includes('URL base')&&text.includes('Sesión de acceso')&&text.includes('Probar conexión')&&text.includes('El proveedor y el transporte se descubren a partir de la URL base.'),`Spanish OpenClaw connection audit is incomplete: ${text}`);ok(await page.locator('#probe-claw .claw-token,#probe-claw .claw-access-provider,#probe-claw .claw-ws-relay-enabled,#probe-claw .claw-proxy-enabled').count()===0,'Spanish connection audit exposes derived credentials or transport controls')}
-{const text=await page.textContent('#probe-llm');const model=page.locator('#probe-llm .claw-url');const claw=page.locator('#probe-claw .claw-url');ok(text.includes('Control directo solo del modelo.')&&await model.getAttribute('readonly')!==null,'Spanish model route mirror is incomplete');ok(await model.inputValue()!==await claw.inputValue(),'Spanish model and OpenClaw probes share a URL');ok(!/Direct model-only control/.test(text),`Spanish model probe retains English copy: ${text}`)}
-await open(page,'/es/nemoclaw/04b-modern-clis.html');await page.waitForSelector('#agent-chat .da-term');{
-  const openclaw=await page.textContent('#agent-chat .da-term');
-  ok(openclaw.includes('Conecta primero tu launchable en el Módulo 3a'),'Spanish OpenClaw CLI prerequisite is missing');
-  ok(!openclaw.includes('Connect your launchable on Module 3a first'),'Spanish OpenClaw CLI retains its English prerequisite');
-  const terminal=await page.textContent('#deepagents-artifact .da-term');
-  ok(terminal.includes('No hay un launchable conectado'),'Spanish launchable terminal prerequisite is missing');
-  ok(!terminal.includes('No launchable connected'),'Spanish launchable terminal retains its English prerequisite');
+
+function localizedFigurePages(language) {
+  const base = path.resolve(root, language.url);
+  return language.available_pages.filter(file => {
+    const candidate = path.resolve(base, file);
+    const relative = path.relative(base, candidate);
+    return !relative.startsWith('..') && !path.isAbsolute(relative) && fs.existsSync(candidate) && fs.readFileSync(candidate, 'utf8').includes('data-svg-src');
+  });
 }
-await open(page,'/es/nemoclaw/01a-loop.html');{const launcher=page.locator('.course-assistant-launcher');await launcher.click();const panel=page.locator('.course-assistant-panel');await panel.waitFor({state:'visible'});const text=await panel.innerText();ok(text.includes('ASISTENTE DEL CURSO')&&text.includes('Nueva sesión'),'Spanish Course Assistant chrome is incomplete');ok(!/COURSE ASSISTANT|New session|Attached page|Clear session/.test(text),'Spanish Course Assistant retains English chrome');await page.keyboard.press('Escape')}
-await open(page,'/es/nemoclaw/01b-react.html');{const figure=page.locator('.fig-embed[data-svg-src*="01b-react-3.svg"]');await figure.scrollIntoViewIfNeeded();const overlaps=await textOverlaps(figure);ok(!overlaps.length,`Spanish ReAct figure has overlapping labels: ${overlaps.join(', ')}`);await figure.screenshot({path:path.join(shots,'spanish-react-loop.png')});await page.evaluate(()=>{localStorage.setItem('theme','dark');document.documentElement.dataset.theme='dark'});await figure.screenshot({path:path.join(shots,'spanish-react-loop-dark.png')});await page.evaluate(()=>{localStorage.setItem('theme','light');document.documentElement.dataset.theme='light'})}await open(page,'/es/nemoclaw/02b-rag.html');for(const name of ['rag_arch_2021.svg','02b-rag-1.svg','02b-rag-2.svg','02b-rag-3.svg','02b-retrieval-boundaries.svg']){const figure=page.locator(`.fig-embed[data-svg-src*="${name}"]`);await figure.scrollIntoViewIfNeeded();const overlaps=await textOverlaps(figure);ok(!overlaps.length,`Spanish ${name} has overlapping labels: ${overlaps.join(', ')}`)}
-await open(page,'/es/nemoclaw/01c-tools.html');let spanishNext=await page.$eval('.foot-nav .next',x=>({href:x.href,fallback:x.dataset.languageFallback}));ok(spanishNext.href.endsWith('/es/nemoclaw/02a-routing.html')&&!spanishNext.fallback,'Spanish 01c does not continue to translated 02a');await open(page,'/es/nemoclaw/02a-routing.html');spanishNext=await page.$eval('.foot-nav .next',x=>({href:x.href,fallback:x.dataset.languageFallback}));ok(spanishNext.href.endsWith('/es/nemoclaw/02b-rag.html')&&!spanishNext.fallback,'Spanish 02a does not continue to translated 02b');await open(page,'/es/nemoclaw/02b-rag.html');spanishNext=await page.$eval('.foot-nav .next',x=>({href:x.href,fallback:x.dataset.languageFallback}));ok(spanishNext.href.endsWith('/es/nemoclaw/02c-deep.html')&&!spanishNext.fallback,'Spanish 02b does not continue to translated 02c');await open(page,'/es/nemoclaw/02a-routing.html');for(const name of ['fig2_react.svg','fig2_rewoo.svg']){const figure=page.locator(`.fig-embed[data-svg-src*="${name}"]`);await figure.scrollIntoViewIfNeeded();const overlaps=await textOverlaps(figure);ok(!overlaps.length,`Spanish ${name} has overlapping labels: ${overlaps.join(', ')}`);await figure.screenshot({path:path.join(shots,`spanish-${name.replace('.svg','')}.png`)})}
-const spanishFigurePages={'02c-deep.html':['02c-deep-1.svg'],'03a-kickstart.html':['03a-kickstart-1.svg'],'03b-openclaw.html':['03b-openclaw-1.svg'],'03c-always-on.html':['03c-always-on-1.svg'],'04a-safety.html':['04a-openshell-architecture.svg','04a-safety-1.svg','lethal-trifecta.svg']};for(const [file,names] of Object.entries(spanishFigurePages)){await open(page,`/es/nemoclaw/${file}`);for(const name of names){const figure=page.locator(`.fig-embed[data-svg-src*="${name}"]`);await figure.scrollIntoViewIfNeeded();const overlaps=await textOverlaps(figure);ok(!overlaps.length,`Spanish ${name} has overlapping labels: ${overlaps.join(', ')}`);if(name==='02c-deep-1.svg'){const escaped=await textEscapesCard(figure);ok(!escaped.length,`Spanish ${name} has labels outside their cards: ${escaped.join(', ')}`)}await figure.screenshot({path:path.join(shots,`spanish-${name.replace('.svg','')}.png`)});await page.evaluate(()=>{localStorage.setItem('theme','dark');document.documentElement.dataset.theme='dark'});await figure.screenshot({path:path.join(shots,`spanish-${name.replace('.svg','')}-dark.png`)});await page.evaluate(()=>{localStorage.setItem('theme','light');document.documentElement.dataset.theme='light'})}}
-await open(page,'/nemoclaw/localization.html?locale=es');await page.waitForSelector('.loc-page');ok((await page.textContent('#loc-target-name')).includes('Español'),'Studio did not select Spanish');ok((await page.textContent('#loc-summary')).includes('13 pages current'),'Studio Spanish course-page count is wrong');const lessonRow=page.locator('.loc-page').filter({hasText:'01a-loop.html'});await lessonRow.click();await page.waitForFunction(()=>[...document.querySelector('#loc-target').contentDocument?.querySelectorAll('.learning-question')||[]].some(x=>x.textContent.includes('¿Explorar el ciclo y las arquitecturas clásicas?')));await page.screenshot({path:path.join(shots,'spanish-localization-page-parity.png'),fullPage:false});const spanishAssetCount=await page.evaluate(async()=>(await(await fetch('./assets/localization-es.json')).json()).assets.length);await page.click('#loc-kinds [data-kind="assets"]');await page.waitForFunction(count=>document.querySelectorAll('.loc-page').length===count,spanishAssetCount);ok((await page.$$eval('.loc-page',xs=>xs.map(x=>x.textContent))).some(x=>x.includes('lethal-trifecta.svg')),'Studio omits full-course Spanish SVG rows');await page.screenshot({path:path.join(shots,'spanish-localization-studio.png'),fullPage:false});
-await open(page,'/pt/nemoclaw/01a-loop.html');await page.waitForSelector('.language-menu-button');ok(await page.getAttribute('html','lang')==='pt-BR','Portuguese page lang is not pt-BR');ok(await page.locator('details.learning-block').count()===5,'Portuguese 01a lost current presentation shells');ok((await page.locator('summary .learning-question').allTextContents()).some(x=>x.includes('Explorar o ciclo')),'Portuguese 01a omits localized shell prompts');await page.waitForSelector('.key-panel');{const panel=page.locator('.key-panel'),text=await panel.innerText(),build=panel.locator('a[href^="https://build.nvidia.com/"]');ok(text.includes('URL base da API de chat')&&text.includes('Chave bearer da API de chat')&&text.includes('Rota de embeddings')&&text.includes('API Keys')&&await build.count()===1,'Portuguese endpoint setup is incomplete');ok(!/Chat API base URL|Chat API bearer key|Embedding route|Brev fallback|Using Tunnels|(?:port|porta) 5000|\\bEMPTY\\b|[?&](?:model_)?base_url=|A presenter|Use the NVIDIA DLI browser relay/i.test(text),`Portuguese endpoint setup retains unsupported or English copy: ${text}`)}let next=await page.$eval('.foot-nav .next',x=>({href:x.href,fallback:x.dataset.languageFallback}));ok(next.href.endsWith('/pt/nemoclaw/01b-react.html')&&!next.fallback,'Portuguese 01a does not continue to translated 01b');const svgState=await page.evaluate(async()=>{const refs=[...document.querySelectorAll('.fig-embed[data-svg-src],img[src*=".svg"]')].map(el=>el.dataset.svgSrc||el.getAttribute('src'));const docs=await Promise.all(refs.map(async ref=>new DOMParser().parseFromString(await (await fetch(ref)).text(),'image/svg+xml')));const inline=[...document.querySelectorAll('.fig-embed svg')].map(svg=>{const box=svg.viewBox.baseVal;const clipped=[...svg.querySelectorAll('text')].filter(el=>{const b=el.getBBox();const m=svg.getScreenCTM().inverse().multiply(el.getScreenCTM());const pts=[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].map(([x,y])=>new DOMPoint(x,y).matrixTransform(m));const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);return Math.min(...xs)<box.x-2||Math.min(...ys)<box.y-2||Math.max(...xs)>box.x+box.width+2||Math.max(...ys)>box.y+box.height+2}).length;return {locale:svg.dataset.locale,clipped,text:svg.textContent}});return {count:docs.length,unmarked:docs.filter(doc=>doc.documentElement.dataset.locale!=='pt-BR').length,inline};});ok(svgState.count>=4&&svgState.unmarked===0,`Portuguese 01a SVG overlay missing: ${JSON.stringify(svgState)}`);ok(svgState.inline.every(item=>item.locale==='pt-BR'&&item.clipped===0),`Portuguese 01a inline SVG text is unmarked or clipped: ${JSON.stringify(svgState.inline)}`);ok(!svgState.inline.some(item=>/Environment|world state|Reflex Agents|Goal-Based Agents/.test(item.text)),'Portuguese 01a SVG retains English learner labels');const assistantLauncher=page.locator('.course-assistant-launcher');await assistantLauncher.waitFor({state:'visible'});await assistantLauncher.click();const assistant=page.locator('.course-assistant-panel');await assistant.waitFor({state:'visible'});ok((await assistant.innerText()).includes('ASSISTENTE DO CURSO'),'Portuguese Course Assistant retains English chrome');ok(!(await assistant.innerText()).includes('New session'),'Portuguese Course Assistant retains English session controls');await page.keyboard.press('Escape');await page.click('.language-menu-button');links=await page.$$eval('.language-menu-popover a',xs=>xs.map(x=>({text:x.textContent.trim(),href:x.href})));ok(links.some(x=>x.text.startsWith('English')&&x.href.endsWith('/nemoclaw/01a-loop.html')),'Portuguese 01a lacks same-page English target');await page.screenshot({path:path.join(shots,'portuguese-01a-language-menu.png'),fullPage:false});
-await open(page,'/pt/nemoclaw/02c-deep.html');await page.waitForSelector('.language-menu-button');next=await page.$eval('.foot-nav .next',x=>({href:x.href,fallback:x.dataset.languageFallback}));ok(next.href.endsWith('/pt/nemoclaw/03a-kickstart.html')&&!next.fallback,'Portuguese 02c does not continue to translated Module 3');
-const translatedPages=[['01b-react.html','O ciclo ReAct'],['01c-tools.html','Ferramentas em Escala'],['02a-routing.html','O Worflow do Agente'],['02b-rag.html','O Agente de Índice'],['02c-deep.html','Agente Profundo']];for(const [file,heading] of translatedPages){await open(page,`/pt/nemoclaw/${file}`);ok(await page.getAttribute('html','lang')==='pt-BR',`${file} lang is not pt-BR`);const title=(await page.textContent('h1')).replace(/\s+/g,' ').trim();ok(title===heading,`${file} heading mismatch: ${title}`);const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);ok(overflow<=2,`${file} overflows by ${overflow}px`);const englishControls=await page.$$eval('.cf-btn-run,.rc-run,.chatui-send,.cf-btn-reset,.rc-reset',xs=>xs.map(x=>x.textContent.trim()).filter(x=>/\b(?:Run|Reset|Send)\b/.test(x)));ok(!englishControls.length,`${file} retains English controls: ${englishControls.join(', ')}`);const assets=await page.evaluate(async()=>{const refs=[...document.querySelectorAll('.fig-embed[data-svg-src],img[src*=".svg"]')].map(el=>el.dataset.svgSrc||el.getAttribute('src'));return Promise.all(refs.map(async ref=>({ref,raw:await (await fetch(ref)).text()})))});ok(assets.every(item=>item.raw.includes('data-locale="pt-BR"')),`${file} uses an English SVG asset`)}ok((await page.textContent('.cf-jm-current-title')).trim()==='Agentes profundos','Portuguese journey map retains English current title');ok((await page.textContent('.cf-jm-mod-label')).trim()==='Seção 2','Portuguese journey map retains English section label');ok((await page.textContent('#key-status')).trim()==='Sem chave de API','Portuguese key status retains English copy');const englishJourney=await page.$$eval('#journey-map text,.cf-jm-nav-title,.cf-jm-current-title',xs=>xs.map(x=>x.textContent.trim()).filter(x=>['The Agent','The ReAct Loop','Tools at Scale','The Index Agent','Deep Agents','Connect NemoClaw','Always-On','Modern CLIs','Going Further'].includes(x)));ok(!englishJourney.length,`Portuguese journey map retains: ${englishJourney.join(', ')}`);await page.screenshot({path:path.join(shots,'portuguese-02c-course-page.png'),fullPage:false});
-const finalPages=[['03a-kickstart.html','Conecte a stack do NemoClaw'],['03b-openclaw.html','O agente OpenClaw'],['03c-always-on.html','O agente sempre ativo'],['04a-safety.html','Sandbox do OpenShell'],['04b-modern-clis.html','Agentes de CLI modernos'],['04c-going-further.html','Próximos passos']];for(const [file,heading] of finalPages){await open(page,`/pt/nemoclaw/${file}`);ok(await page.getAttribute('html','lang')==='pt-BR',`${file} lang is not pt-BR`);const title=(await page.textContent('h1')).replace(/\s+/g,' ').trim();ok(title===heading,`${file} heading mismatch: ${title}`);const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);ok(overflow<=2,`${file} overflows by ${overflow}px`);const englishControls=await page.$$eval('.cf-btn-run,.rc-run,.chatui-send,.cf-btn-reset,.rc-reset',xs=>xs.map(x=>x.textContent.trim()).filter(x=>/\b(?:Run|Reset|Send)\b/.test(x)));ok(!englishControls.length,`${file} retains English controls: ${englishControls.join(', ')}`);const assets=await page.evaluate(async()=>{const refs=[...document.querySelectorAll('.fig-embed[data-svg-src],img[src*=".svg"]')].map(el=>el.dataset.svgSrc||el.getAttribute('src'));const raw=await Promise.all(refs.map(async ref=>({ref,raw:await (await fetch(ref)).text()})));const clipped=[...document.querySelectorAll('.fig-embed svg')].flatMap(svg=>{const box=svg.viewBox.baseVal;return [...svg.querySelectorAll('text')].filter(el=>{const b=el.getBBox();const m=svg.getScreenCTM().inverse().multiply(el.getScreenCTM());const pts=[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].map(([x,y])=>new DOMPoint(x,y).matrixTransform(m));const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);return Math.min(...xs)<box.x-2||Math.min(...ys)<box.y-2||Math.max(...xs)>box.x+box.width+2||Math.max(...ys)>box.y+box.height+2}).map(el=>el.textContent.trim())});return {raw,clipped}});ok(assets.raw.every(item=>item.raw.includes('data-locale="pt-BR"')),`${file} uses an English SVG asset`);ok(!assets.clipped.length,`${file} clips translated SVG labels: ${assets.clipped.join(', ')}`);await page.screenshot({path:path.join(shots,`portuguese-${file.replace('.html','')}.png`),fullPage:false})}
-await open(page,'/pt/nemoclaw/03a-kickstart.html');await page.waitForSelector('.claw-connection-audit');{const text=await page.textContent('#probe-claw');ok(text.includes('URL base')&&text.includes('Sessão de acesso')&&text.includes('Testar conexão')&&text.includes('O provedor e o transporte são descobertos pela URL base.'),`Portuguese OpenClaw connection audit is incomplete: ${text}`);ok(await page.locator('#probe-claw .claw-token,#probe-claw .claw-access-provider,#probe-claw .claw-ws-relay-enabled,#probe-claw .claw-proxy-enabled').count()===0,'Portuguese connection audit exposes derived credentials or transport controls')}
-{const text=await page.textContent('#probe-llm');const model=page.locator('#probe-llm .claw-url');const claw=page.locator('#probe-claw .claw-url');ok(text.includes('Controle direto somente do modelo.')&&await model.getAttribute('readonly')!==null,'Portuguese model route mirror is incomplete');ok(await model.inputValue()!==await claw.inputValue(),'Portuguese model and OpenClaw probes share a URL');ok(!/Direct model-only control/.test(text),`Portuguese model probe retains English copy: ${text}`)}
-await open(page,'/pt/nemoclaw/02a-routing.html');for(const name of ['fig2_react.svg','fig2_rewoo.svg']){const figure=page.locator(`.fig-embed[data-svg-src*="${name}"]`);await figure.scrollIntoViewIfNeeded();const overlaps=await textOverlaps(figure);ok(!overlaps.length,`${name} has overlapping translated labels: ${overlaps.join(', ')}`);await figure.screenshot({path:path.join(shots,`portuguese-${name.replace('.svg','')}.png`)});await page.evaluate(()=>{localStorage.setItem('theme','dark');document.documentElement.dataset.theme='dark'});await figure.screenshot({path:path.join(shots,`portuguese-${name.replace('.svg','')}-dark.png`)});await page.evaluate(()=>{localStorage.setItem('theme','light');document.documentElement.dataset.theme='light'})}await open(page,'/pt/nemoclaw/02b-rag.html');{const figure=page.locator('.fig-embed[data-svg-src*="rag_arch_2021.svg"]');await figure.scrollIntoViewIfNeeded();const overlaps=await textOverlaps(figure);ok(!overlaps.length,`rag_arch_2021.svg has overlapping translated labels: ${overlaps.join(', ')}`);await figure.screenshot({path:path.join(shots,'portuguese-rag-architecture.png')});await page.evaluate(()=>{localStorage.setItem('theme','dark');document.documentElement.dataset.theme='dark'});await figure.screenshot({path:path.join(shots,'portuguese-rag-architecture-dark.png')});await page.evaluate(()=>{localStorage.setItem('theme','light');document.documentElement.dataset.theme='light'})}await open(page,'/pt/nemoclaw/04a-safety.html');{const figure=page.locator('.fig-embed[data-svg-src*="04a-openshell-architecture.svg"]');await figure.scrollIntoViewIfNeeded();const overlaps=await textOverlaps(figure);ok(!overlaps.length,`04a-openshell-architecture.svg has overlapping translated labels: ${overlaps.join(', ')}`);await figure.screenshot({path:path.join(shots,'portuguese-openshell-architecture.png')});await page.evaluate(()=>{localStorage.setItem('theme','dark');document.documentElement.dataset.theme='dark'});await figure.screenshot({path:path.join(shots,'portuguese-openshell-architecture-dark.png')});await page.evaluate(()=>{localStorage.setItem('theme','light');document.documentElement.dataset.theme='light'})}
-await open(page,'/nemoclaw/03a-kickstart.html');await page.waitForSelector('.language-menu-button');await page.click('.language-menu-button');links=await page.$$eval('.language-menu-popover a',xs=>xs.map(x=>({text:x.textContent.trim(),href:x.href})));ok(links.some(x=>x.text.includes('Português')&&x.href.endsWith('/pt/nemoclaw/03a-kickstart.html')),'English 03a lacks same-page Portuguese target');
-await open(page,'/nemoclaw/localization.html?locale=pt');await page.waitForSelector('.loc-page');const summary=await page.textContent('#loc-summary');ok(/pages current/.test(summary)&&/SVGs current/.test(summary),'Localization Studio summary missing page or SVG counts');const rows=await page.$$eval('.loc-page',xs=>xs.map(x=>x.textContent));ok(rows.some(x=>x.includes('01a-loop.html'))&&rows.some(x=>x.includes('04c-going-further.html')),'Localization Studio omits full-course Portuguese rows');ok(await page.isVisible('#loc-source')&&await page.isVisible('#loc-target'),'comparison frames are not visible');const portugueseAssetCount=await page.evaluate(async()=>(await(await fetch('./assets/localization-pt.json')).json()).assets.length);await page.click('#loc-kinds [data-kind="assets"]');await page.waitForFunction(count=>document.querySelectorAll('.loc-page').length===count,portugueseAssetCount);const assetRows=await page.$$eval('.loc-page',xs=>xs.map(x=>x.textContent));ok(assetRows.some(x=>x.includes('01a-loop-1.svg'))&&assetRows.some(x=>x.includes('lethal-trifecta.svg')),'Studio omits full-course SVG drift rows');await page.locator('.loc-page').first().click();await page.waitForFunction(()=>document.querySelector('#loc-source').srcdoc.includes('<svg')&&document.querySelector('#loc-target').srcdoc.includes('data-locale="pt-BR"'));const svgFrames=await page.evaluate(()=>['loc-source','loc-target'].map(id=>!!document.getElementById(id).contentDocument?.querySelector('svg')));ok(svgFrames.every(Boolean),'Localization Studio SVG comparison did not render both figure documents');await page.screenshot({path:path.join(shots,'localization-studio-desktop.png'),fullPage:false});
-await page.setViewportSize({width:390,height:844});
-await open(page,'/pt/nemoclaw/index.html');
-await page.waitForSelector('.language-menu-button');
-const moduleBadges=await page.$$eval('.module-grid .language-fallback-badge',xs=>xs.map(x=>x.textContent.trim()));
-ok(moduleBadges.length===0,'fully translated lesson grid still shows English fallback badges');
-const disclosure=await page.textContent('.howto');
-ok(disclosure.includes('curso completo')&&disclosure.includes('doze aulas'),'Portuguese landing page does not disclose full-course coverage');
-const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
-ok(overflow<=2,`Portuguese mobile page overflows by ${overflow}px`);
-await page.locator('.howto').screenshot({path:path.join(shots,'portuguese-full-coverage.png'),animations:'disabled'});
-await page.locator('.module-grid').screenshot({path:path.join(shots,'portuguese-full-course-modules.png'),animations:'disabled'});
-await page.click('.language-menu-button');
-await page.screenshot({path:path.join(shots,'portuguese-home-mobile-language-menu.png'),fullPage:false,animations:'disabled'});
-await page.setViewportSize({width:1280,height:900});await auditLocalizedFigureCards(page,'es','Spanish');await auditLocalizedFigureCards(page,'pt','Portuguese');
-await browser.close();server.close();console.log(JSON.stringify({ok:true,summary,shots:fs.readdirSync(shots)},null,2));})().catch(e=>{try{server.close()}catch(_){};console.error(e.stack||String(e));process.exit(1)});
+
+async function open(page, route) {
+  const errors = [];
+  page.removeAllListeners();
+  page.on('console', message => { if (message.type() === 'error') errors.push(`console: ${message.text()}`); });
+  page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
+  page.on('response', response => { if (response.status() >= 400) errors.push(`HTTP ${response.status()}: ${response.url()}`); });
+  await page.goto(`http://127.0.0.1:${port}${route}`, {waitUntil:'domcontentloaded'});
+  await page.waitForTimeout(350);
+  errors.forEach(detail => record('browser-error', route, detail));
+}
+
+async function inspect(page, language, file, viewport, sourceUi, isDefault) {
+  const route = `/${language.url.replace(/^\/+|\/+$/g, '')}/${file}`;
+  await page.setViewportSize(viewport);
+  await open(page, route);
+  const result = await page.evaluate(async ({profile, expectedLang, sourceUi, isDefault}) => {
+    document.querySelectorAll('details').forEach(node => { node.open = true; });
+    document.querySelectorAll('.cf-helpers-showall[aria-expanded="false"]').forEach(node => node.click());
+    await new Promise(resolve => setTimeout(resolve, 50));
+    document.querySelector('.language-menu-button')?.click();
+    await new Promise(resolve => setTimeout(resolve, 20));
+    const localized = await import(new URL('./scripts/_locale.js', location.href));
+    const skip = 'pre,code,textarea,script,style,svg,a[href^="http"],[data-preserve-language],.CodeMirror,.cm-editor,.cf-det-sig,[data-code-meta]';
+    const controls = 'button,label,option,summary,[role="button"],[role="tab"],[role="menuitem"]';
+    const words = new Set((profile.english_function_words || []).map(word => word.toLowerCase()));
+    const threshold = Number(profile.english_function_word_threshold || 0);
+    const preserved = [...(profile.canonical_english_titles || []), ...(profile.allowed_english_tokens || [])].sort((a, b) => b.length - a.length);
+    const isPreserved = value => {
+      if (/^(?:https?:\/\/\S+|(?:GET|POST|PUT|PATCH|DELETE)\s+\/\S+|nvapi-\S+|Apache-2\.0|[\w.-]+\/[\w./-]+|[A-Za-z]\w*(?:_[A-Za-z]\w*)+)$/.test(value)) return true;
+      let remaining = value;
+      for (const term of preserved) remaining = remaining.split(term).join(' ');
+      return !/[A-Za-z]{3}/.test(remaining);
+    };
+    const residues = [];
+    const uiText = [];
+    const walker = document.createTreeWalker(document.querySelector('main') || document.body, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const parent = walker.currentNode.parentElement;
+      if (!parent || parent.closest(skip)) continue;
+      const text = walker.currentNode.nodeValue.replace(/\s+/g, ' ').trim();
+      if (text && parent.closest(controls)) uiText.push(text);
+    }
+    for (const element of (document.querySelector('main') || document.body).querySelectorAll('[placeholder],[title],[aria-label]')) {
+      if (element.closest(skip)) continue;
+      for (const name of ['placeholder', 'title', 'aria-label']) {
+        const text = (element.getAttribute(name) || '').replace(/\s+/g, ' ').trim();
+        if (text) uiText.push(text);
+      }
+    }
+    if (!isDefault && threshold && words.size) {
+      for (let text of uiText) {
+        for (const allowed of [...(profile.canonical_english_titles || []), ...(profile.allowed_english_tokens || [])]) text = text.split(allowed).join(' ');
+        const count = (text.toLowerCase().match(/[a-z]+/g) || []).filter(word => words.has(word)).length;
+        if (count >= threshold) residues.push(text.slice(0, 240));
+      }
+    }
+    const helpers = [...document.querySelectorAll('tr[data-helper]')].map(row => ({
+      name: row.dataset.helper,
+      signature: row.cells[0]?.textContent.trim() || '',
+      description: row.cells[1]?.textContent.trim() || '',
+    }));
+    const scrollLeaks = [...document.querySelectorAll('body *')].flatMap(node => {
+      const style = getComputedStyle(node), x = node.scrollWidth > node.clientWidth + 1, y = node.scrollHeight > node.clientHeight + 1;
+      if ((!x && !y) || !/(auto|scroll)/.test(`${style.overflowX} ${style.overflowY}`)) return [];
+      if ((!x || style.overscrollBehaviorX === 'contain') && (!y || style.overscrollBehaviorY === 'contain')) return [];
+      return [`${node.tagName}.${String(node.className || '').replace(/\s+/g,'.').slice(0,100)}`];
+    });
+    const diagramEscapes = [...new Set(document.querySelectorAll('[data-svg-src] svg,svg.dg-svg'))].flatMap(svg => {
+      const cards = [...svg.querySelectorAll('rect')].filter(node => {
+        const stroke = node.getAttribute('stroke');
+        return node.hasAttribute('rx') || node.hasAttribute('ry') || (stroke && stroke !== 'none');
+      }).map(node => node.getBoundingClientRect()).filter(box => box.width > 20 && box.height > 15);
+      return [...svg.querySelectorAll('text')].flatMap(node => {
+        const box = node.getBoundingClientRect(), cx = box.left + box.width / 2, cy = box.top + box.height / 2;
+        const card = cards.filter(item => item.left <= cx && cx <= item.right && item.top <= cy && cy <= item.bottom).sort((a,b) => a.width*a.height-b.width*b.height)[0];
+        return card && (box.left < card.left - 2 || box.right > card.right + 2 || box.top < card.top - 2 || box.bottom > card.bottom + 2) ? [node.textContent.trim()] : [];
+      });
+    });
+    return {
+      lang: document.documentElement.lang,
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      residues: [...new Set(residues)],
+      emptyHelpers: helpers.filter(item => !item.signature || !item.description),
+      misses: localized.courseLocaleMisses(),
+      scrollLeaks: [...new Set(scrollLeaks)],
+      diagramEscapes: [...new Set(diagramEscapes)],
+      languageMenuClipped: [...document.querySelectorAll('.language-menu-popover a')].some(node => {
+        const box = node.getBoundingClientRect();
+        return box.left < 0 || box.top < 0 || box.right > innerWidth || box.bottom > innerHeight;
+      }),
+      untranslatedUi: isDefault ? [] : [...new Set(uiText.filter(text =>
+        sourceUi.includes(text) && /[A-Za-z]{3}/.test(text) && !text.startsWith('/') && !isPreserved(text)))],
+      expectedLang,
+    };
+  }, {profile: profiles[language.code] || {}, expectedLang: language.locale, sourceUi, isDefault});
+  if (result.lang !== result.expectedLang) record('html-lang', route, `${result.lang} != ${result.expectedLang}`);
+  if (result.overflow > 2) record('page-overflow', route, `${result.overflow}px at ${viewport.width}px`);
+  if (result.languageMenuClipped) record('language-menu-layout', route, 'language-menu entries are clipped');
+  for (const [code, values] of Object.entries({
+    'mixed-language': result.residues,
+    'helper-documentation': result.emptyHelpers.map(item => `${item.name}: ${item.signature ? 'description' : 'signature'}`),
+    'runtime-locale-miss': result.misses,
+    'scroll-chain': result.scrollLeaks,
+    'diagram-overflow': result.diagramEscapes.map(value => `${value} has labels outside their cards`),
+    'untranslated-ui': result.untranslatedUi,
+  })) values.forEach(detail => record(code, route, detail));
+}
+
+async function inspectLocalizationStudio(page, manifest, language) {
+  const primary = manifest.languages.find(item => item.code === manifest.default);
+  if (!primary?.available_pages.includes('localization.html')) return;
+  const route = `/${primary.url.replace(/^\/+|\/+$/g, '')}/localization.html?locale=${encodeURIComponent(language.code)}`;
+  await open(page, route);
+  const ready = await page.locator('#loc-source,#loc-target').count();
+  if (ready !== 2) record('localization-studio', route, 'Localization Studio did not render both comparison frames');
+}
+
+async function wheelProbe(page, language, files) {
+  await page.setViewportSize({width:1280,height:900});
+  for (const file of files) {
+    const route = `/${language.url.replace(/^\/+|\/+$/g, '')}/${file}`;
+    await open(page, route);
+    const helpers = page.locator('details.cf-helpers').filter({has: page.locator('tr[data-helper]')}).first();
+    if (!await helpers.count()) continue;
+    await helpers.evaluate(node => {
+      for (let current = node; current; current = current.parentElement) {
+        if (current.tagName === 'DETAILS') current.open = true;
+      }
+    });
+    const showAll = helpers.locator('.cf-helpers-showall:visible').first();
+    if (await showAll.count()) await showAll.click();
+    const helper = helpers.locator('tr[data-helper]:visible').first();
+    if (!await helper.count()) continue;
+    await helper.click();
+    const editor = helpers.locator('tr.cf-helpers-source-row:visible .CodeMirror-scroll').first();
+    if (!await editor.count()) continue;
+    await editor.evaluate(node => { node.scrollTop = node.scrollHeight; node.scrollIntoView({block:'center'}); });
+    await editor.hover();
+    await page.waitForTimeout(500);
+    const before = await page.evaluate(() => scrollY);
+    await page.mouse.wheel(0, 480); await page.waitForTimeout(100);
+    const after = await page.evaluate(() => scrollY);
+    if (Math.abs(after - before) > 2) record('scroll-chain-wheel', route, `${before} -> ${after}`);
+    return;
+  }
+  record('wheel-probe-missing', language.code, 'no discovered learner page exposes a helper editor');
+}
+
+(async () => {
+  await new Promise(resolve => server.listen(port, '127.0.0.1', resolve));
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'languages.json'), 'utf8'));
+  const languages = manifest.languages;
+  const browser = await chromium.launch({headless:true, executablePath:process.env.CHROME_BIN});
+  const page = await browser.newPage();
+  const primary = manifest.languages.find(item => item.code === manifest.default);
+  const primaryPages = learnerPages;
+  const sourceUi = {};
+  for (const file of primaryPages) {
+    const route = `/${primary.url.replace(/^\/+|\/+$/g, '')}/${file}`;
+    console.log(`[locale-runtime] source ${route}`);
+    await capture('source-inspection', route, async () => {
+      await open(page, route);
+      sourceUi[file] = await page.evaluate(() => {
+        const skip = 'pre,code,textarea,script,style,svg,a[href^="http"],[data-preserve-language],.CodeMirror,.cm-editor,.cf-det-sig,[data-code-meta]';
+        const controls = 'button,label,option,summary,[role="button"],[role="tab"],[role="menuitem"]';
+        const values = [], walker = document.createTreeWalker(document.querySelector('main') || document.body, NodeFilter.SHOW_TEXT);
+        while (walker.nextNode()) {
+          const parent = walker.currentNode.parentElement;
+          if (!parent || parent.closest(skip)) continue;
+          const text = walker.currentNode.nodeValue.replace(/\s+/g, ' ').trim();
+          if (text && parent.closest(controls)) values.push(text);
+        }
+        for (const element of (document.querySelector('main') || document.body).querySelectorAll('[placeholder],[title],[aria-label]')) {
+          if (element.closest(skip)) continue;
+          for (const name of ['placeholder', 'title', 'aria-label']) {
+            const text = (element.getAttribute(name) || '').replace(/\s+/g, ' ').trim();
+            if (text) values.push(text);
+          }
+        }
+        return [...new Set(values)];
+      });
+    });
+  }
+  for (const language of languages) {
+    if (language.code !== manifest.default && !profiles[language.code]) {
+      record('locale-profile', language.code, 'missing browser audit profile'); continue;
+    }
+    const available = new Set(language.available_pages);
+    const missing = primaryPages.filter(file => !available.has(file));
+    if (missing.length) record('locale-page-parity', language.code, `missing learner pages: ${missing.join(', ')}`);
+    const pages = [...new Set([...primaryPages, ...localizedFigurePages(language)])].sort();
+    if (!pages.length) { record('locale-pages', language.code, 'no discovered learner pages'); continue; }
+    for (const file of pages) {
+      const route = `/${language.url.replace(/^\/+|\/+$/g, '')}/${file}`;
+      const isDefault = language.code === manifest.default;
+      console.log(`[locale-runtime] ${language.code} ${route}`);
+      await capture('page-inspection', route, () => inspect(page, language, file, {width:1280,height:900}, sourceUi[file] || [], isDefault));
+      await capture('page-inspection', route, () => inspect(page, language, file, {width:390,height:844}, sourceUi[file] || [], isDefault));
+    }
+    const lessons = pages.filter(file => /^\d{2}[a-z]-/.test(file));
+    if (lessons.length) await capture('wheel-probe', language.code, () => wheelProbe(page, language, lessons));
+    if (language.code !== manifest.default) {
+      await capture('localization-studio', language.code, () => inspectLocalizationStudio(page, manifest, language));
+    }
+    await capture('locale-screenshot', language.code, async () => {
+      await open(page, `/${language.url.replace(/^\/+|\/+$/g, '')}/${pages[0]}`);
+      await page.screenshot({path:path.join(shots, `${language.code}-learner-page.png`), fullPage:false, animations:'disabled'});
+    });
+  }
+  await browser.close(); server.close();
+  if (findings.length) throw new Error(JSON.stringify(findings, null, 2));
+  console.log(JSON.stringify({ok:true, locales:languages.map(item => item.code), screenshots:fs.readdirSync(shots).sort()}));
+})().catch(error => { try { server.close(); } catch (_) {} console.error(error.stack || String(error)); process.exit(1); });
 """
+
+
+LESSON_ID = re.compile(r"^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$", re.IGNORECASE)
+
+
+def discover_learner_pages(site: Path, manifest: dict) -> list[str]:
+    """Resolve learner routes from the built course's explicit learning profile."""
+    languages = manifest.get("languages")
+    if not isinstance(languages, list):
+        raise ValueError("languages.json has no languages list")
+    primary = next((item for item in languages if item.get("code") == manifest.get("default")), None)
+    if not isinstance(primary, dict) or not isinstance(primary.get("url"), str):
+        raise ValueError("languages.json has no valid default-language route")
+    course = (site / primary["url"]).resolve()
+    if site != course and site not in course.parents:
+        raise ValueError("default-language route escapes the site root")
+    profile_path = course / "learning-profile.json"
+    try:
+        profile = json.loads(profile_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"{profile_path}: invalid learning profile: {exc}") from exc
+    lessons = profile.get("lessons")
+    if not isinstance(lessons, list) or not lessons:
+        raise ValueError(f"{profile_path}: no lessons declared")
+    ids = [item.get("id") if isinstance(item, dict) else None for item in lessons]
+    invalid = [value for value in ids if not isinstance(value, str) or not LESSON_ID.fullmatch(value)]
+    if invalid:
+        raise ValueError(f"{profile_path}: invalid lesson ids: {invalid}")
+    if len(ids) != len(set(ids)):
+        raise ValueError(f"{profile_path}: duplicate lesson ids")
+    return sorted(["index.html", *(f"{lesson_id}.html" for lesson_id in ids)])
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--site-root", default="/tmp/pt-localization-pages")
-    parser.add_argument("--screenshots", default="/tmp/pt-localization-screenshots")
+    parser.add_argument("--site-root", default="/tmp/course-localization-pages")
+    parser.add_argument("--screenshots", default="/tmp/course-localization-screenshots")
     args = parser.parse_args()
-    site = Path(args.site_root).resolve()
-    shots = Path(args.screenshots).resolve()
+    site, shots = Path(args.site_root).resolve(), Path(args.screenshots).resolve()
     shots.mkdir(parents=True, exist_ok=True)
+    try:
+        manifest = json.loads((site / "languages.json").read_text(encoding="utf-8"))
+        learner_pages = discover_learner_pages(site, manifest)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        print(f"localization runtime audit: FAIL\n  - {exc}")
+        return 1
+    profiles = {
+        spec.url_code: {
+            key: spec.profile.get(key, [] if key != "english_function_word_threshold" else 0)
+            for key in ("english_function_words", "english_function_word_threshold", "allowed_english_tokens", "canonical_english_titles")
+        }
+        for spec in discover_locales(ROOT)
+    }
     with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as handle:
         handle.write(RUNTIME)
         script = Path(handle.name)
     try:
-        run = run_node(script, env=environment(SITE_ROOT=site, SHOTS=shots), timeout=180)
+        language_count = len(manifest["languages"])
+        timeout = max(240, 5 * len(learner_pages) * (1 + 2 * language_count))
+        run = run_node(script, env=environment(
+            SITE_ROOT=site, SHOTS=shots, LOCALE_PROFILES=json.dumps(profiles),
+            LEARNER_PAGES=json.dumps(learner_pages)), timeout=timeout)
     except BrowserRuntimeError as exc:
         print(f"localization runtime audit: FAIL\n  - {exc}")
         return 1
+    except subprocess.TimeoutExpired as exc:
+        output = exc.stdout.decode(errors="replace") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
+        print(f"localization runtime audit: FAIL\n  - timed out after {timeout}s\n{output[-4000:]}")
+        return 1
     finally:
         script.unlink(missing_ok=True)
-    print(run.stdout.rstrip())
+    print((run.stdout or "").rstrip())
+    if (run.stderr or "").strip(): print(run.stderr.rstrip(), file=sys.stderr)
     print("localization runtime audit: " + ("OK" if run.returncode == 0 else "FAIL"))
     return run.returncode
 

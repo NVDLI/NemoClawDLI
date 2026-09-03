@@ -6,6 +6,7 @@
 const OOM_SCORE_ADJ_NOISE = /^(?:\/bin\/)?(?:ba|da|z)?sh:\s*(?:line\s+)?\d+:\s*cannot create \/proc\/self\/oom_score_adj:\s*Permission denied\s*$/;
 
 export function filterOpenClawRuntimeNoise(value) {
+  /* @doc <code>helpers.filterOpenClawRuntimeNoise(text)</code> :: Removes known container noise from OpenClaw text while preserving learner-relevant output. */
   return String(value == null ? "" : value)
     .split(/\r?\n/)
     .filter(line => !OOM_SCORE_ADJ_NOISE.test(line.trim()))
@@ -15,6 +16,7 @@ export function filterOpenClawRuntimeNoise(value) {
 }
 
 export function filterOpenClawRuntimeValue(value) {
+  /* @doc <code>helpers.filterOpenClawRuntimeValue(value)</code> :: Applies OpenClaw noise filtering recursively to strings inside arrays and objects. */
   if (typeof value === "string") return filterOpenClawRuntimeNoise(value);
   if (Array.isArray(value)) return value.map(filterOpenClawRuntimeValue);
   if (value && typeof value === "object") {
@@ -24,6 +26,7 @@ export function filterOpenClawRuntimeValue(value) {
 }
 
 export function openclawMessageText(message) {
+  /* @doc <code>helpers.openclawMessageText(message)</code> :: Extracts clean text from a gateway message with string or block-array content. */
   const content = message?.content;
   if (typeof content === "string") return filterOpenClawRuntimeNoise(content);
   if (!Array.isArray(content)) return "";
@@ -34,6 +37,7 @@ export function openclawMessageText(message) {
 }
 
 export function openclawResultText(result) {
+  /* @doc <code>helpers.openclawResultText(result)</code> :: Extracts clean text from an OpenClaw tool result, including structured content blocks. */
   if (result == null) return "";
   if (typeof result === "string") return filterOpenClawRuntimeNoise(result);
   if (Array.isArray(result.content)) {

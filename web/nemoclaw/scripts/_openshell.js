@@ -172,6 +172,7 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
 // The terminal reads two loopback bootstrap endpoints without exposing the cookie.
 // A fixed map selects the command; no learner-controlled shell fragment is interpolated.
 export async function openclawLoopbackProbe(path, { baseUrl = null, signal = null } = {}) {
+  /* @doc <code>helpers.openclawLoopbackProbe(path, opts?)</code> :: Reads an approved OpenClaw bootstrap endpoint through a Pomerium launchable's terminal without exposing its browser cookie. */
   const connection = getOpenClawConnection();
   const rawUrl = (baseUrl || connection.rawUrl || "").replace(/\/+$/, "");
   if (!rawUrl) throw new Error("No launchable URL set. Connect on Module 3a first.");
@@ -482,6 +483,7 @@ export function annotatePolicyYaml(yaml) {
 // Switching the calling binary recomputes every egress edge through evalSandboxNetwork, and clicking a target shows its rules and verdict reason.
 // The operator token sits ABOVE the checkpoint to mark the escalation axis the sandbox never sees. Returns { setBinary }.
 export function mountPolicyMap(sel, { policy = OPENSHELL_POLICY_HARDENED, binaries, snapshotDate = "2026-06-17" } = {}) {
+  /* @doc <code>helpers.mountPolicyMap(target, opts?)</code> :: Mounts an interactive OpenShell trust-boundary map whose verdicts come from the supplied policy. */
   const root = typeof sel === "string" ? document.querySelector(sel) : sel;
   if (!root) return;
   root.dataset.state = "ready";

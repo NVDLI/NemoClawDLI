@@ -68,6 +68,7 @@ export function detectOpenClawBrowserSession(rawUrl, accessProvider = "auto", ti
 }
 
 export function openclawGatewayWsUrl(rawUrl, accessSession = "", proxyBase = null, proxyEnabled = null, accessProvider = "auto") {
+  /* @doc <code>helpers.openclawGatewayWsUrl(url, session?, relay?, enabled?, provider?)</code> :: Builds the direct or approved-relay WebSocket URL for an OpenClaw gateway. */
   let provider = "auto";
   try { provider = accessProviderForOpenClawUrl(rawUrl, accessProvider); }
   catch (_) { /* openclawWebSocketUrl below returns the authoritative error */ }
@@ -104,6 +105,7 @@ function redactOpenClawText(value) {
 }
 
 export function redactOpenClawDiagnostic(value, key = "", seen = new WeakSet()) {
+  /* @doc <code>helpers.redactOpenClawDiagnostic(value)</code> :: Recursively redacts credentials and credential-bearing URLs from OpenClaw diagnostic data. */
   const name = String(key || "").toLowerCase();
   if (value == null || typeof value === "number" || typeof value === "boolean") return value;
   if (typeof value === "string") {
@@ -195,6 +197,7 @@ let _verifiedGatewayToken = { rawUrl: "", token: "", verifiedAt: 0, metadataMatc
 // Fetch the token from GET /api/agent before the first gateway connection.
 // Keep it only in the tab-scoped store.
 export async function refreshOpenClawGatewayToken({ signal = null, maxAgeMs = 30000 } = {}) {
+  /* @doc <code>helpers.refreshOpenClawGatewayToken(opts?)</code> :: Refreshes the gateway token from verified agent metadata and keeps it only in tab-scoped storage. */
   const connection = getOpenClawConnection();
   const rawUrl = String(connection.rawUrl || "").replace(/\/+$/, "");
   if (!rawUrl) throw new Error("Set the launchable URL in the Module 3a probe first.");
@@ -394,6 +397,7 @@ export async function runOpenClawConnectionAudit({
   signal = null,
   onStep = null,
 } = {}) {
+  /* @doc <code>helpers.runOpenClawConnectionAudit(opts)</code> :: Tests launchable metadata, gateway, terminal, and health routes in order and returns redacted evidence. */
   const rawUrl = normalizeOpenClawLaunchableUrl(baseUrl);
   if (!rawUrl) throw new Error("Enter the NemoClaw launchable Base URL.");
   const provider = accessProviderForOpenClawUrl(rawUrl);
@@ -1754,6 +1758,7 @@ export function mountOpenClawConnectionAudit(targetSel, opts = {}) {
 }
 
 export function mountModelEndpointProbe(targetSel, opts = {}) {
+  /* @doc <code>helpers.mountModelEndpointProbe(target, opts?)</code> :: Mounts the read-only model-endpoint mirror used beside the launchable connection probe. */
   return mountEndpointProbe(targetSel, {
     ...opts,
     connectionKind: "model",
@@ -1989,7 +1994,7 @@ await new Promise((resolve, reject) => {
 export function mountGwRecover(sel) {
   mountCanvasFlow(sel, {
   label: "Detect & recover · health check, then escalating reset",
-  intro: "Health check, conditional repair, and logs for the shared OpenClaw harness. Health check runs a command and reads toolSearch. Recover changes toolSearch only when it is enabled; session clearing and restart are separate opt-ins. Runtime logs tails the log when a run stalls.",
+  intro: localizeCourseUiText("Health check, conditional repair, and logs for the shared OpenClaw harness. Health check runs a command and reads toolSearch. Recover changes toolSearch only when it is enabled; session clearing and restart are separate opt-ins. Runtime logs tails the log when a run stalls."),
   edges: [
     { from: "gw-health", to: "gw-fix" },
   ],

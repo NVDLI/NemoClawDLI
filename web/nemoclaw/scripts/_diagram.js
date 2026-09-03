@@ -34,7 +34,8 @@ function _dgLayout(spec) {
   const hasBottomReturn = (spec.edges || []).some((e) =>
     e.side === "bottom" || (String(e.fromPort || "").startsWith("bottom") && String(e.toPort || "").startsWith("bottom")));
   const boxW = spec.boxW || (cols >= 4 ? 280 : 268);
-  const boxH = spec.boxH || Math.max(96, 54 + maxLines * 18);
+  const maxTitleLines = Math.max(...nodes.map((n) => _dgWrapText(n.label, boxW - 34, 17).length), 1);
+  const boxH = spec.boxH || Math.max(96, 54 + maxLines * 18 + (maxTitleLines - 1) * 15);
   const padX = spec.padX == null ? 44 : spec.padX;
   const top = spec.top == null ? 52 : spec.top;
   const rowGap = spec.rowGap == null ? 74 : spec.rowGap;
@@ -53,37 +54,66 @@ function _dgLayout(spec) {
   return { boxW, boxH, W, H, at, stepX, overlapX };
 }
 
+function _dgTextWidth(value, fontSize) {
+  return [...String(value || "")].reduce((width, char) =>
+    width + fontSize * (/[^\u0000-\u00ff]/.test(char) ? 1 : /\s/.test(char) ? 0.32 : 0.58), 0);
+}
+
+function _dgFitText(value, maxWidth, fontSize) {
+  return _dgTextWidth(value, fontSize) > maxWidth
+    ? ` textLength="${maxWidth}" lengthAdjust="spacingAndGlyphs"`
+    : "";
+}
+
+function _dgWrapText(value, maxWidth, fontSize, maxLines = 2) {
+  const text = String(value || "").trim();
+  if (!text || _dgTextWidth(text, fontSize) <= maxWidth) return [text];
+  const tokens = /\s/.test(text) ? text.split(/\s+/) : [...text];
+  const joiner = /\s/.test(text) ? " " : "";
+  const lines = [];
+  for (const token of tokens) {
+    const candidate = lines.length ? `${lines.at(-1)}${joiner}${token}` : token;
+    if (!lines.length || _dgTextWidth(candidate, fontSize) > maxWidth) lines.push(token);
+    else lines[lines.length - 1] = candidate;
+  }
+  if (lines.length > maxLines) lines.splice(maxLines - 1, lines.length, lines.slice(maxLines - 1).join(joiner));
+  return lines;
+}
+
 function _dgBox(n, g, t) {
   const kc = t.kinds[n.kind] || t.kinds.neutral;
   const { x, y, w } = g.at[n.id];
   const cx = x + w / 2;
   const body = n.lines || [];
-  const lineGap = 18;
   const titleFs = 17;
   const bodyFs = 12;
-  const titleY = y + 27;
-  const ruleY = y + 39;
-  const bodyY = y + 57;
+  const titleLines = _dgWrapText(n.label, w - 34, titleFs);
+  const lineGap = titleLines.length > 1 ? 16 : 18;
+  const titleY = y + (titleLines.length > 1 ? 21 : 27);
+  const ruleY = y + 39 + (titleLines.length - 1) * 15;
+  const bodyY = ruleY + 18;
+  const title = titleLines.map((line, i) =>
+    `<text x="${cx}" y="${titleY + i * 17}" text-anchor="middle" font-size="${titleFs}" ` +
+    `font-family="${_DG_SANS}" fill="${kc}" font-weight="800"${_dgFitText(line, w - 34, titleFs)}>${_dgEsc(line)}</text>`).join("");
   const lines = body.map((s, i) =>
     `<text x="${cx}" y="${bodyY + i * lineGap}" text-anchor="middle" font-size="${bodyFs}" ` +
-    `font-family="${_DG_SANS}" fill="${t.td}">${_dgEsc(s)}</text>`).join("");
+    `font-family="${_DG_SANS}" fill="${t.td}"${_dgFitText(s, w - 28, bodyFs)}>${_dgEsc(s)}</text>`).join("");
   const socket = (() => {
     if (!n.socket) return "";
     // Size the pill to the label (not a fixed inset) so it never clips, centered on the box and capped so it stays inside the card.
-    const sw = Math.min(w - 12, Math.max(w - 84, n.socket.length * 7.0 + 24));
+    const sw = Math.min(w - 12, Math.max(w - 84, _dgTextWidth(n.socket, 12) + 24));
     const sx = cx - sw / 2;
     return `<rect x="${sx}" y="${y + g.boxH - 15}" width="${sw}" height="30" rx="15" ` +
       `fill="${t.bg}" stroke="${kc}" stroke-width="1.5" opacity="0.9"/>` +
       `<text x="${cx}" y="${y + g.boxH + 5}" text-anchor="middle" font-size="12" ` +
-      `font-family="${_DG_SANS}" fill="${kc}" font-weight="700">${_dgEsc(n.socket)}</text>`;
+      `font-family="${_DG_SANS}" fill="${kc}" font-weight="700"${_dgFitText(n.socket, sw - 16, 12)}>${_dgEsc(n.socket)}</text>`;
   })();
   return (
     `<g filter="url(#fig-shadow)"><rect x="${x}" y="${y}" width="${w}" height="${g.boxH}" ` +
     `rx="10" fill="${t.e2}" stroke="${kc}" stroke-width="2"/></g>` +
     `<rect x="${x}" y="${y + 1}" width="8" height="${g.boxH - 2}" rx="6" fill="${kc}" opacity="0.78"/>` +
     `<path d="M ${x + 14} ${ruleY} H ${x + w - 14}" stroke="${kc}" stroke-width="1.2" opacity="0.26"/>` +
-    `<text x="${cx}" y="${titleY}" text-anchor="middle" font-size="${titleFs}" font-family="${_DG_SANS}" ` +
-    `fill="${kc}" font-weight="800">${_dgEsc(n.label)}</text>` + lines + socket
+    title + lines + socket
   );
 }
 
@@ -91,10 +121,10 @@ function _dgBox(n, g, t) {
 function _dgEdgeLabelChip(mx, my, label, kc, t) {
   if (!label) return "";
   // Size the pill to the text so long labels do not clip.
-  const w = Math.max(46, label.length * 7.1 + 18);
+  const w = Math.min(260, Math.max(46, _dgTextWidth(label, 12) + 18));
   return `<rect x="${mx - w / 2}" y="${my - 13}" width="${w}" height="26" rx="13" fill="${t.e1}" stroke="${t.bd}"/>` +
     `<text x="${mx}" y="${my + 4}" text-anchor="middle" font-size="12" font-family="${_DG_SANS}" ` +
-    `fill="${kc}" font-style="italic">${_dgEsc(label)}</text>`;
+    `fill="${kc}" font-style="italic"${_dgFitText(label, w - 18, 12)}>${_dgEsc(label)}</text>`;
 }
 
 function _dgPort(box, port, offset = 0) {

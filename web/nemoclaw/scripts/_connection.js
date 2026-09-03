@@ -270,6 +270,7 @@ export function migrateOpenClawConnectionStorage() {
 }
 
 export function setOpenClawConnection({ rawUrl, token, accessProvider, accessSession, accessJwt } = {}) {
+  /* @doc <code>helpers.setOpenClawConnection(connection)</code> :: Validates and saves launchable routing while keeping credentials in tab-scoped storage. */
   const target = storage();
   const secrets = secretStorage();
   const current = migrateOpenClawConnectionStorage();
@@ -338,6 +339,7 @@ export function setOpenClawConnection({ rawUrl, token, accessProvider, accessSes
 }
 
 export function getOpenClawConnection() {
+  /* @doc <code>helpers.getOpenClawConnection()</code> :: Returns the normalized launchable route, provider, and tab-scoped credentials after migrating legacy storage. */
   const target = storage();
   const secrets = secretStorage();
   const migrated = migrateOpenClawConnectionStorage();

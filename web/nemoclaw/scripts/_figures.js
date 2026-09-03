@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Course-specific inline figure builders kept out of the shared diagram engine.
+import { localizeCourseUiText } from "./_locale.js";
 
 export function ganttBarsSVG(workers, wallSeconds, title = "Concurrency vs serial time") {
   /* @doc <code>helpers.ganttBarsSVG(workers, wallSeconds, title)</code> ::
@@ -147,11 +148,13 @@ function _lightbox() {
 }
 
 export function openFigureLightbox(svg, trigger = null) {
+  /* @doc <code>helpers.openFigureLightbox(svg, trigger?)</code> :: Opens a cloned SVG in the shared keyboard-accessible figure lightbox. */
   if (!svg) return;
   _lightbox().open(svg.cloneNode(true), trigger);
 }
 
 export function wireFigureZoom(host, svg = null) {
+  /* @doc <code>helpers.wireFigureZoom(host, svg?)</code> :: Makes an SVG host open the shared lightbox by click, Enter, or Space. */
   if (!host) return;
   const targetSvg = svg || (host.matches && host.matches("svg") ? host : host.querySelector("svg"));
   if (!targetSvg || targetSvg.dataset.figZoomDone === "1") return;
@@ -162,7 +165,7 @@ export function wireFigureZoom(host, svg = null) {
   clickHost.setAttribute("tabindex", "0");
   clickHost.dataset.state = "ready";
   clickHost.setAttribute("aria-expanded", "false");
-  clickHost.setAttribute("aria-label", (targetSvg.getAttribute("aria-label") || "Figure") + ", click to enlarge");
+  clickHost.setAttribute("aria-label", (targetSvg.getAttribute("aria-label") || "Figure") + ", " + localizeCourseUiText("click to enlarge"));
   const open = () => openFigureLightbox(targetSvg, clickHost);
   clickHost.addEventListener("click", open);
   clickHost.addEventListener("keydown", e => {

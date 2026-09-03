@@ -7,6 +7,15 @@ import { HELPER_FNS, REASONING_MODEL, SPECIALS, VIZ_BUILDERS, _labOnlyService, _
 import { makeViz } from "./_viz.js";
 import { localizeCourseHelperDescription, localizeCourseUiText } from "./_locale.js";
 
+export function containNestedWheel(node) {
+  node?.addEventListener("wheel", event => {
+    const max = node.scrollHeight - node.clientHeight;
+    if (max > 0 && ((event.deltaY < 0 && node.scrollTop <= 0) || (event.deltaY > 0 && node.scrollTop >= max - 1))) {
+      event.preventDefault();
+    }
+  }, { passive: false, capture: true });
+}
+
 // ── Cmd-/ · Ctrl-/ : toggle `// ` line comments on the selection ─────────────────
 // The page loads CodeMirror core and the javascript mode but not the comment addon, so this fills in the toggle: comment the selected lines unless all are already commented, else uncomment.
 function _cmCommentToggle(cm) {
@@ -334,7 +343,7 @@ export function mountCanvasFlow(targetSel, opts) {
         <span class="cf-helpers-meta">click a row to inspect &amp; edit its source</span>
       </summary>
       <div class="cf-helpers-scroll">
-      ${_extraN ? `<button type="button" class="cf-helpers-showall" aria-expanded="false" style="margin:6px 0;background:transparent;border:1px solid var(--bd);color:var(--td);border-radius:5px;padding:3px 10px;font-family:var(--mono);font-size:.74rem;cursor:pointer;">+ show all ${_extraN} more helpers</button>` : ""}
+      ${_extraN ? `<button type="button" class="cf-helpers-showall" aria-expanded="false" style="margin:6px 0;background:transparent;border:1px solid var(--bd);color:var(--td);border-radius:5px;padding:3px 10px;font-family:var(--mono);font-size:.74rem;cursor:pointer;">${localizeCourseUiText(`+ show all ${_extraN} more helpers`)}</button>` : ""}
       <table class="cf-helpers-table">
         <tbody>
           ${_helperRows.map(r => {
@@ -349,9 +358,9 @@ export function mountCanvasFlow(targetSel, opts) {
               <tr class="cf-helpers-source-row" data-helper-source="${r.row}" hidden>
                 <td colspan="2">
                   <div class="cf-helpers-src-head">
-                    source · <code>${r.row}</code>
-                    ${editable ? `<button type="button" class="cf-helpers-apply" data-apply="${r.row}" title="Compile your edits and override the helper for this canvas">apply override</button>
-                    <button type="button" class="cf-helpers-revert" data-revert="${r.row}" title="Restore the original source">revert</button>` : ""}
+                    ${localizeCourseUiText("source")} · <code>${r.row}</code>
+                    ${editable ? `<button type="button" class="cf-helpers-apply" data-apply="${r.row}" title="${localizeCourseUiText("Compile your edits and override the helper for this canvas")}">${localizeCourseUiText("apply override")}</button>
+                    <button type="button" class="cf-helpers-revert" data-revert="${r.row}" title="${localizeCourseUiText("Restore the original source")}">${localizeCourseUiText("revert")}</button>` : ""}
                     <span class="cf-helpers-status" data-status-of="${r.row}"></span>
                   </div>
                   <textarea class="cf-helpers-src-editor" data-src-for="${r.row}" spellcheck="false" ${editable ? "" : "readonly"}></textarea>
@@ -521,7 +530,7 @@ helpers.viz.sideBySide(
       const on = _showAll.getAttribute("aria-expanded") !== "true";
       _showAll.setAttribute("aria-expanded", on ? "true" : "false");
       helpersTable.querySelectorAll("[data-x]").forEach(el => { el.style.display = on ? "" : "none"; });
-      _showAll.textContent = on ? "− show only this section's helpers" : `+ show all ${_extraN} more helpers`;
+      _showAll.textContent = localizeCourseUiText(on ? "− show only this section's helpers" : `+ show all ${_extraN} more helpers`);
     });
     // Click a helper row → toggle its inline source row directly below.
     // Only one source row open at a time keeps the menu compact.
@@ -587,6 +596,7 @@ helpers.viz.sideBySide(
         },
       });
       helperEditors[name].setSize("100%", "auto");
+      containNestedWheel(helperEditors[name].getScrollerElement());
       setTimeout(() => helperEditors[name].refresh(), 30);
     }
   }
@@ -1358,9 +1368,9 @@ function appendLogLine(logEl, args, opts) {
   return div;
 }
 
-function _docFor(name) {
-  let fn = HELPER_FNS[name];
-  if (!fn && name.startsWith("viz.") && typeof VIZ_BUILDERS !== "undefined") fn = VIZ_BUILDERS[name.slice(4)];
+function _docFor(name, helperFns = HELPER_FNS, vizBuilders = VIZ_BUILDERS) {
+  let fn = helperFns[name];
+  if (!fn && name.startsWith("viz.") && vizBuilders) fn = vizBuilders[name.slice(4)];
   if (typeof fn !== "function") return {};
   const m = fn.toString().match(/\/\*\s*@doc\b([\s\S]*?)\*\//);
   if (!m) return {};
@@ -1444,6 +1454,18 @@ export function helperMenuOrphans({ helperFns = HELPER_FNS, vizBuilders = VIZ_BU
   return [...universe].filter(name => !categorized.has(name));
 }
 
+export function helperDocumentationGaps({ helperFns = HELPER_FNS, vizBuilders = VIZ_BUILDERS, specials = SPECIALS } = {}) {
+  return [..._helperUniverse(helperFns, vizBuilders)].flatMap(name => {
+    const doc = _docFor(name, helperFns, vizBuilders);
+    const fallback = specials[name] || {};
+    const signature = doc.sig || fallback.sig || "";
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const ownsName = new RegExp(`(^|[^A-Za-z0-9_$])${escaped}([^A-Za-z0-9_$]|$)`).test(signature);
+    const missing = [!signature ? "signature" : "", signature && !ownsName ? "signature-name" : "", !doc.desc && !fallback.desc ? "description" : ""].filter(Boolean);
+    return missing.length ? [{ name, missing }] : [];
+  });
+}
+
 // Build the helper-menu rows by enumerating everything the runtime exposes, in a fixed order.
 // The category map only groups; anything exposed but uncategorized remains visible under "Other"
 // while the runtime validator fails the contribution that introduced it.
@@ -1512,7 +1534,7 @@ export function mountRunCell(targetSel, opts) {
           <span class="cf-helpers-meta"></span>
         </summary>
         <div class="cf-helpers-scroll">
-        ${_rcExtraN ? `<button type="button" class="cf-helpers-showall" aria-expanded="false" style="margin:6px 0;background:transparent;border:1px solid var(--bd);color:var(--td);border-radius:5px;padding:3px 10px;font-family:var(--mono);font-size:.74rem;cursor:pointer;">+ show all ${_rcExtraN} more helpers</button>` : ""}
+        ${_rcExtraN ? `<button type="button" class="cf-helpers-showall" aria-expanded="false" style="margin:6px 0;background:transparent;border:1px solid var(--bd);color:var(--td);border-radius:5px;padding:3px 10px;font-family:var(--mono);font-size:.74rem;cursor:pointer;">${localizeCourseUiText(`+ show all ${_rcExtraN} more helpers`)}</button>` : ""}
         <table class="cf-helpers-table"><tbody>
           ${_rcRows.map(r => {
             if (r.sectionHead) return `<tr class="cf-helpers-section-head"${r.extra ? ' data-x="1" style="display:none"' : ''}><td colspan="2">${r.sectionHead}</td></tr>`;
@@ -1567,7 +1589,7 @@ export function mountRunCell(targetSel, opts) {
       const on = _sa.getAttribute("aria-expanded") !== "true";
       _sa.setAttribute("aria-expanded", on ? "true" : "false");
       _rcHelpers.querySelectorAll("[data-x]").forEach(el => { el.style.display = on ? "" : "none"; });
-      _sa.textContent = on ? "− show only this cell's helpers" : `+ show all ${_rcExtraN} more helpers`;
+      _sa.textContent = localizeCourseUiText(on ? "− show only this cell's helpers" : `+ show all ${_rcExtraN} more helpers`);
     });
     const rcHelpCM = {};   // read-only CodeMirror per helper source, created lazily on first open
     _rcHelpers.addEventListener("click", (ev) => {
@@ -1589,6 +1611,7 @@ export function mountRunCell(targetSel, opts) {
             readOnly: true, viewportMargin: Infinity, tabSize: 2, indentUnit: 2,
           });
           rcHelpCM[name].setSize("100%", "auto");
+          containNestedWheel(rcHelpCM[name].getScrollerElement());
         }
       }
       srcRow.hidden = false; tr.classList.add("selected");
