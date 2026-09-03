@@ -1,0 +1,1717 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "zh-TW",
+  "template": "web/nemoclaw/01c-tools.html",
+  "media": [
+    "web/nemoclaw/assets/figures/01c-tools-1.svg",
+    "web/nemoclaw/assets/figures/01c-tools-2.svg"
+  ],
+  "values": {
+    "link.1be52ce4d6ee": {
+      "type": "link",
+      "source": "Comprehensive list at <a href=\"04c-going-further.html#refs\">Going Further · References</a>.",
+      "value": "完整列表請參閱<a href=\"04c-going-further.html#refs\">深入探索 · 參考資料</a>。"
+    },
+    "link.287ba68f5012": {
+      "type": "link",
+      "source": "\n    The cell wires <code>glossary_search</code> to an in-page catalog of NVIDIA terms.\n    Ranked search runs in the browser without a key and returns short definitions with source\n    links. The course's shared <code>web_search</code> applies the same ranking to the full catalog.\n    Open the <a href=\"glossary.html\">glossary explorer</a> to inspect every term, read the live\n    <code>webSearch</code> and <code>instantAnswer</code> source, or run the query yourself.\n  ",
+      "value": "\n    該單元將 <code>glossary_search</code> 接入頁面內的 NVIDIA 術語目錄。排序搜尋無需金鑰即可在瀏覽器中執行，並傳回帶來源連結的簡短定義。課程共享的 <code>web_search</code> 會對完整目錄應用相同的排序方式。開啟<a href=\"glossary.html\">術語表瀏覽器</a>即可檢視所有術語、閱讀即時的\n    <code>webSearch</code> 和 <code>instantAnswer</code> 原始碼，或自行執行查詢。\n  "
+    },
+    "link.3733f2183536": {
+      "type": "link",
+      "source": "<a href=\"https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices\" target=\"_blank\" rel=\"noopener\">MCP security best practices</a>. Consent, audience-bound credentials, SSRF controls, and local-server execution risks for MCP clients and operators.",
+      "value": "<a href=\"https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices\" target=\"_blank\" rel=\"noopener\">MCP 安全最佳實踐</a>。MCP 用戶端和運維人員需要關注的使用者同意、限定受眾的憑證、SSRF 控制措施和本機伺服器執行風險。"
+    },
+    "link.37f5c0c84c04": {
+      "type": "link",
+      "source": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/tool-use\" target=\"_blank\" rel=\"noopener\">Anthropic tool-use reference</a>. The parallel implementation for Claude, useful as a cross-vendor comparison.",
+      "value": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/tool-use\" target=\"_blank\" rel=\"noopener\">Anthropic 工具使用參考</a>。這是 Claude 的對應實現，適合用於跨供應商比較。"
+    },
+    "link.7652579600f1": {
+      "type": "link",
+      "source": "\n    <strong>Discovery is a trust boundary.</strong>\n    Treat a <code>tools/list</code> response as untrusted input. Before connecting the server:\n    <ul>\n      <li>verify its identity,</li>\n      <li>show the requested capabilities to the user,</li>\n      <li>grant the smallest useful scope,</li>\n      <li>and bind each credential to that server's audience.</li>\n    </ul>\n    For remote connection and\n    OAuth discovery, reject private and link-local destinations and validate every redirect. The\n    <a href=\"https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices\" target=\"_blank\" rel=\"noopener\">MCP security guidance</a>\n    assigns consent, token handling, and server-side request forgery (SSRF) controls to the client.\n  ",
+      "value": "\n    <strong>發現過程也是信任邊界。</strong>請將 <code>tools/list</code> 回應視為不可信輸入。連線伺服器之前：\n    <ul>\n      <li>驗證其身分，</li>\n      <li>向使用者顯示所請求的能力，</li>\n      <li>授予滿足使用需求的最小權限範圍，</li>\n      <li>並將每項憑證繫結到該伺服器對應的受眾。</li>\n    </ul>\n    對於遠端連線和\n    OAuth 發現，請拒絕私有地址和鏈路本機地址，並驗證每一次重定向。\n    <a href=\"https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices\" target=\"_blank\" rel=\"noopener\">MCP 安全指南</a>要求用戶端負責使用者同意、token 處理以及伺服器端請求偽造（SSRF）控制。\n  "
+    },
+    "link.969792c05cdd": {
+      "type": "link",
+      "source": "\n    This artifact runs a <a href=\"https://python.langchain.com/\" target=\"_blank\" rel=\"noopener\">LangChain</a> <code>createReactAgent</code> wired to the two functions whose\n    contracts you just read: <code>calculate</code> for arithmetic and <code>glossary_search</code>\n    against the in-page NVIDIA glossary that runs in the browser without a key. Ask for a number it cannot work\n    out in its head or a term to define, and watch the tool chip light up before the\n    answer streams.\n  ",
+      "value": "\n    此互動示例執行一個 <a href=\"https://python.langchain.com/\" target=\"_blank\" rel=\"noopener\">LangChain</a> <code>createReactAgent</code>，並接入您剛剛閱讀過契約的兩個函式：用於算術運算的 <code>calculate</code>，以及用於查詢頁面內 NVIDIA 術語表的 <code>glossary_search</code>。整個過程在瀏覽器中執行，無需金鑰。可以讓它計算一個無法心算得出的數字，或要求它解釋某個術語；隨後觀察工具標籤先亮起，再以流式方式顯示答案。\n  "
+    },
+    "link.ae12483e0fae": {
+      "type": "link",
+      "source": "<a href=\"https://platform.openai.com/docs/guides/function-calling\" target=\"_blank\" rel=\"noopener\">OpenAI function-calling guide</a>. The spec your <code>tools=[…]</code> payload conforms to; the hosted build endpoint proxies this shape through to any provider.",
+      "value": "<a href=\"https://platform.openai.com/docs/guides/function-calling\" target=\"_blank\" rel=\"noopener\">OpenAI 函式呼叫指南</a>。 <code>tools=[…]</code> 載荷遵循此規範；託管版本的 API 端點會將這種格式代理到任意提供商。"
+    },
+    "link.c7849defa32f": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer: Language Models Can Teach Themselves to Use Tools</em> (2023)</a>. The paper that established self-supervised tool use; what every subsequent function-calling spec is variations on.",
+      "value": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer: Language Models Can Teach Themselves to Use Tools</em> (2023)</a>。這篇論文奠定了自監督工具使用的基礎；此後所有函式呼叫規範都可視為它的變體。"
+    },
+    "link.d07dc829fc31": {
+      "type": "link",
+      "source": "\n    The cell below fakes a tiny MCP server in pure JavaScript with the\n    same <a href=\"https://www.jsonrpc.org/specification\" target=\"_blank\" rel=\"noopener\">JSON-RPC</a> shape MCP defines (no transport). The agent fetches\n    the tool list, hands the schemas to the model, then dispatches\n    <code>tool_calls</code> back through the server's\n    <code>tools/call</code> handler. The agent loop is byte-for-byte\n    identical to a normal tool call while only the source of the tool list changes.\n  ",
+      "value": "\n    下方單元使用純 JavaScript 模擬了一個微型 MCP 伺服器，其形式與\n    MCP 定義的 <a href=\"https://www.jsonrpc.org/specification\" target=\"_blank\" rel=\"noopener\">JSON-RPC</a> 相同（不含傳輸層）。代理程式先獲取工具列表，將模式交給模型，然後透過伺服器的\n    <code>tool_calls</code> 處理程式分派\n    <code>tools/call</code>。代理程式迴圈與普通工具呼叫逐位元組完全相同，改變的只有工具列表的來源。\n  "
+    },
+    "link.ef623421ba77": {
+      "type": "link",
+      "source": "<a href=\"https://modelcontextprotocol.io/specification\" target=\"_blank\" rel=\"noopener\">Model Context Protocol (MCP) specification</a>. The cross-vendor tool-discovery and tool-serving layer covered in this module's MCP section (originated by Anthropic, now an open project); complements function calling at the agent-runtime layer.",
+      "value": "<a href=\"https://modelcontextprotocol.io/specification\" target=\"_blank\" rel=\"noopener\">Model Context Protocol (MCP) 規範</a>。本模組 MCP 部分介紹的跨供應商工具發現和工具服務層（由 Anthropic 發起，現已成為開放專案）；它在代理程式執行階段層面與函式呼叫形成互補。"
+    },
+    "rich.0ef33c65b4aa": {
+      "type": "rich",
+      "source": "\n    <strong>The cognitive-load lever.</strong>\n    Every additional tool, schema field, and description sentence consumes\n    context the main agent could use for its task. A sprawling flat tool\n    list tends to perform worse than a small set of tools backed by\n    sub-agents, because each loop only sees the tools relevant to its level.\n  ",
+      "value": "\n    <strong>調節認知負荷的槓桿。</strong>每增加一個工具、一個模式欄位或一句描述，都會佔用主代理程式原本可用於執行任務的上下文。龐大而扁平的工具列表往往不如由子代理程式支撐的精簡工具集，因為每個迴圈只需看到與自身層級相關的工具。\n  "
+    },
+    "rich.29756b43c66f": {
+      "type": "rich",
+      "source": "\n    The next section swaps the executor to an exact term lookup behind the <em>same</em>\n    tool contract, so you can watch the contract stay fixed while the backend changes\n    underneath it.\n  ",
+      "value": "\n    下一節會將執行器替換為位於<em>相同</em>工具約定背後的精確術語查詢，讓您直觀看到：底層後端雖已改變，工具約定仍保持不變。\n  "
+    },
+    "rich.339beeb82684": {
+      "type": "rich",
+      "source": " one-line blurb, it returns the term's full NVIDIA glossary article (mats/glossary_raw/<slug>.md).",
+      "value": " one-line blurb, it returns the term's full NVIDIA glossary article (mats/glossary_raw/<slug>.md).",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "rich.35a36df3dd58": {
+      "type": "rich",
+      "source": "Wiring <code>glossary_search</code> to a real tool",
+      "value": "將 <code>glossary_search</code> 接入真實工具"
+    },
+    "rich.3ca94d8b3cef": {
+      "type": "rich",
+      "source": "\n    <strong>The server enforces the schema.</strong> Before structured\n    function calling, applications often parsed custom XML or hand-written JSON from model text.\n    A paraphrase could break that parser. The tools field carries the contract separately, so the\n    serving engine can constrain arguments to the schema and return a consistent\n    <code>tool_calls</code> field. Your dispatch code can then count on <code>tc.function.name</code> and\n    <code>tc.function.arguments</code> being present and parseable.\n  ",
+      "value": "\n    <strong>伺服器負責執行模式約束。</strong>在結構化函式呼叫出現之前，應用通常需要從模型文字中解析自訂 XML 或手寫的 JSON。模型只要換一種表述，就可能導致解析器失效。tools 欄位將約定單獨傳遞，因此推理服務引擎可以約束引數，使其符合模式，並傳回格式一致的\n    <code>tool_calls</code> 欄位。這樣，分派程式碼便可以確信 <code>tc.function.name</code> 和\n    <code>tc.function.arguments</code> 始終存在且可解析。\n  "
+    },
+    "rich.4920003cfc87": {
+      "type": "rich",
+      "source": "Tools <span>at Scale</span>",
+      "value": "工具的<span>規模化應用</span>"
+    },
+    "rich.53f3a05d290a": {
+      "type": "rich",
+      "source": "\n    The same loop runs here as a flat <code>mountRunCell</code> script, with one change: the executor.\n    The earlier search returned a short blurb for each of several matches. This backend returns the whole\n    article for the single best match, fetched from the term's cached glossary page. The schema and the\n    loop do not move; only the source behind <code>glossary_search</code> got richer.\n  ",
+      "value": "\n    此處以扁平的 <code>mountRunCell</code> 指令碼執行相同迴圈，只有一處變化：執行器。之前的搜尋會為多個匹配項分別傳回一段簡短說明。此後端則會從該術語的快取術語表頁面中，獲取最佳匹配項的完整文章。模式和迴圈均未改變；只是 <code>glossary_search</code>\n    背後的資料來源變得更加豐富。\n  "
+    },
+    "rich.5e60c782fb3e": {
+      "type": "rich",
+      "source": "\n    Model Context Protocol (MCP) gives tool serving a standard shape. The agent retrieves a server's\n    catalog with <code>tools/list</code> and invokes a selected entry with\n    <code>tools/call</code>. Those tools live in a separate process that the agent\n    connects to and queries when it starts up. Because the protocol is the same\n    everywhere, the agent can connect to additional servers without learning a new\n    interface for each one. Use MCP when tool discovery and transport need a shared\n    protocol. Use a local function, a repo skill, or a direct API call when the harness\n    already knows where the capability lives and how to invoke it.\n  ",
+      "value": "\n    Model Context Protocol (MCP) 為工具服務提供了標準形式。代理程式透過\n    <code>tools/list</code> 獲取伺服器的工具目錄，並透過\n    <code>tools/call</code> 呼叫所選條目。這些工具執行在獨立處理程序中，代理程式啟動時會連線該處理程序並進行查詢。由於各處採用相同協議，代理程式無需為每臺伺服器學習新的介面，即可連線更多伺服器。當工具發現和傳輸需要共享協議時，請使用 MCP。如果執行框架已經知道能力的位置和呼叫方式，則使用本機函式、儲存庫技能或直接的 API 呼叫。\n  "
+    },
+    "rich.6409a1729518": {
+      "type": "rich",
+      "source": "\n      The page follows that contract from local functions to a search backend and a sub-agent.\n      A <strong>sub-agent as a tool</strong> places one focused agent behind a single schema so the\n      outer workflow can route work without exposing every internal capability. Model Context\n      Protocol (MCP) gives a client a standard way to discover and call tools served by another\n      process. Use it at a capability boundary, after validating the server, identity, and scope.\n      Both patterns keep the main loop's tool list small and motivate Module 2's scoped workflows.\n    ",
+      "value": "\n      本頁沿用這一約定，從本機函式逐步擴充套件到搜尋後端和子代理程式。<strong>將子代理程式用作工具</strong>，就是將一個專注於特定任務的代理程式封裝在單一模式之後，使外層工作流程可以分派任務，而不暴露其全部內部能力。Model Context\n      Protocol (MCP) 為用戶端提供了一套標準方法，用於發現並呼叫由其他處理程序提供的工具。請在能力邊界處使用它，並先驗證伺服器、身分和權限範圍。這兩種模式都能精簡主迴圈的工具列表，併為模組 2 中限定範圍的工作流程奠定基礎。\n    "
+    },
+    "rich.6e4cb8b55f4e": {
+      "type": "rich",
+      "source": "\n    Agents rarely have a single tool. With more than one, the model decides\n    which to call based on the <code>description</code> field.\n  ",
+      "value": "\n    代理程式很少只有一個工具。當存在多個工具時，模型會根據\n    <code>description</code> 欄位決定呼叫哪一個。\n  "
+    },
+    "rich.b765d42d1fb8": {
+      "type": "rich",
+      "source": "\n    <strong>A tool name should describe a capability.</strong>\n    A tool called <code>nvidia_glossary_api</code> is brittle: changing the backend\n    forces you to update every prompt that references the name. A tool called\n    <code>glossary_search</code> describes what the caller needs. Ranked search, exact lookup,\n    or a richer index can sit behind that contract without changing the agent prompt.\n  ",
+      "value": "\n    <strong>工具名稱應描述一種能力。</strong>名為 <code>nvidia_glossary_api</code> 的工具很脆弱：一旦更換後端，您就必須更新所有引用該名稱的提示詞。名為\n    <code>glossary_search</code> 的工具描述的是呼叫方所需的能力。排序搜尋、精確查詢或更豐富的索引都可以置於該約定之後，無需更改代理程式提示詞。\n  "
+    },
+    "rich.ccbfb037b2af": {
+      "type": "rich",
+      "source": "The <code>tool_choice</code> parameter can be set to <code>\"required\"</code> or to a specific tool name. When would forcing a tool call be the right move, and what risk does it create?",
+      "value": "<code>tool_choice</code> 引數可設定為 <code>\"required\"</code> 或特定工具名稱。在哪些情況下應該強制執行工具呼叫？這樣做會帶來什麼風險？"
+    },
+    "rich.d17e905c8785": {
+      "type": "rich",
+      "source": "\n    <strong>The model only sees the contract.</strong> It asks for <code>glossary_search</code> with a\n    natural query and reads whatever comes back, unaware which backend answered. You can start with a blurb\n    index and later swap in full articles or a live search without touching the loop. Accuracy may drift\n    when a backend resolves a match differently, but the contract holds.\n  ",
+      "value": "\n    <strong>模型只能看到約定。</strong>它使用自然語言查詢請求 <code>glossary_search</code>，並讀取傳回的內容，卻不知道是哪個後端作出的回應。可以先使用簡短說明索引，之後再替換為完整文章或即時搜尋，無需修改迴圈。如果不同後端採用不同方式確定匹配項，準確性可能會發生變化，但約定仍然有效。\n  "
+    },
+    "text.038f3167fd60": {
+      "type": "text",
+      "source": " Define the mock database tool the agent may call.",
+      "value": " Define the mock database tool the agent may call.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.03da3570afe9": {
+      "type": "text",
+      "source": "explain_concept",
+      "value": "explain_concept",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.041d8ee96ca3": {
+      "type": "text",
+      "source": "\n    A tool need not be a small function. An entire sub-agent can sit behind a single\n    tool call. To the calling model, the sub-agent remains one contract. Behind that contract, it may query a\n    database, run code, or search a repository without exposing those internal tools to the\n    main loop.\n  ",
+      "value": "\n    工具不一定是小型函式。整個子代理程式也可以封裝在一次工具呼叫之後。對於呼叫模型，子代理程式仍表現為一項約定。在該約定背後，它可以查詢資料庫、執行程式碼或搜尋程式碼庫，無需向主迴圈暴露這些內部工具。\n  "
+    },
+    "text.0484b406d6f9": {
+      "type": "text",
+      "source": " Streams the grounded answer; the return surfaces the full article the model actually read.",
+      "value": " Streams the grounded answer; the return surfaces the full article the model actually read.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.04b54aefbd2f": {
+      "type": "text",
+      "source": "Runs the unchanged chatStream call with discovered tools, keeping transport outside the agent loop.",
+      "value": "使用已發現的工具執行原樣不變的 chatStream 呼叫，使傳輸邏輯與代理程式迴圈保持分離。"
+    },
+    "text.04f8996da763": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~1": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~2": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~3": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~4": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~5": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~6": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~7": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.06ddd6f8ce78": {
+      "type": "text",
+      "source": " the whole NVIDIA glossary article",
+      "value": " the whole NVIDIA glossary article",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.074b16527fe8": {
+      "type": "text",
+      "source": "How the model picks between several tools",
+      "value": "模型如何在多個工具之間作出選擇"
+    },
+    "text.07cbae606e03": {
+      "type": "text",
+      "source": " a reasoning model thinks before it emits the call; too small a budget and it stops mid-thought",
+      "value": " a reasoning model thinks before it emits the call; too small a budget and it stops mid-thought",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.07ed400759a0": {
+      "type": "text",
+      "source": "pro",
+      "value": "pro",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.07ed400759a0~1": {
+      "type": "text",
+      "source": "pro",
+      "value": "pro",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.07ed400759a0~2": {
+      "type": "text",
+      "source": "pro",
+      "value": "pro",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.0840bfdddeeb": {
+      "type": "text",
+      "source": " room for several search-then-read rounds before the safety cap",
+      "value": " room for several search-then-read rounds before the safety cap",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.0f54ec71de61": {
+      "type": "text",
+      "source": "Dispatch tools, then answer",
+      "value": "分派工具，然後回答"
+    },
+    "text.11ed402fcd6b": {
+      "type": "text",
+      "source": " Describe the calculator tool so the model knows when to route to it.",
+      "value": " Describe the calculator tool so the model knows when to route to it.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.142450e69ab8": {
+      "type": "text",
+      "source": "Tool B · explain_concept",
+      "value": "工具 B · explain_concept"
+    },
+    "text.15419f8f9c68": {
+      "type": "text",
+      "source": "Seeing only the one tool, the main agent decides whether to ask the sub-agent or answer directly.",
+      "value": "主代理程式只能看到這一個工具，並據此決定是詢問子代理程式，還是直接回答。"
+    },
+    "text.157edd254aa5": {
+      "type": "text",
+      "source": "What is 2,480 divided by 17, rounded?",
+      "value": "2,480 除以 17 並四捨五入，結果是多少？"
+    },
+    "text.1631cc972051": {
+      "type": "text",
+      "source": " Send the prepared messages and stream the model response.",
+      "value": " Send the prepared messages and stream the model response.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1631cc972051~1": {
+      "type": "text",
+      "source": " Send the prepared messages and stream the model response.",
+      "value": " Send the prepared messages and stream the model response.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1631cc972051~2": {
+      "type": "text",
+      "source": " Send the prepared messages and stream the model response.",
+      "value": " Send the prepared messages and stream the model response.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1d1ec0e0e8bd": {
+      "type": "text",
+      "source": "Tool A · calculate",
+      "value": "工具 A · calculate"
+    },
+    "text.1eb2e1fe590c": {
+      "type": "text",
+      "source": "User question (to the main agent)",
+      "value": "使用者問題（提交給主代理程式）"
+    },
+    "text.1efd12501338": {
+      "type": "text",
+      "source": " Same glossary_search the model already knows, but a richer backend behind it: instead of a",
+      "value": " Same glossary_search the model already knows, but a richer backend behind it: instead of a",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1f5087db919c": {
+      "type": "text",
+      "source": "question",
+      "value": "question",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2258a0dc936a": {
+      "type": "text",
+      "source": "Before you add a remote MCP server to this agent, what identity, capability scope, token audience, and network destinations would you verify? Which one becomes an SSRF path if you accept it without validation?",
+      "value": "在向此代理程式新增遠端 MCP 伺服器之前，您會驗證哪些身分、能力範圍、token 受眾和網路目標？如果未經驗證就接受，其中哪一項會成為 SSRF 路徑？"
+    },
+    "text.23087be48cea": {
+      "type": "text",
+      "source": " Distinguish the two so we never report a direct answer for a truncated call.",
+      "value": " Distinguish the two so we never report a direct answer for a truncated call.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.25407ce16fa4": {
+      "type": "text",
+      "source": "true to read the full article for the best match instead of short blurbs",
+      "value": "設為 true 時，讀取最佳匹配項的完整文章，而非簡短摘要"
+    },
+    "text.26e4f0aada35": {
+      "type": "text",
+      "source": "2024-03-12",
+      "value": "2024-03-12",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.283d8940d227": {
+      "type": "text",
+      "source": "Streams the routing decision. Edit either tool description and rerun to see how it changes the route.",
+      "value": "以流式方式顯示路由決策。修改任一工具的描述並重新執行，即可觀察路由如何變化。"
+    },
+    "text.2842081fe7fd": {
+      "type": "text",
+      "source": "model answered directly; no search needed",
+      "value": "模型已直接回答；無需搜尋"
+    },
+    "text.28bd94ec94a9": {
+      "type": "text",
+      "source": " require the search; don't let it answer from (stale) memory",
+      "value": " require the search; don't let it answer from (stale) memory",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.2958d416d08a": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2958d416d08a~1": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2958d416d08a~2": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2958d416d08a~3": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2958d416d08a~4": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2aeac8f57d37": {
+      "type": "text",
+      "source": "Using only the article above, write the final answer now.",
+      "value": "現在僅根據上述文章撰寫最終答案。"
+    },
+    "text.2c2377b68743": {
+      "type": "text",
+      "source": "The agents-as-tools sub-agent is opaque to the main agent. What information would you want it to surface back (in addition to the answer) so the main agent can decide whether to trust it on the next turn?",
+      "value": "作為工具使用的子代理程式對主代理程式並不透明。除了答案之外，您還希望它傳回哪些資訊，以便主代理程式在下一輪判斷是否可以信任它？"
+    },
+    "text.2cddc67fe700": {
+      "type": "text",
+      "source": "2025-01-09",
+      "value": "2025-01-09",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2d2a0568e6d9": {
+      "type": "text",
+      "source": "Editing either description shifts how the model routes, since the description field is one of the most consequential prompt-engineering surfaces in any tool-using agent.",
+      "value": "編輯任一描述都會改變模型的分派方式，因為對於任何使用工具的代理程式而言，description 欄位都是提示詞工程中影響最顯著的部分之一。"
+    },
+    "text.2e5e2a4d57ca": {
+      "type": "text",
+      "source": "What is a vector database?",
+      "value": "什麼是向量資料庫？"
+    },
+    "text.2e82ea6a7953": {
+      "type": "text",
+      "source": "a term or keywords, e.g. 'vector database'",
+      "value": "術語或關鍵詞，例如 'vector database'"
+    },
+    "text.2e862fdd95ae": {
+      "type": "text",
+      "source": "Approximate pi with 4 * (1 - 1/3 + 1/5 - 1/7 + 1/9 - 1/11).",
+      "value": "用 4 * (1 - 1/3 + 1/5 - 1/7 + 1/9 - 1/11) 近似計算 pi。"
+    },
+    "text.2f9984def04d": {
+      "type": "text",
+      "source": "glossary_search via the in-page NVIDIA glossary MCP server",
+      "value": "透過頁面內 NVIDIA 術語表 MCP 伺服器呼叫 glossary_search"
+    },
+    "text.3031fa407a52": {
+      "type": "text",
+      "source": "the term, e.g. 'vector database'",
+      "value": "術語，例如 'vector database'"
+    },
+    "text.326177898623": {
+      "type": "text",
+      "source": "Define agentic AI",
+      "value": "定義代理式 AI"
+    },
+    "text.32ebb1abcc1c": {
+      "type": "text",
+      "source": "(",
+      "value": "(",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.34426c5d0088": {
+      "type": "text",
+      "source": " The same in-page glossary server the search cell called directly, now reached through",
+      "value": " The same in-page glossary server the search cell called directly, now reached through",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.38e7b324bdc5": {
+      "type": "text",
+      "source": "calculate only accepts arithmetic.",
+      "value": "calculate 僅接受算術表示式。"
+    },
+    "text.3a3e43fce08a": {
+      "type": "text",
+      "source": "Give the top-level agent one query_customer_db tool backed by a schema-aware sub-agent. The caller receives an answer, not raw rows.",
+      "value": "為頂層代理程式提供一個 query_customer_db 工具，其後端是理解 schema 的子代理程式。呼叫方收到的是答案，而不是原始資料行。"
+    },
+    "text.3a83362c50c7": {
+      "type": "text",
+      "source": "Knows the table schema and answers a natural-language question through one LLM call with the rows embedded in its system prompt.",
+      "value": "瞭解表的 schema，並透過一次 LLM 呼叫回答自然語言問題；資料行嵌入在它的系統提示詞中。"
+    },
+    "text.3b2dc7718740": {
+      "type": "text",
+      "source": "Search NVIDIA's glossary. Returns short blurbs for several matching terms; set full=true to fetch the complete article for the single best match.",
+      "value": "搜尋 NVIDIA 的術語表。傳回多個匹配術語的簡短摘要；設定 full=true 可獲取最佳單一匹配項的完整文章。"
+    },
+    "text.3dfd607b3354": {
+      "type": "text",
+      "source": "You are a research assistant. Ground answers in glossary_search results; do not answer factual questions from memory.",
+      "value": "您是一名研究助理。答案必須以 glossary_search 結果為依據；不要憑記憶回答事實性問題。"
+    },
+    "text.3ff7bb2db073": {
+      "type": "text",
+      "source": "What happens when the model calls a tool with arguments that fail your validation? The current loop crashes; how would you make it graceful without giving the model false confidence that the call succeeded?",
+      "value": "如果模型呼叫工具時傳入的引數未透過驗證，會發生什麼？當前迴圈會崩潰；您會如何讓它妥善處理這一情況，同時避免讓模型誤以為呼叫已經成功？"
+    },
+    "text.3ff91592ea8b": {
+      "type": "text",
+      "source": "I can do arithmetic and search NVIDIA's glossary. Try 'what is 17.5% of 2,480?', 'what is a vector database?', or 'explain vector databases in depth'.",
+      "value": "我可以進行算術運算，並搜尋 NVIDIA 的術語表。請嘗試輸入“2,480 的 17.5% 是多少？”、“什麼是向量資料庫？”或“深入解釋向量資料庫”。"
+    },
+    "text.41483fa0f9b8": {
+      "type": "text",
+      "source": "Swapping the backend while the tool contract holds",
+      "value": "更換後端，同時保持工具約定不變"
+    },
+    "text.41f69e5b3819": {
+      "type": "text",
+      "source": " Two tools: calculate (guarded arithmetic) and glossary_search (in-page server).",
+      "value": " Two tools: calculate (guarded arithmetic) and glossary_search (in-page server).",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.41fb5b653b2c": {
+      "type": "text",
+      "source": "Module 1 · Part C of 3",
+      "value": "模組 1 · 第 3 部分（共 3 部分）"
+    },
+    "text.4285d23d69c3": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.42aae75dfb82": {
+      "type": "text",
+      "source": "← Module 1b: The ReAct Loop",
+      "value": "← 模組 1b：ReAct 迴圈"
+    },
+    "text.42ebf6a5ddbd": {
+      "type": "text",
+      "source": "\"use strict\"; return (",
+      "value": "\"use strict\"; return (",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4319a0d98186": {
+      "type": "text",
+      "source": "(the model did not produce a final answer; try Run again)",
+      "value": "（模型未生成最終答案；請嘗試再次執行）"
+    },
+    "text.44136fa355b3": {
+      "type": "text",
+      "source": "{}",
+      "value": "{}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.44136fa355b3~1": {
+      "type": "text",
+      "source": "{}",
+      "value": "{}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.44136fa355b3~2": {
+      "type": "text",
+      "source": "{}",
+      "value": "{}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.44136fa355b3~3": {
+      "type": "text",
+      "source": "{}",
+      "value": "{}",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4575d9a0bb39": {
+      "type": "text",
+      "source": "Nemotron 3.5 Lightning 30B · fast",
+      "value": "Nemotron 3.5 Lightning 30B · fast",
+      "untranslated": "Model selector display label; preserve the complete label in English"
+    },
+    "text.466ce7d17c99": {
+      "type": "text",
+      "source": "Search NVIDIA's glossary of AI and accelerated-computing terms. Use for definitions and concepts.",
+      "value": "搜尋 NVIDIA 的 AI 和加速計算術語表。用於查詢定義和概念。"
+    },
+    "text.46f70a7ed608": {
+      "type": "text",
+      "source": " Define the tool schema the model can choose from next.",
+      "value": " Define the tool schema the model can choose from next.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.46f70a7ed608~1": {
+      "type": "text",
+      "source": " Define the tool schema the model can choose from next.",
+      "value": " Define the tool schema the model can choose from next.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.473287f8298d": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.473287f8298d~1": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.473287f8298d~2": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.473287f8298d~3": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.473287f8298d~4": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.47e71bf4ba06": {
+      "type": "text",
+      "source": " TODO: Try a broad definition or request a specific glossary term.",
+      "value": " TODO: Try a broad definition or request a specific glossary term.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.47f8bdf61749": {
+      "type": "text",
+      "source": "Explain technical or scientific concepts; do not use for arithmetic.",
+      "value": "講解技術或科學概念；不要用於算術運算。"
+    },
+    "text.499419ebeb5e": {
+      "type": "text",
+      "source": "two tools, the model routes",
+      "value": "兩個工具，由模型選擇路由"
+    },
+    "text.4aa773643287": {
+      "type": "text",
+      "source": "Chen Wei",
+      "value": "Chen Wei",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4be0fd6da69f": {
+      "type": "text",
+      "source": "a few keywords, e.g. 'vector database'",
+      "value": "幾個關鍵詞，例如 'vector database'"
+    },
+    "text.4d0282941aaf": {
+      "type": "text",
+      "source": "eu",
+      "value": "eu",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4d0282941aaf~1": {
+      "type": "text",
+      "source": "eu",
+      "value": "eu",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4d0567cf3bac": {
+      "type": "text",
+      "source": "The glossary_search JSON Schema the model reads. It is the same shape any tool takes; only the name and description say what this one does.",
+      "value": "模型讀取的 glossary_search JSON Schema。所有工具都採用相同格式；只有名稱和描述用於說明此工具的用途。"
+    },
+    "text.4df53150d802": {
+      "type": "text",
+      "source": "Which EU customers are on the pro plan, and how active are they?",
+      "value": "哪些 EU 客戶使用 pro 套餐，他們的活躍程度如何？"
+    },
+    "text.4e2f4573157d": {
+      "type": "text",
+      "source": "Tool spec (to the main agent)",
+      "value": "工具規範（提供給主代理程式）"
+    },
+    "text.4eec59a3f753": {
+      "type": "text",
+      "source": "Evaluate arithmetic expressions; do not use for definitions or conceptual questions.",
+      "value": "計算算術表示式；不要用於定義或概念性問題。"
+    },
+    "text.514cc7428c3b": {
+      "type": "text",
+      "source": "Edit this to try a question like 'How many pro-plan customers do we have?' or 'Who has the most tickets in the last 30 days?'",
+      "value": "編輯此內容，嘗試輸入“我們有多少位專業版套餐客戶？”或“過去 30 天內誰的工單最多？”等問題。"
+    },
+    "text.51b29f3fcea3": {
+      "type": "text",
+      "source": "Look up an NVIDIA glossary term and return its full article.",
+      "value": "查詢 NVIDIA 詞彙表術語並傳回其完整文章。"
+    },
+    "text.5502f2a766fc": {
+      "type": "text",
+      "source": "User input",
+      "value": "使用者輸入"
+    },
+    "text.559b570f9717": {
+      "type": "text",
+      "source": " One glossary tool, two modes: ranked blurbs from several terms, or the full article for one.",
+      "value": " One glossary tool, two modes: ranked blurbs from several terms, or the full article for one.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.5620fbf32f8a": {
+      "type": "text",
+      "source": "You are a customer-database analyst. Use ONLY the rows provided. If the rows do not contain the answer, say so. Be concise.\\\\n\\\\n",
+      "value": "您是一名客戶資料庫分析師。只能使用所提供資料行中的 ONLY。如果這些資料行不包含答案，請如實說明。回答應簡潔。\\\\n\\\\n"
+    },
+    "text.56525bf8e45b": {
+      "type": "text",
+      "source": "server → ",
+      "value": "伺服器 → "
+    },
+    "text.568efa6a0ce5": {
+      "type": "text",
+      "source": "us-west",
+      "value": "us-west",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.56b5bb505799": {
+      "type": "text",
+      "source": "Try an arithmetic, a definition, or something either tool could handle.",
+      "value": "請嘗試輸入一道算術題、一個定義問題，或兩個工具都能處理的問題。"
+    },
+    "text.579fdab5225b": {
+      "type": "text",
+      "source": "main agent answered directly without using the sub-agent",
+      "value": "主代理程式未使用子代理程式，直接給出了回答"
+    },
+    "text.57b7e204b183": {
+      "type": "text",
+      "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.58677db268a0": {
+      "type": "text",
+      "source": "sub → main",
+      "value": "子代理程式 → 主代理程式"
+    },
+    "text.59743150252a": {
+      "type": "text",
+      "source": "You are a helpful assistant. Use calculate for any arithmetic and glossary_search for definitions of AI and accelerated-computing terms. For a quick definition, call glossary_search normally; when the user wants depth on a single term, call it with full=true to read the whole article. Ground factual claims in the results; if a search returns nothing, say so rather than answering from memory. Keep answers brief unless the user asks for depth.",
+      "value": "您是一名樂於助人的助手。所有算術運算都使用 calculate；查詢 AI 和加速計算術語的定義時使用 glossary_search。如需簡短定義，請按常規方式呼叫 glossary_search；當使用者希望深入瞭解單個術語時，請設定 full=true 進行呼叫，以讀取整篇文章。事實性陳述必須以結果為依據；如果搜尋無結果，請如實說明，不要憑記憶作答。除非使用者要求深入講解，否則回答應簡短。"
+    },
+    "text.5983e225fe15": {
+      "type": "text",
+      "source": " TODO: Ask about a different customer segment or activity signal.",
+      "value": " TODO: Ask about a different customer segment or activity signal.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.5b543269ef2d": {
+      "type": "text",
+      "source": " Ask the mock MCP server which tools it exposes.",
+      "value": " Ask the mock MCP server which tools it exposes.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.5bb298f9ab91": {
+      "type": "text",
+      "source": "agents as tools · hide the database, expose the question",
+      "value": "將代理程式用作工具 · 隱藏資料庫，僅公開問題"
+    },
+    "text.5df1403bfd50": {
+      "type": "text",
+      "source": "LLM call · the model routes",
+      "value": "LLM 呼叫 · 由模型選擇路由"
+    },
+    "text.5e0d6df80ae5": {
+      "type": "text",
+      "source": "LLM call #2",
+      "value": "LLM 呼叫 #2"
+    },
+    "text.5e4450ff66e6": {
+      "type": "text",
+      "source": "Use for questions about plans, regions, ticket activity, signup dates, and counts.",
+      "value": "用於詢問套餐、區域、工單活動、註冊日期和數量。"
+    },
+    "text.5f332b3745f8": {
+      "type": "text",
+      "source": "an arithmetic expression, e.g. 0.175*2480",
+      "value": "算術表示式，例如 0.175*2480"
+    },
+    "text.6205b5c3cb81": {
+      "type": "text",
+      "source": "the agent + your tools, in code",
+      "value": "程式碼中的代理程式與工具"
+    },
+    "text.62c6ddbc00c6": {
+      "type": "text",
+      "source": "What is a vector database, and how does it use embeddings?",
+      "value": "什麼是向量資料庫？它如何使用嵌入？"
+    },
+    "text.63400dc62376": {
+      "type": "text",
+      "source": "(answered directly)",
+      "value": "（直接作答）"
+    },
+    "text.64ae88a21895": {
+      "type": "text",
+      "source": " state.userQuestion = \"Who opened the most tickets in the last 30 days?\";",
+      "value": " state.userQuestion = \"Who opened the most tickets in the last 30 days?\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.660d39383d8e": {
+      "type": "text",
+      "source": "\n      In Module 1b you wired a single tool into the agent loop: the model requested a named\n      function, your harness ran it, and the result went back into the next model call. That\n      round-trip does not change here. What changes is the tool surface: the model must choose\n      among more descriptions, and each tool may hide a larger capability.\n    ",
+      "value": "\n      在模組 1b 中，您將一個工具接入了代理程式迴圈：模型請求呼叫一個具名函式，執行框架執行該函式，再將結果傳回下一次模型呼叫。此處的往返過程並未改變，變化的是工具介面：模型必須從更多描述中作出選擇，而每個工具背後都可能隱藏著更強大的能力。\n    "
+    },
+    "text.67a5bdf2a82d": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents",
+      "value": "NVIDIA · 安全代理程式"
+    },
+    "text.680694f37af1": {
+      "type": "text",
+      "source": "rendered below. Edit the config and Run.",
+      "value": "結果呈現在下方。編輯設定後，選取“執行”。"
+    },
+    "text.683c4af2827c": {
+      "type": "text",
+      "source": " state.userQuestion = \"How many pro-plan customers signed up this quarter?\";",
+      "value": " state.userQuestion = \"How many pro-plan customers signed up this quarter?\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.6878de529d12": {
+      "type": "text",
+      "source": "A specific question in natural English.",
+      "value": "用自然英語提出的具體問題。"
+    },
+    "text.69824d3b0e70": {
+      "type": "text",
+      "source": "References",
+      "value": "參考資料"
+    },
+    "text.6c33e8ad9d56": {
+      "type": "text",
+      "source": "Hiding a whole agent behind a single tool",
+      "value": "將整個代理程式隱藏在單個工具之後"
+    },
+    "text.6d3104c8a001": {
+      "type": "text",
+      "source": " Fetch the full article when cached; shallow glossary terms fall back to their blurb.",
+      "value": " Fetch the full article when cached; shallow glossary terms fall back to their blurb.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.6f2fc6401d52": {
+      "type": "text",
+      "source": " The reasoning streamed above.",
+      "value": " The reasoning streamed above.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.723234e1a9d3": {
+      "type": "text",
+      "source": "glossary_search",
+      "value": "glossary_search",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.723234e1a9d3~1": {
+      "type": "text",
+      "source": "glossary_search",
+      "value": "glossary_search",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.723234e1a9d3~2": {
+      "type": "text",
+      "source": "glossary_search",
+      "value": "glossary_search",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.723234e1a9d3~3": {
+      "type": "text",
+      "source": "glossary_search",
+      "value": "glossary_search",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.723234e1a9d3~4": {
+      "type": "text",
+      "source": "glossary_search",
+      "value": "glossary_search",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.723234e1a9d3~5": {
+      "type": "text",
+      "source": "glossary_search",
+      "value": "glossary_search",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.723234e1a9d3~6": {
+      "type": "text",
+      "source": "glossary_search",
+      "value": "glossary_search",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.75c43e137307": {
+      "type": "text",
+      "source": " Call the in-page MCP server the same way you would a remote one: tools/call.",
+      "value": " Call the in-page MCP server the same way you would a remote one: tools/call.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.762399209128": {
+      "type": "text",
+      "source": "note: the main agent never saw the rows; only the sub-agent's natural-language summary",
+      "value": "注意：主代理程式從未看到這些資料行，只看到了子代理程式生成的自然語言摘要"
+    },
+    "text.7685c2ed417e": {
+      "type": "text",
+      "source": "Three roots feed into one LLM, and editing either tool description shifts how the model routes. The description string is one of the most consequential prompt-engineering surfaces in any tool-using agent.",
+      "value": "三條路徑匯入同一個 LLM；修改任一工具的描述都會改變模型的路由方式。在任何使用工具的代理程式中，描述字串都是影響最為顯著的提示詞工程介面之一。"
+    },
+    "text.775c1f9044f4": {
+      "type": "text",
+      "source": "Calls the in-page MCP server through tools/call and returns ranked NVIDIA glossary entries. The search stays local to the browser.",
+      "value": "透過 tools/call 呼叫頁面內 MCP 伺服器，並傳回按相關性排序的 NVIDIA 術語表條目。搜尋始終在瀏覽器本機進行。"
+    },
+    "text.77f6b5919129": {
+      "type": "text",
+      "source": "Module 2a: Workflows →",
+      "value": "模組 2a：工作流程 →"
+    },
+    "text.78f9ac018e55": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.78f9ac018e55~1": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.78f9ac018e55~2": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.78f9ac018e55~3": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.78f9ac018e55~4": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.78f9ac018e55~5": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.78f9ac018e55~6": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.78f9ac018e55~7": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.795a9e2f7ad7": {
+      "type": "text",
+      "source": "Boris Müller",
+      "value": "Boris Müller",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.7a7fe005bb71": {
+      "type": "text",
+      "source": "2023-08-22",
+      "value": "2023-08-22",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.7b1a5970524a": {
+      "type": "text",
+      "source": "Sets the question. Definitions route to glossary_search; requests by slug route to glossary_lookup.",
+      "value": "設定問題。定義類問題路由至 glossary_search；按 slug 提出的請求路由至 glossary_lookup。"
+    },
+    "text.7be7a0cea3e6": {
+      "type": "text",
+      "source": "Defines tools/list and tools/call in MCP's JSON-RPC shape. A deployed server transports the same calls over stdio or HTTP.",
+      "value": "按照 MCP 的 JSON-RPC 格式定義 tools/list 和 tools/call。部署後的伺服器透過 stdio 或 HTTP 傳輸相同的呼叫。"
+    },
+    "text.7c44b6b5352b": {
+      "type": "text",
+      "source": "2024-07-30",
+      "value": "2024-07-30",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.7c9bbe5ec9b3": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.7c9bbe5ec9b3~1": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.7c9bbe5ec9b3~2": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.7c9bbe5ec9b3~3": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.7ca93be0af94": {
+      "type": "text",
+      "source": "You are a research assistant. Ground answers in glossary_search results; never answer factual questions from memory.",
+      "value": "您是一名研究助手。回答必須以 glossary_search 結果為依據；切勿憑記憶回答事實性問題。"
+    },
+    "text.7cc40ddf58b1": {
+      "type": "text",
+      "source": " Require the call so the swapped backend is always exercised. The model streams its reasoning.",
+      "value": " Require the call so the swapped backend is always exercised. The model streams its reasoning.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.7cdebb1d52f7": {
+      "type": "text",
+      "source": " state.question = \"Look up the glossary term with the slug vector-database.\";",
+      "value": " state.question = \"Look up the glossary term with the slug vector-database.\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.7f16edc7c823": {
+      "type": "text",
+      "source": "query_customer_db",
+      "value": "query_customer_db",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.7f16edc7c823~1": {
+      "type": "text",
+      "source": "query_customer_db",
+      "value": "query_customer_db",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.7fefb50eff47": {
+      "type": "text",
+      "source": " Edit the system prompt or the tools, then Run to re-render.",
+      "value": " Edit the system prompt or the tools, then Run to re-render.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.810a24cd0d6f": {
+      "type": "text",
+      "source": "Writes the final answer from retrieved results. No tools are passed, so the model must use the returned evidence.",
+      "value": "根據檢索結果生成最終答案。此處不傳入任何工具，因此模型必須使用傳回的證據。"
+    },
+    "text.842bc6e20dfa": {
+      "type": "text",
+      "source": "error: ",
+      "value": "錯誤："
+    },
+    "text.87a230124745": {
+      "type": "text",
+      "source": "In-page MCP server",
+      "value": "頁面內 MCP 伺服器"
+    },
+    "text.88c86eb7341d": {
+      "type": "text",
+      "source": "Try it · an agent with two real tools",
+      "value": "動手實踐 · 配備兩個真實工具的代理程式"
+    },
+    "text.8a8de823d5ed": {
+      "type": "text",
+      "source": "?",
+      "value": "?",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.8ab5748765d4": {
+      "type": "text",
+      "source": "Evaluate (17 * 43) + Math.sqrt(144) / Math.log(2).",
+      "value": "計算 (17 * 43) + Math.sqrt(144) / Math.log(2)。"
+    },
+    "text.8b98634a7b2b": {
+      "type": "text",
+      "source": "(no text)",
+      "value": "（無文字）"
+    },
+    "text.9223d910909b": {
+      "type": "text",
+      "source": "discovered ",
+      "value": "發現了 "
+    },
+    "text.92669bf3e2dc": {
+      "type": "text",
+      "source": "An in-page customer table that the main agent will never see and that a real version would replace with a SQL connection plus row-level auth.",
+      "value": "頁面內的客戶表，主代理程式永遠無法直接看到它。在實際版本中，該表將替換為 SQL 連線，並配合行級身分驗證。"
+    },
+    "text.9267d76c423b": {
+      "type": "text",
+      "source": "The LLM asks, your code answers, and the LLM concludes, but it never runs your function itself.",
+      "value": "LLM 發出請求，程式碼給出回應，LLM 得出結論，但它絕不會自行執行函式。"
+    },
+    "text.92fbeff1a8e7": {
+      "type": "text",
+      "source": " TODO: Choose an example or write a question that makes the tool choice interesting.",
+      "value": " TODO: Choose an example or write a question that makes the tool choice interesting.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.983987033f0e": {
+      "type": "text",
+      "source": "**",
+      "value": "**",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9bb0026a8b4b": {
+      "type": "text",
+      "source": "Tool spec",
+      "value": "工具規範"
+    },
+    "text.9c5e52a271b5": {
+      "type": "text",
+      "source": "us-east",
+      "value": "us-east",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9c5e52a271b5~1": {
+      "type": "text",
+      "source": "us-east",
+      "value": "us-east",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9fae6f6712c2": {
+      "type": "text",
+      "source": "Tools at Scale · Securing Agents",
+      "value": "規模化工具 · 安全代理程式"
+    },
+    "text.a084d8b28e73": {
+      "type": "text",
+      "source": "What is the NVIDIA Nemotron model family and what is it good at?",
+      "value": "NVIDIA Nemotron 模型系列是什麼？它擅長什麼？"
+    },
+    "text.a39a7ffad4a3": {
+      "type": "text",
+      "source": "assistant",
+      "value": "assistant",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a39a7ffad4a3~1": {
+      "type": "text",
+      "source": "assistant",
+      "value": "assistant",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a39a7ffad4a3~2": {
+      "type": "text",
+      "source": "assistant",
+      "value": "assistant",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a39a7ffad4a3~3": {
+      "type": "text",
+      "source": "assistant",
+      "value": "assistant",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a4bd71c25a9a": {
+      "type": "text",
+      "source": "What does GPU stand for, and what is it for?",
+      "value": "GPU 代表什麼？它有什麼用途？"
+    },
+    "text.a5df404263e3": {
+      "type": "text",
+      "source": " Ask the model to choose one of the two tool descriptions above.",
+      "value": " Ask the model to choose one of the two tool descriptions above.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.a71302258c50": {
+      "type": "text",
+      "source": "What is retrieval-augmented generation, and what does a vector database have to do with it?",
+      "value": "什麼是檢索增強生成 (RAG)，它與向量資料庫有什麼關係？"
+    },
+    "text.a79a71b58afe": {
+      "type": "text",
+      "source": "Before you continue",
+      "value": "繼續學習之前"
+    },
+    "text.a7b3eb09ff25": {
+      "type": "text",
+      "source": " the text block the model reads",
+      "value": " the text block the model reads",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.a8b771920b83": {
+      "type": "text",
+      "source": "query",
+      "value": "query",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.a8b771920b83~1": {
+      "type": "text",
+      "source": "query",
+      "value": "query",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.a99b03b8db8e": {
+      "type": "text",
+      "source": "Dara Okafor",
+      "value": "Dara Okafor",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aba42d59b10e": {
+      "type": "text",
+      "source": " Strip stray tool-call text from reasoning models that emit it anyway.",
+      "value": " Strip stray tool-call text from reasoning models that emit it anyway.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.abd19ab703e9": {
+      "type": "text",
+      "source": " Handle the tool-call result from the previous model turn.",
+      "value": " Handle the tool-call result from the previous model turn.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.abd19ab703e9~1": {
+      "type": "text",
+      "source": " Handle the tool-call result from the previous model turn.",
+      "value": " Handle the tool-call result from the previous model turn.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.abd19ab703e9~2": {
+      "type": "text",
+      "source": " Handle the tool-call result from the previous model turn.",
+      "value": " Handle the tool-call result from the previous model turn.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.abd19ab703e9~3": {
+      "type": "text",
+      "source": " Handle the tool-call result from the previous model turn.",
+      "value": " Handle the tool-call result from the previous model turn.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.ac5243b61be1": {
+      "type": "text",
+      "source": "main → sub: ",
+      "value": "主代理程式 → 子代理程式："
+    },
+    "text.ac601321d308": {
+      "type": "text",
+      "source": "); raise max_tokens",
+      "value": "）；引發 max_tokens"
+    },
+    "text.ad03eb5e16bb": {
+      "type": "text",
+      "source": "no answer",
+      "value": "無答案"
+    },
+    "text.ad6f49470459": {
+      "type": "text",
+      "source": "apac",
+      "value": "apac",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ad95d5fa651b": {
+      "type": "text",
+      "source": "free",
+      "value": "free",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ae9eeeb167b1": {
+      "type": "text",
+      "source": "no full article cached for that term",
+      "value": "未快取該術語的完整文章"
+    },
+    "text.aed141fe33a2": {
+      "type": "text",
+      "source": "#tools-artifact",
+      "value": "#tools-artifact",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aedb9d053ac2": {
+      "type": "text",
+      "source": "\n    The figure traces the cycle from 1b. Later sections change where the schema comes from and\n    what the executor does, while the model still requests a named tool and reads its result.\n  ",
+      "value": "\n    下圖呈現了模組 1b 中的迴圈。後續各節會改變模式的來源和執行器的行為，但模型仍會請求呼叫具名工具並讀取其結果。\n  "
+    },
+    "text.aff25bb93d16": {
+      "type": "text",
+      "source": " Discover tools through MCP instead of hard-coding direct calls.",
+      "value": " Discover tools through MCP instead of hard-coding direct calls.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.b07e027420de": {
+      "type": "text",
+      "source": "2025-11-04",
+      "value": "2025-11-04",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b1e050a450c4": {
+      "type": "text",
+      "source": "Keep the glossary_search contract and swap in a richer backend that returns the best term's cached article. Edit the question and rerun; full articles include vector database, RAG, LLMs, AI agents, and deep agents.",
+      "value": "保留 glossary_search 契約，改用功能更豐富的後端，傳回最匹配術語的快取文章。編輯問題並重新執行；全文文章涵蓋向量資料庫、RAG、LLM、AI 代理程式和深度代理程式。"
+    },
+    "text.b3842f35c7fd": {
+      "type": "text",
+      "source": " tools",
+      "value": " 個工具"
+    },
+    "text.b469cfb016ec": {
+      "type": "text",
+      "source": "(tool requested instead)",
+      "value": "（改為請求呼叫工具）"
+    },
+    "text.b4e4f58d3e39": {
+      "type": "text",
+      "source": "Sub-agent · query_customer_db",
+      "value": "子代理程式 · query_customer_db"
+    },
+    "text.b4f225085fb2": {
+      "type": "text",
+      "source": "Explain vector databases in depth",
+      "value": "深入講解向量資料庫"
+    },
+    "text.b5ec5300f4d9": {
+      "type": "text",
+      "source": " { results, count, source }",
+      "value": " { results, count, source }",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.b6fe474d0c7b": {
+      "type": "text",
+      "source": " state.question = \"How does NVIDIA NIM differ from a model checkpoint?\";",
+      "value": " state.question = \"How does NVIDIA NIM differ from a model checkpoint?\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.b7721731a8ca": {
+      "type": "text",
+      "source": "tools/list",
+      "value": "tools/list",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b7721731a8ca~1": {
+      "type": "text",
+      "source": "tools/list",
+      "value": "tools/list",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b7721731a8ca~2": {
+      "type": "text",
+      "source": "tools/list",
+      "value": "tools/list",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b7a303533153": {
+      "type": "text",
+      "source": "Ezra Goldstein",
+      "value": "Ezra Goldstein",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b8bc0e4f01a0": {
+      "type": "text",
+      "source": "expression",
+      "value": "expression",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b8f79fbb2ded": {
+      "type": "text",
+      "source": "What is 17.5% of 2,480?",
+      "value": "2,480 的 17.5% 是多少？"
+    },
+    "text.b90124295427": {
+      "type": "text",
+      "source": "Fetching tools from a separate server with MCP",
+      "value": "使用 MCP 從獨立伺服器獲取工具"
+    },
+    "text.ba5ec51d07a4": {
+      "type": "text",
+      "source": ")",
+      "value": ")",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.ba5ec51d07a4~1": {
+      "type": "text",
+      "source": ")",
+      "value": ")",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.bb787199a95e": {
+      "type": "text",
+      "source": " room for the reasoning model to think AND write the answer",
+      "value": " room for the reasoning model to think AND write the answer",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.bbc5e661e106": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~1": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~2": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~3": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bd232248b00f": {
+      "type": "text",
+      "source": "Handles arithmetic only. Its narrow description steers conceptual questions to the other tool.",
+      "value": "僅處理算術運算。其範圍明確的描述會將概念性問題引導至另一個工具。"
+    },
+    "text.bf3b25babd23": {
+      "type": "text",
+      "source": "Forces glossary_search to expose the complete round-trip while the model supplies the query.",
+      "value": "強制 glossary_search 展示完整的往返過程，同時由模型提供查詢內容。"
+    },
+    "text.bfd21ead912e": {
+      "type": "text",
+      "source": "Forwards each tool_call through tools/call, appends the result, and asks the model for the final answer.",
+      "value": "透過 tools/call 轉發每個 tool_call，附加傳回結果，再請求模型生成最終答案。"
+    },
+    "text.c161ac627293": {
+      "type": "text",
+      "source": "tools/call",
+      "value": "tools/call",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c161ac627293~1": {
+      "type": "text",
+      "source": "tools/call",
+      "value": "tools/call",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c161ac627293~2": {
+      "type": "text",
+      "source": "tools/call",
+      "value": "tools/call",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c3ad7085f730": {
+      "type": "text",
+      "source": " mountAgentChat builds one LangChain agent per model and streams tool calls plus answers. ",
+      "value": " mountAgentChat builds one LangChain agent per model and streams tool calls plus answers. ",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.c49daf8e49c2": {
+      "type": "text",
+      "source": "User question",
+      "value": "使用者問題"
+    },
+    "text.c49daf8e49c2~1": {
+      "type": "text",
+      "source": "User question",
+      "value": "使用者問題"
+    },
+    "text.c84612fc6182": {
+      "type": "text",
+      "source": "Dispatch to the sub-agent and answer",
+      "value": "分派給子代理程式並回答"
+    },
+    "text.c9f6aee2dc65": {
+      "type": "text",
+      "source": "no search was run on this turn",
+      "value": "本輪未執行搜尋"
+    },
+    "text.ca8b22d0db83": {
+      "type": "text",
+      "source": "team",
+      "value": "team",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ca8b22d0db83~1": {
+      "type": "text",
+      "source": "team",
+      "value": "team",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.caa1e55e8ce8": {
+      "type": "text",
+      "source": "You are a customer-success agent. When the user asks about customer data, call query_customer_db rather than guessing.",
+      "value": "您是一個客戶成功代理程式。當使用者詢問客戶資料時，請呼叫 query_customer_db，不要猜測。"
+    },
+    "text.d29a0939bcb5": {
+      "type": "text",
+      "source": "(empty)",
+      "value": "（空）"
+    },
+    "text.d29a0939bcb5~1": {
+      "type": "text",
+      "source": "(empty)",
+      "value": "（空）"
+    },
+    "text.d29a0939bcb5~2": {
+      "type": "text",
+      "source": "(empty)",
+      "value": "（空）"
+    },
+    "text.d29a0939bcb5~3": {
+      "type": "text",
+      "source": "(empty)",
+      "value": "（空）"
+    },
+    "text.d2b9d9f4e779": {
+      "type": "text",
+      "source": "call #1 stopped before answering (finish_reason: ",
+      "value": "呼叫 #1 在回答前已停止（finish_reason："
+    },
+    "text.d70bd34cd925": {
+      "type": "text",
+      "source": "Aiyana Brooks",
+      "value": "Aiyana Brooks",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d71ece7e7346": {
+      "type": "text",
+      "source": "Each node writes into a shared state object that later nodes read. Open any node to edit its JS and rerun it alone, or run the whole graph.",
+      "value": "每個節點都向共享狀態物件寫入資料，後續節點再讀取這些資料。開啟任一節點即可編輯其 JS 並單獨重新執行，也可以執行整個圖。"
+    },
+    "text.d74c1e98e2dd": {
+      "type": "text",
+      "source": " The sub-agent's world: a tight system prompt that hides the table, and the rows as context.",
+      "value": " The sub-agent's world: a tight system prompt that hides the table, and the rows as context.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.da5e11efa367": {
+      "type": "text",
+      "source": "concept",
+      "value": "concept",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.db8af6314e6e": {
+      "type": "text",
+      "source": " state.question = \"Which NVIDIA model family is designed for reasoning?\";",
+      "value": " state.question = \"Which NVIDIA model family is designed for reasoning?\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.de584c0085ba": {
+      "type": "text",
+      "source": "Calls tools/list and maps each inputSchema to the function-calling format the model reads.",
+      "value": "呼叫 tools/list，並將每個 inputSchema 對映為模型讀取的函式呼叫格式。"
+    },
+    "text.de9ad1ba7c3d": {
+      "type": "text",
+      "source": "(no full article cached for that term)",
+      "value": "（未快取該術語的完整文章）"
+    },
+    "text.deb8e4e19bcf": {
+      "type": "text",
+      "source": " Describe the explainer tool so conceptual questions route here.",
+      "value": " Describe the explainer tool so conceptual questions route here.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.dff3393a1df0": {
+      "type": "text",
+      "source": " Seed the small dataset this retrieval example searches.",
+      "value": " Seed the small dataset this retrieval example searches.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.e0142f6a5b03": {
+      "type": "text",
+      "source": "The tool-call contract stays fixed",
+      "value": "工具呼叫約定保持不變"
+    },
+    "text.e073d1d5f8b9": {
+      "type": "text",
+      "source": "the same glossary_search tool, swapped to a full-article backend",
+      "value": "同一個 glossary_search 工具，改用全文後端"
+    },
+    "text.e0811aced14f": {
+      "type": "text",
+      "source": "LLM call #1",
+      "value": "LLM 呼叫 #1"
+    },
+    "text.e246bb1fc08b": {
+      "type": "text",
+      "source": " Steer the synthesis call: answer now, from the results, with no more tool calls.",
+      "value": " Steer the synthesis call: answer now, from the results, with no more tool calls.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.e2940855cd99": {
+      "type": "text",
+      "source": " Return the chosen tool, if any, plus the arguments the model filled in.",
+      "value": " Return the chosen tool, if any, plus the arguments the model filled in.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.e766695f7eca": {
+      "type": "text",
+      "source": "Discover two in-page MCP tools through tools/list, then dispatch model requests through tools/call. The agent loop stays unchanged.",
+      "value": "透過 tools/list 發現兩個頁面內 MCP 工具，再透過 tools/call 分派模型請求。代理程式迴圈保持不變。"
+    },
+    "text.e8812f0b9325": {
+      "type": "text",
+      "source": "Ask a natural-language question about customer accounts.",
+      "value": "用自然語言提出有關客戶賬戶的問題。"
+    },
+    "text.e945f8e890b4": {
+      "type": "text",
+      "source": "\n    The cell below gives the model two tools and a question that requires picking,\n    and the visualization shows which way the model went and why.\n  ",
+      "value": "\n    下方單元為模型提供兩個工具和一個需要從中作出選擇的問題，視覺化結果會顯示模型選擇了哪個工具以及選擇原因。\n  "
+    },
+    "text.e981b71a006c": {
+      "type": "text",
+      "source": "Holds the question the student asks, which you can edit before rerunning.",
+      "value": "儲存學員提出的問題；可以先編輯問題，再重新執行。"
+    },
+    "text.ea7927d0c91d": {
+      "type": "text",
+      "source": "Once the top-level agent calls the tool, we hand the natural-language question to the sub-agent, append its answer, and ask for the user-facing reply.",
+      "value": "頂層代理程式呼叫工具後，將自然語言問題交給子代理程式，附加其答案，然後請求生成面向使用者的回覆。"
+    },
+    "text.eb4efa524494": {
+      "type": "text",
+      "source": "Customer rows have fields: id (int), name (string), plan (free|pro|team), region (us-east|us-west|eu|apac), joined (YYYY-MM-DD), tickets_30d (int).",
+      "value": "客戶資料行包含以下欄位：id (int)、name (string)、plan (free|pro|team)、region (us-east|us-west|eu|apac)、joined (YYYY-MM-DD)、tickets_30d (int)。"
+    },
+    "text.eb728ee8d377": {
+      "type": "text",
+      "source": "2025-06-15",
+      "value": "2025-06-15",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ebd0db98edb4": {
+      "type": "text",
+      "source": " TODO: Try another model-family question, or write your own.",
+      "value": " TODO: Try another model-family question, or write your own.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.ebd617ac4de9": {
+      "type": "text",
+      "source": "Scoped to definitions and conceptual questions only. Its description tells the model not to use it for arithmetic, which keeps the two tools from competing on overlapping inputs.",
+      "value": "僅限定義和概念性問題。其描述會指示模型不要用它處理算術運算，從而避免兩個工具針對重疊輸入相互競爭。"
+    },
+    "text.ec134d5a90b8": {
+      "type": "text",
+      "source": "(model answered directly)",
+      "value": "（模型直接給出了回答）"
+    },
+    "text.eccec404dc6c": {
+      "type": "text",
+      "source": "\n    The cell below exposes a sub-agent that knows a small customer table\n    as one natural-language tool. Its caller never sees the rows\n    and can only ask questions.\n  ",
+      "value": "\n    下方單元將一個熟悉小型客戶表的子代理程式作為單個自然語言工具開放。呼叫方始終看不到表中的資料行，只能提出問題。\n  "
+    },
+    "text.ed095df3c69e": {
+      "type": "text",
+      "source": "Hidden data (the sub-agent's world)",
+      "value": "隱藏資料（子代理程式的世界）"
+    },
+    "text.edca249d8d1f": {
+      "type": "text",
+      "source": "calculate",
+      "value": "calculate",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.edca249d8d1f~1": {
+      "type": "text",
+      "source": "calculate",
+      "value": "calculate",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.eea41ce563ba": {
+      "type": "text",
+      "source": "\n    Module 2 keeps this tool contract and changes the outer structure. A workflow can route\n    calls through a fixed pipeline, fan work into branches, or delegate a focused task to\n    another loop without exposing every internal tool to the caller.\n  ",
+      "value": "\n    模組 2 會保留此工具約定，並改變外層結構。工作流程可以按固定流程分派呼叫、將任務分流到多個分支，或把一項專門任務委派給另一個迴圈，無需向呼叫方暴露所有內部工具。\n  "
+    },
+    "text.eef038ea91f0": {
+      "type": "text",
+      "source": " No tool call here: the model either answered from training (it has content) or ran out of tokens mid-call.",
+      "value": " No tool call here: the model either answered from training (it has content) or ran out of tokens mid-call.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.ef4d3114723c": {
+      "type": "text",
+      "source": " No tools here; the model must answer from the search results it already has.",
+      "value": " No tools here; the model must answer from the search results it already has.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.f11462ba0d58": {
+      "type": "text",
+      "source": "Farida Hassan",
+      "value": "Farida Hassan",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.f28126cc0571": {
+      "type": "text",
+      "source": " state.question = \"What is an AI agent?\";",
+      "value": " state.question = \"What is an AI agent?\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.f3281fd98ddb": {
+      "type": "text",
+      "source": "The schema the main agent sees, which exposes the capability alone and gives zero details about the underlying table.",
+      "value": "主代理程式看到的 schema 只公開該能力，不透露底層表的任何細節。"
+    },
+    "text.f699e94964cf": {
+      "type": "text",
+      "source": "MCP-shaped tool server · discovery + dispatch",
+      "value": "MCP 格式的工具伺服器 · 發現 + 分派"
+    },
+    "text.f84cd2a40474": {
+      "type": "text",
+      "source": "Main agent · plain LLM call",
+      "value": "主代理程式 · 普通 LLM 呼叫"
+    },
+    "text.f8ba03fbcc62": {
+      "type": "text",
+      "source": "What is 2 to the power of 10?",
+      "value": "2 的 10 次方是多少？"
+    },
+    "text.f9e235789471": {
+      "type": "text",
+      "source": "LLM (sees discovered tools)",
+      "value": "LLM（可看到已發現的工具）"
+    },
+    "text.fb0824eb6d34": {
+      "type": "text",
+      "source": "Client · tools/list",
+      "value": "用戶端 · tools/list"
+    },
+    "text.fc4fb4d05383": {
+      "type": "text",
+      "source": "Evaluate an arithmetic expression, e.g. (17/100)*2480 or 2^16 - 1000.",
+      "value": "計算算術表示式，例如 (17/100)*2480 或 2^16 - 1000。"
+    },
+    "text.fd6c8a22f01e": {
+      "type": "text",
+      "source": "What does raising a number to a real, non-integer power mean?",
+      "value": "一個數的實數非整數次冪是什麼意思？"
+    },
+    "text.fe91a8132c1f": {
+      "type": "text",
+      "source": "\\\\n\\\\nRows:\\\\n",
+      "value": "\\\\n\\\\n 資料行：\\\\n"
+    },
+    "text.ff386d079c05": {
+      "type": "text",
+      "source": "Using only the search results above, write the final answer now. Do not request another search or output any tool-call syntax.",
+      "value": "現在僅根據上述搜尋結果撰寫最終答案。不要請求再次搜尋，也不要輸出任何工具呼叫語法。"
+    }
+  }
+}
