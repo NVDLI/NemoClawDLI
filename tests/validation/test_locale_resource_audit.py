@@ -877,6 +877,44 @@ if (!logDescription.includes("<code>log.clear()</code>") || logDescription.inclu
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_taiwan_runtime_ui_uses_traditional_script_and_regional_terms(self) -> None:
+        script = r'''
+globalThis.document = { documentElement: { lang: "zh-TW" } };
+const locale = await import("./web/nemoclaw/scripts/_locale.js");
+const fail = message => { throw new Error(message); };
+
+const runAll = locale.localizeCourseUiText(
+  "Reset when you click <strong>▶ Run all</strong>."
+);
+if (!runAll.includes("▶ 全部執行") || /运行|運行/.test(runAll)) {
+  fail("Run all does not use the Taiwan runtime term: " + runAll);
+}
+if (locale.localizeCourseUiText("Instrumentation") !== "追蹤與日誌") {
+  fail("the trace/log helper category is not localized for Taiwan");
+}
+if (locale.localizeCourseUiText("+ show all 3 more helpers") !== "+ 顯示其餘 3 個輔助函式") {
+  fail("dynamic helper text is not localized for Taiwan");
+}
+const description = locale.localizeCourseHelperDescription("mountAgentChat", "English helper description");
+if (!/[\u3400-\u9fff]/.test(description) || /智能體|智慧體|運行時/.test(description)) {
+  fail("helper description does not use Taiwan terminology: " + description);
+}
+const protectedCode = locale.localizeCourseUiText(
+  "Use <code>log.clear()</code>, then clear the panel."
+);
+if (!protectedCode.includes("<code>log.clear()</code>") || protectedCode.includes("log.清除")) {
+  fail("inline code was translated: " + protectedCode);
+}
+'''
+        result = subprocess.run(
+            ["node", "--input-type=module", "-e", script],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_chinese_resources_preserve_code_and_use_exact_button_and_brand_labels(self) -> None:
         resource_root = ROOT / "i18n/zh/resources/web/nemoclaw"
         values = []

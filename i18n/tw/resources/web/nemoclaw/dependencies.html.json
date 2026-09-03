@@ -1,0 +1,237 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "zh-TW",
+  "template": "web/nemoclaw/dependencies.html",
+  "values": {
+    "text.a0b071a25b7f": {
+      "type": "text",
+      "source": "Browser dependencies · Securing Agents",
+      "value": "瀏覽器依賴項 · 安全代理程式"
+    },
+    "text.54d7486f95eb": {
+      "type": "text",
+      "source": "Browser dependency inventory",
+      "value": "瀏覽器依賴項清單"
+    },
+    "text.cf0c4d31dfee": {
+      "type": "text",
+      "source": "These are the JavaScript and CSS files shipped to the learner browser. Generation starts from locked package inputs. It then records the emitted bytes and every runtime source reference.",
+      "value": "以下是隨課程傳送到學習者瀏覽器的 JavaScript 和 CSS 檔案。生成過程以鎖定的軟體包輸入為起點，並記錄最終生成的檔案內容以及執行階段原始碼中的每處引用。"
+    },
+    "text.7953ef103f68": {
+      "type": "text",
+      "source": "Course home",
+      "value": "課程首頁"
+    },
+    "text.c159e62b7c58": {
+      "type": "text",
+      "source": "All listed assets come from the static course origin; course pages never fetch executable packages from a public package CDN at runtime.",
+      "value": "下列資源均來自課程的靜態站點；課程頁面執行階段不會從公共軟體包 CDN 獲取可執行軟體包。"
+    },
+    "attribute.b71eb0b0fbfd": {
+      "type": "attribute",
+      "source": "Dependency summary",
+      "value": "依賴項摘要"
+    },
+    "text.07cc1f388108": {
+      "type": "text",
+      "source": "Loading inventory",
+      "value": "正在載入清單"
+    },
+    "text.e44f97294f89": {
+      "type": "text",
+      "source": "How the browser file is assembled",
+      "value": "瀏覽器檔案的建置方式"
+    },
+    "text.4d7033355cb5": {
+      "type": "text",
+      "source": "The course needs a few LangChain APIs, but their published files refer to other packages by name and some use Node-style modules. A static browser cannot resolve that layout on its own.",
+      "value": "本課程需要使用少量 LangChain API，但官方釋出的檔案會按名稱引用其他軟體包，其中一些還採用 Node.js 模組格式。靜態瀏覽器無法自行解析這種依賴結構。"
+    },
+    "text.473b0e052856": {
+      "type": "text",
+      "source": "The course chooses features",
+      "value": "課程確定所需功能"
+    },
+    "text.443d75686eb1": {
+      "type": "text",
+      "source": "One small entry file imports the five APIs used by the exercises.",
+      "value": "一個小型入口檔案會匯入練習所需的五個 API。"
+    },
+    "text.1b0ad88d23f3": {
+      "type": "text",
+      "source": "The lock chooses exact packages",
+      "value": "鎖檔案確定軟體包版本"
+    },
+    "text.5fcedbbe443b": {
+      "type": "text",
+      "source": "The npm lock fixes every package version and registry integrity value, including indirect requirements.",
+      "value": "npm 鎖檔案固定每個軟體包的版本和 registry 完整性值，包括間接依賴項。"
+    },
+    "text.7a16194e063b": {
+      "type": "text",
+      "source": "esbuild follows the imports",
+      "value": "esbuild 跟蹤匯入關係"
+    },
+    "text.d6f62c4c3fe4": {
+      "type": "text",
+      "source": "esbuild resolves the reachable npm graph and combines it into one browser ESM file. This project does not minify that file.",
+      "value": "esbuild 會解析可達的 npm 依賴圖，並將其合併為一個瀏覽器 ESM 檔案。本專案不會壓縮該檔案。"
+    },
+    "text.8b914772d5ab": {
+      "type": "text",
+      "source": "The inventory records the result",
+      "value": "清單記錄建置結果"
+    },
+    "text.8317a57569ce": {
+      "type": "text",
+      "source": "The tables below record the npm packages, copied utilities already inside LangChain, full licenses, output hashes, and dependency links.",
+      "value": "下表記錄 npm 軟體包、LangChain 內部已複製的實用程式、完整許可證、輸出檔案雜湊和依賴關係。"
+    },
+    "rich.47e6af775cf4": {
+      "type": "rich",
+      "source": "Why <code>p-timeout</code> appears here",
+      "value": "為什麼此處會出現 <code>p-timeout</code>"
+    },
+    "rich.4d2885fe6389": {
+      "type": "rich",
+      "source": "<code>@langchain/core</code> and <code>langsmith</code> require <code>p-queue</code>. That package requires <code>p-timeout</code>, which requires <code>p-finally</code>. The table records the full dependency chain even when a file has no special legal comment.",
+      "value": "<code>@langchain/core</code> 和 <code>langsmith</code> 依賴 <code>p-queue</code>，後者依賴 <code>p-timeout</code>，而後者又依賴 <code>p-finally</code>。即使檔案中沒有特殊的法律宣告，下表也會記錄完整的依賴鏈。"
+    },
+    "text.f60287fca09e": {
+      "type": "text",
+      "source": "Preserved comments are not a package list",
+      "value": "保留的註釋並非軟體包清單"
+    },
+    "rich.daf65061ae91": {
+      "type": "rich",
+      "source": "Some source authors mark comments with forms such as <code>/*!</code> or <code>@license</code>. Because the build uses esbuild's <code>legalComments: \"external\"</code> setting, esbuild moves those marked comments into <code>.LEGAL.txt</code>. Ordinary dependencies can have no such comment, and embedded copied code can have a comment without being a separate npm package.",
+      "value": "部分原始碼作者會使用 <code>/*!</code> 或 <code>@license</code> 等形式標記註釋。由於建置過程採用 esbuild 的 <code>legalComments: \"external\"</code> 設定，esbuild 會將這些已標記的註釋移至 <code>.LEGAL.txt</code>。普通依賴項可能沒有此類註釋，而內嵌的複製程式碼即使帶有註釋，也不一定是獨立的 npm 軟體包。"
+    },
+    "text.82c1907e7898": {
+      "type": "text",
+      "source": "npm packages included in the course",
+      "value": "課程包含的 npm 軟體包"
+    },
+    "text.00ffc145c2e1": {
+      "type": "text",
+      "source": "“Selected by this project” means the course requested the package. “Required by” names the included package that brought an indirect dependency into the browser file. Each license link opens the complete license text shipped with this course version.",
+      "value": "“本專案直接選用”表示課程明確請求了該軟體包；“由……引入”表示某個已包含的軟體包將這項間接依賴帶入了瀏覽器檔案。每個許可證連結都會開啟隨當前課程版本提供的完整許可證文字。"
+    },
+    "text.59de121db1b8": {
+      "type": "text",
+      "source": "Package",
+      "value": "軟體包"
+    },
+    "text.dd167905de0d": {
+      "type": "text",
+      "source": "Version",
+      "value": "版本"
+    },
+    "text.9f9173db38e9": {
+      "type": "text",
+      "source": "Why included",
+      "value": "引入原因"
+    },
+    "text.c011d6097bfb": {
+      "type": "text",
+      "source": "License",
+      "value": "許可證"
+    },
+    "text.d4e8830a71c7": {
+      "type": "text",
+      "source": "Purpose",
+      "value": "用途"
+    },
+    "text.1fb871b0c342": {
+      "type": "text",
+      "source": "Utility code already copied into LangChain",
+      "value": "LangChain 中已複製的實用程式程式碼"
+    },
+    "rich.d6d3c4e8951f": {
+      "type": "rich",
+      "source": "The rows below describe utility sources already present in <code>@langchain/core</code> 1.1.48. The course receives them through that pinned package, and esbuild includes only the portions reached by course imports. No separate npm install occurs. When LangChain omits an original upstream release number, this inventory records that uncertainty instead of guessing.",
+      "value": "下表說明 <code>@langchain/core</code> 1.1.48 中已有的實用程式原始碼。課程透過這個固定版本的軟體包獲得這些程式碼，esbuild 只會包含課程匯入路徑能夠存取的部分，不會單獨執行 npm 安裝。如果 LangChain 未註明原上游版本號，本清單會如實記錄這一不確定性，而不會自行推測。"
+    },
+    "text.832a26ed52d6": {
+      "type": "text",
+      "source": "Embedded component",
+      "value": "內嵌元件"
+    },
+    "text.fc572644bb75": {
+      "type": "text",
+      "source": "Recorded version",
+      "value": "記錄的版本"
+    },
+    "text.c011d6097bfb~1": {
+      "type": "text",
+      "source": "License",
+      "value": "許可證"
+    },
+    "text.9cd881a5aac2": {
+      "type": "text",
+      "source": "Used for",
+      "value": "用途"
+    },
+    "text.da7db9cef9a4": {
+      "type": "text",
+      "source": "Exact source evidence",
+      "value": "確切來源依據"
+    },
+    "text.43db9c65478d": {
+      "type": "text",
+      "source": "Delivered assets",
+      "value": "交付的資原始檔"
+    },
+    "text.a6428f7a2a65": {
+      "type": "text",
+      "source": "SHA-256 binds each committed browser asset. Reference counts cover canonical pages plus pt-BR and es-ES runtime source.",
+      "value": "SHA-256 用於標識每個已提交的瀏覽器資原始檔。引用次數涵蓋規範頁面以及 pt-BR 和 es-ES 的執行階段原始碼。"
+    },
+    "text.80d298c9f240": {
+      "type": "text",
+      "source": "Asset",
+      "value": "資原始檔"
+    },
+    "text.1af851907331": {
+      "type": "text",
+      "source": "Size",
+      "value": "大小"
+    },
+    "text.40a2085371b8": {
+      "type": "text",
+      "source": "Packages",
+      "value": "軟體包"
+    },
+    "text.24d93accbeee": {
+      "type": "text",
+      "source": "Source refs",
+      "value": "原始碼引用次數"
+    },
+    "text.bbd07c4fc02c": {
+      "type": "text",
+      "source": "SHA-256",
+      "value": "SHA-256 雜湊"
+    },
+    "text.7ea406eb103f": {
+      "type": "text",
+      "source": "Reproduction boundary",
+      "value": "可復現範圍"
+    },
+    "rich.102d06f647a3": {
+      "type": "rich",
+      "source": "The exact npm inputs live in <code>scripts/browser-vendor/package.json</code> and <code>package-lock.json</code>. Embedded-source evidence is pinned to the official <code>@langchain/core@1.1.48</code> tag and commit. CI regenerates the browser file, rejects an unmapped legal-comment section, verifies every license and hash, and checks that the dependency graph and CycloneDX inventory agree. Package-CDN URLs are rejected in student runtime code.",
+      "value": "確切的 npm 輸入記錄在 <code>scripts/browser-vendor/package.json</code> 和 <code>package-lock.json</code> 中。內嵌原始碼的依據固定到官方 <code>@langchain/core@1.1.48</code> 標籤和 commit。CI 會重新生成瀏覽器檔案，拒絕無法對映的法律宣告部分，驗證每項許可證和雜湊，並檢查依賴圖是否與 CycloneDX 清單一致。學習者執行階段程式碼中不允許使用軟體包 CDN URL。"
+    },
+    "text.71fa602e0333": {
+      "type": "text",
+      "source": "Could not load dependency inventory",
+      "value": "無法載入依賴項清單"
+    },
+    "text.191f684582f3": {
+      "type": "text",
+      "source": "无法加载依赖项清单",
+      "value": "無法載入依賴項清單"
+    }
+  }
+}

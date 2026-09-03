@@ -1,0 +1,1117 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "zh-TW",
+  "template": "web/nemoclaw/01b-react.html",
+  "media": [
+    "web/nemoclaw/assets/figures/01b-react-1.svg",
+    "web/nemoclaw/assets/figures/01b-react-2.svg",
+    "web/nemoclaw/assets/figures/01b-react-3.svg",
+    "web/nemoclaw/assets/figures/01b-react-4.svg"
+  ],
+  "values": {
+    "link.0bbec6a67870": {
+      "type": "link",
+      "source": "\n    <strong>The cell produces an artifact.</strong> When you run it, you get a working\n    chat panel rather than a wall of logs, rendered from the agent's own code, that you\n    can hold a conversation with. The word itself is older than its current use, since\n    build pipelines and machine-learning training runs have produced \"artifacts\" and\n    \"model artifacts\" for years. Anthropic's recent <a href=\"https://support.claude.com/en/articles/14729249-use-live-artifacts-in-claude-cowork\" target=\"_blank\" rel=\"noopener\">live artifacts</a>\n    sharpened the idea for agents, where an artifact becomes a persistent, interactive\n    HTML surface that the agent builds and that you keep using long after the reply which\n    produced it. The panel below builds one on a small scale, and an agent that can hand\n    back a full interface rather than plain text is a thread that runs through the rest of\n    this course.\n  ",
+      "value": "\n    <strong>該單元格會生成一個製品。</strong>執行後，您得到的不是滿屏日誌，而是由代理程式自身程式碼呈現、可與之對話的聊天面板。“製品”一詞早在當前用法出現前就已存在，因為建置工作流程和機器學習訓練執行多年來一直會生成“製品”和“模型製品”。Anthropic 最近推出的 <a href=\"https://support.claude.com/en/articles/14729249-use-live-artifacts-in-claude-cowork\" target=\"_blank\" rel=\"noopener\">live artifacts</a>\n    進一步明確了這一概念在代理程式領域中的含義：製品是由代理程式建置、可持久使用的 HTML 互動介面；即使生成它的回覆早已結束，您仍可繼續使用。下方面板以較小規模建置了一個這樣的製品。代理程式不僅能傳回純文字，還能交付完整介面；這一主題將貫穿本課程的後續內容。\n  "
+    },
+    "link.18fdb5153bc7": {
+      "type": "link",
+      "source": "\n    Zoom in on the agent and you find the decomposition\n    <a href=\"https://lilianweng.github.io/posts/2023-06-23-agent/\" target=\"_blank\" rel=\"noopener\">Lilian Weng drew in\n    2023</a>. A language model sits at the center. Around it sit <strong>memory</strong>, <strong>planning</strong>, <strong>tools</strong>,\n    and the <strong>actions</strong> that reach the world.\n  ",
+      "value": "\n    仔細觀察代理程式，您會看到\n    <a href=\"https://lilianweng.github.io/posts/2023-06-23-agent/\" target=\"_blank\" rel=\"noopener\">Lilian Weng 在\n    2023 年提出的</a>組成結構。語言模型位於中心，周圍是<strong>記憶</strong>、<strong>規劃</strong>、<strong>工具</strong>以及觸達外部世界的<strong>行動</strong>。\n  "
+    },
+    "link.1be52ce4d6ee": {
+      "type": "link",
+      "source": "Comprehensive list at <a href=\"04c-going-further.html#refs\">Going Further · References</a>.",
+      "value": "完整列表請參閱<a href=\"04c-going-further.html#refs\">深入探索 · 參考資料</a>。"
+    },
+    "link.2b13321bec07": {
+      "type": "link",
+      "source": "Redrawn from <a href=\"https://arxiv.org/abs/2307.03172\" target=\"_blank\" rel=\"noopener\">Liu et al. (2023)</a>. As the loop appends turns, the answer you need drifts into the weak middle.",
+      "value": "根據 <a href=\"https://arxiv.org/abs/2307.03172\" target=\"_blank\" rel=\"noopener\">Liu et al. (2023)</a>的研究重繪。隨著迴圈不斷追加輪次，您所需的答案會逐漸移入模型表現較弱的上下文中部。"
+    },
+    "link.3535ae0b5666": {
+      "type": "link",
+      "source": "<a href=\"https://lilianweng.github.io/posts/2023-06-23-agent/\" target=\"_blank\" rel=\"noopener\">Lilian Weng, <em>LLM Powered Autonomous Agents</em> (2023)</a>. The decomposition the figure above adapts: a language model as the agent's core controller, surrounded by memory, planning, and tool use.",
+      "value": "<a href=\"https://lilianweng.github.io/posts/2023-06-23-agent/\" target=\"_blank\" rel=\"noopener\">Lilian Weng，<em>LLM Powered Autonomous Agents</em> (2023)</a>。上圖採用了該文的分解方式：語言模型充當代理程式的核心控制器，外圍是記憶、規劃和工具使用能力。"
+    },
+    "link.36832d4704f6": {
+      "type": "link",
+      "source": "After <a href=\"https://lilianweng.github.io/posts/2023-06-23-agent/\" target=\"_blank\" rel=\"noopener\">Lilian Weng (2023)</a>: the model is the agent's core controller, with memory, planning, tools, and action wired around it.",
+      "value": "改編自 <a href=\"https://lilianweng.github.io/posts/2023-06-23-agent/\" target=\"_blank\" rel=\"noopener\">Lilian Weng (2023)</a>：模型是代理程式的核心控制器，記憶、規劃、工具和行動圍繞它連線起來。"
+    },
+    "link.52c80043ccc5": {
+      "type": "link",
+      "source": "\n      An agent built on a language model runs the same perceive-reason-act\n      loop as anything else, with one detail that gives the pattern its name:\n      the model reasons in words between the actions it takes.\n      <a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al. (2022)</a>\n      called this <strong>ReAct</strong>, for reasoning and acting. They found that\n      interleaving short reasoning traces with tool use handles many tasks more\n      reliably than planning everything first or acting with no reasoning step.\n    ",
+      "value": "\n      基於語言模型建置的代理程式與其他系統一樣，執行“感知—推理—行動”迴圈。但其中有一個細節賦予了這一模式名稱：模型會在每次行動之間用文字進行推理。\n      <a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al. (2022)</a>\n      將這種結合推理與行動的模式稱為 <strong>ReAct</strong>。他們發現，將簡短的推理軌跡與工具使用交替進行，在許多工上比預先規劃全部步驟或不經推理直接行動更可靠。\n    "
+    },
+    "link.64ae525d2a06": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2201.11903\" target=\"_blank\" rel=\"noopener\">Wei et al., <em>Chain-of-Thought Prompting</em> (2022)</a>. The \"reason\" half of ReAct; what the model is doing inside <code>reasoning_content</code> when it deliberates before acting.",
+      "value": "<a href=\"https://arxiv.org/abs/2201.11903\" target=\"_blank\" rel=\"noopener\">Wei et al., <em>Chain-of-Thought Prompting</em> (2022)</a>。這是 ReAct 中的“推理”部分，即模型在行動前進行斟酌時，在 <code>reasoning_content</code> 內部執行的過程。"
+    },
+    "link.6726ddaf5bfd": {
+      "type": "link",
+      "source": "\n    The loop above hard-wires one tiny tool. LangChain's <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n    generalizes the same machinery to support more tools, standard interfaces, and observability integrations. An instance of this class is wired below to a single tool,\n    <code>read_course_page</code>, which hands the agent any page of this course as markdown. The model decides which pages to read for your question, so give it a try.\n  ",
+      "value": "\n    上面的迴圈硬編碼了一個很小的工具。LangChain 的 <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n    對相同機制進行了泛化，可支援更多工具、標準介面和可觀測性整合。下方的課程執行個體只接入了一個工具 <code>read_course_page</code>，它可以將本課程任意頁面以 markdown 格式提供給代理程式。模型會根據問題決定讀取哪些頁面，請親自試一試。\n  "
+    },
+    "link.7abcb40c63bb": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al., <em>ReAct: Synergizing Reasoning and Acting in Language Models</em> (2022)</a>. The original alternating thought / action / observation pattern; the figure above is redrawn from this paper.",
+      "value": "<a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al., <em>ReAct: Synergizing Reasoning and Acting in Language Models</em> (2022)</a>。提出了最初的思考、行動與觀察交替模式；上圖根據該論文重繪。"
+    },
+    "link.9b74219a361f": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer</em> (2023)</a>. Covered again in 1c's references; revisit here for the underlying mechanism the ReAct loop exploits.",
+      "value": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer</em> (2023)</a>。1c 的參考資料中還會再次介紹；此處可透過該論文回顧 ReAct 迴圈所利用的底層機制。"
+    },
+    "link.a733bbaab3fa": {
+      "type": "link",
+      "source": "\n    This issue becomes more likely as the context grows. <strong>Context rot</strong> is the\n    tendency for contradictions, stale observations, and poor conventions to accumulate in the\n    prompt history until the model's next decision gets worse. The effect also has a positional\n    component: <a href=\"https://arxiv.org/abs/2307.03172\" target=\"_blank\" rel=\"noopener\">Liu et al. (2023)</a>\n    showed that models can underuse information buried in the middle of a long context. The further an\n    important signal drifts from the current turn, the easier it is for the loop to ignore or contradict it.\n  ",
+      "value": "\n    隨著上下文增長，這個問題更容易出現。<strong>上下文退化</strong>是指矛盾、過時的觀察結果和不良約定不斷積累在提示詞歷史中，最終導致模型下一次決策品質下降的趨勢。這種影響還與資訊所在的位置有關：<a href=\"https://arxiv.org/abs/2307.03172\" target=\"_blank\" rel=\"noopener\">Liu et al. (2023)</a>的研究表明，模型可能無法充分利用埋藏在長上下文中部的資訊。重要訊號距離當前輪次越遠，迴圈就越容易忽略它或產生與之矛盾的結果。\n  "
+    },
+    "link.a904f9e69da1": {
+      "type": "link",
+      "source": "\n      This loop is the foundation that most general-purpose agent frameworks\n      are built on, LangChain's <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n      among them, and the rest of this module works up to it.\n    ",
+      "value": "\n      大多數通用代理程式框架都以這一迴圈為基礎，LangChain 的 <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n      也是如此。本模組的後續內容將逐步建置這一迴圈。\n    "
+    },
+    "link.e672069b0c2f": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al., <em>ReWOO: Decoupling Reasoning from Observations</em> (2023)</a>. A deliberate contrast to ReAct: the model writes the whole plan up front and a separate executor runs it without re-querying the model between steps. Comparing the two reveals the trade-off between reactive replanning and pre-committed execution.",
+      "value": "<a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al., <em>ReWOO: Decoupling Reasoning from Observations</em> (2023)</a>。該方法有意與 ReAct 形成對比：模型預先寫出完整規劃，再由獨立的執行器執行；各步驟之間無需再次查詢模型。對比二者可以看出回應式重新規劃與預先確定執行方案之間的權衡。"
+    },
+    "placeholder.429081bf9e49": {
+      "type": "placeholder",
+      "source": "── step \\${step} ──────────────────────",
+      "value": "── 第 \\${step} 步 ──────────────────────"
+    },
+    "placeholder.de34a1db7cea": {
+      "type": "placeholder",
+      "source": "(tool \"\\${name}\" not found)",
+      "value": "（未找到工具“\\${name}”）"
+    },
+    "rich.0a886834e9f1": {
+      "type": "rich",
+      "source": "\n    Every chat-completions response carries a <code>finish_reason</code>\n    field that tells you why the model stopped generating. Inside an agent\n    loop, this is the only signal you need to decide what to do next:\n    run a tool, return the answer to the user, or handle an error. Before reading\n    what its values mean, make two calls and watch the field change.\n  ",
+      "value": "\n    每個聊天補全回應都包含一個 <code>finish_reason</code>\n    欄位，用於說明模型停止生成的原因。在代理程式迴圈中，您只需依據這一訊號決定下一步操作：執行工具、向使用者傳回答案或處理錯誤。在瞭解各個欄位值的含義之前，請先發起兩次呼叫並觀察該欄位的變化。\n  "
+    },
+    "rich.1cbfc5ef05f8": {
+      "type": "rich",
+      "source": "<code>\"stop\"</code> means the model has written its final answer and the loop can return <code>content</code> to the user.",
+      "value": "<code>\"stop\"</code> 表示模型已生成最終答案，迴圈可以將 <code>content</code> 傳回給使用者。"
+    },
+    "rich.23b34d2bdc7f": {
+      "type": "rich",
+      "source": "<strong>Memory</strong> is the <code>messages[]</code> array.",
+      "value": "<strong>記憶</strong>是 <code>messages[]</code> 陣列。"
+    },
+    "rich.32ec8d5bb853": {
+      "type": "rich",
+      "source": "\n    The first call answered on its own and came back <code>\"stop\"</code>. The second was\n    offered a tool and asked for something training data cannot supply, so instead of stopping\n    it came back <code>\"tool_calls\"</code>, handing your code the name of the function to run.\n    Those two values cover the common branching. The rest signal trouble that routes the loop\n    into a fallback harness, where the agent might retry the call or hand the conversation off\n    to a human.\n  ",
+      "value": "\n    第一次呼叫由模型自行作答，傳回了 <code>\"stop\"</code>。第二次呼叫向模型提供了工具，並要求獲取訓練資料無法提供的資訊，因此它沒有停止，而是傳回 <code>\"tool_calls\"</code>，將需要執行的函式名稱交給程式碼。這兩個值涵蓋了常見的分支情況。其餘值表示發生了問題，迴圈會轉入後備執行框架；代理程式可以在其中重試呼叫，或將對話轉交給人工處理。\n  "
+    },
+    "rich.37cadcb11b30": {
+      "type": "rich",
+      "source": "<strong>Force the model to call the tool even when it does not need to.</strong>\n        Try a question the tool genuinely cannot answer (\"capital of France?\")\n        and watch <code>finish_reason</code> on step 1. Was it\n        <code>\"stop\"</code> or <code>\"tool_calls\"</code>? Now edit the system\n        prompt to <em>require</em> a tool call before answering (\"You must\n        always call get_current_time once, then answer.\"). Does the model\n        comply? What does that tell you about how strongly the system prompt\n        steers a model that has training-data confidence in another\n        direction?",
+      "value": "<strong>即使模型不需要使用工具，也強制它進行工具呼叫。</strong>嘗試提出一個工具確實無法回答的問題（“法國的首都是哪裡？”），並觀察第 1 步中的 <code>finish_reason</code>。它的值是 <code>\"stop\"</code> 還是 <code>\"tool_calls\"</code>？現在編輯系統提示詞，<em>要求</em>模型必須先進行工具呼叫再回答（“您必須始終呼叫 get_current_time 一次，然後再回答。”）。模型是否遵從了要求？如果模型根據訓練資料對另一個答案方向很有信心，這一現象說明系統提示詞對模型的引導作用有多強？"
+    },
+    "rich.55b8f317ac62": {
+      "type": "rich",
+      "source": "<code>\"tool_calls\"</code> means the model is asking your code to run a named function and append the result before calling back.",
+      "value": "<code>\"tool_calls\"</code> 表示模型要求程式碼執行指定函式，追加結果後再回撥模型。"
+    },
+    "rich.5786f2c7058f": {
+      "type": "rich",
+      "source": "The <span>ReAct</span> Loop",
+      "value": "<span>ReAct</span> 迴圈"
+    },
+    "rich.5bfe55cf1c3c": {
+      "type": "rich",
+      "source": "the model returning the wrong <code>finish_reason</code>,",
+      "value": "模型傳回了錯誤的 <code>finish_reason</code>；"
+    },
+    "rich.5dd2af0f718f": {
+      "type": "rich",
+      "source": "\n    As an exercise, we can try to create a simple loop from scratch.\n    All we need is a single tool named <code>get_current_time</code> plus one system prompt\n    and one <code>while</code> loop. Run it with \"What time is it in UTC?\" to start, and see what else you can ask:\n  ",
+      "value": "\n    接下來嘗試從頭建立一個簡單迴圈。只需要一個名為 <code>get_current_time</code> 的工具、一條系統提示詞和一個 <code>while</code> 迴圈。先用“現在 UTC 時間是多少？”執行它，再看看您還能提出哪些問題：\n  "
+    },
+    "rich.84d160e88d5a": {
+      "type": "rich",
+      "source": "<code>\"length\"</code> means the token budget ran out before the answer finished.",
+      "value": "<code>\"length\"</code> 表示答案尚未生成完畢，token 預算就已耗盡。"
+    },
+    "rich.914091fc2532": {
+      "type": "rich",
+      "source": "<strong>Count the steps on a genuinely tool-needing question.</strong>\n        \"How many minutes until 17:00 UTC?\" takes more than one tool call.\n        Run it a few times. Did the model call\n        <code>get_current_time</code> once, twice, or three times? Why\n        would a model re-call a tool whose output it already has,\n        and how would you discourage that in the system prompt?",
+      "value": "<strong>針對一個確實需要工具的問題統計執行步數。</strong>\n        “距離 UTC 17:00 還有多少分鐘？”需要進行多次工具呼叫。多執行幾次。模型呼叫了 <code>get_current_time</code> 一次、兩次還是三次？為什麼模型會再次呼叫已經取得輸出的工具？您會如何在系統提示詞中抑制這種行為？"
+    },
+    "rich.9cf78b159479": {
+      "type": "rich",
+      "source": "\n    The flow is short: the model asks for the tool, the executor appends the timestamp as a\n    <code>tool</code>-role message, the model reads that timestamp, and the loop exits when\n    <code>finish_reason</code> reads <code>\"stop\"</code>.\n  ",
+      "value": "\n    整個流程很短：模型請求使用工具，執行器將時間戳追加為一條 <code>tool</code> 角色訊息，模型讀取該時間戳；當 <code>finish_reason</code> 的值為 <code>\"stop\"</code> 時，迴圈退出。\n  "
+    },
+    "rich.a5ec72e450db": {
+      "type": "rich",
+      "source": "\n      A <strong>tool</strong> is code your harness can run for the model: a named function\n      with a description, an input schema, and a return value. A <strong>tool call</strong>\n      is the model's structured request for that code. The harness parses the request,\n      runs the function, appends the result, and calls the model again.\n    ",
+      "value": "\n      <strong>工具</strong>是執行框架可代模型執行的程式碼：一個具有名稱、描述、輸入模式和傳回值的函式。<strong>工具呼叫</strong>是模型發出的結構化程式碼執行請求。執行框架解析該請求、執行函式、追加結果，然後再次呼叫模型。\n    "
+    },
+    "rich.a672cf1d58db": {
+      "type": "rich",
+      "source": "\n    <strong>The modules are independent.</strong> You can replace the model or the tools\n    or the router on its own, and as long as each one still honors the contract the\n    others expect of it, the rest of the loop keeps working.\n  ",
+      "value": "\n    <strong>這些模組彼此獨立。</strong>可以單獨替換模型、工具或路由；只要各模組仍遵守其他模組所依賴的契約，迴圈的其餘部分就能繼續執行。\n  "
+    },
+    "rich.ac8be9f59109": {
+      "type": "rich",
+      "source": "<strong>Tools</strong> are the functions your harness exposes.",
+      "value": "<strong>工具</strong>是執行框架公開的函式。"
+    },
+    "rich.bd05de694d36": {
+      "type": "rich",
+      "source": "<code>\"content_filter\"</code> means a safety classifier stopped the output.",
+      "value": "<code>\"content_filter\"</code> 表示安全分類器停止了輸出。"
+    },
+    "rich.d43436ee347a": {
+      "type": "rich",
+      "source": "<strong>Action</strong> is the tool call the harness executes.",
+      "value": "<strong>行動</strong>是執行框架執行的工具呼叫。"
+    },
+    "rich.d7a22d027748": {
+      "type": "rich",
+      "source": "\n    <strong>What just happened inside the messages array.</strong><br>\n    The loop pushed four things into <code>state.messages</code>: <ul><li>the system\n    prompt (turn 0),</li><li>the user question (turn 1),</li><li>an assistant message with a\n    <code>tool_calls</code> field (turn 2, the request),</li><li>and a\n    <code>tool</code>-role message holding the function's return value (turn\n    3).</li></ul> The second LLM call read all four of those including the new tool result and\n    wrote the final answer. The growing array is the only \"memory\" this\n    agent has. If you saved that array to disk and reloaded it next week, the\n    model would resume the conversation without noticing the gap.\n  ",
+      "value": "\n    <strong>剛才 messages 陣列內部發生了什麼。</strong><br>\n    迴圈向 <code>state.messages</code> 中加入了四項：<ul><li>系統提示詞（第 0 輪），</li><li>使用者的問題（第 1 輪），</li><li>一條帶有 <code>tool_calls</code> 欄位的 assistant 訊息（第 2 輪，即請求），</li><li>以及一條儲存函式傳回值的 <code>tool</code> 角色訊息（第 3 輪）。</li></ul>第二次 LLM 呼叫讀取了這四項，包括新增的工具結果，然後生成最終答案。這個不斷增長的陣列就是該代理程式擁有的全部“記憶”。如果您將該陣列儲存到磁碟，並在下週重新載入，模型會繼續對話，甚至不會察覺中間曾中斷過。\n  "
+    },
+    "rich.dab40f3dcbce": {
+      "type": "rich",
+      "source": "\n    Run the cell to build the panel, then chat with it. Pin one or more with\n    the <b>Pages</b> chips to ground every answer in them, or pin nothing and let the\n    agent choose what to read. The reply renders as markdown, with a chip for each source\n    the agent read so you can expand it to see the text it pulled back. Alongside the answer,\n    you also get the reasoning trace and the token usage. It remembers the conversation per chat.\n    Edit the cell and rerun to rebuild the artifact.\n  ",
+      "value": "\n    執行單元格建置面板，然後與它對話。可以使用 <b>Pages</b> 標籤固定一個或多個頁面，使每個答案都以這些頁面為依據；也可以不固定任何頁面，讓代理程式自行選擇要讀取的內容。回覆會呈現為 markdown，併為代理程式讀取的每個來源顯示一個標籤；展開標籤即可檢視它檢索到的文字。除答案外，您還會看到推理軌跡和 token 使用情況。它會分別記住每個聊天中的對話。編輯單元格並重新執行即可重建制品。\n  "
+    },
+    "rich.feee3c133cfe": {
+      "type": "rich",
+      "source": "<strong>Planning</strong> is the <code>finish_reason</code> router.",
+      "value": "<strong>規劃</strong>是 <code>finish_reason</code> 路由邏輯。"
+    },
+    "text.00b025711499": {
+      "type": "text",
+      "source": "(nothing)",
+      "value": "（無）"
+    },
+    "text.026e6c091cf3": {
+      "type": "text",
+      "source": "✓ final answer:",
+      "value": "✓ 最終答案："
+    },
+    "text.0476c71c00aa": {
+      "type": "text",
+      "source": "The ReAct Loop · Securing Agents",
+      "value": "ReAct 迴圈 · 安全代理程式"
+    },
+    "text.04f8996da763": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~1": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~2": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.04f8996da763~3": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.050e1935bf8a": {
+      "type": "text",
+      "source": " advertised context window per model",
+      "value": " advertised context window per model",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.0a07f6594619": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0ab6e677de64": {
+      "type": "text",
+      "source": "Pinned page (",
+      "value": "已固定的頁面（"
+    },
+    "text.0bbebf6e464f": {
+      "type": "text",
+      "source": "get_current_time",
+      "value": "get_current_time",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.0bbebf6e464f~1": {
+      "type": "text",
+      "source": "get_current_time",
+      "value": "get_current_time",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.0bbebf6e464f~2": {
+      "type": "text",
+      "source": "get_current_time",
+      "value": "get_current_time",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.0bbebf6e464f~3": {
+      "type": "text",
+      "source": "get_current_time",
+      "value": "get_current_time",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.0e836f28df3b": {
+      "type": "text",
+      "source": "I have a meeting tomorrow morning at 10am in France. How many hours do I have to prepare?",
+      "value": "我明天上午 10 點在法國有一個會議。我還有多少小時可以準備？"
+    },
+    "text.0fe9c7c06710": {
+      "type": "text",
+      "source": "You are a helpful assistant. Use the tools available ",
+      "value": "您是一位樂於助人的助手。請使用可用工具，"
+    },
+    "text.1397e960f2a1": {
+      "type": "text",
+      "source": "\n    That independence also matters for how you read agent code you didn't\n    write. Whatever framework wraps it, any LLM-based agent must contain these\n    four pieces, and when something breaks the cause is usually in one of them:\n  ",
+      "value": "\n    閱讀並非由您編寫的代理程式程式碼時，這種獨立性同樣重要。無論外層採用什麼框架，任何基於 LLM 的代理程式都必須包含以下四個部分；一旦出現故障，原因通常就在其中之一：\n  "
+    },
+    "text.140c64b7ccdf": {
+      "type": "text",
+      "source": "\n    None of that lives inside the model. It is the harness you build around a single\n    text-in, text-out call.\n  ",
+      "value": "\n    這些都不在模型內部，而是您圍繞一次文字輸入、文字輸出呼叫建置的執行框架。\n  "
+    },
+    "text.150461710ba8": {
+      "type": "text",
+      "source": "pages as the question needs, one reason/read step at a time, then answer. For a ",
+      "value": "問題需要閱讀足夠多的頁面，每次執行一個推理或閱讀步驟，然後作答。對於"
+    },
+    "text.1603672b492c": {
+      "type": "text",
+      "source": "Module 1 · Part B of 3",
+      "value": "模組 1 · 第 2 部分（共 3 部分）"
+    },
+    "text.161660030aa6": {
+      "type": "text",
+      "source": "→",
+      "value": "→",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.183e9eb41c65": {
+      "type": "text",
+      "source": "The loop is unchanged. With a language model in the reasoning step, the agent reads tool results and acts by calling tools.",
+      "value": "迴圈本身沒有變化。以語言模型執行推理步驟時，代理程式讀取工具結果，並透過呼叫工具採取行動。"
+    },
+    "text.185d5444c22a": {
+      "type": "text",
+      "source": "Compare a direct answer with a tool request. Watch finish_reason change before building the complete loop.",
+      "value": "比較直接回答與工具請求。在建置完整迴圈之前，觀察 finish_reason 如何變化。"
+    },
+    "text.1b12f21798d2": {
+      "type": "text",
+      "source": " Bound the loop so a confused agent cannot spin forever.",
+      "value": " Bound the loop so a confused agent cannot spin forever.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1c1a24c5dd90": {
+      "type": "text",
+      "source": "'overview' page first. Name the page id(s) you used.\\\\n\\\\nPages:\\\\n",
+      "value": "“overview”頁面。請列出您使用的頁面 id。\\\\n\\\\n 頁面：\\\\n"
+    },
+    "text.1ce7ab6e32fb": {
+      "type": "text",
+      "source": "\n    This course's minimal agent fills each slot with the simplest thing that works:\n  ",
+      "value": "\n    本課程的最小代理程式使用能滿足需求的最簡單方式實現每個部分：\n  "
+    },
+    "text.21b6ab9e7a81": {
+      "type": "text",
+      "source": "· tool_calls:",
+      "value": "· tool_calls："
+    },
+    "text.2298879d8c60": {
+      "type": "text",
+      "source": " tok",
+      "value": " 個 token"
+    },
+    "text.22e27b314a6b": {
+      "type": "text",
+      "source": "Think, act, observe, repeat. The turn exits the moment finish_reason is \"stop\".",
+      "value": "思考、行動、觀察、重複。一旦 finish_reason 為 \"stop\"，當前輪次立即結束。"
+    },
+    "text.263eb2e3d503": {
+      "type": "text",
+      "source": " \"stop\" means the answer is ready and the loop can exit",
+      "value": " \"stop\" means the answer is ready and the loop can exit",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.2744773dba26": {
+      "type": "text",
+      "source": " The model cannot run the tool itself; this preview asks your code to run it.",
+      "value": " The model cannot run the tool itself; this preview asks your code to run it.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.288ec2e40f38": {
+      "type": "text",
+      "source": " state.userPrompt   = \"What time is it in UTC?\";",
+      "value": " state.userPrompt   = \"What time is it in UTC?\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.28ecba64c585": {
+      "type": "text",
+      "source": "← Module 1a: The Agent",
+      "value": "← 模組 1a：代理程式"
+    },
+    "text.2958d416d08a": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2958d416d08a~1": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2bcdea9e3abf": {
+      "type": "text",
+      "source": "which page, e.g. 01b-react",
+      "value": "要讀取的頁面，例如 01b-react"
+    },
+    "text.2cfc66a4bac0": {
+      "type": "text",
+      "source": " stops or asks for the tool on these same two questions.",
+      "value": " stops or asks for the tool on these same two questions.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.2d08f3745b34": {
+      "type": "text",
+      "source": " Suppress raw tokens so only the curated trace appears.",
+      "value": " Suppress raw tokens so only the curated trace appears.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3203b6e01a14": {
+      "type": "text",
+      "source": "Returns the current UTC time.",
+      "value": "傳回當前的 UTC 時間。"
+    },
+    "text.3396288947a0": {
+      "type": "text",
+      "source": "you read with read_course_page; if the pages do not cover it, say so. Read as many ",
+      "value": "read_course_page 閱讀的頁面為依據；如果頁面未涉及相關內容，請明確說明。請根據"
+    },
+    "text.33b3b8031352": {
+      "type": "text",
+      "source": ".chatui-tool-body",
+      "value": ".chatui-tool-body",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.34612a45e6ff": {
+      "type": "text",
+      "source": "Prompt ~",
+      "value": "提示詞約 "
+    },
+    "text.363d049490fc": {
+      "type": "text",
+      "source": "finish_reason:",
+      "value": "finish_reason："
+    },
+    "text.363d049490fc~1": {
+      "type": "text",
+      "source": "finish_reason:",
+      "value": "finish_reason："
+    },
+    "text.363d049490fc~2": {
+      "type": "text",
+      "source": "finish_reason:",
+      "value": "finish_reason："
+    },
+    "text.36d507134134": {
+      "type": "text",
+      "source": " Optional visibility: uncomment to inspect the complete first response.",
+      "value": " Optional visibility: uncomment to inspect the complete first response.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.3a417d05647e": {
+      "type": "text",
+      "source": "You are a teaching assistant for this agents course. Ground every answer in pages ",
+      "value": "您是本代理程式課程的助教。每個答案都必須以您透過"
+    },
+    "text.3eb40a91e88a": {
+      "type": "text",
+      "source": " same loop with a different model.",
+      "value": " same loop with a different model.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.40f3d65d3288": {
+      "type": "text",
+      "source": "Build the artifact · createReactAgent → a live chat panel",
+      "value": "建置制品 · createReactAgent → 即時聊天面板"
+    },
+    "text.41f9644e92f9": {
+      "type": "text",
+      "source": "Context rot: why a longer loop reads worse",
+      "value": "上下文退化：迴圈越長，為何理解效果越差"
+    },
+    "text.420312f26fff": {
+      "type": "text",
+      "source": "read_course_page …",
+      "value": "read_course_page …",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.421eeed28885": {
+      "type": "text",
+      "source": "\n    In modern ReAct, a short router reads that field. If the model asked for a tool, the router\n    runs your function, appends the result, and calls the model again. If the model stopped, the\n    router returns the answer.\n  ",
+      "value": "\n    在現代 ReAct 中，一個簡短的路由邏輯會讀取該欄位。如果模型請求使用工具，路由邏輯就會執行函式、追加結果並再次呼叫模型。如果模型已經停止，路由邏輯就會傳回答案。\n  "
+    },
+    "text.4285d23d69c3": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.44b7b4576467": {
+      "type": "text",
+      "source": " Render each event as it streams; key tool chips by tool-call id.",
+      "value": " Render each event as it streams; key tool chips by tool-call id.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.4575d9a0bb39": {
+      "type": "text",
+      "source": "Nemotron 3.5 Lightning 30B · fast",
+      "value": "Nemotron 3.5 Lightning 30B · fast",
+      "untranslated": "Model selector display label; preserve the complete label in English"
+    },
+    "text.45c61df0a145": {
+      "type": "text",
+      "source": " tool CALL: each new call (tc.id present) PUSHES a fresh chip; arg deltas (no id) extend the call currently open at that index.",
+      "value": " tool CALL: each new call (tc.id present) PUSHES a fresh chip; arg deltas (no id) extend the call currently open at that index.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.46b6d96f4ead": {
+      "type": "text",
+      "source": "react-artifact",
+      "value": "react-artifact",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.46f70a7ed608": {
+      "type": "text",
+      "source": " Define the tool schema the model can choose from next.",
+      "value": " Define the tool schema the model can choose from next.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.473287f8298d": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4f9bdbf133c6": {
+      "type": "text",
+      "source": " MODEL is the swappable brain in the reasoning slot. Change it and rerun to drive the",
+      "value": " MODEL is the swappable brain in the reasoning slot. Change it and rerun to drive the",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.515a5a5545d2": {
+      "type": "text",
+      "source": " state.userPrompt   = \"What is the capital of France?\";",
+      "value": " state.userPrompt   = \"What is the capital of France?\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.5502f2a766fc": {
+      "type": "text",
+      "source": "User input",
+      "value": "使用者輸入"
+    },
+    "text.576f5af82d14": {
+      "type": "text",
+      "source": "\n    Each of those costs something in latency or fidelity or complexity, and each is worth weighing against the task at hand.\n  ",
+      "value": "\n    每種方法都會在延遲、保真度或複雜度方面付出代價，因此都需要結合當前任務權衡取捨。\n  "
+    },
+    "text.5777416ae489": {
+      "type": "text",
+      "source": ", \\\\",
+      "value": ", \\\\",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.57b7e204b183": {
+      "type": "text",
+      "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.57b7e204b183~1": {
+      "type": "text",
+      "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.57b7e204b183~2": {
+      "type": "text",
+      "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.5846418c93e3": {
+      "type": "text",
+      "source": "Artifact mounted below. Edit this cell and rerun to rebuild it.",
+      "value": "構件已掛載到下方。編輯此單元並重新執行即可重建。"
+    },
+    "text.588da4105320": {
+      "type": "text",
+      "source": " · ",
+      "value": " · ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.58f9aa84895a": {
+      "type": "text",
+      "source": "):\\\\n\\\\n",
+      "value": "）：\\\\n\\\\n"
+    },
+    "text.5a44317dda81": {
+      "type": "text",
+      "source": " Save the system prompt that frames the agent loop.",
+      "value": " Save the system prompt that frames the agent loop.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.60902ba79bb1": {
+      "type": "text",
+      "source": "✓ artifact mounted below. Scroll down and chat with it.",
+      "value": "✓ 構件已掛載到下方。請向下滾動並與其對話。"
+    },
+    "text.614983743131": {
+      "type": "text",
+      "source": " window ~",
+      "value": "，視窗約 "
+    },
+    "text.64945d606a53": {
+      "type": "text",
+      "source": "⚠ step cap reached",
+      "value": "⚠ 已達到步驟上限"
+    },
+    "text.6569018015a4": {
+      "type": "text",
+      "source": "No API key yet. Add your nvapi- key on the course home, then rerun.",
+      "value": "尚無 API key。請在課程首頁新增 nvapi- 金鑰，然後重新執行。"
+    },
+    "text.6573068d613f": {
+      "type": "text",
+      "source": ". Unpin a page.",
+      "value": "。請取消固定一個頁面。"
+    },
+    "text.65e4e49e5ed8": {
+      "type": "text",
+      "source": "Read a page of THIS course and return its text as markdown.",
+      "value": "讀取 THIS 課程的一個頁面，並以 markdown 格式傳回其文字。"
+    },
+    "text.67a5bdf2a82d": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents",
+      "value": "NVIDIA · 安全代理程式"
+    },
+    "text.68e84543a986": {
+      "type": "text",
+      "source": "when the user asks for something you cannot answer from training data alone.",
+      "value": "處理使用者提出的、僅憑訓練資料無法回答的問題。"
+    },
+    "text.69824d3b0e70": {
+      "type": "text",
+      "source": "References",
+      "value": "參考資料"
+    },
+    "text.6a0c24f0658f": {
+      "type": "text",
+      "source": " One createReactAgent per model; each keeps its own MemorySaver for multi-turn.",
+      "value": " One createReactAgent per model; each keeps its own MemorySaver for multi-turn.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.6a6932bb5404": {
+      "type": "text",
+      "source": "✗",
+      "value": "✗",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.6a6eb0c995bc": {
+      "type": "text",
+      "source": " \"tool_calls\" means the model is asking you to run a function",
+      "value": " \"tool_calls\" means the model is asking you to run a function",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.6c45cb72a36e": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.6e58c818e00c": {
+      "type": "text",
+      "source": "How does the OpenShell sandbox contain an agent?",
+      "value": "OpenShell 沙箱如何限制代理程式的活動範圍？"
+    },
+    "text.6e690c6bbc15": {
+      "type": "text",
+      "source": " Pin each selected page in full so the chip reflects the actual context.",
+      "value": " Pin each selected page in full so the chip reflects the actual context.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.6ec7ac216303": {
+      "type": "text",
+      "source": " Call 1 · no tools offered. The model can answer, so it stops on its own.",
+      "value": " Call 1 · no tools offered. The model can answer, so it stops on its own.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.761b7ad8ad43": {
+      "type": "text",
+      "source": "summary",
+      "value": "summary",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.78f9ac018e55": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.78f9ac018e55~1": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.7ac1012b98c8": {
+      "type": "text",
+      "source": "the tool executor handing back an unexpected value,",
+      "value": "工具執行器傳回了意外的值；"
+    },
+    "text.7b07fbed8c28": {
+      "type": "text",
+      "source": "Runs the ReAct cycle until finish_reason is 'stop'. Edit MODEL to compare another model.",
+      "value": "執行 ReAct 迴圈，直至 finish_reason 為 'stop'。編輯 MODEL 可比較其他模型。"
+    },
+    "text.7c9bbe5ec9b3": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.7f55b8a3a9c4": {
+      "type": "text",
+      "source": "What time is it right now in UTC?",
+      "value": "UTC 現在幾點？"
+    },
+    "text.8060fc09ef01": {
+      "type": "text",
+      "source": " MODEL is the swappable brain. Change it and rerun to see whether a stronger model",
+      "value": " MODEL is the swappable brain. Change it and rerun to see whether a stronger model",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.850d8ef32ee1": {
+      "type": "text",
+      "source": " Backstop for runaway tool loops during the demo.",
+      "value": " Backstop for runaway tool loops during the demo.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.860e46c3ac56": {
+      "type": "text",
+      "source": "When should I route to specialists instead of one agent?",
+      "value": "何時應將任務分派給多個專家，而不是交給單個代理程式？"
+    },
+    "text.87d11c51b789": {
+      "type": "text",
+      "source": "ReAct loop",
+      "value": "ReAct 迴圈"
+    },
+    "text.8aca1d215520": {
+      "type": "text",
+      "source": "read_course_page",
+      "value": "read_course_page",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8b7b657e4f3d": {
+      "type": "text",
+      "source": "finish_reason · the one field the loop reads to decide what to do next",
+      "value": "finish_reason · 迴圈讀取該欄位來決定下一步操作"
+    },
+    "text.8bb8efa7cdc7": {
+      "type": "text",
+      "source": " token usage rolls up across the ReAct loop's LLM calls",
+      "value": " token usage rolls up across the ReAct loop's LLM calls",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.8e398181480a": {
+      "type": "text",
+      "source": "Add your nvapi- key on the course home, then rerun.",
+      "value": "請在課程首頁新增 nvapi- 金鑰，然後重新執行。"
+    },
+    "text.8e78720c3bde": {
+      "type": "text",
+      "source": "The one field that tells the loop what to do next",
+      "value": "決定迴圈下一步操作的唯一欄位"
+    },
+    "text.8ef829c1a7ee": {
+      "type": "text",
+      "source": "(reading)",
+      "value": "（讀取中）"
+    },
+    "text.8f44ca8bb1a7": {
+      "type": "text",
+      "source": "Set the prompt, register one tool, then watch the loop call the model, execute requests, append observations, and stop.",
+      "value": "設定提示詞並註冊一個工具，然後觀察迴圈如何呼叫模型、執行請求、追加觀察結果並停止。"
+    },
+    "text.94e16b93ac9d": {
+      "type": "text",
+      "source": " tok > ",
+      "value": " 個詞元 > "
+    },
+    "text.99e67b933e08": {
+      "type": "text",
+      "source": " The artifact is a live chat panel, not a transcript dump.",
+      "value": " The artifact is a live chat panel, not a transcript dump.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.9bb0026a8b4b": {
+      "type": "text",
+      "source": "Tool spec",
+      "value": "工具規範"
+    },
+    "text.9bb0d2e378d1": {
+      "type": "text",
+      "source": "tool ran:",
+      "value": "已執行工具："
+    },
+    "text.9cc45829f103": {
+      "type": "text",
+      "source": "plan before the loop accumulates observations,",
+      "value": "在迴圈積累觀察結果之前先制定規劃；"
+    },
+    "text.a15a0063f6b5": {
+      "type": "text",
+      "source": "Walk me from the basic loop to an always-on agent",
+      "value": "帶我從基本迴圈逐步建置到始終線上的代理程式"
+    },
+    "text.a39a7ffad4a3": {
+      "type": "text",
+      "source": "assistant",
+      "value": "assistant",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a44de5d26beb": {
+      "type": "text",
+      "source": "Summarize the whole course",
+      "value": "總結整門課程"
+    },
+    "text.a66f9c25a653": {
+      "type": "text",
+      "source": " includes \"overview\" (the course home)",
+      "value": " includes \"overview\" (the course home)",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.a79a71b58afe": {
+      "type": "text",
+      "source": "Before you continue",
+      "value": "繼續學習之前"
+    },
+    "text.a7b02983d661": {
+      "type": "text",
+      "source": "🔧",
+      "value": "🔧",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.aa85ebc76614": {
+      "type": "text",
+      "source": " reasoning models think first; leave room past reasoning_content",
+      "value": " reasoning models think first; leave room past reasoning_content",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.aa9c9c97480a": {
+      "type": "text",
+      "source": "(used its whole budget thinking; raise max_tokens)",
+      "value": "（思考耗盡了全部預算；請提高 max_tokens）"
+    },
+    "text.ace774147c7e": {
+      "type": "text",
+      "source": "The complete ReAct loop, built from scratch",
+      "value": "從頭建置完整的 ReAct 迴圈"
+    },
+    "text.b073f0668d17": {
+      "type": "text",
+      "source": "delegate sub-tasks so each sub-agent works on a short context,",
+      "value": "委派子任務，讓每個子代理程式在較短的上下文中工作；"
+    },
+    "text.b2487c6516b5": {
+      "type": "text",
+      "source": "What is the ReAct loop?",
+      "value": "什麼是 ReAct 迴圈？"
+    },
+    "text.b3d417190c5a": {
+      "type": "text",
+      "source": "no-key-needed",
+      "value": "no-key-needed",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b4a87ca7c1f5": {
+      "type": "text",
+      "source": "loading LangChain ...",
+      "value": "正在載入 LangChain ..."
+    },
+    "text.b6e64b0566a3": {
+      "type": "text",
+      "source": "call 1 · no tools offered",
+      "value": "呼叫 1 · 未提供工具"
+    },
+    "text.baf1ab983463": {
+      "type": "text",
+      "source": "The pieces an LLM agent is built from",
+      "value": "LLM 代理程式的組成部分"
+    },
+    "text.bbc5e661e106": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~1": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bbc5e661e106~2": {
+      "type": "text",
+      "source": "system",
+      "value": "system",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.bdceb56fdbc1": {
+      "type": "text",
+      "source": " Context-budget check: warn (don't silently clip) if the prompt overflows.",
+      "value": " Context-budget check: warn (don't silently clip) if the prompt overflows.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.be53d4baf16a": {
+      "type": "text",
+      "source": "Ask me anything about the course. I read the relevant pages before I answer.",
+      "value": "可以向我詢問任何課程相關問題。我會先閱讀相關頁面，再作答。"
+    },
+    "text.c0f625cb51db": {
+      "type": "text",
+      "source": "Common mitigations keep each decision close to the evidence it needs:",
+      "value": "常見的緩解方法會讓每次決策儘量靠近其所需的證據："
+    },
+    "text.c16e4e4407c5": {
+      "type": "text",
+      "source": "./vendor/langchain-1.4.7.esm.js",
+      "value": "./vendor/langchain-1.4.7.esm.js",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c3b7187e7262": {
+      "type": "text",
+      "source": " log.details(\"call 1 raw response\", r1);",
+      "value": " log.details(\"call 1 raw response\", r1);",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.c618570e5e70": {
+      "type": "text",
+      "source": "🔧 read page · ",
+      "value": "🔧 讀取頁面 · "
+    },
+    "text.ca00fccfb408": {
+      "type": "text",
+      "source": "error",
+      "value": "error",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.ca32d7f2daac": {
+      "type": "text",
+      "source": " Call 2 · offer one tool and ask for something the model cannot know from training data.",
+      "value": " Call 2 · offer one tool and ask for something the model cannot know from training data.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.ccc143876d1c": {
+      "type": "text",
+      "source": " Running this cell renders a live chat panel into #react-artifact below.",
+      "value": " Running this cell renders a live chat panel into #react-artifact below.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.cebbe96b0c74": {
+      "type": "text",
+      "source": "Compare RAG and deep-agent patterns",
+      "value": "比較 RAG 與深度代理程式模式"
+    },
+    "text.d0487bcfb6fc": {
+      "type": "text",
+      "source": " Tool results get their own chip, including failed reads.",
+      "value": " Tool results get their own chip, including failed reads.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.d06de1005fcb": {
+      "type": "text",
+      "source": "\n    The four-piece frame gives you a checklist that applies regardless of how the\n    surrounding code is organized.\n  ",
+      "value": "\n    無論外圍程式碼採用何種組織方式，這個四部分框架都能為您提供一份通用檢查清單。\n  "
+    },
+    "text.d2270e91a061": {
+      "type": "text",
+      "source": "or the router misreading the signal.",
+      "value": "或者路由誤讀了訊號。"
+    },
+    "text.d3150495ce4f": {
+      "type": "text",
+      "source": " - ",
+      "value": " - ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d33d4eac7a21": {
+      "type": "text",
+      "source": "pinned ",
+      "value": "已固定 "
+    },
+    "text.d3cb9f426bf2": {
+      "type": "text",
+      "source": "Building the loop from scratch with one tool",
+      "value": "使用一個工具從頭建置迴圈"
+    },
+    "text.d4f0bc5a29de": {
+      "type": "text",
+      "source": "agent",
+      "value": "agent",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d4f0bc5a29de~1": {
+      "type": "text",
+      "source": "agent",
+      "value": "agent",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d56573cb0730": {
+      "type": "text",
+      "source": "it asked you to run:",
+      "value": "它要求您執行："
+    },
+    "text.d9bda0c06ee1": {
+      "type": "text",
+      "source": "The same loop, prebuilt and pointed at this course",
+      "value": "使用預建置的相同迴圈讀取本課程"
+    },
+    "text.d9eb253e0698": {
+      "type": "text",
+      "source": "err",
+      "value": "err",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.de92d152d782": {
+      "type": "text",
+      "source": " UTC",
+      "value": " UTC",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.dea54a34ef28": {
+      "type": "text",
+      "source": "a missing turn in the messages array,",
+      "value": "messages 陣列中缺少一輪訊息；"
+    },
+    "text.e0603c499aae": {
+      "type": "text",
+      "source": "http",
+      "value": "http",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e1163cd88699": {
+      "type": "text",
+      "source": "Build a LangChain chat agent with read_course_page and MemorySaver. Edit the agent, tool, or prompt, then rerun.",
+      "value": "使用 read_course_page 和 MemorySaver 建置 LangChain 聊天代理程式。編輯代理程式、工具或提示詞，然後重新執行。"
+    },
+    "text.e164e98682cd": {
+      "type": "text",
+      "source": "course-wide question (\\\\",
+      "value": "涉及整個課程的問題（\\\\"
+    },
+    "text.e3ec162f8c8a": {
+      "type": "text",
+      "source": "call 2 · one tool offered, on a question training data cannot answer",
+      "value": "呼叫 2 · 針對訓練資料無法回答的問題提供一個工具"
+    },
+    "text.e632b7095b0b": {
+      "type": "text",
+      "source": "T",
+      "value": "T",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e7c2cf88bdec": {
+      "type": "text",
+      "source": "Each question is answerable by editing inputs in the canvas above and rerunning.",
+      "value": "編輯上方畫布中的輸入並重新執行，即可回答以下每個問題。"
+    },
+    "text.e85366647d21": {
+      "type": "text",
+      "source": "\n    The arrangement is strong because the model is never bound to the plan it\n    started with. Whenever a tool returns something it did not expect, that result\n    joins the next round of reasoning, and the model can reconsider where it stands\n    before deciding what to do next.\n  ",
+      "value": "\n    這種設計的優勢在於，模型從不受最初規劃的束縛。每當工具傳回意料之外的結果時，該結果都會進入下一輪推理，模型可以重新評估當前狀況，再決定下一步操作。\n  "
+    },
+    "text.ed95eccd3e94": {
+      "type": "text",
+      "source": "Sets the system prompt and question. Try a factual question to see the model answer without a tool call.",
+      "value": "設定系統提示詞和問題。嘗試提出一個事實性問題，觀察模型如何在不進行工具呼叫的情況下回答。"
+    },
+    "text.f0953ecb0cd8": {
+      "type": "text",
+      "source": "), read the ",
+      "value": "），請先閱讀"
+    },
+    "text.f21847c624e1": {
+      "type": "text",
+      "source": "Registers get_current_time and its JavaScript executor. The model requests the call; your code runs it.",
+      "value": "註冊 get_current_time 及其 JavaScript 執行器。模型請求呼叫，程式碼負責執行。"
+    },
+    "text.f354e2a19c96": {
+      "type": "text",
+      "source": " Show answer tokens from the agent node; tool output stays in tool chips.",
+      "value": " Show answer tokens from the agent node; tool output stays in tool chips.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.f39b5d45344a": {
+      "type": "text",
+      "source": " reasoning trace (nemotron streams it on additional_kwargs.reasoning_content)",
+      "value": " reasoning trace (nemotron streams it on additional_kwargs.reasoning_content)",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.f447a0edc143": {
+      "type": "text",
+      "source": "Returns the current UTC time as 'YYYY-MM-DD HH:MM:SS UTC'.",
+      "value": "以“YYYY-MM-DD HH:MM:SS UTC”格式傳回當前 UTC 時間。"
+    },
+    "text.f5cccfb73751": {
+      "type": "text",
+      "source": "messages",
+      "value": "messages",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.f8e308dfc942": {
+      "type": "text",
+      "source": "In one sentence, what is an agent's ReAct loop?",
+      "value": "請用一句話說明代理程式的 ReAct 迴圈是什麼。"
+    },
+    "text.f9a9b6db6982": {
+      "type": "text",
+      "source": "Module 1c: Tools at Scale →",
+      "value": "模組 1c：規模化工具使用 →"
+    },
+    "text.f9cb28d5e202": {
+      "type": "text",
+      "source": "or summarize earlier turns before they become a liability.",
+      "value": "或者在早期輪次成為負擔之前對其進行總結。"
+    },
+    "text.f9d35d43770d": {
+      "type": "text",
+      "source": "tools",
+      "value": "tools",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    }
+  }
+}

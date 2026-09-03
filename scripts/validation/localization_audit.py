@@ -630,6 +630,33 @@ def interface_findings(root: Path) -> list[dict[str, str]]:
     locale_path = root / "web/nemoclaw/scripts/_locale.js"
     if locale_path.is_file():
         locale_raw = locale_path.read_text(encoding="utf-8")
+        declared_runtime_locales = []
+        for manifest_path in sorted((root / "i18n").glob("*/locale.json")):
+            try:
+                locale = json.loads(manifest_path.read_text(encoding="utf-8")).get("locale")
+            except (json.JSONDecodeError, OSError):
+                continue
+            if locale:
+                declared_runtime_locales.append(str(locale).lower())
+        locale_map_block = locale_raw[locale_raw.find("const LOCALE_MAPS"):locale_raw.find("function localeMaps")]
+        helper_map_block = locale_raw[locale_raw.find("const HELPER_DESCRIPTIONS"):locale_raw.find("const LOCALIZED_UI")]
+        dynamic_map_block = locale_raw[locale_raw.find("const DYNAMIC_TEXT"):locale_raw.find("const RUNTIME_LOCALE_MISSES")]
+        runtime_locale_count = len(re.findall(r'"[^"]+":\s*localeSpec\(', locale_map_block))
+        for locale in declared_runtime_locales:
+            missing = [
+                name for name, source in (
+                    ("UI map", locale_map_block),
+                    ("helper descriptions", helper_map_block),
+                    ("dynamic text", dynamic_map_block),
+                )
+                if f'"{locale}":' not in source
+            ]
+            if missing:
+                out.append({
+                    "code": "runtime-ui-locale",
+                    "path": "web/nemoclaw/scripts/_locale.js",
+                    "detail": f"declared locale {locale} is missing runtime " + ", ".join(missing),
+                })
         runtime_paths = (
             root / "web/nemoclaw/scripts/_keypanel.js",
             root / "web/nemoclaw/scripts/_connection.js",
@@ -650,11 +677,11 @@ def interface_findings(root: Path) -> list[dict[str, str]]:
             ) if match.group(2))
         for key in sorted(runtime_keys):
             needle = json.dumps(key, ensure_ascii=False) + ":"
-            if locale_raw.count(needle) < 3:
+            if locale_raw.count(needle) < max(len(declared_runtime_locales), runtime_locale_count):
                 out.append({
                     "code": "runtime-ui-translation",
                     "path": "web/nemoclaw/scripts/_locale.js",
-                    "detail": f"runtime UI key must have reviewed Portuguese, Spanish, and Chinese mappings: {key}",
+                    "detail": f"runtime UI key must cover every declared locale mapping: {key}",
                 })
             if key not in runtime_raw:
                 out.append({
@@ -1702,6 +1729,12 @@ def self_test() -> list[str]:
         if "runtime-ui-source-contract" not in {item["code"] for item in interface_findings(fixture)}:
             failures.append("runtime UI source mutation escaped detector")
         path.write_text(raw, encoding="utf-8")
+        manifest = fixture / "i18n/zz/locale.json"
+        manifest.parent.mkdir(parents=True, exist_ok=True)
+        manifest.write_text(json.dumps({"locale": "zz-ZZ"}), encoding="utf-8")
+        if "runtime-ui-locale" not in {item["code"] for item in interface_findings(fixture)}:
+            failures.append("novel locale without runtime UI mappings escaped detector")
+        manifest.unlink()
     return failures
 
 
