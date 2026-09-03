@@ -1,0 +1,50 @@
+<svg data-locale="zh-TW" class="gfx-dark" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="組合式漏洞矩陣，展示不受信任的輸入、可存取機密資訊以及允許的出站通道三者的交集，幷包含全雙工入站反饋迴圈。" preserveAspectRatio="xMidYMid meet" style="width:100%; height:auto; display:block; background:var(--gfx-bg,#0d0d0d); border:1px solid var(--gfx-line,#2a2a2a); border-radius:12px; padding:16px; max-width:1100px; margin:1.5rem auto">
+  <defs>
+    <filter id="hub-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <circle cx="330" cy="210" r="145" fill="var(--gfx-blue,#3b82f6)" fill-opacity="0.06" stroke="var(--gfx-blue,#3b82f6)" stroke-width="2"/>
+
+  <circle cx="470" cy="210" r="145" fill="var(--gfx-amber,#eab308)" fill-opacity="0.06" stroke="var(--gfx-amber,#eab308)" stroke-width="2"/>
+
+  <circle cx="400" cy="320" r="145" fill="var(--gfx-green,#10b981)" fill-opacity="0.06" stroke="var(--gfx-green,#10b981)" stroke-width="2"/>
+
+  <path d="M 500 170 C 440 140, 360 140, 310 175" fill="none" stroke="var(--gfx-amber,#eab308)" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="306,178 316,176 312,170" fill="var(--gfx-amber,#eab308)"/>
+  <text x="400" y="140" font-family="Arial, sans-serif" font-size="10.5" fill="var(--gfx-amber,#eab308)" text-anchor="middle" font-style="italic">操控執行階段上下文</text>
+
+  <path d="M 290 240 C 290 320, 340 360, 385 368" fill="none" stroke="var(--gfx-blue,#3b82f6)" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="391,369 382,372 384,363" fill="var(--gfx-blue,#3b82f6)"/>
+  <text x="330" y="300" font-family="Arial, sans-serif" font-size="10.5" fill="var(--gfx-blue2,#4e8ef6)" text-anchor="middle" font-style="italic" transform="rotate(-65 310 320)">沿允許的路徑傳輸</text>
+
+  <path d="M 420 370 C 500 340, 505 300, 510 245" fill="none" stroke="var(--gfx-green,#10b981)" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <polygon points="510,236 505,245 515,245" fill="var(--gfx-green,#10b981)"/>
+  <text x="491" y="335" font-family="Arial, sans-serif" font-size="10.5" fill="var(--gfx-green,#10b981)" text-anchor="middle" font-style="italic" transform="rotate(60 515 320)">攝取回應</text>
+
+  <g transform="translate(130, 160)">
+    <rect x="0" y="0" width="160" height="46" rx="6" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-blue,#3b82f6)" stroke-width="1.5"/>
+    <text x="80" y="19" font-family="Arial, sans-serif" font-size="12.5" fill="var(--gfx-blue,#3b82f6)" font-weight="700" text-anchor="middle">存取機密資訊</text>
+    <text x="80" y="35" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-muted,#6a6a6a)" text-anchor="middle">受保護的隱私資料</text>
+  </g>
+
+  <g transform="translate(515, 160)">
+    <rect x="0" y="0" width="160" height="46" rx="6" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-amber,#eab308)" stroke-width="1.5"/>
+    <text x="80" y="19" font-family="Arial, sans-serif" font-size="12.5" fill="var(--gfx-amber,#eab308)" font-weight="700" text-anchor="middle">不受信任的輸入</text>
+    <text x="80" y="35" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-muted,#6a6a6a)" text-anchor="middle">對抗性指令</text>
+  </g>
+
+  <g transform="translate(320, 380)">
+    <rect x="0" y="0" width="160" height="46" rx="6" fill="var(--gfx-bg,#0d0d0d)" stroke="var(--gfx-green,#10b981)" stroke-width="1.5"/>
+    <text x="80" y="19" font-family="Arial, sans-serif" font-size="12.5" fill="var(--gfx-green,#10b981)" font-weight="700" text-anchor="middle">一條出路</text>
+    <text x="80" y="35" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-muted,#6a6a6a)" text-anchor="middle">允許的出站路徑</text>
+  </g>
+
+  <g filter="url(#hub-shadow)" transform="translate(352, 192)">
+    <circle cx="48" cy="48" r="48" fill="var(--gfx-red,#ef4444)" fill-opacity="0.95" stroke="#ffffff" stroke-width="1"/>
+    <circle cx="48" cy="48" r="41" fill="none" stroke="var(--gfx-red,#ef4444)" stroke-width="1.5" stroke-dasharray="2 2"/>
+    <text x="48" y="44" font-family="ui-monospace, monospace" font-size="14" fill="#ffffff" font-weight="900" text-anchor="middle" letter-spacing="0.05em">BREACH</text>
+    <text x="48" y="62" font-family="Arial, sans-serif" font-size="11" fill="var(--gfx-tint-red,#fecaca)" text-anchor="middle" font-weight="700">致命三要素</text>
+  </g>
+</svg>

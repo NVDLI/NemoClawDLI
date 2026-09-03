@@ -1,0 +1,1556 @@
+{
+  "schema": "nemoclaw-locale-resource/1",
+  "locale": "zh-TW",
+  "template": "web/nemoclaw/03a-kickstart.html",
+  "media": [
+    "web/nemoclaw/assets/figures/03a-kickstart-1.svg",
+    "web/nemoclaw/assets/figures/03a-nemoclaw-workflow.svg"
+  ],
+  "values": {
+    "link.1511a6aba9a1": {
+      "type": "link",
+      "source": "<a href=\"https://docs.anthropic.com/en/docs/claude-code/overview\" target=\"_blank\" rel=\"noopener\">Anthropic,\n            <em>Claude Code</em> (docs)</a>. The directory-as-session pattern that the next page edits to change what\n          OpenClaw is.",
+      "value": "<a href=\"https://docs.anthropic.com/en/docs/claude-code/overview\" target=\"_blank\" rel=\"noopener\">Anthropic，\n            <em>Claude Code</em>（文件）</a>。下一頁將編輯這種“以目錄作為會話”的模式，從而改變\n          OpenClaw 的特性。"
+    },
+    "link.1be52ce4d6ee": {
+      "type": "link",
+      "source": "Comprehensive list at <a href=\"04c-going-further.html#refs\">Going Further ·\n          References</a>.",
+      "value": "完整列表請參閱<a href=\"04c-going-further.html#refs\">深入探索 · 參考資料</a>。"
+    },
+    "link.391b6d3567fb": {
+      "type": "link",
+      "source": "<strong>OpenClaw gateway.</strong> The exercise below and the Control UI use the same <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API\" target=\"_blank\" rel=\"noopener\"><code>/cli/gateway</code> WebSocket</a>. It carries <a href=\"https://www.jsonrpc.org/specification\" target=\"_blank\" rel=\"noopener\">JSON-RPC</a> events between the browser client and the running agent.",
+      "value": "<strong>OpenClaw 閘道。</strong>下方練習與 Control UI 使用同一個 <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API\" target=\"_blank\" rel=\"noopener\"><code>/cli/gateway</code> WebSocket</a>。它在瀏覽器用戶端與正在執行的代理程式之間傳輸 <a href=\"https://www.jsonrpc.org/specification\" target=\"_blank\" rel=\"noopener\">JSON-RPC</a> 事件。"
+    },
+    "link.42191b6cde2a": {
+      "type": "link",
+      "source": "\n          In Modules 1 and 2, we kept orchestration in the browser, and each workflow ended when the page stopped\n          carrying its messages, intermediate results, or branch state. Module 3 moves the same agent patterns into a\n          <a href=\"https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990\" target=\"_blank\" rel=\"noopener\">\n          NemoClaw Brev launchable</a>.\n        ",
+      "value": "\n          模組 1 和模組 2 中，編排一直在瀏覽器內進行；一旦頁面不再承載訊息、中間結果或分支狀態，工作流程便會結束。模組 3 將相同的代理程式模式遷移到\n          <a href=\"https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990\" target=\"_blank\" rel=\"noopener\">\n          NemoClaw Brev 可啟動執行個體</a>中。\n        "
+    },
+    "link.4d5c1d9e7570": {
+      "type": "link",
+      "source": "<strong><a href=\"https://modelcontextprotocol.io/\" target=\"_blank\" rel=\"noopener\">Model Context Protocol (MCP)</a>.</strong> Inside an agent runtime, MCP standardizes tool and context discovery and invocation. It does not carry this browser's gateway traffic.",
+      "value": "<strong><a href=\"https://modelcontextprotocol.io/\" target=\"_blank\" rel=\"noopener\">Model Context Protocol (MCP)</a>。</strong>在代理程式執行階段內部，MCP 對工具和上下文的發現與呼叫進行標準化。它不承載此瀏覽器的閘道流量。"
+    },
+    "link.545abef00491": {
+      "type": "link",
+      "source": "<a href=\"https://platform.openai.com/docs/api-reference/chat\" target=\"_blank\" rel=\"noopener\">OpenAI Chat\n            Completions API</a>. The wire format the model endpoint speaks, including the <code>finish_reason</code>\n          field this page surfaces.",
+      "value": "<a href=\"https://platform.openai.com/docs/api-reference/chat\" target=\"_blank\" rel=\"noopener\">OpenAI Chat\n            Completions API</a>。模型 API 端點所使用的傳輸格式，包括本頁面顯示的 <code>finish_reason</code>\n          欄位。"
+    },
+    "link.547bfd828fe0": {
+      "type": "link",
+      "source": "<p><strong>What it is:</strong> The bearer key saved with the active model endpoint.\nNVIDIA API keys start with <code>nvapi-</code>.</p>\n<p><strong>How to get one:</strong> Sign in at <a href=\"${NVIDIA_BUILD_URL}\" target=\"_blank\" rel=\"noopener\">build.nvidia.com</a>\n→ API Keys → Generate Key.</p>\n<p><strong>Running locally:</strong> Same key works everywhere. Store it as an environment variable\n(<code>NVIDIA_API_KEY</code>) rather than pasting it into code.</p>",
+      "value": "<p><strong>它是什麼：</strong>與當前模型 API 端點一起儲存的 bearer 金鑰。\nNVIDIA API 金鑰以 <code>nvapi-</code> 開頭。</p>\n<p><strong>如何獲取：</strong>登入 <a href=\"${NVIDIA_BUILD_URL}\" target=\"_blank\" rel=\"noopener\">build.nvidia.com</a>\n→ API Keys → Generate Key。</p>\n<p><strong>本機執行：</strong>同一金鑰可在任何環境中使用。請將其儲存為環境變數（<code>NVIDIA_API_KEY</code>），不要直接貼上到程式碼中。</p>"
+    },
+    "link.6d40c8e77b7f": {
+      "type": "link",
+      "source": "<a href=\"https://arxiv.org/abs/2304.03442\" target=\"_blank\" rel=\"noopener\">Park et al., <em>Generative\n              Agents</em> (2023)</a>. Establishes server-side memory plus identity as durable runtime structure, the\n          model the session-key header implements.",
+      "value": "<a href=\"https://arxiv.org/abs/2304.03442\" target=\"_blank\" rel=\"noopener\">Park et al., <em>Generative\n              Agents</em> (2023)</a>。該論文將伺服器端記憶與身分確立為持久的執行階段結構，\n          session-key 標頭正是對這一模型的實現。"
+    },
+    "link.7a65670174c4": {
+      "type": "link",
+      "source": "\n          Runtime roles in the NemoClaw blueprint, adapted from NVIDIA's\n          <a href=\"https://build.nvidia.com/nvidia/nemoclaw-for-openclaw/nemoclawcard?ncid=ref-dli-146986\"\n            target=\"_blank\" rel=\"noopener\">NemoClaw for OpenClaw workflow</a>.\n        ",
+      "value": "\n          NemoClaw Blueprint 中的執行階段角色，改編自 NVIDIA 的\n          <a href=\"https://build.nvidia.com/nvidia/nemoclaw-for-openclaw/nemoclawcard?ncid=ref-dli-146986\"\n            target=\"_blank\" rel=\"noopener\">NemoClaw for OpenClaw 工作流程</a>。\n        "
+    },
+    "link.a84b2dd7fa9b": {
+      "type": "link",
+      "source": "<a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NVIDIA build.nvidia.com</a>. The model API\n          behind the course proxy; paste your nvapi- key in the bearer field to authenticate.",
+      "value": "<a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NVIDIA build.nvidia.com</a>。課程代理背後的模型 API；將 nvapi- 金鑰貼上到 bearer 欄位中即可完成身分驗證。"
+    },
+    "link.cc042b69f7a4": {
+      "type": "link",
+      "source": "Open the\n        <a href=\"https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990\"\n          target=\"_blank\" rel=\"noopener\">NemoClaw launchable</a> and sign in.",
+      "value": "開啟\n        <a href=\"https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990\"\n          target=\"_blank\" rel=\"noopener\">NemoClaw launchable</a> 並登入。"
+    },
+    "rich.00d188488ec3": {
+      "type": "rich",
+      "source": "<strong>Firefox:</strong> open Developer Tools, select <strong>Storage</strong> →\n        <strong>Cookies</strong>, then select the launchable origin.",
+      "value": "<strong>Firefox：</strong>開啟開發者工具，依次選擇 <strong>Storage</strong> →\n        <strong>Cookies</strong>，然後選擇 launchable 的來源。"
+    },
+    "rich.10e621350ee5": {
+      "type": "rich",
+      "source": "<strong>OpenClaw harness.</strong> Preserves session history, a file-backed workspace, and tool access.",
+      "value": "<strong>OpenClaw 執行框架。</strong>保留會話歷史記錄、基於檔案的工作區和工具存取權限。"
+    },
+    "rich.1260cedbb7fa": {
+      "type": "rich",
+      "source": "Each <code>⚙️</code> row is a tool call with its input arguments.",
+      "value": "每個 <code>⚙️</code> 行都表示一次工具呼叫及其輸入引數。"
+    },
+    "rich.182a0563107f": {
+      "type": "rich",
+      "source": "That token carries <code>operator.admin</code> scope, the same authority\n      the Control UI holds. With it you can:",
+      "value": "該 token 具有 <code>operator.admin</code> 作用域，與 Control UI 擁有相同的權限。藉助它，可以："
+    },
+    "rich.28538d8a6c36": {
+      "type": "rich",
+      "source": "\n      <strong>The session key is all the client sends to identify a conversation.</strong>\n      From that one string the gateway resolves the full session server-side before every\n      call, so the client never has to ship the transcript itself. Any two keys\n      that differ at all address two separate sessions even when the conversations behind\n      them hold identical content.\n    ",
+      "value": "\n      <strong>用戶端只傳送會話金鑰來標識對話。</strong>每次呼叫前，閘道都會根據這一個字串在伺服器端解析出完整會話，因此用戶端無需自行傳送對話記錄。任何兩個存在差異的金鑰都會指向兩個不同的會話，即使它們背後的對話內容完全相同。\n    "
+    },
+    "rich.2edde5d86458": {
+      "type": "rich",
+      "source": "\n      <p>Anyone who can read the launchable environment can read that token,\n        and a reader of the token is an operator with everything above. Module 4\n        turns this from a convenience into the central security question.</p>\n    ",
+      "value": "\n      <p>任何能夠讀取 launchable 環境的人都能讀取該 token，而 token 的讀取者就是擁有上述所有權限的 operator。模組 4 將把這個便利機制轉化為核心安全問題。</p>\n    "
+    },
+    "rich.32c87b138c97": {
+      "type": "rich",
+      "source": "\n      <p>Reaching the launchable and operating its gateway require separate credentials:</p>\n      <ul>\n        <li><strong>Launchable access.</strong> The browser session reaches the host.</li>\n        <li><strong>Gateway authority.</strong> The gateway token authorizes JSON-RPC calls.</li>\n      </ul>\n      <p>After launchable authentication, <code>GET /api/agent</code> returns the gateway token under\n        <code>agent.dashboardUrl</code>. Leave the token field blank and let the probe fill it in.</p>\n    ",
+      "value": "\n      <p>存取可啟動執行個體和操作其閘道需要兩套獨立憑證：</p>\n      <ul>\n        <li><strong>可啟動執行個體存取憑證。</strong>瀏覽器會話用於存取主機。</li>\n        <li><strong>閘道權限。</strong>閘道 token 用於授權 JSON-RPC 呼叫。</li>\n      </ul>\n      <p>可啟動執行個體完成身分驗證後，<code>GET /api/agent</code> 會透過\n        <code>agent.dashboardUrl</code> 傳回閘道 token。請將 token 欄位留空，由探測工具自動填充。</p>\n    "
+    },
+    "rich.35b160c0dbd4": {
+      "type": "rich",
+      "source": "\n      <strong>If the NemoClaw check times out or returns a 502.</strong>\n      The agent harness likely has not finished booting, which usually means the\n      launchable started before OpenClaw finished loading its policy YAML. Wait\n      30 seconds and test again. If it stays down, use the Recover cell in\n      the gateway section below before continuing.\n    ",
+      "value": "\n      <strong>如果 NemoClaw 檢查超時或傳回 502。</strong>代理程式測試工具可能尚未完成啟動。這通常是因為 launchable 啟動時，OpenClaw 還未完成其策略 YAML 的載入。請等待 30 秒後再次測試。如果服務仍未恢復，請先使用下方閘道部分中的 Recover 單元，再繼續操作。\n    "
+    },
+    "rich.43335edc5e0a": {
+      "type": "rich",
+      "source": "Supported NemoClaw launchables normally report <code>tools.toolSearch=false</code>. A custom configuration can still enable it, so the health check reads the live value before Recover changes anything:",
+      "value": "受支援的 NemoClaw launchable 通常會報告 <code>tools.toolSearch=false</code>。自訂設定仍可將其啟用，因此執行狀態檢查會先讀取即時值，之後 Recover 才會進行任何更改："
+    },
+    "rich.44904fdf3de4": {
+      "type": "rich",
+      "source": "Keep the signed-in launchable tab open. Use <code>_pomerium</code> for an\n        <code>apps.run.brev.nvidia.com</code> host or <code>CF_Authorization</code> for a\n        <code>brevlab.com</code> host.",
+      "value": "保持已登入的 launchable 標籤頁處於開啟狀態。對於 <code>apps.run.brev.nvidia.com</code> 主機，請使用 <code>_pomerium</code>；對於 <code>brevlab.com</code> 主機，請使用 <code>CF_Authorization</code>。"
+    },
+    "rich.4efe9c20b838": {
+      "type": "rich",
+      "source": "\n          In this lesson, you will connect the browser to the launchable, inspect its four connection paths, use one\n          direct model call as a control, send a tool-using agent turn through the gateway, and prove that a\n          <code>sessionKey</code> restores history the client did not resend.\n        ",
+      "value": "\n          本課中，您將連線瀏覽器與可啟動執行個體，檢查其四條連線路徑，以一次直接模型呼叫作為對照，透過閘道傳送會使用工具的代理程式輪次，並驗證\n          <code>sessionKey</code> 能恢復用戶端沒有重新傳送的歷史記錄。\n        "
+    },
+    "rich.4f2589a3d249": {
+      "type": "rich",
+      "source": "<strong>Different key:</strong> a clean start, nothing carried over.",
+      "value": "<strong>使用不同金鑰：</strong>全新開始，不繼承任何內容。"
+    },
+    "rich.58c9a3916107": {
+      "type": "rich",
+      "source": "Every chat run self-checks: if one logs <code>⚠ DEGRADED</code>, come back up\n      here, run Recover, then retry.",
+      "value": "每次聊天執行都會自行檢查：如果某次執行記錄了 <code>⚠ DEGRADED</code>，請傳回此處執行 Recover，然後重試。"
+    },
+    "rich.6096a1ee9fc6": {
+      "type": "rich",
+      "source": "<p><strong>What it is:</strong> The model API base saved on the course home page.</p>\n<p><strong>How requests reach it:</strong> The default is <code>integrate.api.nvidia.com</code>.\nYou can select a compatible model endpoint once; every lesson and this probe reuse that value.\nIframe proxy mode remains available only for the default NVIDIA endpoint.</p>\n<p><strong>Active endpoint:</strong> <code>${MODEL_API_BASE_URL}</code>.</p>",
+      "value": "<p><strong>它是什麼：</strong>課程首頁上儲存的模型 API 基礎地址。</p>\n<p><strong>請求如何到達該地址：</strong>預設地址為 <code>integrate.api.nvidia.com</code>。可以選擇一次相容的模型 API 端點；所有課程和此探測工具都會複用該值。\nIframe 代理模式僅適用於預設的 NVIDIA API 端點。</p>\n<p><strong>當前 API 端點：</strong><code>${MODEL_API_BASE_URL}</code>。</p>"
+    },
+    "rich.695769efb0e3": {
+      "type": "rich",
+      "source": "<code>cron.add</code> schedules work that runs without you.",
+      "value": "<code>cron.add</code> 會排程無需您在場即可執行的任務。"
+    },
+    "rich.77bacdc2413d": {
+      "type": "rich",
+      "source": "\n      Once the probe above is green, this artifact opens the same\n      <code>/cli/gateway</code> WebSocket and lets you chat with your live OpenClaw\n      agent. It streams the reply and shows a chip whenever the agent reaches for a\n      tool. Every reply you see here came back over that live gateway connection.\n    ",
+      "value": "\n      上方探測顯示綠色後，此互動元件會開啟同一個\n      <code>/cli/gateway</code> WebSocket，讓您與即時執行的 OpenClaw\n      代理程式聊天。它會以流式方式顯示回覆；代理程式每次準備使用工具時，介面都會顯示一個標籤。您在此看到的每條回覆都透過該即時閘道連線傳回。\n    "
+    },
+    "rich.7bbbef680f75": {
+      "type": "rich",
+      "source": "Connect the <span>NemoClaw</span> Stack",
+      "value": "連線 <span>NemoClaw</span> 技術堆疊"
+    },
+    "rich.83b0706d0fbc": {
+      "type": "rich",
+      "source": "<strong>Chrome, Edge, or Brave:</strong> open Developer Tools, select\n        <strong>Application</strong> → <strong>Storage</strong> → <strong>Cookies</strong>, then select\n        the launchable origin.",
+      "value": "<strong>Chrome、Edge 或 Brave：</strong>開啟開發者工具，依次選擇<strong>應用</strong> → <strong>Storage</strong> → <strong>Cookies</strong>，然後選擇 launchable 的來源。"
+    },
+    "rich.84092d13842a": {
+      "type": "rich",
+      "source": "<strong>Same key, twice:</strong> the gateway rehydrates the first turn's\n        history before the second runs, so the agent answers from a conversation\n        your client never re-sent.",
+      "value": "<strong>連續兩次使用相同金鑰：</strong>閘道會在第二輪執行前恢復第一輪的歷史記錄，因此代理程式可以根據用戶端從未重新傳送過的對話作答。"
+    },
+    "rich.97e76bf6cfe3": {
+      "type": "rich",
+      "source": "The gateway token authorizes JSON-RPC calls on <code>/cli/gateway</code>.",
+      "value": "閘道 token 授權在 <code>/cli/gateway</code> 上進行 JSON-RPC 呼叫。"
+    },
+    "rich.a390ff174347": {
+      "type": "rich",
+      "source": "Every <code>chat.send</code> takes a <code>sessionKey</code>, and that key\n      decides what the turn remembers:",
+      "value": "每次 <code>chat.send</code> 都接受一個 <code>sessionKey</code>，該金鑰決定當前輪次能記住哪些內容："
+    },
+    "rich.a4058a0ceeef": {
+      "type": "rich",
+      "source": "<code>models.list</code> enumerates every model the runtime serves.",
+      "value": "<code>models.list</code> 會列出執行階段提供的所有模型。"
+    },
+    "rich.a4559564daab": {
+      "type": "rich",
+      "source": "<strong>NemoClaw blueprint.</strong> Configures OpenClaw and OpenShell to work together.",
+      "value": "<strong>NemoClaw Blueprint。</strong>設定 OpenClaw 與 OpenShell，使二者協同工作。"
+    },
+    "rich.b052bfa0ce8d": {
+      "type": "rich",
+      "source": "Find the running <code>my-assistant</code> card and select <strong>Chat with Agent</strong>.",
+      "value": "找到正在執行的 <code>my-assistant</code> 卡片，然後選擇 <strong>Chat with Agent</strong>。"
+    },
+    "rich.b5f3cd2fe688": {
+      "type": "rich",
+      "source": "<strong>Clean up</strong> sweeps the throwaway sessions that pile up in the\n        Control UI as you experiment (including Step 2's per-run keys), keeping only\n        the Main Session.",
+      "value": "<strong>Clean up</strong> 會清除您在實驗過程中積累在 Control UI 中的臨時會話（包括步驟 2 中每次執行所用的金鑰），僅保留 Main Session。"
+    },
+    "rich.bad87a9c2742": {
+      "type": "rich",
+      "source": "<strong>Safari:</strong> enable web-developer features in <strong>Settings</strong> →\n        <strong>Advanced</strong> if necessary, open the Web Inspector, then select\n        <strong>Storage</strong> → <strong>Cookies</strong> and the launchable origin.",
+      "value": "<strong>Safari：</strong>如有必要，請在 <strong>Settings</strong> →\n        <strong>Advanced</strong> 中啟用 Web 開發者功能，開啟 Web 檢查器，然後依次選擇\n        <strong>Storage</strong> → <strong>Cookies</strong> 和 launchable 的來源。"
+    },
+    "rich.c311fc01830e": {
+      "type": "rich",
+      "source": "<strong>Clear</strong> wipes one session in a single call, so the next turn\n        starts from nothing. Every chat cell also carries a commented\n        <code>sessions.reset</code> line to start fresh in place.\n      ",
+      "value": "<strong>Clear</strong> 只需一次呼叫即可清除一個會話，使下一輪從空白狀態開始。每個聊天單元還包含一行已註釋的 <code>sessions.reset</code>，可用於直接重新開始。\n      "
+    },
+    "rich.c895310c64f9": {
+      "type": "rich",
+      "source": "<strong>Recovery:</strong> run the health check. If <code>toolSearch</code> is on and the exec probe fails, Recover can turn it off with <code>config.patch</code>. Session clearing and restart remain opt-in.",
+      "value": "<strong>恢復：</strong>執行狀態檢查。如果 <code>toolSearch</code> 已開啟且 exec 探測失敗，Recover 可以透過 <code>config.patch</code> 將其關閉。清除會話和重啟仍需您主動選擇。"
+    },
+    "rich.cd0168ab4a5f": {
+      "type": "rich",
+      "source": "Open <code>&lt;launchable&gt;/dashboard</code>.",
+      "value": "開啟 <code>&lt;launchable&gt;/dashboard</code>。"
+    },
+    "rich.d466179d9969": {
+      "type": "rich",
+      "source": "Each <code>✓</code>/<code>✗</code> row is that tool's result.",
+      "value": "每個 <code>✓</code>/<code>✗</code> 行都表示該工具的結果。"
+    },
+    "rich.d492f032408d": {
+      "type": "rich",
+      "source": "<strong>Symptom:</strong> you ask for a command, nothing comes back,\n        the run stalls, and then it times out.",
+      "value": "<strong>症狀：</strong>您請求執行命令後沒有收到任何傳回，執行過程停滯，隨後超時。"
+    },
+    "rich.d4e42a7691c4": {
+      "type": "rich",
+      "source": "Find the matching cookie name and copy only its complete <strong>Value</strong>. Do not copy\n        the whole <code>Cookie</code> header or paste the value anywhere except the Access session\n        field on this page.",
+      "value": "找到名稱匹配的 Cookie，僅複製其完整的 <strong>Value</strong>。不要複製整個 <code>Cookie</code> 標頭，也不要將該值貼上到本頁面 Access session 欄位之外的任何位置。"
+    },
+    "rich.d800d685f0e6": {
+      "type": "rich",
+      "source": "Step 1 established the model-only control: one Chat Completions <code>POST</code> carried the\n      model, messages, and caller authorization. OpenClaw calls its configured model inside the\n      launchable, but this page operates the running agent through a different interface.",
+      "value": "步驟 1 建立了僅使用模型的對照：一次 Chat Completions <code>POST</code> 攜帶模型、訊息和呼叫方授權資訊。OpenClaw 會在可啟動執行個體內呼叫已設定的模型，但本頁面透過另一個介面操作正在執行的代理程式。"
+    },
+    "rich.e6ec9c72041f": {
+      "type": "rich",
+      "source": "<strong>REST (Representational State Transfer).</strong> The direct model control in Step 1 uses one bounded HTTP request and response. An API can still identify server-side state between calls.",
+      "value": "<strong>REST（表述性狀態轉移）。</strong>步驟 1 的直接模型對照使用一次獨立的 HTTP 請求與回應。API 仍然可以識別呼叫之間由伺服器端儲存的狀態。"
+    },
+    "rich.e8a5c7f97701": {
+      "type": "rich",
+      "source": "<strong>Cause:</strong> toolSearch lets the model reach its tools by writing\n        code for a bridge (<code>tool_search_code</code> &middot; &ldquo;run bridge\n        code&rdquo;), and the model loops on that bridge instead of calling\n        <code>exec</code>.\n      ",
+      "value": "<strong>原因：</strong>toolSearch 允許模型透過為橋接器編寫程式碼（<code>tool_search_code</code> &middot; &ldquo;執行橋接程式碼&rdquo;）來存取工具，導致模型在該橋接器上反覆迴圈，而不呼叫 <code>exec</code>。\n      "
+    },
+    "rich.eed8805240f3": {
+      "type": "rich",
+      "source": "The access session, an <code>_pomerium</code> or <code>CF_Authorization</code> browser cookie,\n        authorizes reaching the launchable at all.",
+      "value": "存取會話是名為 <code>_pomerium</code> 或 <code>CF_Authorization</code> 的瀏覽器 Cookie，用於授權存取 launchable 本身。"
+    },
+    "rich.eef3154c49c6": {
+      "type": "rich",
+      "source": "<code>chat.send</code> with a <code>sessionKey</code> drops a message\n        straight into the running agent's loop.",
+      "value": "帶有 <code>chat.send</code> 的 <code>sessionKey</code> 會將訊息直接送入正在執行的代理程式迴圈。"
+    },
+    "rich.f32a85bda16a": {
+      "type": "rich",
+      "source": "<strong>OpenShell sandbox.</strong> Limits what the running agent can reach.",
+      "value": "<strong>OpenShell sandbox。</strong>限制執行中的代理程式可以存取的範圍。"
+    },
+    "rich.f3bbda749211": {
+      "type": "rich",
+      "source": "<strong>LLM endpoint.</strong> Turns prompts and tool results into semantic responses, but does not retain the agent's session state.",
+      "value": "<strong>LLM API 端點。</strong>將提示詞和工具結果轉換為語義回應，但不儲存代理程式的會話狀態。"
+    },
+    "text.01a9ecdc3c66": {
+      "type": "text",
+      "source": "GET /v1/models",
+      "value": "GET /v1/models",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.043a718774c5": {
+      "type": "text",
+      "source": "s",
+      "value": "s",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.043cbf4d1dd6": {
+      "type": "text",
+      "source": " const PROMPT    = \"Explain step by step why the sky is blue.\";                // a reasoning task",
+      "value": " const PROMPT    = \"Explain step by step why the sky is blue.\";                // a reasoning task",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.04c57b9c3c59": {
+      "type": "text",
+      "source": "Gateway · WebSocket protocol, step by step",
+      "value": "閘道 · WebSocket 協議分步解析"
+    },
+    "text.04f8996da763": {
+      "type": "text",
+      "source": "user",
+      "value": "user",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.05529e9fe8b9": {
+      "type": "text",
+      "source": "HTTP ",
+      "value": "HTTP ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.05634343b15a": {
+      "type": "text",
+      "source": "🧹 cleared session memory: ",
+      "value": "🧹 已清除會話記憶："
+    },
+    "text.061588cd5010": {
+      "type": "text",
+      "source": "Plant a fact, then ask it back",
+      "value": "寫入一項事實，然後提問以回憶它"
+    },
+    "text.097cd4e6916f": {
+      "type": "text",
+      "source": "When this course is not served by the launchable, copy that browser cookie into the Access\n      session field below:",
+      "value": "當本課程並非由 launchable 提供時，請將該瀏覽器 Cookie 複製到下方的 Access session 欄位："
+    },
+    "text.0a07f6594619": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0a07f6594619~1": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.0a63ba7f0e8a": {
+      "type": "text",
+      "source": "shell directly",
+      "value": "直接呼叫 shell"
+    },
+    "text.0ad70dcd2cc5": {
+      "type": "text",
+      "source": "toolSearch is a conditional failure mode",
+      "value": "toolSearch 是一種條件性故障模式"
+    },
+    "text.0f82aca66af9": {
+      "type": "text",
+      "source": "length",
+      "value": "長度"
+    },
+    "text.10b414e45d15": {
+      "type": "text",
+      "source": " Try another prompt (uncomment one) to compare how the models behave on different work:",
+      "value": " Try another prompt (uncomment one) to compare how the models behave on different work:",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1139259614b2": {
+      "type": "text",
+      "source": "the shell runs",
+      "value": "shell 正常執行"
+    },
+    "text.11dfe8ab74b3": {
+      "type": "text",
+      "source": "one POST per turn",
+      "value": "每輪一個 POST"
+    },
+    "text.1315df573694": {
+      "type": "text",
+      "source": "(no answer: the model used all ",
+      "value": "（無答案：模型用完了全部 "
+    },
+    "text.138ad29fac60": {
+      "type": "text",
+      "source": " Stream one prompt through each selected model and measure first-token latency.",
+      "value": " Stream one prompt through each selected model and measure first-token latency.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.14348f407a94": {
+      "type": "text",
+      "source": "turn 2 · ask it back (only the question is sent)",
+      "value": "第 2 輪 · 詢問此前的資訊（僅傳送問題）"
+    },
+    "text.1637a7765d02": {
+      "type": "text",
+      "source": " The shared audit reads the normalized Module 3a connection and selects transport.",
+      "value": " The shared audit reads the normalized Module 3a connection and selects transport.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.16e4ab430622": {
+      "type": "text",
+      "source": "← final chat frame",
+      "value": "← 最終聊天幀"
+    },
+    "text.17c76e3f9442": {
+      "type": "text",
+      "source": "Run 'Fetch matching models' first.",
+      "value": "請先執行“獲取匹配的模型”。"
+    },
+    "text.185a2bfff807": {
+      "type": "text",
+      "source": " Optional visibility: uncomment to inspect the complete timing records.",
+      "value": " Optional visibility: uncomment to inspect the complete timing records.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1895c1f96b69": {
+      "type": "text",
+      "source": "The optional benchmark pulls matching models from the catalog, streams one short prompt through\n        each, and records time to first token (TTFT) and time to finish. These are direct API measurements;\n        they do not measure the planning, tools, or session work added by the OpenClaw gateway.",
+      "value": "可選基準測試會從目錄中選取匹配的模型，向每個模型流式傳送一個簡短提示詞，並記錄首個 token 回應時間 (TTFT) 和完成時間。這些資料來自直接 API 測量，不包含 OpenClaw 閘道增加的規劃、工具或會話處理時間。"
+    },
+    "text.1c350d860826": {
+      "type": "text",
+      "source": "Clear the session memory",
+      "value": "清除會話記憶"
+    },
+    "text.1d1a87bd09c0": {
+      "type": "text",
+      "source": " first token of ANY kind",
+      "value": " first token of ANY kind",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1e5f42d45364": {
+      "type": "text",
+      "source": "Copy the launchable access session when this page is hosted separately",
+      "value": "當此頁面單獨託管時，複製 launchable 存取會話"
+    },
+    "text.1e83e51de641": {
+      "type": "text",
+      "source": " mean inter-token latency",
+      "value": " mean inter-token latency",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1ec92a88001c": {
+      "type": "text",
+      "source": " Keep these; delete the rest. The default keeps only the Main Session.",
+      "value": " Keep these; delete the rest. The default keeps only the Main Session.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1fad4f65a1f5": {
+      "type": "text",
+      "source": " session(s); keeping ",
+      "value": " 個會話；保留 "
+    },
+    "text.2144fd972dd6": {
+      "type": "text",
+      "source": "Call models.list and cron.list",
+      "value": "呼叫 models.list 和 cron.list"
+    },
+    "text.222f88777073": {
+      "type": "text",
+      "source": "Streams chat.send under a fresh sessionKey until run-end. Commented prompts offer simpler alternatives.",
+      "value": "使用新的 sessionKey 流式執行 chat.send，直至收到 run-end。註釋掉的提示詞提供了更簡單的替代方案。"
+    },
+    "text.22759a3f3bc5": {
+      "type": "text",
+      "source": "Connect NemoClaw",
+      "value": "連線 NemoClaw"
+    },
+    "text.2298879d8c60": {
+      "type": "text",
+      "source": " tok",
+      "value": " 個 token"
+    },
+    "text.2298879d8c60~1": {
+      "type": "text",
+      "source": " tok",
+      "value": " 個 token"
+    },
+    "text.22b0bf2e97c2": {
+      "type": "text",
+      "source": "The first cell below plants a fact and then asks for it back under the same key.\n      The agent answers from a turn your client never re-sent, because the gateway\n      rehydrated that history server-side. The other two cells let you manage the stored\n      state.",
+      "value": "下方第一個單元會先寫入一個事實，然後使用相同的金鑰要求代理程式複述該事實。由於閘道在伺服器端恢復了歷史記錄，代理程式可以根據用戶端從未重新傳送過的輪次作答。另外兩個單元可供您管理已儲存的狀態。"
+    },
+    "text.25e417a76686": {
+      "type": "text",
+      "source": "Use your exec tool to run whoami and pwd, then report both results",
+      "value": "使用 exec 工具執行 whoami 和 pwd，然後報告這兩項結果"
+    },
+    "text.26d7c6fc8c61": {
+      "type": "text",
+      "source": "  [",
+      "value": "  [",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2706c619fe73": {
+      "type": "text",
+      "source": "exec",
+      "value": "exec",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2aacd67c0fa5": {
+      "type": "text",
+      "source": "Check before changing runtime settings",
+      "value": "更改執行階段設定前先檢查"
+    },
+    "text.2acb59482d62": {
+      "type": "text",
+      "source": "Return here and enter the launchable URL. If this course is not served by the launchable,\n        paste the launchable's browser access session too.",
+      "value": "傳回此頁面並輸入 launchable URL。如果本課程並非由 launchable 提供，還需貼上 launchable 的瀏覽器存取會話。"
+    },
+    "text.2b50d1ad6eb6": {
+      "type": "text",
+      "source": " helpers.log.json(\"all model IDs\", data.map(model => model.id));",
+      "value": " helpers.log.json(\"all model IDs\", data.map(model => model.id));",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.2bf548d80560": {
+      "type": "text",
+      "source": "glm",
+      "value": "glm",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2c40f2845cfc": {
+      "type": "text",
+      "source": " The panel is helpers.mountChatUI and it streams through helpers.openclawChat; open the helpers tab above to read either one's source.",
+      "value": " The panel is helpers.mountChatUI and it streams through helpers.openclawChat; open the helpers tab above to read either one's source.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.2da6eb7f8d23": {
+      "type": "text",
+      "source": "command output",
+      "value": "命令輸出"
+    },
+    "text.2e0ff22be30a": {
+      "type": "text",
+      "source": "art-",
+      "value": "art-",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2f545492bf26": {
+      "type": "text",
+      "source": " @ ",
+      "value": " @ ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.2fd0e09f44c6": {
+      "type": "text",
+      "source": "Module 3b: OpenClaw →",
+      "value": "模組 3b：OpenClaw →"
+    },
+    "text.308d9f1495e1": {
+      "type": "text",
+      "source": "models fetch failed: HTTP ",
+      "value": "獲取模型失敗：HTTP "
+    },
+    "text.34964df9ce71": {
+      "type": "text",
+      "source": "  🗑  ",
+      "value": "  🗑  ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.35217c2db25b": {
+      "type": "text",
+      "source": "AbortError",
+      "value": "AbortError",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.354dbe14bd0d": {
+      "type": "text",
+      "source": "healthy setting",
+      "value": "正常設定"
+    },
+    "text.35e5a9632e18": {
+      "type": "text",
+      "source": "Bearer ",
+      "value": "Bearer ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.35e5a9632e18~1": {
+      "type": "text",
+      "source": "Bearer ",
+      "value": "Bearer ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.371eb0c6f92c": {
+      "type": "text",
+      "source": "Use your exec tool to run ls -la /sandbox/.openclaw/workspace, then explain each file",
+      "value": "使用 exec 工具執行 ls -la /sandbox/.openclaw/workspace，然後解釋每個檔案"
+    },
+    "text.3784fc0b8af8": {
+      "type": "text",
+      "source": "tool_search_code",
+      "value": "tool_search_code",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3828ff48f1a6": {
+      "type": "text",
+      "source": "\\\\n── ranked by TTFT ──────────────────────────",
+      "value": "\\\\n── 按 TTFT 排名 ──────────────────────────"
+    },
+    "text.3928dddb82c8": {
+      "type": "text",
+      "source": "Sends two turns under one sessionKey so the second can recall the first. Another key creates separate history.",
+      "value": "使用同一個 sessionKey 傳送兩個輪次，使第二輪能夠回憶第一輪。使用另一個鍵則會建立獨立的歷史記錄。"
+    },
+    "text.3a53db8a2c8a": {
+      "type": "text",
+      "source": "abort",
+      "value": "abort",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3a53db8a2c8a~1": {
+      "type": "text",
+      "source": "abort",
+      "value": "abort",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.3c27de069860": {
+      "type": "text",
+      "source": "Module 3 · Part A of 3 · live calls begin",
+      "value": "模組 3 · 第 1/3 部分 · 開始即時呼叫"
+    },
+    "text.3d8d6a4e0663": {
+      "type": "text",
+      "source": "Step 2 · Operate the agent through its gateway",
+      "value": "步驟 2 · 透過閘道操作代理程式"
+    },
+    "text.3ff8a0bba62e": {
+      "type": "text",
+      "source": "Optional · Compare direct model latency",
+      "value": "可選 · 比較直接模型呼叫延遲"
+    },
+    "text.4004db613c6e": {
+      "type": "text",
+      "source": "✓ ",
+      "value": "✓ ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.402b9e6bf552": {
+      "type": "text",
+      "source": "Clean up old sessions",
+      "value": "清理舊會話"
+    },
+    "text.404d5ff0859b": {
+      "type": "text",
+      "source": " so it does not keep running in the background…",
+      "value": "，以免它繼續在後臺執行…"
+    },
+    "text.4063688957bf": {
+      "type": "text",
+      "source": "sessions.list",
+      "value": "sessions.list",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.4096d2bc7931": {
+      "type": "text",
+      "source": "Direct model-only control. Change the saved course route above; this never reads, writes, or configures NemoClaw launchable values.",
+      "value": "僅使用模型的直接對照。可在上方更改已儲存的課程路由；此操作不會讀取、寫入或設定 NemoClaw 可啟動執行個體中的任何值。"
+    },
+    "text.42228a6e49b5": {
+      "type": "text",
+      "source": "exec never runs",
+      "value": "exec 從未執行"
+    },
+    "text.4285d23d69c3": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.42b0085252ef": {
+      "type": "text",
+      "source": "Check the model route saved above, its bearer key, and the served model ID.",
+      "value": "請檢查上方儲存的模型路由、對應的 bearer 金鑰以及所提供的模型 ID。"
+    },
+    "text.432775ab95bc": {
+      "type": "text",
+      "source": "✗ ",
+      "value": "✗ ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.45822f54a0d0": {
+      "type": "text",
+      "source": ": ",
+      "value": ": ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.459be464036a": {
+      "type": "text",
+      "source": "Use the probe UI above for the normal path. This cell reruns the same four checks and returns their redacted requests and responses.",
+      "value": "常規流程請使用上方的探測 UI。此單元會重新執行相同的四項檢查，並傳回經過隱藏敏感資訊處理的請求和回應。"
+    },
+    "text.45ef17650098": {
+      "type": "text",
+      "source": "The launchable checks above prove that the running stack is reachable. Before sending an agent\n      turn, make one direct Chat Completions request through the model route used in Modules 1 and 2.\n      This control has no OpenClaw session or gateway tools, so Step 2 can show what the harness adds.\n      It does not inspect or reconfigure the model inside your launchable.",
+      "value": "上述可啟動執行個體檢查證明執行中的技術堆疊可以存取。在傳送代理程式輪次前，先透過模組 1 和模組 2 使用的模型路由發起一次直接 Chat Completions 請求。這個對照不涉及 OpenClaw 會話或閘道工具，因此步驟 2 可以清楚展示執行框架增加的能力。它不會檢查或重新設定可啟動執行個體內的模型。"
+    },
+    "text.4868391894d1": {
+      "type": "text",
+      "source": "The main functional components of this deployment are:",
+      "value": "此部署主要包含以下功能元件："
+    },
+    "text.4d7cbb57371a": {
+      "type": "text",
+      "source": " Server-sent events: one \"data: {json}\" line per chunk.",
+      "value": " Server-sent events: one \"data: {json}\" line per chunk.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.4eca6d76cb65": {
+      "type": "text",
+      "source": "model loops on the",
+      "value": "模型在以下位置迴圈"
+    },
+    "text.4f5a2ada1166": {
+      "type": "text",
+      "source": " (",
+      "value": "（"
+    },
+    "text.4fc9ad13005f": {
+      "type": "text",
+      "source": "Connect the launchable in the probe above. This panel unlocks as soon as its URL and token are saved.",
+      "value": "連線上方探測程式碼中的可啟動執行個體。儲存其 URL 和 token 後，此面板會立即解鎖。"
+    },
+    "text.511ff71910ce": {
+      "type": "text",
+      "source": "The same WebSocket at /cli/gateway that the Control UI uses is written out here as a challenge/response handshake, a JSON-RPC method call, and then a streaming chat turn.",
+      "value": "此處將 Control UI 使用的同一個 /cli/gateway WebSocket 完整展開，依次展示質詢/回應握手、一次 JSON-RPC 方法呼叫，以及一輪流式聊天。"
+    },
+    "text.516d931db26e": {
+      "type": "text",
+      "source": "Re-run the recall turn above and the planted code is gone.",
+      "value": "重新執行上面的回憶輪次，植入的程式碼已不存在。"
+    },
+    "text.5175a09aac75": {
+      "type": "text",
+      "source": "← Module 2c: Deep Agents",
+      "value": "← 模組 2c：深度代理程式"
+    },
+    "text.52946759d6f7": {
+      "type": "text",
+      "source": " Use the existing gateway socket to list models and scheduled jobs.",
+      "value": " Use the existing gateway socket to list models and scheduled jobs.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.552e423045fc": {
+      "type": "text",
+      "source": "(none)",
+      "value": "（無）"
+    },
+    "text.56944f48d4a4": {
+      "type": "text",
+      "source": "⛔ aborting the run on ",
+      "value": "⛔ 正在中止執行，停止位置："
+    },
+    "text.5782b18687e6": {
+      "type": "text",
+      "source": "reply",
+      "value": "回覆"
+    },
+    "text.588da4105320": {
+      "type": "text",
+      "source": " · ",
+      "value": " · ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.59a4a823640f": {
+      "type": "text",
+      "source": " role-only / empty keepalive delta",
+      "value": " role-only / empty keepalive delta",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.5a4c8eb4f8f0": {
+      "type": "text",
+      "source": "Run Connect first.",
+      "value": "請先執行 Connect。"
+    },
+    "text.5b0d20d5935b": {
+      "type": "text",
+      "source": "sessions.reset",
+      "value": "sessions.reset",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.5b5be2bc6924": {
+      "type": "text",
+      "source": "List five prime numbers.",
+      "value": "列出五個質數。"
+    },
+    "text.5f4b71189dde": {
+      "type": "text",
+      "source": "   A tool is hung or the model is looping. The ⚙️ rows above show the exact tool + args it got stuck on.",
+      "value": "   某個工具已卡住，或模型陷入了迴圈。上方的 ⚙️ 行顯示了卡住時的確切工具及其引數。"
+    },
+    "text.61145368eded": {
+      "type": "text",
+      "source": "CHECK THE LIVE VALUE BEFORE REPAIR",
+      "value": "CHECK THE LIVE VALUE BEFORE REPAIR",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.625f8ca31f09": {
+      "type": "text",
+      "source": "no output",
+      "value": "無輸出"
+    },
+    "text.63066c9c9477": {
+      "type": "text",
+      "source": "Remember this for later: my access code is BLUEJAY-7. Just acknowledge it in a few words.",
+      "value": "請記住，以後會用到：我的存取程式碼是 BLUEJAY-7。只需用幾個字確認即可。"
+    },
+    "text.64d4866d0eda": {
+      "type": "text",
+      "source": "raw cron.list",
+      "value": "cron.list 原始結果"
+    },
+    "text.65dfeff77e65": {
+      "type": "text",
+      "source": "The model's reasoning is not forwarded by the gateway, so this input/output\n        trace is the deepest per-step view. When a run stalls with no result, the\n        📜 logs cell above tails the runtime instead.",
+      "value": "閘道不會轉發模型的推理過程，因此該輸入/輸出跟蹤記錄是您能夠檢視到的最詳細逐步資訊。如果執行過程停滯且沒有傳回結果，請改用上方的 📜 日誌單元持續檢視執行階段日誌。"
+    },
+    "text.673e6a682440": {
+      "type": "text",
+      "source": "One agent call, expanded",
+      "value": "展開一次代理程式呼叫"
+    },
+    "text.67a5bdf2a82d": {
+      "type": "text",
+      "source": "NVIDIA · Securing Agents",
+      "value": "NVIDIA · 安全代理程式"
+    },
+    "text.680694f37af1": {
+      "type": "text",
+      "source": "rendered below. Edit the config and Run.",
+      "value": "結果呈現在下方。編輯設定後，選取“執行”。"
+    },
+    "text.6878a9189424": {
+      "type": "text",
+      "source": "What tools can you call?",
+      "value": "可以呼叫哪些工具？"
+    },
+    "text.69824d3b0e70": {
+      "type": "text",
+      "source": "References",
+      "value": "參考資料"
+    },
+    "text.69e50cf728b7": {
+      "type": "text",
+      "source": "  TTFT ",
+      "value": "  TTFT ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.6a6e1144f13b": {
+      "type": "text",
+      "source": "✗ no recall; confirm both turns used the same sessionKey",
+      "value": "✗ 未能回憶；請確認兩輪使用了相同的 sessionKey"
+    },
+    "text.6cf6d05b55a0": {
+      "type": "text",
+      "source": "plans, calls tools,",
+      "value": "制定規劃、呼叫工具，"
+    },
+    "text.6d580547dc9c": {
+      "type": "text",
+      "source": "your code",
+      "value": "程式碼"
+    },
+    "text.7073e6d8763d": {
+      "type": "text",
+      "source": "[DONE]",
+      "value": "[DONE]",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.70ce88318f4e": {
+      "type": "text",
+      "source": " Optional visibility: uncomment to inspect every model ID before filtering.",
+      "value": " Optional visibility: uncomment to inspect every model ID before filtering.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.7107f6329249": {
+      "type": "text",
+      "source": "the loop runs here",
+      "value": "迴圈在此處執行"
+    },
+    "text.74c1c9541ef8": {
+      "type": "text",
+      "source": "Fetch matching models",
+      "value": "獲取匹配的模型"
+    },
+    "text.765989849995": {
+      "type": "text",
+      "source": "Inspect all four connection routes",
+      "value": "檢查全部四條連線路由"
+    },
+    "text.768b36f69ce4": {
+      "type": "text",
+      "source": "Authorize the gateway",
+      "value": "授權閘道"
+    },
+    "text.77c5ab5fe82d": {
+      "type": "text",
+      "source": " streams the reply into the view and fires a chip per tool call.",
+      "value": " streams the reply into the view and fires a chip per tool call.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.792d3afa2890": {
+      "type": "text",
+      "source": " ms; give up on a model with no first token by now (some are slow to start)",
+      "value": " ms; give up on a model with no first token by now (some are slow to start)",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.7b30f0e7342a": {
+      "type": "text",
+      "source": "raw output · ",
+      "value": "原始輸出 · "
+    },
+    "text.7b65aa343238": {
+      "type": "text",
+      "source": "\n      A Pomerium launchable keeps bootstrap and WebSocket traffic direct: HTTP checks run through\n      its terminal loopback. Cloudflare sends HTTP checks through the approved relay; its WebSockets\n      try the launchable first and can recover through the relay. The probe shows the route without\n      displaying the session value.\n    ",
+      "value": "\n      Pomerium launchable 會讓引導和 WebSocket 流量保持直連：HTTP 檢查透過其終端機環回執行。Cloudflare 會透過獲准的中繼傳送 HTTP 檢查；其 WebSocket 會先嚐試連線 launchable，並可透過中繼恢復。探測結果會顯示路由，但不會顯示會話值。\n    "
+    },
+    "text.7bd374b9cfef": {
+      "type": "text",
+      "source": " thinking)",
+      "value": " 用於思考）"
+    },
+    "text.7c2f1b8836ef": {
+      "type": "text",
+      "source": " first-token watchdog",
+      "value": " first-token watchdog",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.7c9bbe5ec9b3": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.7c9bbe5ec9b3~1": {
+      "type": "text",
+      "source": "tool",
+      "value": "tool",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.7cab103f26ec": {
+      "type": "text",
+      "source": " Time first-token latency and count both reasoning and answer tokens.",
+      "value": " Time first-token latency and count both reasoning and answer tokens.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.7d0337b38bc8": {
+      "type": "text",
+      "source": "The diagram compares interfaces used at different layers, not one request path:",
+      "value": "該圖比較的是不同層使用的介面，而不是一條請求路徑："
+    },
+    "text.7e47dc8fc7f4": {
+      "type": "text",
+      "source": "turn 1 · plant a fact",
+      "value": "第 1 輪 · 植入一條資訊"
+    },
+    "text.7e4815e70c61": {
+      "type": "text",
+      "source": "A single POST drives a loop inside the gateway, where the session key carries memory forward to the next call.",
+      "value": "單個 POST 會驅動閘道內的迴圈，而會話金鑰會將記憶延續到下一次呼叫。"
+    },
+    "text.81fc8a8084e3": {
+      "type": "text",
+      "source": "Three interfaces at different layers: bounded model HTTP, MCP tool integration inside the runtime, and the live WebSocket to the OpenClaw gateway.",
+      "value": "不同層的三個介面：一次獨立的模型 HTTP 請求與回應、執行階段內部的 MCP 工具整合，以及連線 OpenClaw 閘道的即時 WebSocket。"
+    },
+    "text.82f713a6ad06": {
+      "type": "text",
+      "source": "The healthy path uses exec directly. Recover changes toolSearch only when the live check finds it enabled.",
+      "value": "正常路徑會直接使用 exec。只有即時檢查發現 toolSearch 已啟用時，Recover 才會更改該設定。"
+    },
+    "text.843a61562402": {
+      "type": "text",
+      "source": "Send a chat message (streaming)",
+      "value": "傳送聊天訊息（流式傳輸）"
+    },
+    "text.844f786418f4": {
+      "type": "text",
+      "source": "models (",
+      "value": "模型（"
+    },
+    "text.8452a47cea3c": {
+      "type": "text",
+      "source": "/models",
+      "value": "/models",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.85eb00994d09": {
+      "type": "text",
+      "source": "Content-Type",
+      "value": "Content-Type",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.898702fa218d": {
+      "type": "text",
+      "source": "the Try-it artifact, in code",
+      "value": "“動手試試”練習程式碼"
+    },
+    "text.8a5edab28263": {
+      "type": "text",
+      "source": "/",
+      "value": "/",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.8ca587036511": {
+      "type": "text",
+      "source": "ms/tok · ",
+      "value": "毫秒/token · "
+    },
+    "text.8d03fec80e72": {
+      "type": "text",
+      "source": " tokens thinking; raise MAX_TOKENS)\\\\n\\\\n",
+      "value": " token 進行思考；請提高 MAX_TOKENS）\\\\n\\\\n"
+    },
+    "text.8dccf256f6d5": {
+      "type": "text",
+      "source": ". ",
+      "value": ". ",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.8f316ca2ce76": {
+      "type": "text",
+      "source": "found ",
+      "value": "找到 "
+    },
+    "text.917b41beeffe": {
+      "type": "text",
+      "source": "Try it · talk to your launchable",
+      "value": "動手試試 · 與您啟動的執行個體對話"
+    },
+    "text.92f9a423aac1": {
+      "type": "text",
+      "source": "ms · ",
+      "value": "毫秒 · "
+    },
+    "text.92f9a423aac1~1": {
+      "type": "text",
+      "source": "ms · ",
+      "value": "毫秒 · "
+    },
+    "text.93497aab615d": {
+      "type": "text",
+      "source": "No models matched filter: ",
+      "value": "沒有模型符合篩選條件："
+    },
+    "text.94aee8a89fe5": {
+      "type": "text",
+      "source": "Step 3 · Memory lives in the session key",
+      "value": "步驟 3 · 記憶儲存在會話金鑰中"
+    },
+    "text.958c3877cbd2": {
+      "type": "text",
+      "source": "Try to curl https://example.com and tell me what happened",
+      "value": "嘗試使用 curl 存取 https://example.com"
+    },
+    "text.9679e6a35def": {
+      "type": "text",
+      "source": " stale session(s).",
+      "value": " 個過期會話。"
+    },
+    "text.99e78bacf57a": {
+      "type": "text",
+      "source": "no first token in ",
+      "value": "在以下時長內未收到首個 token："
+    },
+    "text.99f784fabe72": {
+      "type": "text",
+      "source": "/chat/completions",
+      "value": "/chat/completions",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9a0c0d731083": {
+      "type": "text",
+      "source": "✓ cleared; that session now has no history.",
+      "value": "✓ 已清除；該會話現已沒有歷史記錄。"
+    },
+    "text.9aee6b1bcdf6": {
+      "type": "text",
+      "source": "POST",
+      "value": "POST",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9aee6b1bcdf6~1": {
+      "type": "text",
+      "source": "POST",
+      "value": "POST",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9af15a7dd9ed": {
+      "type": "text",
+      "source": "(empty response)",
+      "value": "（空回應）"
+    },
+    "text.9b71245153f9": {
+      "type": "text",
+      "source": "  ✗ ",
+      "value": "  ✗ ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9c0648888eff": {
+      "type": "text",
+      "source": "✓ removed ",
+      "value": "✓ 已移除 "
+    },
+    "text.9c4373945b48": {
+      "type": "text",
+      "source": "s · ~",
+      "value": "秒 · 約"
+    },
+    "text.9ce94a2e47c2": {
+      "type": "text",
+      "source": " Rank survivors by TTFT, the metric that matters when streaming to a user.",
+      "value": " Rank survivors by TTFT, the metric that matters when streaming to a user.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.9f0a32e2aa93": {
+      "type": "text",
+      "source": "The connection check and exposed code share the normalized launchable connection and\n      provider decision. Run the editable cell to test agent metadata, gateway, terminal, and\n      health in order, then inspect its automatically rendered redacted result.",
+      "value": "連線檢查與展示的程式碼使用同一套規範化 launchable 連線和提供商選擇邏輯。執行可編輯單元，依次測試代理程式後設資料、閘道、終端機和執行狀態，然後檢查自動呈現的隱藏敏感資訊結果。"
+    },
+    "text.9f15dc7d72da": {
+      "type": "text",
+      "source": "Run the Connect node first.",
+      "value": "請先執行 Connect 節點。"
+    },
+    "text.9f3d1e1accad": {
+      "type": "text",
+      "source": "sessions.delete",
+      "value": "sessions.delete",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.9fe101a0ec7e": {
+      "type": "text",
+      "source": "OpenClaw gateway",
+      "value": "OpenClaw 閘道"
+    },
+    "text.a01be2975b06": {
+      "type": "text",
+      "source": "Connect your launchable in the probe above, then say hi or ask the agent to run whoami and pwd with exec.",
+      "value": "連線上方探測程式碼中的可啟動執行個體，然後打個招呼，或要求代理程式使用 exec 執行 whoami 和 pwd。"
+    },
+    "text.a683c5c5349f": {
+      "type": "text",
+      "source": "n/a",
+      "value": "不適用"
+    },
+    "text.a683c5c5349f~1": {
+      "type": "text",
+      "source": "n/a",
+      "value": "不適用"
+    },
+    "text.a683c5c5349f~2": {
+      "type": "text",
+      "source": "n/a",
+      "value": "不適用"
+    },
+    "text.a683c5c5349f~3": {
+      "type": "text",
+      "source": "n/a",
+      "value": "不適用"
+    },
+    "text.a6e8d16c5bb8": {
+      "type": "text",
+      "source": " Fetch the model catalog and keep only the IDs this benchmark compares.",
+      "value": " Fetch the model catalog and keep only the IDs this benchmark compares.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.a7d28389c5a9": {
+      "type": "text",
+      "source": "The settings card mirrors the course model route saved on the home page or in Module 1a. Change\n      it only if the direct probe fails. The course model route and the launchable connection retain\n      separate credentials and state.",
+      "value": "設定卡片會映象課程首頁或模組 1a 中儲存的課程模型路由。只有直接探測失敗時才需要更改。課程模型路由與可啟動執行個體連線各自使用獨立的憑證和狀態。"
+    },
+    "text.abea8c9b2fde": {
+      "type": "text",
+      "source": "custom configuration",
+      "value": "自訂設定"
+    },
+    "text.ac5740663e09": {
+      "type": "text",
+      "source": "all four connection checks, as editable code",
+      "value": "以可編輯程式碼形式檢視全部四項連線檢查"
+    },
+    "text.ad6fc89ae222": {
+      "type": "text",
+      "source": "toolSearch ON",
+      "value": "toolSearch ON",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.adca42419506": {
+      "type": "text",
+      "source": "✗ sessions.reset returned an unexpected payload (see below).",
+      "value": "✗ sessions.reset 傳回了意外的載荷（見下文）。"
+    },
+    "text.af30a6c4064b": {
+      "type": "text",
+      "source": "Plant a fact and recall it under the same sessionKey, then clear that history and remove the throwaway sessions. The recall sends only the question; the gateway restores the earlier turn server-side.",
+      "value": "先寫入一項事實，再使用同一個 sessionKey 回憶該事實；隨後清除這段歷史記錄，並刪除臨時會話。回憶時只傳送問題；閘道會在伺服器端恢復之前的輪次。"
+    },
+    "text.af71550d84e8": {
+      "type": "text",
+      "source": "Measure TTFT per model",
+      "value": "測量每個模型的 TTFT"
+    },
+    "text.b15c904fa412": {
+      "type": "text",
+      "source": "quick-3a-memory",
+      "value": "quick-3a-memory",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b15c904fa412~1": {
+      "type": "text",
+      "source": "quick-3a-memory",
+      "value": "quick-3a-memory",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b15c904fa412~2": {
+      "type": "text",
+      "source": "quick-3a-memory",
+      "value": "quick-3a-memory",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b6d954e82127": {
+      "type": "text",
+      "source": "✓ recalled across turns; the gateway rehydrated the planted fact server-side",
+      "value": "✓ 成功跨輪次回憶；閘道在伺服器端恢復了植入的資訊"
+    },
+    "text.b6f7f0b96461": {
+      "type": "text",
+      "source": " …",
+      "value": " …",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.b8b00f380a83": {
+      "type": "text",
+      "source": "Connect NemoClaw · Securing Agents",
+      "value": "連線 NemoClaw · 安全代理程式"
+    },
+    "text.bacb769b46f6": {
+      "type": "text",
+      "source": "application/json",
+      "value": "application/json",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.bb3f116c30cb": {
+      "type": "text",
+      "source": "⚠ DEGRADED: started ",
+      "value": "⚠ 效能下降：已啟動 "
+    },
+    "text.bd18f7a030cb": {
+      "type": "text",
+      "source": "Clears server-side history for one sessionKey. Rerun the recall turn to confirm the planted fact is gone.",
+      "value": "清除一個 sessionKey 在伺服器端的歷史記錄。重新執行回憶輪次，確認之前寫入的事實已被刪除。"
+    },
+    "text.bd8daef76c56": {
+      "type": "text",
+      "source": "model calls the",
+      "value": "模型呼叫"
+    },
+    "text.c060f7fff70f": {
+      "type": "text",
+      "source": "Start the launchable",
+      "value": "啟動 launchable"
+    },
+    "text.c29b2291e8b8": {
+      "type": "text",
+      "source": " A model that never produced a token (ttft null) sorts last, not first.",
+      "value": " A model that never produced a token (ttft null) sorts last, not first.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.c381c101a6e5": {
+      "type": "text",
+      "source": " const PROMPT    = \"Write a haiku about GPUs, then one line on what it means.\"; // a longer generation",
+      "value": " const PROMPT    = \"Write a haiku about GPUs, then one line on what it means.\"; // a longer generation",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.c5334811cd87": {
+      "type": "text",
+      "source": ", deleting ",
+      "value": "，刪除 "
+    },
+    "text.c5416ff7a3eb": {
+      "type": "text",
+      "source": " reasoning models think first; too low and they never answer",
+      "value": " reasoning models think first; too low and they never answer",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.c5959f256e40": {
+      "type": "text",
+      "source": "Two JSON-RPC calls go through the open connection: models.list names every model the runtime serves, while cron.list reports the currently scheduled jobs.",
+      "value": "透過已開啟的連線進行兩次 JSON-RPC 呼叫：models.list 列出執行階段提供的所有模型，cron.list 則報告當前的排程任務。"
+    },
+    "text.c646af57cbb4": {
+      "type": "text",
+      "source": "What access code did I give you earlier? Reply with just the code.",
+      "value": "我之前告訴存取程式碼是什麼？只回復程式碼。"
+    },
+    "text.c64aa81e2be0": {
+      "type": "text",
+      "source": "Run this short discovery request first. It lists models matching the editable prefix; code stays visible because changing that filter is the exercise.",
+      "value": "請先執行這個簡短的發現請求。它會列出與可編輯字首匹配的模型；由於修改該篩選條件正是本練習的內容，程式碼將保持可見。"
+    },
+    "text.c64cc9c8dd71": {
+      "type": "text",
+      "source": "Step 1 · Establish the model-only control",
+      "value": "步驟 1 · 建立僅使用模型的對照"
+    },
+    "text.c95b3b01ea0e": {
+      "type": "text",
+      "source": "⚠ frame-handler error: ",
+      "value": "⚠ 幀處理程式錯誤："
+    },
+    "text.caabb618fb03": {
+      "type": "text",
+      "source": "Open the gateway connection",
+      "value": "開啟閘道連線"
+    },
+    "text.cc1c34e885db": {
+      "type": "text",
+      "source": "loops until it answers",
+      "value": "迴圈執行直至給出回答"
+    },
+    "text.cc2ba7f9b418": {
+      "type": "text",
+      "source": "models.list",
+      "value": "models.list",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.cd155903dfae": {
+      "type": "text",
+      "source": "120b",
+      "value": "120b",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.cdb4ee2aea69": {
+      "type": "text",
+      "source": ".",
+      "value": ".",
+      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+    },
+    "text.ce189dd0fa0a": {
+      "type": "text",
+      "source": " model(s) to bench:\\\\n  ",
+      "value": " 個待測試模型：\\\\n  "
+    },
+    "text.ce71b5b7b33b": {
+      "type": "text",
+      "source": " tok · ",
+      "value": " token · "
+    },
+    "text.ce9dde73ce5a": {
+      "type": "text",
+      "source": "#kickstart-artifact",
+      "value": "#kickstart-artifact",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.cfa7b8a87b83": {
+      "type": "text",
+      "source": "sessions.reset response",
+      "value": "sessions.reset 回應"
+    },
+    "text.cfae0d4248f7": {
+      "type": "text",
+      "source": "]",
+      "value": "]",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d139302d30e7": {
+      "type": "text",
+      "source": "What model are you running on?",
+      "value": "您正在執行哪個模型？"
+    },
+    "text.d218956954fc": {
+      "type": "text",
+      "source": "raw models.list",
+      "value": "models.list 原始結果"
+    },
+    "text.d257e553fce9": {
+      "type": "text",
+      "source": " One call wipes the conversation the gateway holds for this key.",
+      "value": " One call wipes the conversation the gateway holds for this key.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.d32e4f05cb89": {
+      "type": "text",
+      "source": "\\\\n  ",
+      "value": "\\\\n  ",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d3555d131008": {
+      "type": "text",
+      "source": "Enter Base URL and Access session. Provider, relay route, and gateway token are discovered automatically.",
+      "value": "輸入 Base URL 和 Access session。系統會自動發現提供商、中繼路由和閘道 token。"
+    },
+    "text.d356dfadceeb": {
+      "type": "text",
+      "source": "\\\\ncron jobs: ",
+      "value": "\\\\ncron 任務："
+    },
+    "text.d9eab396e1e6": {
+      "type": "text",
+      "source": "Module 3b opens the files that shape each OpenClaw turn. Module 3c adds skills\n      and scheduled triggers, then Module 4 tests how OpenShell limits the actions those\n      persistent instructions can start.",
+      "value": "模組 3b 將介紹影響 OpenClaw 每輪互動的檔案。模組 3c 將新增技能和排程觸發器，隨後模組 4 將測試 OpenShell 如何限制這些持久指令可以發起的操作。"
+    },
+    "text.db3326c7e968": {
+      "type": "text",
+      "source": "toolSearch OFF",
+      "value": "toolSearch OFF",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.dbbe07bb4d13": {
+      "type": "text",
+      "source": "Read your SOUL.md and summarize who you are",
+      "value": "讀取 SOUL.md，並概述身分"
+    },
+    "text.de56802acbde": {
+      "type": "text",
+      "source": "Lists sessions and removes throwaway entries while retaining KEEP. Use /:(main|quick-3c-skill)$/ to preserve another named session.",
+      "value": "列出會話並刪除臨時條目，同時保留 KEEP。使用 /:(main|quick-3c-skill)$/ 可保留另一個具名會話。"
+    },
+    "text.dee9df394086": {
+      "type": "text",
+      "source": "   Run the 🩺 Health check (it flags toolSearch) + 🛠 Recover; for a deeper look, the 📜 logs cell tails the runtime.",
+      "value": "   請執行 🩺 Health check（它會標記 toolSearch）和 🛠 Recover；如需深入排查，📜 logs 單元會持續顯示執行階段日誌的末尾內容。"
+    },
+    "text.e0f265428fc2": {
+      "type": "text",
+      "source": "Authenticates the /cli/gateway WebSocket with operator.admin and stores a call() helper so later nodes reuse the connection.",
+      "value": "使用 operator.admin 對 /cli/gateway WebSocket 進行身分驗證，並儲存 call() 輔助函式，供後續節點複用該連線。"
+    },
+    "text.e1517be14d06": {
+      "type": "text",
+      "source": "minimax",
+      "value": "minimax",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e3ee9fe2c8e7": {
+      "type": "text",
+      "source": " · hit max_tokens",
+      "value": " · 命中 max_tokens"
+    },
+    "text.e46d6265a556": {
+      "type": "text",
+      "source": " helpers.log.json(\"timing rows\", results);",
+      "value": " helpers.log.json(\"timing rows\", results);",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.e4c98834f5e0": {
+      "type": "text",
+      "source": "code bridge",
+      "value": "程式碼橋接層"
+    },
+    "text.e4f9c522e1c8": {
+      "type": "text",
+      "source": "kimi",
+      "value": "kimi",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e6e1d0a85eea": {
+      "type": "text",
+      "source": "Hello chat",
+      "value": "聊天問候"
+    },
+    "text.e7d8b0bf6e13": {
+      "type": "text",
+      "source": " tool call(s) but none returned a result or answer.",
+      "value": " 次工具呼叫，但均未傳回結果或答案。"
+    },
+    "text.e805db86a2c2": {
+      "type": "text",
+      "source": "ms/tok",
+      "value": "毫秒/token"
+    },
+    "text.e971a93a70cd": {
+      "type": "text",
+      "source": "🧹 clearing session memory for ",
+      "value": "🧹 正在清除會話記憶："
+    },
+    "text.eaf380e7f604": {
+      "type": "text",
+      "source": "What's next",
+      "value": "接下來"
+    },
+    "text.eb5f1740bf5c": {
+      "type": "text",
+      "source": " Launch every model concurrently, then await them in catalog order, so the log prints in a stable order even though the requests overlap.",
+      "value": " Launch every model concurrently, then await them in catalog order, so the log prints in a stable order even though the requests overlap.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.ec5cc6a5a0c9": {
+      "type": "text",
+      "source": "Confirm the direct model connection",
+      "value": "確認直接模型連線"
+    },
+    "text.ee01b21eb121": {
+      "type": "text",
+      "source": " This opens the same /cli/gateway WebSocket the probe above used; openclawChat",
+      "value": " This opens the same /cli/gateway WebSocket the probe above used; openclawChat",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.ef5e40048c83": {
+      "type": "text",
+      "source": " · first token ",
+      "value": " · 首個 token "
+    },
+    "text.efade7955dc6": {
+      "type": "text",
+      "source": "nothing to remove; already tidy.",
+      "value": "沒有需要移除的內容；已清理完畢。"
+    },
+    "text.efe26056e35b": {
+      "type": "text",
+      "source": "ONE POST · A LOOP INSIDE THE GATEWAY",
+      "value": "ONE POST · A LOOP INSIDE THE 閘道"
+    },
+    "text.f03b4ef909e2": {
+      "type": "text",
+      "source": "With the runtime shaped, you can drop a message into the agent's loop. The three\n      cells below run in order so that the first ones connect and list models and crons\n      before a later cell sends a chat turn and the last one streams the trace back. Read\n      that trace row by row:",
+      "value": "執行階段調整完成後，您便可以將訊息送入代理程式迴圈。下方三個單元會按順序執行：前面的單元先建立連線並列出模型和排程任務，後續單元再傳送一輪聊天，最後一個單元則以流式方式傳回跟蹤記錄。請逐行閱讀該記錄："
+    },
+    "text.f27ee28f8d6d": {
+      "type": "text",
+      "source": "The gateway token and the launchable access session authorize different things:",
+      "value": "閘道 token 與 launchable 存取會話授予的權限不同："
+    },
+    "text.f3afa1250f53": {
+      "type": "text",
+      "source": " sessions.list is paginated, so walk every page before deleting anything.",
+      "value": " sessions.list is paginated, so walk every page before deleting anything.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.f46d84fc54b1": {
+      "type": "text",
+      "source": "notebook or browser",
+      "value": "notebook 或瀏覽器"
+    },
+    "text.f4bbd8dc0a3f": {
+      "type": "text",
+      "source": "):",
+      "value": "）："
+    },
+    "text.f57645630e62": {
+      "type": "text",
+      "source": "The sessionKey rehydrates history across turns",
+      "value": "sessionKey 可在多個輪次之間恢復歷史記錄"
+    },
+    "text.fa0bb0789945": {
+      "type": "text",
+      "source": "ms · total ",
+      "value": "毫秒 · 總計 "
+    },
+    "text.fb7f020e3043": {
+      "type": "text",
+      "source": "Probe active model endpoint",
+      "value": "探測當前模型 API 端點"
+    },
+    "text.fd37b8febd57": {
+      "type": "text",
+      "source": "cron.list",
+      "value": "cron.list",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ff72caa36dca": {
+      "type": "text",
+      "source": "data:",
+      "value": "data:",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.ff8972b1ceea": {
+      "type": "text",
+      "source": " Show the answer; if the model spent its whole budget thinking, show that instead.",
+      "value": " Show the answer; if the model spent its whole budget thinking, show that instead.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.ffa4e7430ea1": {
+      "type": "text",
+      "source": "No API key saved. Go to the course home and save the endpoint and key first.",
+      "value": "尚未儲存 API key。請先前往課程首頁，儲存 API 端點和金鑰。"
+    }
+  }
+}
