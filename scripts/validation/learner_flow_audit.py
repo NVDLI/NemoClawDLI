@@ -343,7 +343,7 @@ def audit_launchable_learning_path(pages: dict[str, str]) -> list[str]:
         credential_boundaries = [
             item for item in re.findall(r"<li\b[^>]*>.*?</li>", text, re.S | re.I)
             if re.search(
-                r"(?:browser cookie|cookie del navegador|cookie do navegador|浏览器\s*Cookie)",
+                r"(?:browser cookie|cookie del navegador|cookie do navegador|[浏瀏][览覽]器\s*Cookie)",
                 item,
                 re.I,
             )
@@ -2010,6 +2010,10 @@ def self_test() -> list[str]:
         mutated_pages["en-03a"] = mutated_pages["en-03a"].replace(old, new, 1)
         if not audit_launchable_learning_path(mutated_pages):
             misses.append(f"detector missed {label} mutation")
+    mutated_pages = dict(runtime_pages)
+    mutated_pages["tw-03a"] = mutated_pages["tw-03a"].replace("瀏覽器 Cookie", "瀏覽器工作階段", 1)
+    if not audit_launchable_learning_path(mutated_pages):
+        misses.append("detector missed Taiwan launchable access cookie mutation")
 
     # Unsupported endpoint guidance must be rejected by shape, on any learner surface,
     # including files this audit has never been told about by name.
