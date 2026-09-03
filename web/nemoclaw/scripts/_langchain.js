@@ -190,7 +190,7 @@ function _htmlToMarkdown(html) {
 }
 
 export async function coursePage(pageId) {
-  /* @doc <code>helpers.coursePage(id)</code> returns one course page's prose as markdown.
+  /* @doc <code>helpers.coursePage(id)</code> :: Returns one course page's prose as markdown.
        <code>id</code> is a file id like <code>"01b-react"</code> (list them with <code>helpers.coursePages()</code>); same-origin fetch, no key.
        Wire it as the body of a <code>read_course_page</code> tool to ground answers in real content. */
   const id = _courseId(pageId);
@@ -217,14 +217,14 @@ export const CONTEXT_WINDOWS = {
   "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": 262144,
 };
 export function contextWindow(model) {
-  /* @doc <code>helpers.contextWindow(model)</code> returns a model's advertised context-window size in tokens.
+  /* @doc <code>helpers.contextWindow(model)</code> :: Returns a model's advertised context-window size in tokens.
        It drives the artifact's context-budget readout, and falls back to 131072 for unknown models. */
   return CONTEXT_WINDOWS[model] || 131072;
 }
 // Cheap pre-flight token estimate (about 4 chars/token) before a turn is sent.
 // The authoritative count comes back in usage_metadata afterward.
 export function estimateTokens(textOrMessages) {
-  /* @doc <code>helpers.estimateTokens(textOrMessages)</code> roughly estimates tokens (about 4 chars/token) for a string or an array of <code>{content}</code> messages.
+  /* @doc <code>helpers.estimateTokens(textOrMessages)</code> :: Roughly estimates tokens (about 4 chars/token) for a string or an array of <code>{content}</code> messages.
        Use it for a pre-flight check; the authoritative count is the model's <code>usage_metadata</code>. */
   const s = Array.isArray(textOrMessages)
     ? textOrMessages.map(m => (typeof m === "string" ? m : (m && m.content) || "")).join("\n")
@@ -233,7 +233,7 @@ export function estimateTokens(textOrMessages) {
 }
 
 export function coursePages() {
-  /* @doc <code>helpers.coursePages()</code> returns the page list as <code>[{ id, title }]</code>.
+  /* @doc <code>helpers.coursePages()</code> :: Returns the page list as <code>[{ id, title }]</code>.
        It is the single source for a module menu or a <code>read_course_page</code> tool's <code>enum</code>. */
   return COURSE_PAGES.map(p => ({ ...p }));
 }

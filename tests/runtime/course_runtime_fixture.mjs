@@ -26,3 +26,4 @@ if (candidates.length !== 1) {
 const scripts = path.join(candidates[0], 'scripts');
 export const sharedRuntime = await import(pathToFileURL(path.join(scripts, '_shared.js')));
 export const canvasRuntime = await import(pathToFileURL(path.join(scripts, '_canvas.js')));
+export const localeRuntime = await import(pathToFileURL(path.join(scripts, '_locale.js')));

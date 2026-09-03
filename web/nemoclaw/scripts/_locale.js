@@ -44,6 +44,20 @@ const PT_TEXT = new Map(Object.entries({
   "🧠 memory: off": "🧠 memória: inativa",
   "↺ New chat": "↺ Nova conversa",
   "Ask a question…": "Faça uma pergunta…",
+  "Copy link to this section": "Copiar link para esta seção", "Restore this node's original code and clear its output": "Restaurar o código original deste nó e limpar sua saída",
+  "Run this node": "Executar este nó", "Copy code to clipboard": "Copiar código para a área de transferência", "Copy code": "Copiar código",
+  "When on, the model sees the whole conversation. Turn it off to watch it answer each message as a stateless function with no recall.": "Quando ativa, o modelo recebe toda a conversa. Desative-a para observar cada mensagem ser respondida como uma função sem estado e sem memória.",
+  "results": "resultados", "stream · log · return value": "stream · log · valor retornado", "request": "requisição", "tool": "ferramenta",
+  "console input": "entrada do console", "course-authored (no public repo)": "criado pelo curso (sem repositório público)",
+  "Show token": "Mostrar token", "Hide token": "Ocultar token", "Show or hide token": "Mostrar ou ocultar token", "Auditor SOUL": "SOUL do auditor", "click to enlarge": "clique para ampliar",
+  "Define agentic AI": "Defina IA baseada em agentes", "Explain vector databases in depth": "Explique bancos de dados vetoriais em detalhes", "What is a vector database?": "O que é um banco de dados vetorial?",
+  "How do I reset my password?": "Como redefino minha senha?", "How do I update my email address?": "Como atualizo meu endereço de e-mail?", "I want a refund for last month's subscription": "Quero o reembolso da assinatura do mês passado", "I was double charged on my invoice": "Houve uma cobrança duplicada na minha fatura",
+  "The API returns 500 errors since this morning": "A API retorna erros 500 desde esta manhã", "The app crashes every time I log in": "O aplicativo trava sempre que faço login",
+  "How does the ReAct loop work?": "Como funciona o ciclo ReAct?", "What does the OpenShell sandbox do?": "O que o sandbox do OpenShell faz?", "What is a deep research agent?": "O que é um agente de pesquisa profunda?", "What is a tool, mechanically?": "Como uma ferramenta funciona mecanicamente?", "What is retrieval-augmented generation?": "O que é geração aumentada por recuperação?", "Why use cosine similarity?": "Por que usar similaridade de cosseno?",
+  "Walk me through your incident runbook": "Explique seu runbook de incidentes", "What cron jobs do you have scheduled?": "Quais tarefas cron estão agendadas?", "checkout-service is throwing 502s in us-east-1": "checkout-service está retornando erros 502 em us-east-1",
+  "Check whether the agent can reach the public internet": "Verifique se o agente consegue acessar a internet pública", "Make the SOUL.md persona file read-only": "Torne o arquivo de persona SOUL.md somente leitura", "Read the agent's SOUL.md persona file": "Leia o arquivo de persona SOUL.md do agente",
+  "A personal assistant I message from my phone": "Um assistente pessoal com quem converso pelo celular", "Compute the 12th Fibonacci number and return it.": "Calcule o 12º número de Fibonacci e retorne-o.", "Refactor a large repo unattended overnight": "Refatore um repositório grande durante a noite sem supervisão", "Triage prod incidents on a server 24/7": "Faça a triagem de incidentes de produção em um servidor 24 horas por dia",
+  "*NVIDIA is waiving the fee for the Brev launchable for a limited time to the first 25K users (limited to one redemption per user). Once launched, the user will see a $1.00 credit added to their account, enabling them to complete all 4 modules (~4 hours).": "*A NVIDIA está isentando por tempo limitado a taxa do launchable no Brev para os primeiros 25 mil usuários (limitado a um resgate por usuário). Depois de iniciar o launchable, o usuário receberá um crédito de US$ 1,00 na conta, suficiente para concluir os 4 módulos (cerca de 4 horas).",
   "Send": "Enviar",
   "⏹ Stop": "⏹ Parar",
   "▶ Run": "▶ Executar",
@@ -160,6 +174,49 @@ const PT_TEXT = new Map(Object.entries({
   "Enter the key for the embedding route": "Informe a chave da rota de embeddings",
   "model discovery returned no model IDs": "A descoberta de modelos não retornou IDs de modelo",
   "embedding model discovery returned no model IDs": "A descoberta de modelos de embeddings não retornou IDs de modelo",
+  "Live artifacts": "Artefatos interativos", "Shared state": "Estado compartilhado", "Model calls": "Chamadas de modelo",
+  "Model configuration": "Configuração do modelo", "Web search": "Pesquisa na Web", "Embeddings & similarity": "Embeddings e similaridade",
+  "Tokens & context": "Tokens e contexto", "Raw HTTP": "HTTP direto", "Launchable terminal": "Terminal do launchable",
+  "OpenShell policy": "Política do OpenShell", "Course content": "Conteúdo do curso", "Diagram strings": "Strings de diagramas",
+  "OpenClaw gateway": "Gateway do OpenClaw", "Run control": "Controle de execução", "Instrumentation": "Rastreamento e logs",
+  "Visualization": "Visualização", "Other": "Outros", "source": "código-fonte",
+  "apply override": "aplicar alteração", "revert": "reverter",
+  "Compile your edits and override the helper for this canvas": "Compilar as edições e substituir o helper neste canvas",
+  "Restore the original source": "Restaurar o código-fonte original",
+  "Health check, conditional repair, and logs for the shared OpenClaw harness. Health check runs a command and reads toolSearch. Recover changes toolSearch only when it is enabled; session clearing and restart are separate opt-ins. Runtime logs tails the log when a run stalls.": "Verificação de integridade, reparo condicional e logs do harness compartilhado do OpenClaw. A verificação executa um comando e lê toolSearch. A recuperação altera toolSearch somente quando ele está ativado; limpar a sessão e reiniciar são opções separadas. Os logs de runtime acompanham o log quando uma execução trava.",
+  "Detect & recover · health check, then escalating reset": "Detectar e recuperar · verificação e redefinição gradual",
+  "Health check": "Verificação de integridade", "Runtime logs": "Logs de runtime", "Clean up": "Limpeza", "Clear": "Limpar",
+  "Connect": "Conectar", "Recover": "Recuperar", "Debug info": "Informações de depuração", "Advanced": "Avançado",
+  "Reconnect": "Reconectar", "Saved. Rerun the cell.": "Salvo. Execute a célula novamente.",
+  "Figure path is invalid.": "O caminho da figura é inválido.", "Figure could not be loaded.": "Não foi possível carregar a figura.",
+  "lab only": "somente no laboratório", "streaming…": "transmitindo…", "stopped": "interrompido", "error": "erro", "reset": "redefinido",
+  "select": "selecionar", "copied ✓": "copiado ✓", "⎘ copy": "⎘ copiar", "⏹ stopping…": "⏹ interrompendo…", "✓ override active": "✓ alteração ativa",
+  "view policy source": "ver código-fonte da política", "hide policy source": "ocultar código-fonte da política", "failed step": "etapa com falha",
+  "Lessons": "Aulas", "Review before deployment": "Revisar antes da implantação",
+  "Request handling": "Tratamento da solicitação", "Value": "Valor", "not yet run": "ainda não executado",
+  "returned value": "valor retornado", "raw response": "resposta bruta", "live artifacts": "artefatos interativos", "No OpenClaw": "OpenClaw não detectado",
+  "Automatic retries for network, HTTP 429, or transient 5xx failures": "Novas tentativas automáticas para falhas de rede, HTTP 429 ou 5xx transitórias",
+  "Failures remain visible. Retries are off by default and apply only before a stream starts.": "As falhas permanecem visíveis. As novas tentativas vêm desativadas e só ocorrem antes do início do streaming.",
+  "Wait for response headers or the next stream chunk (seconds)": "Tempo para aguardar os cabeçalhos ou o próximo trecho do streaming (segundos)",
+  "Need a value? Select the ? beside that field for its source and fallback.": "Precisa de um valor? Selecione o ? ao lado do campo para ver a origem e o fallback.",
+  "I'm a deep research agent. Ask me something and I'll plan a few parallel sub-investigations across curated NVIDIA materials and this course's own sections, then synthesize a grounded answer.": "Sou um agente de pesquisa profunda. Faça uma pergunta; vou planejar investigações paralelas nos materiais selecionados da NVIDIA e nas seções do curso, depois sintetizar uma resposta fundamentada.",
+  "How does this course's OpenShell sandbox relate to agent safety in general?": "Como o sandbox do OpenShell deste curso se relaciona à segurança de agentes?",
+  "What is RAG, and how does this course build it?": "O que é RAG e como este curso a implementa?",
+  "Compare the ReAct loop with the deep-agent pattern": "Compare o ciclo ReAct com o padrão de agente profundo",
+  "What are the main failure modes of autonomous agents?": "Quais são os principais modos de falha de agentes autônomos?",
+  "How do production CLI agents sandbox themselves?": "Como agentes de CLI em produção usam sandbox?",
+  "Trace this course from a single LLM call to an always-on agent": "Trace a evolução do curso de uma chamada ao LLM até um agente sempre ativo",
+  "✗ Error: Embedding key missing. Open the course setup and configure the persistent embedding route.": "✗ Erro: falta a chave de embeddings. Abra a configuração do curso e configure a rota persistente.",
+  "Error: Embedding key missing. Open the course setup and configure the persistent embedding route.": "Erro: falta a chave de embeddings. Abra a configuração do curso e configure a rota persistente.",
+  "Checks env status, toolSearch, stuck approvals, and one trivial command. HEALTHY needs no repair; DEGRADED shows what to inspect next.": "Verifica o ambiente, toolSearch, aprovações travadas e um comando simples. HEALTHY não requer reparo; DEGRADED indica o próximo diagnóstico.",
+  "Disables tools.toolSearch only when the live config has it enabled. Session clearing and restart default off, so running this cell against a healthy launchable is non-destructive.": "Desativa tools.toolSearch somente quando a configuração ativa o habilita. Limpar a sessão e reiniciar vêm desativados; executar esta célula em um launchable íntegro não é destrutivo.",
+  "Tails the gateway/agent log (logs.tail): model calls, tool dispatches, errors, hangs. The deepest view when a run stalls and Health check is green; reasoning itself is not exposed over the gateway.": "Acompanha o log do gateway e do agente (logs.tail): chamadas de modelo, ferramentas, erros e travamentos. É a visão mais detalhada quando a execução trava e a verificação está verde; o gateway não expõe o raciocínio.",
+  "The agent doing its job": "O agente em operação", "The agent off the rails": "O agente fora dos limites", "the agent tries to ": "o agente tenta ",
+  "   ·   run Confirm next, then Compare": "   ·   execute Confirmar e depois Comparar", "list available models": "listar modelos disponíveis", "send a chat completion": "enviar uma conclusão de chat",
+  "exfiltrate data to an outside host": "exfiltrar dados para um host externo", "read cloud-instance credentials (metadata SSRF)": "ler credenciais da instância de nuvem (SSRF de metadados)",
+  "clone tooling from GitHub": "clonar ferramentas do GitHub", "reach the inference API as a stray curl, not the runtime": "acessar a API de inferência com um curl avulso, fora do runtime",
+  "pull an npm package directly with curl": "baixar um pacote npm diretamente com curl", "Run the live-policy cell above to draw your launchable's policy as an interactive map.": "Execute a célula de política ativa acima para desenhar a política do launchable como mapa interativo.",
+  "tips for building a RAG pipeline": "dicas para criar um pipeline de RAG",
 }));
 
 const PT_PREFIXES = new Map(Object.entries({
@@ -168,6 +225,8 @@ const PT_PREFIXES = new Map(Object.entries({
   "commands.list failed: ": "commands.list falhou: ",
   "branches: ": "ramificações: ",
   "Branch '": "Ramificação '",
+  "context ": "contexto ", "done in ": "concluído em ", "── call ": "── chamada ",
+  "✗ stopped at ": "✗ interrompido em ", "🧠 reasoning · ~": "🧠 raciocínio · ~",
   "✓ Connected. Model replied: ": "✓ Conectado. O modelo respondeu: ",
   "Connection failed: ": "Falha na conexão: ",
   "Model ID is not served by this endpoint. Choose one of: ": "O ID do modelo não é servido por este endpoint. Escolha um destes: ",
@@ -203,6 +262,13 @@ const ES_TEXT = new Map(Object.entries({
   "none pinned = auto-select": "ninguna fijada = selección automática", "🧠 memory: on": "🧠 memoria: activa",
   "🧠 memory: off": "🧠 memoria: inactiva", "↺ New chat": "↺ Nueva conversación",
   "Ask a question…": "Escriba una pregunta…", "Send": "Enviar", "⏹ Stop": "⏹ Detener",
+  "Copy link to this section": "Copiar enlace a esta sección", "Restore this node's original code and clear its output": "Restablecer el código original de este nodo y borrar su salida",
+  "Run this node": "Ejecutar este nodo", "Copy code to clipboard": "Copiar código al portapapeles", "Copy code": "Copiar código",
+  "When on, the model sees the whole conversation. Turn it off to watch it answer each message as a stateless function with no recall.": "Cuando está activa, el modelo recibe toda la conversación. Desactívala para observar cómo responde a cada mensaje como una función sin estado y sin memoria.",
+  "results": "resultados", "stream · log · return value": "stream · registro · valor devuelto", "request": "solicitud", "tool": "herramienta",
+  "console input": "entrada de consola", "course-authored (no public repo)": "creado para el curso (sin repositorio público)",
+  "Show token": "Mostrar token", "Hide token": "Ocultar token", "Show or hide token": "Mostrar u ocultar token", "Auditor SOUL": "SOUL del auditor", "click to enlarge": "pulse para ampliar",
+  "*NVIDIA is waiving the fee for the Brev launchable for a limited time to the first 25K users (limited to one redemption per user). Once launched, the user will see a $1.00 credit added to their account, enabling them to complete all 4 modules (~4 hours).": "*NVIDIA exime temporalmente del pago del launchable en Brev a los primeros 25.000 usuarios (limitado a un canje por usuario). Al iniciarlo, el usuario recibirá un crédito de 1,00 USD en su cuenta, suficiente para completar los 4 módulos (unas 4 horas).",
   "▶ Run": "▶ Ejecutar", "▶ Run all": "▶ Ejecutar todo", "⏳ Running…": "⏳ Ejecutando…",
   "↺ Reset": "↺ Restablecer", "↺ Reset code": "↺ Restablecer código", "Ready": "Listo",
   "clear": "borrar", "■ stop": "■ detener", "Stopping…": "Deteniendo…", "+ branch": "+ rama",
@@ -224,7 +290,7 @@ const ES_TEXT = new Map(Object.entries({
   "Base URL": "URL base", "Bearer token": "Token bearer", "Access provider": "Proveedor de acceso",
   "Access session": "Sesión de acceso", "Automatic from URL": "Automático según la URL",
   "Enter the launchable URL and its browser access session. The course discovers everything else.": "Introduzca la URL del launchable y la sesión de acceso del navegador. El curso descubre el resto.",
-  "Enter Base URL and Access session. Provider, relay route, and gateway token are discovered automatically.": "Introduzca la URL base y la sesión de acceso. El proveedor, la ruta del relay y el token del gateway se descubren automáticamente.",
+  "Enter Base URL and Access session. Provider, relay route, and gateway token are discovered automatically.": "Introduce la URL base y la sesión de acceso. El proveedor, la ruta del relay y el token del gateway se descubren automáticamente.",
   "Show session": "Mostrar sesión", "Show or hide access session": "Mostrar u ocultar la sesión de acceso",
   "Hide session": "Ocultar sesión", "Test connection": "Probar conexión", "Test again": "Probar de nuevo",
   "Waiting to test.": "Esperando la prueba.", "Agent metadata": "Metadatos del agente",
@@ -274,7 +340,57 @@ const ES_TEXT = new Map(Object.entries({
   "model discovery returned no model IDs": "El descubrimiento de modelos no devolvió IDs de modelo",
   "embedding model discovery returned no model IDs": "El descubrimiento de modelos de embeddings no devolvió IDs de modelo",
   "Change": "Cambiar", "Save & verify": "Guardar y verificar", "No key yet?": "¿Aún no tiene una clave?",
-  "Sign up at build.nvidia.com →": "Regístrese en build.nvidia.com →"
+  "Sign up at build.nvidia.com →": "Regístrese en build.nvidia.com →",
+  "javascript · editable · re-run": "javascript · editable · volver a ejecutar", "JSON · editable": "JSON · editable",
+  "in scope inside every node:": "disponible en todos los nodos:",
+  "click a row to inspect & edit its source": "pulse una fila para inspeccionar y editar su código fuente",
+  "in scope for this cell. Click a row to read its source": "disponible en esta celda. Pulse una fila para leer su código fuente",
+  "Live artifacts": "Artefactos interactivos", "Shared state": "Estado compartido", "Model calls": "Llamadas al modelo",
+  "Model configuration": "Configuración del modelo", "Web search": "Búsqueda web", "Embeddings & similarity": "Embeddings y similitud",
+  "Tokens & context": "Tokens y contexto", "Raw HTTP": "HTTP directo", "Launchable terminal": "Terminal del launchable",
+  "OpenShell policy": "Política de OpenShell", "Course content": "Contenido del curso", "Diagram strings": "Textos de diagramas",
+  "OpenClaw gateway": "Gateway de OpenClaw", "Run control": "Control de ejecución", "Instrumentation": "Trazas y registros",
+  "Visualization": "Visualización", "Other": "Otros", "source": "código fuente",
+  "apply override": "aplicar cambio", "revert": "revertir",
+  "Compile your edits and override the helper for this canvas": "Compilar los cambios y sustituir el helper en este canvas",
+  "Restore the original source": "Restaurar el código fuente original",
+  "Health check, conditional repair, and logs for the shared OpenClaw harness. Health check runs a command and reads toolSearch. Recover changes toolSearch only when it is enabled; session clearing and restart are separate opt-ins. Runtime logs tails the log when a run stalls.": "Comprobación de estado, reparación condicional y registros del entorno compartido de OpenClaw. La comprobación ejecuta un comando y lee toolSearch. La recuperación solo cambia toolSearch cuando está habilitado; borrar la sesión y reiniciar son opciones independientes. Los registros del runtime siguen el registro cuando una ejecución se bloquea.",
+  "Detect & recover · health check, then escalating reset": "Detectar y recuperar · comprobación y restablecimiento gradual",
+  "Health check": "Comprobación de estado", "Runtime logs": "Registros del runtime", "Clean up": "Limpiar", "Clear": "Borrar",
+  "Connect": "Conectar", "Recover": "Recuperar", "Debug info": "Información de depuración", "Advanced": "Avanzado",
+  "Reconnect": "Reconectar", "Saved. Rerun the cell.": "Guardado. Vuelva a ejecutar la celda.",
+  "Figure path is invalid.": "La ruta de la figura no es válida.", "Figure could not be loaded.": "No se pudo cargar la figura.",
+  "lab only": "solo en el laboratorio", "streaming…": "transmitiendo…", "stopped": "detenido", "reset": "restablecido",
+  "select": "seleccionar", "copied ✓": "copiado ✓", "⎘ copy": "⎘ copiar", "⏹ stopping…": "⏹ deteniendo…", "✓ override active": "✓ cambio activo",
+  "view policy source": "ver código fuente de la política", "hide policy source": "ocultar código fuente de la política", "failed step": "paso fallido",
+  "Lessons": "Lecciones", "Review before deployment": "Revisar antes de la implementación",
+  "Request handling": "Gestión de la solicitud", "Value": "Valor", "not yet run": "aún no ejecutado",
+  "returned value": "valor devuelto", "raw response": "respuesta sin procesar", "live artifacts": "artefactos interactivos", "No OpenClaw": "OpenClaw no detectado",
+  "Automatic retries for network, HTTP 429, or transient 5xx failures": "Reintentos automáticos para fallos de red, HTTP 429 o errores 5xx transitorios",
+  "Failures remain visible. Retries are off by default and apply only before a stream starts.": "Los fallos permanecen visibles. Los reintentos están desactivados de forma predeterminada y solo se aplican antes del streaming.",
+  "Wait for response headers or the next stream chunk (seconds)": "Tiempo para esperar las cabeceras o el siguiente fragmento del streaming (segundos)",
+  "Need a value? Select the ? beside that field for its source and fallback.": "¿Necesita un valor? Seleccione el ? junto al campo para ver su origen y alternativa.",
+  "I'm a deep research agent. Ask me something and I'll plan a few parallel sub-investigations across curated NVIDIA materials and this course's own sections, then synthesize a grounded answer.": "Soy un agente de investigación profunda. Formule una pregunta; planificaré investigaciones paralelas en materiales seleccionados de NVIDIA y en las secciones del curso, y después sintetizaré una respuesta fundamentada.",
+  "How does this course's OpenShell sandbox relate to agent safety in general?": "¿Cómo se relaciona el sandbox de OpenShell del curso con la seguridad de agentes?",
+  "What is RAG, and how does this course build it?": "¿Qué es RAG y cómo la implementa este curso?",
+  "Compare the ReAct loop with the deep-agent pattern": "Compare el ciclo ReAct con el patrón de agente profundo",
+  "What are the main failure modes of autonomous agents?": "¿Cuáles son los principales modos de fallo de los agentes autónomos?",
+  "How do production CLI agents sandbox themselves?": "¿Cómo usan sandbox los agentes de CLI en producción?",
+  "Trace this course from a single LLM call to an always-on agent": "Siga el curso desde una llamada al LLM hasta un agente siempre activo",
+  "✗ Error: Embedding key missing. Open the course setup and configure the persistent embedding route.": "✗ Error: falta la clave de embeddings. Abra la configuración del curso y configure la ruta persistente.",
+  "Error: Embedding key missing. Open the course setup and configure the persistent embedding route.": "Error: falta la clave de embeddings. Abra la configuración del curso y configure la ruta persistente.",
+  "Checks env status, toolSearch, stuck approvals, and one trivial command. HEALTHY needs no repair; DEGRADED shows what to inspect next.": "Comprueba el entorno, toolSearch, aprobaciones bloqueadas y un comando sencillo. HEALTHY no requiere reparación; DEGRADED indica el siguiente diagnóstico.",
+  "Disables tools.toolSearch only when the live config has it enabled. Session clearing and restart default off, so running this cell against a healthy launchable is non-destructive.": "Desactiva tools.toolSearch solo cuando la configuración activa lo habilita. Borrar la sesión y reiniciar están desactivados; ejecutar esta celda en un launchable sano no es destructivo.",
+  "Tails the gateway/agent log (logs.tail): model calls, tool dispatches, errors, hangs. The deepest view when a run stalls and Health check is green; reasoning itself is not exposed over the gateway.": "Sigue el registro del gateway y del agente (logs.tail): llamadas al modelo, herramientas, errores y bloqueos. Es la vista más detallada cuando la ejecución se bloquea y la comprobación está verde; el gateway no expone el razonamiento.",
+  "The agent doing its job": "El agente en funcionamiento", "The agent off the rails": "El agente fuera de control", "the agent tries to ": "el agente intenta ",
+  "   ·   run Confirm next, then Compare": "   ·   ejecute Confirmar y después Comparar", "list available models": "enumerar los modelos disponibles", "send a chat completion": "enviar una finalización de chat",
+  "exfiltrate data to an outside host": "exfiltrar datos a un host externo", "read cloud-instance credentials (metadata SSRF)": "leer credenciales de la instancia en la nube (SSRF de metadatos)",
+  "clone tooling from GitHub": "clonar herramientas desde GitHub", "reach the inference API as a stray curl, not the runtime": "acceder a la API de inferencia con un curl aislado, fuera del runtime",
+  "pull an npm package directly with curl": "descargar un paquete npm directamente con curl", "Run the live-policy cell above to draw your launchable's policy as an interactive map.": "Ejecute la celda de política activa anterior para dibujar la política del launchable como mapa interactivo.",
+  "tips for building a RAG pipeline": "consejos para crear un pipeline de RAG",
+  "loop · LLM as function": "ciclo · LLM como función", "tools · finish_reason": "herramientas · finish_reason", "JSON · MCP · routing": "JSON · MCP · enrutamiento",
+  "router · planner · ReWOO": "router · planner · ReWOO", "embed · retrieve · bundle": "embed · retrieve · bundle", "planner · sub-agents · VFS": "planner · subagentes · VFS",
+  "launchable · first call": "launchable · primera llamada", "file-as-context · paste URL": "archivo como contexto · pegar URL", "sandbox · policy · CI gate": "sandbox · política · control de CI",
 }));
 
 const ES_PREFIXES = new Map(Object.entries({
@@ -283,6 +399,8 @@ const ES_PREFIXES = new Map(Object.entries({
   "commands.list failed: ": "commands.list falló: ",
   "branches: ": "ramas: ",
   "Branch '": "Rama '",
+  "context ": "contexto ", "done in ": "completado en ", "── call ": "── llamada ",
+  "✗ stopped at ": "✗ detenido en ", "🧠 reasoning · ~": "🧠 razonamiento · ~",
   "✓ Connected. Model replied: ": "✓ Conectado. El modelo respondió: ",
   "Connection failed: ": "Error de conexión: ",
   "Model ID is not served by this endpoint. Choose one of: ": "El ID del modelo no se sirve en este endpoint. Elija uno de estos: ",
@@ -304,6 +422,13 @@ const ES_ATTRS = new Map(Object.entries({
 }));
 
 const ZH_TEXT = new Map(Object.entries({
+  "Copy link to this section": "复制此节链接", "Restore this node's original code and clear its output": "恢复此节点的原始代码并清除输出",
+  "Run this node": "运行此节点", "Copy code to clipboard": "将代码复制到剪贴板", "Copy code": "复制代码",
+  "When on, the model sees the whole conversation. Turn it off to watch it answer each message as a stateless function with no recall.": "开启后，模型会看到完整对话。关闭后，可以观察模型如何以无状态、无记忆的函数方式回答每条消息。",
+  "results": "结果", "stream · log · return value": "流式输出 · 日志 · 返回值", "request": "请求", "tool": "工具",
+  "console input": "控制台输入", "course-authored (no public repo)": "课程编写（无公开仓库）",
+  "Show token": "显示 token", "Hide token": "隐藏 token", "Show or hide token": "显示或隐藏 token", "helpers": "辅助函数", "click to enlarge": "点击放大",
+  "*NVIDIA is waiving the fee for the Brev launchable for a limited time to the first 25K users (limited to one redemption per user). Once launched, the user will see a $1.00 credit added to their account, enabling them to complete all 4 modules (~4 hours).": "*NVIDIA 将在限定时间内为前 25,000 名用户免除 Brev launchable 费用（每位用户限兑换一次）。启动后，用户的账户将获得 1.00 美元额度，可用于完成全部 4 个模块（约 4 小时）。",
   "Live artifacts": "交互页面",
   "Shared state": "共享状态",
   "Model calls": "模型调用",
@@ -321,11 +446,6 @@ const ZH_TEXT = new Map(Object.entries({
   "Instrumentation": "追踪与日志",
   "Visualization": "可视化",
   "Other": "其他",
-  "One-shot, non-streaming chat completion. Returns the raw OpenAI-shape response. Use when you just want the final message.": "单次、非流式聊天补全。返回原始 OpenAI 格式响应。只需要最终消息时使用。",
-  "Cosine similarity between two vectors. Closer to 1 = closer match. The standard retrieval primitive.": "计算两个向量的余弦相似度。越接近 1，匹配度越高。这是标准的检索基本操作。",
-  "Gantt-style bar chart comparing per-worker duration against total wall time.": "甘特式条形图，用于比较各工作线程耗时和总墙钟时间。",
-  "Horizontal score bars for retrieval results, with the top-k entries highlighted green and the rest dimmed.": "检索结果的水平分数条形图，以绿色突出显示 top-k 条目，并调暗其它条目。",
-  "Mount the live OpenClaw command/chat artifact without copying gateway RPC, session-tab, autocomplete, and rendering plumbing into a learner cell.": "挂载 OpenClaw 实时命令/聊天界面，无需将网关 RPC、会话标签页、自动补全和渲染支撑代码复制到学习者单元格中。",
   "Automatic retries for network, HTTP 429, or transient 5xx failures": "针对网络、HTTP 429 或暂时性 5xx 故障自动重试",
   "Failures remain visible. Retries are off by default and apply only before a stream starts.": "故障始终可见。默认关闭重试，且只在流式传输开始前重试。",
   "Wait for response headers or the next stream chunk (seconds)": "等待响应标头或下一个流式数据块（秒）",
@@ -353,7 +473,18 @@ const ZH_TEXT = new Map(Object.entries({
   "Advanced": "高级",
   "Request handling": "请求处理",
   "Value": "值",
-  "apply override": "应用覆盖设置",
+  "apply override": "应用修改",
+  "revert": "还原",
+  "source": "源代码",
+  "Compile your edits and override the helper for this canvas": "编译修改并在此画布中替换辅助函数",
+  "Restore the original source": "还原原始源代码",
+  "Health check, conditional repair, and logs for the shared OpenClaw harness. Health check runs a command and reads toolSearch. Recover changes toolSearch only when it is enabled; session clearing and restart are separate opt-ins. Runtime logs tails the log when a run stalls.": "共享 OpenClaw 运行框架的健康检查、条件修复和日志。健康检查会运行命令并读取 toolSearch。仅当 toolSearch 已启用时，恢复操作才会更改它；清除会话和重启是独立的可选操作。运行时日志会在执行停滞时持续读取日志。",
+  "Reconnect": "重新连接", "Saved. Rerun the cell.": "已保存。请重新运行该单元格。",
+  "Figure path is invalid.": "图路径无效。", "Figure could not be loaded.": "无法加载图。",
+  "lab only": "仅实验环境", "streaming…": "正在流式传输…", "stopped": "已停止", "error": "错误", "reset": "已重置",
+  "select": "选择", "copied ✓": "已复制 ✓", "⎘ copy": "⎘ 复制", "⏹ stopping…": "⏹ 正在停止…", "✓ override active": "✓ 修改已生效",
+  "view policy source": "查看策略源代码", "hide policy source": "隐藏策略源代码", "failed step": "失败步骤",
+  "Lessons": "课程", "Review before deployment": "部署前检查",
   "not yet run": "尚未运行",
   "returned value": "返回值",
   "raw response": "原始响应",
@@ -363,7 +494,6 @@ const ZH_TEXT = new Map(Object.entries({
   "The agent off the rails": "智能体行为失控",
   "the agent tries to ": "智能体尝试 ",
   "   ·   run Confirm next, then Compare": "   ·   接下来运行“确认”，然后运行“比较”",
-  "接下来运行 Confirm，然后运行 Compare": "接下来运行“确认”，然后运行“比较”",
   "list available models": "列出可用模型",
   "send a chat completion": "发送聊天补全请求",
   "exfiltrate data to an outside host": "将数据外泄到外部主机",
@@ -416,6 +546,8 @@ const ZH_TEXT = new Map(Object.entries({
   "⏹ Stop": "⏹ 停止",
   "▶ Run": "▶ 运行",
   "▶ Run all": "▶ 全部运行",
+  "Reset when you click <strong>▶ Run all</strong>.": "点击 <strong>▶ 全部运行</strong> 时重置。",
+  "Use <code>log.clear()</code>, then clear the panel.": "使用 <code>log.clear()</code>，然后清除面板。",
   "⏳ Running…": "⏳ 正在运行…",
   "↺ Reset": "↺ 重置",
   "↺ Reset code": "↺ 重置代码",
@@ -454,7 +586,7 @@ const ZH_TEXT = new Map(Object.entries({
   "Access provider": "访问提供商",
   "Access session": "访问会话",
   "Enter the launchable URL and its browser access session. The course discovers everything else.": "输入可启动实例的 URL 及其浏览器访问会话。本课程会自动发现其它所有信息。",
-  "Enter Base URL and Access session. Provider, relay route, and gateway token are discovered automatically.": "输入基础 URL 和访问会话。系统会自动发现提供商、中继路由和网关 token。",
+  "Enter Base URL and Access session. Provider, relay route, and gateway token are discovered automatically.": "输入 Base URL 和 Access session。系统会自动发现提供商、中继路由和网关 token。",
   "Show session": "显示会话",
   "Show or hide access session": "显示或隐藏访问会话",
   "Hide session": "隐藏会话",
@@ -536,6 +668,8 @@ const ZH_PREFIXES = new Map(Object.entries({
   "commands.list failed: ": "commands.list 失败：",
   "branches: ": "分支：",
   "Branch '": "分支 '",
+  "context ": "上下文 ", "done in ": "完成，用时 ", "── call ": "── 调用 ",
+  "✗ stopped at ": "✗ 已停止于 ", "🧠 reasoning · ~": "🧠 推理 · ~",
   "✓ Connected. Model replied: ": "✓ 已连接。模型回复：",
   "Connection failed: ": "连接失败：",
   "Model ID is not served by this endpoint. Choose one of: ": "此 API 入口不提供模型 ID。请选择以下模型之一：",
@@ -559,9 +693,40 @@ const ZH_ATTRS = new Map(Object.entries({
   "the saved nvapi key was refused (401/403). Re-enter it on Module 1a.": "已保存的 nvapi 密钥被拒绝（401/403）。请在模块 1a 中重新输入。"
 }));
 
-// Helper signatures stay in English because learners call them from code. Only the
-// explanatory second column is localized. Keying by helper name also keeps code spans
-// such as <code>log.clear()</code> out of the general-purpose text replacement path.
+// Helper signatures stay in English because learners call them from code. Descriptions
+// are keyed by the discovered helper name, so code spans never enter text replacement.
+const PT_HELPER_DESCRIPTIONS = new Map(Object.entries({
+  chat: "Executa uma conclusão de chat não streaming e retorna a resposta no formato OpenAI.", chatStream: "Executa uma conclusão em streaming e expõe conteúdo, raciocínio, ferramentas, motivo de término e uso.",
+  webSearch: "Pesquisa o catálogo de materiais do curso sem exigir uma chave.", instantAnswer: "Retorna uma definição selecionada quando a consulta contém um termo conhecido.", formatSearchResults: "Converte resultados de pesquisa em texto numerado para uma mensagem de ferramenta.",
+  embed: "Gera vetores pela rota persistente de embeddings.", cosineSim: "Calcula a similaridade de cosseno entre dois vetores.", fetchRetry: "Executa <code>fetch</code> com timeout e novas tentativas limitadas.", delay: "Espera pelo período indicado e respeita o sinal de cancelamento da célula.",
+  getConfig: "Retorna a configuração atual de chat.", getKey: "Retorna a chave bearer mantida apenas nesta aba.", getModelApiBaseUrl: "Retorna a URL salva da API de modelos ou o padrão do curso.", setModelApiBaseUrl: "Valida e salva a URL base da API de modelos.", isDefaultModelApiBaseUrl: "Indica se a URL usa a rota de modelos NVIDIA aprovada pelo curso.",
+  terminal: "Executa um comando no terminal PTY do launchable conectado.", openclawLoopbackProbe: "Lê um endpoint de bootstrap pelo terminal de um launchable Pomerium sem expor o cookie.",
+  coursePage: "Retorna em Markdown o conteúdo de uma aula pelo ID.", coursePages: "Lista as páginas do curso como <code>[{ id, title }]</code>.", contextWindow: "Retorna o tamanho publicado da janela de contexto de um modelo.", estimateTokens: "Estima a contagem de tokens de texto ou mensagens.", browserChatFetch: "Cria um <code>fetch</code> compatível com SDKs para chamadas de chat no navegador.",
+  diagramSVG: "Gera uma figura SVG de nós e arestas a partir de uma especificação.", ganttBarsSVG: "Gera uma figura SVG que compara duração de workers e tempo total.", mountFigures: "Carrega os SVGs da página e habilita o lightbox.", openFigureLightbox: "Abre uma cópia do SVG no lightbox acessível.", wireFigureZoom: "Habilita abertura do SVG por clique, Enter ou Espaço.",
+  mountChatUI: "Monta uma interface de chat observável com streaming, histórico e controles.", mountAgentChat: "Monta uma interface de agente ReAct baseada em LangChain.", mountConsole: "Monta um console com histórico, sugestões, conclusão e cancelamento.", mountOpenClawCli: "Monta a interface de comandos e chat do OpenClaw.", mountKeyPanel: "Monta o painel de configuração da chave de API.", mountModelEndpointProbe: "Monta o espelho somente leitura do endpoint do modelo.",
+  openclawBootstrapRequest: "Lê um endpoint de bootstrap do launchable pela rota aprovada.", openclawChat: "Envia um turno ao agente OpenClaw e transmite a resposta e as ferramentas.", openclawGatewayWsUrl: "Monta a URL WebSocket direta ou do relay aprovado para o gateway.", refreshOpenClawGatewayToken: "Atualiza o token do gateway usando metadados verificados e o mantém nesta aba.", runOpenClawConnectionAudit: "Testa, em ordem, metadados, gateway, terminal e integridade do launchable.", redactOpenClawDiagnostic: "Remove credenciais de dados de diagnóstico do OpenClaw.", getOpenClawConnection: "Retorna a rota, o provedor e as credenciais da aba para o launchable.", setOpenClawConnection: "Valida e salva a rota do launchable sem persistir credenciais fora da aba.",
+  filterOpenClawRuntimeNoise: "Remove ruído conhecido do container sem ocultar saídas relevantes.", filterOpenClawRuntimeValue: "Aplica a filtragem de ruído a strings em arrays e objetos.", openclawMessageText: "Extrai texto limpo de uma mensagem do gateway.", openclawResultText: "Extrai texto limpo de um resultado de ferramenta.",
+  evalSandboxNetwork: "Avalia estaticamente uma conexão candidata contra a política de rede do OpenShell.", evalSandboxFs: "Avalia uma leitura ou gravação contra a política de arquivos do OpenShell.", sandboxExec: "Executa um comando no sandbox OpenShell real.", policyGet: "Lê e analisa a política ativa do OpenShell.", mountPolicyMap: "Monta um mapa interativo de limites de confiança a partir da política.",
+  "viz.diagram": "Gera um diagrama temático de nós e arestas.", "viz.lineChart": "Gera um gráfico de linhas para uma sequência numérica.", "viz.scoreBarChart": "Gera barras de pontuação com limiar e média.", "viz.messageList": "Exibe uma sequência de mensagens diferenciadas por função.", "viz.ganttBars": "Compara visualmente a duração dos workers com o tempo total.", "viz.retrievalBars": "Exibe barras de relevância e destaca os resultados top-k.", "viz.diffTable": "Exibe uma comparação antes/depois com deltas e veredito opcional.", "viz.chat": "Exibe um histórico de chat em balões diferenciados por função.", "viz.sideBySide": "Exibe duas colunas de texto lado a lado.",
+  state: "Objeto compartilhado entre os nós; é redefinido ao executar todos.", fetch: "Função <code>fetch</code> nativa do navegador, sem novas tentativas nem chave automática.", trace: "Registra um evento de span no armazenamento de rastreamento do canvas.", log: "Adiciona texto, JSON, HTML ou SVG à área de log da célula.", signal: "Sinal de cancelamento da execução atual, conectado ao botão Parar."
+}));
+
+const ES_HELPER_DESCRIPTIONS = new Map(Object.entries({
+  chat: "Ejecuta una finalización de chat sin streaming y devuelve la respuesta con formato OpenAI.", chatStream: "Ejecuta una finalización en streaming y expone contenido, razonamiento, herramientas, motivo de finalización y uso.",
+  webSearch: "Busca en el catálogo de materiales del curso sin exigir una clave.", instantAnswer: "Devuelve una definición seleccionada cuando la consulta contiene un término conocido.", formatSearchResults: "Convierte resultados de búsqueda en texto numerado para un mensaje de herramienta.",
+  embed: "Genera vectores mediante la ruta persistente de embeddings.", cosineSim: "Calcula la similitud coseno entre dos vectores.", fetchRetry: "Ejecuta <code>fetch</code> con tiempo de espera y reintentos limitados.", delay: "Espera el periodo indicado y respeta la señal de cancelación de la celda.",
+  getConfig: "Devuelve la configuración actual del chat.", getKey: "Devuelve la clave bearer conservada solo en esta pestaña.", getModelApiBaseUrl: "Devuelve la URL guardada de la API de modelos o el valor predeterminado del curso.", setModelApiBaseUrl: "Valida y guarda la URL base de la API de modelos.", isDefaultModelApiBaseUrl: "Indica si la URL usa la ruta de modelos NVIDIA aprobada por el curso.",
+  terminal: "Ejecuta un comando en el terminal PTY del launchable conectado.", openclawLoopbackProbe: "Lee un endpoint de arranque mediante el terminal de un launchable Pomerium sin exponer la cookie.",
+  coursePage: "Devuelve en Markdown el contenido de una lección por su ID.", coursePages: "Enumera las páginas del curso como <code>[{ id, title }]</code>.", contextWindow: "Devuelve el tamaño publicado de la ventana de contexto de un modelo.", estimateTokens: "Estima el número de tokens de texto o mensajes.", browserChatFetch: "Crea un <code>fetch</code> compatible con SDK para llamadas de chat desde el navegador.",
+  diagramSVG: "Genera una figura SVG de nodos y aristas a partir de una especificación.", ganttBarsSVG: "Genera una figura SVG que compara la duración de workers y el tiempo total.", mountFigures: "Carga los SVG de la página y habilita el visor ampliado.", openFigureLightbox: "Abre una copia del SVG en el visor ampliado accesible.", wireFigureZoom: "Habilita la apertura del SVG por clic, Intro o Espacio.",
+  mountChatUI: "Monta una interfaz de chat observable con streaming, historial y controles.", mountAgentChat: "Monta una interfaz de agente ReAct basada en LangChain.", mountConsole: "Monta una consola con historial, sugerencias, autocompletado y cancelación.", mountOpenClawCli: "Monta la interfaz de comandos y chat de OpenClaw.", mountKeyPanel: "Monta el panel de configuración de la clave de API.", mountModelEndpointProbe: "Monta el reflejo de solo lectura del endpoint del modelo.",
+  openclawBootstrapRequest: "Lee un endpoint de arranque del launchable por la ruta aprobada.", openclawChat: "Envía un turno al agente OpenClaw y transmite la respuesta y las herramientas.", openclawGatewayWsUrl: "Construye la URL WebSocket directa o del relé aprobado para el gateway.", refreshOpenClawGatewayToken: "Actualiza el token del gateway desde metadatos verificados y lo conserva en esta pestaña.", runOpenClawConnectionAudit: "Prueba en orden los metadatos, gateway, terminal y estado del launchable.", redactOpenClawDiagnostic: "Elimina credenciales de los datos de diagnóstico de OpenClaw.", getOpenClawConnection: "Devuelve la ruta, el proveedor y las credenciales de pestaña del launchable.", setOpenClawConnection: "Valida y guarda la ruta del launchable sin persistir credenciales fuera de la pestaña.",
+  filterOpenClawRuntimeNoise: "Elimina ruido conocido del contenedor sin ocultar resultados relevantes.", filterOpenClawRuntimeValue: "Aplica el filtrado de ruido a cadenas dentro de arrays y objetos.", openclawMessageText: "Extrae texto limpio de un mensaje del gateway.", openclawResultText: "Extrae texto limpio de un resultado de herramienta.",
+  evalSandboxNetwork: "Evalúa estáticamente una conexión candidata frente a la política de red de OpenShell.", evalSandboxFs: "Evalúa una lectura o escritura frente a la política de archivos de OpenShell.", sandboxExec: "Ejecuta un comando en el sandbox OpenShell real.", policyGet: "Lee y analiza la política activa de OpenShell.", mountPolicyMap: "Monta un mapa interactivo de límites de confianza a partir de la política.",
+  "viz.diagram": "Genera un diagrama temático de nodos y aristas.", "viz.lineChart": "Genera un gráfico de líneas para una secuencia numérica.", "viz.scoreBarChart": "Genera barras de puntuación con umbral y media.", "viz.messageList": "Muestra una secuencia de mensajes diferenciada por rol.", "viz.ganttBars": "Compara visualmente la duración de los workers con el tiempo total.", "viz.retrievalBars": "Muestra barras de relevancia y destaca los resultados top-k.", "viz.diffTable": "Muestra una comparación antes/después con deltas y un veredicto opcional.", "viz.chat": "Muestra un historial de chat en burbujas diferenciadas por rol.", "viz.sideBySide": "Muestra dos columnas de texto en paralelo.",
+  state: "Objeto compartido entre los nodos; se restablece al ejecutarlos todos.", fetch: "Función <code>fetch</code> nativa del navegador, sin reintentos ni clave automática.", trace: "Registra un evento de span en el almacén de trazas del canvas.", log: "Añade texto, JSON, HTML o SVG al área de registro de la celda.", signal: "Señal de cancelación de la ejecución actual, conectada al botón Detener."
+}));
+
 const ZH_HELPER_DESCRIPTIONS = new Map(Object.entries({
   chat: "单次、非流式聊天补全。返回原始 OpenAI 格式响应。只需要最终消息时使用。",
   chatStream: "流式聊天补全；token 到达时会实时显示在此面板的结果视图中。返回的摘要包含 <code>.content</code>、<code>.reasoning</code>、<code>.tool_calls</code>、<code>.finish_reason</code> 和 <code>.usage</code>。",
@@ -594,6 +759,25 @@ const ZH_HELPER_DESCRIPTIONS = new Map(Object.entries({
   evalSandboxFs: "OpenShell 文件系统（Landlock）策略的静态实现。针对 <code>path</code> 的读取或写入返回 <code>\"allow\"</code> 或 <code>\"deny\"</code>。默认使用实时可启动实例的强化策略。",
   sandboxExec: "通过 <code>openshell sandbox exec</code> 在实时 OpenShell sandbox 内运行 <code>command</code>，并返回内核实际允许或拒绝后的输出。未提供 <code>agent</code> 时会自动发现 sandbox 名称。可使用它对正在运行的 sandbox 验证 <code>helpers.evalSandboxNetwork</code> 或 <code>evalSandboxFs</code> 的预测。仅适用于可启动实例。",
   policyGet: "读取可启动实例的实时 OpenShell 策略。通过 operator 终端运行 <code>openshell policy get &lt;agent&gt; --full</code> 并解析 YAML 正文。返回 <code>{ agent, command, raw, status, policy, parseError }</code>，其中包括实际运行的命令、原始返回文本、状态标头、解析后的策略对象，以及策略不可用时的明确解析错误；<code>evalSandboxNetwork</code> 和 <code>evalSandboxFs</code> 会读取该结构。仅适用于可启动实例。",
+  getModelApiBaseUrl: "返回已保存的模型 API 基础 URL；没有有效的自定义值时返回课程默认值。",
+  setModelApiBaseUrl: "验证并保存模型 API 基础 URL，然后清除本标签页缓存的模型配置。",
+  isDefaultModelApiBaseUrl: "判断 URL 是否使用课程批准的 NVIDIA 模型路由。",
+  openclawLoopbackProbe: "通过 Pomerium 可启动实例的终端读取获准的 OpenClaw 引导端点，而不暴露浏览器 cookie。",
+  openFigureLightbox: "在支持键盘操作的共享灯箱中打开 SVG 副本。",
+  wireFigureZoom: "使 SVG 可通过单击、Enter 或空格键打开共享灯箱。",
+  mountConsole: "挂载带历史记录、建议、补全、取消和输出钩子的终端式控制台。",
+  openclawGatewayWsUrl: "为 OpenClaw 网关生成直连或获准中继的 WebSocket URL。",
+  refreshOpenClawGatewayToken: "从已验证的智能体元数据刷新网关 token，并仅保存在本标签页中。",
+  runOpenClawConnectionAudit: "依次测试可启动实例的元数据、网关、终端和健康路由，并返回脱敏证据。",
+  redactOpenClawDiagnostic: "递归移除 OpenClaw 诊断数据中的凭据及含凭据的 URL。",
+  getOpenClawConnection: "迁移旧存储后，返回规范化的可启动实例路由、提供商和标签页凭据。",
+  setOpenClawConnection: "验证并保存可启动实例路由，同时将凭据限制在本标签页。",
+  filterOpenClawRuntimeNoise: "移除已知容器噪声，同时保留与学习相关的 OpenClaw 输出。",
+  filterOpenClawRuntimeValue: "递归过滤数组和对象内字符串中的 OpenClaw 噪声。",
+  openclawMessageText: "从字符串或内容块数组形式的网关消息中提取干净文本。",
+  openclawResultText: "从 OpenClaw 工具结果及其结构化内容块中提取干净文本。",
+  mountModelEndpointProbe: "挂载可启动实例连接探测旁的只读模型 API 入口视图。",
+  mountPolicyMap: "根据提供的策略挂载交互式 OpenShell 信任边界图。",
   "viz.diagram": "根据数据规范自动生成适配主题的节点/边图。<code>spec</code> 为 <code>{title?, caption?, nodes:[{id, label, kind, x, y, lines?}], edges:[{from, to, label?}]}</code>；<code>kind &isin; env|agent|tool|data|model|neutral</code>；<code>x</code> 和 <code>y</code> 表示网格列与行。",
   "viz.lineChart": "为数值序列生成静态折线图。<code>opts</code> 为 <code>{title?, xLabel?, yLabel?, min?, max?, width?}</code>。SVG 的无障碍标签中包含数据点数值；学习者需要精确数据时，请另行返回源数组。",
   "viz.scoreBarChart": "生成 1 到 5 分的评分条形图，并叠加阈值和平均值。<code>scored</code> 是 <code>{score, label?}</code> 数组；<code>opts</code> 为 <code>{threshold, title, width}</code>。",
@@ -610,63 +794,87 @@ const ZH_HELPER_DESCRIPTIONS = new Map(Object.entries({
   signal: "本次运行对应的 <code>AbortSignal</code>，已连接到停止按钮。<code>helpers.delay</code>、<code>helpers.chat</code> 和 <code>chatStream</code> 会自动使用它。将它传给 <code>helpers.fetch</code> 或您自己的 <code>WebSocket</code> 清理逻辑，确保学习者按下停止按钮后，长时间运行的任务能够真正取消。"
 }));
 
+const HELPER_DESCRIPTIONS = Object.freeze({
+  "pt-br": PT_HELPER_DESCRIPTIONS,
+  "es-es": ES_HELPER_DESCRIPTIONS,
+  "zh-cn": ZH_HELPER_DESCRIPTIONS,
+});
+
 const LOCALIZED_UI = "main,.topbar";
+const localeSpec = (text, attrs, prefixes, previous, next) => Object.freeze({
+  text, attrs, prefixes, previous, next,
+  localized: new Set([...text.values(), ...attrs.values(), ...prefixes.values()]),
+});
+const LOCALE_MAPS = Object.freeze({
+  "zh-cn": localeSpec(ZH_TEXT, ZH_ATTRS, ZH_PREFIXES, "上一课：", "下一课："),
+  "pt-br": localeSpec(PT_TEXT, PT_ATTRS, PT_PREFIXES, "Anterior: ", "Próxima: "),
+  "es-es": localeSpec(ES_TEXT, ES_ATTRS, ES_PREFIXES, "Anterior: ", "Siguiente: "),
+});
 
 function localeMaps() {
-  const locale = document.documentElement.lang.toLowerCase();
-  if (locale === "zh-cn") return { text: ZH_TEXT, attrs: ZH_ATTRS, prefixes: ZH_PREFIXES, previous: "上一课：", next: "下一课：" };
-  if (locale === "pt-br") return { text: PT_TEXT, attrs: PT_ATTRS, prefixes: PT_PREFIXES, previous: "Anterior: ", next: "Próxima: " };
-  if (locale === "es-es") return { text: ES_TEXT, attrs: ES_ATTRS, prefixes: ES_PREFIXES, previous: "Anterior: ", next: "Siguiente: " };
-  return null;
+  return LOCALE_MAPS[document.documentElement.lang.toLowerCase()] || null;
 }
 
-function translatedText(value) {
+const DYNAMIC_TEXT = Object.freeze({
+  "pt-br": [
+    [/^\+ show all (\d+) more helpers$/, m => `+ mostrar mais ${m[1]} helpers`],
+    [/^− show only this (section|cell)'s helpers$/, m => `− mostrar somente os helpers desta ${m[1] === "cell" ? "célula" : "seção"}`],
+    [/^javascript · editable · (\d+) lines$/, m => `javascript · editável · ${m[1]} linhas`],
+    [/^✓ ran (\d+) nodes$/, m => `✓ executou ${m[1]} nós`],
+    [/^⏹ stopped after (\d+) of (\d+) nodes$/, m => `⏹ interrompido após ${m[1]} de ${m[2]} nós`],
+  ],
+  "es-es": [
+    [/^\+ show all (\d+) more helpers$/, m => `+ mostrar ${m[1]} helpers más`],
+    [/^− show only this (section|cell)'s helpers$/, m => `− mostrar solo los helpers de ${m[1] === "cell" ? "esta celda" : "esta sección"}`],
+    [/^javascript · editable · (\d+) lines$/, m => `javascript · editable · ${m[1]} líneas`],
+    [/^✓ ran (\d+) nodes$/, m => `✓ ejecutó ${m[1]} nodos`],
+    [/^⏹ stopped after (\d+) of (\d+) nodes$/, m => `⏹ detenido tras ${m[1]} de ${m[2]} nodos`],
+  ],
+  "zh-cn": [
+    [/^\+ show all (\d+) more helpers$/, m => `+ 显示其余 ${m[1]} 个辅助函数`],
+    [/^− show only this (section|cell)'s helpers$/, m => `− 仅显示此${m[1] === "cell" ? "单元格" : "章节"}的辅助函数`],
+    [/^javascript · editable · (\d+) lines$/, m => `javascript · 可编辑 · ${m[1]} 行`],
+    [/^✓ ran (\d+) nodes$/, m => `✓ 已运行 ${m[1]} 个节点`],
+    [/^⏹ stopped after (\d+) of (\d+) nodes$/, m => `⏹ 运行 ${m[1]}/${m[2]} 个节点后停止`],
+  ],
+});
+
+const RUNTIME_LOCALE_MISSES = new Set();
+
+function recordRuntimeLocaleMiss(value) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  if (text) RUNTIME_LOCALE_MISSES.add(text);
+}
+
+export function courseLocaleMisses() {
+  return [...RUNTIME_LOCALE_MISSES].sort();
+}
+
+export function clearCourseLocaleMisses() {
+  RUNTIME_LOCALE_MISSES.clear();
+}
+
+function translatedText(value, recordMiss = false) {
   const maps = localeMaps();
   if (!maps) return value;
   const collapsed = value.replace(/\s+/g, " ").trim();
   const direct = maps.text.get(value) || maps.text.get(collapsed);
   if (direct) return direct;
-  if (document.documentElement.lang.toLowerCase() === "zh-cn") {
-    let match = value.match(/^\+ show all (\d+) more helpers$/);
-    if (match) return `+ 显示其余 ${match[1]} 个辅助函数`;
-    match = value.match(/^javascript · editable · (\d+) lines$/);
-    if (match) return `javascript · 可编辑 · ${match[1]} 行`;
-    const protectedUi = [];
-    let embedded = value.replace(/GitHub Pages/g, match => {
-      const token = `\u0000NEMO_UI_${protectedUi.length}\u0000`;
-      protectedUi.push(match);
-      return token;
-    });
-    // Prefer the longest UI label first ("▶ Run all" before "▶ Run") and never
-    // rewrite code/kbd/pre/textarea contents or markup attributes.
-    const entries = [...maps.text].sort((a, b) => b[0].length - a[0].length);
-    for (const [source, target] of entries) {
-      if (source.length < 5 || !embedded.includes(source)) continue;
-      embedded = embedded
-        .split(/(<(?:code|kbd|pre|textarea)\b[^>]*>[\s\S]*?<\/(?:code|kbd|pre|textarea)>|<[^>]+>)/gi)
-        .map(part => {
-          if (part.startsWith("<")) return part;
-          if (/^[A-Za-z][A-Za-z0-9-]*$/.test(source)) {
-            return part.replace(
-              new RegExp(`(?<![A-Za-z0-9])${source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![A-Za-z0-9])`, "g"),
-              target,
-            );
-          }
-          return part.split(source).join(target);
-        })
-        .join("");
-    }
-    protectedUi.forEach((original, index) => {
-      embedded = embedded.split(`\u0000NEMO_UI_${index}\u0000`).join(original);
-    });
-    if (embedded !== value) return embedded;
+  if (maps.localized.has(value) || maps.localized.has(collapsed)) return value;
+  for (const [pattern, render] of DYNAMIC_TEXT[document.documentElement.lang.toLowerCase()] || []) {
+    const match = value.match(pattern);
+    if (match) return render(match);
   }
   for (const [prefix, replacement] of [["Previous: ", maps.previous], ["Next: ", maps.next]]) {
     if (value.startsWith(prefix)) return replacement + (maps.text.get(value.slice(prefix.length)) || value.slice(prefix.length));
   }
   for (const [prefix, replacement] of maps.prefixes) {
-    if (value.startsWith(prefix)) return replacement + value.slice(prefix.length);
+    if (value.startsWith(prefix)) {
+      const suffix = value.slice(prefix.length);
+      return replacement + (maps.text.get(suffix) || suffix);
+    }
   }
+  if (recordMiss) recordRuntimeLocaleMiss(value);
   return value;
 }
 
@@ -732,15 +940,17 @@ function normalizeZhInlineSpacing(root) {
 }
 
 export function localizeCourseUiText(value) {
-  return translatedText(String(value == null ? "" : value));
+  return translatedText(String(value == null ? "" : value), true);
 }
 
 export function localizeCourseHelperDescription(name, value) {
   const source = String(value == null ? "" : value);
-  if (document.documentElement.lang.toLowerCase() === "zh-cn") {
-    return ZH_HELPER_DESCRIPTIONS.get(String(name || "")) || translatedText(source);
-  }
-  return translatedText(source);
+  const descriptions = HELPER_DESCRIPTIONS[document.documentElement.lang.toLowerCase()];
+  if (!descriptions) return source;
+  const localized = descriptions.get(String(name || ""));
+  if (localized) return localized;
+  recordRuntimeLocaleMiss(`helper:${String(name || "")}`);
+  return source;
 }
 
 function localizeUi(root = document.body) {

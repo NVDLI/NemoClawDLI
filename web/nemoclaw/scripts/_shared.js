@@ -112,11 +112,13 @@ export function normalizeModelId(raw, fallback = DEFAULT_MODEL) {
 }
 
 export function getModelApiBaseUrl() {
+  /* @doc <code>helpers.getModelApiBaseUrl()</code> :: Returns the saved model API base URL, or the course default when no custom URL is valid. */
   try { return normalizeModelApiBaseUrl(localStorage.getItem(MODEL_API_BASE_URL_KEY)); }
   catch (_) { return DEFAULT_MODEL_API_BASE_URL; }
 }
 
 export function setModelApiBaseUrl(raw) {
+  /* @doc <code>helpers.setModelApiBaseUrl(url)</code> :: Validates and saves the model API base URL, then clears the tab's cached model configuration. */
   const normalized = normalizeModelApiBaseUrl(raw);
   try {
     if (normalized === DEFAULT_MODEL_API_BASE_URL) localStorage.removeItem(MODEL_API_BASE_URL_KEY);
@@ -350,6 +352,7 @@ export function getModelRequestPolicy() {
 }
 
 export function isDefaultModelApiBaseUrl(url) {
+  /* @doc <code>helpers.isDefaultModelApiBaseUrl(url)</code> :: Reports whether a URL uses the course's approved NVIDIA model route. */
   try {
     const host = new URL(url, location.href).hostname;
     return host === "integrate.api.nvidia.com" || host === "nvidia-api-cors-proxy.experiments.courses.nvidia.com";

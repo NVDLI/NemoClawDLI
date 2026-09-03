@@ -776,6 +776,7 @@ export async function mountAgentChat(container, opts = {}) {
 
 // Reusable terminal-like console with history, suggestions, completion, and output hooks.
 export function mountConsole(container, { prompt = "$", greeting = "", suggestions = [], onSubmit, disabled = false, disabledMsg = "" } = {}) {
+  /* @doc <code>helpers.mountConsole(target, opts?)</code> :: Mounts a terminal-like console with history, suggestions, completion, cancellation, and output hooks. */
   const root = typeof container === "string" ? document.querySelector(container) : container;
   if (!root) return null;
   markLiveArtifact(root);

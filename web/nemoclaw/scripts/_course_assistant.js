@@ -351,7 +351,7 @@ export function mountCourseAssistant(runtime = {}) {
     tools: "可使用课程地图、正文、代码和运行时源文件工具",
     chatView: "对话", artifactView: "交互内容", historyView: "历史记录", historyTitle: "已保存的会话活动", copyHistory: "复制历史记录", noHistory: "此会话尚无已保存的活动。", artifactTitle: "交互内容标题", htmlLabel: "HTML", javascriptLabel: "JavaScript",
     runArtifact: "▶ 运行", clearArtifact: "清除预览", deleteArtifact: "删除交互内容", artifactPreview: "课程交互内容预览", generatedReady: "生成的代码已就绪",
-    previewCleared: "预览已清除；代码已保留", artifactDeleted: "交互内容已删除", syntaxError: "语法错误", runtimeError: "运行时错误", runtimeReady: "预览已就绪",
+    previewCleared: "预览已清除；代码已保留", artifactDeleted: "交互内容已删除", syntaxError: "语法错误", runtimeError: "运行时错误", runtimeReady: "预览已就绪", artifactRejected: "生成的交互内容被拒绝", storageError: "存储错误", unknownError: "未知错误",
     artifactApi: 'API：await course.embed(...) 或 await helpers.embed(...)；helpers.cosineSim(a, b)。',
     saved: "已保存到本地", saving: "正在保存回答", full: "未保存：浏览器存储空间已满", selected: "已选择会话",
     created: "已新建会话", deleted: "已删除会话", renamed: "已重命名会话", attachedNow: "页面已关联到会话", compacted: "上下文已压缩并保存到本地",
@@ -374,7 +374,7 @@ export function mountCourseAssistant(runtime = {}) {
     tools: "mapa, prosa, código e fontes do runtime disponíveis",
     chatView: "Conversa", artifactView: "Artefato", historyView: "Histórico", historyTitle: "Atividade salva da sessão", copyHistory: "Copiar histórico", noHistory: "Ainda não há atividade salva nesta sessão.", artifactTitle: "Título do artefato", htmlLabel: "HTML", javascriptLabel: "JavaScript",
     runArtifact: "▶ Executar", clearArtifact: "Limpar prévia", deleteArtifact: "Excluir artefato", artifactPreview: "Prévia do artefato do curso", generatedReady: "Código gerado pronto",
-    previewCleared: "Prévia limpa; código preservado", artifactDeleted: "Artefato excluído", syntaxError: "Erro de sintaxe", runtimeError: "Erro de execução", runtimeReady: "Prévia pronta",
+    previewCleared: "Prévia limpa; código preservado", artifactDeleted: "Artefato excluído", syntaxError: "Erro de sintaxe", runtimeError: "Erro de execução", runtimeReady: "Prévia pronta", artifactRejected: "Artefato gerado rejeitado", storageError: "erro de armazenamento", unknownError: "erro desconhecido",
     artifactApi: 'API: await course.embed(...) ou await helpers.embed(...); helpers.cosineSim(a, b).',
     saved: "Salvo localmente", saving: "Salvando resposta", full: "Não salvo: armazenamento local cheio", selected: "Sessão selecionada",
     created: "Nova sessão criada", deleted: "Sessão excluída", renamed: "Sessão renomeada", attachedNow: "Página vinculada à sessão", compacted: "Contexto condensado e salvo localmente",
@@ -397,7 +397,7 @@ export function mountCourseAssistant(runtime = {}) {
     tools: "mapa, prosa, código y fuentes del runtime disponibles",
     chatView: "Conversación", artifactView: "Artefacto", historyView: "Historial", historyTitle: "Actividad guardada de la sesión", copyHistory: "Copiar historial", noHistory: "Esta sesión aún no tiene actividad guardada.", artifactTitle: "Título del artefacto", htmlLabel: "HTML", javascriptLabel: "JavaScript",
     runArtifact: "▶ Ejecutar", clearArtifact: "Borrar vista previa", deleteArtifact: "Eliminar artefacto", artifactPreview: "Vista previa del artefacto del curso", generatedReady: "Código generado listo",
-    previewCleared: "Vista previa borrada; se conservó el código", artifactDeleted: "Artefacto eliminado", syntaxError: "Error de sintaxis", runtimeError: "Error de ejecución", runtimeReady: "Vista previa lista",
+    previewCleared: "Vista previa borrada; se conservó el código", artifactDeleted: "Artefacto eliminado", syntaxError: "Error de sintaxis", runtimeError: "Error de ejecución", runtimeReady: "Vista previa lista", artifactRejected: "Artefacto generado rechazado", storageError: "error de almacenamiento", unknownError: "error desconocido",
     artifactApi: 'API: await course.embed(...) o await helpers.embed(...); helpers.cosineSim(a, b).',
     saved: "Guardado localmente", saving: "Guardando respuesta", full: "No se guardó: el almacenamiento del navegador está lleno", selected: "Sesión seleccionada",
     created: "Nueva sesión creada", deleted: "Sesión eliminada", renamed: "Sesión renombrada", attachedNow: "Página vinculada a la sesión", compacted: "Contexto condensado y guardado localmente",
@@ -420,7 +420,7 @@ export function mountCourseAssistant(runtime = {}) {
     tools: "course map, prose, code, and runtime-source tools available",
     chatView: "Chat", artifactView: "Artifact", historyView: "History", historyTitle: "Saved session activity", copyHistory: "Copy history", noHistory: "No saved activity in this session yet.", artifactTitle: "Artifact title", htmlLabel: "HTML", javascriptLabel: "JavaScript",
     runArtifact: "▶ Run", clearArtifact: "Clear preview", deleteArtifact: "Delete artifact", artifactPreview: "Course artifact preview", generatedReady: "Generated code ready",
-    previewCleared: "Preview cleared; code preserved", artifactDeleted: "Artifact deleted", syntaxError: "Syntax error", runtimeError: "Runtime error", runtimeReady: "Preview ready",
+    previewCleared: "Preview cleared; code preserved", artifactDeleted: "Artifact deleted", syntaxError: "Syntax error", runtimeError: "Runtime error", runtimeReady: "Preview ready", artifactRejected: "Generated artifact rejected", storageError: "storage error", unknownError: "unknown error",
     artifactApi: 'API: await course.embed(...) or await helpers.embed(...); helpers.cosineSim(a, b).',
     saved: "Saved locally", saving: "Saving response", full: "Not saved: browser storage is full", selected: "Session selected",
     created: "New session created", deleted: "Session deleted", renamed: "Session renamed", attachedNow: "Page attached to session", compacted: "Compacted and saved locally",
@@ -739,7 +739,7 @@ export function mountCourseAssistant(runtime = {}) {
       const saved = saveCourseAssistantStore(store); renderSessions(); renderHistory();
       sessionStatus.textContent = `${message} · ${saved.sessions}/${MAX_ASSISTANT_SESSIONS} · ${Math.ceil(saved.chars / 1024)} KB`;
     }
-    catch (error) { sessionStatus.textContent = `${copy.full} · ${error?.name || "storage error"}`; }
+    catch (error) { sessionStatus.textContent = `${copy.full} · ${error?.name || copy.storageError}`; }
   };
   persistStore(copy.saved);
   renderArtifact(true);
@@ -843,7 +843,7 @@ export function mountCourseAssistant(runtime = {}) {
     if (event.source !== artifactFrame.contentWindow || data.channel !== artifactBridgeId) return;
     if (data.type === "artifact-error") {
       const locationText = data.line ? ` · line ${data.line}${data.column ? ":" + data.column : ""}` : "";
-      artifactStatus.textContent = `${copy.runtimeError}: ${String(data.message || "unknown error").slice(0, 500)}${locationText}`;
+      artifactStatus.textContent = `${copy.runtimeError}: ${String(data.message || copy.unknownError).slice(0, 500)}${locationText}`;
       artifactStatus.classList.add("error"); return;
     }
     if (data.type === "artifact-ready") {
@@ -983,7 +983,7 @@ export function mountCourseAssistant(runtime = {}) {
         if (mountedSessionId !== sessionId) return;
         current.artifact = artifact; current.updatedAt = Date.now();
         persistStore(copy.saved); renderArtifact(!issue); activateView("artifact");
-        artifactStatus.textContent = issue ? `Generated artifact rejected: ${issue}` : copy.generatedReady;
+        artifactStatus.textContent = issue ? `${copy.artifactRejected}: ${issue}` : copy.generatedReady;
         artifactStatus.classList.toggle("error", !!issue);
       },
       intro: copy.intro,
