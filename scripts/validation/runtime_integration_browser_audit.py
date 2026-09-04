@@ -469,6 +469,53 @@ async function open(browser, pageName, init) {
     await page.close();
   }
 
+  // 2c: a degenerate worker stream is retried once and never reaches the findings corpus.
+  {
+    const { page, errors } = await open(browser, '02c-deep.html', () => {
+      sessionStorage.setItem('nvapi', 'nvapi-deep-audit');
+    });
+    let requests = 0, ragWorkerCalls = 0;
+    await page.route('**/chat/completions', async route => {
+      requests++;
+      const body = JSON.parse(route.request().postData() || '{}');
+      const system = body.messages?.[0]?.content || '';
+      const user = body.messages?.[1]?.content || '';
+      let content;
+      if (system.includes('research planner')) {
+        content = JSON.stringify({ branches: [
+          { source:'materials', target:'Retrieval-Augmented Generation (RAG)', goal:'Define RAG' },
+          { source:'section', target:'overview', goal:'Explain how this course builds RAG' },
+        ] });
+      } else if (system.includes('You are a sub-agent')) {
+        if (user.includes('GOAL: Define RAG') && ragWorkerCalls++ === 0) {
+          content = 'Basedellsellsellsellsellsellsellsellsellsellsell';
+        } else {
+          content = user.includes('GOAL: Define RAG')
+            ? 'RAG grounds a model response in retrieved evidence.'
+            : 'The course moves from model calls through retrieval and agent coordination.';
+        }
+      } else {
+        content = 'RAG uses retrieved evidence [1], and this course builds it into coordinated agents [2].';
+      }
+      const frame = JSON.stringify({ choices:[{ delta:{ content }, finish_reason:null }] });
+      const done = JSON.stringify({ choices:[{ delta:{}, finish_reason:'stop' }], usage:{ prompt_tokens:1, completion_tokens:1 } });
+      await route.fulfill({
+        status:200, contentType:'text/event-stream',
+        body:`data: ${frame}\n\ndata: ${done}\n\ndata: [DONE]\n\n`,
+      });
+    });
+    await page.getByRole('button', { name:'What is RAG, and how does this course build it?', exact:true }).click();
+    await page.getByRole('button', { name:'Send', exact:true }).click();
+    await page.locator('.research-board-status').filter({ hasText:'synthesis complete' }).waitFor({ timeout:timeoutMs });
+    const transcript = await page.locator('#deep-artifact').innerText();
+    if (requests !== 5 || ragWorkerCalls !== 2 || /sellsellsell/i.test(transcript) ||
+        !transcript.includes('RAG grounds a model response in retrieved evidence.')) {
+      fail('2c repetitive worker recovery failed: ' + JSON.stringify({ requests, ragWorkerCalls, transcript }));
+    }
+    if (errors.length) fail('2c repetitive worker browser errors: ' + JSON.stringify(errors));
+    await page.close();
+  }
+
   // 3a: model and OpenClaw registrations stay distinct. The learner-facing connection
   // audit owns exactly Base URL and Access session; provider, token, and transport stay derived.
   {
