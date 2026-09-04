@@ -350,16 +350,24 @@ helpers.mountChatUI("#deep-artifact", {
         worker.text = "";
         setWorker(worker, "running", "Extracting evidence…");
 
-        const r = await helpers.chatStream({ messages: [
+        const extraction = { messages: [
           { role: "system", content: (
             "You are a sub-agent. From the SOURCE, extract only what supports the GOAL, in 2-4 sentences."
             + " If coverage is partial, report the supported point and end with 'Coverage gap:' plus what is missing."
             + " Use 'not covered' only when the source has no relevant information at all."
           ) },
           { role: "user", content: "GOAL: " + b.goal + "\n\nSOURCE:\n" + src }],
-          model: FAST, max_tokens: window.DEEP_AGENT_MAX_TOKENS, signal: sig },
-          (token) => streamWorker(worker, token));
+          model: FAST, max_tokens: window.DEEP_AGENT_MAX_TOKENS, signal: sig };
+        let r = await helpers.chatStream(extraction, (token) => streamWorker(worker, token));
         finding = (r.content || "").trim() || "(no finding)";
+        const repetitive = text => /([\p{L}\p{N}]{2,12})\1{5,}/iu.test(text);
+        if (repetitive(finding)) {
+          worker.text = "";
+          worker.stream.textContent = "";
+          r = await helpers.chatStream({ ...extraction, temperature: 0 }, streamWorker.bind(null, worker));
+          finding = (r.content || "").trim() || "(no finding)";
+          if (repetitive(finding)) throw new Error("model returned repetitive text twice");
+        }
         worker.text = finding;
         worker.stream.textContent = finding;
         const gap = /^not covered\.?$/i.test(finding) || /\bcoverage gap:/i.test(finding);
