@@ -520,7 +520,7 @@ helpers.mountChatUI(document.getElementById("react-artifact"), {
         c.body.textContent = String(chunk.content);
         if (chunk.status === "error" || /^\\(unknown page/.test(String(chunk.content).trim())) {
           c.classList.add("err"); c.sum.textContent = c.sum.textContent.replace("🔧", "✗");
-        }
+        } else ctx.view.activitySuccess();
         continue;
       }
       // tool CALL: each new call (tc.id present) PUSHES a fresh chip; arg deltas (no id) extend the call currently open at that index.

@@ -23,6 +23,110 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 T1="$(cd "$HERE/../.." && pwd)"  # repo root (implementation lives under scripts/build)
+
+inject_activity_release() {
+    local target="$1" source_commit="$2" archive_digest
+    if [[ ! "$source_commit" =~ ^[0-9a-f]{40}$ ]] || \
+       ! git -C "$T1" cat-file -e "$source_commit^{commit}" 2>/dev/null; then
+        echo "[build_pages]   ERROR: activity release identity requires a full source commit" >&2
+        return 1
+    fi
+    archive_digest="$(git -C "$T1" archive --format=tar "$source_commit" -- \
+        web/nemoclaw web/shared/activity-sdk.js | shasum -a 256 | awk '{print $1}')"
+    if [[ ! "$archive_digest" =~ ^[0-9a-f]{64}$ ]] || [ "$archive_digest" = "$(printf '0%.0s' {1..64})" ]; then
+        echo "[build_pages]   ERROR: invalid activity source archive digest" >&2
+        return 1
+    fi
+    node - "$target" "$source_commit" "$archive_digest" <<'NODE'
+const fs = require('node:fs');
+const path = require('node:path');
+const [root, sourceCommit, archiveDigest] = process.argv.slice(2);
+const metadata = JSON.stringify({
+  artifact_id: 'artifact_nemoclaw_web',
+  artifact_version: sourceCommit,
+  artifact_digest: `sha256:${archiveDigest}`,
+});
+const tag = `<script type="application/json" id="dli-activity-release">${metadata}</script>`;
+let count = 0;
+function visit(target) {
+  for (const entry of fs.readdirSync(target, { withFileTypes: true })) {
+    const child = path.join(target, entry.name);
+    if (entry.isDirectory()) visit(child);
+    else if (entry.isFile() && entry.name.endsWith('.html')) {
+      const source = fs.readFileSync(child, 'utf8');
+      if (source.includes('id="dli-activity-release"')) throw new Error(`duplicate activity metadata: ${child}`);
+      if (!source.includes('</head>')) throw new Error(`cannot inject activity metadata: ${child}`);
+      fs.writeFileSync(child, source.replace('</head>', `${tag}\n</head>`));
+      count += 1;
+    }
+  }
+}
+visit(root);
+if (count === 0) throw new Error('activity metadata target contains no HTML pages');
+process.stdout.write(`[build_pages] activity release ${sourceCommit} -> ${count} pages\n`);
+NODE
+}
+
+assert_activity_source_matches_commit() {
+    local source_commit="$1" untracked
+    if [[ ! "$source_commit" =~ ^[0-9a-f]{40}$ ]] || \
+       ! git -C "$T1" cat-file -e "$source_commit^{commit}" 2>/dev/null; then
+        echo "[build_pages]   ERROR: activity source preflight requires a full source commit" >&2
+        return 1
+    fi
+    untracked="$(git -C "$T1" ls-files --others -- web/nemoclaw web/shared/activity-sdk.js)"
+    if [ -n "$untracked" ]; then
+        echo "[build_pages]   ERROR: untracked activity source would enter the bundle:" >&2
+        printf '%s\n' "$untracked" >&2
+        return 1
+    fi
+    if ! git -C "$T1" diff --quiet "$source_commit" -- web/nemoclaw web/shared/activity-sdk.js; then
+        echo "[build_pages]   ERROR: activity source differs from $source_commit" >&2
+        return 1
+    fi
+}
+
+stage_activity_sdk() {
+    local course_root="$1" target
+    target="$(dirname "$course_root")/shared"
+    mkdir -p "$target"
+    cp "$T1/web/shared/activity-sdk.js" "$target/activity-sdk.js"
+    cmp -s "$T1/web/shared/activity-sdk.js" "$target/activity-sdk.js" || {
+        echo "[build_pages]   ERROR: staged activity SDK differs from source" >&2
+        return 1
+    }
+}
+
+prepare_activity_course() {
+    local course_root="$1" source_commit="$2"
+    stage_activity_sdk "$course_root"
+    inject_activity_release "$course_root" "$source_commit"
+}
+
+if [ "${1:-}" = "--inject-activity-release" ]; then
+    [ "$#" -eq 3 ] || { echo "usage: $0 --inject-activity-release OUT COMMIT" >&2; exit 2; }
+    inject_activity_release "$2" "$3"
+    exit 0
+fi
+
+if [ "${1:-}" = "--check-activity-source" ]; then
+    [ "$#" -eq 2 ] || { echo "usage: $0 --check-activity-source COMMIT" >&2; exit 2; }
+    assert_activity_source_matches_commit "$2"
+    exit 0
+fi
+
+if [ "${1:-}" = "--stage-activity-sdk" ]; then
+    [ "$#" -eq 2 ] || { echo "usage: $0 --stage-activity-sdk OUT" >&2; exit 2; }
+    stage_activity_sdk "$2"
+    exit 0
+fi
+
+if [ "${1:-}" = "--prepare-activity-course" ]; then
+    [ "$#" -eq 3 ] || { echo "usage: $0 --prepare-activity-course COURSE_ROOT COMMIT" >&2; exit 2; }
+    prepare_activity_course "$2" "$3"
+    exit 0
+fi
+
 OUT="${1:-$T1/public}"
 # Build the source language at $OUT root, then each sparse same-branch overlay under i18n/<lang>/
 # over canonical web/ and into $OUT/<lang>/. BUILD_PAGES_LANGS=0 disables that loop.
@@ -120,6 +224,8 @@ fi
 # the assets, and adds the off-lab key panel, so one call produces a complete course dir. (The
 # default, no --full, is the light chrome-free iframe export for the edX navigator.) The bundle
 # is generated from web/<course>/ on every build and is never committed (no intermediate).
+ACTIVITY_SOURCE_COMMIT="${GITHUB_SHA:-${CI_COMMIT_SHA:-$(git -C "$T1" rev-parse HEAD)}}"
+assert_activity_source_matches_commit "$ACTIVITY_SOURCE_COMMIT"
 for c in nemoclaw; do
     src="$T1/web/$c"
     if [ ! -d "$src" ] || [ ! -f "$T1/scripts/build/bundle_standalone.py" ]; then
@@ -139,6 +245,9 @@ for c in nemoclaw; do
     done
     echo "[build_pages]   $c -> $course_out/ ($(find "$course_out" -name '*.html' | wc -l) pages)"
 done
+
+# _activity.js resolves this shared facade two levels above the bundled scripts directory.
+prepare_activity_course "$OUT/${COURSE_PREFIX:+$COURSE_PREFIX/}nemoclaw" "$ACTIVITY_SOURCE_COMMIT"
 
 # Declared previews are review surfaces, not releases, but a foyer link must still resolve in the
 # built artifact. Project every preview named by the machine-readable foyer contract beside the
@@ -356,6 +465,7 @@ if [ "$LANGS" = 1 ] && [ -d "$T1/i18n" ]; then
             rm -rf "$locale_tmp"
             exit 1
         fi
+        prepare_activity_course "$OUT/$lang/nemoclaw" "$ACTIVITY_SOURCE_COMMIT"
         # the language foyer is its own translated web/index.html, /lab/static -> relative
         if [ -f "$locale_tmp/web/index.html" ]; then
             python3 - "$locale_tmp/web/index.html" "$OUT/$lang/index.html" "$COURSE_PREFIX" <<'PROJ'

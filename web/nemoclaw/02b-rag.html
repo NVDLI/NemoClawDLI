@@ -660,6 +660,7 @@ helpers.mountChatUI("#rag-artifact", {
       r.s.toFixed(3) + '</td></tr>').join("") + '</table>');
     const top = ranked.slice(0, 3).map((r, i) => "[" + (i + 1) + "] " + r.t).join("\\n");
     ctx.view.tool("retrieved top 3 passages", top);   // the exact text handed to the model, in full
+    if (top.trim()) ctx.view.activitySuccess();
     const s = await helpers.chatStream({ messages: [
       { role: "system", content: "Answer ONLY from these passages and cite them as [n]. If they do not cover the question, say so.\\n\\n" + top },
       ...(ctx.history || []),

@@ -345,7 +345,7 @@ export function mountChatUI(container, opts = {}) {
     sendBtn.textContent = "⏹ Stop"; sendBtn.classList.add("stop");
     setState("Running. Press Stop to cancel.", "running");
     let cur = null;         // the currently-open streaming block: {kind, el, body?, _t, _raf}
-    let answered = false, errored = false;
+    let answered = false, errored = false, activitySuccessCount = 0;
     // Per ReAct round the reasoning trace and the answer each live in ONE reused block.
     // Reuse keeps a stray content token interleaved mid-reasoning from splitting the trace.
     // A tool call, warn, or note ends the round; the next reasoning opens a fresh block.
@@ -416,6 +416,7 @@ export function mountChatUI(container, opts = {}) {
         if (body && detail != null) body.textContent = String(detail);
         snapshotTurn("running");
       },
+      activitySuccess() { activitySuccessCount++; },
       warn(msg) { endThink(); flush(); cur = null; roundThink = null; roundAnswer = null; const d = document.createElement("div"); d.className = "chatui-warn"; d.textContent = "⚠ " + msg; turn.appendChild(d); snapshotTurn("running"); scroll(); return d; },
       note(msg) { flush(); cur = null; roundThink = null; roundAnswer = null; const d = document.createElement("div"); d.className = "chatui-usage"; d.textContent = msg; turn.appendChild(d); snapshotTurn("running"); scroll(); return d; },
       usage(u) { u = u || {};
@@ -465,7 +466,12 @@ export function mountChatUI(container, opts = {}) {
         const state = curAC.signal.aborted ? "stopped" : "error";
         const answer = curAC.signal.aborted ? "Response stopped before completion." : "Request failed: " + lastError;
         notifyTurnSnapshot([...history, { role: "user", content: q }, { role: "assistant", content: answer }], state, activityText);
-      } else notifyTurnSnapshot(history, "complete", activityText);
+      } else {
+        notifyTurnSnapshot(history, "complete", activityText);
+        if (typeof window.CustomEvent === "function") window.dispatchEvent(new window.CustomEvent("nemoclaw:chat-completed", {
+          detail: { containerId: el.id || "", successCount: activitySuccessCount, hasAnswer: answered },
+        }));
+      }
       running = false; curAC = null;
       sendBtn.textContent = "Send"; sendBtn.classList.remove("stop");
       sendBtn.disabled = prerequisiteBlocked;
@@ -641,6 +647,7 @@ export async function mountAgentChat(container, opts = {}) {
           c.result = (c.result || "") + (typeof chunk.content === "string" ? chunk.content : JSON.stringify(chunk.content));
           if (c.bodyEl) c.bodyEl.textContent = c.result;
           if (chunk.status === "error" || /^\(unknown page|→ \d{3}$/.test(c.result.trim())) markErr(c);
+          else ctx.view.activitySuccess();
           ctx.view.updateTool(c.el, labelFor(c.name, c.args), c.result);
           continue;
         }

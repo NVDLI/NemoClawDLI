@@ -43,6 +43,8 @@
     background: var(--g); color: #000; margin: .4em 0 1em;
   }
   .action-btn:hover { background: var(--gs); text-decoration: none; }
+  button.action-btn { border: 0; cursor: pointer; }
+  button.action-btn:disabled { cursor: not-allowed; opacity: .55; }
   :root[data-theme="light"] .action-btn { color: #fff; }
   .action-btn.secondary {
     background: var(--e2); color: var(--td);
@@ -551,6 +553,13 @@
   </div>
   <p><button type="button" class="course-assistant-open" id="open-course-assistant">Open Course Assistant</button></p>
 
+  <div class="section" id="course-finish">
+    <div class="section-eyebrow">Course completion</div>
+    <h2>Finish the course</h2>
+    <p id="finish-course-status" role="status" aria-live="polite">Checking your verified course progress.</p>
+    <button type="button" class="action-btn" id="finish-course" disabled>Finish Course</button>
+  </div>
+
   <div class="foot-nav">
     <a href="04b-modern-clis.html">← Module 4b: Modern CLIs</a>
     <a class="next" href="index.html">↩ Back to course home</a>
@@ -559,11 +568,45 @@
 
 <script type="module">
 import { buildNav, updateKeyPill, mountJourneyMap } from "./scripts/_shared.js";
+import { getInstalledNemoClawActivity } from "./scripts/_activity_runtime.js";
 mountJourneyMap("#journey-map", "4c");
 document.getElementById("nav").innerHTML = buildNav("04c-going-further.html");
 updateKeyPill(document.getElementById("key-status"));
 hljs.highlightAll();
 document.getElementById("open-course-assistant").addEventListener("click", () => document.querySelector(".course-assistant-launcher")?.click());
+const finishButton = document.getElementById("finish-course");
+const finishStatus = document.getElementById("finish-course-status");
+const courseActivity = getInstalledNemoClawActivity();
+async function refreshCompletion() {
+  try {
+    const state = await courseActivity.getCourseActivityState();
+    if (state.completedAt) {
+      finishButton.textContent = "Course completed";
+      finishButton.disabled = true;
+      finishStatus.textContent = "Course completed. You can return to the course home or continue exploring the resources above.";
+      return;
+    }
+    const ready = Number.isInteger(state.progressPercent) && state.progressPercent === 100;
+    finishButton.disabled = !ready;
+    finishStatus.textContent = ready
+      ? "All verified checkpoints are complete. Finish the course when you are ready."
+      : `Verified progress is ${Number(state.progressPercent) || 0}%. Complete the remaining hands-on checkpoints before finishing.`;
+  } catch (_) {
+    finishStatus.textContent = "Course progress is temporarily unavailable. Reload this page to try again.";
+  }
+}
+finishButton.addEventListener("click", async () => {
+  finishButton.disabled = true;
+  finishStatus.textContent = "Recording course completion.";
+  if (await courseActivity.recordCompletion()) {
+    finishButton.textContent = "Course completed";
+    finishStatus.textContent = "Course completed. You can return to the course home or continue exploring the resources above.";
+  } else {
+    finishButton.disabled = false;
+    finishStatus.textContent = "Completion was not recorded. Check your connection and try again.";
+  }
+});
+refreshCompletion();
 </script>
 </body>
 </html>

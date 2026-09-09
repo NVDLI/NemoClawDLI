@@ -375,6 +375,7 @@ helpers.mountChatUI("#deep-artifact", {
     };
 
     const results = await Promise.all(branches.map(runBranch));
+    if (results.some(result => !/^\(branch failed:/.test(result.finding))) ctx.view.activitySuccess();
     const wall = (performance.now() - t0) / 1000;
     const serial = results.reduce((sum, r) => sum + r.dt, 0);
     const gaps = results.filter(r => r.gap).length;

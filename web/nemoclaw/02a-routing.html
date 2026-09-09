@@ -330,6 +330,7 @@ helpers.mountChatUI("#router-artifact", {
     const cat = raw.toLowerCase().match(/billing|technical|account|other/);
     const c = cat ? cat[0] : "other";
     ctx.view.tool("routed → " + c, "classifier replied: " + (raw || "(empty)"));
+    if (cat) ctx.view.activitySuccess();
 
     const s = await helpers.chatStream({ messages: [{ role: "system", content: SPECIALISTS[c] }, ...(ctx.history || []), { role: "user", content: text }], model: ctx.model, max_tokens: 8196, signal: ctx.signal },
       (t) => ctx.view.token(t), { onReasoning: (x) => ctx.view.reasoning(x) });
