@@ -52,17 +52,20 @@ export const ACTIVITY_REFERRALS = Object.freeze({
 
 function createSessionStorageAdapter(target, artifactVersion) {
   const storageKey = `dli_activity:nemoclaw:${artifactVersion}`;
+  let memoryValue = null;
   return {
     load() {
       try {
         const raw = target?.getItem(storageKey);
-        return raw ? JSON.parse(raw) : null;
-      } catch (_) { return null; }
+        return raw ? JSON.parse(raw) : memoryValue;
+      } catch (_) { return memoryValue; }
     },
     save(value) {
-      target?.setItem(storageKey, JSON.stringify(value));
+      memoryValue = value;
+      try { target?.setItem(storageKey, JSON.stringify(value)); } catch (_) {}
     },
     clear() {
+      memoryValue = null;
       try { target?.removeItem(storageKey); } catch (_) {}
     },
   };

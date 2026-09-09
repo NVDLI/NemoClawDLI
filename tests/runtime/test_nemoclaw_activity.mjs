@@ -214,6 +214,38 @@ test('failed initialization is retried while concurrent and successful attempts 
   assert.equal(attempts.length, 2);
 });
 
+test('unavailable session storage keeps one activity session in memory', async () => {
+  const requests = [];
+  const storageTarget = {
+    getItem() { throw new DOMException('denied', 'SecurityError'); },
+    setItem() { throw new DOMException('denied', 'SecurityError'); },
+    removeItem() { throw new DOMException('denied', 'SecurityError'); },
+  };
+  const fetchImpl = async (url, init) => {
+    requests.push([url, init]);
+    if (url.endsWith('/v1/activity-sessions')) {
+      return new Response(JSON.stringify({
+        session_id: '019f38f1-e5ab-7688-af0d-0e8925299e93',
+        session_token: 'opaque-session-token-with-safe-length',
+        expires_at: '2026-09-09T20:00:00Z',
+      }), { status: 201 });
+    }
+    if (url.endsWith('/state')) {
+      return new Response(JSON.stringify({ progress_percent: 0, completed_at: null }), { status: 200 });
+    }
+    return new Response(JSON.stringify({ state: { progress_percent: 10 } }), { status: 201 });
+  };
+  const activity = createNemoClawActivity({
+    fetchImpl,
+    storageTarget,
+    now: () => new Date('2026-09-09T19:00:00Z'),
+  });
+
+  assert.equal(await activity.start(), true);
+  assert.equal(await activity.recordMilestone('01a:model-call-verified'), true);
+  assert.equal(requests.filter(([url]) => url.endsWith('/v1/activity-sessions')).length, 1);
+});
+
 test('the approved NVIDIA Build destination records one referral', async () => {
   const { activity, calls } = createFixture();
 

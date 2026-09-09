@@ -13,7 +13,7 @@ import {
 
 const read = path => fs.readFileSync(path, 'utf8');
 
-function trackingFixture(page = '01a-loop.html') {
+function trackingFixture(page = '01a-loop.html', providedStorageTarget) {
   const previousLocation = globalThis.location;
   Object.defineProperty(globalThis, 'location', {
     configurable: true,
@@ -22,7 +22,7 @@ function trackingFixture(page = '01a-loop.html') {
   const windowTarget = new EventTarget();
   const documentTarget = new EventTarget();
   const values = new Map();
-  const storageTarget = {
+  const storageTarget = providedStorageTarget || {
     getItem: key => values.get(key) || null,
     setItem: (key, value) => values.set(key, value),
   };
@@ -122,6 +122,23 @@ test('course bootstrap survives browsers that deny sessionStorage access', () =>
   } finally {
     if (descriptor) Object.defineProperty(globalThis, 'sessionStorage', descriptor);
     else delete globalThis.sessionStorage;
+  }
+});
+
+test('checkpoint prerequisites remain available in memory when session storage is denied', () => {
+  const storageTarget = {
+    getItem() { throw new DOMException('denied', 'SecurityError'); },
+    setItem() { throw new DOMException('denied', 'SecurityError'); },
+  };
+  const fixture = trackingFixture('01a-loop.html', storageTarget);
+  try {
+    dispatch(fixture.windowTarget, 'nemoclaw:api-key-verified');
+    dispatch(fixture.windowTarget, 'nemoclaw:run-succeeded', {
+      cellId: 'cell-onecall', hasContent: true,
+    });
+    assert.deepEqual(fixture.milestones, ['01a:model-call-verified']);
+  } finally {
+    fixture.restore();
   }
 });
 

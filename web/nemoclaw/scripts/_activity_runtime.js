@@ -41,14 +41,19 @@ function pageName() {
 
 function evidenceStorage(target, artifactVersion) {
   const storageKey = `${EVIDENCE_KEY_PREFIX}:${artifactVersion || 'unavailable'}`;
+  let memoryValue = {};
   const read = () => {
-    try { return JSON.parse(target?.getItem(storageKey) || '{}'); }
-    catch (_) { return {}; }
+    try {
+      const raw = target?.getItem(storageKey);
+      if (raw) memoryValue = JSON.parse(raw);
+    } catch (_) {}
+    return { ...memoryValue };
   };
   return {
     has: key => read()[key] === true,
     add(key) {
       const value = read(); value[key] = true;
+      memoryValue = value;
       try { target?.setItem(storageKey, JSON.stringify(value)); } catch (_) {}
     },
   };
