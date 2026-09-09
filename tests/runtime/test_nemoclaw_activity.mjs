@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -13,30 +13,13 @@ import * as activityModule from '../../web/nemoclaw/scripts/_activity.js';
 const {
   ACTIVITY_MILESTONES,
   ACTIVITY_REFERRALS,
+  ACTIVITY_ARTIFACT,
   BUILD_SIGNUP_URL,
   createNemoClawActivity,
-  resolveActivityArtifact,
   resolveActivityBaseUrl,
 } = activityModule;
 
-const RELEASE_COMMIT = 'a'.repeat(40);
-const RELEASE_DIGEST = `sha256:${'b'.repeat(64)}`;
-
-function releaseDocument(overrides = {}) {
-  const metadata = {
-    artifact_id: 'artifact_nemoclaw_web',
-    artifact_version: RELEASE_COMMIT,
-    artifact_digest: RELEASE_DIGEST,
-    ...overrides,
-  };
-  return {
-    getElementById(id) {
-      return id === 'dli-activity-release' ? { textContent: JSON.stringify(metadata) } : null;
-    },
-  };
-}
-
-function createFixture({ progressPercent = 10, documentTarget = releaseDocument() } = {}) {
+function createFixture({ progressPercent = 10 } = {}) {
   const calls = [];
   const facade = {
     progress: async (...args) => { calls.push(['progress', ...args]); },
@@ -51,7 +34,6 @@ function createFixture({ progressPercent = 10, documentTarget = releaseDocument(
     },
   };
   const activity = createNemoClawActivity({
-    documentTarget,
     initialize: async options => {
       calls.push(['initialize', options]);
       return facade;
@@ -60,7 +42,7 @@ function createFixture({ progressPercent = 10, documentTarget = releaseDocument(
   return { activity, calls };
 }
 
-test('NemoClaw imports only the public activity facade and contains no non-production hostnames', () => {
+test('NemoClaw imports only the public activity facade and contains no alternate hostnames', () => {
   const source = fs.readFileSync('web/nemoclaw/scripts/_activity.js', 'utf8');
   const publicSource = fs.readFileSync('web/nemoclaw/scripts/_activity_runtime.js', 'utf8')
     + fs.readFileSync('web/nemoclaw/04c-going-further.html', 'utf8') + source;
@@ -70,7 +52,7 @@ test('NemoClaw imports only the public activity facade and contains no non-produ
   assert.doesNotMatch(publicSource, /activity-api\.(?:dev|stage)\.learn\.nvidia\.com/);
 });
 
-test('the base URL resolver always uses production and rejects runtime override globals', () => {
+test('the base URL resolver always uses the public endpoint and rejects runtime override globals', () => {
   const overrideUrl = ['https://activity-api', 'stage', 'learn', 'nvidia', 'com'].join('.');
   assert.equal(
     resolveActivityBaseUrl({ __DLI_ACTIVITY_BASE_URL__: overrideUrl }),
@@ -79,52 +61,19 @@ test('the base URL resolver always uses production and rejects runtime override 
   assert.equal(resolveActivityBaseUrl({}), 'https://activity-api.learn.nvidia.com');
 });
 
-test('activity identity is immutable and bound to injected commit and archive metadata', () => {
-  const artifact = resolveActivityArtifact(releaseDocument());
-  assert.equal(Object.isFrozen(artifact), true);
-  assert.deepEqual(artifact, {
+test('activity identity is a stable checked-in integration version', () => {
+  assert.equal(Object.isFrozen(ACTIVITY_ARTIFACT), true);
+  assert.deepEqual(ACTIVITY_ARTIFACT, {
     artifact_id: 'artifact_nemoclaw_web',
-    artifact_version: RELEASE_COMMIT,
-    artifact_digest: RELEASE_DIGEST,
+    artifact_version: '1',
+    artifact_digest: 'sha256:86340bccc4bc735e9db5971b5282887e9d65adfd068d613c386e02ccc1ce0ad9',
   });
 });
 
-test('activity initialization fails closed without valid build-generated metadata', async () => {
-  let initializeCalls = 0;
-  for (const documentTarget of [
-    { getElementById: () => null },
-    releaseDocument({ artifact_version: '2026.09.0' }),
-    releaseDocument({ artifact_digest: `sha256:${'0'.repeat(64)}` }),
-  ]) {
-    const activity = createNemoClawActivity({
-      documentTarget,
-      initialize: async () => { initializeCalls += 1; },
-    });
-    assert.equal(await activity.start(), false);
-  }
-  assert.equal(initializeCalls, 0);
-});
-
-test('the Pages injector binds the exact commit and deterministic course archive digest', () => {
-  const output = fs.mkdtempSync(path.join(os.tmpdir(), 'nemoclaw-activity-release-'));
-  const page = path.join(output, 'index.html');
-  fs.writeFileSync(page, '<!doctype html><html><head></head><body></body></html>');
-  const commit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-  execFileSync('bash', ['scripts/build/build_pages.sh', '--inject-activity-release', output, commit]);
-  const archive = execFileSync('git', [
-    'archive', '--format=tar', commit, '--', 'web/nemoclaw', 'web/shared/activity-sdk.js',
-  ], { maxBuffer: 64 * 1024 * 1024 });
-  const expectedDigest = execFileSync('shasum', ['-a', '256'], { input: archive, encoding: 'utf8' })
-    .trim().split(/\s+/)[0];
-  const builtPage = fs.readFileSync(page, 'utf8');
-  const match = builtPage.match(/<script type="application\/json" id="dli-activity-release">([^<]+)<\/script>/);
-
-  assert.ok(match, 'release metadata was not injected');
-  assert.deepEqual(JSON.parse(match[1]), {
-    artifact_id: 'artifact_nemoclaw_web',
-    artifact_version: commit,
-    artifact_digest: `sha256:${expectedDigest}`,
-  });
+test('activity initialization uses checked-in identity without page metadata', async () => {
+  const { activity, calls } = createFixture();
+  assert.equal(await activity.start(), true);
+  assert.deepEqual(calls[0][1].artifact, ACTIVITY_ARTIFACT);
 });
 
 test('the default Pages layout ships the public activity SDK at its imported path', () => {
@@ -139,40 +88,6 @@ test('the default Pages layout ships the public activity SDK at its imported pat
       fs.readFileSync(path.resolve(courseRoot, 'scripts', '../../shared/activity-sdk.js'), 'utf8'),
       fs.readFileSync('web/shared/activity-sdk.js', 'utf8'),
     );
-  }
-});
-
-test('Pages injects the exact release identity into canonical and localized courses', () => {
-  const output = fs.mkdtempSync(path.join(os.tmpdir(), 'nemoclaw-activity-locales-'));
-  const roots = ['nemoclaw', 'web/nemoclaw', 'es/nemoclaw', 'pt/nemoclaw', 'tw/nemoclaw', 'zh/nemoclaw'];
-  for (const root of roots) {
-    const target = path.join(output, root);
-    fs.mkdirSync(target, { recursive: true });
-    fs.writeFileSync(path.join(target, 'index.html'), '<html><head></head><body></body></html>');
-  }
-  const commit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-  for (const root of roots) execFileSync(
-    'bash', ['scripts/build/build_pages.sh', '--prepare-activity-course', path.join(output, root), commit],
-  );
-  const identities = roots.map(root => fs.readFileSync(path.join(output, root, 'index.html'), 'utf8')
-    .match(/id="dli-activity-release">([^<]+)/)?.[1]);
-  assert.ok(identities.every(Boolean));
-  assert.equal(new Set(identities).size, 1);
-  assert.equal(JSON.parse(identities[0]).artifact_version, commit);
-});
-
-test('the Pages identity preflight rejects untracked source consumed by the bundle', () => {
-  const commit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-  const probe = `web/nemoclaw/scripts/_activity_untracked_probe_${process.pid}.js`;
-  fs.writeFileSync(probe, 'export const untrackedProbe = true;\n');
-  try {
-    const result = spawnSync(
-      'bash', ['scripts/build/build_pages.sh', '--check-activity-source', commit], { encoding: 'utf8' },
-    );
-    assert.notEqual(result.status, 0);
-    assert.match(`${result.stdout}\n${result.stderr}`, /untracked activity source/);
-  } finally {
-    fs.unlinkSync(probe);
   }
 });
 
@@ -265,8 +180,8 @@ test('start initializes the NemoClaw proof-of-concept activity once', async () =
   assert.equal(calls[0][1].baseUrl, 'https://activity-api.learn.nvidia.com');
   assert.deepEqual(calls[0][1].artifact, {
     artifact_id: 'artifact_nemoclaw_web',
-    artifact_version: RELEASE_COMMIT,
-    artifact_digest: RELEASE_DIGEST,
+    artifact_version: '1',
+    artifact_digest: 'sha256:86340bccc4bc735e9db5971b5282887e9d65adfd068d613c386e02ccc1ce0ad9',
   });
   assert.equal('activity' in calls[0][1], false);
   assert.equal(typeof calls[0][1].storage.load, 'function');
@@ -275,7 +190,6 @@ test('start initializes the NemoClaw proof-of-concept activity once', async () =
 test('failed initialization is retried while concurrent and successful attempts remain shared', async () => {
   const attempts = [];
   const activity = createNemoClawActivity({
-    documentTarget: releaseDocument(),
     initialize: () => new Promise((resolve, reject) => attempts.push({ resolve, reject })),
   });
 
@@ -361,7 +275,6 @@ test('course state is read through the facade', async () => {
 test('facade failures remain contained and retryable at the lesson boundary', async () => {
   let attempts = 0;
   const activity = createNemoClawActivity({
-    documentTarget: releaseDocument(),
     initialize: async () => ({
       getState: async () => ({ progressPercent: 100, completedAt: null }),
       complete: async () => {

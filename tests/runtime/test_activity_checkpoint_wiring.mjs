@@ -21,13 +21,6 @@ function trackingFixture(page = '01a-loop.html') {
   });
   const windowTarget = new EventTarget();
   const documentTarget = new EventTarget();
-  documentTarget.getElementById = id => id === 'dli-activity-release' ? {
-    textContent: JSON.stringify({
-      artifact_id: 'artifact_nemoclaw_web',
-      artifact_version: 'a'.repeat(40),
-      artifact_digest: `sha256:${'b'.repeat(64)}`,
-    }),
-  } : null;
   const values = new Map();
   const storageTarget = {
     getItem: key => values.get(key) || null,
@@ -135,7 +128,7 @@ test('course bootstrap survives browsers that deny sessionStorage access', () =>
 test('checkpoint evidence from an older release cannot advance the current release', () => {
   const fixture = trackingFixture('01b-react.html');
   try {
-    fixture.storageTarget.setItem('dli_activity:nemoclaw:evidence:v1', JSON.stringify({
+    fixture.storageTarget.setItem('dli_activity:nemoclaw:evidence:v1:0', JSON.stringify({
       'milestone:01a:model-call-verified': true,
     }));
     dispatch(fixture.windowTarget, 'nemoclaw:chat-completed', {
@@ -200,7 +193,7 @@ test('every 01b through 04b checkpoint requires its full success predicate', () 
     const fixture = trackingFixture(page);
     try {
       const position = order.indexOf(milestone);
-      fixture.storageTarget.setItem(`dli_activity:nemoclaw:evidence:v1:${'a'.repeat(40)}`,
+      fixture.storageTarget.setItem('dli_activity:nemoclaw:evidence:v1:1',
         JSON.stringify(Object.fromEntries(order.slice(0, position)
           .map(item => [`milestone:${item}`, true]))));
       if (negative) {
@@ -236,7 +229,7 @@ test('paired checkpoints reject partial evidence and advance after both halves',
   for (const [page, first, second, milestone, priorCount] of cases) {
     const fixture = trackingFixture(page);
     try {
-      fixture.storageTarget.setItem(`dli_activity:nemoclaw:evidence:v1:${'a'.repeat(40)}`,
+      fixture.storageTarget.setItem('dli_activity:nemoclaw:evidence:v1:1',
         JSON.stringify(Object.fromEntries(order.slice(0, priorCount).map(item => [`milestone:${item}`, true]))));
       dispatch(fixture.windowTarget, first[0], first[1]);
       assert.deepEqual(fixture.milestones, [], `${milestone} accepted partial evidence`);

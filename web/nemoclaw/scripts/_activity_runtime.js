@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+  ACTIVITY_ARTIFACT,
   ACTIVITY_REFERRALS,
   createNemoClawActivity,
-  resolveActivityArtifact,
 } from './_activity.js';
 
 const EVIDENCE_KEY_PREFIX = 'dli_activity:nemoclaw:evidence:v1';
@@ -68,8 +68,7 @@ export function installNemoClawActivityTracking({
   activity ||= createNemoClawActivity({ storageTarget });
   windowTarget.__nemoclawActivityTracking = true;
   windowTarget.__nemoclawActivity = activity;
-  const artifactVersion = resolveActivityArtifact(documentTarget)?.artifact_version;
-  const evidence = evidenceStorage(storageTarget, artifactVersion);
+  const evidence = evidenceStorage(storageTarget, ACTIVITY_ARTIFACT.artifact_version);
   const page = pageName();
   void activity.start();
 

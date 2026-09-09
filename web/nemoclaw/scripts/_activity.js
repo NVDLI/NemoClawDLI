@@ -4,9 +4,13 @@
 import { DLIActivity } from '../../shared/activity-sdk.js';
 
 export const BUILD_SIGNUP_URL = 'https://build.nvidia.com/?ncid=ref-dli-146986';
-const PRODUCTION_ACTIVITY_BASE_URL = 'https://activity-api.learn.nvidia.com';
+const ACTIVITY_BASE_URL = 'https://activity-api.learn.nvidia.com';
 
-const ACTIVITY_RELEASE_ELEMENT_ID = 'dli-activity-release';
+export const ACTIVITY_ARTIFACT = Object.freeze({
+  artifact_id: 'artifact_nemoclaw_web',
+  artifact_version: '1',
+  artifact_digest: 'sha256:86340bccc4bc735e9db5971b5282887e9d65adfd068d613c386e02ccc1ce0ad9',
+});
 
 export const ACTIVITY_MILESTONES = Object.freeze({
   '01a:model-call-verified': Object.freeze({ progressPercent: 10 }),
@@ -65,25 +69,10 @@ function createSessionStorageAdapter(target, artifactVersion) {
 }
 
 export function resolveActivityBaseUrl() {
-  return PRODUCTION_ACTIVITY_BASE_URL;
-}
-
-export function resolveActivityArtifact(documentTarget = globalThis.document) {
-  const raw = documentTarget?.getElementById?.(ACTIVITY_RELEASE_ELEMENT_ID)?.textContent;
-  let artifact;
-  try { artifact = JSON.parse(raw || ''); } catch (_) { return null; }
-  if (artifact?.artifact_id !== 'artifact_nemoclaw_web' ||
-      !/^[0-9a-f]{40}$/.test(artifact?.artifact_version || '') ||
-      !/^sha256:(?!0{64}$)[0-9a-f]{64}$/.test(artifact?.artifact_digest || '')) return null;
-  return Object.freeze({
-    artifact_id: artifact.artifact_id,
-    artifact_version: artifact.artifact_version,
-    artifact_digest: artifact.artifact_digest,
-  });
+  return ACTIVITY_BASE_URL;
 }
 
 export function createNemoClawActivity({
-  documentTarget = globalThis.document,
   fetchImpl = globalThis.fetch?.bind(globalThis),
   storageTarget = globalThis.sessionStorage,
   now,
@@ -95,18 +84,14 @@ export function createNemoClawActivity({
   function initializeActivity() {
     if (initializedActivity) return initializedActivity;
 
-    const attempt = Promise.resolve().then(() => {
-      const artifact = resolveActivityArtifact(documentTarget);
-      if (!artifact) throw new Error('Activity release metadata is unavailable.');
-      return initialize({
-        baseUrl: resolveActivityBaseUrl(),
-        artifact,
-        storage: createSessionStorageAdapter(storageTarget, artifact.artifact_version),
-        fetchImpl,
-        now,
-        onDiagnostic,
-      });
-    });
+    const attempt = Promise.resolve().then(() => initialize({
+      baseUrl: resolveActivityBaseUrl(),
+      artifact: ACTIVITY_ARTIFACT,
+      storage: createSessionStorageAdapter(storageTarget, ACTIVITY_ARTIFACT.artifact_version),
+      fetchImpl,
+      now,
+      onDiagnostic,
+    }));
     initializedActivity = attempt;
     attempt.catch(() => {
       if (initializedActivity === attempt) initializedActivity = undefined;
