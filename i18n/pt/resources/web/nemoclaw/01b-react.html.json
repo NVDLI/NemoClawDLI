@@ -91,11 +91,6 @@
       "value": "(tool \"\\${name}\" not found)",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
-    "rich.0a886834e9f1": {
-      "type": "rich",
-      "source": "\n    Every chat-completions response carries a <code>finish_reason</code>\n    field that tells you why the model stopped generating. Inside an agent\n    loop, this is the only signal you need to decide what to do next:\n    run a tool, return the answer to the user, or handle an error. Before reading\n    what its values mean, make two calls and watch the field change.\n  ",
-      "value": "\n Todas as respostas de chat-completions carregam um campo <code>finish_reason</code>\n que informa por que o modelo parou de gerar. Dentro de um ciclo de agente,\n este é o único sinal de que você precisa para decidir o que fazer em seguida:\n executar uma ferramenta, retornar a resposta ao usuário ou lidar com um erro. Antes de ler\n o que seus valores significam, faça duas chamadas e observe o campo mudar.\n "
-    },
     "rich.1cbfc5ef05f8": {
       "type": "rich",
       "source": "<code>\"stop\"</code> means the model has written its final answer and the loop can return <code>content</code> to the user.",
@@ -105,11 +100,6 @@
       "type": "rich",
       "source": "<strong>Memory</strong> is the <code>messages[]</code> array.",
       "value": "<strong>Memória</strong> é o array <code>messages[]</code>."
-    },
-    "rich.32ec8d5bb853": {
-      "type": "rich",
-      "source": "\n    The first call answered on its own and came back <code>\"stop\"</code>. The second was\n    offered a tool and asked for something training data cannot supply, so instead of stopping\n    it came back <code>\"tool_calls\"</code>, handing your code the name of the function to run.\n    Those two values cover the common branching. The rest signal trouble that routes the loop\n    into a fallback harness, where the agent might retry the call or hand the conversation off\n    to a human.\n  ",
-      "value": "\n A primeira chamada respondeu sozinha e retornou <code>\"stop\"</code>. A segunda recebeu\n uma ferramenta e uma pergunta que os dados de treinamento não podem responder. Em vez de parar,\n ela retornou <code>\"tool_calls\"</code>, entregando ao código o nome da função a executar.\n Esses dois valores cobrem a ramificação comum. O restante sinaliza problemas que roteiam o ciclo\n para um fluxo de fallback do harness, no qual o agente pode tentar novamente a chamada ou passar a conversa para\n um humano.\n "
     },
     "rich.37cadcb11b30": {
       "type": "rich",
@@ -141,11 +131,6 @@
       "source": "<code>\"length\"</code> means the token budget ran out before the answer finished.",
       "value": "<code>\"length\"</code> significa que o orçamento de tokens esgotou antes que a resposta terminasse."
     },
-    "rich.914091fc2532": {
-      "type": "rich",
-      "source": "<strong>Count the steps on a genuinely tool-needing question.</strong>\n        \"How many minutes until 17:00 UTC?\" takes more than one tool call.\n        Run it a few times. Did the model call\n        <code>get_current_time</code> once, twice, or three times? Why\n        would a model re-call a tool whose output it already has,\n        and how would you discourage that in the system prompt?",
-      "value": "<strong>Conte as etapas em uma pergunta que realmente precisa de uma ferramenta.</strong>\n \"Quantos minutos até 17:00 UTC?\" leva mais de uma chamada de ferramenta.\n Execute algumas vezes. O modelo chamou\n <code>get_current_time</code> uma vez, duas vezes ou três vezes? Por que\n um modelo rechamaria uma ferramenta cuja saída ele já tem,\n e como você desencorajaria isso no prompt do sistema?"
-    },
     "rich.9cf78b159479": {
       "type": "rich",
       "source": "\n    The flow is short: the model asks for the tool, the executor appends the timestamp as a\n    <code>tool</code>-role message, the model reads that timestamp, and the loop exits when\n    <code>finish_reason</code> reads <code>\"stop\"</code>.\n  ",
@@ -176,11 +161,6 @@
       "source": "<strong>Action</strong> is the tool call the harness executes.",
       "value": "<strong>Ação</strong> é a chamada de ferramenta que o harness de execução executa."
     },
-    "rich.d7a22d027748": {
-      "type": "rich",
-      "source": "\n    <strong>What just happened inside the messages array.</strong><br>\n    The loop pushed four things into <code>state.messages</code>: <ul><li>the system\n    prompt (turn 0),</li><li>the user question (turn 1),</li><li>an assistant message with a\n    <code>tool_calls</code> field (turn 2, the request),</li><li>and a\n    <code>tool</code>-role message holding the function's return value (turn\n    3).</li></ul> The second LLM call read all four of those including the new tool result and\n    wrote the final answer. The growing array is the only \"memory\" this\n    agent has. If you saved that array to disk and reloaded it next week, the\n    model would resume the conversation without noticing the gap.\n  ",
-      "value": "\n <strong>O que acabou de acontecer dentro do array de mensagens.</strong><br>\n O ciclo adicionou quatro itens a <code>state.messages</code>: <ul><li>o prompt do sistema (turno 0),</li><li>a pergunta do usuário (turno 1),</li><li>uma mensagem de assistente com um\n campo <code>tool_calls</code> (turno 2, a solicitação),</li><li>e uma\n mensagem com o papel <code>tool</code> que contém o valor de retorno da função (turno\n 3).</li></ul> A segunda chamada do LLM leu todas as quatro, incluindo o novo resultado da ferramenta, e\n escreveu a resposta final. O array crescente é a única \"memória\" que este\n agente tem. Se você salvar esse array em disco e recarregá-lo na semana seguinte, o\n modelo retomará a conversa sem notar a lacuna.\n "
-    },
     "rich.dab40f3dcbce": {
       "type": "rich",
       "source": "\n    Run the cell to build the panel, then chat with it. Pin one or more with\n    the <b>Pages</b> chips to ground every answer in them, or pin nothing and let the\n    agent choose what to read. The reply renders as markdown, with a chip for each source\n    the agent read so you can expand it to see the text it pulled back. Alongside the answer,\n    you also get the reasoning trace and the token usage. It remembers the conversation per chat.\n    Edit the cell and rerun to rebuild the artifact.\n  ",
@@ -190,12 +170,6 @@
       "type": "rich",
       "source": "<strong>Planning</strong> is the <code>finish_reason</code> router.",
       "value": "<strong>Planejamento</strong> é o roteador <code>finish_reason</code>."
-    },
-    "text.00b025711499": {
-      "type": "text",
-      "source": "(nothing)",
-      "value": "(nothing)",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
     "text.026e6c091cf3": {
       "type": "text",
@@ -317,11 +291,6 @@
       "source": "The loop is unchanged. With a language model in the reasoning step, the agent reads tool results and acts by calling tools.",
       "value": "O ciclo permanece o mesmo. Com um grande modelo de linguagem na etapa de raciocínio, o agente lê os resultados e age chamando ferramentas."
     },
-    "text.185d5444c22a": {
-      "type": "text",
-      "source": "Compare a direct answer with a tool request. Watch finish_reason change before building the complete loop.",
-      "value": "Compare duas chamadas ao mesmo modelo. A primeira responde diretamente; a segunda solicita uma ferramenta que o seu código deve executar. Observe como finish_reason muda entre elas. Essa ferramenta é uma prévia do ciclo completo abaixo."
-    },
     "text.1b12f21798d2": {
       "type": "text",
       "source": " Bound the loop so a confused agent cannot spin forever.",
@@ -356,18 +325,6 @@
       "source": "Think, act, observe, repeat. The turn exits the moment finish_reason is \"stop\".",
       "value": "Pense, aja, observe, repita. O ciclo termina quando finish_reason é \"stop\"."
     },
-    "text.263eb2e3d503": {
-      "type": "text",
-      "source": " \"stop\" means the answer is ready and the loop can exit",
-      "value": " \"stop\" means the answer is ready and the loop can exit",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
-    },
-    "text.2744773dba26": {
-      "type": "text",
-      "source": " The model cannot run the tool itself; this preview asks your code to run it.",
-      "value": " The model cannot run the tool itself; this preview asks your code to run it.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
-    },
     "text.288ec2e40f38": {
       "type": "text",
       "source": " state.userPrompt   = \"What time is it in UTC?\";",
@@ -395,12 +352,6 @@
       "type": "text",
       "source": "which page, e.g. 01b-react",
       "value": "which page, e.g. 01b-react",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
-    },
-    "text.2cfc66a4bac0": {
-      "type": "text",
-      "source": " stops or asks for the tool on these same two questions.",
-      "value": " stops or asks for the tool on these same two questions.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
     "text.2d08f3745b34": {
@@ -450,11 +401,6 @@
       "source": "finish_reason:",
       "value": "finish_reason:",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
-    },
-    "text.36d507134134": {
-      "type": "text",
-      "source": " Optional visibility: uncomment to inspect the complete first response.",
-      "value": " Visibilidade opcional: remova o comentário para inspecionar a primeira resposta completa."
     },
     "text.3a417d05647e": {
       "type": "text",
@@ -661,12 +607,6 @@
       "value": "✗",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
-    "text.6a6eb0c995bc": {
-      "type": "text",
-      "source": " \"tool_calls\" means the model is asking you to run a function",
-      "value": " \"tool_calls\" means the model is asking you to run a function",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
-    },
     "text.6c45cb72a36e": {
       "type": "text",
       "source": "stop",
@@ -683,12 +623,6 @@
       "type": "text",
       "source": " Pin each selected page in full so the chip reflects the actual context.",
       "value": " Pin each selected page in full so the chip reflects the actual context.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
-    },
-    "text.6ec7ac216303": {
-      "type": "text",
-      "source": " Call 1 · no tools offered. The model can answer, so it stops on its own.",
-      "value": " Call 1 · no tools offered. The model can answer, so it stops on its own.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
     "text.761b7ad8ad43": {
@@ -729,12 +663,6 @@
       "type": "text",
       "source": "What time is it right now in UTC?",
       "value": "What time is it right now in UTC?",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
-    },
-    "text.8060fc09ef01": {
-      "type": "text",
-      "source": " MODEL is the swappable brain. Change it and rerun to see whether a stronger model",
-      "value": " MODEL is the swappable brain. Change it and rerun to see whether a stronger model",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
     "text.850d8ef32ee1": {
@@ -855,18 +783,6 @@
       "value": "🔧",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
-    "text.aa85ebc76614": {
-      "type": "text",
-      "source": " reasoning models think first; leave room past reasoning_content",
-      "value": " reasoning models think first; leave room past reasoning_content",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
-    },
-    "text.aa9c9c97480a": {
-      "type": "text",
-      "source": "(used its whole budget thinking; raise max_tokens)",
-      "value": "(used its whole budget thinking; raise max_tokens)",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
-    },
     "text.ace774147c7e": {
       "type": "text",
       "source": "The complete ReAct loop, built from scratch",
@@ -944,11 +860,6 @@
       "value": "./vendor/langchain-1.4.7.esm.js",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
-    "text.c3b7187e7262": {
-      "type": "text",
-      "source": " log.details(\"call 1 raw response\", r1);",
-      "value": " log.details(\"resposta 1 bruta\", r1);"
-    },
     "text.c618570e5e70": {
       "type": "text",
       "source": "🔧 read page · ",
@@ -959,12 +870,6 @@
       "type": "text",
       "source": "error",
       "value": "error",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
-    },
-    "text.ca32d7f2daac": {
-      "type": "text",
-      "source": " Call 2 · offer one tool and ask for something the model cannot know from training data.",
-      "value": " Call 2 · offer one tool and ask for something the model cannot know from training data.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
     "text.ccc143876d1c": {
@@ -1024,11 +929,6 @@
       "value": "agent",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
-    "text.d56573cb0730": {
-      "type": "text",
-      "source": "it asked you to run:",
-      "value": "ela solicitou que você executasse:"
-    },
     "text.d9bda0c06ee1": {
       "type": "text",
       "source": "The same loop, prebuilt and pointed at this course",
@@ -1067,11 +967,6 @@
       "source": "course-wide question (\\\\",
       "value": "course-wide question (\\\\",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
-    },
-    "text.e3ec162f8c8a": {
-      "type": "text",
-      "source": "call 2 · one tool offered, on a question training data cannot answer",
-      "value": "chamada 2 · uma ferramenta oferecida, em uma pergunta que os dados de treinamento não podem responder"
     },
     "text.e632b7095b0b": {
       "type": "text",
@@ -1150,6 +1045,158 @@
       "source": "tools",
       "value": "tools",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "rich.04b481fa123f": {
+      "type": "rich",
+      "source": "\n    Every chat-completions response carries a <code>finish_reason</code>\n    field that tells you why the model stopped generating. Inside an agent\n    loop, read it alongside the response content and tool requests to decide what to do next:\n    run a tool, return the answer to the user, or handle an error. Before reading\n    what its values mean, make two calls and compare their replies.\n  ",
+      "value": "Cada resposta de Chat Completions inclui <code>finish_reason</code>, que indica por que o modelo parou de gerar. No ciclo do agente, leia esse campo junto com o conteúdo e as solicitações de ferramentas para decidir se deve executar uma ferramenta, retornar a resposta ou tratar um erro. Antes de estudar os valores, faça duas chamadas e compare as respostas."
+    },
+    "rich.d503e5a1f6fe": {
+      "type": "rich",
+      "source": "\n    The first call offers no tools. In the second, the model is offered a tool and asked\n    for the current time. It still chooses whether to request the clock tool. Compare the displayed questions, replies, and\n    <code>finish_reason</code>. If both calls return <code>\"stop\"</code>, inspect the\n    second reply: did it admit it cannot check the time, or give an unsupported answer?\n    Change the model or question and rerun. A tool request names work for your code;\n    this preview does not execute it.\n  ",
+      "value": "A primeira chamada não oferece ferramentas. Na segunda, o modelo recebe uma ferramenta e uma pergunta sobre a hora atual. Ele decide se solicita o relógio. Compare as perguntas, as respostas e <code>finish_reason</code>. Se ambas retornarem <code>\"stop\"</code>, examine a segunda resposta: o modelo admite que não pode consultar a hora ou responde sem verificá-la? Altere o modelo ou a pergunta e execute novamente. Uma solicitação de ferramenta indica trabalho para seu código; esta prévia não o executa."
+    },
+    "rich.71d5f7e1b268": {
+      "type": "rich",
+      "source": "\n    <strong>What just happened inside the messages array.</strong><br>\n    When the model requests the clock, the loop adds these turns to <code>state.messages</code>: <ul><li>the system\n    prompt (turn 0),</li><li>the user question (turn 1),</li><li>an assistant message with a\n    <code>tool_calls</code> field (turn 2, the request),</li><li>and a\n    <code>tool</code>-role message holding the function's return value (turn\n    3).</li></ul> The second LLM call read all four of those including the new tool result and\n    wrote the final answer. The growing array is the only \"memory\" this\n    agent has. If you saved that array to disk and reloaded it next week, the\n    model would resume the conversation without noticing the gap.\n  ",
+      "value": "\n <strong>O que acabou de acontecer dentro do array de mensagens.</strong><br>\nQuando o modelo solicita o relógio, o ciclo adiciona estes turnos a <code>state.messages</code>: <ul><li>o prompt do sistema (turno 0),</li><li>a pergunta do usuário (turno 1),</li><li>uma mensagem de assistente com um\n campo <code>tool_calls</code> (turno 2, a solicitação),</li><li>e uma\n mensagem com o papel <code>tool</code> que contém o valor de retorno da função (turno\n 3).</li></ul> A segunda chamada do LLM leu todas as quatro, incluindo o novo resultado da ferramenta, e\n escreveu a resposta final. O array crescente é a única \"memória\" que este\n agente tem. Se você salvar esse array em disco e recarregá-lo na semana seguinte, o\n modelo retomará a conversa sem notar a lacuna.\n "
+    },
+    "rich.925eff5b49ae": {
+      "type": "rich",
+      "source": "<strong>Count the steps on a genuinely tool-needing question.</strong>\n        \"How many minutes until 17:00 UTC?\" needs a clock reading and a calculation.\n        Run it a few times. Did the model call\n        <code>get_current_time</code> once, twice, or three times? Why\n        would a model re-call a tool whose output it already has,\n        and how would you discourage that in the system prompt?",
+      "value": "<strong>Conte os passos de uma pergunta que precisa de uma ferramenta.</strong> \"Quantos minutos faltam para as 17:00 UTC?\" precisa de uma leitura do relógio e de um cálculo. Execute algumas vezes. O modelo chamou <code>get_current_time</code> uma, duas ou três vezes? Por que pediria novamente um resultado que já tem? Como você alteraria o prompt do sistema para evitar isso?"
+    },
+    "text.6998c813031f": {
+      "type": "text",
+      "source": "Compare two questions, the offered tools, and the actual replies. A model may answer or decline without requesting a tool.",
+      "value": "Compare as duas perguntas, as ferramentas disponíveis e as respostas recebidas. Mesmo sem solicitar uma ferramenta, o modelo pode responder ou informar que não consegue responder."
+    },
+    "text.99e1a8e15403": {
+      "type": "text",
+      "source": " On a custom endpoint, change the model in the connection card; that setting owns the route.",
+      "value": " Em um endpoint personalizado, altere o modelo no cartão de conexão; essa configuração controla a rota."
+    },
+    "text.408f13277d8d": {
+      "type": "text",
+      "source": "model:",
+      "value": "modelo:"
+    },
+    "text.1f5087db919c": {
+      "type": "text",
+      "source": "question",
+      "value": "pergunta"
+    },
+    "text.360cd27d23a6": {
+      "type": "text",
+      "source": "response model:",
+      "value": "modelo da resposta:"
+    },
+    "text.5db94652ba22": {
+      "type": "text",
+      "source": "reply:",
+      "value": "resposta:"
+    },
+    "text.2d27e607c67d": {
+      "type": "text",
+      "source": "(no answer content; inspect the raw response)",
+      "value": "(sem conteúdo de resposta; examine a resposta completa)"
+    },
+    "text.44a36db1abd1": {
+      "type": "text",
+      "source": "call 1 raw response",
+      "value": "resposta completa da chamada 1"
+    },
+    "text.6b9eac8f14cf": {
+      "type": "text",
+      "source": " Offering a tool lets the model request it; it does not execute the function.",
+      "value": " Oferecer uma ferramenta permite que o modelo a solicite; isso não executa a função."
+    },
+    "text.4809d1df83ab": {
+      "type": "text",
+      "source": " Optional visibility: inspect the exact schema offered to the model.",
+      "value": " Inspeção opcional: examine o esquema exato oferecido ao modelo."
+    },
+    "text.becc7f440ae3": {
+      "type": "text",
+      "source": " log.json(\"offered tool schema\", TOOLS);",
+      "value": " log.json(\"offered tool schema\", TOOLS);",
+      "untranslated": "Editable JavaScript diagnostic statement with preserved identifiers."
+    },
+    "text.e18b187cecf8": {
+      "type": "text",
+      "source": "call 2 · get_current_time offered",
+      "value": "chamada 2 · get_current_time disponível"
+    },
+    "text.408f13277d8d~1": {
+      "type": "text",
+      "source": "model:",
+      "value": "modelo:"
+    },
+    "text.1f5087db919c~1": {
+      "type": "text",
+      "source": "question",
+      "value": "pergunta"
+    },
+    "text.360cd27d23a6~1": {
+      "type": "text",
+      "source": "response model:",
+      "value": "modelo da resposta:"
+    },
+    "text.5db94652ba22~1": {
+      "type": "text",
+      "source": "reply:",
+      "value": "resposta:"
+    },
+    "text.b6d8f3ef94a9": {
+      "type": "text",
+      "source": "(no answer content)",
+      "value": "(sem conteúdo de resposta)"
+    },
+    "text.dbacd9211eb0": {
+      "type": "text",
+      "source": "requested tools:",
+      "value": "ferramentas solicitadas:"
+    },
+    "text.552e423045fc": {
+      "type": "text",
+      "source": "(none)",
+      "value": "(nenhuma)"
+    },
+    "text.90dfb008f2c5": {
+      "type": "text",
+      "source": "call 2 raw response",
+      "value": "resposta completa da chamada 2"
+    },
+    "text.e869af251171": {
+      "type": "text",
+      "source": "No clock reading was taken. Inspect the reply, then change the question or model and compare.",
+      "value": "O relógio não foi consultado. Examine a resposta, altere a pergunta ou o modelo e compare."
+    },
+    "text.c9d2fde3d3f2": {
+      "type": "text",
+      "source": " Optional comparison: ask QUESTION_2 to explicitly request the clock tool, then rerun.",
+      "value": " Comparação opcional: altere QUESTION_2 para pedir explicitamente a ferramenta de relógio e execute novamente."
+    },
+    "text.408f13277d8d~2": {
+      "type": "text",
+      "source": "model:",
+      "value": "modelo:"
+    },
+    "text.1f5087db919c~2": {
+      "type": "text",
+      "source": "question",
+      "value": "pergunta"
+    },
+    "text.99de16babaa5": {
+      "type": "text",
+      "source": " Optional visibility: inspect the instruction guiding tool use.",
+      "value": " Inspeção opcional: examine a instrução que orienta o uso de ferramentas."
+    },
+    "text.9024eab41188": {
+      "type": "text",
+      "source": " helpers.log.kv({ \"system prompt\": state.systemPrompt });",
+      "value": " helpers.log.kv({ \"system prompt\": state.systemPrompt });",
+      "untranslated": "Editable JavaScript diagnostic statement with preserved identifiers."
     }
   }
 }
