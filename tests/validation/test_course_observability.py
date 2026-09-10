@@ -13,10 +13,19 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const root = process.cwd();
-function cell(page, id) {
-  const source = fs.readFileSync(path.join(root, 'web/nemoclaw', page), 'utf8');
-  const start = source.indexOf('mountRunCell("#' + id + '"');
-  assert(start >= 0, id);
+function cell(id, directory = path.join(root, 'web')) {
+  const marker = 'mountRunCell("#' + id + '"';
+  function sources(dir) {
+    return fs.readdirSync(dir, {withFileTypes: true}).flatMap(entry => {
+      const file = path.join(dir, entry.name);
+      if (entry.isDirectory()) return sources(file);
+      return entry.isFile() && entry.name.endsWith('.html') ? [fs.readFileSync(file, 'utf8')] : [];
+    });
+  }
+  const matches = sources(directory).filter(source => source.includes(marker));
+  assert.equal(matches.length, 1, id + ': expected one authored cell');
+  const source = matches[0];
+  const start = source.indexOf(marker);
   const rest = source.slice(start);
   const match = rest.match(/code:\s*(`(?:\\[\s\S]|[^`\\])*`)/);
   assert(match, id + ' code');
@@ -42,8 +51,23 @@ const helpers = {
   },
 };
 (async () => {
-  const discovery = cell('03a-kickstart.html', 'bench-fetch-models');
-  const measure = cell('03a-kickstart.html', 'bench-measure-models');
+  const temporary = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'cell-discovery-'));
+  try {
+    const nested = path.join(temporary, 'new-course', 'lessons');
+    fs.mkdirSync(nested, {recursive: true});
+    const original = path.join(nested, 'new-lesson.html');
+    const renamed = path.join(nested, 'renamed-lesson.html');
+    fs.writeFileSync(original, 'mountRunCell("#probe", {code: `return 7;`});');
+    assert.equal(cell('probe', temporary), 'return 7;');
+    fs.renameSync(original, renamed);
+    assert.equal(cell('probe', temporary), 'return 7;');
+    fs.writeFileSync(renamed, 'mountRunCell("#probe-near-match", {code: `return 7;`});');
+    assert.throws(() => cell('probe', temporary), /expected one authored cell/);
+    fs.unlinkSync(renamed);
+    assert.throws(() => cell('probe', temporary), /expected one authored cell/);
+  } finally { fs.rmSync(temporary, {recursive: true, force: true}); }
+  const discovery = cell('bench-fetch-models');
+  const measure = cell('bench-measure-models');
   const state = {};
   await run(discovery, state, helpers);
   assert.deepEqual(state.models, ['course/agent']);
@@ -73,7 +97,7 @@ const helpers = {
   await run(discovery, state, helpers);
   assert.deepEqual(state.models, []);
   config.needsKey = false;
-  const preview = cell('01b-react.html', 'cell-finish-reason');
+  const preview = cell('cell-finish-reason');
   for (const toolCalls of [[], [{id: 'call-clock', function: {name: 'get_current_time', arguments: '{}'}}]]) {
     config.model = toolCalls.length ? 'provider/switched-model' : 'course/agent';
     const sent = [];
