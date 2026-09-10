@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -17,6 +18,57 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from scripts.runtime.host_browser import BrowserRuntimeError, environment, run_node
 
+LOCALE_PAGES = ("index.html", "03a-kickstart.html", "03c-always-on.html", "04a-safety.html")
+
+
+def discover_artifact_locales(site: Path) -> list[dict[str, str]]:
+    """Resolve published locale routes before opening any browser pages."""
+    site = site.resolve()
+    manifest = site / "languages.json"
+    if not manifest.exists() and site == ROOT / "web":
+        return [{"code": "en", "locale": "en", "url": "nemoclaw/"}]
+    data = json.loads(manifest.read_text(encoding="utf-8"))
+    if not isinstance(data, dict) or data.get("schema") != "nemoclaw-languages/1" or data.get("default") != "en":
+        raise ValueError("languages.json must declare the published language schema and English default")
+    languages = data.get("languages")
+    if not isinstance(languages, list) or not languages:
+        raise ValueError("languages.json has no declared languages")
+    routes = []
+    codes, urls = set(), set()
+    for row in languages:
+        if not isinstance(row, dict):
+            raise ValueError("languages.json contains a malformed language declaration")
+        code, locale, url = (row.get(field) for field in ("code", "locale", "url"))
+        if (not isinstance(code, str) or not re.fullmatch(r"[a-z]{2,3}(?:-[a-z0-9]{2,8})*", code)
+                or not isinstance(locale, str) or not re.fullmatch(r"[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*", locale)
+                or not isinstance(url, str) or not re.fullmatch(r"(?:[a-z0-9][a-z0-9-]*/)*nemoclaw/", url)
+                or code in codes or url in urls):
+            raise ValueError(f"languages.json contains an unsafe or duplicate locale route: {row!r}")
+        codes.add(code)
+        urls.add(url)
+        course = site / url
+        for leaf in LOCALE_PAGES:
+            page = (course / leaf).resolve()
+            if not page.is_relative_to(site) or not page.is_file():
+                raise ValueError(f"declared locale {code} is missing a required route: {url}{leaf}")
+        if code == "en":
+            if locale != "en":
+                raise ValueError("the English route must declare locale en")
+        else:
+            metadata = json.loads((course / "assets/locale.json").read_text(encoding="utf-8"))
+            if (not isinstance(metadata, dict) or metadata.get("schema") != "nemoclaw-locale/1"
+                    or metadata.get("url_code") != code or metadata.get("locale") != locale):
+                raise ValueError(f"declared locale {code} does not match its delivered locale metadata")
+        routes.append({"code": code, "locale": locale, "url": url})
+    if "en" not in codes:
+        raise ValueError("languages.json is missing its English default route")
+    for metadata_path in site.glob("**/nemoclaw/assets/locale.json"):
+        route = metadata_path.parent.parent.relative_to(site).as_posix() + "/"
+        if route not in urls:
+            raise ValueError(f"delivered locale route is missing from languages.json: {route}")
+    return routes
+
+
 RUNTIME_JS = r"""
 const http = require('http');
 const fs = require('fs');
@@ -26,6 +78,8 @@ const { chromium } = require('playwright-core');
 const root = process.env.SITE_ROOT || '/site';
 const port = Number(process.env.SITE_PORT || 4198);
 const timeoutMs = Number(process.env.AUDIT_TIMEOUT_MS || 120000);
+const locales = JSON.parse(process.env.ARTIFACT_LOCALES);
+const english = locales.find(locale => locale.code === 'en');
 const retiredBillingHeader = 'x-billing-' + 'source';
 const mime = { '.html':'text/html; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.css':'text/css; charset=utf-8', '.json':'application/json; charset=utf-8', '.svg':'image/svg+xml', '.png':'image/png', '.woff2':'font/woff2' };
 
@@ -46,16 +100,38 @@ const server = http.createServer((req, res) => {
   });
 });
 const listen = () => new Promise(resolve => server.listen(port, '127.0.0.1', resolve));
-const url = page => `http://127.0.0.1:${port}${page.startsWith('/') ? page : '/nemoclaw/' + page}`;
+const url = page => `http://127.0.0.1:${port}${page.startsWith('/') ? page : '/' + english.url + page}`;
 const fail = message => { throw new Error(message); };
+
+function topLevelInitScript(init) {
+  return `if (window === window.top) { (${init.toString()})(); }`;
+}
+
+function courseExplorerPath() {
+  const candidates = [
+    path.posix.join('/', english.url, '_skill_explorer.js'),
+    path.posix.join('/', english.url, '..', '_skill_explorer.js'),
+  ];
+  const found = candidates.find(candidate => fs.existsSync(safeJoin(root, candidate)));
+  if (!found) fail(`missing course explorer script for ${english.url}`);
+  return found;
+}
 
 async function open(browser, pageName, init) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const errors = [];
   page.on('pageerror', error => errors.push(error.message || String(error)));
-  if (init) await page.addInitScript(init);
-  await page.goto(url(pageName), { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+  if (init) await page.addInitScript({ content: topLevelInitScript(init) });
+  const response = await page.goto(url(pageName), { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+  if (!response?.ok()) fail(`course route failed: ${pageName} (${response?.status()})`);
   return { page, errors };
+}
+
+async function openLocale(browser, language, filename) {
+  const opened = await open(browser, '/' + language.url + filename);
+  const actual = await opened.page.locator('html').getAttribute('lang');
+  if (actual !== language.locale) fail(`${language.code} ${filename}: html.lang ${actual} != ${language.locale}`);
+  return opened;
 }
 
 (async () => {
@@ -391,21 +467,19 @@ async function open(browser, pageName, init) {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const errors = [];
     page.on('pageerror', error => errors.push(error.message || String(error)));
-    await page.addInitScript(() => {
+    await page.addInitScript({ content: topLevelInitScript(() => {
       localStorage.setItem('nemoclaw_model_api_base_url_v1', 'https://skill-model.example.test/v1');
       localStorage.setItem('nemoclaw_model_id_v1', 'model/skill-registry');
       sessionStorage.setItem('nvapi', 'test-model-key');
-    });
+    }) });
     const fixtureUrl = `http://127.0.0.1:${port}/endpoint-registry-fixture.html`;
-    const skillExplorerPath = fs.existsSync(path.join(root, '_skill_explorer.js'))
-      ? '/_skill_explorer.js'
-      : '/web/_skill_explorer.js';
+    const skillExplorerPath = courseExplorerPath();
     await page.route(fixtureUrl, route => route.fulfill({
       status: 200,
       contentType: 'text/html',
       body: `<!doctype html><html><head><meta charset="utf-8"><title>Registry fixture</title></head><body>
         <div id="explorer"></div>
-        <script type="application/json" id="explorer-config">{"title":"Registry fixture","files":[{"path":"nemoclaw/scripts/_shared.js","role":"fixture"}]}</script>
+        <script type="application/json" id="explorer-config">{"title":"Registry fixture","files":[{"path":"${english.url}scripts/_shared.js","role":"fixture"}]}</script>
         <script src="${skillExplorerPath}"></script>
       </body></html>`,
     }));
@@ -466,6 +540,53 @@ async function open(browser, pageName, init) {
     if (imports !== 3) fail('2c authored LangChain import coverage expected 3 cells, found ' + imports);
     results.agentBundle.deepImportCells = imports;
     if (errors.length) fail('2c browser errors: ' + JSON.stringify(errors));
+    await page.close();
+  }
+
+  // 2c: a degenerate worker stream is retried once and never reaches the findings corpus.
+  {
+    const { page, errors } = await open(browser, '02c-deep.html', () => {
+      sessionStorage.setItem('nvapi', 'nvapi-deep-audit');
+    });
+    let requests = 0, ragWorkerCalls = 0;
+    await page.route('**/chat/completions', async route => {
+      requests++;
+      const body = JSON.parse(route.request().postData() || '{}');
+      const system = body.messages?.[0]?.content || '';
+      const user = body.messages?.[1]?.content || '';
+      let content;
+      if (system.includes('research planner')) {
+        content = JSON.stringify({ branches: [
+          { source:'materials', target:'Retrieval-Augmented Generation (RAG)', goal:'Define RAG' },
+          { source:'section', target:'overview', goal:'Explain how this course builds RAG' },
+        ] });
+      } else if (system.includes('You are a sub-agent')) {
+        if (user.includes('GOAL: Define RAG') && ragWorkerCalls++ === 0) {
+          content = 'Basedellsellsellsellsellsellsellsellsellsellsell';
+        } else {
+          content = user.includes('GOAL: Define RAG')
+            ? 'RAG grounds a model response in retrieved evidence.'
+            : 'The course moves from model calls through retrieval and agent coordination.';
+        }
+      } else {
+        content = 'RAG uses retrieved evidence [1], and this course builds it into coordinated agents [2].';
+      }
+      const frame = JSON.stringify({ choices:[{ delta:{ content }, finish_reason:null }] });
+      const done = JSON.stringify({ choices:[{ delta:{}, finish_reason:'stop' }], usage:{ prompt_tokens:1, completion_tokens:1 } });
+      await route.fulfill({
+        status:200, contentType:'text/event-stream',
+        body:`data: ${frame}\n\ndata: ${done}\n\ndata: [DONE]\n\n`,
+      });
+    });
+    await page.getByRole('button', { name:'What is RAG, and how does this course build it?', exact:true }).click();
+    await page.getByRole('button', { name:'Send', exact:true }).click();
+    await page.locator('.research-board-status').filter({ hasText:'synthesis complete' }).waitFor({ timeout:timeoutMs });
+    const transcript = await page.locator('#deep-artifact').innerText();
+    if (requests !== 5 || ragWorkerCalls !== 2 || /sellsellsell/i.test(transcript) ||
+        !transcript.includes('RAG grounds a model response in retrieved evidence.')) {
+      fail('2c repetitive worker recovery failed: ' + JSON.stringify({ requests, ragWorkerCalls, transcript }));
+    }
+    if (errors.length) fail('2c repetitive worker browser errors: ' + JSON.stringify(errors));
     await page.close();
   }
 
@@ -675,27 +796,34 @@ async function open(browser, pageName, init) {
     await page.close();
   }
 
-  // Built Pages roots contain locale overlays. Prove runtime guidance stayed translated.
+  // Every published locale must retain its declared language and shared runtime contracts.
   results.locales = {};
-  for (const [locale, connectionPattern, cronPattern, policyPattern] of [
-    ['pt', /URL base[\s\S]*Sessão de acesso[\s\S]*Testar conexão/i, /Adicione uma linha curta[\s\S]*aguardando uma execução cron concluída/i, /Não foi possível interpretar/],
-    ['es', /URL base[\s\S]*Sesión de acceso[\s\S]*Probar conexión/i, /Añade una línea breve[\s\S]*esperando una ejecución cron terminada/i, /No se pudo interpretar/],
-  ]) {
-    const kickstartPath = `/${locale}/nemoclaw/03a-kickstart.html`;
-    if (!fs.existsSync(safeJoin(root, kickstartPath))) continue;
-    const kickstart = await open(browser, kickstartPath);
+  const translatedGuidance = {
+    pt: [/URL base[\s\S]*Sessão de acesso[\s\S]*Testar conexão/i, /Adicione uma linha curta[\s\S]*aguardando uma execução cron concluída/i, /Não foi possível interpretar/],
+    es: [/URL base[\s\S]*Sesión de acceso[\s\S]*Probar conexión/i, /Añade una línea breve[\s\S]*esperando una ejecución cron terminada/i, /No se pudo interpretar/],
+  };
+  for (const language of locales) {
+    const locale = language.code;
+    const [connectionPattern, cronPattern, policyPattern] = translatedGuidance[locale] || [];
+    const kickstart = await openLocale(browser, language, '03a-kickstart.html');
     await kickstart.page.locator('#probe-claw .claw-connection-audit').waitFor({ state: 'visible', timeout: timeoutMs });
+    const connectionReady = await kickstart.page.evaluate(async () => {
+      const connection = await import(new URL('./scripts/_connection.js', location.href));
+      const widget = document.querySelector('#probe-claw .claw-connection-audit');
+      return typeof connection.setOpenClawConnection === 'function' &&
+        !!widget.querySelector('.claw-url') && !!widget.querySelector('.claw-access-session');
+    });
     const connectionText = await kickstart.page.locator('#probe-claw .claw-connection-audit').innerText();
-    if (!connectionPattern.test(connectionText)) {
+    if (!connectionReady || (connectionPattern && !connectionPattern.test(connectionText))) {
       fail(`${locale} connection audit was de-localized: ${connectionText}`);
     }
     if (kickstart.errors.length) fail(`${locale} 3a browser errors: ${JSON.stringify(kickstart.errors)}`);
     await kickstart.page.close();
 
-    const cron = await open(browser, `/${locale}/nemoclaw/03c-always-on.html`);
+    const cron = await openLocale(browser, language, '03c-always-on.html');
     await cron.page.locator('#probe-cron .cf-panel-code').first().waitFor({ state: 'attached', timeout: timeoutMs });
     const cronCode = await cron.page.locator('#probe-cron .cf-panel-code').evaluateAll(items => items.map(item => item.value || '').join('\n'));
-    if (!cronPattern.test(cronCode) || !cronCode.includes('state.call("cron.add"') ||
+    if ((cronPattern && !cronPattern.test(cronCode)) || !cronCode.includes('state.call("cron.add"') ||
         !cronCode.includes('sessionTarget: "isolated"') ||
         !cronCode.includes('state.call("cron.runs"') ||
         !cronCode.includes('const POLL_MS = 5000') || cronCode.includes('const WAIT_S = 70')) {
@@ -704,15 +832,16 @@ async function open(browser, pageName, init) {
     if (cron.errors.length) fail(`${locale} 3c browser errors: ${JSON.stringify(cron.errors)}`);
     await cron.page.close();
 
-    const safety = await open(browser, `/${locale}/nemoclaw/04a-safety.html`);
+    const safety = await openLocale(browser, language, '04a-safety.html');
     await safety.page.locator('#cell-live-policy .rc-code').waitFor({ state: 'attached', timeout: timeoutMs });
     const policyCode = await safety.page.locator('#cell-live-policy .rc-code').inputValue();
-    if (!policyPattern.test(policyCode) || !policyCode.includes('p.parseError')) {
+    if ((policyPattern && !policyPattern.test(policyCode)) || !policyCode.includes('p.parseError')) {
       fail(`${locale} policy failure guidance lost translation or parser detail`);
     }
     if (safety.errors.length) fail(`${locale} 4a browser errors: ${JSON.stringify(safety.errors)}`);
     await safety.page.close();
-    results.locales[locale] = { connectionLocalized: true, cronLocalized: true, policyLocalized: true };
+    results.locales[locale] = { htmlLang: language.locale, route: language.url, connectionReady: true,
+      cronContract: true, policyContract: true, translatedGuidanceChecked: !!connectionPattern };
   }
 
   await browser.close();
@@ -740,13 +869,19 @@ def main() -> int:
     if not site_root.exists():
         print(f"runtime_integration_browser_audit: FAIL\n  - site root missing: {site_root}")
         return 1
+    try:
+        locales = discover_artifact_locales(site_root)
+    except (OSError, ValueError) as error:
+        print(f"runtime_integration_browser_audit: FAIL\n  - {error}")
+        return 1
     with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as handle:
         handle.write(RUNTIME_JS)
         script = Path(handle.name)
     try:
         proc = run_node(
             script,
-            env=environment(SITE_ROOT=site_root, AUDIT_TIMEOUT_MS=str(args.timeout_ms)),
+            env=environment(SITE_ROOT=site_root, AUDIT_TIMEOUT_MS=str(args.timeout_ms),
+                            ARTIFACT_LOCALES=json.dumps(locales)),
             timeout=args.timeout_ms / 1000 + 60,
         )
     except BrowserRuntimeError as error:
