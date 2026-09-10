@@ -36,6 +36,11 @@ Contained cross-model changes use the frozen protocol and evidence boundary in
 
 - Keep idea intake cheap. A Discussion or structured Issue can carry a question, correction,
   source, or design without requiring code.
+- An automated worker may use the dedicated machine user in
+  [`agent-github-bot.md`](agent-github-bot.md) as its GitHub actor. The human remains the commit
+  author and DCO signer. The bot may push feature branches and update one bounded Check and status
+  comment; it cannot approve, merge, deploy, edit workflows, or bypass protected refs or
+  environments.
 - Treat every patch as untrusted input, including patches from maintainers and capable agents.
   Require issue linkage and named surfaces. Record blast-radius evidence, command results, human
   ownership, risk, rollback, and explicit out-of-scope work.
