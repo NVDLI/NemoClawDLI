@@ -197,7 +197,8 @@ Sources of truth are the exact lock files named in the Scope column. The same pa
 | security-tooling | jsonschema-specifications | 2025.9.1 | MIT | [PyPI](https://pypi.org/pypi/jsonschema-specifications/2025.9.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | lark | 1.3.1 | MIT | [PyPI](https://pypi.org/pypi/lark/1.3.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | license-expression | 30.4.4 | Apache-2.0 | [PyPI](https://pypi.org/pypi/license-expression/30.4.4/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
-| material-tooling, security-tooling | lxml | 6.1.1 | BSD-3-Clause | [PyPI](https://pypi.org/pypi/lxml/6.1.1/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
+| security-tooling | lxml | 6.1.1 | BSD-3-Clause | [PyPI](https://pypi.org/pypi/lxml/6.1.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
+| material-tooling | lxml | 6.1.2 | BSD-3-Clause | [PyPI](https://pypi.org/pypi/lxml/6.1.2/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock) |
 | security-tooling | markdown-it-py | 4.2.0 | MIT | [PyPI](https://pypi.org/pypi/markdown-it-py/4.2.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | material-tooling | markdownify | 1.2.3 | MIT | [PyPI](https://pypi.org/pypi/markdownify/1.2.3/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock) |
 | security-tooling | mdurl | 0.1.2 | MIT | [PyPI](https://pypi.org/pypi/mdurl/0.1.2/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
