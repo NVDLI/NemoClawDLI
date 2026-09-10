@@ -461,8 +461,7 @@ NVIDIA API keys start with <code>nvapi-</code>.</p>
       },
       actions: [
         {
-          label: "GET /v1/models", path: "/models", method: "GET",
-          filterModels: ["120b", "glm", "kimi", "minimax"]
+          label: "GET /v1/models", path: "/models", method: "GET"
         },
 
         {
@@ -491,26 +490,31 @@ NVIDIA API keys start with <code>nvapi-</code>.</p>
       openCode: true,
       intro: "Run this short discovery request first. It lists models matching the editable prefix; code stays visible because changing that filter is the exercise.",
       code: `// Fetch the model catalog and keep only the IDs this benchmark compares.
-const FILTER = ["120b", "glm", "kimi", "minimax"];
-const CFG      = await helpers.getConfig();
+state.models = []; // A failed discovery must not reuse models from an earlier run.
+state.results = [];
+const CFG = await helpers.getConfig();
+const FILTER = [CFG.model]; // Start with the configured model; edit using the catalog IDs below.
 const ENDPOINT = CFG.url.replace(/\\/+$/, "");
 const KEY    = helpers.getKey() || "";
 
-if (!KEY) {
+if (CFG.needsKey && !KEY) {
   helpers.log("No API key saved. Go to the course home and save the endpoint and key first.");
   return;
 }
 const r = await helpers.browserChatFetch()(ENDPOINT + "/models", {
-  headers: { Authorization: "Bearer " + KEY },
+  headers: KEY ? { Authorization: "Bearer " + KEY } : {},
+  signal: helpers.signal,
 });
 
 if (!r.ok) { helpers.log("models fetch failed: HTTP " + r.status); return; }
 const { data } = await r.json();
-// Optional visibility: uncomment to inspect every model ID before filtering.
-// helpers.log.json("all model IDs", data.map(model => model.id));
+// Optional visibility: inspect the complete catalog entries.
+// helpers.log.json("catalog response", { data });
+helpers.log.details("available model IDs", data.map(model => model.id));
+helpers.log("filter:", FILTER.join(", "));
 const models = data.map(m => m.id).filter(id => FILTER.some(s => id.toLowerCase().includes(s.toLowerCase())));
 if (!models.length) {
-  helpers.log("No models matched filter: " + FILTER.join(", "));
+  helpers.log("No models matched. Choose an ID from available model IDs, edit FILTER, and rerun discovery.");
   return;
 }
 helpers.log(models.length + " model(s) to bench:\\n  " + models.join("\\n  "));
@@ -523,11 +527,18 @@ return { count: models.length };`,
     mountRunCell("#bench-measure-models", {
       label: "Measure TTFT per model",
       code: `// Stream one prompt through each selected model and measure first-token latency.
-if (!state.models?.length) { helpers.log("Run 'Fetch matching models' first."); return; }
+if (!state.models?.length) { helpers.log("Fetch matching models must return at least one model. Inspect its catalog and filter, then rerun it."); return; }
+const CFG = await helpers.getConfig();
+if (state.endpoint !== CFG.url.replace(/\\/+$/, "") || state.key !== (helpers.getKey() || "")) {
+  helpers.log("Connection changed. Rerun Fetch matching models before measuring.");
+  return;
+}
 const PROMPT       = "List five prime numbers.";
 // Try another prompt (uncomment one) to compare how the models behave on different work:
 // const PROMPT    = "Explain step by step why the sky is blue.";                // a reasoning task
 // const PROMPT    = "Write a haiku about GPUs, then one line on what it means."; // a longer generation
+helpers.log("prompt:", PROMPT);
+helpers.log("models:", state.models.join(", "));
 const MAX_TOKENS   = 256;     // reasoning models think first; too low and they never answer
 const TTFT_TIMEOUT = 30000;   // ms; give up on a model with no first token by now (some are slow to start)
 
@@ -545,7 +556,7 @@ async function bench(model) {
   try {
     const r = await helpers.browserChatFetch()(state.endpoint + "/chat/completions", {
       method: "POST",
-      headers: { Authorization: "Bearer " + state.key, "Content-Type": "application/json" },
+      headers: { ...(state.key ? { Authorization: "Bearer " + state.key } : {}), "Content-Type": "application/json" },
       body: JSON.stringify({ model, messages: [{ role: "user", content: PROMPT }], max_tokens: MAX_TOKENS, stream: true }),
       signal: ctrl.signal,
     });
