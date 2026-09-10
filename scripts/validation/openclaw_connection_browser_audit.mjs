@@ -123,7 +123,7 @@ try {
               runId, state: 'final', message: { content: [{ text: 'final-only answer' }] },
             } }, 5); return;
           }
-          const noise = '/bin/bash: 1: cannot create /proc/self/oom_score_adj: Permission denied';
+          const noise = '/usr/bin/sh: 1: cannot create /proc/self/oom_score_adj: Permission denied';
           this.emit(frame('tool', { phase: 'start', toolCallId: 'tool-1', name: 'dir_list', args: {} }), 5);
           this.emit(frame('tool', { phase: 'result', toolCallId: 'tool-1', name: 'dir_list', isError: true,
             result: { content: [{ text: `Validation failed for tool "dir_list": required properties node, path\n${noise}\nretry with exec` }] } }), 10);
@@ -575,6 +575,24 @@ try {
   ok(toolResult.error && /Validation failed/.test(toolResult.body) && /retry with exec/.test(toolResult.body),
     `actionable dir_list validation evidence was hidden: ${JSON.stringify(toolResult)}`);
   ok(!/oom_score_adj/.test(toolResult.body), `sandbox bootstrap noise remained in tool output: ${JSON.stringify(toolResult)}`);
+  result.noiseBoundary = await page.evaluate(async () => {
+    const { filterOpenClawRuntimeNoise } = await import('./scripts/_runtime_text.js');
+    const known = ['', '/bin/', '/usr/bin/'].flatMap(prefix =>
+      ['sh', 'bash', 'dash', 'zsh'].map(shell => `${prefix}${shell}: 1: cannot create /proc/self/oom_score_adj: Permission denied`));
+    const actionable = [
+      'sh: cannot create /proc/self/oom_score_adj: Permission denied',
+      'sh: 1: cannot create /proc/self/oom_score: Permission denied',
+      'sh: 1: cannot create /proc/123/oom_score_adj: Permission denied',
+      'sh: 1: cannot create /proc/self/oom_score_adj: Operation not permitted',
+      `unexpected failure: ${known[0]}`,
+    ];
+    return {
+      recognized: known.every(line => filterOpenClawRuntimeNoise(`before\n${line}\nafter`) === 'before\nafter'),
+      preserved: actionable.every(line => filterOpenClawRuntimeNoise(line) === line),
+    };
+  });
+  ok(result.noiseBoundary.recognized && result.noiseBoundary.preserved,
+    `shell-noise boundary changed: ${JSON.stringify(result.noiseBoundary)}`);
   ok(result.chatContract.finalOnly.text === 'final-only answer' && result.chatContract.finalOnly.tokens === 'final-only answer',
     `final-only gateway text did not reach the UI: ${JSON.stringify(result.chatContract.finalOnly)}`);
   ok(/without a displayable reply/.test(result.chatContract.empty.text) &&
