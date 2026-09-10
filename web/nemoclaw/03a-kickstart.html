@@ -520,6 +520,7 @@ if (!models.length) {
 helpers.log(models.length + " model(s) to bench:\\n  " + models.join("\\n  "));
 state.models = models;
 state.endpoint = ENDPOINT;
+state.configUrl = CFG.url;
 state.key    = KEY;
 return { count: models.length };`,
     });
@@ -529,7 +530,7 @@ return { count: models.length };`,
       code: `// Stream one prompt through each selected model and measure first-token latency.
 if (!state.models?.length) { helpers.log("Fetch matching models must return at least one model. Inspect its catalog and filter, then rerun it."); return; }
 const CFG = await helpers.getConfig();
-if (state.endpoint !== CFG.url.replace(/\\/+$/, "") || state.key !== (helpers.getKey() || "")) {
+if (state.configUrl !== CFG.url || state.key !== (helpers.getKey() || "")) {
   helpers.log("Connection changed. Rerun Fetch matching models before measuring.");
   return;
 }
