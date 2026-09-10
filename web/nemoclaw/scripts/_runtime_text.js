@@ -3,7 +3,7 @@
 
 // Text normalization shared by live OpenClaw chat, gateway cells, and launchable terminals.
 
-const OOM_SCORE_ADJ_NOISE = /^(?:\/bin\/)?(?:ba|da|z)?sh:\s*(?:line\s+)?\d+:\s*cannot create \/proc\/self\/oom_score_adj:\s*Permission denied\s*$/;
+const OOM_SCORE_ADJ_NOISE = /^(?:(?:\/usr)?\/bin\/)?(?:ba|da|z)?sh:\s*(?:line\s+)?\d+:\s*cannot create \/proc\/self\/oom_score_adj:\s*Permission denied\s*$/;
 
 export function filterOpenClawRuntimeNoise(value) {
   /* @doc <code>helpers.filterOpenClawRuntimeNoise(text)</code> :: Removes known container noise from OpenClaw text while preserving learner-relevant output. */
