@@ -3,21 +3,35 @@
 
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
+import { pathToFileURL } from 'node:url';
 
-import {
-  getInstalledNemoClawActivity,
+const COURSE_ROOTS = fs.readdirSync('web', { withFileTypes: true })
+  .filter(entry => entry.isDirectory() && fs.existsSync(path.join('web', entry.name, 'activity-policy.json')))
+  .map(entry => path.join('web', entry.name));
+assert.equal(COURSE_ROOTS.length, 1, 'expected one discovered Activity-enabled course');
+const [COURSE_ROOT] = COURSE_ROOTS;
+const COURSE_ID = path.basename(COURSE_ROOT);
+const runtimeModule = await import(pathToFileURL(path.resolve(COURSE_ROOT, 'scripts', '_activity_runtime.js')));
+const {
+  ACTIVITY_MILESTONE_ORDER,
+  getInstalledCourseActivity,
   highestContiguousMilestone,
-  installNemoClawActivityTracking,
-} from '../../web/nemoclaw/scripts/_activity_runtime.js';
+  installCourseActivityTracking,
+} = runtimeModule;
 
 const read = path => fs.readFileSync(path, 'utf8');
+const source = (...parts) => path.join(COURSE_ROOT, ...parts);
+const event = name => `${COURSE_ID}:${name}`;
+const connectedMilestone = `03a:${COURSE_ID}-connected`;
+const evidenceKey = version => `dli_activity:${COURSE_ID}:evidence:v1:${version}`;
 
 function trackingFixture(page = '01a-loop.html', providedStorageTarget) {
   const previousLocation = globalThis.location;
   Object.defineProperty(globalThis, 'location', {
     configurable: true,
-    value: { pathname: `/nemoclaw/${page}` },
+    value: { pathname: `/${COURSE_ID}/${page}` },
   });
   const windowTarget = new EventTarget();
   const documentTarget = new EventTarget();
@@ -32,7 +46,7 @@ function trackingFixture(page = '01a-loop.html', providedStorageTarget) {
     recordMilestone: async milestone => { milestones.push(milestone); },
     trackReferral: async () => true,
   };
-  installNemoClawActivityTracking({ windowTarget, documentTarget, storageTarget, activity });
+  installCourseActivityTracking({ windowTarget, documentTarget, storageTarget, activity });
   return {
     milestones,
     storageTarget,
@@ -55,48 +69,37 @@ test('out-of-order outcomes advance only through contiguous checkpoints', () => 
   assert.equal(highestContiguousMilestone(new Set([
     '01a:model-call-verified', '01b:react-loop-complete', '01c:tool-roundtrip-complete',
   ])), '01c:tool-roundtrip-complete');
-  assert.equal(highestContiguousMilestone(new Set([
-    '01a:model-call-verified', '01b:react-loop-complete', '01c:tool-roundtrip-complete',
-    '02a:routed-workflow-complete', '02b:grounded-answer-complete',
-    '02c:deep-research-complete', '03a:nemoclaw-connected',
-    '03b:workspace-inspected', '03c:scheduled-run-complete',
-    '04a:policy-boundary-verified', '04b:live-agent-operated',
-  ])), '04b:live-agent-operated');
+  assert.equal(highestContiguousMilestone(new Set(ACTIVITY_MILESTONE_ORDER)), '04b:live-agent-operated');
 });
 
 test('shared runtimes publish success-only activity signals', () => {
-  const canvas = read('web/nemoclaw/scripts/_canvas.js');
-  assert.match(canvas, /nemoclaw:run-succeeded/);
-  assert.match(canvas, /nemoclaw:canvas-node-succeeded/);
+  const canvas = read(source('scripts', '_canvas.js'));
+  assert.match(canvas, new RegExp(event('run-succeeded')));
+  assert.match(canvas, new RegExp(event('canvas-node-succeeded')));
   assert.doesNotMatch(canvas, /publishActivitySignal\([^;]+\bresult\s*[,}]/s);
-  assert.match(read('web/nemoclaw/scripts/_chat.js'), /nemoclaw:chat-completed/);
-  assert.match(read('web/nemoclaw/scripts/_openclaw.js'), /nemoclaw:connection-audit-passed/);
-  assert.match(read('web/nemoclaw/scripts/_openclaw_cli.js'), /nemoclaw:live-agent-operated/);
+  assert.match(read(source('scripts', '_chat.js')), new RegExp(event('chat-completed')));
+  assert.match(read(source('scripts', '_openclaw.js')), new RegExp(event('connection-audit-passed')));
+  assert.match(read(source('scripts', '_openclaw_cli.js')), new RegExp(event('live-agent-operated')));
 });
 
 test('checkpoint predicates require explicit successful evidence', () => {
-  const source = read('web/nemoclaw/scripts/_activity_runtime.js');
-  assert.match(source, /successCount < 1/);
-  assert.match(source, /&& runObserved/);
-  assert.match(source, /&& cleanupSucceeded/);
-  assert.match(source, /&& policyAgreed/);
+  const runtimeSource = read(source('scripts', '_activity_runtime.js'));
+  assert.match(runtimeSource, /successCount < 1/);
+  assert.match(runtimeSource, /&& runObserved/);
+  assert.match(runtimeSource, /&& cleanupSucceeded/);
+  assert.match(runtimeSource, /&& policyAgreed/);
 });
 
 test('the activity runtime maps every approved checkpoint to evidence', () => {
-  const source = read('web/nemoclaw/scripts/_activity_runtime.js');
-  for (const milestone of [
-    '01a:model-call-verified', '01b:react-loop-complete',
-    '01c:tool-roundtrip-complete', '02a:routed-workflow-complete',
-    '02b:grounded-answer-complete', '02c:deep-research-complete',
-    '03a:nemoclaw-connected', '03b:workspace-inspected',
-    '03c:scheduled-run-complete', '04a:policy-boundary-verified',
-    '04b:live-agent-operated',
-  ]) assert.match(source, new RegExp(milestone.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  const runtimeSource = read(source('scripts', '_activity_runtime.js'));
+  for (const milestone of ACTIVITY_MILESTONE_ORDER) {
+    assert.match(runtimeSource, new RegExp(milestone.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
 });
 
 test('the shared course entrypoint installs activity tracking', () => {
-  const source = read('web/nemoclaw/scripts/_shared.js');
-  assert.match(source, /installNemoClawActivityTracking/);
+  const sharedSource = read(source('scripts', '_shared.js'));
+  assert.match(sharedSource, /install\w+ActivityTracking/);
 });
 
 test('installing activity tracking on a page does not advance progress', () => {
@@ -118,7 +121,7 @@ test('course bootstrap survives browsers that deny sessionStorage access', () =>
   const documentTarget = new EventTarget();
   const activity = { start: async () => true, recordMilestone: async () => true };
   try {
-    assert.equal(installNemoClawActivityTracking({ windowTarget, documentTarget, activity }), activity);
+    assert.equal(installCourseActivityTracking({ windowTarget, documentTarget, activity }), activity);
   } finally {
     if (descriptor) Object.defineProperty(globalThis, 'sessionStorage', descriptor);
     else delete globalThis.sessionStorage;
@@ -132,8 +135,8 @@ test('checkpoint prerequisites remain available in memory when session storage i
   };
   const fixture = trackingFixture('01a-loop.html', storageTarget);
   try {
-    dispatch(fixture.windowTarget, 'nemoclaw:api-key-verified');
-    dispatch(fixture.windowTarget, 'nemoclaw:run-succeeded', {
+    dispatch(fixture.windowTarget, event('api-key-verified'));
+    dispatch(fixture.windowTarget, event('run-succeeded'), {
       cellId: 'cell-onecall', hasContent: true,
     });
     assert.deepEqual(fixture.milestones, ['01a:model-call-verified']);
@@ -145,10 +148,10 @@ test('checkpoint prerequisites remain available in memory when session storage i
 test('checkpoint evidence from an older release cannot advance the current release', () => {
   const fixture = trackingFixture('01b-react.html');
   try {
-    fixture.storageTarget.setItem('dli_activity:nemoclaw:evidence:v1:0', JSON.stringify({
+    fixture.storageTarget.setItem(evidenceKey(0), JSON.stringify({
       'milestone:01a:model-call-verified': true,
     }));
-    dispatch(fixture.windowTarget, 'nemoclaw:chat-completed', {
+    dispatch(fixture.windowTarget, event('chat-completed'), {
       containerId: 'react-artifact', successCount: 1, hasAnswer: true,
     });
     assert.deepEqual(fixture.milestones, []);
@@ -160,18 +163,18 @@ test('checkpoint evidence from an older release cannot advance the current relea
 test('Module 1a advances only after key verification and successful model content', () => {
   const fixture = trackingFixture();
   try {
-    dispatch(fixture.windowTarget, 'nemoclaw:run-succeeded', {
+    dispatch(fixture.windowTarget, event('run-succeeded'), {
       cellId: 'cell-onecall', hasContent: true,
     });
     assert.deepEqual(fixture.milestones, []);
 
-    dispatch(fixture.windowTarget, 'nemoclaw:api-key-verified');
-    dispatch(fixture.windowTarget, 'nemoclaw:run-succeeded', {
+    dispatch(fixture.windowTarget, event('api-key-verified'));
+    dispatch(fixture.windowTarget, event('run-succeeded'), {
       cellId: 'cell-onecall', hasContent: false,
     });
     assert.deepEqual(fixture.milestones, []);
 
-    dispatch(fixture.windowTarget, 'nemoclaw:run-succeeded', {
+    dispatch(fixture.windowTarget, event('run-succeeded'), {
       cellId: 'cell-onecall', hasContent: true,
     });
     assert.deepEqual(fixture.milestones, ['01a:model-call-verified']);
@@ -182,35 +185,35 @@ test('Module 1a advances only after key verification and successful model conten
 
 test('every 01b through 04b checkpoint requires its full success predicate', () => {
   const cases = [
-    ['01b-react.html', 'nemoclaw:chat-completed',
+    ['01b-react.html', event('chat-completed'),
       { containerId: 'react-artifact', successCount: 1, hasAnswer: true },
       { containerId: 'react-artifact', successCount: 0, hasAnswer: true }, '01b:react-loop-complete'],
-    ['01c-tools.html', 'nemoclaw:chat-completed',
+    ['01c-tools.html', event('chat-completed'),
       { containerId: 'tools-artifact', successCount: 1, hasAnswer: true },
       { containerId: 'tools-artifact', successCount: 1, hasAnswer: false }, '01c:tool-roundtrip-complete'],
-    ['02a-routing.html', 'nemoclaw:chat-completed',
+    ['02a-routing.html', event('chat-completed'),
       { containerId: 'router-artifact', successCount: 1, hasAnswer: true },
       { containerId: 'wrong-artifact', successCount: 1, hasAnswer: true }, '02a:routed-workflow-complete'],
-    ['02b-rag.html', 'nemoclaw:chat-completed',
+    ['02b-rag.html', event('chat-completed'),
       { containerId: 'rag-artifact', successCount: 1, hasAnswer: true },
       { containerId: 'rag-artifact', successCount: 0, hasAnswer: false }, '02b:grounded-answer-complete'],
-    ['02c-deep.html', 'nemoclaw:chat-completed',
+    ['02c-deep.html', event('chat-completed'),
       { containerId: 'deep-artifact', successCount: 1, hasAnswer: true },
       { containerId: 'deep-artifact', successCount: 0, hasAnswer: true }, '02c:deep-research-complete'],
-    ['03a-connect.html', 'nemoclaw:connection-audit-passed', {}, null, '03a:nemoclaw-connected'],
-    ['04b-operate.html', 'nemoclaw:live-agent-operated', {}, null, '04b:live-agent-operated'],
+    ['03a-connect.html', event('connection-audit-passed'), {}, null, connectedMilestone],
+    ['04b-operate.html', event('live-agent-operated'), {}, null, '04b:live-agent-operated'],
   ];
   const order = [
     '01a:model-call-verified', '01b:react-loop-complete', '01c:tool-roundtrip-complete',
     '02a:routed-workflow-complete', '02b:grounded-answer-complete', '02c:deep-research-complete',
-    '03a:nemoclaw-connected', '03b:workspace-inspected', '03c:scheduled-run-complete',
+    connectedMilestone, '03b:workspace-inspected', '03c:scheduled-run-complete',
     '04a:policy-boundary-verified', '04b:live-agent-operated',
   ];
   for (const [page, type, positive, negative, milestone] of cases) {
     const fixture = trackingFixture(page);
     try {
       const position = order.indexOf(milestone);
-      fixture.storageTarget.setItem('dli_activity:nemoclaw:evidence:v1:1',
+      fixture.storageTarget.setItem(evidenceKey(1),
         JSON.stringify(Object.fromEntries(order.slice(0, position)
           .map(item => [`milestone:${item}`, true]))));
       if (negative) {
@@ -226,29 +229,29 @@ test('every 01b through 04b checkpoint requires its full success predicate', () 
 test('paired checkpoints reject partial evidence in either order', async t => {
   const cases = [
     ['03b-openclaw.html',
-      ['nemoclaw:run-succeeded', { cellId: 'cell-introspect' }],
-      ['nemoclaw:run-succeeded', { cellId: 'cell-workspace-term' }],
+      [event('run-succeeded'), { cellId: 'cell-introspect' }],
+      [event('run-succeeded'), { cellId: 'cell-workspace-term' }],
       '03b:workspace-inspected', 7],
     ['03c-always-on.html',
-      ['nemoclaw:canvas-node-succeeded', { canvasId: 'probe-cron', nodeId: 'cr-watch', runObserved: true }],
-      ['nemoclaw:canvas-node-succeeded', { canvasId: 'probe-cron', nodeId: 'cr-rm', cleanupSucceeded: true }],
+      [event('canvas-node-succeeded'), { canvasId: 'probe-cron', nodeId: 'cr-watch', runObserved: true }],
+      [event('canvas-node-succeeded'), { canvasId: 'probe-cron', nodeId: 'cr-rm', cleanupSucceeded: true }],
       '03c:scheduled-run-complete', 8],
     ['04a-safety.html',
-      ['nemoclaw:run-succeeded', { cellId: 'cell-live-policy', hasAgent: true }],
-      ['nemoclaw:canvas-node-succeeded', { canvasId: 'cell-predict-confirm', nodeId: 'compare', policyAgreed: true }],
+      [event('run-succeeded'), { cellId: 'cell-live-policy', hasAgent: true }],
+      [event('canvas-node-succeeded'), { canvasId: 'cell-predict-confirm', nodeId: 'compare', policyAgreed: true }],
       '04a:policy-boundary-verified', 9],
   ];
   const order = [
     '01a:model-call-verified', '01b:react-loop-complete', '01c:tool-roundtrip-complete',
     '02a:routed-workflow-complete', '02b:grounded-answer-complete', '02c:deep-research-complete',
-    '03a:nemoclaw-connected', '03b:workspace-inspected', '03c:scheduled-run-complete',
+    connectedMilestone, '03b:workspace-inspected', '03c:scheduled-run-complete',
   ];
   for (const [page, left, right, milestone, priorCount] of cases) {
     for (const [first, second] of [[left, right], [right, left]]) {
       await t.test(`${milestone}: ${first[1].cellId || first[1].nodeId} first`, () => {
         const fixture = trackingFixture(page);
         try {
-          fixture.storageTarget.setItem('dli_activity:nemoclaw:evidence:v1:1',
+          fixture.storageTarget.setItem(evidenceKey(1),
             JSON.stringify(Object.fromEntries(order.slice(0, priorCount).map(item => [`milestone:${item}`, true]))));
           dispatch(fixture.windowTarget, first[0], first[1]);
           assert.deepEqual(fixture.milestones, [], `${milestone} accepted partial evidence`);
@@ -268,16 +271,16 @@ test('reinstalling the tracker returns the existing page activity client', () =>
   const documentTarget = { addEventListener() {} };
   const activity = { start() {}, recordMilestone() {} };
 
-  assert.equal(installNemoClawActivityTracking({ windowTarget, documentTarget, activity }), activity);
-  assert.equal(installNemoClawActivityTracking({ windowTarget, documentTarget }), activity);
-  assert.equal(getInstalledNemoClawActivity(windowTarget), activity);
+  assert.equal(installCourseActivityTracking({ windowTarget, documentTarget, activity }), activity);
+  assert.equal(installCourseActivityTracking({ windowTarget, documentTarget }), activity);
+  assert.equal(getInstalledCourseActivity(windowTarget), activity);
 });
 
 test('Going Further exposes an explicit gated Finish Course action', () => {
-  const page = read('web/nemoclaw/04c-going-further.html');
+  const page = read(source('04c-going-further.html'));
   assert.match(page, /id="finish-course"/);
-  assert.match(page, /getInstalledNemoClawActivity/);
-  assert.doesNotMatch(page, /createNemoClawActivity/);
+  assert.match(page, /getInstalled\w+Activity/);
+  assert.doesNotMatch(page, /create\w+Activity/);
   assert.match(page, /getCourseActivityState/);
   assert.match(page, /recordCompletion/);
   assert.match(page, /Course completed/);

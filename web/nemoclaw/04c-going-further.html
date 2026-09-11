@@ -569,6 +569,7 @@
 <script type="module">
 import { buildNav, updateKeyPill, mountJourneyMap } from "./scripts/_shared.js";
 import { getInstalledNemoClawActivity } from "./scripts/_activity_runtime.js";
+import { localizeCourseUiText } from "./scripts/_locale.js";
 mountJourneyMap("#journey-map", "4c");
 document.getElementById("nav").innerHTML = buildNav("04c-going-further.html");
 updateKeyPill(document.getElementById("key-status"));
@@ -577,36 +578,57 @@ document.getElementById("open-course-assistant").addEventListener("click", () =>
 const finishButton = document.getElementById("finish-course");
 const finishStatus = document.getElementById("finish-course-status");
 const courseActivity = getInstalledNemoClawActivity();
+const text = value => localizeCourseUiText(value);
 async function refreshCompletion() {
+  if (courseActivity?.snapshot().phase !== "connected") {
+    finishButton.disabled = true;
+    finishStatus.textContent = text("Remote progress is off. Open Activity in the toolbar to enable it.");
+    return;
+  }
   try {
     const state = await courseActivity.getCourseActivityState();
     if (state.completedAt) {
-      finishButton.textContent = "Course completed";
+      finishButton.textContent = text("Course completed");
       finishButton.disabled = true;
-      finishStatus.textContent = "Course completed. You can return to the course home or continue exploring the resources above.";
+      finishStatus.textContent = text("Course completed. You can return to the course home or continue exploring the resources above.");
       return;
     }
     const ready = Number.isInteger(state.progressPercent) && state.progressPercent === 100;
     finishButton.disabled = !ready;
-    finishStatus.textContent = ready
-      ? "All verified checkpoints are complete. Finish the course when you are ready."
-      : `Verified progress is ${Number(state.progressPercent) || 0}%. Complete the remaining hands-on checkpoints before finishing.`;
+    if (ready) {
+      finishStatus.textContent = text("All verified checkpoints are complete. Finish the course when you are ready.");
+    } else {
+      finishStatus.replaceChildren(
+        document.createTextNode(`${text("Verified progress:")} `),
+        document.createTextNode(`${Number(state.progressPercent) || 0}%. `),
+        document.createTextNode(text("Complete the remaining hands-on checkpoints before finishing.")),
+      );
+    }
   } catch (_) {
-    finishStatus.textContent = "Course progress is temporarily unavailable. Reload this page to try again.";
+    finishStatus.textContent = text("Course progress is temporarily unavailable. Reload this page to try again.");
   }
 }
 finishButton.addEventListener("click", async () => {
   finishButton.disabled = true;
-  finishStatus.textContent = "Recording course completion.";
+  finishStatus.textContent = text("Recording course completion.");
   if (await courseActivity.recordCompletion()) {
-    finishButton.textContent = "Course completed";
-    finishStatus.textContent = "Course completed. You can return to the course home or continue exploring the resources above.";
+    finishButton.textContent = text("Course completed");
+    finishStatus.textContent = text("Course completed. You can return to the course home or continue exploring the resources above.");
   } else {
-    finishButton.disabled = false;
-    finishStatus.textContent = "Completion was not recorded. Check your connection and try again.";
+    const connected = courseActivity.snapshot().phase === "connected";
+    finishButton.disabled = !connected;
+    finishStatus.textContent = connected
+      ? text("Completion was not recorded. Check your connection and try again.")
+      : text("Remote progress is off. Open Activity in the toolbar to enable it.");
   }
 });
-refreshCompletion();
+courseActivity?.subscribe(state => {
+  if (state.phase === "connected") void refreshCompletion();
+  else {
+    finishButton.disabled = true;
+    finishStatus.textContent = text("Remote progress is off. Open Activity in the toolbar to enable it.");
+  }
+});
 </script>
 </body>
 </html>

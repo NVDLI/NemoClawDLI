@@ -2,12 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-  ACTIVITY_ARTIFACT,
+  ACTIVITY_MILESTONES,
   ACTIVITY_REFERRALS,
   createNemoClawActivity,
 } from './_activity.js';
+import { localizeCourseUiText } from './_locale.js';
 
 const EVIDENCE_KEY_PREFIX = 'dli_activity:nemoclaw:evidence:v1';
+const CHECKPOINT_CONTRACT_VERSION = '1';
 const MILESTONE_ORDER = Object.freeze([
   '01a:model-call-verified',
   '01b:react-loop-complete',
@@ -45,7 +47,10 @@ function evidenceStorage(target, artifactVersion) {
   const read = () => {
     try {
       const raw = target?.getItem(storageKey);
-      if (raw) memoryValue = JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        memoryValue = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+      }
     } catch (_) {}
     return { ...memoryValue };
   };
@@ -57,6 +62,165 @@ function evidenceStorage(target, artifactVersion) {
       try { target?.setItem(storageKey, JSON.stringify(value)); } catch (_) {}
     },
   };
+}
+
+function localProgress(evidence) {
+  const completed = new Set(MILESTONE_ORDER.filter(item => evidence.has(`milestone:${item}`)));
+  const latest = highestContiguousMilestone(completed);
+  return latest ? ACTIVITY_MILESTONES[latest].progressPercent : 0;
+}
+
+function mountActivityInterface({ windowTarget, documentTarget, activity, evidence, syncLocal }) {
+  const topbar = documentTarget.querySelector?.('.topbar');
+  if (!topbar || typeof documentTarget.createElement !== 'function') return null;
+  const text = value => localizeCourseUiText(value);
+  const root = documentTarget.createElement('div');
+  root.className = 'activity-control';
+  root.innerHTML = `
+    <button type="button" class="activity-control-toggle" aria-expanded="false" aria-controls="activity-control-panel">
+      <span class="activity-control-dot" aria-hidden="true"></span><span data-activity-label></span>
+    </button>
+    <section id="activity-control-panel" class="activity-control-panel" hidden role="dialog" aria-label="${text('Course activity and privacy')}">
+      <header><strong>${text('Course activity')}</strong><button type="button" data-activity-close aria-label="${text('Close activity panel')}">×</button></header>
+      <p data-activity-notice>${text('Remote progress is off. Nothing is sent until you enable it.')}</p>
+      <p data-activity-status role="status" aria-live="polite"></p>
+      <div class="activity-control-actions">
+        <button type="button" data-activity-enable>${text('Enable remote progress')}</button>
+        <button type="button" data-activity-disable hidden>${text('Disconnect this tab')}</button>
+      </div>
+      <label class="activity-referral-choice"><input type="checkbox" data-activity-referrals disabled> ${text('Record selections of approved NVIDIA resources')}</label>
+      <details>
+        <summary>${text('Data, purpose, and retention')}</summary>
+        <p><strong>${text('Sent to NVIDIA DLI Activity API')}</strong></p>
+        <ul data-activity-data></ul>
+        <p><strong>${text('Purpose')}</strong></p>
+        <ul data-activity-purpose></ul>
+        <p data-activity-browser-retention></p>
+        <p data-activity-controller></p>
+        <p data-activity-legal-basis></p>
+        <p data-activity-service-retention></p>
+        <p data-activity-sale-sharing></p>
+        <p>${text('The course does not send API keys, prompts, model responses, terminal output, or workspace files to the Activity API.')}</p>
+      </details>
+      <details>
+        <summary>${text('Service status')}</summary>
+        <p data-activity-service-level></p>
+        <p data-activity-observation>${text('No connection has been measured in this tab.')}</p>
+      </details>
+      <p class="activity-control-links"><a data-activity-policy target="_blank" rel="noopener noreferrer">${text('NVIDIA Privacy Policy')}</a><a data-activity-rights target="_blank" rel="noopener noreferrer">${text('Privacy choices and requests')}</a></p>
+      <p data-activity-gpc hidden>${text('Global Privacy Control is enabled. Referral tracking remains off.')}</p>
+    </section>`;
+  const keyPill = topbar.querySelector('.key-pill');
+  topbar.insertBefore(root, keyPill || null);
+
+  const toggle = root.querySelector('.activity-control-toggle');
+  const panel = root.querySelector('.activity-control-panel');
+  const label = root.querySelector('[data-activity-label]');
+  const notice = root.querySelector('[data-activity-notice]');
+  const status = root.querySelector('[data-activity-status]');
+  const enable = root.querySelector('[data-activity-enable]');
+  const disable = root.querySelector('[data-activity-disable]');
+  const referrals = root.querySelector('[data-activity-referrals]');
+  const observation = root.querySelector('[data-activity-observation]');
+  const gpc = windowTarget.navigator?.globalPrivacyControl === true;
+  if (gpc) root.querySelector('[data-activity-gpc]').hidden = false;
+
+  const setPanel = open => {
+    panel.hidden = !open;
+    toggle.setAttribute('aria-expanded', String(open));
+    if (open) panel.querySelector('button, a')?.focus();
+  };
+  toggle.addEventListener('click', () => setPanel(panel.hidden));
+  root.querySelector('[data-activity-close]').addEventListener('click', () => {
+    setPanel(false); toggle.focus();
+  });
+  panel.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { setPanel(false); toggle.focus(); }
+  });
+
+  let policy = null;
+  const renderProgress = (prefix, progress) => {
+    status.replaceChildren(
+      documentTarget.createTextNode(`${text(prefix)} `),
+      documentTarget.createTextNode(`${progress}%`),
+    );
+  };
+  const render = state => {
+    const progress = localProgress(evidence);
+    root.dataset.state = state.phase;
+    label.textContent = state.phase === 'connected'
+      ? `${text('Activity')} ${progress}%`
+      : text('Activity: local');
+    disable.hidden = state.phase === 'off' || state.phase === 'blocked';
+    enable.hidden = state.enabled;
+    referrals.disabled = state.phase !== 'connected' || gpc;
+    referrals.checked = state.referralTracking && !gpc;
+    if (state.phase === 'connecting') status.textContent = text('Connecting to the Activity API.');
+    else if (state.phase === 'connected') renderProgress('Remote progress is connected. Local verified progress:', progress);
+    else if (state.phase === 'unavailable') status.textContent = text('The Activity API is unavailable. Local course work is unchanged.');
+    else if (state.reason === 'secure-context') status.textContent = text('Open this course over HTTPS to enable remote progress.');
+    else if (state.reason === 'artifact') status.textContent = text('Remote progress is available only from a validated course build.');
+    else if (state.phase === 'blocked') status.textContent = text('Remote progress is unavailable until its data policy is approved.');
+    else renderProgress('Local verified progress:', progress);
+    if (state.observedAt && Number.isInteger(state.observedLatencyMs)) {
+      observation.replaceChildren(
+        documentTarget.createTextNode(`${text('Last connection:')} `),
+        documentTarget.createTextNode(`${state.observedLatencyMs} ms, `),
+        Object.assign(documentTarget.createElement('time'), {
+          dateTime: state.observedAt, textContent: state.observedAt,
+        }),
+      );
+    } else observation.textContent = text('No connection has been measured in this tab.');
+    const approved = policy?.collection_enabled === true
+      && policy.publication_status === 'privacy-legal-reviewed'
+      && policy.controller?.status === 'confirmed'
+      && policy.service_retention?.status === 'confirmed'
+      && policy.legal_basis?.status === 'confirmed'
+      && ['confirmed', 'not-applicable'].includes(policy.sale_sharing?.status);
+    enable.disabled = state.phase === 'connecting' || !approved;
+    notice.textContent = approved
+      ? text(state.enabled ? 'Remote progress is enabled.' : 'Remote progress is off. Nothing is sent until you enable it.')
+      : text('Remote collection is disabled while privacy, legal, and service-owner review is incomplete.');
+  };
+  activity.subscribe(render);
+
+  enable.addEventListener('click', async () => {
+    if (await activity.enable()) await syncLocal();
+  });
+  disable.addEventListener('click', () => activity.disconnect());
+  referrals.addEventListener('change', () => activity.setReferralTracking(referrals.checked && !gpc));
+
+  void activity.getPolicy().then(value => {
+    policy = value;
+    if (!policy) return render(activity.snapshot());
+    root.querySelector('[data-activity-data]').replaceChildren(...policy.data_categories.map(item => {
+      const li = documentTarget.createElement('li'); li.textContent = text(item); return li;
+    }));
+    root.querySelector('[data-activity-purpose]').replaceChildren(...policy.purposes.map(item => {
+      const li = documentTarget.createElement('li'); li.textContent = text(item); return li;
+    }));
+    root.querySelector('[data-activity-browser-retention]').textContent = text(policy.browser_retention);
+    root.querySelector('[data-activity-controller]').textContent = policy.controller.status === 'confirmed'
+      ? `${text('Service controller:')} ${text(policy.controller.name)}`
+      : text('The service controller is not yet confirmed. Remote collection remains disabled.');
+    root.querySelector('[data-activity-legal-basis]').textContent = policy.legal_basis.status === 'confirmed'
+      ? `${text('Service legal basis:')} ${text(policy.legal_basis.basis)}`
+      : text('The service legal basis is not yet confirmed. Remote collection remains disabled.');
+    root.querySelector('[data-activity-service-retention]').textContent = policy.service_retention.status === 'confirmed'
+      ? `${text('Service retention:')} ${text(policy.service_retention.period_or_criteria)}`
+      : text('Service-specific retention is not yet confirmed. Remote collection remains disabled.');
+    root.querySelector('[data-activity-sale-sharing]').textContent = ['confirmed', 'not-applicable'].includes(policy.sale_sharing.status)
+      ? `${text('Service sale or sharing disposition:')} ${text(policy.sale_sharing.disposition)}`
+      : text('The service sale or sharing disposition is not yet confirmed. Remote collection remains disabled.');
+    root.querySelector('[data-activity-service-level]').textContent = policy.service_level.status === 'published'
+      ? `${text('Published service target:')} ${text(policy.service_level.target)}`
+      : text('No course-level availability or response-time target is published. Live status is an observation, not an SLA.');
+    root.querySelector('[data-activity-policy]').href = policy.privacy_policy_url;
+    root.querySelector('[data-activity-rights]').href = policy.privacy_center_url;
+    render(activity.snapshot());
+  });
+  void activity.resume().then(connected => { if (connected) return syncLocal(); });
+  return { root, refresh: () => render(activity.snapshot()) };
 }
 
 export function installNemoClawActivityTracking({
@@ -73,16 +237,26 @@ export function installNemoClawActivityTracking({
   activity ||= createNemoClawActivity({ storageTarget });
   windowTarget.__nemoclawActivityTracking = true;
   windowTarget.__nemoclawActivity = activity;
-  const evidence = evidenceStorage(storageTarget, ACTIVITY_ARTIFACT.artifact_version);
+  const evidence = evidenceStorage(storageTarget, CHECKPOINT_CONTRACT_VERSION);
   const page = pageName();
-  void activity.start();
 
+  let activityInterface;
   const record = milestone => {
     evidence.add(`milestone:${milestone}`);
+    activityInterface?.refresh();
     const completed = new Set(MILESTONE_ORDER.filter(item => evidence.has(`milestone:${item}`)));
     const latest = highestContiguousMilestone(completed);
     return latest ? activity.recordMilestone(latest) : Promise.resolve(false);
   };
+  const syncLocal = () => {
+    const latest = highestContiguousMilestone(
+      new Set(MILESTONE_ORDER.filter(item => evidence.has(`milestone:${item}`))),
+    );
+    return latest ? activity.recordMilestone(latest) : Promise.resolve(false);
+  };
+  activityInterface = mountActivityInterface({
+    windowTarget, documentTarget, activity, evidence, syncLocal,
+  });
   const markPair = (key, partner, milestone) => {
     evidence.add(key);
     if (evidence.has(partner)) record(milestone);
@@ -149,3 +323,9 @@ export function installNemoClawActivityTracking({
   });
   return activity;
 }
+
+export {
+  MILESTONE_ORDER as ACTIVITY_MILESTONE_ORDER,
+  getInstalledNemoClawActivity as getInstalledCourseActivity,
+  installNemoClawActivityTracking as installCourseActivityTracking,
+};

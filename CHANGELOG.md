@@ -5,6 +5,10 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Extend Lisa Guo's Activity SDK integration with explicit progress/referral controls,
+  manifest-bound session identity and disconnect cancellation. Collection remains disabled
+  pending service-policy review; local course work remains available.
+
 - Thanks to Lisa Guo for contributing the Activity SDK, browser-session continuity, and course checkpoint integration.
 - Codex reviewed the Activity completion and research-status text in Spanish, Brazilian Portuguese,
   Simplified Chinese, and Taiwan Traditional Chinese at the maintainer's request.

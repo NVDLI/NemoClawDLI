@@ -299,13 +299,13 @@ test('public referral records a portable destination', async () => {
   });
 
   await activity.referral({
-    referenceId: 'brev:nemoclaw-lab',
+    referenceId: 'brev:course-lab',
     destinationUrl: 'https://brev.nvidia.com/',
   });
 
-  assert.equal(calls[1].init.headers['Idempotency-Key'], 'dli-activity:referral:brev:nemoclaw-lab');
+  assert.equal(calls[1].init.headers['Idempotency-Key'], 'dli-activity:referral:brev:course-lab');
   assert.deepEqual(JSON.parse(calls[1].init.body), {
-    reference_id: 'brev:nemoclaw-lab',
+    reference_id: 'brev:course-lab',
     destination_url: 'https://brev.nvidia.com/',
   });
 });
@@ -598,6 +598,14 @@ test('referral and progress writes use bearer and idempotency headers', async ()
   assert.equal(calls[0].init.headers.Authorization, `Bearer ${sessionResponse().session_token}`);
   assert.equal(calls[0].init.headers['Idempotency-Key'], 'referral-key');
   assert.equal(calls[1].init.headers['Idempotency-Key'], 'progress-key');
+  for (const { init } of calls) {
+    assert.equal(init.credentials, 'omit');
+    assert.equal(init.cache, 'no-store');
+    assert.equal(init.redirect, 'error');
+    assert.equal(init.referrerPolicy, 'no-referrer');
+    assert.equal(init.mode, 'cors');
+    assert.equal(init.signal instanceof AbortSignal, true);
+  }
 });
 
 test('a 200 write response is identified as an idempotent replay', async () => {

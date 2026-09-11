@@ -6,6 +6,10 @@ Progress is cumulative and advances in course order. If a learner completes a la
 
 Use the [runtime testing workflow](lab_runtime_testing.md) to exercise these predicates and verify that failures do not award progress.
 
+Remote progress and referrals default to off. The Activity panel explains the proposed data use and permits connection only when the deployed service policy is approved. Referral tracking requires a separate choice. Choices persist within the tab only for the same delivered artifact and notice version; a changed build or notice requires enablement again. Disconnect cancels pending Activity operations and clears the remote session from this tab; local course work and checkpoint evidence remain available.
+
+Session identity comes from the delivered Pages or materialized manifest bytes and source version. Unvalidated source previews cannot enable collection. Service retention and controller details remain unconfirmed in the checked-in policy, so production collection stays disabled.
+
 ## Progress checkpoints
 
 | Section | Checkpoint | Progress | Learner action | Acceptance criteria |

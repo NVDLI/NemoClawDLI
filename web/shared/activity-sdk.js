@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 const SESSION_ID_PATTERN = /^[0-9a-f-]{36}$/;
+const REQUEST_TIMEOUT_MS = 10_000;
 const initializationAttempts = new Map();
 const storageIdentities = new WeakMap();
 let nextStorageIdentity = 1;
@@ -73,7 +74,7 @@ function translatePublicError(error) {
   if (!(error instanceof ActivitySdkError)) {
     return new DLIActivityError('activity_error', 'Activity operation failed', { cause: error });
   }
-  const code = error.code || (error.category === 'network'
+  const code = error.code || (['network', 'timeout'].includes(error.category)
     ? 'network_error'
     : error.category === 'idempotency-conflict'
       ? 'idempotency_conflict'
@@ -188,18 +189,29 @@ export function createActivityClient({
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (session) headers.Authorization = `Bearer ${session.session_token}`;
     if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
+    const controller = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS) : null;
     let response;
     try {
       response = await fetchImpl(`${normalizedBaseUrl}${path}`, {
         method, headers,
         body: body === undefined ? undefined : JSON.stringify(body),
+        cache: 'no-store',
+        credentials: 'omit',
         keepalive: operation === 'referral',
+        mode: 'cors',
+        redirect: 'error',
+        referrerPolicy: 'no-referrer',
+        signal: controller?.signal,
       });
-    } catch (_) {
-      diagnostic(operation, 'network');
+    } catch (error) {
+      const category = error?.name === 'AbortError' ? 'timeout' : 'network';
+      diagnostic(operation, category);
       throw new ActivitySdkError('Activity request failed', {
-        code: 'network_error', operation, category: 'network',
+        code: 'network_error', operation, category,
       });
+    } finally {
+      if (timer) clearTimeout(timer);
     }
     if (!response.ok) {
       const category = categoryForStatus(response.status);
