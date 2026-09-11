@@ -202,6 +202,7 @@ test('the default Pages layout ships the public activity SDK at its imported pat
     path.join(output, COURSE_ID),
     path.join(output, 'web', COURSE_ID),
     path.join(output, 'es', COURSE_ID),
+    path.join(output, 'i18n', 'novel', 'web', COURSE_ID),
   ]) {
     execFileSync('bash', ['scripts/build/build_pages.sh', '--stage-activity-sdk', courseRoot]);
     assert.equal(

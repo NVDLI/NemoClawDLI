@@ -897,17 +897,32 @@ def _self_test() -> int:
         assert (linked_out / "interface-inventory.json").is_file()
         assert (linked_out / "learning-profile.json").is_file()
         assert not (linked_out / "outside.json").exists()
+
+        metadata = source_course / "novel-runtime-policy.json"
+        metadata.write_text('{"collection_enabled":false}\n', encoding="utf-8")
+        (source_course / "ignored.json.bak").write_text("not runtime metadata\n", encoding="utf-8")
+        assert _copy_linked_course_files(source_course, linked_out) == [metadata.name]
+        assert (linked_out / metadata.name).read_bytes() == metadata.read_bytes()
+        assert not (linked_out / "ignored.json.bak").exists()
+        renamed = metadata.rename(source_course / "renamed-runtime-policy.json")
+        renamed_out = root / "renamed-out"
+        assert renamed.name in _copy_linked_course_files(source_course, renamed_out)
+        assert not (renamed_out / metadata.name).exists()
+        renamed.unlink()
+        deleted_out = root / "deleted-out"
+        assert renamed.name not in _copy_linked_course_files(source_course, deleted_out)
+        assert not (deleted_out / renamed.name).exists()
     print("bundle_standalone self-test: PASS")
     return 0
 
 
 def _copy_linked_course_files(source: Path, destination: Path) -> list[str]:
-    """Ship relative files linked by the course root SKILL without a filename allowlist."""
+    """Ship root JSON metadata and relative SKILL links without a filename allowlist."""
     skill = source / "SKILL.html"
-    if not skill.is_file():
-        return []
     copied: list[str] = []
-    refs = re.findall(r'\b(?:href|src)=["\']([^"\']+)["\']', skill.read_text(encoding="utf-8"), re.I)
+    refs = [path.name for path in source.glob("*.json")]
+    if skill.is_file():
+        refs.extend(re.findall(r'\b(?:href|src)=["\']([^"\']+)["\']', skill.read_text(encoding="utf-8"), re.I))
     for ref in refs:
         parsed = urlsplit(ref)
         relative = Path(parsed.path)
@@ -1140,7 +1155,7 @@ def main() -> int:
 
     linked_course_files = _copy_linked_course_files(web, out)
     if linked_course_files:
-        print(f"  copied SKILL-linked course files ({', '.join(linked_course_files)})")
+        print(f"  copied course metadata and SKILL-linked files ({', '.join(linked_course_files)})")
 
     # Ship the shared ES modules as real files so the pages' kept `./scripts/_shared.js` import and the
     # per-section modules scripts/_shared.js imports in turn (e.g. _openshell.js) all resolve as siblings,

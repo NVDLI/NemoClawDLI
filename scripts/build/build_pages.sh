@@ -248,6 +248,7 @@ for locale_source in "$OUT"/i18n/*/web/nemoclaw; do
         fi
     done < <(find "$T1/web/nemoclaw" -path "$T1/web/nemoclaw/standalone" -prune -o -type f -print0)
     cp "$T1/web/_skill_explorer.js" "$(dirname "$locale_source")/_skill_explorer.js"
+    stage_activity_sdk "$locale_source"
 done
 echo "[build_pages] source explorers -> public/ ($(find "$OUT" -name SKILL.html -type f | wc -l) SKILL contracts)"
 
