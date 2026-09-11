@@ -281,6 +281,9 @@ export function mountOpenClawCliRuntime(targetSel, runtime) {
           signal: context.signal,
         });
         if (!view.streamed) consoleView.write(response || (command ? "(done)" : "(no reply)"));
+        if (!command && (view.streamed || String(response || "").trim()) && typeof window.CustomEvent === "function") {
+          window.dispatchEvent(new window.CustomEvent("nemoclaw:live-agent-operated"));
+        }
       } catch (error) {
         consoleView.write(error?.message || String(error), "da-err");
         return { status: "error", message: "Agent request failed. Read the message, then retry." };
