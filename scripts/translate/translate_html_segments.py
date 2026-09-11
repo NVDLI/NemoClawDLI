@@ -50,8 +50,8 @@ UI_HELP_RE = re.compile(r'\b(?!code\b)[A-Za-z_$][\w$]*\s*:\s*`(.*?)`', re.S)
 # Learner-visible DOM text assigned from JavaScript rather than declared in an object literal.
 DOM_TEXT_LITERAL = r'''(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)'''
 UI_ASSIGN_RE = re.compile(
-    r'\.(?:textContent|innerText)\s*=(?!=|>)\s*((?:' + DOM_TEXT_LITERAL + r'''|[^;"'`])*)\s*;''', re.S)
-DOM_TEXT_STRING_RE = re.compile(r'''(["'`])((?:\\.|(?!\1)[\s\S])*)\1''')
+    r'\.(?:textContent|innerText)\s*=(?!=|>)((?:' + DOM_TEXT_LITERAL + r'''|[^;"'`])*);''', re.S)
+DOM_TEXT_STRING_RE = re.compile(r'''(["'`])((?:\\[\s\S]|(?!\1)[^\\])*)\1''')
 UI_TERNARY_RE = re.compile(r'\b(?:greeting|disabledMsg)\s*:\s*([^\n]+)')
 JS_STRING_RE = re.compile(r'(["\'])(.*?)(?<!\\)\1', re.S)
 UI_CALL_RE = re.compile(r'\b(?:helpers\.log|log(?:\.h|\.details|\.html)?|info|show)\s*\((.*?)\)\s*;', re.S)

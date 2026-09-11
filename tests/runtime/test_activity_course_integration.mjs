@@ -429,6 +429,7 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     await page.waitForFunction(() => document.querySelector('[data-activity-notice]')?.textContent === 'Remote progress is enabled.');
     assert.equal(await page.locator('#activity-progress').getAttribute('value'), '0');
     assert.equal(await page.locator('#activity-progress-label').textContent(), 'Saved progress: 0%');
+    assert.equal(await page.locator('[data-activity-status]').isHidden(), true);
     assert.equal(await page.locator('input[type="range"]').count(), 0, 'completion cannot be moved manually');
     await page.evaluate(() => {
       window.dispatchEvent(new CustomEvent('nemoclaw:api-key-verified'));
@@ -468,6 +469,7 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     assert.equal(await page.locator('[data-activity-enable]').isVisible(), true);
     assert.equal(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key.startsWith('dli_activity:') && !key.includes(':evidence:')).length), 0);
     assert.equal(await page.locator('#activity-progress-label').textContent(), 'Local verified progress: 10%');
+    assert.equal(await page.locator('[data-activity-status]').isHidden(), true);
     assert.equal(await page.evaluate(() => sessionStorage.getItem('learner-work')), 'retained');
     assert.equal(apiRequests, beforeDisconnect, 'disconnect must work without the service');
   } finally {

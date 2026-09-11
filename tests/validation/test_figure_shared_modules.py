@@ -4,11 +4,11 @@
 """Exercise figure rendering through course-relative shared module imports."""
 from __future__ import annotations
 
-import os
 from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from scripts.runtime.host_browser import environment, resolve_node
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / 'scripts/figures/check_figures.mjs'
@@ -50,8 +50,8 @@ class FigureSharedModuleTests(unittest.TestCase):
             '\nconsole.log(await renderedPolicyMap());\n'
         )
         return subprocess.run(
-            ['node', '--input-type=module', '-e', program], cwd=ROOT,
-            env={**os.environ, 'FIG_NEMO': str(self.course)}, capture_output=True,
+            [resolve_node(), '--input-type=module', '-e', program], cwd=ROOT,
+            env=environment(FIG_NEMO=self.course), capture_output=True,
             text=True, timeout=45, check=False,
         )
 

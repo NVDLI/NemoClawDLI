@@ -149,12 +149,6 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
 
   let policy = null;
   let refreshing = false;
-  const renderProgress = (prefix, progress) => {
-    status.replaceChildren(
-      documentTarget.createTextNode(`${text(prefix)} `),
-      documentTarget.createTextNode(`${progress}%`),
-    );
-  };
   const render = state => {
     const progress = localProgress(evidence);
     const saved = state.enabled && Boolean(state.progressCheckedAt);
@@ -183,12 +177,13 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
     referrals.disabled = state.phase !== 'connected' || gpc;
     referrals.checked = state.referralTracking && !gpc;
     if (state.phase === 'connecting') status.textContent = text('Connecting to the Activity API.');
-    else if (state.phase === 'connected') status.textContent = text(state.completedAt ? 'Course completed' : 'Remote progress is enabled.');
+    else if (state.phase === 'connected') status.textContent = state.completedAt ? text('Course completed') : '';
     else if (state.phase === 'unavailable') status.textContent = text('The Activity API is unavailable. Local course work is unchanged.');
     else if (state.reason === 'secure-context') status.textContent = text('Open this course over HTTPS to enable remote progress.');
     else if (state.reason === 'artifact') status.textContent = text('Remote progress is available only from a validated course build.');
     else if (state.phase === 'blocked') status.textContent = text('Remote progress is unavailable until its data policy is approved.');
-    else renderProgress('Local verified progress:', progress);
+    else status.textContent = '';
+    status.hidden = !status.textContent;
     if (state.observedAt && Number.isInteger(state.observedLatencyMs)) {
       observation.replaceChildren(
         documentTarget.createTextNode(`${text('Last connection:')} `),
@@ -205,6 +200,7 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
       && policy.legal_basis?.status === 'confirmed'
       && ['confirmed', 'not-applicable'].includes(policy.sale_sharing?.status);
     enable.disabled = state.phase === 'connecting' || !approved;
+    notice.hidden = state.phase === 'connecting';
     notice.textContent = approved
       ? text(state.enabled ? 'Remote progress is enabled.' : 'Remote progress is off. Nothing is sent until you enable it.')
       : text('Remote collection is disabled while privacy, legal, and service-owner review is incomplete.');
