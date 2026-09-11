@@ -123,7 +123,7 @@ def render() -> str:
             "- `" + markdown_cell(edge["id"]) + "` carries " + markdown_cell(edge["data"])
             + " from " + markdown_cell(source["label"]) + " to "
             + markdown_cell(destination["label"]) + " using " + markdown_cell(edge["protocol"])
-            + ". It crosses the " + markdown_cell(ownership) + " boundary. " + objective_scope
+            + ". Boundary: " + markdown_cell(ownership) + ". " + objective_scope
         )
     invariants = section_body(
         ANALYSIS_SOURCE.read_text(encoding="utf-8"), "Threat-analysis invariants"
@@ -165,7 +165,7 @@ def render() -> str:
         "",
         f"Open-source classification: {target['classification_rule']}",
         "",
-        "Explicit facts that generated analysis must preserve:",
+        "Required analysis facts:",
         "",
         *bullets(target["explicit_facts"]),
         "",
@@ -183,7 +183,7 @@ def render() -> str:
         "",
         "## Architecture and sensitive data",
         "",
-        "- Public path: a protected workflow builds one static artifact, a static host serves it, and the learner browser calls model and NemoClaw services directly or through a reviewed relay route.",
+        "- Public path: a protected workflow builds one static artifact, a static host serves it, and the learner browser calls model, Activity, and NemoClaw services directly or through a reviewed relay route.",
         "- Co-located path: a launchable pins the same course artifact, serves it from its origin, starts the external runtime, and uses the documented direct runtime route.",
         "- Browser storage: model, gateway, and access bearer credentials are JavaScript-readable values in tab-scoped `sessionStorage`; non-secret route preferences may remain in `localStorage`. Explicit save, replace, and clear actions do not make browser storage a vault.",
         "- Sensitive transfers: credentials, prompts, responses, agent commands, events, and workspace results cross HTTPS or WSS boundaries selected by the learner or hosting path.",
@@ -300,8 +300,10 @@ def self_test() -> int:
     assert "The repository stores only the public-safe approval state" in document
     assert "## Submission binding" in document
     assert "report input identity is Unknown" in document
-    assert "- Declared flows: 8" in document
-    assert "- Applicable security objectives: 19" in document
+    architecture = json.loads(ARCHITECTURE_SOURCE.read_text(encoding="utf-8"))
+    assert f"- Declared flows: {len(architecture['edges'])}" in document
+    objectives = sum(len(edge["security_objectives"]) for edge in architecture["edges"])
+    assert f"- Applicable security objectives: {objectives}" in document
     assert "Repository paths below are evidence labels, not required reading" in document
     assert "## Threat-analysis invariants" in document
     assert "## Threat register" in document
@@ -309,7 +311,6 @@ def self_test() -> int:
     assert "Repository tests cannot certify external systems" in document
     assert "Missing, stale, self-issued, unbound, or unverifiable evidence is Unknown" in document
     assert "## Interactions and Data Flow" in document
-    architecture = json.loads(ARCHITECTURE_SOURCE.read_text(encoding="utf-8"))
     control_data = json.loads(CONTROL_SOURCE.read_text(encoding="utf-8"))
     assert architecture["system"]["target_of_evaluation"] == control_data["target_of_evaluation"]["owned"]
     for edge in architecture["edges"]:

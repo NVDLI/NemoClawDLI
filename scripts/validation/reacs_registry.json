@@ -106,9 +106,9 @@
       "impacts": [
         "scripts/build/bundle_standalone.py",
         "scripts/build/build_pages.sh",
-        "web/nemoclaw/*.html",
-        "web/nemoclaw/assets/figures/*",
-        "i18n/*/web/nemoclaw/*.html"
+        "web/*/*.html",
+        "web/*/assets/figures/*",
+        "i18n/*/web/*/*.html"
       ]
     },
     {
@@ -278,12 +278,12 @@
         "README.md",
         "web/*.html",
         "web/*.js",
-        "web/nemoclaw/*.html",
-        "web/nemoclaw/scripts/*.js",
-        "web/nemoclaw/standalone/*.html",
-        "web/nemoclaw/standalone/scripts/*.js",
+        "web/*/*.html",
+        "web/*/scripts/*.js",
+        "web/*/standalone/*.html",
+        "web/*/standalone/scripts/*.js",
         "i18n/*/web/*.html",
-        "i18n/*/web/nemoclaw/*.html"
+        "i18n/*/web/*/*.html"
       ]
     },
     {
@@ -735,7 +735,7 @@
       "parallel_safe": true,
       "impacts": [
         "scripts/build/project_source_tree.py",
-        "web/nemoclaw/standalone/*"
+        "web/*/standalone/*"
       ]
     },
     {
@@ -838,7 +838,7 @@
         "scripts/compliance/source_license_contract.py",
         "tests/validation/test_source_license_contract.py",
         "scripts/build/vendor_browser_dependencies.mjs",
-        "web/nemoclaw/vendor/browser-dependencies.json",
+        "web/*/vendor/browser-dependencies.json",
         "scripts/**/*.py",
         "scripts/**/*.js",
         "scripts/**/*.mjs",
@@ -890,9 +890,9 @@
         "scripts/compliance/source_document_audit.py",
         "scripts/compliance/docs/document_sources.json",
         "THIRD_PARTY_LICENSES.md",
-        "web/nemoclaw/*.html",
-        "web/nemoclaw/mats/*",
-        "web/nemoclaw/assets/SKILL.html"
+        "web/*/*.html",
+        "web/*/mats/*",
+        "web/*/assets/*.html"
       ]
     },
     {
@@ -1004,13 +1004,13 @@
         "THIRD_PARTY_LICENSES.md",
         "scripts/compliance/third_party_inventory_audit.py",
         "scripts/browser-vendor/package-lock.json",
-        "web/nemoclaw/vendor/*",
+        "web/*/vendor/*",
         "scripts/materials/requirements*",
         "scripts/security/requirements*",
         "scripts/runtime/package.json",
         "scripts/runtime/pnpm-lock.yaml",
-        "web/nemoclaw/assets/SKILL.html",
-        "web/nemoclaw/mats/SKILL.html",
+        "web/*/assets/*.html",
+        "web/*/mats/*.html",
         "scripts/build/build_pages.sh"
       ]
     },
@@ -1039,7 +1039,7 @@
         "scripts/compliance/third_party_inventory_audit.py",
         "scripts/compliance/SKILL.html",
         "scripts/compliance/third_party_export_ui.js",
-        "web/nemoclaw/vendor/browser-dependencies.json"
+        "web/*/vendor/browser-dependencies.json"
       ]
     },
     {
@@ -1067,7 +1067,7 @@
         "scripts/compliance/export_third_party_csv.py",
         "scripts/compliance/SKILL.html",
         "scripts/compliance/third_party_export_ui.js",
-        "web/nemoclaw/vendor/browser-dependencies.json"
+        "web/*/vendor/browser-dependencies.json"
       ]
     },
     {
@@ -1143,7 +1143,7 @@
         "scripts/compliance/sbom_evidence.py",
         "scripts/compliance/render_sbom_license_inventory.py",
         "scripts/compliance/docs/sbom_evidence.json",
-        "web/nemoclaw/vendor/browser-sbom.cdx.json",
+        "web/*/vendor/browser-sbom.cdx.json",
         ".gitlab/ci/sca.yml",
         ".github/workflows/release.yml"
       ]
@@ -1447,10 +1447,10 @@
       "parallel_safe": true,
       "impacts": [
         "scripts/validation/learner_flow_audit.py",
-        "web/nemoclaw/scripts/*",
-        "web/nemoclaw/styles/*",
-        "web/nemoclaw/0*.html",
-        "i18n/*/web/nemoclaw/0*.html",
+        "web/*/scripts/*",
+        "web/*/styles/*",
+        "web/*/*.html",
+        "i18n/*/web/*/0*.html",
         "scripts/browser-vendor/*",
         ".gitlab/ci/core.yml"
       ]
@@ -1626,24 +1626,12 @@
         "scripts/translate/locale_pages.py",
         "scripts/translate/locale_resource_render.py",
         "scripts/translate/locale_resources.py",
-        "scripts/runtime/test_page_runtime.js",
-        "scripts/runtime/browser_runtime_test.sh",
-        "scripts/runtime/host_browser.py",
-        "web/nemoclaw/scripts/_connection.js",
-        "web/nemoclaw/scripts/_openclaw.js",
-        "web/nemoclaw/scripts/_openshell.js",
-        "web/nemoclaw/scripts/_shared.js",
-        "web/nemoclaw/03a-kickstart.html",
-        "web/nemoclaw/04b-modern-clis.html",
-        "i18n/*/locale.json",
-        "i18n/*/resources/**/*",
-        "i18n/*/web/nemoclaw/03*.html",
-        "i18n/*/web/nemoclaw/04b-modern-clis.html",
         "scripts/translate/locale_catalog.py",
-        "scripts/runtime/engine.js",
-        "scripts/runtime/link_projection.py",
-        "scripts/runtime/run_engine.sh",
-        "scripts/runtime/run_node.sh"
+        "web/*",
+        "tests/runtime/*",
+        "scripts/runtime/*",
+        "scripts/build/*",
+        "i18n/*"
       ]
     },
     {
@@ -1702,9 +1690,9 @@
         "scripts/build/assemble_locale_overlay.py",
         "i18n/*/locale.json",
         "i18n/*/localization_state.json",
-        "web/nemoclaw/scripts/_keypanel.js",
-        "web/nemoclaw/scripts/_locale.js",
-        "web/nemoclaw/scripts/_shared.js"
+        "web/*/scripts/_keypanel.js",
+        "web/*/scripts/_locale.js",
+        "web/*/scripts/_shared.js"
       ]
     },
     {
@@ -1752,7 +1740,7 @@
         "scripts/translate/locales/*/shell_translations.json",
         "web/*.html",
         "web/**/*.html",
-        "web/nemoclaw/assets/localization-*.json"
+        "web/*/assets/localization-*.json"
       ]
     },
     {
@@ -1802,7 +1790,7 @@
         "scripts/translate/locales/*/shell_translations.json",
         "web/*.html",
         "web/**/*.html",
-        "web/nemoclaw/assets/localization-*.json"
+        "web/*/assets/localization-*.json"
       ]
     },
     {
@@ -1877,8 +1865,8 @@
       "impacts": [
         "scripts/validation/contribution_safety_audit.py",
         "tests/validation/test_contribution_language_ownership.py",
-        "web/nemoclaw/*",
-        "i18n/*/web/nemoclaw/*",
+        "web/*/*",
+        "i18n/*/web/*/*",
         "i18n/*/resources/**/*.html.json"
       ]
     },
@@ -1964,9 +1952,9 @@
       "impacts": [
         "scripts/security/audit_iframe_proxy_opt_in.py",
         "scripts/cors-proxy/*",
-        "web/nemoclaw/index.html",
-        "web/nemoclaw/scripts/_keypanel.js",
-        "web/nemoclaw/scripts/_shared.js"
+        "web/*/*.html",
+        "web/*/scripts/_keypanel.js",
+        "web/*/scripts/_shared.js"
       ]
     },
     {
@@ -1986,11 +1974,11 @@
       "parallel_safe": true,
       "impacts": [
         "scripts/validation/endpoint_registration_audit.py",
-        "web/nemoclaw/scripts/_shared.js",
-        "web/nemoclaw/scripts/_keypanel.js",
-        "web/nemoclaw/scripts/_connection.js",
-        "web/nemoclaw/scripts/_openclaw.js",
-        "web/nemoclaw/03a-kickstart.html",
+        "web/*/scripts/_shared.js",
+        "web/*/scripts/_keypanel.js",
+        "web/*/scripts/_connection.js",
+        "web/*/scripts/_openclaw.js",
+        "web/*/*.html",
         "web/_skill_explorer.js",
         "scripts/cors-proxy/SKILL.html",
         "scripts/runtime/test_page_runtime.js",
@@ -1998,7 +1986,7 @@
         "scripts/translate/locale_catalog.py",
         "i18n/*/locale.json",
         "i18n/*/localization_state.json",
-        "i18n/*/web/nemoclaw/03a-kickstart.html"
+        "i18n/*/web/*/03a-kickstart.html"
       ]
     },
     {
@@ -2022,7 +2010,7 @@
         "scripts/validation/course_dependency_integrity.py",
         "scripts/browser-vendor/*",
         "scripts/build/vendor_browser_dependencies.mjs",
-        "web/nemoclaw/vendor/*",
+        "web/*/vendor/*",
         ".gitlab/ci/sca.yml",
         ".github/workflows/pages.yml",
         ".github/workflows/release.yml"
@@ -2047,8 +2035,8 @@
       "parallel_safe": true,
       "impacts": [
         "scripts/validation/cell_audit.py",
-        "web/nemoclaw/scripts/*",
-        "web/nemoclaw/vendor/*"
+        "web/*/scripts/*",
+        "web/*/vendor/*"
       ]
     },
     {
@@ -2252,7 +2240,7 @@
         "scripts/security/audit_codeql_sarif.py",
         "scripts/security/codeql-vendor-dispositions.json",
         "tests/validation/test_codeql_sarif_audit.py",
-        "web/nemoclaw/vendor/*",
+        "web/*/vendor/*",
         "web/shared/vendor/*"
       ]
     },
