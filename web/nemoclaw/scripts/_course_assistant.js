@@ -356,7 +356,7 @@ export function mountCourseAssistant(runtime = {}) {
     saved: "已保存到本地", saving: "正在保存回答", full: "未保存：浏览器存储空间已满", selected: "已选择会话",
     created: "已新建会话", deleted: "已删除会话", renamed: "已重命名会话", attachedNow: "页面已关联到会话", compacted: "上下文已压缩并保存到本地",
     emptyTitle: "新会话", clear: "↺ 清除会话",
-    intro: "会话保存在此浏览器中。系统会自动压缩较早的对话轮次。",
+    intro: /zh-(tw|hant)/.test(language) ? "對話儲存在此瀏覽器中。傳送訊息時，所選 AI 服務會處理提示詞和相關課程內容。請使用虛構、非機密的輸入，並核對回答。" : "对话保存在此浏览器中。发送消息时，所选 AI 服务会处理提示词和相关课程上下文。请使用虚构、非机密的输入，并核查回答。",
     entryTitle: "课程助理",
     entryText: "每个课时中的 ✦ 按钮都可以打开课程助理。每个会话都保存在此浏览器中，并持续关联到会话开始时的页面，直至您明确选择当前页面。",
     entryAction: "打开课程助理",
@@ -379,7 +379,7 @@ export function mountCourseAssistant(runtime = {}) {
     saved: "Salvo localmente", saving: "Salvando resposta", full: "Não salvo: armazenamento local cheio", selected: "Sessão selecionada",
     created: "Nova sessão criada", deleted: "Sessão excluída", renamed: "Sessão renomeada", attachedNow: "Página vinculada à sessão", compacted: "Contexto condensado e salvo localmente",
     emptyTitle: "Nova sessão", clear: "↺ Limpar sessão",
-    intro: "As sessões ficam neste navegador. Turnos antigos são condensados automaticamente.",
+    intro: "As conversas são salvas neste navegador. Ao enviar uma mensagem, o serviço de IA selecionado processa seu prompt e o contexto relevante do curso. Use dados fictícios e não confidenciais e confira as respostas.",
     entryTitle: "Assistente do Curso",
     entryText: "O botão ✦ abre um assistente em todas as lições. Cada sessão fica neste navegador e permanece vinculada à página onde começou até você escolher a página atual.",
     entryAction: "Abrir Assistente do Curso",
@@ -402,7 +402,7 @@ export function mountCourseAssistant(runtime = {}) {
     saved: "Guardado localmente", saving: "Guardando respuesta", full: "No se guardó: el almacenamiento del navegador está lleno", selected: "Sesión seleccionada",
     created: "Nueva sesión creada", deleted: "Sesión eliminada", renamed: "Sesión renombrada", attachedNow: "Página vinculada a la sesión", compacted: "Contexto condensado y guardado localmente",
     emptyTitle: "Nueva sesión", clear: "↺ Borrar sesión",
-    intro: "Las sesiones permanecen en este navegador. Los turnos antiguos se condensan automáticamente.",
+    intro: "Las conversaciones se guardan en este navegador. Al enviar un mensaje, el servicio de IA seleccionado procesa tu prompt y el contexto pertinente del curso. Usa datos ficticios y no confidenciales y verifica las respuestas.",
     entryTitle: "Asistente del curso",
     entryText: "El botón ✦ abre un asistente en cada lección. Cada sesión permanece en este navegador y sigue vinculada a la página donde comenzó hasta que usted elija la página actual.",
     entryAction: "Abrir el Asistente del curso",
@@ -425,7 +425,7 @@ export function mountCourseAssistant(runtime = {}) {
     saved: "Saved locally", saving: "Saving response", full: "Not saved: browser storage is full", selected: "Session selected",
     created: "New session created", deleted: "Session deleted", renamed: "Session renamed", attachedNow: "Page attached to session", compacted: "Compacted and saved locally",
     emptyTitle: "New session", clear: "↺ Clear session",
-    intro: "Sessions stay in this browser. Older turns compact automatically.",
+    intro: "Conversations are saved in this browser. When you send a message, the selected AI service processes your prompt and relevant course context. Use synthetic, nonconfidential inputs and check the answers.",
     entryTitle: "Course Assistant",
     entryText: "The ✦ button opens an assistant on every lesson. Each session stays in this browser and remains attached to the page where it began until you explicitly choose the current page.",
     entryAction: "Open Course Assistant",
@@ -448,8 +448,8 @@ export function mountCourseAssistant(runtime = {}) {
 
   const shell = document.createElement("section");
   shell.className = "course-assistant-shell";
-  shell.innerHTML = `<div class="course-assistant-backdrop" data-course-assistant-close></div>
-    <aside id="course-assistant-panel" class="course-assistant-panel" role="dialog" aria-modal="true" aria-label="${copy.dialog}" aria-hidden="true">
+  shell.innerHTML = `
+    <dialog id="course-assistant-panel" class="course-assistant-panel" aria-label="${copy.dialog}" aria-hidden="true">
       <div class="course-assistant-resizer" role="separator" aria-label="${copy.resize}" aria-orientation="vertical" aria-valuemin="320" tabindex="0" title="${copy.resizeTitle}"></div>
       <header><div><span>${copy.assistant}</span><h2 data-course-assistant-title>${copy.emptyTitle}</h2></div><button type="button" data-course-assistant-close aria-label="${copy.close}">×</button></header>
       <div class="course-assistant-sessions"><label for="course-assistant-session">${copy.session}</label><select id="course-assistant-session" aria-label="${copy.session}"></select><button type="button" data-course-assistant-new>${copy.newSession}</button><button type="button" data-course-assistant-delete aria-label="${copy.deleteLabel}">${copy.deleteSession}</button><input type="text" maxlength="72" aria-label="${copy.renameLabel}" placeholder="${copy.renamePlaceholder}"><span role="status" aria-live="polite"></span></div>
@@ -464,7 +464,7 @@ export function mountCourseAssistant(runtime = {}) {
         <iframe sandbox="allow-scripts" referrerpolicy="no-referrer" title="${copy.artifactPreview}"></iframe>
       </section>
       <section class="course-assistant-history" hidden><header><strong>${copy.historyTitle}</strong><button type="button" data-course-history-copy>${copy.copyHistory}</button></header><pre tabindex="0"></pre></section>
-    </aside>`;
+    </dialog>`;
   document.body.append(launcher, shell);
   if (page.id === "overview" && !document.querySelector(".course-assistant-entry")) {
     const entry = document.createElement("section");
@@ -1159,6 +1159,7 @@ export function mountCourseAssistant(runtime = {}) {
     store.activeId = store.sessions[0].id; mountedSessionId = null; persistStore(copy.deleted); renderArtifact(true); await mountSession();
   });
   const close = () => {
+    panel.close();
     shell.classList.remove("open");
     panel.setAttribute("aria-hidden", "true");
     launcher.setAttribute("aria-expanded", "false");
@@ -1169,11 +1170,23 @@ export function mountCourseAssistant(runtime = {}) {
     shell.classList.add("open");
     panel.setAttribute("aria-hidden", "false");
     launcher.setAttribute("aria-expanded", "true");
+    panel.showModal();
     await mountSession();
-    panel.querySelector("button[data-course-assistant-close]").focus();
+    if (panel.open) panel.querySelector("button[data-course-assistant-close]").focus();
   };
   launcher.addEventListener("click", () => shell.classList.contains("open") ? close() : open());
   shell.querySelectorAll("[data-course-assistant-close]").forEach(el => el.addEventListener("click", close));
+  panel.addEventListener("cancel", event => { event.preventDefault(); close(); });
+  panel.addEventListener("keydown", event => {
+    if (event.key !== 'Tab') return;
+    const controls = [...panel.querySelectorAll('a[href], button, input, select, textarea, iframe, [tabindex]')]
+      .filter(node => !node.disabled && node.tabIndex >= 0 && node.getClientRects().length);
+    const first = controls[0], last = controls.at(-1);
+    const target = event.shiftKey && document.activeElement === first ? last
+      : !event.shiftKey && document.activeElement === last ? first : null;
+    if (target) { event.preventDefault(); target.focus(); }
+  });
+  panel.addEventListener("click", event => { if (event.target === panel && event.clientX < panel.getBoundingClientRect().left) close(); });
   window.addEventListener("keydown", event => { if (event.key === "Escape" && shell.classList.contains("open")) close(); });
 }
 
@@ -1185,11 +1198,39 @@ export function mountCourseLicenseNote() {
   note.className = "course-license-note";
   const language = document.documentElement.lang.toLowerCase();
   note.innerHTML = language.startsWith("zh")
-    ? '课程原创文字、示例代码和原始图表采用 <a href="../../LICENSE">Apache-2.0</a> 许可。注明名称的外部资料沿用各自条款；请参阅<a href="assets/SKILL.html">来源说明</a>。'
+    ? '课程原创文字、示例代码和原始图表采用 <a href="https://github.com/NVDLI/NemoClawDLI/blob/main/LICENSE">Apache-2.0</a> 许可。注明名称的外部资料沿用各自条款；请参阅<a href="assets/SKILL.html">来源说明</a>。'
     : language.startsWith("pt")
-    ? 'Material do curso, código de exemplo e diagramas originais: <a href="../../LICENSE">Apache-2.0</a>. Material externo citado mantém seus próprios termos; veja a <a href="assets/SKILL.html">proveniência</a>.'
+    ? 'Material do curso, código de exemplo e diagramas originais: <a href="https://github.com/NVDLI/NemoClawDLI/blob/main/LICENSE">Apache-2.0</a>. Material externo citado mantém seus próprios termos; veja a <a href="assets/SKILL.html">proveniência</a>.'
     : language.startsWith("es")
-      ? 'Prosa del curso, código de ejemplo y diagramas originales: <a href="../../LICENSE">Apache-2.0</a>. El material externo citado conserva sus propios términos; consulte la <a href="assets/SKILL.html">procedencia</a>.'
-      : 'Course-authored prose, example code, and original diagrams: <a href="../../LICENSE">Apache-2.0</a>. Named external material keeps its own terms; see <a href="assets/SKILL.html">provenance</a>.';
+      ? 'Prosa del curso, código de ejemplo y diagramas originales: <a href="https://github.com/NVDLI/NemoClawDLI/blob/main/LICENSE">Apache-2.0</a>. El material externo citado conserva sus propios términos; consulte la <a href="assets/SKILL.html">procedencia</a>.'
+      : 'Course-authored prose, example code, and original diagrams: <a href="https://github.com/NVDLI/NemoClawDLI/blob/main/LICENSE">Apache-2.0</a>. Named external material keeps its own terms; see <a href="assets/SKILL.html">provenance</a>.';
+  const disclosure = document.createElement('p');
+  disclosure.textContent = /zh-(tw|hant)/.test(language)
+    ? '瀏覽器會儲存對話與課程偏好設定；傳送訊息時，所選 AI 服務會處理輸入。刪除本機工作階段不會刪除服務端紀錄。請使用虛構、非機密的資料，並遵守所選服務的條款。'
+    : language.startsWith('zh')
+    ? '浏览器会保存对话和课程偏好设置；发送消息时，所选 AI 服务会处理输入。删除本地会话不会删除服务端记录。请使用虚构、非机密的数据，并遵守所选服务的条款。'
+    : language.startsWith('pt')
+      ? 'O navegador salva conversas e preferências do curso; ao enviar mensagens, o serviço de IA selecionado processa os dados. Excluir uma sessão local não apaga registros no serviço. Use dados fictícios e não confidenciais e siga os termos do serviço escolhido.'
+      : language.startsWith('es')
+        ? 'El navegador guarda conversaciones y preferencias del curso; al enviar mensajes, el servicio de IA seleccionado procesa los datos. Eliminar una sesión local no borra los registros del servicio. Usa datos ficticios y no confidenciales y cumple los términos del servicio elegido.'
+        : 'The browser saves conversations and course preferences; sending messages uses the selected AI service. Deleting a local session does not delete service records. Use synthetic, nonconfidential data and follow the selected service’s terms.';
+  note.appendChild(disclosure);
+  const links = document.createElement('p');
+  const labels = /zh-(tw|hant)/.test(language) ? ['NVIDIA 隱私權政策', '隱私權利與請求', 'NVIDIA API 試用條款', 'GitHub 託管隱私權說明']
+    : language.startsWith('zh') ? ['NVIDIA 隐私政策', '隐私权利与请求', 'NVIDIA API 试用条款', 'GitHub 托管隐私说明']
+    : language.startsWith('pt') ? ['Privacidade da NVIDIA', 'Direitos e solicitações de privacidade', 'Termos de avaliação da API NVIDIA', 'Privacidade da hospedagem GitHub']
+      : language.startsWith('es') ? ['Privacidad de NVIDIA', 'Derechos y solicitudes de privacidad', 'Términos de prueba de la API de NVIDIA', 'Privacidad del alojamiento en GitHub']
+        : ['NVIDIA privacy policy', 'Privacy rights and requests', 'NVIDIA API trial terms', 'GitHub hosting privacy'];
+  [
+    'https://www.nvidia.com/en-us/about-nvidia/privacy-policy/',
+    'https://www.nvidia.com/en-us/about-nvidia/privacy-center/',
+    'https://assets.ngc.nvidia.com/products/api-catalog/legal/NVIDIA%20API%20Trial%20Terms%20of%20Service.pdf',
+    'https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement',
+  ].forEach((href, index) => {
+    if (index) links.append(' · ');
+    const link = document.createElement('a');
+    link.href = href; link.textContent = labels[index]; links.appendChild(link);
+  });
+  note.appendChild(links);
   main.appendChild(note);
 }

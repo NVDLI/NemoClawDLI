@@ -5,6 +5,10 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Correct the course license link, explain local conversation storage and remote AI processing,
+  and expose privacy/service links. Use a native modal for Course Assistant keyboard focus.
+  Codex reviewed the added Spanish, Brazilian Portuguese and Chinese wording under maintainer authority.
+
 - Show the questions, replies, and model identities in the ReAct preview, and make optional
   model discovery recover from missing matches or a changed connection. Codex reviewed the
   affected Spanish, Brazilian Portuguese, Simplified Chinese, and Traditional Chinese text
