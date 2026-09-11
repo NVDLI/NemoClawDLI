@@ -5,6 +5,10 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Update hosted embeddings to Nemotron 3 Embed and regenerate the RAG index with matching vectors.
+  Preserve custom model routes and migrate the former NVIDIA default. Codex reviewed the corrected
+  endpoint explanation in Spanish, Brazilian Portuguese, and Traditional and Simplified Chinese.
+
 - Correct the course license link, explain local conversation storage and remote AI processing,
   and expose privacy/service links. Use a native modal for Course Assistant keyboard focus.
   Codex reviewed the added Spanish, Brazilian Portuguese and Chinese wording under maintainer authority.
