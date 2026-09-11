@@ -292,8 +292,8 @@ test('course activity is local-only until the learner enables remote progress', 
   assert.equal(typeof calls[0][1].storage.load, 'function');
 });
 
-test('the checked-in pending policy blocks collection before artifact or API access', async () => {
-  const policy = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8'));
+test('a deployment with collection disabled blocks artifact and API access', async () => {
+  const policy = { ...JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8')), collection_enabled: false };
   const activity = createCourseActivity({
     policyLoader: async () => policy,
     artifactResolver: async () => assert.fail('artifact discovery must not run'),
@@ -896,4 +896,59 @@ test('Module 1a explicitly wires session, referral, and verified progress events
   assert.doesNotMatch(page, /recordApiKeyVerified/);
 });
 
+test('the published opt-in notice requires complete disclosure and keeps both defaults off', () => {
+  const policy = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8'));
+  assert.equal(isActivityPolicyApproved(policy), true);
+  for (const key of Object.keys(policy)) {
+    const missing = { ...policy }; delete missing[key];
+    assert.throws(() => validateActivityPolicy(missing), key);
+    assert.throws(() => validateActivityPolicy({ ...missing, [`renamed_${key}`]: policy[key] }), key);
+  }
+  for (const base_path of ['https://example.test/api', '//example.test/api', '/api/../redirect', '/api/path?url=https://example.test', '/api/%2e%2e/path']) {
+    assert.throws(() => validateActivityPolicy({ ...policy, lab_transport: { base_path, allow_http: true } }));
+  }
+  assert.throws(() => validateActivityPolicy({ ...policy, api_base_url: 'http://activity-api.learn.nvidia.com' }));
+  assert.throws(() => validateActivityPolicy({ ...policy, collection_defaults: { progress_sync: 'on', referral_tracking: 'off' } }));
+});
+
+test('HTTP lab transport requires deployment permission and preserves authenticated HTTPS SDK semantics', async () => {
+  const policy = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8'));
+  policy.lab_transport = { base_path: '/lab/api/course/activity', allow_http: true };
+  const identity = { ...APPROVED_ARTIFACT, artifact_version: `git-${'a'.repeat(40)}-adapter-${'b'.repeat(64)}` };
+  const requests = [];
+  let sdkOptions;
+  const make = p => createCourseActivity({
+    policyLoader: async () => p,
+    locationHref: 'http://lab.example.test/lab/static/web/nemoclaw/index.html',
+    cryptoImpl: {},
+    fetchImpl: async (url, options) => {
+      requests.push({ url, options });
+      return { ok: true, url, json: async () => ({ artifact: identity, xsrf_token: 'fixture-xsrf' }) };
+    },
+    initialize: async options => {
+      sdkOptions = options;
+      return { getState: async () => ({ progressPercent: 0, completedAt: null }) };
+    },
+  });
+  const blocked = make({ ...policy, lab_transport: { ...policy.lab_transport, allow_http: false } });
+  assert.equal(await blocked.enable(), false);
+  assert.equal(requests.length, 0);
+  const activity = make(policy);
+  await activity.getPolicy();
+  assert.equal(requests.length, 0, 'no session or manifest access before consent');
+  assert.equal(await activity.enable(), true);
+  assert.deepEqual(sdkOptions.artifact, identity);
+  assert.equal(sdkOptions.baseUrl, 'https://activity-api.learn.nvidia.com');
+  await sdkOptions.fetchImpl('https://activity-api.learn.nvidia.com/v1/activity-sessions', {
+    method: 'POST', headers: { Authorization: 'Bearer fixture-activity', 'Idempotency-Key': 'fixture-key' },
+  });
+  const last = requests.at(-1);
+  assert.equal(last.url, 'http://lab.example.test/lab/api/course/activity/v1/activity-sessions');
+  assert.equal(last.options.credentials, 'same-origin');
+  assert.equal(last.options.headers.get('Authorization'), null);
+  assert.equal(last.options.headers.get('X-Activity-Authorization'), 'Bearer fixture-activity');
+  assert.equal(last.options.headers.get('X-XSRFToken'), 'fixture-xsrf');
+  await assert.rejects(sdkOptions.fetchImpl('https://example.test/v1/activity-sessions', {}), /Unexpected Activity destination/);
+  activity.disconnect();
+});
 }

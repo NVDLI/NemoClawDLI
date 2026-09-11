@@ -7,8 +7,11 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 - Extend Lisa Guo's Activity SDK integration with explicit progress/referral controls,
   manifest-bound session identity, disconnect cancellation, and a progress bar that distinguishes
-  local checkpoints from API-confirmed progress, with outage status and retry. Collection remains disabled
-  pending service-policy review; local course work remains available.
+  local checkpoints from API-confirmed progress, with outage status and retry. Remote syncing is now
+  offered through learner opt-in and a concise NVIDIA privacy notice; local course work remains available.
+- Support explicitly configured authenticated lab transports with an HTTP warning before consent.
+  The lab keeps the NVIDIA Activity upstream on HTTPS. Codex reviewed the updated Spanish, Brazilian
+  Portuguese, Simplified Chinese, and Taiwan Traditional Chinese UI under Vadim Kudlay's authority.
 
 - Thanks to Lisa Guo for contributing the Activity SDK, browser-session continuity, and course checkpoint integration.
 - Codex reviewed the Activity completion and research-status text in Spanish, Brazilian Portuguese,

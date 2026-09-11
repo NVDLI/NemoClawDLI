@@ -1,65 +1,20 @@
 {
-  "schema": "dli-activity-policy/1",
-  "notice_version": "2026-09-09",
-  "publication_status": "pending-privacy-legal-review",
-  "collection_enabled": false,
+  "schema": "dli-activity-policy/2",
+  "notice_version": "2026-09-11",
+  "publication_status": "published-notice",
+  "collection_enabled": true,
   "api_base_url": "https://activity-api.learn.nvidia.com",
   "recipient": "NVIDIA DLI Activity API",
-  "collection_defaults": {
-    "progress_sync": "off",
-    "referral_tracking": "off"
-  },
+  "collection_defaults": { "progress_sync": "off", "referral_tracking": "off" },
   "data_categories": [
-    "course artifact identifier, version, and digest",
-    "opaque activity session identifier and token",
-    "verified course progress and completion time",
-    "approved NVIDIA resource identifier and destination when referral tracking is enabled",
-    "ordinary HTTPS request metadata available to the service operator"
+    "course version, session identifier, completed checkpoints, and completion time",
+    "selected NVIDIA resource links, only if you enable link tracking",
+    "connection metadata received by the service, such as IP address"
   ],
-  "excluded_course_payloads": [
-    "model API keys",
-    "learner prompts and model responses",
-    "terminal commands and output",
-    "workspace files"
-  ],
-  "purposes": [
-    "save verified course progress and completion",
-    "measure selections of approved NVIDIA resources when referral tracking is enabled"
-  ],
-  "browser_retention": "The session identifier and token remain in sessionStorage until the tab closes or the learner disconnects remote progress.",
-  "controller": {
-    "status": "unconfirmed",
-    "name": null,
-    "owner": null
-  },
-  "service_retention": {
-    "status": "unconfirmed",
-    "period_or_criteria": null,
-    "owner": null
-  },
-  "legal_basis": {
-    "status": "unconfirmed",
-    "basis": null,
-    "owner": null
-  },
-  "sale_sharing": {
-    "status": "unconfirmed",
-    "disposition": null,
-    "owner": null,
-    "course_code_behavior": "Activity events are sent only to the configured NVIDIA DLI Activity API endpoint. Global Privacy Control keeps optional referral tracking off."
-  },
-  "service_level": {
-    "status": "unpublished",
-    "target": null,
-    "source_url": null,
-    "health_path": "/health",
-    "readiness_path": "/ready"
-  },
+  "excluded_course_payloads": ["model API keys", "learner prompts and model responses", "terminal commands and output", "workspace files"],
+  "purposes": ["save course progress", "understand which NVIDIA resources learners use when link tracking is enabled"],
+  "browser_retention": "Disconnect stops future syncing and clears this tab's Activity session. Closing the tab also clears the session. Neither action deletes records already sent to NVIDIA.",
+  "service_retention_notice": "NVIDIA's Privacy Policy describes how NVIDIA uses and retains service data and how to request deletion. Its general retention criteria apply for the duration of your engagement; this course does not promise a separate Activity-specific deletion period.",
   "privacy_policy_url": "https://www.nvidia.com/en-us/about-nvidia/privacy-policy/",
-  "privacy_center_url": "https://www.nvidia.com/en-us/about-nvidia/privacy-center/",
-  "review_required": [
-    "privacy",
-    "legal",
-    "activity-service-owner"
-  ]
+  "privacy_center_url": "https://www.nvidia.com/en-us/about-nvidia/privacy-center/"
 }
