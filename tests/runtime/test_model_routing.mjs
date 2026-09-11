@@ -13,6 +13,7 @@ const {
   fetchRetry,
   getConfig,
   getEmbeddingConfig,
+  getEmbeddingModelId,
   getModelRequestPolicy,
   normalizeModelRequestRetries,
   normalizeModelRequestTimeoutMs,
@@ -33,6 +34,27 @@ function memoryStorage() {
     removeItem:key => values.delete(key),
   };
 }
+
+test('only the former NVIDIA hosted embedding default migrates', () => {
+  const previous = globalThis.localStorage;
+  globalThis.localStorage = memoryStorage();
+  const oldModel = 'nvidia/llama-nemotron-embed-vl-1b-v2';
+  try {
+    assert.equal(getEmbeddingModelId(), 'nvidia/nemotron-3-embed-1b');
+    localStorage.setItem('nemoclaw_embedding_model_id_v1', oldModel);
+    assert.equal(getEmbeddingModelId(), 'nvidia/nemotron-3-embed-1b');
+    setEmbeddingApiBaseUrl('https://models.example.test/v1');
+    assert.equal(getEmbeddingModelId(), oldModel);
+    setEmbeddingApiBaseUrl(DEFAULT_MODEL_API_BASE_URL);
+    localStorage.setItem('nemoclaw_embedding_model_id_v1', `${oldModel}-custom`);
+    assert.equal(getEmbeddingModelId(), `${oldModel}-custom`);
+    localStorage.setItem('nemoclaw_embedding_model_id_v1', 'example/custom-embed');
+    assert.equal(getEmbeddingModelId(), 'example/custom-embed');
+  } finally {
+    if (previous === undefined) delete globalThis.localStorage;
+    else globalThis.localStorage = previous;
+  }
+});
 
 test('the model relay default covers only the exact published course origins and local files', () => {
   const cases = [
@@ -155,7 +177,7 @@ test('embedding route shares relay selection but keeps its own endpoint', async 
     assert.deepEqual(relayed, {
       mode:'direct',
       url:'https://nvidia-api-cors-proxy.experiments.courses.nvidia.com/v1',
-      model:'nvidia/llama-nemotron-embed-vl-1b-v2',
+      model:'nvidia/nemotron-3-embed-1b',
       needsKey:true,
       iframeProxy:true,
     });

@@ -84,8 +84,13 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
       <header><strong>${text('Course activity')}</strong><button type="button" data-activity-close aria-label="${text('Close activity panel')}">×</button></header>
       <p data-activity-notice>${text('Remote progress is off. Nothing is sent until you enable it.')}</p>
       <p data-activity-status role="status" aria-live="polite"></p>
+      <label id="activity-progress-label" for="activity-progress"></label>
+      <progress id="activity-progress" max="100" value="0" aria-labelledby="activity-progress-label"></progress>
+      <p data-activity-sync></p>
+      <p>${text('Progress records successful course activity checkpoints.')}</p>
       <div class="activity-control-actions">
         <button type="button" data-activity-enable>${text('Enable remote progress')}</button>
+        <button type="button" data-activity-refresh hidden>${text('Refresh saved progress')}</button>
         <button type="button" data-activity-disable hidden>${text('Disconnect this tab')}</button>
       </div>
       <label class="activity-referral-choice"><input type="checkbox" data-activity-referrals disabled> ${text('Record selections of approved NVIDIA resources')}</label>
@@ -118,7 +123,11 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
   const label = root.querySelector('[data-activity-label]');
   const notice = root.querySelector('[data-activity-notice]');
   const status = root.querySelector('[data-activity-status]');
+  const progressBar = root.querySelector('#activity-progress');
+  const progressLabel = root.querySelector('#activity-progress-label');
+  const syncStatus = root.querySelector('[data-activity-sync]');
   const enable = root.querySelector('[data-activity-enable]');
+  const refresh = root.querySelector('[data-activity-refresh]');
   const disable = root.querySelector('[data-activity-disable]');
   const referrals = root.querySelector('[data-activity-referrals]');
   const observation = root.querySelector('[data-activity-observation]');
@@ -139,6 +148,7 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
   });
 
   let policy = null;
+  let refreshing = false;
   const renderProgress = (prefix, progress) => {
     status.replaceChildren(
       documentTarget.createTextNode(`${text(prefix)} `),
@@ -147,16 +157,33 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
   };
   const render = state => {
     const progress = localProgress(evidence);
+    const saved = state.enabled && Boolean(state.progressCheckedAt);
+    const shownProgress = saved ? state.progressPercent : progress;
+    const progressKind = saved
+      ? (state.phase === 'connected' ? 'Saved progress:' : 'Last confirmed progress:')
+      : 'Local verified progress:';
     root.dataset.state = state.phase;
-    label.textContent = state.phase === 'connected'
-      ? `${text('Activity')} ${progress}%`
-      : text('Activity: local');
+    label.textContent = `${text(saved ? 'Activity' : 'Activity: local')} ${shownProgress}%`;
+    progressLabel.textContent = `${text(progressKind)} ${shownProgress}%`;
+    toggle.title = progressLabel.textContent;
+    progressBar.value = shownProgress;
+    progressBar.setAttribute('aria-valuetext', progressLabel.textContent);
+    syncStatus.replaceChildren();
+    if (saved && progress > state.progressPercent) {
+      syncStatus.append(documentTarget.createTextNode(
+        `${text('Local verified progress:')} ${progress}%. ${text('Waiting for API confirmation.')}`,
+      ));
+    } else if (saved && state.phase === 'connected') {
+      syncStatus.textContent = text('Confirmed by the Activity API.');
+    }
     disable.hidden = state.phase === 'off' || state.phase === 'blocked';
     enable.hidden = state.enabled;
+    refresh.hidden = !state.enabled;
+    refresh.disabled = refreshing || state.phase === 'connecting';
     referrals.disabled = state.phase !== 'connected' || gpc;
     referrals.checked = state.referralTracking && !gpc;
     if (state.phase === 'connecting') status.textContent = text('Connecting to the Activity API.');
-    else if (state.phase === 'connected') renderProgress('Remote progress is connected. Local verified progress:', progress);
+    else if (state.phase === 'connected') status.textContent = text(state.completedAt ? 'Course completed' : 'Remote progress is enabled.');
     else if (state.phase === 'unavailable') status.textContent = text('The Activity API is unavailable. Local course work is unchanged.');
     else if (state.reason === 'secure-context') status.textContent = text('Open this course over HTTPS to enable remote progress.');
     else if (state.reason === 'artifact') status.textContent = text('Remote progress is available only from a validated course build.');
@@ -186,6 +213,13 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
 
   enable.addEventListener('click', async () => {
     if (await activity.enable()) await syncLocal();
+  });
+  refresh.addEventListener('click', async () => {
+    if (refreshing) return;
+    refreshing = true;
+    refresh.disabled = true;
+    try { if (await activity.getCourseActivityState()) await syncLocal(); }
+    finally { refreshing = false; render(activity.snapshot()); }
   });
   disable.addEventListener('click', () => activity.disconnect());
   referrals.addEventListener('change', () => activity.setReferralTracking(referrals.checked && !gpc));

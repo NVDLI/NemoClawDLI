@@ -32,7 +32,7 @@ CONTROL_REGISTER = ROOT / "docs" / "security-control-themes.json"
 RELEASE_STAGES = {"deploy", "verify", "review"}
 EXPECTED_SVG_TITLE = "Security architecture for the DLI course Securing Agents with OpenShell and NemoClaw"
 TOE_NODE_IDS = {"source", "artifact", "browser"}
-EXTERNAL_NODE_IDS = {"ci", "pages_host", "launchable_host", "model_api", "activity_api", "nemoclaw"}
+EXTERNAL_NODE_IDS = {"ci", "pages_host", "launchable_host", "model_api", "nemoclaw"}
 TOE_ASSURANCE = "REPOSITORY EVIDENCE"
 EXTERNAL_ASSURANCE = "NO LIVE EVIDENCE FROM EXTERNAL OPERATOR"
 ALLOWED_SECURITY_OBJECTIVES = {"confidentiality", "integrity", "availability"}
@@ -336,6 +336,11 @@ def audit_model(model: dict, *, root: Path = ROOT, svg_text: str | None = None) 
     edges = model.get("edges", [])
     zones = {zone.get("id"): zone for zone in zones_list if zone.get("id")}
     nodes = {node.get("id"): node for node in nodes_list if node.get("id")}
+    service_ids = {
+        node_id for node_id, node in nodes.items()
+        if node.get("kind") in {"external_service", "external_runtime"}
+    }
+    external_node_ids = EXTERNAL_NODE_IDS | service_ids
     if len(zones) != len(zones_list):
         out.append(finding("duplicate-zone", "docs/security-architecture.json", "zone ids must be present and unique"))
     if len(nodes) != len(nodes_list):
@@ -520,7 +525,7 @@ def audit_model(model: dict, *, root: Path = ROOT, svg_text: str | None = None) 
     for node_id in sorted(set(nodes) - connected):
         out.append(finding("isolated-node", "docs/security-architecture.json", f"{node_id} has no data-flow edge"))
 
-    for node_id in ("model_api", "activity_api", "nemoclaw"):
+    for node_id in external_node_ids - {"ci", "pages_host", "launchable_host"}:
         if node_id not in nodes or nodes[node_id].get("conditional"):
             out.append(finding("required-service", "docs/security-architecture.json", f"{node_id} must remain a required, non-conditional service"))
     route_contract = {edge_id: False for edge_id in EXPECTED_EDGE_IDS}
@@ -557,11 +562,11 @@ def audit_model(model: dict, *, root: Path = ROOT, svg_text: str | None = None) 
             out.append(finding("retired-runtime-surface", retired, "repository-owned runtime surface returned"))
     if set(coverage.get("toe_nodes", [])) != TOE_NODE_IDS:
         out.append(finding("toe-node-coverage", "docs/security-architecture.json", "TOE node inventory changed"))
-    if set(coverage.get("external_context_nodes", [])) != EXTERNAL_NODE_IDS:
+    if set(coverage.get("external_context_nodes", [])) != external_node_ids:
         out.append(finding("external-node-coverage", "docs/security-architecture.json", "external-context node inventory changed"))
     actual_toe = {node["id"] for node in nodes_list if node.get("ownership") == "toe"}
     actual_external = {node["id"] for node in nodes_list if node.get("ownership") == "external"}
-    if actual_toe != TOE_NODE_IDS or actual_external != EXTERNAL_NODE_IDS:
+    if actual_toe != TOE_NODE_IDS or actual_external != external_node_ids:
         out.append(finding("node-ownership-coverage", "docs/security-architecture.json", "node ownership does not match the reviewed boundary"))
     for node in nodes_list:
         if node.get("compose_service"):
@@ -683,10 +688,27 @@ def self_test() -> list[str]:
     mutation["nodes"][0]["detail"] = "secure course delivery architecture"
     cases.append(("unsupported architecture assurance", mutation, expected_svg, "architecture-overclaim"))
 
-    for node_id in ("nemoclaw", "activity_api"):
+    for node_id in [node["id"] for node in base["nodes"] if node.get("kind") in {"external_service", "external_runtime"}]:
         mutation = copy.deepcopy(base)
         next(node for node in mutation["nodes"] if node["id"] == node_id)["conditional"] = True
         cases.append((f"required {node_id} service", mutation, expected_svg, "required-service"))
+
+    service = next(node for node in base["nodes"] if node.get("kind") == "external_service")
+    mutation = copy.deepcopy(base)
+    node = copy.deepcopy(service)
+    node["conditional"] = True
+    mutation["nodes"].append(node)
+    mutation["coverage"]["external_context_nodes"].append("new-service")
+    for service_id in ("new-service", "renamed-service"):
+        node["id"] = service_id
+        mutation["coverage"]["external_context_nodes"][-1] = service_id
+        cases.append((f"discovered {service_id}", copy.deepcopy(mutation), expected_svg, "required-service"))
+        malformed = copy.deepcopy(mutation)
+        malformed["nodes"][-1]["kind"] = "external_service_typo"
+        cases.append((f"malformed {service_id} role", malformed, expected_svg, "external-node-coverage"))
+        deleted = copy.deepcopy(mutation)
+        deleted["nodes"].pop()
+        cases.append((f"deleted {service_id}", deleted, expected_svg, "external-node-coverage"))
 
     mutation = copy.deepcopy(base)
     next(edge for edge in mutation["edges"] if edge["id"] == "browser_to_nemoclaw")["conditional"] = True

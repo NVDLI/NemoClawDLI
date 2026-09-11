@@ -87,7 +87,7 @@ function createFixture({ progressPercent = 10 } = {}) {
       return facade;
     },
   });
-  return { activity, calls };
+  return { activity, calls, setProgress: value => { progressPercent = value; } };
 }
 
 async function enableFixture(activity) {
@@ -378,6 +378,7 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     const port = server.address().port;
     let apiRequests = 0;
     let apiMode = 'blocked';
+    let confirmedProgress = 0;
     await context.route('**/*', route => {
       const url = new URL(route.request().url());
       if (url.hostname === 'activity-api.learn.nvidia.com') {
@@ -392,7 +393,7 @@ test('browser artifact discovery preserves same-origin authentication and blocks
             session_id: '019f38f1-e5ab-7688-af0d-0e8925299e93',
             session_token: 'fixture-browser-session-token',
             expires_at: new Date(Date.now() + 3600000).toISOString(),
-          } : { progress_percent: 0, completed_at: null },
+          } : { progress_percent: confirmedProgress, completed_at: null },
         });
       }
       return ['127.0.0.1', 'localhost', 'course.test'].includes(url.hostname) && url.port === String(port)
@@ -420,26 +421,53 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     assert.equal(apiRequests, 0, 'no Activity API request is permitted in these cases');
     redirect = false;
     apiMode = 'healthy';
-    await page.goto(`http://127.0.0.1:${port}/${COURSE_ROOT}/index.html`);
+    const firstLesson = fs.readdirSync(COURSE_ROOT).find(name => name.startsWith('01a-') && name.endsWith('.html'));
+    assert.ok(firstLesson);
+    await page.goto(`http://127.0.0.1:${port}/${COURSE_ROOT}/${firstLesson}`);
     await page.locator('.activity-control-toggle').click();
     await page.locator('[data-activity-enable]').click();
     await page.waitForFunction(() => document.querySelector('[data-activity-notice]')?.textContent === 'Remote progress is enabled.');
+    assert.equal(await page.locator('#activity-progress').getAttribute('value'), '0');
+    assert.equal(await page.locator('#activity-progress-label').textContent(), 'Saved progress: 0%');
+    assert.equal(await page.locator('input[type="range"]').count(), 0, 'completion cannot be moved manually');
+    await page.evaluate(() => {
+      window.dispatchEvent(new CustomEvent('nemoclaw:api-key-verified'));
+      window.dispatchEvent(new CustomEvent('nemoclaw:run-succeeded', { detail: { cellId: 'cell-onecall', hasContent: true } }));
+    });
+    await page.waitForFunction(() => document.querySelector('[data-activity-sync]')?.textContent.includes('Waiting for API confirmation.'));
+    assert.equal(await page.locator('#activity-progress').getAttribute('value'), '0');
+    assert.match(await page.locator('[data-activity-sync]').textContent(), /Local verified progress: 10%/);
+    confirmedProgress = 45;
+    await page.locator('[data-activity-refresh]').click();
+    await page.waitForFunction(() => document.querySelector('#activity-progress')?.value === 45);
+    assert.equal(await page.locator('#activity-progress-label').textContent(), 'Saved progress: 45%');
+    await page.waitForLoadState('networkidle');
     const beforeReload = apiRequests;
     await page.reload();
     await page.locator('.activity-control-toggle').click();
     await page.waitForFunction(() => window.__nemoclawActivity.snapshot().enabled);
-    assert.equal(apiRequests, beforeReload + 1, 'the existing tab choice resumes one state read for the same artifact');
+    await page.waitForLoadState('networkidle');
+    assert.equal(apiRequests, beforeReload + 2, 'resume reads state, then confirms the synchronized local evidence without creating another session');
     assert.equal(await page.locator('[data-activity-enable]').isHidden(), true);
     await page.waitForFunction(() => document.querySelector('[data-activity-notice]')?.textContent === 'Remote progress is enabled.');
     apiMode = 'unavailable';
     await page.evaluate(() => window.__nemoclawActivity.recordMilestone('01a:model-call-verified'));
     assert.equal(await page.locator('.activity-control').getAttribute('data-state'), 'unavailable');
+    assert.equal(await page.locator('#activity-progress-label').textContent(), 'Last confirmed progress: 45%');
+    assert.equal(await page.locator('#activity-progress').getAttribute('value'), '45');
+    apiMode = 'healthy';
+    confirmedProgress = 60;
+    await page.locator('[data-activity-refresh]').click();
+    await page.waitForFunction(() => document.querySelector('#activity-progress')?.value === 60);
+    assert.equal(await page.locator('[data-activity-sync]').textContent(), 'Confirmed by the Activity API.');
+    assert.equal(await page.locator('#activity-progress').getAttribute('aria-valuetext'), 'Saved progress: 60%');
     await page.evaluate(() => sessionStorage.setItem('learner-work', 'retained'));
     const beforeDisconnect = apiRequests;
     await page.locator('[data-activity-disable]').click();
     assert.equal(await page.locator('.activity-control').getAttribute('data-state'), 'off');
     assert.equal(await page.locator('[data-activity-enable]').isVisible(), true);
-    assert.equal(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key.startsWith('dli_activity:')).length), 0);
+    assert.equal(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key.startsWith('dli_activity:') && !key.includes(':evidence:')).length), 0);
+    assert.equal(await page.locator('#activity-progress-label').textContent(), 'Local verified progress: 10%');
     assert.equal(await page.evaluate(() => sessionStorage.getItem('learner-work')), 'retained');
     assert.equal(apiRequests, beforeDisconnect, 'disconnect must work without the service');
   } finally {
@@ -729,7 +757,7 @@ test('a named milestone sends its cumulative progress with a stable idempotency 
   await enableFixture(activity);
   assert.equal(await activity.recordMilestone('02b:grounded-answer-complete'), true);
 
-  assert.deepEqual(calls.at(-1), ['progress', 45, {
+  assert.deepEqual(calls.findLast(call => call[0] === 'progress'), ['progress', 45, {
     idempotencyKey: `${COURSE_ID}:milestone:02b:grounded-answer-complete`,
   }]);
 });
@@ -749,10 +777,60 @@ test('course completion is sent once state reaches 100 percent', async () => {
   await enableFixture(activity);
   assert.equal(await activity.recordCompletion(), true);
 
-  assert.deepEqual(calls.slice(-2), [
+  assert.deepEqual(calls.slice(-3), [
     ['getState'],
     ['complete', { idempotencyKey: `${COURSE_ID}:course:completed` }],
+    ['getState'],
   ]);
+});
+
+test('displayed progress follows API confirmation rather than the submitted percentage', async () => {
+  const { activity, setProgress } = createFixture({ progressPercent: 10 });
+  await enableFixture(activity);
+  assert.equal(await activity.recordMilestone('02b:grounded-answer-complete'), true);
+  assert.equal(activity.snapshot().progressPercent, 10);
+  assert.ok(activity.snapshot().progressCheckedAt);
+  setProgress(45);
+  await activity.getCourseActivityState();
+  assert.equal(activity.snapshot().progressPercent, 45);
+});
+
+test('invalid API percentages are unavailable instead of fabricated zero progress', async () => {
+  for (const progressPercent of [-1, 101, 0.5, '45', null, NaN]) {
+    const { activity } = createFixture({ progressPercent });
+    assert.equal(await activity.enable(), false);
+    assert.equal(activity.snapshot().phase, 'unavailable');
+    assert.equal(activity.snapshot().progressCheckedAt, undefined);
+  }
+  const { activity } = createFixture({ progressPercent: 0 });
+  assert.equal(await activity.enable(), true);
+  assert.equal(activity.snapshot().progressPercent, 0);
+});
+
+test('refresh preserves the last confirmed value on failure and publishes recovery', async () => {
+  let unavailable = false;
+  let progressPercent = 25;
+  const activity = createCourseActivity({
+    policyLoader: async () => APPROVED_POLICY,
+    artifactResolver: async () => APPROVED_ARTIFACT,
+    initialize: async () => ({ getState: async () => {
+      if (unavailable) throw new Error('service unavailable');
+      return { progressPercent, completedAt: null };
+    } }),
+  });
+  await enableFixture(activity);
+  const checked = activity.snapshot().progressCheckedAt;
+  unavailable = true;
+  assert.equal(await activity.getCourseActivityState(), null);
+  assert.equal(activity.snapshot().phase, 'unavailable');
+  assert.equal(activity.snapshot().progressPercent, 25);
+  assert.equal(activity.snapshot().progressCheckedAt, checked);
+  unavailable = false;
+  progressPercent = 45;
+  await activity.getCourseActivityState();
+  assert.equal(activity.snapshot().phase, 'connected');
+  assert.equal(activity.snapshot().reason, null);
+  assert.equal(activity.snapshot().progressPercent, 45);
 });
 
 test('course state is read through the facade', async () => {
@@ -761,6 +839,31 @@ test('course state is read through the facade', async () => {
   await enableFixture(activity);
   assert.deepEqual(await activity.getCourseActivityState(), { progressPercent: 70, completedAt: null });
   assert.deepEqual(calls.at(-1), ['getState']);
+});
+
+test('an older concurrent refresh cannot replace newer confirmed progress or connection state', async () => {
+  let pending = null;
+  const activity = createCourseActivity({
+    policyLoader: async () => APPROVED_POLICY,
+    artifactResolver: async () => APPROVED_ARTIFACT,
+    initialize: async () => ({ getState: () => pending
+      ? new Promise((resolve, reject) => pending.push({ resolve, reject }))
+      : Promise.resolve({ progressPercent: 10 }) }),
+  });
+  await enableFixture(activity);
+  for (const failOlder of [false, true]) {
+    pending = [];
+    const older = activity.getCourseActivityState();
+    const newer = activity.getCourseActivityState();
+    await new Promise(resolve => setImmediate(resolve));
+    pending[1].resolve({ progressPercent: 60 });
+    await newer;
+    if (failOlder) pending[0].reject(new Error('late failure'));
+    else pending[0].resolve({ progressPercent: 25 });
+    await older;
+    assert.equal(activity.snapshot().progressPercent, 60);
+    assert.equal(activity.snapshot().phase, 'connected');
+  }
 });
 
 test('facade failures remain contained and retryable at the lesson boundary', async () => {

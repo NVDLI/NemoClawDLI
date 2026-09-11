@@ -31,7 +31,7 @@ export const DEFAULT_MODEL_REQUEST_RETRIES = 0;
 const BILLING_INVOKE_ORIGIN = "dli-nemoclaw-web";
 // Web-cell model contract. All repository explorers delegate to this one default.
 export const DEFAULT_MODEL = "nvidia/nemotron-3.5-lightning-30b-a3b";
-export const DEFAULT_EMBEDDING_MODEL = "nvidia/llama-nemotron-embed-vl-1b-v2";
+export const DEFAULT_EMBEDDING_MODEL = "nvidia/nemotron-3-embed-1b";
 export const REASONING_MODEL = DEFAULT_MODEL;
 
 // ── Lab-only step detection ─────────────────────────────────────────────────
@@ -165,7 +165,13 @@ export function setEmbeddingApiBaseUrl(raw) {
 }
 
 export function getEmbeddingModelId() {
-  try { return normalizeModelId(localStorage.getItem(EMBEDDING_MODEL_ID_KEY), DEFAULT_EMBEDDING_MODEL); }
+  try {
+    const model = normalizeModelId(localStorage.getItem(EMBEDDING_MODEL_ID_KEY), DEFAULT_EMBEDDING_MODEL);
+    // Retire the former hosted default without changing a custom service's model registration.
+    if (getEmbeddingApiBaseUrl() === DEFAULT_MODEL_API_BASE_URL &&
+        /^nvidia\/llama-nemotron-embed-vl-1b-v2$/.test(model)) return DEFAULT_EMBEDDING_MODEL;
+    return model;
+  }
   catch (_) { return DEFAULT_EMBEDDING_MODEL; }
 }
 

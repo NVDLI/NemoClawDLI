@@ -242,6 +242,7 @@ export function createNemoClawActivity({
   let artifact;
   let enableAttempt;
   let connectionGeneration = 0;
+  let stateRead = 0;
   let connectionAbort;
   const listeners = new Set();
   let storage;
@@ -319,6 +320,31 @@ export function createNemoClawActivity({
     }
   }
 
+  function validateProgress(remote) {
+    if (!Number.isInteger(remote?.progressPercent)
+        || remote.progressPercent < 0 || remote.progressPercent > 100) {
+      throw new Error('The Activity API returned invalid progress');
+    }
+    return remote;
+  }
+
+  async function readConfirmedState(activity, isCurrent) {
+    const reading = ++stateRead;
+    let remote;
+    try { remote = validateProgress(await activity.getState()); }
+    catch (error) {
+      if (!isCurrent() || reading !== stateRead) return null;
+      throw error;
+    }
+    if (isCurrent() && reading === stateRead) publish({
+      phase: 'connected', reason: null,
+      progressPercent: remote.progressPercent,
+      completedAt: remote.completedAt || null,
+      progressCheckedAt: (now ? now() : new Date()).toISOString(),
+    });
+    return remote;
+  }
+
   return {
     snapshot() { return state; },
     subscribe(listener) {
@@ -374,7 +400,7 @@ export function createNemoClawActivity({
           if (storage === attemptStorage) storage = undefined;
           return false;
         }
-        const remote = activity ? await attempt(value => value.getState(), null) : null;
+        const remote = activity ? await attempt(async value => validateProgress(await value.getState()), null) : null;
         if (generation !== connectionGeneration) {
           initializedActivity = undefined;
           attemptStorage?.dispose();
@@ -391,8 +417,9 @@ export function createNemoClawActivity({
         const endedAt = performanceImpl?.now?.() ?? Date.now();
         publish({
           phase: 'connected',
-          progressPercent: Number(remote.progressPercent) || 0,
+          progressPercent: remote.progressPercent,
           completedAt: remote.completedAt || null,
+          progressCheckedAt: (now ? now() : new Date()).toISOString(),
           observedLatencyMs: Math.max(0, Math.round(endedAt - startedAt)),
           observedAt: (now ? now() : new Date()).toISOString(),
         });
@@ -412,7 +439,7 @@ export function createNemoClawActivity({
       storage = undefined;
       connectionAbort?.abort();
       connectionAbort = undefined;
-      return publish({ phase: 'off', reason: null, progressPercent: 0, completedAt: null, observedLatencyMs: null, observedAt: null });
+      return publish({ phase: 'off', reason: null, progressPercent: 0, completedAt: null, progressCheckedAt: null, observedLatencyMs: null, observedAt: null });
     },
     setReferralTracking(value) {
       referralTracking = enabled && value === true && !globalPrivacyControl;
@@ -440,24 +467,28 @@ export function createNemoClawActivity({
       if (!enabled) return Promise.resolve(false);
       const milestone = ACTIVITY_MILESTONES[milestoneRef];
       if (!milestone) return Promise.resolve(false);
-      return attempt(async activity => {
+      return attempt(async (activity, isCurrent) => {
         await activity.progress(milestone.progressPercent, {
           idempotencyKey: `nemoclaw:milestone:${milestoneRef}`,
         });
+        if (!isCurrent()) return false;
+        await readConfirmedState(activity, isCurrent);
         return true;
       });
     },
     getCourseActivityState() {
       if (!enabled) return Promise.resolve(null);
-      return attempt(activity => activity.getState(), null);
+      return attempt(readConfirmedState, null);
     },
     recordCompletion() {
       if (!enabled) return Promise.resolve(false);
       return attempt(async (activity, isCurrent) => {
-        const state = await activity.getState();
+        const state = await readConfirmedState(activity, isCurrent);
         if (!isCurrent()) return false;
         if (!Number.isInteger(state?.progressPercent) || state.progressPercent !== 100) return false;
         const result = await activity.complete({ idempotencyKey: 'nemoclaw:course:completed' });
+        if (!isCurrent()) return false;
+        await readConfirmedState(activity, isCurrent);
         return result?.written !== false;
       });
     },

@@ -12,6 +12,14 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 - Thanks to Lisa Guo for contributing the Activity SDK, browser-session continuity, and course checkpoint integration.
 - Codex reviewed the Activity completion and research-status text in Spanish, Brazilian Portuguese,
   Simplified Chinese, and Taiwan Traditional Chinese at the maintainer's request.
+- Update hosted embeddings to Nemotron 3 Embed and regenerate the RAG index with matching vectors.
+  Preserve custom model routes and migrate the former NVIDIA default. Codex reviewed the corrected
+  endpoint explanation in Spanish, Brazilian Portuguese, and Traditional and Simplified Chinese.
+
+- Correct the course license link, explain local conversation storage and remote AI processing,
+  and expose privacy/service links. Use a native modal for Course Assistant keyboard focus.
+  Codex reviewed the added Spanish, Brazilian Portuguese and Chinese wording under maintainer authority.
+
 - Show the questions, replies, and model identities in the ReAct preview, and make optional
   model discovery recover from missing matches or a changed connection. Codex reviewed the
   affected Spanish, Brazilian Portuguese, Simplified Chinese, and Traditional Chinese text

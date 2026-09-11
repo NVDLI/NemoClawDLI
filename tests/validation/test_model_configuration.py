@@ -20,7 +20,7 @@ DEFAULT = "nvidia/nemotron-3.5-lightning-30b-a3b"
 APPROVED = {
     DEFAULT,
     "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
-    "nvidia/llama-nemotron-embed-vl-1b-v2",
+    "nvidia/nemotron-3-embed-1b",
 }
 MODEL_ID = re.compile(r'''["']((?:nvidia|openai|qwen)/[A-Za-z0-9][A-Za-z0-9._/-]*)["']''')
 SOURCE_SUFFIXES = {".html", ".js", ".json", ".mjs", ".py"}
@@ -29,6 +29,16 @@ NON_RUNTIME_SCRIPT_DIRS = {
     "browser-vendor", "build", "compliance", "git-hooks", "security", "skills",
     "translate", "validation",
 }
+
+
+def model_runtime_sources(root: Path) -> dict[Path, str]:
+    declaration = re.compile(r"export\s+const\s+DEFAULT_MODEL\s*=")
+    return {
+        path: source
+        for path in (root / "web").rglob("*.js")
+        if not REFERENCE_PARTS.intersection(path.relative_to(root).parts)
+        if declaration.search(source := path.read_text(encoding="utf-8"))
+    }
 
 
 def runtime_model_references(root: Path) -> dict[str, list[str]]:
@@ -64,10 +74,28 @@ class ModelConfigurationTests(unittest.TestCase):
         self.assertEqual([], offenders)
 
     def test_course_runtime_declares_the_default_once(self) -> None:
-        source = (ROOT / "web/nemoclaw/scripts/_shared.js").read_text(encoding="utf-8")
-        self.assertEqual(1, source.count(DEFAULT))
-        self.assertIn("export const REASONING_MODEL = DEFAULT_MODEL;", source)
-        self.assertIn("const LAB_MODEL     = DEFAULT_MODEL;", source)
+        sources = model_runtime_sources(ROOT)
+        self.assertTrue(sources)
+        for path, source in sources.items():
+            with self.subTest(path=path):
+                self.assertEqual(1, source.count(DEFAULT))
+                self.assertIn("export const REASONING_MODEL = DEFAULT_MODEL;", source)
+                self.assertIn("const LAB_MODEL     = DEFAULT_MODEL;", source)
+
+    def test_runtime_discovery_covers_new_renamed_deleted_and_near_match_sources(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "web/new-course/nested/runtime.js"
+            source.parent.mkdir(parents=True)
+            source.write_text(f'export const DEFAULT_MODEL = "{DEFAULT}";')
+            self.assertEqual([source], list(model_runtime_sources(root)))
+            renamed = source.with_name("renamed.js")
+            source.rename(renamed)
+            self.assertEqual([renamed], list(model_runtime_sources(root)))
+            renamed.write_text(f'export const DEFAULT_MODEL_EXTRA = "{DEFAULT}";')
+            self.assertEqual({}, model_runtime_sources(root))
+            renamed.unlink()
+            self.assertEqual({}, model_runtime_sources(root))
 
     def test_generators_do_not_reintroduce_a_model_pin(self) -> None:
         for relative in (
