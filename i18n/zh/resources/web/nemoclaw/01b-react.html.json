@@ -89,11 +89,6 @@
       "source": "(tool \"\\${name}\" not found)",
       "value": "（未找到工具“\\${name}”）"
     },
-    "rich.0a886834e9f1": {
-      "type": "rich",
-      "source": "\n    Every chat-completions response carries a <code>finish_reason</code>\n    field that tells you why the model stopped generating. Inside an agent\n    loop, this is the only signal you need to decide what to do next:\n    run a tool, return the answer to the user, or handle an error. Before reading\n    what its values mean, make two calls and watch the field change.\n  ",
-      "value": "\n    每个聊天补全响应都包含一个 <code>finish_reason</code>\n    字段，用于说明模型停止生成的原因。在智能体循环中，您只需依据这一信号决定下一步操作：运行工具、向用户返回答案或处理错误。在了解各个字段值的含义之前，请先发起两次调用并观察该字段的变化。\n  "
-    },
     "rich.1cbfc5ef05f8": {
       "type": "rich",
       "source": "<code>\"stop\"</code> means the model has written its final answer and the loop can return <code>content</code> to the user.",
@@ -103,11 +98,6 @@
       "type": "rich",
       "source": "<strong>Memory</strong> is the <code>messages[]</code> array.",
       "value": "<strong>记忆</strong>是 <code>messages[]</code> 数组。"
-    },
-    "rich.32ec8d5bb853": {
-      "type": "rich",
-      "source": "\n    The first call answered on its own and came back <code>\"stop\"</code>. The second was\n    offered a tool and asked for something training data cannot supply, so instead of stopping\n    it came back <code>\"tool_calls\"</code>, handing your code the name of the function to run.\n    Those two values cover the common branching. The rest signal trouble that routes the loop\n    into a fallback harness, where the agent might retry the call or hand the conversation off\n    to a human.\n  ",
-      "value": "\n    第一次调用由模型自行作答，返回了 <code>\"stop\"</code>。第二次调用向模型提供了工具，并要求获取训练数据无法提供的信息，因此它没有停止，而是返回 <code>\"tool_calls\"</code>，将需要运行的函数名称交给代码。这两个值涵盖了常见的分支情况。其余值表示发生了问题，循环会转入后备运行框架；智能体可以在其中重试调用，或将对话转交给人工处理。\n  "
     },
     "rich.37cadcb11b30": {
       "type": "rich",
@@ -139,11 +129,6 @@
       "source": "<code>\"length\"</code> means the token budget ran out before the answer finished.",
       "value": "<code>\"length\"</code> 表示答案尚未生成完毕，token 预算就已耗尽。"
     },
-    "rich.914091fc2532": {
-      "type": "rich",
-      "source": "<strong>Count the steps on a genuinely tool-needing question.</strong>\n        \"How many minutes until 17:00 UTC?\" takes more than one tool call.\n        Run it a few times. Did the model call\n        <code>get_current_time</code> once, twice, or three times? Why\n        would a model re-call a tool whose output it already has,\n        and how would you discourage that in the system prompt?",
-      "value": "<strong>针对一个确实需要工具的问题统计执行步数。</strong>\n        “距离 UTC 17:00 还有多少分钟？”需要进行多次工具调用。多运行几次。模型调用了 <code>get_current_time</code> 一次、两次还是三次？为什么模型会再次调用已经取得输出的工具？您会如何在系统提示词中抑制这种行为？"
-    },
     "rich.9cf78b159479": {
       "type": "rich",
       "source": "\n    The flow is short: the model asks for the tool, the executor appends the timestamp as a\n    <code>tool</code>-role message, the model reads that timestamp, and the loop exits when\n    <code>finish_reason</code> reads <code>\"stop\"</code>.\n  ",
@@ -174,11 +159,6 @@
       "source": "<strong>Action</strong> is the tool call the harness executes.",
       "value": "<strong>行动</strong>是运行框架执行的工具调用。"
     },
-    "rich.d7a22d027748": {
-      "type": "rich",
-      "source": "\n    <strong>What just happened inside the messages array.</strong><br>\n    The loop pushed four things into <code>state.messages</code>: <ul><li>the system\n    prompt (turn 0),</li><li>the user question (turn 1),</li><li>an assistant message with a\n    <code>tool_calls</code> field (turn 2, the request),</li><li>and a\n    <code>tool</code>-role message holding the function's return value (turn\n    3).</li></ul> The second LLM call read all four of those including the new tool result and\n    wrote the final answer. The growing array is the only \"memory\" this\n    agent has. If you saved that array to disk and reloaded it next week, the\n    model would resume the conversation without noticing the gap.\n  ",
-      "value": "\n    <strong>刚才 messages 数组内部发生了什么。</strong><br>\n    循环向 <code>state.messages</code> 中加入了四项：<ul><li>系统提示词（第 0 轮），</li><li>用户的问题（第 1 轮），</li><li>一条带有 <code>tool_calls</code> 字段的 assistant 消息（第 2 轮，即请求），</li><li>以及一条保存函数返回值的 <code>tool</code> 角色消息（第 3 轮）。</li></ul>第二次 LLM 调用读取了这四项，包括新增的工具结果，然后生成最终答案。这个不断增长的数组就是该智能体拥有的全部“记忆”。如果您将该数组保存到磁盘，并在下周重新加载，模型会继续对话，甚至不会察觉中间曾中断过。\n  "
-    },
     "rich.dab40f3dcbce": {
       "type": "rich",
       "source": "\n    Run the cell to build the panel, then chat with it. Pin one or more with\n    the <b>Pages</b> chips to ground every answer in them, or pin nothing and let the\n    agent choose what to read. The reply renders as markdown, with a chip for each source\n    the agent read so you can expand it to see the text it pulled back. Alongside the answer,\n    you also get the reasoning trace and the token usage. It remembers the conversation per chat.\n    Edit the cell and rerun to rebuild the artifact.\n  ",
@@ -188,11 +168,6 @@
       "type": "rich",
       "source": "<strong>Planning</strong> is the <code>finish_reason</code> router.",
       "value": "<strong>规划</strong>是 <code>finish_reason</code> 路由逻辑。"
-    },
-    "text.00b025711499": {
-      "type": "text",
-      "source": "(nothing)",
-      "value": "（无）"
     },
     "text.026e6c091cf3": {
       "type": "text",
@@ -310,11 +285,6 @@
       "source": "The loop is unchanged. With a language model in the reasoning step, the agent reads tool results and acts by calling tools.",
       "value": "循环本身没有变化。以语言模型执行推理步骤时，智能体读取工具结果，并通过调用工具采取行动。"
     },
-    "text.185d5444c22a": {
-      "type": "text",
-      "source": "Compare a direct answer with a tool request. Watch finish_reason change before building the complete loop.",
-      "value": "比较直接回答与工具请求。在构建完整循环之前，观察 finish_reason 如何变化。"
-    },
     "text.1b12f21798d2": {
       "type": "text",
       "source": " Bound the loop so a confused agent cannot spin forever.",
@@ -346,18 +316,6 @@
       "source": "Think, act, observe, repeat. The turn exits the moment finish_reason is \"stop\".",
       "value": "思考、行动、观察、重复。一旦 finish_reason 为 \"stop\"，当前轮次立即结束。"
     },
-    "text.263eb2e3d503": {
-      "type": "text",
-      "source": " \"stop\" means the answer is ready and the loop can exit",
-      "value": " \"stop\" means the answer is ready and the loop can exit",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
-    "text.2744773dba26": {
-      "type": "text",
-      "source": " The model cannot run the tool itself; this preview asks your code to run it.",
-      "value": " The model cannot run the tool itself; this preview asks your code to run it.",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
     "text.288ec2e40f38": {
       "type": "text",
       "source": " state.userPrompt   = \"What time is it in UTC?\";",
@@ -385,12 +343,6 @@
       "type": "text",
       "source": "which page, e.g. 01b-react",
       "value": "要读取的页面，例如 01b-react"
-    },
-    "text.2cfc66a4bac0": {
-      "type": "text",
-      "source": " stops or asks for the tool on these same two questions.",
-      "value": " stops or asks for the tool on these same two questions.",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.2d08f3745b34": {
       "type": "text",
@@ -433,12 +385,6 @@
       "type": "text",
       "source": "finish_reason:",
       "value": "finish_reason："
-    },
-    "text.36d507134134": {
-      "type": "text",
-      "source": " Optional visibility: uncomment to inspect the complete first response.",
-      "value": " Optional visibility: uncomment to inspect the complete first response.",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.3a417d05647e": {
       "type": "text",
@@ -639,12 +585,6 @@
       "value": "✗",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.6a6eb0c995bc": {
-      "type": "text",
-      "source": " \"tool_calls\" means the model is asking you to run a function",
-      "value": " \"tool_calls\" means the model is asking you to run a function",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
     "text.6c45cb72a36e": {
       "type": "text",
       "source": "stop",
@@ -660,12 +600,6 @@
       "type": "text",
       "source": " Pin each selected page in full so the chip reflects the actual context.",
       "value": " Pin each selected page in full so the chip reflects the actual context.",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
-    "text.6ec7ac216303": {
-      "type": "text",
-      "source": " Call 1 · no tools offered. The model can answer, so it stops on its own.",
-      "value": " Call 1 · no tools offered. The model can answer, so it stops on its own.",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.761b7ad8ad43": {
@@ -706,12 +640,6 @@
       "type": "text",
       "source": "What time is it right now in UTC?",
       "value": "UTC 现在几点？"
-    },
-    "text.8060fc09ef01": {
-      "type": "text",
-      "source": " MODEL is the swappable brain. Change it and rerun to see whether a stronger model",
-      "value": " MODEL is the swappable brain. Change it and rerun to see whether a stronger model",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.850d8ef32ee1": {
       "type": "text",
@@ -825,17 +753,6 @@
       "value": "🔧",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.aa85ebc76614": {
-      "type": "text",
-      "source": " reasoning models think first; leave room past reasoning_content",
-      "value": " reasoning models think first; leave room past reasoning_content",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
-    "text.aa9c9c97480a": {
-      "type": "text",
-      "source": "(used its whole budget thinking; raise max_tokens)",
-      "value": "（思考耗尽了全部预算；请提高 max_tokens）"
-    },
     "text.ace774147c7e": {
       "type": "text",
       "source": "The complete ReAct loop, built from scratch",
@@ -912,12 +829,6 @@
       "value": "./vendor/langchain-1.4.7.esm.js",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.c3b7187e7262": {
-      "type": "text",
-      "source": " log.details(\"call 1 raw response\", r1);",
-      "value": " log.details(\"call 1 raw response\", r1);",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
     "text.c618570e5e70": {
       "type": "text",
       "source": "🔧 read page · ",
@@ -928,12 +839,6 @@
       "source": "error",
       "value": "error",
       "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
-    },
-    "text.ca32d7f2daac": {
-      "type": "text",
-      "source": " Call 2 · offer one tool and ask for something the model cannot know from training data.",
-      "value": " Call 2 · offer one tool and ask for something the model cannot know from training data.",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.ccc143876d1c": {
       "type": "text",
@@ -990,11 +895,6 @@
       "value": "agent",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.d56573cb0730": {
-      "type": "text",
-      "source": "it asked you to run:",
-      "value": "它要求您运行："
-    },
     "text.d9bda0c06ee1": {
       "type": "text",
       "source": "The same loop, prebuilt and pointed at this course",
@@ -1032,11 +932,6 @@
       "type": "text",
       "source": "course-wide question (\\\\",
       "value": "涉及整个课程的问题（\\\\"
-    },
-    "text.e3ec162f8c8a": {
-      "type": "text",
-      "source": "call 2 · one tool offered, on a question training data cannot answer",
-      "value": "调用 2 · 针对训练数据无法回答的问题提供一个工具"
     },
     "text.e632b7095b0b": {
       "type": "text",
@@ -1112,6 +1007,163 @@
       "source": "tools",
       "value": "tools",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.04b481fa123f": {
+      "type": "rich",
+      "source": "\n    Every chat-completions response carries a <code>finish_reason</code>\n    field that tells you why the model stopped generating. Inside an agent\n    loop, read it alongside the response content and tool requests to decide what to do next:\n    run a tool, return the answer to the user, or handle an error. Before reading\n    what its values mean, make two calls and compare their replies.\n  ",
+      "value": "每个 Chat Completions 响应都包含 <code>finish_reason</code>，用于说明模型停止生成的原因。在智能体循环中，将它与响应内容和工具请求一起检查，决定执行工具、返回回答还是处理错误。在了解各个值之前，先发出两次调用并比较回复。"
+    },
+    "rich.d503e5a1f6fe": {
+      "type": "rich",
+      "source": "\n    The first call offers no tools. In the second, the model is offered a tool and asked\n    for the current time. It still chooses whether to request the clock tool. Compare the displayed questions, replies, and\n    <code>finish_reason</code>. If both calls return <code>\"stop\"</code>, inspect the\n    second reply: did it admit it cannot check the time, or give an unsupported answer?\n    Change the model or question and rerun. A tool request names work for your code;\n    this preview does not execute it.\n  ",
+      "value": "第一次调用不提供工具。第二次调用向模型提供工具并询问当前时间。是否请求使用时钟工具仍由模型决定。比较显示的问题、回复和 <code>finish_reason</code>。如果两次都返回 <code>\"stop\"</code>，请检查第二条回复：模型承认无法查询时间，还是给出了未经验证的回答？更换模型或问题后重新运行。工具请求只是指明需要代码执行的工作；此预览不会执行工具。"
+    },
+    "rich.71d5f7e1b268": {
+      "type": "rich",
+      "source": "\n    <strong>What just happened inside the messages array.</strong><br>\n    When the model requests the clock, the loop adds these turns to <code>state.messages</code>: <ul><li>the system\n    prompt (turn 0),</li><li>the user question (turn 1),</li><li>an assistant message with a\n    <code>tool_calls</code> field (turn 2, the request),</li><li>and a\n    <code>tool</code>-role message holding the function's return value (turn\n    3).</li></ul> The second LLM call read all four of those including the new tool result and\n    wrote the final answer. The growing array is the only \"memory\" this\n    agent has. If you saved that array to disk and reloaded it next week, the\n    model would resume the conversation without noticing the gap.\n  ",
+      "value": "\n    <strong>刚才 messages 数组内部发生了什么。</strong><br>\n当模型请求时钟时，循环会向 <code>state.messages</code> 中加入以下四项：<ul><li>系统提示词（第 0 轮），</li><li>用户的问题（第 1 轮），</li><li>一条带有 <code>tool_calls</code> 字段的 assistant 消息（第 2 轮，即请求），</li><li>以及一条保存函数返回值的 <code>tool</code> 角色消息（第 3 轮）。</li></ul>第二次 LLM 调用读取了这四项，包括新增的工具结果，然后生成最终答案。这个不断增长的数组就是该智能体拥有的全部“记忆”。如果您将该数组保存到磁盘，并在下周重新加载，模型会继续对话，甚至不会察觉中间曾中断过。\n  "
+    },
+    "rich.925eff5b49ae": {
+      "type": "rich",
+      "source": "<strong>Count the steps on a genuinely tool-needing question.</strong>\n        \"How many minutes until 17:00 UTC?\" needs a clock reading and a calculation.\n        Run it a few times. Did the model call\n        <code>get_current_time</code> once, twice, or three times? Why\n        would a model re-call a tool whose output it already has,\n        and how would you discourage that in the system prompt?",
+      "value": "<strong>统计需要工具的问题所用的步骤。</strong>“距离 17:00 UTC 还有多少分钟？”需要读取时钟并进行计算。运行几次，看看模型调用 <code>get_current_time</code> 一次、两次还是三次。为什么模型会重复调用已获取结果的工具？您会如何修改系统提示词来减少重复调用？"
+    },
+    "text.6998c813031f": {
+      "type": "text",
+      "source": "Compare two questions, the offered tools, and the actual replies. A model may answer or decline without requesting a tool.",
+      "value": "比较两个问题、提供的工具和实际回复。模型可能直接回答或表示无法回答，而不请求工具。"
+    },
+    "text.99e1a8e15403": {
+      "type": "text",
+      "source": " On a custom endpoint, change the model in the connection card; that setting owns the route.",
+      "value": " On a custom endpoint, change the model in the connection card; that setting owns the route.",
+      "untranslated": "Canonical executable comment retained in English under the Chinese locale contract."
+    },
+    "text.408f13277d8d": {
+      "type": "text",
+      "source": "model:",
+      "value": "模型："
+    },
+    "text.1f5087db919c": {
+      "type": "text",
+      "source": "question",
+      "value": "问题"
+    },
+    "text.360cd27d23a6": {
+      "type": "text",
+      "source": "response model:",
+      "value": "响应模型："
+    },
+    "text.5db94652ba22": {
+      "type": "text",
+      "source": "reply:",
+      "value": "回复："
+    },
+    "text.2d27e607c67d": {
+      "type": "text",
+      "source": "(no answer content; inspect the raw response)",
+      "value": "（没有回答内容；请查看原始响应）"
+    },
+    "text.44a36db1abd1": {
+      "type": "text",
+      "source": "call 1 raw response",
+      "value": "调用 1 的原始响应"
+    },
+    "text.6b9eac8f14cf": {
+      "type": "text",
+      "source": " Offering a tool lets the model request it; it does not execute the function.",
+      "value": " Offering a tool lets the model request it; it does not execute the function.",
+      "untranslated": "Canonical executable comment retained in English under the Chinese locale contract."
+    },
+    "text.4809d1df83ab": {
+      "type": "text",
+      "source": " Optional visibility: inspect the exact schema offered to the model.",
+      "value": " Optional visibility: inspect the exact schema offered to the model.",
+      "untranslated": "Canonical executable comment retained in English under the Chinese locale contract."
+    },
+    "text.becc7f440ae3": {
+      "type": "text",
+      "source": " log.json(\"offered tool schema\", TOOLS);",
+      "value": " log.json(\"offered tool schema\", TOOLS);",
+      "untranslated": "Editable JavaScript diagnostic statement with preserved identifiers."
+    },
+    "text.e18b187cecf8": {
+      "type": "text",
+      "source": "call 2 · get_current_time offered",
+      "value": "调用 2 · 提供 get_current_time"
+    },
+    "text.408f13277d8d~1": {
+      "type": "text",
+      "source": "model:",
+      "value": "模型："
+    },
+    "text.1f5087db919c~1": {
+      "type": "text",
+      "source": "question",
+      "value": "问题"
+    },
+    "text.360cd27d23a6~1": {
+      "type": "text",
+      "source": "response model:",
+      "value": "响应模型："
+    },
+    "text.5db94652ba22~1": {
+      "type": "text",
+      "source": "reply:",
+      "value": "回复："
+    },
+    "text.b6d8f3ef94a9": {
+      "type": "text",
+      "source": "(no answer content)",
+      "value": "（没有回答内容）"
+    },
+    "text.dbacd9211eb0": {
+      "type": "text",
+      "source": "requested tools:",
+      "value": "请求的工具："
+    },
+    "text.552e423045fc": {
+      "type": "text",
+      "source": "(none)",
+      "value": "（无）"
+    },
+    "text.90dfb008f2c5": {
+      "type": "text",
+      "source": "call 2 raw response",
+      "value": "调用 2 的原始响应"
+    },
+    "text.e869af251171": {
+      "type": "text",
+      "source": "No clock reading was taken. Inspect the reply, then change the question or model and compare.",
+      "value": "尚未读取时钟。检查回复，然后更换问题或模型并比较结果。"
+    },
+    "text.c9d2fde3d3f2": {
+      "type": "text",
+      "source": " Optional comparison: ask QUESTION_2 to explicitly request the clock tool, then rerun.",
+      "value": " Optional comparison: ask QUESTION_2 to explicitly request the clock tool, then rerun.",
+      "untranslated": "Canonical executable comment retained in English under the Chinese locale contract."
+    },
+    "text.408f13277d8d~2": {
+      "type": "text",
+      "source": "model:",
+      "value": "模型："
+    },
+    "text.1f5087db919c~2": {
+      "type": "text",
+      "source": "question",
+      "value": "问题"
+    },
+    "text.99de16babaa5": {
+      "type": "text",
+      "source": " Optional visibility: inspect the instruction guiding tool use.",
+      "value": " Optional visibility: inspect the instruction guiding tool use.",
+      "untranslated": "Canonical executable comment retained in English under the Chinese locale contract."
+    },
+    "text.9024eab41188": {
+      "type": "text",
+      "source": " helpers.log.kv({ \"system prompt\": state.systemPrompt });",
+      "value": " helpers.log.kv({ \"system prompt\": state.systemPrompt });",
+      "untranslated": "Editable JavaScript diagnostic statement with preserved identifiers."
     }
   }
 }

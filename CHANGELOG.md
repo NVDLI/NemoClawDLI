@@ -5,6 +5,11 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Show the questions, replies, and model identities in the ReAct preview, and make optional
+  model discovery recover from missing matches or a changed connection. Codex reviewed the
+  affected Spanish, Brazilian Portuguese, Simplified Chinese, and Traditional Chinese text
+  at the maintainer's request.
+
 - Thanks to Vadim Kudlay for reviewing the Taiwan Traditional Chinese localization.
 - Thanks to Vadim Kudlay for reviewing the Spanish, Brazilian Portuguese, and Simplified Chinese
   learner guidance for the supported NVIDIA model-role migration and course-wide runtime localization.
