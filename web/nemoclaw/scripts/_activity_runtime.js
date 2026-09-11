@@ -5,6 +5,7 @@ import {
   ACTIVITY_MILESTONES,
   ACTIVITY_REFERRALS,
   createNemoClawActivity,
+  isActivityPolicyApproved,
 } from './_activity.js';
 import { localizeCourseUiText } from './_locale.js';
 
@@ -83,6 +84,7 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
     <section id="activity-control-panel" class="activity-control-panel" hidden role="dialog" aria-label="${text('Course activity and privacy')}">
       <header><strong>${text('Course activity')}</strong><button type="button" data-activity-close aria-label="${text('Close activity panel')}">×</button></header>
       <p data-activity-notice>${text('Remote progress is off. Nothing is sent until you enable it.')}</p>
+      <p data-activity-http hidden>${text('This lab uses HTTP. Someone on the network could read or alter your progress and session. Enable syncing only if you accept this risk.')}</p>
       <p data-activity-status role="status" aria-live="polite"></p>
       <label id="activity-progress-label" for="activity-progress"></label>
       <progress id="activity-progress" max="100" value="0" aria-labelledby="activity-progress-label"></progress>
@@ -96,20 +98,14 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
       <label class="activity-referral-choice"><input type="checkbox" data-activity-referrals disabled> ${text('Record selections of approved NVIDIA resources')}</label>
       <details>
         <summary>${text('Data, purpose, and retention')}</summary>
-        <p><strong>${text('Sent to NVIDIA DLI Activity API')}</strong></p>
-        <ul data-activity-data></ul>
-        <p><strong>${text('Purpose')}</strong></p>
-        <ul data-activity-purpose></ul>
+        <p>${text('If enabled, this course sends its version, a session identifier, and completed checkpoints to NVIDIA to save your progress. Link tracking is a separate choice. The service also receives connection metadata such as your IP address.')}</p>
         <p data-activity-browser-retention></p>
-        <p data-activity-controller></p>
-        <p data-activity-legal-basis></p>
         <p data-activity-service-retention></p>
-        <p data-activity-sale-sharing></p>
         <p>${text('The course does not send API keys, prompts, model responses, terminal output, or workspace files to the Activity API.')}</p>
       </details>
       <details>
         <summary>${text('Service status')}</summary>
-        <p data-activity-service-level></p>
+        <p>${text('Syncing is optional. If it is unavailable, keep working and retry later. Saved progress is shown only after the API confirms it.')}</p>
         <p data-activity-observation>${text('No connection has been measured in this tab.')}</p>
       </details>
       <p class="activity-control-links"><a data-activity-policy target="_blank" rel="noopener noreferrer">${text('NVIDIA Privacy Policy')}</a><a data-activity-rights target="_blank" rel="noopener noreferrer">${text('Privacy choices and requests')}</a></p>
@@ -181,7 +177,7 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
     else if (state.phase === 'unavailable') status.textContent = text('The Activity API is unavailable. Local course work is unchanged.');
     else if (state.reason === 'secure-context') status.textContent = text('Open this course over HTTPS to enable remote progress.');
     else if (state.reason === 'artifact') status.textContent = text('Remote progress is available only from a validated course build.');
-    else if (state.phase === 'blocked') status.textContent = text('Remote progress is unavailable until its data policy is approved.');
+    else if (state.phase === 'blocked') status.textContent = text('Remote progress is unavailable for this course deployment.');
     else status.textContent = '';
     status.hidden = !status.textContent;
     if (state.observedAt && Number.isInteger(state.observedLatencyMs)) {
@@ -193,17 +189,13 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
         }),
       );
     } else observation.textContent = text('No connection has been measured in this tab.');
-    const approved = policy?.collection_enabled === true
-      && policy.publication_status === 'privacy-legal-reviewed'
-      && policy.controller?.status === 'confirmed'
-      && policy.service_retention?.status === 'confirmed'
-      && policy.legal_basis?.status === 'confirmed'
-      && ['confirmed', 'not-applicable'].includes(policy.sale_sharing?.status);
+    const approved = isActivityPolicyApproved(policy);
     enable.disabled = state.phase === 'connecting' || !approved;
     notice.hidden = state.phase === 'connecting';
     notice.textContent = approved
       ? text(state.enabled ? 'Remote progress is enabled.' : 'Remote progress is off. Nothing is sent until you enable it.')
-      : text('Remote collection is disabled while privacy, legal, and service-owner review is incomplete.');
+      : text('Remote progress is unavailable for this course deployment.');
+    root.querySelector('[data-activity-http]').hidden = documentTarget.location?.protocol !== 'http:';
   };
   activity.subscribe(render);
 
@@ -223,28 +215,8 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
   void activity.getPolicy().then(value => {
     policy = value;
     if (!policy) return render(activity.snapshot());
-    root.querySelector('[data-activity-data]').replaceChildren(...policy.data_categories.map(item => {
-      const li = documentTarget.createElement('li'); li.textContent = text(item); return li;
-    }));
-    root.querySelector('[data-activity-purpose]').replaceChildren(...policy.purposes.map(item => {
-      const li = documentTarget.createElement('li'); li.textContent = text(item); return li;
-    }));
     root.querySelector('[data-activity-browser-retention]').textContent = text(policy.browser_retention);
-    root.querySelector('[data-activity-controller]').textContent = policy.controller.status === 'confirmed'
-      ? `${text('Service controller:')} ${text(policy.controller.name)}`
-      : text('The service controller is not yet confirmed. Remote collection remains disabled.');
-    root.querySelector('[data-activity-legal-basis]').textContent = policy.legal_basis.status === 'confirmed'
-      ? `${text('Service legal basis:')} ${text(policy.legal_basis.basis)}`
-      : text('The service legal basis is not yet confirmed. Remote collection remains disabled.');
-    root.querySelector('[data-activity-service-retention]').textContent = policy.service_retention.status === 'confirmed'
-      ? `${text('Service retention:')} ${text(policy.service_retention.period_or_criteria)}`
-      : text('Service-specific retention is not yet confirmed. Remote collection remains disabled.');
-    root.querySelector('[data-activity-sale-sharing]').textContent = ['confirmed', 'not-applicable'].includes(policy.sale_sharing.status)
-      ? `${text('Service sale or sharing disposition:')} ${text(policy.sale_sharing.disposition)}`
-      : text('The service sale or sharing disposition is not yet confirmed. Remote collection remains disabled.');
-    root.querySelector('[data-activity-service-level]').textContent = policy.service_level.status === 'published'
-      ? `${text('Published service target:')} ${text(policy.service_level.target)}`
-      : text('No course-level availability or response-time target is published. Live status is an observation, not an SLA.');
+    root.querySelector('[data-activity-service-retention]').textContent = text(policy.service_retention_notice || 'See NVIDIA’s Privacy Policy for service data retention and privacy requests.');
     root.querySelector('[data-activity-policy]').href = policy.privacy_policy_url;
     root.querySelector('[data-activity-rights]').href = policy.privacy_center_url;
     render(activity.snapshot());

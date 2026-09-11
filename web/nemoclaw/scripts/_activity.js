@@ -158,6 +158,23 @@ function isNvidiaHttpsUrl(value) {
 
 export function validateActivityPolicy(policy) {
   const strings = value => Array.isArray(value) && value.length > 0 && value.every(isNonEmptyString);
+  if (policy?.schema === 'dli-activity-policy/2') {
+    if (!isNonEmptyString(policy.notice_version)
+        || policy.publication_status !== 'published-notice'
+        || typeof policy.collection_enabled !== 'boolean'
+        || policy.api_base_url !== ACTIVITY_BASE_URL
+        || policy.collection_defaults?.progress_sync !== 'off'
+        || policy.collection_defaults?.referral_tracking !== 'off'
+        || !strings(policy.data_categories) || !strings(policy.excluded_course_payloads)
+        || !strings(policy.purposes) || !isNonEmptyString(policy.recipient)
+        || !isNonEmptyString(policy.browser_retention) || !isNonEmptyString(policy.service_retention_notice)
+        || !isNvidiaHttpsUrl(policy.privacy_policy_url) || !isNvidiaHttpsUrl(policy.privacy_center_url)
+        || (policy.lab_transport !== undefined && (
+          !/^\/(?:[a-z0-9-]+\/)*api\/[a-z0-9/-]+$/.test(policy.lab_transport?.base_path || '')
+          || typeof policy.lab_transport?.allow_http !== 'boolean'
+        ))) throw new Error('Activity data notice is invalid');
+    return Object.freeze(policy);
+  }
   if (policy?.schema !== 'dli-activity-policy/1'
       || !isNonEmptyString(policy.notice_version)
       || !['pending-privacy-legal-review', 'privacy-legal-reviewed'].includes(policy.publication_status)
@@ -232,7 +249,7 @@ export function createNemoClawActivity({
   globalPrivacyControl = globalThis.navigator?.globalPrivacyControl === true,
   onDiagnostic = () => {},
   policyLoader = () => loadActivityPolicy(fetchImpl),
-  artifactResolver = () => resolveActivityArtifact({ fetchImpl, locationHref, cryptoImpl }),
+  artifactResolver,
   initialize = options => DLIActivity.initialize(options),
 } = {}) {
   let initializedActivity;
@@ -240,6 +257,7 @@ export function createNemoClawActivity({
   let referralTracking = false;
   let policy;
   let artifact;
+  let labTransport;
   let enableAttempt;
   let connectionGeneration = 0;
   let stateRead = 0;
@@ -290,7 +308,23 @@ export function createNemoClawActivity({
         if (signal.aborted) abort();
         else signal.addEventListener('abort', abort, { once: true });
       }
-      try { return await fetchImpl(url, { ...options, signal: requestAbort.signal }); }
+      try {
+        if (labTransport) {
+          const upstream = new URL(url);
+          if (upstream.origin !== ACTIVITY_BASE_URL) throw new Error('Unexpected Activity destination');
+          const headers = new Headers(options.headers);
+          const authorization = headers.get('Authorization');
+          headers.delete('Authorization');
+          if (authorization) headers.set('X-Activity-Authorization', authorization);
+          headers.set('X-XSRFToken', labTransport.xsrfToken);
+          return await fetchImpl(`${labTransport.baseUrl}${upstream.pathname}`, {
+            ...options, credentials: 'same-origin', redirect: 'error', referrerPolicy: 'no-referrer',
+            headers,
+            signal: requestAbort.signal,
+          });
+        }
+        return await fetchImpl(url, { ...options, signal: requestAbort.signal });
+      }
       finally {
         for (const signal of signals) signal.removeEventListener('abort', abort);
       }
@@ -377,7 +411,27 @@ export function createNemoClawActivity({
           publish({ phase: 'blocked', reason: 'policy' });
           return false;
         }
-        try { artifact ||= await artifactResolver(); }
+        try {
+          if (!artifact && currentPolicy.lab_transport) {
+            const page = new URL(locationHref);
+            if (page.protocol !== 'https:' && !(page.protocol === 'http:' && currentPolicy.lab_transport.allow_http)) {
+              throw Object.assign(new Error('HTTP lab progress is not enabled'), { code: 'secure-context' });
+            }
+            const baseUrl = new URL(currentPolicy.lab_transport.base_path, page.origin).href;
+            const response = await fetchImpl(`${baseUrl}/artifact`, {
+              credentials: 'same-origin', cache: 'no-store', redirect: 'error', referrerPolicy: 'no-referrer',
+            });
+            if (!response.ok || response.url !== `${baseUrl}/artifact`) throw new Error('Lab activity identity unavailable');
+            const value = await response.json();
+            if (value.artifact?.artifact_id !== ACTIVITY_ARTIFACT_ID
+                || !/^git-[0-9a-f]{40}-adapter-[0-9a-f]{64}$/.test(value.artifact?.artifact_version || '')
+                || !/^sha256:[0-9a-f]{64}$/.test(value.artifact?.artifact_digest || '')
+                || !isNonEmptyString(value.xsrf_token)) throw new Error('Invalid lab activity identity');
+            artifact = Object.freeze(value.artifact);
+            labTransport = { baseUrl, xsrfToken: value.xsrf_token };
+          }
+          artifact ||= await (artifactResolver || (() => resolveActivityArtifact({ fetchImpl, locationHref, cryptoImpl })))();
+        }
         catch (error) {
           if (generation !== connectionGeneration) return false;
           publish({ phase: 'blocked', reason: error?.code === 'secure-context' ? 'secure-context' : 'artifact' });

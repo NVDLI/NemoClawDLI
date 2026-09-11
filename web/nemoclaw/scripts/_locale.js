@@ -5,6 +5,13 @@
 // The manifest lists only built locales; each locale lists pages that passed localization review.
 
 const PT_TEXT = new Map(Object.entries({
+  "This lab uses HTTP. Someone on the network could read or alter your progress and session. Enable syncing only if you accept this risk.": "Este laboratório usa HTTP. Alguém na rede pode ler ou alterar seu progresso e sua sessão. Ative a sincronização apenas se aceitar esse risco.",
+  "If enabled, this course sends its version, a session identifier, and completed checkpoints to NVIDIA to save your progress. Link tracking is a separate choice. The service also receives connection metadata such as your IP address.": "Se você ativar a sincronização, o curso enviará à NVIDIA sua versão, um identificador de sessão e as etapas concluídas para salvar seu progresso. O registro de links é opcional e independente. O serviço também recebe metadados de conexão, como seu endereço IP.",
+  "Disconnect stops future syncing and clears this tab's Activity session. Closing the tab also clears the session. Neither action deletes records already sent to NVIDIA.": "Desconectar interrompe a sincronização e apaga a sessão do Activity nesta aba. Fechar a aba também apaga a sessão. Nenhuma dessas ações exclui registros já enviados à NVIDIA.",
+  "NVIDIA's Privacy Policy describes how NVIDIA uses and retains service data and how to request deletion. Its general retention criteria apply for the duration of your engagement; this course does not promise a separate Activity-specific deletion period.": "A Política de Privacidade da NVIDIA explica o uso e a retenção dos dados do serviço e como solicitar sua exclusão. Os critérios gerais de retenção consideram a duração da sua relação com a NVIDIA; este curso não estabelece um prazo de exclusão específico para o Activity.",
+  "Syncing is optional. If it is unavailable, keep working and retry later. Saved progress is shown only after the API confirms it.": "A sincronização é opcional. Se estiver indisponível, continue os exercícios e tente novamente mais tarde. O progresso salvo só é exibido após a confirmação da API.",
+  "Remote progress is unavailable for this course deployment.": "O progresso remoto está indisponível nesta instalação do curso.",
+  "See NVIDIA’s Privacy Policy for service data retention and privacy requests.": "Consulte a Política de Privacidade da NVIDIA para saber sobre a retenção de dados do serviço e solicitações de privacidade.",
   "The Agent": "O agente",
   "The ReAct Loop": "O ciclo ReAct",
   "Tools at Scale": "Ferramentas em escala",
@@ -314,6 +321,13 @@ const PT_ATTRS = new Map(Object.entries({
 }));
 
 const ES_TEXT = new Map(Object.entries({
+  "This lab uses HTTP. Someone on the network could read or alter your progress and session. Enable syncing only if you accept this risk.": "Este laboratorio usa HTTP. Alguien en la red podría leer o modificar tu progreso y tu sesión. Activa la sincronización solo si aceptas este riesgo.",
+  "If enabled, this course sends its version, a session identifier, and completed checkpoints to NVIDIA to save your progress. Link tracking is a separate choice. The service also receives connection metadata such as your IP address.": "Si activas la sincronización, el curso enviará a NVIDIA su versión, un identificador de sesión y las etapas completadas para guardar tu progreso. El registro de enlaces es una opción independiente. El servicio también recibe metadatos de conexión, como tu dirección IP.",
+  "Disconnect stops future syncing and clears this tab's Activity session. Closing the tab also clears the session. Neither action deletes records already sent to NVIDIA.": "Desconectar detiene la sincronización y borra la sesión de Activity de esta pestaña. Cerrar la pestaña también borra la sesión. Ninguna de estas acciones elimina los registros ya enviados a NVIDIA.",
+  "NVIDIA's Privacy Policy describes how NVIDIA uses and retains service data and how to request deletion. Its general retention criteria apply for the duration of your engagement; this course does not promise a separate Activity-specific deletion period.": "La Política de Privacidad de NVIDIA explica cómo se usan y conservan los datos del servicio y cómo solicitar su eliminación. Sus criterios generales de conservación tienen en cuenta la duración de tu relación con NVIDIA; este curso no establece un plazo de eliminación específico para Activity.",
+  "Syncing is optional. If it is unavailable, keep working and retry later. Saved progress is shown only after the API confirms it.": "La sincronización es opcional. Si no está disponible, continúa los ejercicios e inténtalo de nuevo más tarde. El progreso guardado solo se muestra después de que la API lo confirme.",
+  "Remote progress is unavailable for this course deployment.": "El progreso remoto no está disponible en esta instalación del curso.",
+  "See NVIDIA’s Privacy Policy for service data retention and privacy requests.": "Consulta la Política de Privacidad de NVIDIA para conocer la conservación de datos del servicio y las solicitudes de privacidad.",
   "The Agent": "El agente", "The ReAct Loop": "El ciclo ReAct", "Tools at Scale": "Herramientas a escala",
   "Workflows": "Flujos de trabajo", "The Index Agent": "El agente de índice", "Deep Agents": "Agentes profundos",
   "Connect NemoClaw": "Conectar NemoClaw", "Always-On": "Operación continua", "Modern CLIs": "CLI modernas",
@@ -547,6 +561,13 @@ const ES_ATTRS = new Map(Object.entries({
 }));
 
 const ZH_TEXT = new Map(Object.entries({
+  "This lab uses HTTP. Someone on the network could read or alter your progress and session. Enable syncing only if you accept this risk.": "此实验环境使用 HTTP。网络中的其他人可能读取或篡改你的进度和会话。仅在接受此风险时启用同步。",
+  "If enabled, this course sends its version, a session identifier, and completed checkpoints to NVIDIA to save your progress. Link tracking is a separate choice. The service also receives connection metadata such as your IP address.": "启用同步后，课程会向 NVIDIA 发送课程版本、会话标识符和已完成的检查点，以保存你的进度。是否记录链接点击由你单独选择。服务还会接收 IP 地址等连接元数据。",
+  "Disconnect stops future syncing and clears this tab's Activity session. Closing the tab also clears the session. Neither action deletes records already sent to NVIDIA.": "断开连接会停止后续同步，并清除此标签页的 Activity 会话。关闭标签页也会清除会话。这两种操作都不会删除已发送给 NVIDIA 的记录。",
+  "NVIDIA's Privacy Policy describes how NVIDIA uses and retains service data and how to request deletion. Its general retention criteria apply for the duration of your engagement; this course does not promise a separate Activity-specific deletion period.": "NVIDIA 隐私政策说明了服务数据的使用和保留方式，以及如何申请删除。一般保留标准会考虑你与 NVIDIA 持续互动的时间；本课程不承诺 Activity 服务另有特定的删除期限。",
+  "Syncing is optional. If it is unavailable, keep working and retry later. Saved progress is shown only after the API confirms it.": "同步为可选功能。服务不可用时，你可以继续练习，稍后重试。只有经 API 确认后，界面才会显示已保存的进度。",
+  "Remote progress is unavailable for this course deployment.": "此课程部署暂不支持远程进度同步。",
+  "See NVIDIA’s Privacy Policy for service data retention and privacy requests.": "有关服务数据保留和隐私请求，请参阅 NVIDIA 隐私政策。",
   "Copy link to this section": "复制此节链接", "Restore this node's original code and clear its output": "恢复此节点的原始代码并清除输出",
   "Run this node": "运行此节点", "Copy code to clipboard": "将代码复制到剪贴板", "Copy code": "复制代码",
   "When on, the model sees the whole conversation. Turn it off to watch it answer each message as a stateless function with no recall.": "开启后，模型会看到完整对话。关闭后，可以观察模型如何以无状态、无记忆的函数方式回答每条消息。",
@@ -884,6 +905,13 @@ const ZH_ATTRS = new Map(Object.entries({
 // Helper signatures stay in English because learners call them from code. Descriptions
 // are keyed by the discovered helper name, so code spans never enter text replacement.
 const TW_TEXT = new Map(Object.entries({
+  "This lab uses HTTP. Someone on the network could read or alter your progress and session. Enable syncing only if you accept this risk.": "此實驗環境使用 HTTP。網路上的其他人可能讀取或竄改你的進度與工作階段。僅在接受此風險時啟用同步。",
+  "If enabled, this course sends its version, a session identifier, and completed checkpoints to NVIDIA to save your progress. Link tracking is a separate choice. The service also receives connection metadata such as your IP address.": "啟用同步後，課程會將課程版本、工作階段識別碼及已完成的檢查點傳送至 NVIDIA，以儲存你的進度。是否記錄連結點選由你另外選擇。服務也會接收 IP 位址等連線中繼資料。",
+  "Disconnect stops future syncing and clears this tab's Activity session. Closing the tab also clears the session. Neither action deletes records already sent to NVIDIA.": "中斷連線會停止後續同步，並清除此分頁的 Activity 工作階段。關閉分頁也會清除工作階段。這兩種操作都不會刪除已傳送至 NVIDIA 的紀錄。",
+  "NVIDIA's Privacy Policy describes how NVIDIA uses and retains service data and how to request deletion. Its general retention criteria apply for the duration of your engagement; this course does not promise a separate Activity-specific deletion period.": "NVIDIA 隱私權政策說明服務資料的使用與保留方式，以及如何申請刪除。一般保留原則會考量你與 NVIDIA 持續互動的期間；本課程不承諾 Activity 服務另有特定的刪除期限。",
+  "Syncing is optional. If it is unavailable, keep working and retry later. Saved progress is shown only after the API confirms it.": "同步是選用功能。服務無法使用時，你可以繼續練習，稍後再試。只有經 API 確認後，介面才會顯示已儲存的進度。",
+  "Remote progress is unavailable for this course deployment.": "此課程部署暫不支援遠端進度同步。",
+  "See NVIDIA’s Privacy Policy for service data retention and privacy requests.": "有關服務資料保留與隱私權申請，請參閱 NVIDIA 隱私權政策。",
   "Copy link to this section": "複製此節連結", "Restore this node's original code and clear its output": "恢復此節點的原始程式碼並清除輸出",
   "Run this node": "執行此節點", "Copy code to clipboard": "將程式碼複製到剪貼簿", "Copy code": "複製程式碼",
   "When on, the model sees the whole conversation. Turn it off to watch it answer each message as a stateless function with no recall.": "開啟後，模型會看到完整對話。關閉後，可以觀察模型如何以無狀態、無記憶的函式方式回答每條訊息。",
