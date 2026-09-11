@@ -6,7 +6,8 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 ## Unreleased
 
 - Extend Lisa Guo's Activity SDK integration with explicit progress/referral controls,
-  manifest-bound session identity and disconnect cancellation. Collection remains disabled
+  manifest-bound session identity, disconnect cancellation, and a progress bar that distinguishes
+  local checkpoints from API-confirmed progress, with outage status and retry. Collection remains disabled
   pending service-policy review; local course work remains available.
 
 - Thanks to Lisa Guo for contributing the Activity SDK, browser-session continuity, and course checkpoint integration.

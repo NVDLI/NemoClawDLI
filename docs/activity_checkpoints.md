@@ -10,6 +10,8 @@ Remote progress and referrals default to off. The Activity panel explains the pr
 
 Session identity comes from the delivered Pages or materialized manifest bytes and source version. Unvalidated source previews cannot enable collection. Service retention and controller details remain unconfirmed in the checked-in policy, so production collection stays disabled.
 
+The Activity panel shows a read-only progress bar. With remote progress enabled, **Saved progress** is the percentage returned by the Activity API. A successful write is followed by a state read; pending local checkpoints are shown separately until confirmed. During an outage, **Last confirmed progress** retains the last successful reading. **Refresh saved progress** retries the read and synchronizes local checkpoints. With remote progress off, the bar shows **Local verified progress** for this tab. These percentages record completed course activities, not a grade or a measure of mastery.
+
 ## Progress checkpoints
 
 | Section | Checkpoint | Progress | Learner action | Acceptance criteria |
