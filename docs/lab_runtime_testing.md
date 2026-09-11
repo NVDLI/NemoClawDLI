@@ -2,6 +2,8 @@
 
 The course is static HTML, CSS, and JavaScript. Repository checks run directly on the contributor or CI host; this repository does not define or distribute a container image.
 
+The [Activity checkpoint contract](activity_checkpoints.md) defines which successful runtime events may advance course progress and completion.
+
 ## Prerequisites
 
 - Python 3.11 or newer; Python 3.12 is the tested default
