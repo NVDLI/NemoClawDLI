@@ -6,6 +6,8 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 ## Unreleased
 
 - Thanks to Lisa Guo for contributing the Activity SDK, browser-session continuity, and course checkpoint integration.
+- Codex reviewed the Activity completion and research-status text in Spanish, Brazilian Portuguese,
+  Simplified Chinese, and Taiwan Traditional Chinese at the maintainer's request.
 - Show the questions, replies, and model identities in the ReAct preview, and make optional
   model discovery recover from missing matches or a changed connection. Codex reviewed the
   affected Spanish, Brazilian Portuguese, Simplified Chinese, and Traditional Chinese text

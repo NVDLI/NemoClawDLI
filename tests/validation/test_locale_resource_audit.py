@@ -153,12 +153,21 @@ const panel = {
   arbitraryHelp: `<p>Visible template help</p>`,
 };
 status.textContent = "Visible assigned " + "status";
+status.innerText = ready
+  ? "Ready; continue when you choose."
+  : `Verified progress is ${Number(progress) || 0}%. Complete the remaining checkpoints.`;
+status.textContentExtra = "Unrelated property";
+const same = status.textContent === "Comparison only";
 </script></html>"""
         values = [item.text for item in extract_segments(raw) if item.kind == "script-ui"]
         self.assertIn("Visible quoted hint", values)
         self.assertIn("<p>Visible template help</p>", values)
         self.assertIn("Visible assigned ", values)
         self.assertIn("status", values)
+        self.assertIn("Ready; continue when you choose.", values)
+        self.assertIn("Verified progress is ${Number(progress) || 0}%. Complete the remaining checkpoints.", values)
+        self.assertNotIn("Unrelated property", values)
+        self.assertNotIn("Comparison only", values)
 
     def test_runnable_code_span_hides_nested_strings_from_ui_discovery(self) -> None:
         raw = """<html><script>
