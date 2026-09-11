@@ -38,7 +38,7 @@ MODELS = (
     "nvidia/nemotron-3.5-lightning-30b-a3b",
     "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
 )
-EMBEDDING_MODEL = "nvidia/llama-nemotron-embed-vl-1b-v2"
+EMBEDDING_MODEL = "nvidia/nemotron-3-embed-1b"
 CDN_ORIGIN = "https://cdn.dli.learn.nvidia.com"
 CAPABILITY_PROBES = {
     "assessment": "candidate-required-gate",

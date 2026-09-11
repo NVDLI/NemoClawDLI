@@ -323,7 +323,7 @@ async function openLocale(browser, language, filename, init) {
       shared.setEmbeddingApiBaseUrl('https://embedding.example.test/v1');
       shared.setEmbeddingModelId('embedding/provider-model');
       shared.setEmbeddingKey('test-embedding-key');
-      await rag.embed('custom embedding route', { model: 'nvidia/llama-nemotron-embed-vl-1b-v2' });
+      await rag.embed('custom embedding route', { model: 'nvidia/nemotron-3-embed-1b' });
       let jupyterError = '';
       try { shared.normalizeModelApiBaseUrl('https://jupyter-example.brevlab.com/lab'); }
       catch (error) { jupyterError = error.message; }
@@ -345,7 +345,7 @@ async function openLocale(browser, language, filename, init) {
     const embedding = results.modelRoutes.requests.find(item => item.url === 'https://integrate.api.nvidia.com/v1/embeddings');
     const customEmbedding = results.modelRoutes.requests.find(item => item.url === 'https://embedding.example.test/v1/embeddings');
     if (results.modelRoutes.chat.model !== 'nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8' ||
-        results.modelRoutes.embedding.model !== 'nvidia/llama-nemotron-embed-vl-1b-v2' ||
+        results.modelRoutes.embedding.model !== 'nvidia/nemotron-3-embed-1b' ||
         results.modelRoutes.customEmbedding.model !== 'embedding/provider-model' ||
         !/Jupyter \/lab URL is not a model API/.test(results.modelRoutes.jupyterError) ||
         custom.some(item => item.credentials !== 'include' ||
@@ -389,7 +389,7 @@ async function openLocale(browser, language, filename, init) {
       };
     });
     if (results.prebuiltRagIndex.status !== 200 ||
-        results.prebuiltRagIndex.model !== 'nvidia/llama-nemotron-embed-vl-1b-v2' ||
+        results.prebuiltRagIndex.model !== 'nvidia/nemotron-3-embed-1b' ||
         results.prebuiltRagIndex.dim !== 2048 ||
         results.prebuiltRagIndex.docs !== 8 || results.prebuiltRagIndex.queries !== 6 ||
         !results.prebuiltRagIndex.shapesValid ||
