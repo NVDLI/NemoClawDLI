@@ -68,20 +68,20 @@
   <p>
     Every chat-completions response carries a <code>finish_reason</code>
     field that tells you why the model stopped generating. Inside an agent
-    loop, this is the only signal you need to decide what to do next:
+    loop, read it alongside the response content and tool requests to decide what to do next:
     run a tool, return the answer to the user, or handle an error. Before reading
-    what its values mean, make two calls and watch the field change.
+    what its values mean, make two calls and compare their replies.
   </p>
 
   <div id="cell-finish-reason"></div>
 
   <p>
-    The first call answered on its own and came back <code>"stop"</code>. The second was
-    offered a tool and asked for something training data cannot supply, so instead of stopping
-    it came back <code>"tool_calls"</code>, handing your code the name of the function to run.
-    Those two values cover the common branching. The rest signal trouble that routes the loop
-    into a fallback harness, where the agent might retry the call or hand the conversation off
-    to a human.
+    The first call offers no tools. In the second, the model is offered a tool and asked
+    for the current time. It still chooses whether to request the clock tool. Compare the displayed questions, replies, and
+    <code>finish_reason</code>. If both calls return <code>"stop"</code>, inspect the
+    second reply: did it admit it cannot check the time, or give an unsupported answer?
+    Change the model or question and rerun. A tool request names work for your code;
+    this preview does not execute it.
   </p>
   <ul>
     <li><code>"stop"</code> means the model has written its final answer and the loop can return <code>content</code> to the user.</li>
@@ -173,7 +173,7 @@
 
   <div class="callout">
     <strong>What just happened inside the messages array.</strong><br>
-    The loop pushed four things into <code>state.messages</code>: <ul><li>the system
+    When the model requests the clock, the loop adds these turns to <code>state.messages</code>: <ul><li>the system
     prompt (turn 0),</li><li>the user question (turn 1),</li><li>an assistant message with a
     <code>tool_calls</code> field (turn 2, the request),</li><li>and a
     <code>tool</code>-role message holding the function's return value (turn
@@ -256,7 +256,7 @@
         steers a model that has training-data confidence in another
         direction?</li>
     <li><strong>Count the steps on a genuinely tool-needing question.</strong>
-        "How many minutes until 17:00 UTC?" takes more than one tool call.
+        "How many minutes until 17:00 UTC?" needs a clock reading and a calculation.
         Run it a few times. Did the model call
         <code>get_current_time</code> once, twice, or three times? Why
         would a model re-call a tool whose output it already has,
@@ -296,25 +296,28 @@ hljs.highlightAll();
 mountRunCell("#cell-finish-reason", {
   openCode: true,
   label: "finish_reason · the one field the loop reads to decide what to do next",
-  intro: "Compare a direct answer with a tool request. Watch finish_reason change before building the complete loop.",
-  code: `// MODEL is the swappable brain. Change it and rerun to see whether a stronger model
-// stops or asks for the tool on these same two questions.
-const MODEL = "nvidia/nemotron-3.5-lightning-30b-a3b";
+  intro: "Compare two questions, the offered tools, and the actual replies. A model may answer or decline without requesting a tool.",
+  code: `// On a custom endpoint, change the model in the connection card; that setting owns the route.
+const CFG = await helpers.getConfig();
+const MODEL = helpers.isDefaultModelApiBaseUrl(CFG.url)
+  ? "nvidia/nemotron-3.5-lightning-30b-a3b" : CFG.model;
+const QUESTION_1 = "In one sentence, what is an agent's ReAct loop?";
+const QUESTION_2 = "What time is it right now in UTC?";
 
-// Call 1 · no tools offered. The model can answer, so it stops on its own.
+log.h("call 1 · no tools offered");
+log("model:", MODEL);
+log.kv({ "question": QUESTION_1 });
 const r1 = await chat({
   model: MODEL,
-  messages: [{ role: "user", content: "In one sentence, what is an agent's ReAct loop?" }],
-  max_tokens: 8196,  // reasoning models think first; leave room past reasoning_content
+  messages: [{ role: "user", content: QUESTION_1 }],
+  max_tokens: 8196,
 });
-// Optional visibility: uncomment to inspect the complete first response.
-// log.details("call 1 raw response", r1);
-log.h("call 1 · no tools offered");
-log("finish_reason:", r1.choices[0].finish_reason);   // "stop" means the answer is ready and the loop can exit
-log(r1.choices[0].message.content || "(used its whole budget thinking; raise max_tokens)");
+log("response model:", r1.model || MODEL);
+log("finish_reason:", r1.choices[0].finish_reason);
+log("reply:", r1.choices[0].message.content || "(no answer content; inspect the raw response)");
+log.details("call 1 raw response", r1);
 
-// Call 2 · offer one tool and ask for something the model cannot know from training data.
-// The model cannot run the tool itself; this preview asks your code to run it.
+// Offering a tool lets the model request it; it does not execute the function.
 const TOOLS = [{
   type: "function",
   function: {
@@ -323,18 +326,28 @@ const TOOLS = [{
     parameters: { type: "object", properties: {}, required: [] },
   },
 }];
+// Optional visibility: inspect the exact schema offered to the model.
+// log.json("offered tool schema", TOOLS);
+log.h("call 2 · get_current_time offered");
+log("model:", MODEL);
+log.kv({ "question": QUESTION_2 });
 const r2 = await chat({
   model: MODEL,
-  messages: [{ role: "user", content: "What time is it right now in UTC?" }],
+  messages: [{ role: "user", content: QUESTION_2 }],
   tools: TOOLS,
   max_tokens: 8196,
 });
 const m2 = r2.choices[0].message;
-log.h("call 2 · one tool offered, on a question training data cannot answer");
-log("finish_reason:", r2.choices[0].finish_reason);   // "tool_calls" means the model is asking you to run a function
-log("it asked you to run:", (m2.tool_calls || []).map(t => t.function.name).join(", ") || "(nothing)");
-
-return { call1: r1.choices[0].finish_reason, call2: r2.choices[0].finish_reason };
+log("response model:", r2.model || MODEL);
+log("finish_reason:", r2.choices[0].finish_reason);
+log("reply:", m2.content || "(no answer content)");
+log("requested tools:", (m2.tool_calls || []).map(t => t.function.name).join(", ") || "(none)");
+log.details("call 2 raw response", r2);
+if (!m2.tool_calls?.length) {
+  log("No clock reading was taken. Inspect the reply, then change the question or model and compare.");
+}
+// Optional comparison: ask QUESTION_2 to explicitly request the clock tool, then rerun.
+return { model: MODEL, call1: r1.choices[0].finish_reason, call2: r2.choices[0].finish_reason };
 `,
 });
 
@@ -384,7 +397,13 @@ return state.execTool("get_current_time");
       summary: "Runs the ReAct cycle until finish_reason is 'stop'. Edit MODEL to compare another model.",
       code: `// MODEL is the swappable brain in the reasoning slot. Change it and rerun to drive the
 // same loop with a different model.
-const MODEL = "nvidia/nemotron-3.5-lightning-30b-a3b";
+const CFG = await helpers.getConfig();
+const MODEL = helpers.isDefaultModelApiBaseUrl(CFG.url)
+  ? "nvidia/nemotron-3.5-lightning-30b-a3b" : CFG.model;
+helpers.log("model:", MODEL);
+helpers.log.kv({ "question": state.userPrompt });
+// Optional visibility: inspect the instruction guiding tool use.
+// helpers.log.kv({ "system prompt": state.systemPrompt });
 // Backstop for runaway tool loops during the demo.
 const max_steps = 12;
 
