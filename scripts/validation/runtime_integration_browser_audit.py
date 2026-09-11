@@ -121,6 +121,9 @@ async function open(browser, pageName, init) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const errors = [];
   page.on('pageerror', error => errors.push(error.message || String(error)));
+  await page.route('https://activity-api.learn.nvidia.com/**', route => route.fulfill({
+    status: 503, contentType: 'application/json', body: '{"error":"audit service unavailable"}',
+  }));
   if (init) await page.addInitScript({ content: topLevelInitScript(init) });
   const response = await page.goto(url(pageName), { waitUntil: 'domcontentloaded', timeout: timeoutMs });
   if (!response?.ok()) fail(`course route failed: ${pageName} (${response?.status()})`);
@@ -566,6 +569,10 @@ async function openLocale(browser, language, filename, init) {
     for (const scenario of cases) {
       const { page, errors } = await openLocale(browser, scenario.language, '02c-deep.html', () => {
         sessionStorage.setItem('nvapi', 'nvapi-deep-audit');
+        window.activitySignals = [];
+        window.addEventListener('nemoclaw:chat-completed', event => {
+          if (event.detail?.containerId === 'deep-artifact') window.activitySignals.push(event.detail);
+        });
       });
       const workerCalls = [[], []];
       let requests = 0, synthesisInput = null;
@@ -607,6 +614,11 @@ async function openLocale(browser, language, filename, init) {
           const board = document.querySelector('.research-board');
           return ['complete', 'failed'].includes(board?.dataset.state);
         }, null, { timeout:timeoutMs });
+        await page.waitForFunction(() => window.activitySignals.length === 1, null, { timeout:timeoutMs });
+        const activity = await page.evaluate(() => window.activitySignals[0]);
+        if (activity.successCount !== (scenario.allFailed ? 0 : 1)) {
+          fail('activity success did not match admitted research evidence: ' + JSON.stringify(activity));
+        }
         const transcript = await page.locator('#deep-artifact').innerText();
         const failed = await page.locator('.research-thread.failed').count();
         const gaps = await page.locator('.research-thread.gap').count();

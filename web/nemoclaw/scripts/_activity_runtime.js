@@ -105,7 +105,7 @@ export function installNemoClawActivityTracking({
     } else if (page === '03b-openclaw.html' && cellId === 'cell-workspace-term') {
       markPair('03b:workspace', '03b:introspect', '03b:workspace-inspected');
     } else if (page === '04a-safety.html' && cellId === 'cell-live-policy' && hasAgent) {
-      evidence.add('04a:policy');
+      markPair('04a:policy', '04a:agreement', '04a:policy-boundary-verified');
     }
   });
 
@@ -132,15 +132,15 @@ export function installNemoClawActivityTracking({
     const { canvasId, nodeId, runObserved, cleanupSucceeded, policyAgreed } = event.detail || {};
     if (page === '03c-always-on.html' && canvasId === 'probe-cron' && nodeId === 'cr-watch'
         && runObserved) {
-      evidence.add('03c:run');
+      markPair('03c:run', '03c:removed', '03c:scheduled-run-complete');
     }
     if (page === '03c-always-on.html' && canvasId === 'probe-cron' && nodeId === 'cr-rm'
         && cleanupSucceeded) {
       markPair('03c:removed', '03c:run', '03c:scheduled-run-complete');
     }
     if (page === '04a-safety.html' && canvasId === 'cell-predict-confirm' && nodeId === 'compare'
-        && policyAgreed && evidence.has('04a:policy')) {
-      record('04a:policy-boundary-verified');
+        && policyAgreed) {
+      markPair('04a:agreement', '04a:policy', '04a:policy-boundary-verified');
     }
   });
 

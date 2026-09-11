@@ -22,12 +22,15 @@ const { diagramSVG } = shared;
 const { chromium } = require("playwright-core");
 
 async function renderedPolicyMap() {
+  const webRoot = path.dirname(NEMO);
+  const coursePath = '/' + encodeURIComponent(path.basename(NEMO));
+  const fixturePath = coursePath + '/.figcheck-policy-map.html';
   const server = http.createServer((req, res) => {
     const rel = decodeURIComponent(new URL(req.url, "http://127.0.0.1").pathname).replace(/^\/+/, "") || "index.html";
-    if (rel === "index.html") { res.writeHead(200, { "content-type": "text/html" }); res.end('<div id="pm"></div>'); return; }
-    const file = path.resolve(NEMO, rel);
-    if ((!file.startsWith(NEMO + path.sep) && file !== NEMO) || !fs.existsSync(file)) { res.writeHead(404); res.end(); return; }
-    res.writeHead(200, { "content-type": file.endsWith(".js") ? "text/javascript" : "application/octet-stream" });
+    if ('/' + rel === decodeURIComponent(fixturePath)) { res.writeHead(200, { "content-type": "text/html" }); res.end('<div id="pm"></div>'); return; }
+    const file = path.resolve(webRoot, rel);
+    if (!file.startsWith(webRoot + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) { res.writeHead(404); res.end(); return; }
+    res.writeHead(200, { "content-type": /\.(?:m?js)$/.test(file) ? "text/javascript" : "application/octet-stream" });
     fs.createReadStream(file).pipe(res);
   });
   await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
@@ -35,9 +38,9 @@ async function renderedPolicyMap() {
   const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME_BIN });
   try {
     const page = await browser.newPage();
-    await page.goto(`http://127.0.0.1:${port}/index.html`);
+    await page.goto(`http://127.0.0.1:${port}${fixturePath}`);
     return await page.evaluate(async () => {
-      const shared = await import("/scripts/_shared.js");
+      const shared = await import("./scripts/_shared.js");
       shared.mountPolicyMap("#pm");
       return document.querySelector("#pm .pmap-svg")?.innerHTML || "";
     });

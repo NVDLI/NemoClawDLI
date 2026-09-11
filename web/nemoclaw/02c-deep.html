@@ -385,7 +385,6 @@ helpers.mountChatUI("#deep-artifact", {
     };
 
     const results = await Promise.all(branches.map(runBranch));
-    if (results.some(result => !/^\(branch failed:/.test(result.finding))) ctx.view.activitySuccess();
     const wall = (performance.now() - t0) / 1000;
     const serial = results.reduce((sum, r) => sum + r.dt, 0);
     const gaps = results.filter(r => r.gap).length;
@@ -398,6 +397,7 @@ helpers.mountChatUI("#deep-artifact", {
       ctx.view.token(failed.map(r => r.label + ": " + r.finding).join("\n"));
       return;
     }
+    ctx.view.activitySuccess();
     boardStatus.textContent = accepted.length + " workers complete · " + wall.toFixed(1) +
       "s wall time vs " + serial.toFixed(1) + "s serial" + (gaps ? " · " + gaps + (gaps === 1 ? " coverage gap" : " coverage gaps") : "") + " · synthesizing…";
 

@@ -32,7 +32,7 @@ CONTROL_REGISTER = ROOT / "docs" / "security-control-themes.json"
 RELEASE_STAGES = {"deploy", "verify", "review"}
 EXPECTED_SVG_TITLE = "Security architecture for the DLI course Securing Agents with OpenShell and NemoClaw"
 TOE_NODE_IDS = {"source", "artifact", "browser"}
-EXTERNAL_NODE_IDS = {"ci", "pages_host", "launchable_host", "model_api", "nemoclaw"}
+EXTERNAL_NODE_IDS = {"ci", "pages_host", "launchable_host", "model_api", "activity_api", "nemoclaw"}
 TOE_ASSURANCE = "REPOSITORY EVIDENCE"
 EXTERNAL_ASSURANCE = "NO LIVE EVIDENCE FROM EXTERNAL OPERATOR"
 ALLOWED_SECURITY_OBJECTIVES = {"confidentiality", "integrity", "availability"}
@@ -44,6 +44,7 @@ EXPECTED_EDGE_IDS = {
     "pages_to_browser",
     "launchable_to_browser",
     "browser_to_models",
+    "browser_to_activity",
     "browser_to_nemoclaw",
 }
 EXPECTED_EXCLUDED_INTERACTIONS = {
@@ -519,7 +520,7 @@ def audit_model(model: dict, *, root: Path = ROOT, svg_text: str | None = None) 
     for node_id in sorted(set(nodes) - connected):
         out.append(finding("isolated-node", "docs/security-architecture.json", f"{node_id} has no data-flow edge"))
 
-    for node_id in ("model_api", "nemoclaw"):
+    for node_id in ("model_api", "activity_api", "nemoclaw"):
         if node_id not in nodes or nodes[node_id].get("conditional"):
             out.append(finding("required-service", "docs/security-architecture.json", f"{node_id} must remain a required, non-conditional service"))
     route_contract = {edge_id: False for edge_id in EXPECTED_EDGE_IDS}
@@ -682,9 +683,10 @@ def self_test() -> list[str]:
     mutation["nodes"][0]["detail"] = "secure course delivery architecture"
     cases.append(("unsupported architecture assurance", mutation, expected_svg, "architecture-overclaim"))
 
-    mutation = copy.deepcopy(base)
-    next(node for node in mutation["nodes"] if node["id"] == "nemoclaw")["conditional"] = True
-    cases.append(("required NemoClaw service", mutation, expected_svg, "required-service"))
+    for node_id in ("nemoclaw", "activity_api"):
+        mutation = copy.deepcopy(base)
+        next(node for node in mutation["nodes"] if node["id"] == node_id)["conditional"] = True
+        cases.append((f"required {node_id} service", mutation, expected_svg, "required-service"))
 
     mutation = copy.deepcopy(base)
     next(edge for edge in mutation["edges"] if edge["id"] == "browser_to_nemoclaw")["conditional"] = True

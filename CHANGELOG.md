@@ -5,6 +5,8 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Thanks to Lisa Guo for contributing the Activity SDK, browser-session continuity, and course checkpoint integration.
+
 - Thanks to Vadim Kudlay for reviewing the Taiwan Traditional Chinese localization.
 - Thanks to Vadim Kudlay for reviewing the Spanish, Brazilian Portuguese, and Simplified Chinese
   learner guidance for the supported NVIDIA model-role migration and course-wide runtime localization.

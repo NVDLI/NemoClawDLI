@@ -223,7 +223,7 @@ test('every 01b through 04b checkpoint requires its full success predicate', () 
   }
 });
 
-test('paired checkpoints reject partial evidence and advance after both halves', () => {
+test('paired checkpoints reject partial evidence in either order', async t => {
   const cases = [
     ['03b-openclaw.html',
       ['nemoclaw:run-succeeded', { cellId: 'cell-introspect' }],
@@ -243,16 +243,20 @@ test('paired checkpoints reject partial evidence and advance after both halves',
     '02a:routed-workflow-complete', '02b:grounded-answer-complete', '02c:deep-research-complete',
     '03a:nemoclaw-connected', '03b:workspace-inspected', '03c:scheduled-run-complete',
   ];
-  for (const [page, first, second, milestone, priorCount] of cases) {
-    const fixture = trackingFixture(page);
-    try {
-      fixture.storageTarget.setItem('dli_activity:nemoclaw:evidence:v1:1',
-        JSON.stringify(Object.fromEntries(order.slice(0, priorCount).map(item => [`milestone:${item}`, true]))));
-      dispatch(fixture.windowTarget, first[0], first[1]);
-      assert.deepEqual(fixture.milestones, [], `${milestone} accepted partial evidence`);
-      dispatch(fixture.windowTarget, second[0], second[1]);
-      assert.deepEqual(fixture.milestones, [milestone]);
-    } finally { fixture.restore(); }
+  for (const [page, left, right, milestone, priorCount] of cases) {
+    for (const [first, second] of [[left, right], [right, left]]) {
+      await t.test(`${milestone}: ${first[1].cellId || first[1].nodeId} first`, () => {
+        const fixture = trackingFixture(page);
+        try {
+          fixture.storageTarget.setItem('dli_activity:nemoclaw:evidence:v1:1',
+            JSON.stringify(Object.fromEntries(order.slice(0, priorCount).map(item => [`milestone:${item}`, true]))));
+          dispatch(fixture.windowTarget, first[0], first[1]);
+          assert.deepEqual(fixture.milestones, [], `${milestone} accepted partial evidence`);
+          dispatch(fixture.windowTarget, second[0], second[1]);
+          assert.deepEqual(fixture.milestones, [milestone]);
+        } finally { fixture.restore(); }
+      });
+    }
   }
 });
 

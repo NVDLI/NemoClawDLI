@@ -123,6 +123,14 @@ class ReacsRegistryTests(unittest.TestCase):
         )
         self.assertEqual("full-matrix", reason)
 
+    def test_build_changes_select_sdk_staging_coverage(self) -> None:
+        registry = self.load()
+        path = "scripts/build/build_pages.sh"
+        for signal in ("commit:M", "commit:A", "commit:D", "commit:R"):
+            with self.subTest(signal=signal):
+                selected, _ = registry.selected_mutations({path}, {path: {signal}})
+                self.assertIn("test-embedded-validator-suites", selected)
+
     def test_parallel_safe_suites_are_mutation_only_and_have_no_resource_collision(self) -> None:
         registry = self.load()
         parallel = [suite for suite in registry.suites if suite.parallel_safe]

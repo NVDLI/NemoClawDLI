@@ -55,6 +55,7 @@ EXPECTED_EXTERNAL = {
     "co-located launchable",
     "learner browser and device",
     "model service",
+    "DLI Activity API",
     "NemoClaw runtime",
     "cross-origin relays",
 }
@@ -693,9 +694,10 @@ def self_test() -> list[str]:
     value = mutated_register()
     value["target_of_evaluation"]["owned"].append("NemoClaw runtime")
     tests.append(("external component claimed as owned", {CONTROL_REGISTER: json.dumps(value)}, "toe-owned-scope"))
-    value = mutated_register()
-    value["target_of_evaluation"]["external_dependencies"].remove("model service")
-    tests.append(("external boundary narrowed", {CONTROL_REGISTER: json.dumps(value)}, "toe-external-scope"))
+    for dependency in EXPECTED_EXTERNAL:
+        value = mutated_register()
+        value["target_of_evaluation"]["external_dependencies"].remove(dependency)
+        tests.append((f"external boundary narrowed: {dependency}", {CONTROL_REGISTER: json.dumps(value)}, "toe-external-scope"))
     value = mutated_register()
     value["themes"][0]["evidence"] = ["docs/does-not-exist.md"]
     tests.append(("unresolvable theme evidence", {CONTROL_REGISTER: json.dumps(value)}, "theme-evidence-path"))
