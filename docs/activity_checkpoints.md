@@ -4,6 +4,8 @@ NemoClaw records course progress only after a learner successfully completes a d
 
 Progress is cumulative and advances in course order. If a learner completes a later checkpoint before an earlier one, the course keeps the successful evidence in the current browser session and advances after the missing earlier checkpoint is completed.
 
+Use the [runtime testing workflow](lab_runtime_testing.md) to exercise these predicates and verify that failures do not award progress.
+
 ## Progress checkpoints
 
 | Section | Checkpoint | Progress | Learner action | Acceptance criteria |
