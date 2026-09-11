@@ -350,16 +350,25 @@ helpers.mountChatUI("#deep-artifact", {
         worker.text = "";
         setWorker(worker, "running", "Extracting evidence…");
 
-        const r = await helpers.chatStream({ messages: [
+        const extraction = { messages: [
           { role: "system", content: (
             "You are a sub-agent. From the SOURCE, extract only what supports the GOAL, in 2-4 sentences."
             + " If coverage is partial, report the supported point and end with 'Coverage gap:' plus what is missing."
             + " Use 'not covered' only when the source has no relevant information at all."
           ) },
           { role: "user", content: "GOAL: " + b.goal + "\n\nSOURCE:\n" + src }],
-          model: FAST, max_tokens: window.DEEP_AGENT_MAX_TOKENS, signal: sig },
-          (token) => streamWorker(worker, token));
-        finding = (r.content || "").trim() || "(no finding)";
+          model: FAST, max_tokens: window.DEEP_AGENT_MAX_TOKENS, signal: sig };
+        let r = await helpers.chatStream(extraction, (token) => streamWorker(worker, token));
+        finding = (r.content || "").trim();
+        const repetitive = text => /([\p{L}\p{N}]{2,12})\1{5,}/iu.test(text);
+        if (repetitive(finding)) {
+          worker.text = "";
+          worker.stream.textContent = "";
+          r = await helpers.chatStream({ ...extraction, temperature: 0 }, streamWorker.bind(null, worker));
+          finding = (r.content || "").trim();
+          if (repetitive(finding)) throw new Error("model returned repetitive text twice");
+        }
+        if (!finding) throw new Error("model returned no finding");
         worker.text = finding;
         worker.stream.textContent = finding;
         const gap = /^not covered\.?$/i.test(finding) || /\bcoverage gap:/i.test(finding);
@@ -371,7 +380,8 @@ helpers.mountChatUI("#deep-artifact", {
       }
       const dt = (performance.now() - bt0) / 1000;
       worker.status.textContent += " · " + dt.toFixed(1) + "s";
-      return { finding, label, src, goal: b.goal, dt, gap: worker.card.classList.contains("gap") };
+      return { n: i + 1, finding, label, src, goal: b.goal, dt,
+        gap: worker.card.classList.contains("gap"), failed: worker.card.classList.contains("failed") };
     };
 
     const results = await Promise.all(branches.map(runBranch));
@@ -379,22 +389,37 @@ helpers.mountChatUI("#deep-artifact", {
     const wall = (performance.now() - t0) / 1000;
     const serial = results.reduce((sum, r) => sum + r.dt, 0);
     const gaps = results.filter(r => r.gap).length;
-    boardStatus.textContent = branches.length + " workers complete · " + wall.toFixed(1) +
+    const failed = results.filter(r => r.failed);
+    const accepted = results.filter(r => !r.failed);
+    const failureStatus = failed.map(r => "[" + r.n + "] " + cards[r.n - 1].status.textContent).join(" · ");
+    if (!accepted.length) {
+      board.dataset.state = "failed";
+      boardStatus.textContent = failureStatus;
+      ctx.view.token(failed.map(r => r.label + ": " + r.finding).join("\n"));
+      return;
+    }
+    boardStatus.textContent = accepted.length + " workers complete · " + wall.toFixed(1) +
       "s wall time vs " + serial.toFixed(1) + "s serial" + (gaps ? " · " + gaps + (gaps === 1 ? " coverage gap" : " coverage gaps") : "") + " · synthesizing…";
 
     // ── 3. SYNTHESIZE: one grounded answer from the findings ────────────
-    const findings = results.map((r, i) => "[" + (i + 1) + "] (" + r.label + ")\n" + r.finding).join("\n\n");
+    const findings = accepted.map(r => "[" + r.n + "] (" + r.label + ")\n" + r.finding).join("\n\n");
+    const unavailable = failed.length
+      ? "\n\nUNAVAILABLE BRANCHES (missing coverage):\n" + failed.map(r => r.label + ": " + r.goal).join("\n")
+      : "";
     // Show the findings corpus that each [n] citation maps back to.
-    ctx.view.tool("findings corpus", { findings: results.map((r, i) => ({ n: i + 1, branch: r.label, finding: r.finding })) });
+    ctx.view.tool("findings corpus", { findings: accepted.map(r => ({ n: r.n, branch: r.label, finding: r.finding })) });
     const s = await helpers.chatStream({ messages: [
       { role: "system", content: (
         "You are a research assistant. Answer the user's question using ONLY the findings below, citing each claim with its [n]."
         + " If a finding names a coverage gap or is empty, do not invent; preserve that limitation in the answer."
+        + " Mention unavailable branches as missing coverage; they are not citable findings."
       ) },
-      { role: "user", content: "QUESTION: " + text + "\n\nFINDINGS:\n" + findings }],
+      { role: "user", content: "QUESTION: " + text + "\n\nFINDINGS:\n" + findings + unavailable }],
       model: ctx.model, max_tokens: window.DEEP_AGENT_MAX_TOKENS, signal: sig },
       (tok) => ctx.view.token(tok));   // no reasoning here: the sub-agents did the thinking; keep the synthesis one clean answer
-    boardStatus.textContent = branches.length + " workers + synthesis complete · " + wall.toFixed(1) + "s parallel fan-out";
+    board.dataset.state = "complete";
+    boardStatus.textContent = accepted.length + " workers + synthesis complete · " + wall.toFixed(1) + "s parallel fan-out";
+    if (failureStatus) boardStatus.textContent += " · " + failureStatus;
     if (s.usage) ctx.view.usage({ input: s.usage.prompt_tokens, output: s.usage.completion_tokens, model: s.model });
   },
 });
