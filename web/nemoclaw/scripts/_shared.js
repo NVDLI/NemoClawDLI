@@ -1,6 +1,10 @@
 // Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import { installNemoClawActivityTracking } from "./_activity_runtime.js";
+
+installNemoClawActivityTracking();
+
 // ─── Shared runtime for the nemoclaw web course (frontend track) ─────────────
 
 // Remote-service-only. Direct calls use the learner key. The published course origins use the

@@ -48,7 +48,10 @@ UI_LINES_RE = re.compile(r'\blines\s*:\s*\[(.*?)\]', re.S)
 # by name here and by the code-range guard below.
 UI_HELP_RE = re.compile(r'\b(?!code\b)[A-Za-z_$][\w$]*\s*:\s*`(.*?)`', re.S)
 # Learner-visible DOM text assigned from JavaScript rather than declared in an object literal.
-UI_ASSIGN_RE = re.compile(r'\.(?:textContent|innerText)\s*=\s*([^\n;]*);', re.S)
+DOM_TEXT_LITERAL = r'''(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)'''
+UI_ASSIGN_RE = re.compile(
+    r'\.(?:textContent|innerText)\s*=(?!=|>)((?:' + DOM_TEXT_LITERAL + r'''|[^;"'`])*);''', re.S)
+DOM_TEXT_STRING_RE = re.compile(r'''(["'`])((?:\\[\s\S]|(?!\1)[^\\])*)\1''')
 UI_TERNARY_RE = re.compile(r'\b(?:greeting|disabledMsg)\s*:\s*([^\n]+)')
 JS_STRING_RE = re.compile(r'(["\'])(.*?)(?<!\\)\1', re.S)
 UI_CALL_RE = re.compile(r'\b(?:helpers\.log|log(?:\.h|\.details|\.html)?|info|show)\s*\((.*?)\)\s*;', re.S)
@@ -369,7 +372,12 @@ def script_segments(raw: str) -> list[Segment]:
         for assignment in UI_ASSIGN_RE.finditer(body):
             if inside_code(assignment.start(1)):
                 continue
-            for match in JS_STRING_RE.finditer(assignment.group(1)):
+            expression = assignment.group(1)
+            templates = [match for match in DOM_TEXT_STRING_RE.finditer(expression)
+                         if match.group(1) == '`' and useful(PLACEHOLDER_RE.sub('', match.group(2)))]
+            strings = [match for match in JS_STRING_RE.finditer(expression)
+                       if not any(template.start() <= match.start() < template.end() for template in templates)]
+            for match in sorted(strings + templates, key=lambda item: item.start()):
                 text = match.group(2)
                 if useful(text):
                     start = body_start + assignment.start(1) + match.start(2)

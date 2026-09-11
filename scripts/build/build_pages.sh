@@ -23,6 +23,24 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 T1="$(cd "$HERE/../.." && pwd)"  # repo root (implementation lives under scripts/build)
+
+stage_activity_sdk() {
+    local course_root="$1" target
+    target="$(dirname "$course_root")/shared"
+    mkdir -p "$target"
+    cp "$T1/web/shared/activity-sdk.js" "$target/activity-sdk.js"
+    cmp -s "$T1/web/shared/activity-sdk.js" "$target/activity-sdk.js" || {
+        echo "[build_pages]   ERROR: staged activity SDK differs from source" >&2
+        return 1
+    }
+}
+
+if [ "${1:-}" = "--stage-activity-sdk" ]; then
+    [ "$#" -eq 2 ] || { echo "usage: $0 --stage-activity-sdk OUT" >&2; exit 2; }
+    stage_activity_sdk "$2"
+    exit 0
+fi
+
 OUT="${1:-$T1/public}"
 # Build the source language at $OUT root, then each sparse same-branch overlay under i18n/<lang>/
 # over canonical web/ and into $OUT/<lang>/. BUILD_PAGES_LANGS=0 disables that loop.
@@ -140,6 +158,9 @@ for c in nemoclaw; do
     echo "[build_pages]   $c -> $course_out/ ($(find "$course_out" -name '*.html' | wc -l) pages)"
 done
 
+# _activity.js resolves this shared facade two levels above the bundled scripts directory.
+stage_activity_sdk "$OUT/${COURSE_PREFIX:+$COURSE_PREFIX/}nemoclaw"
+
 # Declared previews are review surfaces, not releases, but a foyer link must still resolve in the
 # built artifact. Project every preview named by the machine-readable foyer contract beside the
 # released course prefix. The copied tree stays byte-identical to its reviewed browser source.
@@ -227,6 +248,7 @@ for locale_source in "$OUT"/i18n/*/web/nemoclaw; do
         fi
     done < <(find "$T1/web/nemoclaw" -path "$T1/web/nemoclaw/standalone" -prune -o -type f -print0)
     cp "$T1/web/_skill_explorer.js" "$(dirname "$locale_source")/_skill_explorer.js"
+    stage_activity_sdk "$locale_source"
 done
 echo "[build_pages] source explorers -> public/ ($(find "$OUT" -name SKILL.html -type f | wc -l) SKILL contracts)"
 
@@ -356,6 +378,7 @@ if [ "$LANGS" = 1 ] && [ -d "$T1/i18n" ]; then
             rm -rf "$locale_tmp"
             exit 1
         fi
+        stage_activity_sdk "$OUT/$lang/nemoclaw"
         # the language foyer is its own translated web/index.html, /lab/static -> relative
         if [ -f "$locale_tmp/web/index.html" ]; then
             python3 - "$locale_tmp/web/index.html" "$OUT/$lang/index.html" "$COURSE_PREFIX" <<'PROJ'

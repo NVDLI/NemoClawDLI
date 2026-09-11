@@ -9,6 +9,9 @@ import path from 'node:path';
 import './test_openclaw_pomerium_transport.mjs';
 import './test_helper_registry.mjs';
 import './test_model_routing.mjs';
+import './test_activity_sdk.mjs';
+import './test_activity_course_integration.mjs';
+import './test_activity_checkpoint_wiring.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 

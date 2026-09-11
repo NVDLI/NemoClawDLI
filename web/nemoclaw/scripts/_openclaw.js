@@ -1739,6 +1739,9 @@ export function mountOpenClawConnectionAudit(targetSel, opts = {}) {
       summary.textContent = result.ok
         ? text("Connection ready. Metadata, gateway, terminal, and health checks passed.")
         : text("Connection failed. Open the failed check for its redacted request and response.");
+      if (result.ok && typeof window.CustomEvent === "function") {
+        window.dispatchEvent(new window.CustomEvent("nemoclaw:connection-audit-passed"));
+      }
       runButton.textContent = text("Test again");
     } catch (error) {
       root.dataset.state = "failed";

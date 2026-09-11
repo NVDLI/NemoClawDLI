@@ -123,12 +123,51 @@ class ReacsRegistryTests(unittest.TestCase):
         )
         self.assertEqual("full-matrix", reason)
 
+    def test_build_changes_select_sdk_staging_coverage(self) -> None:
+        registry = self.load()
+        path = "scripts/build/build_pages.sh"
+        for signal in ("commit:M", "commit:A", "commit:D", "commit:R"):
+            with self.subTest(signal=signal):
+                selected, _ = registry.selected_mutations({path}, {path: {signal}})
+                self.assertIn("test-embedded-validator-suites", selected)
+
     def test_parallel_safe_suites_are_mutation_only_and_have_no_resource_collision(self) -> None:
         registry = self.load()
         parallel = [suite for suite in registry.suites if suite.parallel_safe]
         self.assertTrue(parallel)
         self.assertTrue(all(suite.mode == "mutation" for suite in parallel))
         self.assertTrue(all(not suite.exclusive_resources for suite in parallel))
+
+    def test_runtime_selection_covers_new_nested_localized_and_renamed_consumers(self) -> None:
+        registry = self.load()
+        runtime_suites = {
+            suite.id for suite in registry.suites
+            if any(argument.startswith("tests/runtime/") for argument in suite.argv)
+        }
+        self.assertTrue(runtime_suites)
+        paths = (
+            "web/new-course/nested/client.js",
+            "web/renamed-course/nested/renamed.mjs",
+            "web/shared/new-sdk.js",
+            "tests/runtime/nested/new-client.mjs",
+            "i18n/future/resources/web/new-course/new-lesson.html.json",
+            "scripts/build/new-static-publisher.sh",
+        )
+        for path in paths:
+            for signal in ("commit:M", "commit:A", "commit:D", "commit:R100:to"):
+                with self.subTest(path=path, signal=signal):
+                    selected, _ = registry.selected_mutations({path}, {path: {signal}})
+                    self.assertTrue(runtime_suites <= selected)
+        selected, reason = registry.selected_mutations({"website/new-course/nested/client.js"})
+        self.assertEqual("unclaimed-path-full-matrix", reason)
+        self.assertTrue(runtime_suites <= selected)
+
+    def test_course_identity_does_not_change_impact_selection(self) -> None:
+        registry = self.load()
+        for relative in ("scripts/_shared.js", "vendor/browser-dependencies.json", "renamed-lesson.html"):
+            first, _ = registry.selected_mutations({f"web/first-course/{relative}"})
+            second, _ = registry.selected_mutations({f"web/another-course/{relative}"})
+            self.assertEqual(first, second)
 
 
 if __name__ == "__main__":
