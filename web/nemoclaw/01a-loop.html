@@ -434,7 +434,13 @@ document.getElementById("nav").innerHTML = buildNav("01a-loop.html");
 const pill = document.getElementById("key-status");
 updateKeyPill(pill);
 mountJourneyMap("#journey-map", "1a");
-mountKeyPanel(document.getElementById("key-panel"), { onSave: () => updateKeyPill(pill), onClear: () => updateKeyPill(pill) });
+mountKeyPanel(document.getElementById("key-panel"), {
+  onSave: () => {
+    updateKeyPill(pill);
+    window.dispatchEvent(new CustomEvent("nemoclaw:api-key-verified"));
+  },
+  onClear: () => updateKeyPill(pill),
+});
 hljs.highlightAll();
 
 // ── Canvas 1: a reflex agent with zero LLMs ──────────────────────────────────

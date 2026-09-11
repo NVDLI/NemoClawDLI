@@ -16,6 +16,11 @@ export function containNestedWheel(node) {
   }, { passive: false, capture: true });
 }
 
+function publishActivitySignal(type, detail) {
+  if (typeof window === "undefined" || typeof window.CustomEvent !== "function") return;
+  window.dispatchEvent(new window.CustomEvent(type, { detail }));
+}
+
 // ── Cmd-/ · Ctrl-/ : toggle `// ` line comments on the selection ─────────────────
 // The page loads CodeMirror core and the javascript mode but not the comment addon, so this fills in the toggle: comment the selected lines unless all are already commented, else uncomment.
 function _cmCommentToggle(cm) {
@@ -1192,6 +1197,13 @@ helpers.viz.sideBySide(
       // A clean run wipes the error marks a previous failed run left, so a fixed cell stops showing the old red line instead of accumulating marks.
       if (s.cm) _clearCMErrs(s.cm);
       setStatus(nodeId, "complete");
+      publishActivitySignal("nemoclaw:canvas-node-succeeded", {
+        canvasId: target.id || "",
+        nodeId,
+        runObserved: /^(completed|ok|success|succeeded)$/i.test(String(result?.run_status || "")),
+        cleanupSucceeded: result?.removed === true,
+        policyAgreed: result?.agree === true,
+      });
       if (metaEl) {
         const dt = ((performance.now() - t0) / 1000).toFixed(2);
         metaEl.textContent = "done in " + dt + "s";
@@ -1817,6 +1829,11 @@ export function mountRunCell(targetSel, opts) {
           _appendText(String(result));
         }
         setCellState("succeeded");
+        publishActivitySignal("nemoclaw:run-succeeded", {
+          cellId,
+          hasContent: Boolean(String(result?.content || "").trim()),
+          hasAgent: Boolean(result?.agent),
+        });
       }
     } catch (e) {
       if (epoch !== runEpoch) {

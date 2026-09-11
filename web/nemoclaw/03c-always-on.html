@@ -628,7 +628,7 @@ return {
 if (!state.call) { helpers.log("Run Connect first."); return; }
 const before = await state.call("cron.list");
 const job = (before?.jobs || []).find(j => j.id === state.demoCronId || j.name === "quick-3c-demo");
-if (!job) { helpers.log("quick-3c-demo is already absent"); return { remaining: (before?.jobs || []).map(j => j.id) }; }
+if (!job) { helpers.log("quick-3c-demo is already absent"); return { remaining: (before?.jobs || []).map(j => j.id), removed: true }; }
 const removed = await state.call("cron.remove", { id: job.id });
 helpers.log("removed quick-3c-demo (" + job.id + ")");
 helpers.log.details("raw cron.remove", removed);
@@ -636,7 +636,7 @@ const pl = await state.call("cron.list");
 const remaining = (pl?.jobs || []).map(j => j.id);
 helpers.log("cron jobs remaining: " + (remaining.length ? remaining.join(", ") : "(none)"));
 helpers.log.details("raw cron.list", pl);
-return { remaining };
+return { remaining, removed: !remaining.includes(job.id) };
 `,
     },
   ],
