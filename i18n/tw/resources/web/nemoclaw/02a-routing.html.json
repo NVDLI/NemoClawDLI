@@ -8,11 +8,6 @@
     "web/nemoclaw/assets/figures/fig2_rewoo.svg"
   ],
   "values": {
-    "link.01e8e548013f": {
-      "type": "link",
-      "source": "\n    <a href=\"https://www.crewai.com/\" target=\"_blank\" rel=\"noopener\">CrewAI</a>,\n    <a href=\"https://www.langchain.com/\" target=\"_blank\" rel=\"noopener\">LangChain</a>, and\n    <a href=\"https://www.langchain.com/langgraph\" target=\"_blank\" rel=\"noopener\">LangGraph</a>\n    all expose this same factory under names that vary by framework, whether\n    <code>Agent</code> or <code>create_agent</code> or a role/goal dataclass.\n    The cell below builds two specialists from the same four parameters, an\n    arithmetic tutor and a translator that both run on one input with their replies\n    rendered side by side.\n  ",
-      "value": "\n    <a href=\"https://www.crewai.com/\" target=\"_blank\" rel=\"noopener\">CrewAI</a>、\n    <a href=\"https://www.langchain.com/\" target=\"_blank\" rel=\"noopener\">LangChain</a> 和\n    <a href=\"https://www.langchain.com/langgraph\" target=\"_blank\" rel=\"noopener\">LangGraph</a>\n    都以各框架特有的名稱提供了同一種工廠，無論其名稱是<code>Agent</code>、<code>create_agent</code>，還是角色/目標 dataclass。以下單元使用相同的四個引數建置兩個專用代理程式：一個算術輔導代理程式和一個翻譯代理程式。兩者處理同一個輸入，回覆並排呈現。\n  "
-    },
     "link.088977681e2f": {
       "type": "link",
       "source": "<a href=\"https://arxiv.org/abs/2305.18323\" target=\"_blank\" rel=\"noopener\">Xu et al., <em>ReWOO: Decoupling Reasoning from Observations</em> (2023)</a>. The planner / worker / solver decomposition this module's Workflow Agent implements.",
@@ -21,7 +16,7 @@
     "link.139eba09e8b7": {
       "type": "link",
       "source": "\n        At each step the model reads the latest observation before it picks an action\n        and runs a tool, then sizes up whatever came back and chooses again. The agent\n        <em>reacts</em> to whatever the previous tool call returned, so the path\n        through the tools takes shape as it runs. That makes ReAct strong when the\n        path depends on intermediate results and weak when many steps could have\n        run at once.\n        <br><br>\n        Paper: <a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al., 2022</a>.\n      ",
-      "value": "\n        在每一步中，模型都會先讀取最新觀察結果，再選擇行動並執行工具；隨後評估傳回結果，再次作出選擇。代理程式會對上一次工具呼叫的傳回結果作出<em>回應</em>，因此工具使用路徑是在執行過程中逐步形成的。當執行路徑取決於中間結果時，ReAct 表現出色；而當多個步驟本可同時執行階段，它的表現則較弱。\n        <br><br>\n        論文：<a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al., 2022</a>。\n      "
+      "value": "\n        在每一步中，模型都會先讀取最新觀察結果，再選擇行動並執行工具；隨後評估傳回結果，再次作出選擇。代理程式會對上一次工具呼叫的傳回結果作出<em>回應</em>，因此工具使用路徑是在執行過程中逐步形成的。當執行路徑取決於中間結果時，ReAct 表現出色；而當多個步驟本可同時執行時，它的表現則較弱。\n        <br><br>\n        論文：<a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al., 2022</a>。\n      "
     },
     "link.1be52ce4d6ee": {
       "type": "link",
@@ -42,11 +37,6 @@
       "type": "link",
       "source": "<a href=\"https://arxiv.org/abs/2305.04091\" target=\"_blank\" rel=\"noopener\">Wang et al., <em>Plan-and-Solve Prompting</em> (2023)</a>. The simpler ancestor: a single LLM call writes a plan, the same LLM executes step-by-step. ReWOO splits planner from executor.",
       "value": "<a href=\"https://arxiv.org/abs/2305.04091\" target=\"_blank\" rel=\"noopener\">Wang et al., <em>Plan-and-Solve Prompting</em> (2023)</a>。這是更簡單的前身：一次 LLM 呼叫寫出規劃，同一個 LLM 逐步執行規劃。ReWOO 將 planner 與執行器分離。"
-    },
-    "link.6c17d60c30cb": {
-      "type": "link",
-      "source": "<strong>Tools.</strong> The <a href=\"https://json-schema.org/\" target=\"_blank\" rel=\"noopener\">JSON-Schema</a>-described functions it can call, if any.",
-      "value": "<strong>工具。</strong>它可以呼叫的函式（如有），這些函式使用 <a href=\"https://json-schema.org/\" target=\"_blank\" rel=\"noopener\">JSON-Schema</a> 描述。"
     },
     "link.edf787ed5434": {
       "type": "link",
@@ -78,6 +68,11 @@
       "source": "Topic: \\${state.topic}\\\\n\\\\nSources:\\\\n\\${state.context}\\\\n\\\\nWrite your version.",
       "value": "主題：\\${state.topic}\\\\n\\\\n 來源：\\\\n\\${state.context}\\\\n\\\\n 請寫出版本。"
     },
+    "rich.16b28bd7afe2": {
+      "type": "rich",
+      "source": "<strong>Invoke contract.</strong> <code>specialist.run(input)</code> returns one model response, including its finish reason and any tool requests.",
+      "value": "<strong>呼叫契約。</strong><code>specialist.run(input)</code> 傳回一次模型回應，包含結束原因與任何工具請求。"
+    },
     "rich.1a12441953a2": {
       "type": "rich",
       "source": "Output exactly two lines: 'FR: <french>' and 'BACK: <original-language>'.",
@@ -88,20 +83,15 @@
       "source": "<strong>Role.</strong> A short label, used for logs and routing.",
       "value": "<strong>角色。</strong>用於日誌記錄和路由的簡短標籤。"
     },
-    "rich.50ba04ccb0aa": {
+    "rich.59a380471196": {
       "type": "rich",
-      "source": "<strong>Context bloat is real.</strong> A single agent doing everything accumulates 10000-token context. Specialists stay focused on their slice.",
-      "value": "<strong>上下文膨脹確實存在。</strong>由單個代理程式包辦所有工作會累積 10000-token 上下文，而各個專用代理程式可以專注於各自負責的部分。"
+      "source": "<strong>Tools.</strong> Optional schemas the model may request. This one-call wrapper returns requests for inspection; it does not execute them.",
+      "value": "<strong>工具。</strong>模型可請求的選用結構描述。這個單次呼叫封裝會傳回請求供您檢查，不會執行它們。"
     },
-    "rich.58a54f63f510": {
+    "rich.5ed16cafc93d": {
       "type": "rich",
-      "source": "<strong>Parallelism is possible.</strong> Two workers run concurrently, where one agent could only run them in sequence. Three independent searches finish in the time of the slowest.",
-      "value": "<strong>可以並行處理。</strong>兩個工作單元可以併發執行，而單個代理程式只能依次執行。三項獨立搜尋可在其中最慢一項所需的時間內全部完成。"
-    },
-    "rich.79e7f0a66de9": {
-      "type": "rich",
-      "source": "<strong>Specialization matters.</strong> Different workstreams need different system prompts, tools, or models. One agent forced into both roles degrades both.",
-      "value": "<strong>專業分工很重要。</strong>不同工作流程需要不同的系統提示詞、工具或模型。強迫一個代理程式同時承擔兩種角色，會使兩方面的表現都下降。"
+      "source": "\n    Compare the added calls and coordination with the work they enable.\n    Different prompts or tools can help specialists focus; independent work can overlap.\n    Measure the resulting latency and answer quality before deciding whether to split the task.\n    Failure isolation also needs explicit handling: the examples below use\n    <code>Promise.all</code>, which rejects if any branch rejects.\n  ",
+      "value": "比較新增的呼叫與協調成本，以及它們能完成的工作。不同的提示詞或工具可協助專家聚焦；獨立工作可同時進行。決定是否拆分任務前，先測量延遲與回答品質。故障隔離也需要明確處理：以下範例使用 <code>Promise.all</code>，只要任一分支的 Promise 遭拒，整體 Promise 就會遭拒。"
     },
     "rich.82b2c51d66a4": {
       "type": "rich",
@@ -123,11 +113,6 @@
       "source": "\n    <strong>The overhead tax in concrete terms.</strong>\n    Every agent boundary adds model-call latency and routing logic. It also creates another\n    source of malformed messages and replaces a readable timeline with a trajectory that\n    fans across workers.\n  ",
       "value": "\n    <strong>開銷具體體現在哪裡。</strong>每個代理程式邊界都會增加模型呼叫延遲和路由邏輯，還會引入一個新的訊息格式錯誤來源，並將清晰易讀的時間線變成一條向多個工作單元分叉的執行軌跡。\n  "
     },
-    "rich.b485aaf225cf": {
-      "type": "rich",
-      "source": "<strong>Invoke contract.</strong> A consistent shape (<code>specialist.run(input)</code>) that returns the final reply.",
-      "value": "<strong>呼叫約定。</strong>採用統一形式（<code>specialist.run(input)</code>）並傳回最終回覆。"
-    },
     "rich.b78f1a0b8a39": {
       "type": "rich",
       "source": "\n    <strong>In practice, you can have both.</strong>\n    Many real systems borrow from each approach at once. The tools a ReAct loop calls\n    might internally run a planned, ReWOO-style pipeline, and a planner that lays its\n    work out in advance still needs sub-agents to execute each step, which are usually\n    ReAct loops in their own right. Compose these software components wherever their\n    strengths fit, reserving a Workflow Agent for tasks that split into independent workstreams.\n  ",
@@ -142,11 +127,6 @@
       "type": "rich",
       "source": "<strong>Executor.</strong> Plain JavaScript. Every query runs concurrently via <code>Promise.all</code>, with no LLM calls at this stage.",
       "value": "<strong>執行器。</strong>使用純 JavaScript。每個查詢都透過 <code>Promise.all</code> 併發執行，此階段不進行 LLM 呼叫。"
-    },
-    "rich.dcde6ae021af": {
-      "type": "rich",
-      "source": "<strong>Failure isolation helps.</strong> A crashed worker does not kill the whole task. The orchestrator retries, skips, or routes around it.",
-      "value": "<strong>故障隔離很有幫助。</strong>某個工作單元崩潰不會導致整個任務失敗。編排器可以重試、跳過它或選擇其他路由。"
     },
     "rich.dfb993bf67b0": {
       "type": "rich",
@@ -306,20 +286,10 @@
       "source": "You are a help desk triage agent.",
       "value": "您是一個幫助臺分流代理程式。"
     },
-    "text.0d5e75ab410b": {
-      "type": "text",
-      "source": "Emits the triage schema through response_format. extractJson handles fenced or reasoning-channel JSON.",
-      "value": "透過 response_format 生成分流 schema。extractJson 可處理程式碼圍欄或推理通道中的 JSON。"
-    },
     "text.0e47a37afc94": {
       "type": "text",
       "source": "searches concurrently in",
       "value": "項搜尋，耗時"
-    },
-    "text.0e97879787b6": {
-      "type": "text",
-      "source": "Three specialists · wall clock vs serial total",
-      "value": "三位專家 · 實際耗時與序列總耗時對比"
     },
     "text.0f916789d300": {
       "type": "text",
@@ -337,6 +307,12 @@
       "type": "text",
       "source": " state.topic = \"How should an agent decide whether to call a tool?\";",
       "value": " state.topic = \"How should an agent decide whether to call a tool?\";",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.13835af51a4d": {
+      "type": "text",
+      "source": " Sum concurrent durations as an estimate; no serial run was measured.",
+      "value": " Sum concurrent durations as an estimate; no serial run was measured.",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.13b19e6c7c17": {
@@ -389,16 +365,16 @@
       "source": "Simple · non-technical reader",
       "value": "簡明版 · 非技術讀者"
     },
-    "text.1a35c7f4ea7c": {
+    "text.1ac3c07f2fc9": {
       "type": "text",
-      "source": "Plots each specialist's duration against the shared wall-clock window to show the concurrency gain.",
-      "value": "將每位專家的處理時長與共享的實際計時視窗進行對比，以展示併發帶來的加速效果。"
-    },
-    "text.1af2eebe6e52": {
-      "type": "text",
-      "source": " TODO: Try a billing or account-access ticket and watch the route change.",
-      "value": " TODO: Try a billing or account-access ticket and watch the route change.",
+      "source": " state.ticket = \"The laptop screen flickers when I move the lid.\";",
+      "value": " state.ticket = \"The laptop screen flickers when I move the lid.\";",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.1c8d73aad58f": {
+      "type": "text",
+      "source": "Unknown specialist category: ",
+      "value": "未知的專家類別："
     },
     "text.1e039f8d613c": {
       "type": "text",
@@ -488,7 +464,7 @@
     "text.25b0f3fc616f": {
       "type": "text",
       "source": "Classify the ticket into one category: network, hardware, software, or account.",
-      "value": "將工單歸入以下一個類別：網路、硬體、軟體或賬號。"
+      "value": "請將支援單歸入一個類別：network、hardware、software 或 account。"
     },
     "text.26787dd2f72c": {
       "type": "text",
@@ -515,13 +491,13 @@
       "type": "text",
       "source": "object",
       "value": "object",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.2958d416d08a~1": {
       "type": "text",
       "source": "object",
       "value": "object",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.2d711642b726": {
       "type": "text",
@@ -533,6 +509,11 @@
       "type": "text",
       "source": "Runs both specialists concurrently and renders their replies side by side. Differences trace to their prompts.",
       "value": "併發執行兩位專家，並將其回覆並排呈現。回覆差異源自各自的提示詞。"
+    },
+    "text.2ee01f57e353": {
+      "type": "text",
+      "source": "Compares concurrent durations with elapsed wall time. The ratio estimates overlap; it is not a measured serial speedup.",
+      "value": "比較並行工作的耗時與實際經過時間。此比值估計重疊程度，並非實測相對於循序執行的加速比。"
     },
     "text.3009be769fb8": {
       "type": "text",
@@ -556,6 +537,16 @@
       "source": "Runs every planned search concurrently with Promise.all. Wall time follows the slowest query instead of their sum.",
       "value": "使用 Promise.all 併發執行所有規劃的搜尋。總耗時取決於最慢的查詢，而不是各項查詢耗時之和。"
     },
+    "text.322517d0849c": {
+      "type": "text",
+      "source": "\n    The cell below builds two specialists with one factory, an\n    arithmetic tutor and a translator that both run on one input with their replies\n    rendered side by side.\n  ",
+      "value": "下方單元格以同一個工廠建立兩個專家：算術家教與翻譯員。兩者收到相同的輸入，回應並排顯示。"
+    },
+    "text.32a477a1ad59": {
+      "type": "text",
+      "source": "Route the current ticket before calling a specialist.",
+      "value": "請先為目前支援單選擇路由，再呼叫專家。"
+    },
     "text.35390f5453e8": {
       "type": "text",
       "source": "software",
@@ -572,10 +563,11 @@
       "source": "Dispatches three prompted specialists with Promise.all. Total wall time follows the slowest response.",
       "value": "使用 Promise.all 排程三位採用不同提示詞的專家。總實際耗時取決於最慢的回應。"
     },
-    "text.38350eb278fb": {
+    "text.38581d183b73": {
       "type": "text",
-      "source": "Defines a factory over role, system prompt, and tools. Each returned specialist shares the same run loop.",
-      "value": "定義一個接收角色、系統提示詞和工具的工廠函式。它傳回的每位專家都共用同一個執行迴圈。"
+      "source": "Planner",
+      "value": "Planner",
+      "untranslated": "Validator dispatch selector compared by __validateCourseObject; translating changes the selected validation contract."
     },
     "text.39617394a19c": {
       "type": "text",
@@ -598,6 +590,11 @@
       "type": "text",
       "source": "The triage router has a fixed enum of categories. What should the\n        router do if the model emits a category that is not in the enum? Is the JSON\n        schema enough by itself, or do you also need application-side validation?",
       "value": "分流路由使用固定的類別列舉。如果模型生成的類別不在列舉中，路由應如何處理？僅靠 JSON schema 是否足夠，還是還需要應用端驗證？"
+    },
+    "text.3dcce5cea873": {
+      "type": "text",
+      "source": "The goal changed while planning; plan again.",
+      "value": "目標在規劃期間發生變更；請重新規劃。"
     },
     "text.3dd649e25c5a": {
       "type": "text",
@@ -648,31 +645,36 @@
       "type": "text",
       "source": "string",
       "value": "string",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.473287f8298d~1": {
       "type": "text",
       "source": "string",
       "value": "string",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.473287f8298d~2": {
       "type": "text",
       "source": "string",
       "value": "string",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.473287f8298d~3": {
       "type": "text",
       "source": "string",
       "value": "string",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.473287f8298d~4": {
       "type": "text",
       "source": "string",
       "value": "string",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.47f1bf88ca58": {
+      "type": "text",
+      "source": "Plan the current goal before searching.",
+      "value": "請先為目前目標制定計畫，再進行搜尋。"
     },
     "text.49f5f0be58c8": {
       "type": "text",
@@ -699,21 +701,22 @@
       "source": "Synthesize and show the pipeline",
       "value": "綜合並顯示工作流程"
     },
-    "text.4f1c1bb6d7a3": {
+    "text.4ffbef3c08ed": {
       "type": "text",
-      "source": "\n    Each of the four exercises above built a small agent by hand from the same few\n    pieces of boilerplate that production code should never have to retype for every new\n    specialist. Those pieces are a role label, a system prompt, a tool list, and an\n    invocation. The factory pattern parameterises those four moving parts, so you declare\n    specialists instead of writing them:\n  ",
-      "value": "\n    上述四項練習都使用相同的幾段樣板程式碼手動建置了一個小型代理程式，而生產程式碼不應在每次新增專用代理程式時都重複編寫這些內容。它們包括角色標籤、系統提示詞、工具列表和呼叫方式。工廠模式將這四個可變部分引數化，使您只需宣告專用代理程式，無需逐個編寫：\n  "
-    },
-    "text.502bdd68cc7e": {
-      "type": "text",
-      "source": " state.ticket = \"I was charged twice for the same subscription this month.\";",
-      "value": " state.ticket = \"I was charged twice for the same subscription this month.\";",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
+      "source": "Triage",
+      "value": "Triage",
+      "untranslated": "Validator dispatch selector compared by __validateCourseObject; translating changes the selected validation contract."
     },
     "text.50436a2b01d3": {
       "type": "text",
       "source": "I want a refund for last month's subscription",
       "value": "我想退回上個月的訂閱費用"
+    },
+    "text.5298c4b93da5": {
+      "type": "text",
+      "source": " TODO: Try a hardware or account-access ticket and watch the route change.",
+      "value": " TODO: Try a hardware or account-access ticket and watch the route change.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.5555b3120209": {
       "type": "text",
@@ -737,7 +740,7 @@
       "type": "text",
       "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
       "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "Exact provider model ID sent in API requests."
     },
     "text.588da4105320": {
       "type": "text",
@@ -755,11 +758,10 @@
       "source": "\n    Two LLM calls total, plus N parallel glossary searches. Edit the research goal and\n    watch the planner's query list change.\n  ",
       "value": "\n    總共進行兩次 LLM 呼叫，外加 N 次並行術語表搜尋。編輯研究目標，觀察 planner 的查詢列表如何變化。\n  "
     },
-    "text.5c97bdfd9e48": {
+    "text.5c960d9336eb": {
       "type": "text",
-      "source": " Compare the routed work against a serial baseline.",
-      "value": " Compare the routed work against a serial baseline.",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
+      "source": "\n    Ask a support question. One model call classifies it as billing, technical, account,\n    or other; the selected specialist then answers. This reuses the classify-then-specialist\n    pattern above with a different classifier prompt, category contract, parser, and\n    specialist prompts.\n  ",
+      "value": "提出一個支援問題。一次模型呼叫會將它分類為帳務、技術、帳號或其他，接著由選定的專家回答。這裡重用上方先分類再交給專家的模式，但使用不同的分類提示詞、類別契約、解析器與專家提示詞。"
     },
     "text.5cd5f84e9aa2": {
       "type": "text",
@@ -812,12 +814,17 @@
     "text.63f9ff4a3131": {
       "type": "text",
       "source": "billing = payments, charges, double charges, refunds, invoices, subscriptions",
-      "value": "賬單 = 付款、扣款、重複扣款、退款、發票、訂閱"
+      "value": "billing = 付款、扣款、重複扣款、退款、發票、訂閱"
     },
     "text.650f0800373b": {
       "type": "text",
       "source": "You are a research planner.",
       "value": "您是一位研究 planner。"
+    },
+    "text.66119dfd8c0f": {
+      "type": "text",
+      "source": "Three specialists · wall clock vs summed concurrent durations",
+      "value": "三位專家 · 實際經過時間與並行耗時總和"
     },
     "text.67a5bdf2a82d": {
       "type": "text",
@@ -829,21 +836,10 @@
       "source": "rendered below. Edit the config and Run.",
       "value": "結果呈現在下方。編輯設定後，選取“執行”。"
     },
-    "text.6849f140c10c": {
-      "type": "text",
-      "source": " Call the model and time the routed response.",
-      "value": " Call the model and time the routed response.",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
     "text.69824d3b0e70": {
       "type": "text",
       "source": "References",
       "value": "參考資料"
-    },
-    "text.6ae72180788e": {
-      "type": "text",
-      "source": "\n    Ask a support question and the artifact classifies it into one category with a\n    single model call before it routes that ticket to the matching specialist's system\n    prompt and streams the answer back in that voice. It runs the same\n    classify-then-specialist pattern shown above. The categories here are a\n    customer-support set rather than the IT help-desk enum. Its four values are billing,\n    technical, account, and other. Only the category list changes when the domain\n    changes, while the routing mechanism underneath stays identical.\n  ",
-      "value": "\n    提出一個支援問題後，該互動元件會先透過一次模型呼叫將其歸入一個類別，再將該工單路由到匹配的專用代理程式系統提示詞，並以該代理程式的口吻流式傳回答案。它執行的正是上面所示的“先分類、後交給專用代理程式”模式。這裡使用客戶支援類別，而非 IT 服務檯列舉。四個值分別是 billing、technical、賬號和其他。更換領域時，只有類別列表會變化，底層路由機制保持不變。\n  "
     },
     "text.6c1ff09db3a7": {
       "type": "text",
@@ -856,6 +852,42 @@
       "source": " hits",
       "value": " 條結果"
     },
+    "text.6c45cb72a36e": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~1": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~2": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~3": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~4": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~5": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
     "text.6e60e97688d3": {
       "type": "text",
       "source": " Build a node/edge spec from the plan the planner emitted, then let helpers.viz.diagram lay it out and theme it.",
@@ -867,6 +899,16 @@
       "source": "high",
       "value": "high",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.752da19f5286": {
+      "type": "text",
+      "source": " response",
+      "value": "的回應"
+    },
+    "text.752da19f5286~1": {
+      "type": "text",
+      "source": " response",
+      "value": "的回應"
     },
     "text.75d1a90c8570": {
       "type": "text",
@@ -884,6 +926,11 @@
       "type": "text",
       "source": "See the Gantt chart in the cell's log area: three bars (specialists) inside a dashed wall-clock window.",
       "value": "請檢視單元格日誌區域中的甘特圖：虛線實際耗時視窗內有三個條形，分別代表三位專家。"
+    },
+    "text.7897abb27c43": {
+      "type": "text",
+      "source": "translation specialist response",
+      "value": "翻譯專家回應"
     },
     "text.78d858c9dce6": {
       "type": "text",
@@ -908,7 +955,7 @@
     "text.7bdd6103bbef": {
       "type": "text",
       "source": "account = login, password, profile, security, access",
-      "value": "賬號 = 登入、密碼、個人資料、安全、存取權限"
+      "value": "account = 登入、密碼、個人資料、安全、存取權限"
     },
     "text.7bf868b18299": {
       "type": "text",
@@ -941,20 +988,10 @@
       "source": "Topic",
       "value": "主題"
     },
-    "text.801d27873126": {
-      "type": "text",
-      "source": "\n    That tax is fixed regardless of the task, so the question becomes whether the work\n    returns enough to cover it. A linear job that one prompt already handles will never\n    recoup the extra calls and the routing logic that they require. The split begins to\n    earn its keep only once the task itself carries the kind of structure that a single\n    loop has no choice but to flatten down into one timeline. Any one of the conditions\n    below makes the trade pay off.\n  ",
-      "value": "\n    無論任務是什麼，這項開銷都是固定的，因此關鍵在於工作收益能否覆蓋它。對於一個提示詞就能處理的線性任務，額外呼叫及其所需的路由邏輯永遠無法收回成本。只有當任務本身具備某種結構，而單一迴圈只能被迫將其壓縮為一條時間線時，拆分才開始體現價值。只要滿足以下任一條件，這項權衡就值得。\n  "
-    },
     "text.821ca15e7360": {
       "type": "text",
       "source": "You are an account support specialist. Give 3-5 clear, numbered steps for account access and permission issues.",
       "value": "您是賬號支援專家。請針對賬號存取和權限問題給出 3-5 個清晰的編號步驟。"
-    },
-    "text.82e2ab7b2ce9": {
-      "type": "text",
-      "source": "could not parse triage JSON; would fall back to a catch-all in production",
-      "value": "無法解析分流結果 JSON；在生產環境中將回退到兜底處理"
     },
     "text.8342cf28bab7": {
       "type": "text",
@@ -966,15 +1003,25 @@
       "source": "You are a software support specialist. Give 3-5 concise, numbered steps to resolve the software issue.",
       "value": "您是軟體支援專家。請給出 3-5 個簡潔的編號步驟來解決軟體問題。"
     },
-    "text.877428968433": {
+    "text.881f8a190955": {
       "type": "text",
-      "source": "\n    Without independent workstreams, the coordination overhead of multi-agent\n    composition buys nothing, and one plain loop stays faster and easier\n    to debug.\n  ",
-      "value": "\n    如果沒有獨立工作流程，組合多個代理程式所產生的協調開銷便不會帶來任何收益，而一個普通迴圈反而更快、更易除錯。\n  "
+      "source": "Run searches for the current goal before synthesis.",
+      "value": "請先針對目前目標執行搜尋，再進行綜合。"
+    },
+    "text.881f8a190955~1": {
+      "type": "text",
+      "source": "Run searches for the current goal before synthesis.",
+      "value": "請先針對目前目標執行搜尋，再進行綜合。"
+    },
+    "text.881f8a190955~2": {
+      "type": "text",
+      "source": "Run searches for the current goal before synthesis.",
+      "value": "請先針對目前目標執行搜尋，再進行綜合。"
     },
     "text.88453f8fc3b5": {
       "type": "text",
       "source": "other = anything that fits none of the above",
-      "value": "其他 = 不屬於以上任何類別的內容"
+      "value": "other = 不屬於以上任何類別的內容"
     },
     "text.8935b10f056e": {
       "type": "text",
@@ -992,11 +1039,37 @@
       "source": "then back into the original language.",
       "value": "然後再譯回原始語言。"
     },
+    "text.8bb4168eee36": {
+      "type": "text",
+      "source": "answer response",
+      "value": "回答回應"
+    },
+    "text.8bb4168eee36~1": {
+      "type": "text",
+      "source": "answer response",
+      "value": "回答回應"
+    },
+    "text.8bb4168eee36~2": {
+      "type": "text",
+      "source": "answer response",
+      "value": "回答回應"
+    },
     "text.8c76984e15a8": {
       "type": "text",
       "source": " state.input = \"Evaluate twenty-five times sixteen, then translate the result into French.\";",
       "value": " state.input = \"Evaluate twenty-five times sixteen, then translate the result into French.\";",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.8caea4a51b84": {
+      "type": "text",
+      "source": "The ticket changed during triage; classify again.",
+      "value": "支援單在分流期間發生變更；請重新分類。"
+    },
+    "text.8e920ae7d06b": {
+      "type": "text",
+      "source": "tool_calls",
+      "value": "tool_calls",
+      "untranslated": "OpenAI finish_reason enum and message field; compared by executable control flow."
     },
     "text.9142243f55fb": {
       "type": "text",
@@ -1022,12 +1095,18 @@
     "text.9af211329b2f": {
       "type": "text",
       "source": "account",
-      "value": "賬號"
+      "value": "account",
+      "untranslated": "Fixed classifier/triage category enum. The schema and executable lookup use the literal account; translate explanations, not this dispatch value."
     },
     "text.9bf4925aa80f": {
       "type": "text",
       "source": "Same factory · two instances · same input",
       "value": "同一工廠 · 兩個執行個體 · 相同輸入"
+    },
+    "text.9c91c09ab4dc": {
+      "type": "text",
+      "source": "Requests the triage schema, then validates the final response before routing.",
+      "value": "請求分類結構描述，並在路由前驗證最終回應。"
     },
     "text.9f16e67822a5": {
       "type": "text",
@@ -1038,6 +1117,11 @@
       "type": "text",
       "source": "DELIBERATIVE · PLAN-THEN-EXECUTE",
       "value": "審慎規劃式 · PLAN-THEN-執行"
+    },
+    "text.a131869a51e0": {
+      "type": "text",
+      "source": "classifier response",
+      "value": "分類器回應"
     },
     "text.a137f17a19a0": {
       "type": "text",
@@ -1105,12 +1189,17 @@
     "text.b2512ec5f9d1": {
       "type": "text",
       "source": "technical = errors, bugs, setup, configuration, how-to",
-      "value": "技術 = 錯誤、缺陷、設定、設定、操作方法"
+      "value": "technical = 錯誤、缺陷、安裝、設定、操作方法"
     },
     "text.b2a7383fe3bd": {
       "type": "text",
       "source": "classifier replied: ",
       "value": "分類器回覆："
+    },
+    "text.b2b76ce16084": {
+      "type": "text",
+      "source": " response did not finish (finish_reason: ",
+      "value": "的回應尚未完成 (finish_reason: "
     },
     "text.b4935894c8ce": {
       "type": "text",
@@ -1139,7 +1228,7 @@
     "text.b57eba53ae86": {
       "type": "text",
       "source": "A schema-bound first LLM call emits {category, priority, summary}, a plain-JS router selects a specialist system prompt from the category, and a second LLM call writes the response under that prompt.",
-      "value": "第一次受 schema 約束的 LLM 呼叫會生成 {category, priority, summary}；一個純 JS 路由根據類別選擇專用代理程式的系統提示詞；第二次 LLM 呼叫則依據該提示詞撰寫回復。"
+      "value": "第一次受 schema 約束的 LLM 呼叫會生成 {category, priority, summary}；一個純 JS 路由根據類別選擇專用代理程式的系統提示詞；第二次 LLM 呼叫則依據該提示詞撰寫回覆。"
     },
     "text.b5d4bbd6fd21": {
       "type": "text",
@@ -1182,6 +1271,11 @@
       "type": "text",
       "source": "ReAct (reasoning and action)",
       "value": "ReAct（推理與行動）"
+    },
+    "text.bb786ec24849": {
+      "type": "text",
+      "source": "Specialist did not complete its answer.",
+      "value": "專家尚未完成回答。"
     },
     "text.bbc5e661e106": {
       "type": "text",
@@ -1234,12 +1328,18 @@
     "text.bbca6d86a57e": {
       "type": "text",
       "source": "\n    The ReWOO pipeline was parallel by construction, since every query it planned ran\n    concurrently against the glossary. A more common parallel pattern fans one shared\n    input out to several specialists that each carry their own system prompt and all run\n    at once. In the trace, total wall time tracks the slowest specialist while the others\n    overlap inside that window, the Gantt chart shows each specialist's duration, and all\n    specialists share one web-search result so cost stays bounded.\n  ",
-      "value": "\n    ReWOO 工作流程在設計上就是並行的，因為它規劃的每個查詢都會針對術語表併發執行。另一種更常見的並行模式是將一個共享輸入分發給多個專用代理程式；每個代理程式都有自己的系統提示詞，並且全部同時執行。在執行軌跡中，總耗時取決於最慢的專用代理程式，其他代理程式則在這段時間內重疊執行。甘特圖會顯示每個專用代理程式的執行階段長，並且所有代理程式共享一項網路搜尋結果，從而將成本控制在一定範圍內。\n  "
+      "value": "\n    ReWOO 工作流程在設計上就是並行的，因為它規劃的每個查詢都會針對術語表併發執行。另一種更常見的並行模式是將一個共享輸入分發給多個專用代理程式；每個代理程式都有自己的系統提示詞，並且全部同時執行。在執行軌跡中，總耗時取決於最慢的專用代理程式，其他代理程式則在這段時間內重疊執行。甘特圖會顯示每個專用代理程式的執行時間，並且所有代理程式共享一項網路搜尋結果，從而將成本控制在一定範圍內。\n  "
     },
     "text.bc19985b027b": {
       "type": "text",
       "source": "Triage schema",
       "value": "分流 schema"
+    },
+    "text.bc69c071746f": {
+      "type": "text",
+      "source": " Time the parallel glossary searches; this stage makes no model call.",
+      "value": " Time the parallel glossary searches; this stage makes no model call.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.bcdee84da1b5": {
       "type": "text",
@@ -1250,6 +1350,21 @@
       "type": "text",
       "source": "routed → ",
       "value": "已路由至 → "
+    },
+    "text.c0117a251ef8": {
+      "type": "text",
+      "source": "No complete answer arrived; inspect the response.",
+      "value": "未收到完整答案；請檢查回應。"
+    },
+    "text.c0117a251ef8~1": {
+      "type": "text",
+      "source": "No complete answer arrived; inspect the response.",
+      "value": "未收到完整答案；請檢查回應。"
+    },
+    "text.c0117a251ef8~2": {
+      "type": "text",
+      "source": "No complete answer arrived; inspect the response.",
+      "value": "未收到完整答案；請檢查回應。"
     },
     "text.c082456a7766": {
       "type": "text",
@@ -1266,6 +1381,12 @@
       "type": "text",
       "source": "You are a billing specialist. Answer only billing, payment, and refund questions, crisply.",
       "value": "您是一位賬單專家。僅簡潔回答賬單、付款和退款問題。"
+    },
+    "text.c4b2896a2081": {
+      "type": "text",
+      "source": ").",
+      "value": ").",
+      "untranslated": "Closing delimiter for the diagnostic prefix containing finish_reason; preserve paired ASCII parentheses."
     },
     "text.c6d2e406d1e8": {
       "type": "text",
@@ -1331,26 +1452,6 @@
       "source": "Executor (parallel searches)",
       "value": "執行器（並行搜尋）"
     },
-    "text.d29a0939bcb5": {
-      "type": "text",
-      "source": "(empty)",
-      "value": "（空）"
-    },
-    "text.d29a0939bcb5~1": {
-      "type": "text",
-      "source": "(empty)",
-      "value": "（空）"
-    },
-    "text.d29a0939bcb5~2": {
-      "type": "text",
-      "source": "(empty)",
-      "value": "（空）"
-    },
-    "text.d29a0939bcb5~3": {
-      "type": "text",
-      "source": "(empty)",
-      "value": "（空）"
-    },
     "text.d463bf3e87a9": {
       "type": "text",
       "source": "Research goal",
@@ -1379,10 +1480,10 @@
       "source": "Runs one web search and shares its results with every specialist, avoiding repeated retrieval cost.",
       "value": "執行一次網路搜尋，並與所有專家共享結果，避免產生重複的檢索成本。"
     },
-    "text.d9298a10d1b0": {
+    "text.d7a4e2fad24a": {
       "type": "text",
-      "source": "other",
-      "value": "其他"
+      "source": "planner response",
+      "value": "規劃器回應"
     },
     "text.da4b0fab8709": {
       "type": "text",
@@ -1401,11 +1502,21 @@
       "value": "array",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
+    "text.e05dbaf1915a": {
+      "type": "text",
+      "source": "\n    The specialists above each define a role label, a system prompt, a tool list, and\n    an invocation. The factory below exposes these inputs as parameters so that another\n    specialist can reuse the same construction.\n  ",
+      "value": "上方每個專家都定義了角色標籤、系統提示詞、工具清單與呼叫方式。下方的工廠會將這些輸入公開為參數，讓另一個專家能重用相同的建構方式。"
+    },
     "text.e09f45652ea1": {
       "type": "text",
       "source": "\\\\n\\\\n",
       "value": "\\\\n\\\\n",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e1ba0704df7f": {
+      "type": "text",
+      "source": "triage response",
+      "value": "分流回應"
     },
     "text.e20554b94353": {
       "type": "text",
@@ -1422,10 +1533,10 @@
       "source": "Try it · the triage router, live",
       "value": "動手嘗試 · 即時分流路由"
     },
-    "text.e72cc767e3b4": {
+    "text.e64b5b1f3c90": {
       "type": "text",
-      "source": "Compare timing and speedup",
-      "value": "比較耗時和加速效果"
+      "source": "arithmetic specialist response",
+      "value": "算術專家回應"
     },
     "text.e7a07c1eae34": {
       "type": "text",
@@ -1437,6 +1548,11 @@
       "type": "text",
       "source": "You are a hardware support specialist. Give 3-5 concise, numbered troubleshooting steps for the hardware problem.",
       "value": "您是硬體支援專家。請針對硬體問題給出 3-5 個簡潔的編號故障排查步驟。"
+    },
+    "text.e8a335881926": {
+      "type": "text",
+      "source": "Compare concurrent durations and wall time",
+      "value": "比較並行耗時與實際經過時間"
     },
     "text.e8c3e4faa6b2": {
       "type": "text",
@@ -1459,6 +1575,11 @@
       "type": "text",
       "source": "writes the 4-6 sentence brief",
       "value": "撰寫 4-6 句的簡報"
+    },
+    "text.ea9d9ca28e0e": {
+      "type": "text",
+      "source": "Classifier did not return one complete allowed category. Inspect its response and retry.",
+      "value": "分類器未完整傳回一個允許的類別。請檢查其回應後重試。"
     },
     "text.eaec3b3a8fe9": {
       "type": "text",
@@ -1516,6 +1637,11 @@
       "type": "text",
       "source": "Router (plain JS)",
       "value": "路由（純 JS）"
+    },
+    "text.f757c83a1337": {
+      "type": "text",
+      "source": "Defines a one-call specialist over role, prompt, and optional tool schemas. Tool requests are returned for inspection.",
+      "value": "以角色、提示詞與選用工具結構描述定義單次呼叫專家，並傳回工具請求供檢查。"
     },
     "text.f7ded0c36df9": {
       "type": "text",
