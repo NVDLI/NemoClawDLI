@@ -5,6 +5,13 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Validate model completions and tool batches before recording exercise results. Preserve current
+  inputs, cancellation, connection identity, and owned file or scheduled-job evidence across reruns.
+  Clarify the twelve lessons and their figures, and move reusable course behavior into shared helpers.
+  Vadim Kudlay contributed this integration with Codex-assisted implementation and contextual review.
+  Updated Spanish, Brazilian Portuguese, Simplified Chinese, and Taiwan Traditional Chinese resources
+  are review drafts; qualified language acceptance remains pending.
+
 - Extend Lisa Guo's Activity SDK integration with explicit progress/referral controls,
   manifest-bound session identity, disconnect cancellation, and a progress bar that distinguishes
   local checkpoints from API-confirmed progress, with outage status and retry. Remote syncing is now

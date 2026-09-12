@@ -9,11 +9,6 @@
     "web/nemoclaw/assets/figures/01b-react-4.svg"
   ],
   "values": {
-    "link.0bbec6a67870": {
-      "type": "link",
-      "source": "\n    <strong>The cell produces an artifact.</strong> When you run it, you get a working\n    chat panel rather than a wall of logs, rendered from the agent's own code, that you\n    can hold a conversation with. The word itself is older than its current use, since\n    build pipelines and machine-learning training runs have produced \"artifacts\" and\n    \"model artifacts\" for years. Anthropic's recent <a href=\"https://support.claude.com/en/articles/14729249-use-live-artifacts-in-claude-cowork\" target=\"_blank\" rel=\"noopener\">live artifacts</a>\n    sharpened the idea for agents, where an artifact becomes a persistent, interactive\n    HTML surface that the agent builds and that you keep using long after the reply which\n    produced it. The panel below builds one on a small scale, and an agent that can hand\n    back a full interface rather than plain text is a thread that runs through the rest of\n    this course.\n  ",
-      "value": "<strong>La celda produce un artefacto.</strong> Al ejecutarla aparece un panel de chat funcional, renderizado por código del agente. El término artefacto es anterior a los agentes: los pipelines de compilación y el entrenamiento de modelos llevan años generando artefactos. Los <a href=\"https://support.claude.com/en/articles/14729249-use-live-artifacts-in-claude-cowork\" target=\"_blank\" rel=\"noopener\">artefactos interactivos</a> amplían la idea a una interfaz HTML persistente que se sigue usando después de la respuesta que la creó. El panel siguiente construye una versión sencilla usando esta idea; el resto del curso hace uso de esta capacidad de entregar interfaces, no solo texto."
-    },
     "link.18fdb5153bc7": {
       "type": "link",
       "source": "\n    Zoom in on the agent and you find the decomposition\n    <a href=\"https://lilianweng.github.io/posts/2023-06-23-agent/\" target=\"_blank\" rel=\"noopener\">Lilian Weng drew in\n    2023</a>. A language model sits at the center. Around it sit <strong>memory</strong>, <strong>planning</strong>, <strong>tools</strong>,\n    and the <strong>actions</strong> that reach the world.\n  ",
@@ -42,17 +37,22 @@
     "link.52c80043ccc5": {
       "type": "link",
       "source": "\n      An agent built on a language model runs the same perceive-reason-act\n      loop as anything else, with one detail that gives the pattern its name:\n      the model reasons in words between the actions it takes.\n      <a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al. (2022)</a>\n      called this <strong>ReAct</strong>, for reasoning and acting. They found that\n      interleaving short reasoning traces with tool use handles many tasks more\n      reliably than planning everything first or acting with no reasoning step.\n    ",
-      "value": "Un agente basado en un modelo de lenguaje ejecuta el mismo bucle de percibir, razonar y actuar que cualquier otro agente, con un detalle que da nombre al patrón:\nel modelo razona con palabras entre las acciones que aplica.\nEste patrón de comportamiento fue denominado por <a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al. (2022)</a>\ncomo <strong>ReAct</strong>, por razonamiento y acción (del inglés <i>Reason and Action</i>). Dichos autores observaron que intercalar pasos breves de razonamiento con el uso de herramientas permite resolver muchas tareas con mayor fiabilidad que planificar todo de antemano o actuar sin razonar."
+      "value": "Un agente basado en un modelo de lenguaje ejecuta el mismo bucle de percibir, razonar y actuar que cualquier otro agente, con un detalle que da nombre al patrón:\nel modelo razona con palabras entre las acciones que aplica.\nEste patrón de comportamiento fue denominado por <a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al. (2022)</a>\ncomo <strong>ReAct</strong>, por razonamiento y acción. Dichos autores observaron que intercalar pasos breves de razonamiento con el uso de herramientas permite resolver muchas tareas con mayor fiabilidad que planificar todo de antemano o actuar sin razonar."
+    },
+    "link.5df192642c7d": {
+      "type": "link",
+      "source": "\n    The loop above hard-wires one tiny tool. LangChain's <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n    generalizes the same machinery to support more tools, standard interfaces, and observability integrations. The agent below uses a single tool,\n    <code>read_course_page</code>, which hands the agent any page of this course as markdown. The model decides which pages to read for your question, so give it a try.\n  ",
+      "value": "El bucle anterior tiene una única herramienta fijada directamente en el código. La función\n<a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\nde LangChain generaliza esta estructura para admitir varias herramientas, interfaces estándar e\nintegraciones de observabilidad o monitorización. El agente siguiente utiliza una sola herramienta,\n<code>read_course_page</code>, que entrega al agente cualquier página de este curso como Markdown. El\nmodelo decide qué páginas necesita consultar para responder."
     },
     "link.64ae525d2a06": {
       "type": "link",
       "source": "<a href=\"https://arxiv.org/abs/2201.11903\" target=\"_blank\" rel=\"noopener\">Wei et al., <em>Chain-of-Thought Prompting</em> (2022)</a>. The \"reason\" half of ReAct; what the model is doing inside <code>reasoning_content</code> when it deliberates before acting.",
       "value": "<a href=\"https://arxiv.org/abs/2201.11903\" target=\"_blank\" rel=\"noopener\">Wei et al., <em>Chain-of-Thought Prompting</em> (2022)</a>. Fundamenta la parte de razonamiento de ReAct y ayuda a interpretar lo que ocurre en <code>reasoning_content</code> antes de actuar."
     },
-    "link.6726ddaf5bfd": {
+    "link.701fae3a00f7": {
       "type": "link",
-      "source": "\n    The loop above hard-wires one tiny tool. LangChain's <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n    generalizes the same machinery to support more tools, standard interfaces, and observability integrations. An instance of this class is wired below to a single tool,\n    <code>read_course_page</code>, which hands the agent any page of this course as markdown. The model decides which pages to read for your question, so give it a try.\n  ",
-      "value": "El bucle anterior tiene una única herramienta fijada directamente en el código. La función\n<a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\nde LangChain generaliza esta estructura para admitir varias herramientas, interfaces estándar e\nintegraciones de observabilidad o monitorización. El ejemplo siguiente expone una sola herramienta,\n<code>read_course_page</code>, que entrega al agente cualquier página de este curso como Markdown. El\nmodelo decide qué páginas necesita consultar para responder."
+      "source": "Return to <a href=\"#cell-m2c-p3\">the clock-loop canvas</a> and edit its inputs for these comparisons.",
+      "value": "Vuelve al <a href=\"#cell-m2c-p3\">lienzo del bucle del reloj</a> y modifica sus entradas para realizar estas comparaciones."
     },
     "link.7abcb40c63bb": {
       "type": "link",
@@ -64,15 +64,15 @@
       "source": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer</em> (2023)</a>. Covered again in 1c's references; revisit here for the underlying mechanism the ReAct loop exploits.",
       "value": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer</em> (2023)</a>. El módulo 1c retoma este trabajo para explicar el mecanismo de uso de herramientas que aprovecha el bucle ReAct."
     },
-    "link.a733bbaab3fa": {
-      "type": "link",
-      "source": "\n    This issue becomes more likely as the context grows. <strong>Context rot</strong> is the\n    tendency for contradictions, stale observations, and poor conventions to accumulate in the\n    prompt history until the model's next decision gets worse. The effect also has a positional\n    component: <a href=\"https://arxiv.org/abs/2307.03172\" target=\"_blank\" rel=\"noopener\">Liu et al. (2023)</a>\n    showed that models can underuse information buried in the middle of a long context. The further an\n    important signal drifts from the current turn, the easier it is for the loop to ignore or contradict it.\n  ",
-      "value": "Este problema se vuelve más probable a medida que crece el contexto (o cantidad de mensajes que guardamos en el array). La <strong>degradación del contexto</strong> ocurre cuando aparecen contradicciones, observaciones obsoletas y convenciones deficientes que se acumulan en el historial y que pueden perjudicar la siguiente decisión. El efecto también tiene un componente posicional:\n<a href=\"https://arxiv.org/abs/2307.03172\" target=\"_blank\" rel=\"noopener\">Liu et al. (2023)</a>\nmostraron que los modelos pueden desaprovechar información situada en la zona intermedia de un contexto largo.\nCuanto más se aleja una señal importante del mensaje o turno actual, mayor es la probabilidad de que el bucle la ignore o la contradiga."
-    },
     "link.a904f9e69da1": {
       "type": "link",
       "source": "\n      This loop is the foundation that most general-purpose agent frameworks\n      are built on, LangChain's <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n      among them, and the rest of this module works up to it.\n    ",
       "value": "Este bucle sirve de base para la mayoría de los frameworks de agentes de propósito general,\nincluido <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\nde LangChain. El resto de este capítulo profundiza paso a paso en sus componentes."
+    },
+    "link.cce736bafb5e": {
+      "type": "link",
+      "source": "\n    <strong>Context rot</strong> is the\n    tendency for contradictions, stale observations, and poor conventions to accumulate in the\n    prompt history until the model's next decision gets worse. The effect also has a positional\n    component: <a href=\"https://arxiv.org/abs/2307.03172\" target=\"_blank\" rel=\"noopener\">Liu et al. (2023)</a>\n    showed that models can underuse information buried in the middle of a long context. The further an\n    important signal drifts from the current turn, the easier it is for the loop to ignore or contradict it.\n  ",
+      "value": "La <strong>degradación del contexto</strong> ocurre cuando aparecen contradicciones, observaciones obsoletas y convenciones deficientes que se acumulan en el historial y que pueden perjudicar la siguiente decisión. El efecto también tiene un componente posicional:\n<a href=\"https://arxiv.org/abs/2307.03172\" target=\"_blank\" rel=\"noopener\">Liu et al. (2023)</a>\nmostraron que los modelos pueden desaprovechar información situada en la zona intermedia de un contexto largo.\nCuanto más se aleja una señal importante del mensaje o turno actual, mayor es la probabilidad de que el bucle la ignore o la contradiga."
     },
     "link.e672069b0c2f": {
       "type": "link",
@@ -90,6 +90,11 @@
       "source": "(tool \"\\${name}\" not found)",
       "value": "(tool \"\\${name}\" not found)",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "rich.04b481fa123f": {
+      "type": "rich",
+      "source": "\n    Every chat-completions response carries a <code>finish_reason</code>\n    field that tells you why the model stopped generating. Inside an agent\n    loop, read it alongside the response content and tool requests to decide what to do next:\n    run a tool, return the answer to the user, or handle an error. Before reading\n    what its values mean, make two calls and compare their replies.\n  ",
+      "value": "Cada respuesta de Chat Completions incluye <code>finish_reason</code>, que indica por qué el modelo dejó de generar. En el bucle del agente, lee ese campo junto con el contenido y las solicitudes de herramientas para decidir si ejecutar una herramienta, devolver la respuesta o gestionar un error. Antes de estudiar sus valores, realiza dos llamadas y compara las respuestas."
     },
     "rich.1cbfc5ef05f8": {
       "type": "rich",
@@ -126,15 +131,20 @@
       "source": "\n    As an exercise, we can try to create a simple loop from scratch.\n    All we need is a single tool named <code>get_current_time</code> plus one system prompt\n    and one <code>while</code> loop. Run it with \"What time is it in UTC?\" to start, and see what else you can ask:\n  ",
       "value": "Construyamos un ejemplo sencillo desde cero. Solo necesitamos la herramienta <code>get_current_time</code>, un prompt para el sistema y un bucle <code>while</code>. Empieza preguntando «¿Qué hora es en UTC?» y luego prueba otras preguntas:"
     },
+    "rich.5e25607d98f1": {
+      "type": "rich",
+      "source": "\n    Run the cell to build the panel. Before your first message, select <b>Pages</b> to include in the initial context, or leave them unselected and let the agent choose what to read. If you change the pinned pages later, click <b>New chat</b> before sending another message. Expand each source chip to inspect what the agent read. The panel shows the answer, token usage, and any reasoning trace the model returns. It keeps the conversation within each chat. Edit the cell and rerun to rebuild the panel.\n  ",
+      "value": "Ejecuta la celda para crear el panel. Antes del primer mensaje, selecciona <b>Pages</b> para incluirlas en el contexto inicial, o déjalas sin seleccionar para que el agente elija qué leer. Si después cambias las páginas fijadas, pulsa <b>Nueva conversación</b> antes de enviar otro mensaje. Expande cada etiqueta de fuente para examinar lo que leyó el agente. El panel muestra la respuesta, el uso de tokens y cualquier traza de razonamiento que devuelva el modelo. Conserva la conversación dentro de cada chat. Edita la celda y vuelve a ejecutarla para reconstruir el panel."
+    },
     "rich.84d160e88d5a": {
       "type": "rich",
       "source": "<code>\"length\"</code> means the token budget ran out before the answer finished.",
       "value": "<code>\"length\"</code> significa que el presupuesto de tokens se agotó antes de completar la respuesta."
     },
-    "rich.9cf78b159479": {
+    "rich.925eff5b49ae": {
       "type": "rich",
-      "source": "\n    The flow is short: the model asks for the tool, the executor appends the timestamp as a\n    <code>tool</code>-role message, the model reads that timestamp, and the loop exits when\n    <code>finish_reason</code> reads <code>\"stop\"</code>.\n  ",
-      "value": "El flujo de ejecución es breve: el modelo solicita llamar a la herramienta, el ejecutor añade la marca de tiempo como un\nmensaje con el rol <code>tool</code>, el modelo lee el resultado y el bucle termina cuando\n<code>finish_reason</code> contiene <code>\"stop\"</code>."
+      "source": "<strong>Count the steps on a genuinely tool-needing question.</strong>\n        \"How many minutes until 17:00 UTC?\" needs a clock reading and a calculation.\n        Run it a few times. Did the model call\n        <code>get_current_time</code> once, twice, or three times? Why\n        would a model re-call a tool whose output it already has,\n        and how would you discourage that in the system prompt?",
+      "value": "<strong>Cuenta los pasos de una pregunta que necesita una herramienta.</strong> \"¿Cuántos minutos faltan para las 17:00 UTC?\" necesita una lectura del reloj y un cálculo. Ejecútala varias veces. ¿El modelo llamó a <code>get_current_time</code> una, dos o tres veces? ¿Por qué volvería a solicitar un resultado que ya tiene? ¿Cómo cambiarías el prompt del sistema para evitarlo?"
     },
     "rich.a5ec72e450db": {
       "type": "rich",
@@ -161,15 +171,25 @@
       "source": "<strong>Action</strong> is the tool call the harness executes.",
       "value": "La <strong>acción</strong> es la llamada a herramienta que ejecuta dicho motor."
     },
-    "rich.dab40f3dcbce": {
+    "rich.d503e5a1f6fe": {
       "type": "rich",
-      "source": "\n    Run the cell to build the panel, then chat with it. Pin one or more with\n    the <b>Pages</b> chips to ground every answer in them, or pin nothing and let the\n    agent choose what to read. The reply renders as markdown, with a chip for each source\n    the agent read so you can expand it to see the text it pulled back. Alongside the answer,\n    you also get the reasoning trace and the token usage. It remembers the conversation per chat.\n    Edit the cell and rerun to rebuild the artifact.\n  ",
-      "value": "Ejecuta la celda para construir el panel y conversar con el agente. Fija una o más páginas mediante los marcadores del menú <b>Páginas</b> para basar cada respuesta en dichas páginas, o no fijes ninguna y deja que el agente elija qué leer. La respuesta se presenta como Markdown y cada fuente consultada aparece en un pequeño menú; expándelo para ver el texto recuperado. El panel también muestra las trazas de razonamiento y el uso de tokens, y conserva la conversación. Edita la celda y ejecútala de nuevo para reconstruir el artefacto."
+      "source": "\n    The first call offers no tools. In the second, the model is offered a tool and asked\n    for the current time. It still chooses whether to request the clock tool. Compare the displayed questions, replies, and\n    <code>finish_reason</code>. If both calls return <code>\"stop\"</code>, inspect the\n    second reply: did it admit it cannot check the time, or give an unsupported answer?\n    Change the model or question and rerun. A tool request names work for your code;\n    this preview does not execute it.\n  ",
+      "value": "La primera llamada no ofrece herramientas. En la segunda, se ofrece una herramienta al modelo y se le pregunta la hora actual. El modelo decide si solicita el reloj. Compara las preguntas, las respuestas y <code>finish_reason</code>. Si ambas devuelven <code>\"stop\"</code>, revisa la segunda respuesta: ¿admite que no puede consultar la hora o da una respuesta sin comprobarla? Cambia el modelo o la pregunta y vuelve a ejecutar. Una solicitud de herramienta indica trabajo para tu código; esta vista previa no lo ejecuta."
+    },
+    "rich.f72c22dd2753": {
+      "type": "rich",
+      "source": "\n    <strong>What just happened inside the messages array.</strong><br>\n    When the model requests the clock, the loop adds these turns to <code>state.messages</code>: <ul><li>the system\n    prompt (turn 0),</li><li>the user question (turn 1),</li><li>an assistant message with a\n    <code>tool_calls</code> field (turn 2, the request),</li><li>and a\n    <code>tool</code>-role message holding the function's return value (turn\n    3).</li></ul> The next model call receives those messages, including the clock result. Inspect its response to see whether it answers or requests another tool. The growing array is the only \"memory\" this\n    agent has. Saving and reloading that array preserves the supplied conversation history; external facts and model behavior may change.\n  ",
+      "value": "<strong>Lo que acaba de suceder dentro del array de mensajes.</strong> <br>\nCuando el modelo solicita el reloj, el bucle añade estos turnos a <code>state.messages</code>: <ul> <li>el prompt del sistema (turno 0);</li> <li>la pregunta del usuario (turno 1);</li> <li>un mensaje del asistente con un\ncampo <code>tool_calls</code> (turno 2, la solicitud);</li> <li>y un\nmensaje con el rol <code>tool</code> que contiene el valor devuelto por la función (turno\n3).</li> </ul> La siguiente llamada al modelo recibe esos mensajes, incluido el resultado del reloj. Examina su respuesta para comprobar si responde o solicita otra herramienta. Este array creciente es la única «memoria» del agente. Guardar y volver a cargar ese array conserva el historial de conversación proporcionado; los hechos externos y el comportamiento del modelo pueden cambiar."
     },
     "rich.feee3c133cfe": {
       "type": "rich",
       "source": "<strong>Planning</strong> is the <code>finish_reason</code> router.",
       "value": "La <strong>planificación</strong> reside en el router que interpreta <code>finish_reason</code>."
+    },
+    "text.0017dac66b84": {
+      "type": "text",
+      "source": "Model output reached its token limit; inspect the response before rerunning.",
+      "value": "La salida del modelo alcanzó el límite de tokens; examina la respuesta antes de volver a ejecutar."
     },
     "text.026e6c091cf3": {
       "type": "text",
@@ -211,11 +231,16 @@
       "value": " advertised context window per model",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
+    "text.089570aa5dfb": {
+      "type": "text",
+      "source": "The model returned no final answer or tool request.",
+      "value": "El modelo no devolvió una respuesta final ni una solicitud de herramienta."
+    },
     "text.0a07f6594619": {
       "type": "text",
       "source": ", ",
-      "value": ", ",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "value": ",",
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
     },
     "text.0ab6e677de64": {
       "type": "text",
@@ -227,37 +252,43 @@
       "type": "text",
       "source": "get_current_time",
       "value": "get_current_time",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.0bbebf6e464f~1": {
       "type": "text",
       "source": "get_current_time",
       "value": "get_current_time",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.0bbebf6e464f~2": {
       "type": "text",
       "source": "get_current_time",
       "value": "get_current_time",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.0bbebf6e464f~3": {
       "type": "text",
       "source": "get_current_time",
       "value": "get_current_time",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
-    "text.0e836f28df3b": {
+    "text.0bbebf6e464f~4": {
       "type": "text",
-      "source": "I have a meeting tomorrow morning at 10am in France. How many hours do I have to prepare?",
-      "value": "I have a meeting tomorrow morning at 10am in France. How many hours do I have to prepare?",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "source": "get_current_time",
+      "value": "get_current_time",
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
-    "text.0fe9c7c06710": {
+    "text.0bbebf6e464f~5": {
       "type": "text",
-      "source": "You are a helpful assistant. Use the tools available ",
-      "value": "You are a helpful assistant. Use the tools available ",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "source": "get_current_time",
+      "value": "get_current_time",
+      "untranslated": "Tool function name used in schemas and dispatch."
+    },
+    "text.0f82aca66af9": {
+      "type": "text",
+      "source": "length",
+      "value": "length",
+      "untranslated": "OpenAI finish_reason enum; token-budget failure comparison must retain this exact value."
     },
     "text.1397e960f2a1": {
       "type": "text",
@@ -275,6 +306,11 @@
       "value": "pages as the question needs, one reason/read step at a time, then answer. For a ",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
+    "text.15fb6fadb175": {
+      "type": "text",
+      "source": "Use get_current_time when the question needs the current time. ",
+      "value": "Usa get_current_time cuando la pregunta requiera la hora actual. "
+    },
     "text.1603672b492c": {
       "type": "text",
       "source": "Module 1 · Part B of 3",
@@ -286,10 +322,20 @@
       "value": "→",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
+    "text.182ac4f6825e": {
+      "type": "text",
+      "source": " Optional comparison: remove the explicit clock instruction from QUESTION_2, then rerun.",
+      "value": " Comparación opcional: elimina la instrucción explícita de usar el reloj de QUESTION_2 y vuelve a ejecutar."
+    },
     "text.183e9eb41c65": {
       "type": "text",
       "source": "The loop is unchanged. With a language model in the reasoning step, the agent reads tool results and acts by calling tools.",
       "value": "El bucle no cambia. Al incorporar un modelo de lenguaje en la etapa de razonamiento, el agente interpreta los resultados y actúa mediante llamadas a herramientas."
+    },
+    "text.1a319929e92d": {
+      "type": "text",
+      "source": "Malformed or duplicate tool request; no tool was executed.",
+      "value": "Solicitud de herramienta mal formada o duplicada; no se ejecutó ninguna herramienta."
     },
     "text.1b12f21798d2": {
       "type": "text",
@@ -308,11 +354,20 @@
       "source": "\n    This course's minimal agent fills each slot with the simplest thing that works:\n  ",
       "value": "El agente mínimo presentado en este curso implementa dichos componentes con el mecanismo más sencillo que cumpla su función:"
     },
-    "text.21b6ab9e7a81": {
+    "text.1f5087db919c": {
       "type": "text",
-      "source": "· tool_calls:",
-      "value": "· tool_calls:",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "source": "question",
+      "value": "pregunta"
+    },
+    "text.1f5087db919c~1": {
+      "type": "text",
+      "source": "question",
+      "value": "pregunta"
+    },
+    "text.1f5087db919c~2": {
+      "type": "text",
+      "source": "question",
+      "value": "pregunta"
     },
     "text.2298879d8c60": {
       "type": "text",
@@ -325,28 +380,33 @@
       "source": "Think, act, observe, repeat. The turn exits the moment finish_reason is \"stop\".",
       "value": "Razonar, actuar, observar y repetir. El bucle termina cuando finish_reason vale \"stop\"."
     },
-    "text.288ec2e40f38": {
-      "type": "text",
-      "source": " state.userPrompt   = \"What time is it in UTC?\";",
-      "value": " state.userPrompt   = \"What time is it in UTC?\";",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
-    },
     "text.28ecba64c585": {
       "type": "text",
       "source": "← Module 1a: The Agent",
       "value": "← Módulo 1a: El agente"
     },
+    "text.290c9ad24bc8": {
+      "type": "text",
+      "source": "Malformed tool arguments; no tool was executed.",
+      "value": "Argumentos de herramienta mal formados; no se ejecutó ninguna herramienta."
+    },
     "text.2958d416d08a": {
       "type": "text",
       "source": "object",
       "value": "object",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.2958d416d08a~1": {
       "type": "text",
       "source": "object",
       "value": "object",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.2958d416d08a~2": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.2bcdea9e3abf": {
       "type": "text",
@@ -359,6 +419,11 @@
       "source": " Suppress raw tokens so only the curated trace appears.",
       "value": " Suppress raw tokens so only the curated trace appears.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.2d27e607c67d": {
+      "type": "text",
+      "source": "(no answer content; inspect the raw response)",
+      "value": "(sin contenido de respuesta; revisa la respuesta completa)"
     },
     "text.3203b6e01a14": {
       "type": "text",
@@ -378,29 +443,59 @@
       "value": ".chatui-tool-body",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
+    "text.3404b2ab6d56": {
+      "type": "text",
+      "source": "(malformed request)",
+      "value": "(solicitud mal formada)"
+    },
+    "text.3404b2ab6d56~1": {
+      "type": "text",
+      "source": "(malformed request)",
+      "value": "(solicitud mal formada)"
+    },
     "text.34612a45e6ff": {
       "type": "text",
       "source": "Prompt ~",
       "value": "Prompt ~",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
+    "text.35f6ea4da28f": {
+      "type": "text",
+      "source": "Training data cannot provide a live clock reading. Answer from the tool result.",
+      "value": "Los datos de entrenamiento no pueden proporcionar una lectura actual del reloj. Responde a partir del resultado de la herramienta."
+    },
+    "text.360cd27d23a6": {
+      "type": "text",
+      "source": "response model:",
+      "value": "modelo de la respuesta:"
+    },
+    "text.360cd27d23a6~1": {
+      "type": "text",
+      "source": "response model:",
+      "value": "modelo de la respuesta:"
+    },
+    "text.360cd27d23a6~2": {
+      "type": "text",
+      "source": "response model:",
+      "value": "modelo de la respuesta:"
+    },
     "text.363d049490fc": {
       "type": "text",
       "source": "finish_reason:",
       "value": "finish_reason:",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "untranslated": "Diagnostic label naming the exact API field; leave the identifier and delimiter recognizable."
     },
     "text.363d049490fc~1": {
       "type": "text",
       "source": "finish_reason:",
       "value": "finish_reason:",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "untranslated": "Diagnostic label naming the exact API field; leave the identifier and delimiter recognizable."
     },
     "text.363d049490fc~2": {
       "type": "text",
       "source": "finish_reason:",
       "value": "finish_reason:",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "untranslated": "Diagnostic label naming the exact API field; leave the identifier and delimiter recognizable."
     },
     "text.3a417d05647e": {
       "type": "text",
@@ -413,6 +508,21 @@
       "source": " same loop with a different model.",
       "value": " same loop with a different model.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.408f13277d8d": {
+      "type": "text",
+      "source": "model:",
+      "value": "modelo:"
+    },
+    "text.408f13277d8d~1": {
+      "type": "text",
+      "source": "model:",
+      "value": "modelo:"
+    },
+    "text.408f13277d8d~2": {
+      "type": "text",
+      "source": "model:",
+      "value": "modelo:"
     },
     "text.40f3d65d3288": {
       "type": "text",
@@ -440,6 +550,11 @@
       "source": "\\\\n",
       "value": "\\\\n",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.44a36db1abd1": {
+      "type": "text",
+      "source": "call 1 raw response",
+      "value": "respuesta completa de la llamada 1"
     },
     "text.44b7b4576467": {
       "type": "text",
@@ -474,7 +589,23 @@
       "type": "text",
       "source": "string",
       "value": "string",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.473287f8298d~1": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.4809d1df83ab": {
+      "type": "text",
+      "source": " Optional visibility: inspect the exact schema offered to the model.",
+      "value": " Inspección opcional: revisa el esquema exacto que se ofrece al modelo."
+    },
+    "text.4d369a6b96b9": {
+      "type": "text",
+      "source": "What time is it in UTC? Use get_current_time to read the clock.",
+      "value": "¿Qué hora es en UTC? Usa get_current_time para consultar el reloj."
     },
     "text.4f9bdbf133c6": {
       "type": "text",
@@ -493,10 +624,10 @@
       "source": "User input",
       "value": "Entrada del usuario"
     },
-    "text.576f5af82d14": {
+    "text.552e423045fc": {
       "type": "text",
-      "source": "\n    Each of those costs something in latency or fidelity or complexity, and each is worth weighing against the task at hand.\n  ",
-      "value": "Cada posible medida de contención añade costes de latencia, fidelidad o complejidad y debe evaluarse según la tarea."
+      "source": "(none)",
+      "value": "(ninguna)"
     },
     "text.5777416ae489": {
       "type": "text",
@@ -508,19 +639,19 @@
       "type": "text",
       "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
       "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "untranslated": "Exact provider model ID sent in API requests."
     },
     "text.57b7e204b183~1": {
       "type": "text",
       "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
       "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "untranslated": "Exact provider model ID sent in API requests."
     },
     "text.57b7e204b183~2": {
       "type": "text",
       "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
       "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "untranslated": "Exact provider model ID sent in API requests."
     },
     "text.5846418c93e3": {
       "type": "text",
@@ -546,6 +677,16 @@
       "value": " Save the system prompt that frames the agent loop.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
+    "text.5db94652ba22": {
+      "type": "text",
+      "source": "reply:",
+      "value": "respuesta:"
+    },
+    "text.5db94652ba22~1": {
+      "type": "text",
+      "source": "reply:",
+      "value": "respuesta:"
+    },
     "text.60902ba79bb1": {
       "type": "text",
       "source": "✓ artifact mounted below. Scroll down and chat with it.",
@@ -556,11 +697,6 @@
       "source": " window ~",
       "value": " window ~",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
-    },
-    "text.64945d606a53": {
-      "type": "text",
-      "source": "⚠ step cap reached",
-      "value": "⚠ alcanzado el límite de pasos"
     },
     "text.6569018015a4": {
       "type": "text",
@@ -584,16 +720,15 @@
       "source": "NVIDIA · Securing Agents",
       "value": "NVIDIA · Seguridad de agentes"
     },
-    "text.68e84543a986": {
-      "type": "text",
-      "source": "when the user asks for something you cannot answer from training data alone.",
-      "value": "when the user asks for something you cannot answer from training data alone.",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
-    },
     "text.69824d3b0e70": {
       "type": "text",
       "source": "References",
       "value": "Referencias"
+    },
+    "text.6998c813031f": {
+      "type": "text",
+      "source": "Compare two questions, the offered tools, and the actual replies. A model may answer or decline without requesting a tool.",
+      "value": "Compara las dos preguntas, las herramientas disponibles y las respuestas recibidas. Aunque no solicite ninguna herramienta, el modelo puede responder o indicar que no puede responder."
     },
     "text.6a0c24f0658f": {
       "type": "text",
@@ -607,11 +742,28 @@
       "value": "✗",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
+    "text.6b9eac8f14cf": {
+      "type": "text",
+      "source": " Offering a tool lets the model request it; it does not execute the function.",
+      "value": " Ofrecer una herramienta permite que el modelo la solicite; no ejecuta la función."
+    },
     "text.6c45cb72a36e": {
       "type": "text",
       "source": "stop",
       "value": "stop",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~1": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~2": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
     },
     "text.6e58c818e00c": {
       "type": "text",
@@ -624,6 +776,11 @@
       "value": " Pin each selected page in full so the chip reflects the actual context.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
+    "text.73677634555b": {
+      "type": "text",
+      "source": "raw model response",
+      "value": "respuesta completa del modelo"
+    },
     "text.761b7ad8ad43": {
       "type": "text",
       "source": "summary",
@@ -634,13 +791,19 @@
       "type": "text",
       "source": "function",
       "value": "function",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
     },
     "text.78f9ac018e55~1": {
       "type": "text",
       "source": "function",
       "value": "function",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
+    },
+    "text.78f9ac018e55~2": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
     },
     "text.7ac1012b98c8": {
       "type": "text",
@@ -656,12 +819,6 @@
       "type": "text",
       "source": "tool",
       "value": "tool",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
-    },
-    "text.7f55b8a3a9c4": {
-      "type": "text",
-      "source": "What time is it right now in UTC?",
-      "value": "What time is it right now in UTC?",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
     "text.850d8ef32ee1": {
@@ -708,6 +865,12 @@
       "source": "The one field that tells the loop what to do next",
       "value": "El campo que decide el siguiente paso"
     },
+    "text.8e920ae7d06b": {
+      "type": "text",
+      "source": "tool_calls",
+      "value": "tool_calls",
+      "untranslated": "OpenAI finish_reason enum and message field; compared by executable control flow."
+    },
     "text.8ef829c1a7ee": {
       "type": "text",
       "source": "(reading)",
@@ -719,11 +882,32 @@
       "source": "Set the prompt, register one tool, then watch the loop call the model, execute requests, append observations, and stop.",
       "value": "Define el prompt y una herramienta; observa cómo el bucle llama al modelo, ejecuta solicitudes, añade observaciones y se detiene."
     },
+    "text.9024eab41188": {
+      "type": "text",
+      "source": " helpers.log.kv({ \"system prompt\": state.systemPrompt });",
+      "value": " helpers.log.kv({ \"system prompt\": state.systemPrompt });",
+      "untranslated": "Editable JavaScript diagnostic statement with preserved identifiers."
+    },
+    "text.90dfb008f2c5": {
+      "type": "text",
+      "source": "call 2 raw response",
+      "value": "respuesta completa de la llamada 2"
+    },
     "text.94e16b93ac9d": {
       "type": "text",
       "source": " tok > ",
       "value": " tok > ",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.99de16babaa5": {
+      "type": "text",
+      "source": " Optional visibility: inspect the instruction guiding tool use.",
+      "value": " Inspección opcional: revisa la instrucción que guía el uso de herramientas."
+    },
+    "text.99e1a8e15403": {
+      "type": "text",
+      "source": " On a custom endpoint, change the model in the connection card; that setting owns the route.",
+      "value": " En un endpoint personalizado, cambia el modelo en la tarjeta de conexión; esa configuración controla la ruta."
     },
     "text.99e67b933e08": {
       "type": "text",
@@ -762,6 +946,11 @@
       "source": "Summarize the whole course",
       "value": "Resume todo el curso"
     },
+    "text.a58b54c7b9bd": {
+      "type": "text",
+      "source": "Incomplete model turn; no tool was executed.",
+      "value": "El turno del modelo está incompleto; no se ejecutó ninguna herramienta."
+    },
     "text.a66f9c25a653": {
       "type": "text",
       "source": " includes \"overview\" (the course home)",
@@ -779,6 +968,11 @@
       "value": "🔧",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
+    "text.ab7f4bfeb159": {
+      "type": "text",
+      "source": "\n    The model can revise its plan after reading a tool result. Whenever a tool returns something it did not expect, that result\n    joins the next round of reasoning, and the model can reconsider where it stands\n    before deciding what to do next.\n  ",
+      "value": "El modelo puede revisar su plan después de leer el resultado de una herramienta. Cuando una herramienta devuelve algo inesperado, el resultado entra en la siguiente ronda de razonamiento y el modelo puede reevaluar la situación."
+    },
     "text.ace774147c7e": {
       "type": "text",
       "source": "The complete ReAct loop, built from scratch",
@@ -794,6 +988,11 @@
       "source": "What is the ReAct loop?",
       "value": "¿Qué es el bucle ReAct?"
     },
+    "text.b36bb3d4c569": {
+      "type": "text",
+      "source": " Next compare: a meeting tomorrow at 10am in France also requires a timezone assumption.",
+      "value": " Siguiente comparación: una reunión mañana a las 10:00 en Francia también requiere una suposición sobre la zona horaria."
+    },
     "text.b3d417190c5a": {
       "type": "text",
       "source": "no-key-needed",
@@ -804,6 +1003,11 @@
       "type": "text",
       "source": "loading LangChain ...",
       "value": "cargando LangChain ..."
+    },
+    "text.b6d8f3ef94a9": {
+      "type": "text",
+      "source": "(no answer content)",
+      "value": "(sin contenido de respuesta)"
     },
     "text.b6e64b0566a3": {
       "type": "text",
@@ -843,6 +1047,12 @@
       "type": "text",
       "source": "Ask me anything about the course. I read the relevant pages before I answer.",
       "value": "Pregúntame cualquier cosa sobre el curso. Leo las páginas pertinentes antes de responder."
+    },
+    "text.becc7f440ae3": {
+      "type": "text",
+      "source": " log.json(\"offered tool schema\", TOOLS);",
+      "value": " log.json(\"offered tool schema\", TOOLS);",
+      "untranslated": "Editable JavaScript diagnostic statement with preserved identifiers."
     },
     "text.c0f625cb51db": {
       "type": "text",
@@ -884,11 +1094,6 @@
       "value": " Tool results get their own chip, including failed reads.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
-    "text.d06de1005fcb": {
-      "type": "text",
-      "source": "\n    The four-piece frame gives you a checklist that applies regardless of how the\n    surrounding code is organized.\n  ",
-      "value": "Esta estructura proporciona una lista de comprobación aplicable con independencia de cómo esté organizado el código que la rodea."
-    },
     "text.d2270e91a061": {
       "type": "text",
       "source": "or the router misreading the signal.",
@@ -923,16 +1128,21 @@
       "value": "agent",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
-    "text.d9bda0c06ee1": {
-      "type": "text",
-      "source": "The same loop, prebuilt and pointed at this course",
-      "value": "El mismo bucle, preconfigurado para trabajar con el curso"
-    },
     "text.d9eb253e0698": {
       "type": "text",
       "source": "err",
       "value": "err",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.dbacd9211eb0": {
+      "type": "text",
+      "source": "requested tools:",
+      "value": "herramientas solicitadas:"
+    },
+    "text.dbacd9211eb0~1": {
+      "type": "text",
+      "source": "requested tools:",
+      "value": "herramientas solicitadas:"
     },
     "text.de92d152d782": {
       "type": "text",
@@ -962,21 +1172,31 @@
       "value": "course-wide question (\\\\",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
+    "text.e18b187cecf8": {
+      "type": "text",
+      "source": "call 2 · get_current_time offered",
+      "value": "llamada 2 · get_current_time disponible"
+    },
     "text.e632b7095b0b": {
       "type": "text",
       "source": "T",
       "value": "T",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
-    "text.e7c2cf88bdec": {
+    "text.e6d146897856": {
       "type": "text",
-      "source": "Each question is answerable by editing inputs in the canvas above and rerunning.",
-      "value": "Responde a cada pregunta modificando las entradas del ejercicio y volviendo a ejecutarlo."
+      "source": "Expected get_current_time with an empty argument object; no tool was executed.",
+      "value": "Se esperaba get_current_time con un objeto de argumentos vacío; no se ejecutó ninguna herramienta."
     },
-    "text.e85366647d21": {
+    "text.e841a730d0ac": {
       "type": "text",
-      "source": "\n    The arrangement is strong because the model is never bound to the plan it\n    started with. Whenever a tool returns something it did not expect, that result\n    joins the next round of reasoning, and the model can reconsider where it stands\n    before deciding what to do next.\n  ",
-      "value": "Este diseño funciona porque el modelo no queda atado a un único plan inicial. Cuando una herramienta devuelve algo inesperado, el resultado entra en la siguiente ronda de razonamiento y el modelo puede reevaluar la situación."
+      "source": "Step cap reached without a final answer. Inspect the tool history.",
+      "value": "Se alcanzó el límite de pasos sin obtener una respuesta final. Examina el historial de herramientas."
+    },
+    "text.e869af251171": {
+      "type": "text",
+      "source": "No clock reading was taken. Inspect the reply, then change the question or model and compare.",
+      "value": "No se consultó el reloj. Revisa la respuesta, cambia la pregunta o el modelo y compara."
     },
     "text.ed95eccd3e94": {
       "type": "text",
@@ -1018,6 +1238,11 @@
       "value": "messages",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
+    "text.f86e9a14473f": {
+      "type": "text",
+      "source": "Applying the Same Loop to the Course",
+      "value": "Aplicar el mismo bucle al curso"
+    },
     "text.f8e308dfc942": {
       "type": "text",
       "source": "In one sentence, what is an agent's ReAct loop?",
@@ -1040,157 +1265,10 @@
       "value": "tools",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
-    "rich.04b481fa123f": {
-      "type": "rich",
-      "source": "\n    Every chat-completions response carries a <code>finish_reason</code>\n    field that tells you why the model stopped generating. Inside an agent\n    loop, read it alongside the response content and tool requests to decide what to do next:\n    run a tool, return the answer to the user, or handle an error. Before reading\n    what its values mean, make two calls and compare their replies.\n  ",
-      "value": "Cada respuesta de Chat Completions incluye <code>finish_reason</code>, que indica por qué el modelo dejó de generar. En el bucle del agente, lee ese campo junto con el contenido y las solicitudes de herramientas para decidir si ejecutar una herramienta, devolver la respuesta o gestionar un error. Antes de estudiar sus valores, realiza dos llamadas y compara las respuestas."
-    },
-    "rich.d503e5a1f6fe": {
-      "type": "rich",
-      "source": "\n    The first call offers no tools. In the second, the model is offered a tool and asked\n    for the current time. It still chooses whether to request the clock tool. Compare the displayed questions, replies, and\n    <code>finish_reason</code>. If both calls return <code>\"stop\"</code>, inspect the\n    second reply: did it admit it cannot check the time, or give an unsupported answer?\n    Change the model or question and rerun. A tool request names work for your code;\n    this preview does not execute it.\n  ",
-      "value": "La primera llamada no ofrece herramientas. En la segunda, se ofrece una herramienta al modelo y se le pregunta la hora actual. El modelo decide si solicita el reloj. Compara las preguntas, las respuestas y <code>finish_reason</code>. Si ambas devuelven <code>\"stop\"</code>, revisa la segunda respuesta: ¿admite que no puede consultar la hora o da una respuesta sin comprobarla? Cambia el modelo o la pregunta y vuelve a ejecutar. Una solicitud de herramienta indica trabajo para tu código; esta vista previa no lo ejecuta."
-    },
-    "rich.71d5f7e1b268": {
-      "type": "rich",
-      "source": "\n    <strong>What just happened inside the messages array.</strong><br>\n    When the model requests the clock, the loop adds these turns to <code>state.messages</code>: <ul><li>the system\n    prompt (turn 0),</li><li>the user question (turn 1),</li><li>an assistant message with a\n    <code>tool_calls</code> field (turn 2, the request),</li><li>and a\n    <code>tool</code>-role message holding the function's return value (turn\n    3).</li></ul> The second LLM call read all four of those including the new tool result and\n    wrote the final answer. The growing array is the only \"memory\" this\n    agent has. If you saved that array to disk and reloaded it next week, the\n    model would resume the conversation without noticing the gap.\n  ",
-      "value": "<strong>Lo que acaba de suceder dentro del array de mensajes.</strong> <br>\nCuando el modelo solicita el reloj, el bucle añade estos turnos a <code>state.messages</code>: <ul> <li>el prompt del sistema (turno 0);</li> <li>la pregunta del usuario (turno 1);</li> <li>un mensaje del asistente con un\ncampo <code>tool_calls</code> (turno 2, la solicitud);</li> <li>y un\nmensaje con el rol <code>tool</code> que contiene el valor devuelto por la función (turno\n3).</li> </ul> Una segunda llamada al modelo de lenguaje leyó los cuatro elementos, incluido el resultado de la herramienta, y\ngeneró la respuesta final. Este array creciente es la única «memoria» del agente. Si guardamos este array en\ndisco y lo volvemos a cargar una semana después, el modelo retomará la conversación sin percibir interrupción alguna."
-    },
-    "rich.925eff5b49ae": {
-      "type": "rich",
-      "source": "<strong>Count the steps on a genuinely tool-needing question.</strong>\n        \"How many minutes until 17:00 UTC?\" needs a clock reading and a calculation.\n        Run it a few times. Did the model call\n        <code>get_current_time</code> once, twice, or three times? Why\n        would a model re-call a tool whose output it already has,\n        and how would you discourage that in the system prompt?",
-      "value": "<strong>Cuenta los pasos de una pregunta que necesita una herramienta.</strong> \"¿Cuántos minutos faltan para las 17:00 UTC?\" necesita una lectura del reloj y un cálculo. Ejecútala varias veces. ¿El modelo llamó a <code>get_current_time</code> una, dos o tres veces? ¿Por qué volvería a solicitar un resultado que ya tiene? ¿Cómo cambiarías el prompt del sistema para evitarlo?"
-    },
-    "text.6998c813031f": {
+    "text.fe3d028d68ff": {
       "type": "text",
-      "source": "Compare two questions, the offered tools, and the actual replies. A model may answer or decline without requesting a tool.",
-      "value": "Compara las dos preguntas, las herramientas disponibles y las respuestas recibidas. Aunque no solicite ninguna herramienta, el modelo puede responder o indicar que no puede responder."
-    },
-    "text.99e1a8e15403": {
-      "type": "text",
-      "source": " On a custom endpoint, change the model in the connection card; that setting owns the route.",
-      "value": " En un endpoint personalizado, cambia el modelo en la tarjeta de conexión; esa configuración controla la ruta."
-    },
-    "text.408f13277d8d": {
-      "type": "text",
-      "source": "model:",
-      "value": "modelo:"
-    },
-    "text.1f5087db919c": {
-      "type": "text",
-      "source": "question",
-      "value": "pregunta"
-    },
-    "text.360cd27d23a6": {
-      "type": "text",
-      "source": "response model:",
-      "value": "modelo de la respuesta:"
-    },
-    "text.5db94652ba22": {
-      "type": "text",
-      "source": "reply:",
-      "value": "respuesta:"
-    },
-    "text.2d27e607c67d": {
-      "type": "text",
-      "source": "(no answer content; inspect the raw response)",
-      "value": "(sin contenido de respuesta; revisa la respuesta completa)"
-    },
-    "text.44a36db1abd1": {
-      "type": "text",
-      "source": "call 1 raw response",
-      "value": "respuesta completa de la llamada 1"
-    },
-    "text.6b9eac8f14cf": {
-      "type": "text",
-      "source": " Offering a tool lets the model request it; it does not execute the function.",
-      "value": " Ofrecer una herramienta permite que el modelo la solicite; no ejecuta la función."
-    },
-    "text.4809d1df83ab": {
-      "type": "text",
-      "source": " Optional visibility: inspect the exact schema offered to the model.",
-      "value": " Inspección opcional: revisa el esquema exacto que se ofrece al modelo."
-    },
-    "text.becc7f440ae3": {
-      "type": "text",
-      "source": " log.json(\"offered tool schema\", TOOLS);",
-      "value": " log.json(\"offered tool schema\", TOOLS);",
-      "untranslated": "Editable JavaScript diagnostic statement with preserved identifiers."
-    },
-    "text.e18b187cecf8": {
-      "type": "text",
-      "source": "call 2 · get_current_time offered",
-      "value": "llamada 2 · get_current_time disponible"
-    },
-    "text.408f13277d8d~1": {
-      "type": "text",
-      "source": "model:",
-      "value": "modelo:"
-    },
-    "text.1f5087db919c~1": {
-      "type": "text",
-      "source": "question",
-      "value": "pregunta"
-    },
-    "text.360cd27d23a6~1": {
-      "type": "text",
-      "source": "response model:",
-      "value": "modelo de la respuesta:"
-    },
-    "text.5db94652ba22~1": {
-      "type": "text",
-      "source": "reply:",
-      "value": "respuesta:"
-    },
-    "text.b6d8f3ef94a9": {
-      "type": "text",
-      "source": "(no answer content)",
-      "value": "(sin contenido de respuesta)"
-    },
-    "text.dbacd9211eb0": {
-      "type": "text",
-      "source": "requested tools:",
-      "value": "herramientas solicitadas:"
-    },
-    "text.552e423045fc": {
-      "type": "text",
-      "source": "(none)",
-      "value": "(ninguna)"
-    },
-    "text.90dfb008f2c5": {
-      "type": "text",
-      "source": "call 2 raw response",
-      "value": "respuesta completa de la llamada 2"
-    },
-    "text.e869af251171": {
-      "type": "text",
-      "source": "No clock reading was taken. Inspect the reply, then change the question or model and compare.",
-      "value": "No se consultó el reloj. Revisa la respuesta, cambia la pregunta o el modelo y compara."
-    },
-    "text.c9d2fde3d3f2": {
-      "type": "text",
-      "source": " Optional comparison: ask QUESTION_2 to explicitly request the clock tool, then rerun.",
-      "value": " Comparación opcional: modifica QUESTION_2 para pedir explícitamente la herramienta de reloj y vuelve a ejecutar."
-    },
-    "text.408f13277d8d~2": {
-      "type": "text",
-      "source": "model:",
-      "value": "modelo:"
-    },
-    "text.1f5087db919c~2": {
-      "type": "text",
-      "source": "question",
-      "value": "pregunta"
-    },
-    "text.99de16babaa5": {
-      "type": "text",
-      "source": " Optional visibility: inspect the instruction guiding tool use.",
-      "value": " Inspección opcional: revisa la instrucción que guía el uso de herramientas."
-    },
-    "text.9024eab41188": {
-      "type": "text",
-      "source": " helpers.log.kv({ \"system prompt\": state.systemPrompt });",
-      "value": " helpers.log.kv({ \"system prompt\": state.systemPrompt });",
-      "untranslated": "Editable JavaScript diagnostic statement with preserved identifiers."
+      "source": "What time is it right now in UTC? Use get_current_time to read the clock.",
+      "value": "¿Qué hora es ahora en UTC? Usa get_current_time para consultar el reloj."
     }
   }
 }

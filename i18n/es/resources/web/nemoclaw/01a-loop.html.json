@@ -14,11 +14,6 @@
       "source": "Four agent architectures, from direct input-to-action rules to an agent that improves its rules. Adapted from Russell and Norvig's <a href=\"https://aima.cs.berkeley.edu/\" target=\"_blank\" rel=\"noopener\">Artificial Intelligence: A Modern Approach</a> (Ch 1).",
       "value": "Cuatro arquitecturas con estructura creciente: desde un agente de reflejo que asigna acciones directamente a las entradas hasta un agente de aprendizaje que modifica sus propias reglas. Adaptado de <a href=\"https://aima.cs.berkeley.edu/\" target=\"_blank\" rel=\"noopener\">Artificial Intelligence: A Modern Approach</a>, de Russell y Norvig (capítulo 1)."
     },
-    "link.45c391295392": {
-      "type": "link",
-      "source": "The cell below sends one chat-completion to the model. It needs an\n     <a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NVIDIA API key</a>,\n     though the free tier covers every exercise. You enter it once, and the course then\n     keeps it in your browser and reuses it on every page so you never paste it twice.",
-      "value": "La celda siguiente envía una solicitud de Chat Completions al modelo. Para ello, necesita una\n<a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">clave API de NVIDIA</a>. El nivel gratuito es suficiente para cubrir todos los ejercicios de este curso. Sólo tienes que añadir la clave una vez y el curso la mantendrá en el navegador, reutilizandola en todas las páginas."
-    },
     "link.4ba247503225": {
       "type": "link",
       "source": "\n    This course uses the\n    <a href=\"https://platform.openai.com/docs/api-reference/chat\" target=\"_blank\" rel=\"noopener\">Chat Completions API</a>\n    throughout: you keep the conversation as a <code>messages[]</code> array in your own code and resend\n    the full array on every turn. The newer\n    <a href=\"https://platform.openai.com/docs/api-reference/responses\" target=\"_blank\" rel=\"noopener\">Responses API</a>\n    can hold the thread server-side instead, so you send only the new input and a reference to the prior\n    turn. Either way the model stays stateless and unchanged between calls. The conversation lives outside\n    it, in state your code or the server keeps.\n  ",
@@ -29,15 +24,15 @@
       "source": "\n    Classic agent designs differ at the decision step. Russell and Norvig's\n    <a href=\"https://aima.cs.berkeley.edu/\" target=\"_blank\" rel=\"noopener\">Artificial Intelligence: A Modern Approach</a>\n    arranges them as a spectrum, from a bare reflex agent up to a learning agent that improves its own\n    rules. This course starts with rigid logic, then adds a language model and engineered context\n    to move toward a model-based, goal-oriented loop. Later modules keep that loop running over\n    changing state, which is the pattern learning agents build on.\n  ",
       "value": "Las implementaciones clásicas de agentes difieren en la etapa de decisión (que como indicamos anteriormente tiene lugar durante la etapa de razonamiento). El libro\n<a href=\"https://aima.cs.berkeley.edu/\" target=\"_blank\" rel=\"noopener\">Artificial Intelligence: A Modern Approach</a>,\nde Russell y Norvig, organiza estas implementaciones en un espectro que va del agente basado en reflejo a un agente\nde aprendizaje capaz de mejorar sus propias reglas. Este curso comienza con lógica rígida y después\nañade un modelo de lenguaje y contexto proyectado, acercando el bucle al de un agente orientado\na objetivos y basado en un modelo. En los módulos siguientes, el bucle continúa sobre un estado cambiante,\nsiguiendo el patrón que sirve de base para los agentes de aprendizaje."
     },
-    "link.74c5f51a795b": {
-      "type": "link",
-      "source": "\n  <strong>Two things that call is quietly doing, and why.</strong> Neither is\n  magic, and both are worth understanding before you trust them.\n  <ul>\n    <li><strong>Your request may go through a proxy.</strong> If you selected the \n        learning management system/iframe setting when you put in your API key, your \n        request does not hit <code>build.nvidia.com</code> directly. That\n        endpoint does not return the <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS\" target=\"_blank\" rel=\"noopener\">cross-origin (CORS)</a> headers a browser\n        <code>fetch</code> requires, so the call is routed through a small\n        pass-through proxy that adds them. The proxy also adds a course attribution\n        header so DLI can identify traffic from this resource. The lesson sends your\n        API key with that request without storing it or substituting another key.</li>\n    <li><strong>Streaming is wrapped in a helper.</strong>\n        <code>chatStream()</code> sends the same chat request with streaming enabled,\n        then parses the returned event stream into answer text, reasoning text,\n        usage metadata, and the final done signal. The helper also connects those\n        pieces to the lesson panel and Stop button, so the cell can focus on the\n        concept instead of the streaming plumbing. You can open the helper source\n        from the cell menu to inspect exactly what it does.</li>\n    </ul>\n  ",
-      "value": "<strong>Dos cosas que esa llamada hace discretamente, y por qué.</strong> Ninguna es magia, y vale la pena entender ambas antes de confiar en ellas.\n<ul>\n<li> <strong>Una llamada o solicitud puede ser enviada a través de un proxy.</strong> Si seleccionaste la opción\nLMS/iframe al añadir la clave, la solicitud no alcanza directamente\n<code>build.nvidia.com</code>. A veces se necesitan encabezados especiales que algunos <i>endpoints</i> no añaden. Por ejemplo, los encabezados de\n<a href=\"https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS\" target=\"_blank\" rel=\"noopener\">origen cruzado (CORS)</a>\nrequeridos por <code>fetch</code> en el navegador. Para solucionar este problema, se enruta la llamada por un proxy que los añade.\nEl proxy usado en este curso también añade una cabecera de asignación para identificar el tráfico del curso.\nLa llamada también envía la clave sin almacenarla ni reemplazarla. </li>\n<li> <strong>La opción de streaming está encapsulada en una función auxiliar.</strong>\n<code>chatStream()</code> envía la misma solicitud de chat con streaming activado y\ninterpreta el flujo de eventos como texto de respuesta, texto de razonamiento, metadatos\nde uso y señal de término. La función auxiliar conecta estos elementos al panel de esta lección y al botón\nStop, dejando la celda concentrada en el concepto. El código fuente de la función auxiliar se puede abrir\nusando el menú de la celda. </li>\n</ul>"
-    },
     "link.88007657e487": {
       "type": "link",
       "source": "<a href=\"https://en.wikipedia.org/wiki/A*_search_algorithm\" target=\"_blank\" rel=\"noopener\">A*</a> biases those same rings toward the goal.",
       "value": "El <a href=\"https://en.wikipedia.org/wiki/A*_search_algorithm\" target=\"_blank\" rel=\"noopener\">A*</a> utiliza una heurística de distancia para priorizar caminos prometedores sin perder la garantía de encontrar el camino más corto."
+    },
+    "link.89cb16ab43c4": {
+      "type": "link",
+      "source": "\n  <p>Configure a compatible endpoint in the model panel before running the cell.\n    NVIDIA-hosted endpoints require an\n    <a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NVIDIA API key</a>.\n    Check the selected service's access and quota. The panel shows the active endpoint\n    and credential settings; inspect the redacted request below before sending.</p>\n  <p>The selected route determines which service receives the request and its credential.\n    A browser call requires the endpoint to permit the course origin. The course can use\n    its configured relay when the provider does not allow that direct browser request.\n    Inspect the active route and request headers in the model panel.</p>\n  <strong>Inspect the streaming helper.</strong> <code>chatStream()</code> parses answer text, any returned reasoning text, usage metadata, and the end-of-stream signal. It connects the response to the lesson panel and Stop button. Open the helper source from the cell menu to inspect the request and event handling.\n  ",
+      "value": "\n  <p>Configura un endpoint compatible en el panel del modelo antes de ejecutar la celda.\n    Los endpoints alojados por NVIDIA requieren una\n    <a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">clave de API de NVIDIA</a>.\n    Comprueba el acceso y la cuota del servicio seleccionado. El panel muestra el endpoint activo\n    y la configuración de credenciales; examina la solicitud con los datos sensibles ocultos que aparece abajo antes de enviarla.</p>\n  <p>La ruta seleccionada determina qué servicio recibe la solicitud y su credencial.\n    Una llamada desde el navegador requiere que el endpoint permita el origen del curso. El curso puede usar\n    su servicio de retransmisión configurado si el proveedor no permite esa solicitud directa desde el navegador.\n    Examina la ruta activa y las cabeceras de la solicitud en el panel del modelo.</p>\n  <strong>Examina el helper de streaming.</strong> <code>chatStream()</code> procesa el texto de la respuesta, cualquier texto de razonamiento devuelto, los metadatos de uso y la señal de fin de la transmisión. Conecta la respuesta con el panel de la lección y el botón Stop. Abre el código fuente del helper desde el menú de la celda para examinar la solicitud y el manejo de eventos.\n  "
     },
     "link.917d52288863": {
       "type": "link",
@@ -241,6 +236,11 @@
       "source": "The <strong>environment</strong> (wall positions, current\n        position) lives in <code>state.env</code>, while the agent's intrinsics\n        (its direction) live in <code>state.agent</code>. Keeping them\n        separate means a different agent with different intrinsic state\n        can operate in the same environment cleanly.",
       "value": "El <strong>entorno</strong> (las paredes y la posición actual) vive en <code>state.env</code>, mientras que el estado interno del agente (su dirección) vive en <code>state.agent</code>. Mantenerlos separados permite que otros agentes operen en el mismo entorno con un estado interno distinto."
     },
+    "rich.00f83fc956e6": {
+      "type": "rich",
+      "source": "<strong>Compare conversation history.</strong>\n        Set <code>includeHistory:false</code>, then rerun with the same profile and maze.\n        Compare branch order, junction decisions, and elapsed time with history enabled.\n        The controller retains visited cells and the return path in both runs.",
+      "value": "<strong>Compara el historial de conversación.</strong> Configura <code>includeHistory:false</code> y vuelve a ejecutar con el mismo perfil y laberinto. Compara el orden de las ramas, las decisiones en los cruces y el tiempo transcurrido con el historial activado. El controlador conserva las celdas visitadas y la ruta de regreso en ambas ejecuciones."
+    },
     "rich.01b4b75c60a7": {
       "type": "rich",
       "source": "<code>chat()</code> is a convenience wrapper around one ordinary HTTP\n     <code>POST</code> in the OpenAI-compatible wire format. That request carries three things:",
@@ -256,11 +256,6 @@
       "source": "\" style=\"margin:0 0 10px\"><button style=\"padding:4px 12px;border:1px solid #555;border-radius:4px;background:#1a1a1a;color:#ccc;cursor:pointer\">stop</button></div>",
       "value": "\" style=\"margin:0 0 10px\"><button style=\"padding:4px 12px;border:1px solid #555;border-radius:4px;background:#1a1a1a;color:#ccc;cursor:pointer\">stop</button></div>",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "rich.0658e511afda": {
-      "type": "rich",
-      "source": "an <code>Authorization</code> header carrying your key,",
-      "value": "un encabezado <code>Authorization</code> que carga la clave de usuario,"
     },
     "rich.09a6c8d57290": {
       "type": "rich",
@@ -278,6 +273,11 @@
       "source": "<br>extra_body: ",
       "value": "<br>extra_body: ",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "rich.0def2ff8c439": {
+      "type": "rich",
+      "source": "<strong>finish_reason is the loop's exit condition.</strong>\n        <code>\"stop\"</code> means the model has written its final\n        answer. <code>\"tool_calls\"</code> means it wants your code to\n        run a named function and report the result back.\n        <code>\"length\"</code> means the token budget ran out before\n        the model finished. Read this field alongside the returned content and tool requests\n        before deciding what to do next.",
+      "value": "<strong>finish_reason es la condición de salida del bucle.</strong>\n<code>\"stop\"</code> significa que el modelo escribió su respuesta final. <code>\"tool_calls\"</code> significa que quiere que el código ejecute una función con nombre y devuelva el resultado.\n<code>\"length\"</code> significa que el presupuesto de tokens se agotó antes de terminar. Lee este campo junto con el contenido devuelto y las solicitudes de herramientas antes de decidir el siguiente paso."
     },
     "rich.100db3aaf248": {
       "type": "rich",
@@ -348,10 +348,10 @@
       "source": "Run the editable maze-agent node below. <code>DIRECTIVE</code> is the core system instruction, and the options object controls the model, maze size, text map, move history, coordinate trail, and repeated tool schema.",
       "value": "Ejecuta el nodo editable del agente de laberinto que aparece a continuación. <code>DIRECTIVE</code> es la instrucción principal del sistema; el objeto de opciones controla el modelo, el tamaño del laberinto, el mapa textual, el historial de movimientos, la ruta de coordenadas y la repetición del esquema de la herramienta."
     },
-    "rich.33a4a9e54725": {
+    "rich.3755f119965c": {
       "type": "rich",
-      "source": "\n    That leaves the green box below as the <em>only</em> piece you did not write. An agent\n    therefore has just two choices: what you feed into its context, and what you do with\n    the intent it returns.\n  ",
-      "value": "Esto deja el cuadrado verde como la <em>única</em> parte que el usuario no escribe. Al diseñar un agente, hay que prestar atención a dos cosas: el contexto que entrega al modelo y lo que hace con la intención devuelta."
+      "source": "<strong>Reasoning output is optional.</strong> Some models and modes return reasoning text in <code>reasoning_content</code>; others return only answer content or tool requests. Inspect the fields actually returned. The loop reads <code>content</code>, the finish reason, and tool requests before choosing its next step.",
+      "value": "<strong>La salida de razonamiento es opcional.</strong> Algunos modelos y modos devuelven texto de razonamiento en <code>reasoning_content</code>; otros solo devuelven la respuesta o solicitudes de herramientas. Examina los campos que realmente se devolvieron. El bucle lee <code>content</code>, el motivo de finalización y las solicitudes de herramientas antes de elegir el siguiente paso."
     },
     "rich.37d03bd6f8c5": {
       "type": "rich",
@@ -392,10 +392,20 @@
       "value": "<div id=\"\\${UID}\" style=\"margin:6px 0\"></div>",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
+    "rich.501bae36f0cc": {
+      "type": "rich",
+      "source": "\n    <strong>The decision step is the only part that varies.</strong>\n    DFS, BFS, and A* all read the current maze state and return a move. One line in the\n    last node chooses the decision function; the loop below runs the same way for each\n    choice. The next example gives the model a choice of branches while a controller\n    records explored cells and the return path.\n  ",
+      "value": "<strong>Solamente la etapa de decisión varía.</strong> DFS, BFS y A* leen el estado actual del\nlaberinto y devuelven un movimiento. Una línea en el último nodo elige la función, mientras\nel bucle permanece igual para cada elección. En el siguiente ejemplo, el modelo elige entre varias ramas mientras un controlador registra las celdas exploradas y la ruta de regreso."
+    },
     "rich.5179f45aa8dd": {
       "type": "rich",
       "source": "\n    You now have both halves of an agent, and the stateless <code>chat()</code> function above will pair nicely\n    with the previous reflex agent's perceive-reason-act loop. Before\n    wiring the model into that loop, it helps to watch the decision step use routines\n    that are <em>not</em> language models first.\n  ",
       "value": "Por ahora tenemos las dos mitades de un agente. La función sin estado <code>chat()</code> se puede combinar con el bucle de percibir, razonar y actuar del agente de reflejo anterior. Antes de conectar un\nmodelo al bucle, observa la etapa de decisión con rutinas normales (es decir, que <em>no</em> son modelos de lenguaje)."
+    },
+    "rich.528a14d71c17": {
+      "type": "rich",
+      "source": "<strong>Compare model profiles.</strong>\n        Start with <code>model:\"direct\"</code>, then compare <code>model:\"reasoning\"</code>\n        and <code>model:\"omni\"</code> on the same maze. Inspect each request's model,\n        token budget, temperature, and reasoning settings. These profiles change several\n        settings; compare branch order and latency without attributing every difference\n        to model identity alone.",
+      "value": "<strong>Compara perfiles de modelo.</strong> Empieza con <code>model:\"direct\"</code> y luego compara <code>model:\"reasoning\"</code> y <code>model:\"omni\"</code> en el mismo laberinto. Examina el modelo, el presupuesto de tokens, la temperatura y los ajustes de razonamiento de cada solicitud. Estos perfiles cambian varios ajustes; compara el orden de las ramas y la latencia sin atribuir todas las diferencias únicamente a la identidad del modelo."
     },
     "rich.52b5eb95e4b8": {
       "type": "rich",
@@ -414,30 +424,15 @@
       "value": "<div style=\"white-space:pre-wrap\">",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "rich.5f90993bb5a3": {
-      "type": "rich",
-      "source": "\n    The smallest artifact in the course is a single <code>chat()</code> call with no tools\n    and no memory wrapped around it. Each message you send stands on its own, running the\n    bare stateless function that the loop will later wrap. Type something below and watch\n    the reply stream back.\n  ",
-      "value": "El menor artefacto del curso es una única llamada <code>chat()</code> sin herramientas y sin memoria alrededor. Cada mensaje se envía directamente a la función, que se ejecuta de forma pura, sin historial y, por tanto, sin el estado que el bucle devolvería. Escribe algo y observa la respuesta recibida."
-    },
-    "rich.5ffcc82fdbeb": {
-      "type": "rich",
-      "source": "<strong>Take the move history away.</strong>\n        Set <code>includeHistory:false</code>, then rerun with the same model and maze.\n        Does the agent repeat explored branches or need more junction decisions without prior turns?",
-      "value": "<strong>Elimina el historial de movimientos.</strong>\n        Define <code>includeHistory:false</code> y vuelve a ejecutar con el mismo modelo y laberinto.\n        Sin los turnos anteriores, ¿el agente repite ramas ya exploradas o necesita tomar más decisiones en los cruces?"
-    },
     "rich.603238e8e2ed": {
       "type": "rich",
       "source": "What <code>chat()</code> actually sends",
       "value": "Lo que <code>chat()</code> realmente envía"
     },
-    "rich.64255fa1b56b": {
+    "rich.6a207d55d69b": {
       "type": "rich",
-      "source": "<span style=\"color:#fbbf24\"><strong>search state:</strong> every branch at this junction has been explored. The model must choose the allowed backtrack and continue.</span>",
-      "value": "<span style=\"color:#fbbf24\"><strong>estado de búsqueda:</strong> ya se exploraron todas las ramas de este cruce. El modelo debe elegir el retroceso permitido y continuar.</span>"
-    },
-    "rich.65f94b857e23": {
-      "type": "rich",
-      "source": "\n    Place the <code>chat()</code> call inside the loop that re-sends history, and a single\n    turn of any LLM agent in this course takes the same four-stage shape. Name the stages\n    now, because every security and reliability question later traces back to one of these\n    four arrows.\n  ",
-      "value": "Al colocar <code>chat()</code> dentro del bucle que reenvía el historial, cada llamada adopta el mismo formato de cuatro etapas. Conviene nombrarlas ahora porque las cuestiones posteriores de seguridad y fiabilidad se remiten a ellas."
+      "source": "<span style=\"color:#fbbf24\"><strong>search state:</strong> no unvisited neighbor remains here. Choose the allowed backtrack along the recorded search path.</span>",
+      "value": "<span style=\"color:#fbbf24\"><strong>estado de la búsqueda:</strong> aquí no quedan celdas vecinas sin visitar. Elige el retroceso permitido por la ruta de búsqueda registrada.</span>"
     },
     "rich.6c6713e8d95e": {
       "type": "rich",
@@ -456,10 +451,21 @@
       "value": "<img src=\"",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
+    "rich.7009ccefd32d": {
+      "type": "rich",
+      "source": "<br>tool_choice: ",
+      "value": "<br>tool_choice: ",
+      "untranslated": "Markup plus the exact API field label tool_choice; preserve the identifier and delimiter for request inspection."
+    },
     "rich.74ddf95e4fa6": {
       "type": "rich",
       "source": "The <span>Agent</span>",
       "value": "<span>Agente</span>"
+    },
+    "rich.75e28bbb8f39": {
+      "type": "rich",
+      "source": "\n    Place the <code>chat()</code> call inside the loop that re-sends history, and a single\n    turn of any LLM agent in this course takes the same four-stage shape.\n  ",
+      "value": "Al colocar la llamada a <code>chat()</code> dentro del bucle que reenvía el historial, un turno de cualquier agente LLM de este curso adopta la misma estructura de cuatro etapas."
     },
     "rich.7a23cade9bbf": {
       "type": "rich",
@@ -471,11 +477,6 @@
       "source": "<think>",
       "value": "<think>",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "rich.7dc2a1948635": {
-      "type": "rich",
-      "source": "<strong>The output has two channels.</strong> Reasoning models\n        return their working notes in\n        <code>reasoning_content</code> and their final answer in\n        <code>content</code>. You inspect those working notes during\n        development, while the next stage of the loop reads and acts on the\n        answer in <code>content</code>.",
-      "value": "<strong>La salida tiene dos canales.</strong> Los modelos de razonamiento devuelven sus trazas de razonamiento o trabajo en\n<code>reasoning_content</code> y su respuesta final en\n<code>content</code>. Las trazas sirven para inspeccionar el desarrollo; la siguiente etapa actúa únicamente sobre la respuesta en <code>content</code>."
     },
     "rich.7f1e2f630b48": {
       "type": "rich",
@@ -494,20 +495,10 @@
       "source": "The smallest decision function is a single <code>if</code>\n     statement. Here it drives a one-dimensional track bounded by walls at positions 0\n     and 9, which leaves the whole agent about as stripped down as one can get. Press Run\n     and watch the position number bounce between those two walls as the loop runs.",
       "value": "La función de decisión más simple es la instrucción <code>if</code>. En el siguiente ejemplo, dicha instrucción guía una pista\nunidimensional limitada por paredes entre las posiciones 0 y 9. Pulsa Ejecutar y observa cómo la posición de la pista rebota entre las paredes mientras el bucle se ejecuta."
     },
-    "rich.800c436a3853": {
-      "type": "rich",
-      "source": "\n    The maze loop still samples the world and applies one validated move. Only the\n    decision step changes. Instead of DFS, BFS, or A*, the model reads the rendered maze\n    and asks your code to call <code>choose_direction</code>.\n  ",
-      "value": "El bucle todavía lee el entorno y aplica un movimiento validado. Solamente la etapa de decisión\ncambia. En lugar de DFS, BFS o A*, el modelo lee la representación del laberinto y solicita al\ncódigo una llamada <code>choose_direction</code>."
-    },
     "rich.85272f9ac1ba": {
       "type": "rich",
       "source": "The <strong>reasoning step</strong> is one <code>if</code>\n        statement. Replacing it with something more powerful, whether a\n        decision tree, a neural network, or a language model, only\n        requires changing what sits between perception and action. The\n        loop structure, the state layout, and the action step all\n        remain identical.",
       "value": "El <strong>paso de razonamiento</strong> es una sola instrucción <code>if</code>. Sustituirla por un árbol de decisión, una red neuronal o un modelo de lenguaje solo cambiará lo que ocurre entre percepción y acción. La estructura del bucle, el estado y la acción permanecerían iguales."
-    },
-    "rich.89768fee415b": {
-      "type": "rich",
-      "source": "\n    <strong>The decision step is the only part that varies.</strong>\n    DFS, BFS, and A* all read the current maze state and return a move. One line in the\n    last node chooses the decision function; the loop below runs the same way for each\n    choice. The <code>chat()</code> call you just ran can fill that\n    same step. It changes two edges: your code renders perception as text, and the\n    model returns a tool call that your code applies. The next section zooms in on those\n    two edges.\n  ",
-      "value": "<strong>Solamente la etapa de decisión varía.</strong> DFS, BFS y A* leen el estado actual del\nlaberinto y devuelven un movimiento. Una línea en el último nodo elige la función, mientras\nel bucle permanece igual para cada opción. La llamada <code>chat()</code> puede\nhacer esta función también. En este caso, hay dos cambios que considerar: el código representa la percepción como texto y el modelo devuelve una llamada a herramienta que el código aplica."
     },
     "rich.8bc911477eec": {
       "type": "rich",
@@ -530,6 +521,11 @@
       "value": "<div style=\"margin-top:6px;font-size:10px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;color:",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
+    "rich.958938bee74d": {
+      "type": "rich",
+      "source": "<strong>Remove the strategy hint from the DIRECTIVE.</strong>\n        Delete the line that says to prefer unvisited branches over visited cells, then\n        rerun with the same profile and maze. Compare branch order, junction decisions,\n        and elapsed time. The controller still filters visited branches; use repeated\n        runs to check whether any difference persists.",
+      "value": "<strong>Elimina la pista de estrategia de DIRECTIVE.</strong> Borra la línea que indica preferir las ramas sin explorar a las celdas visitadas y vuelve a ejecutar con el mismo perfil y laberinto. Compara el orden de las ramas, las decisiones en los cruces y el tiempo transcurrido. El controlador sigue descartando las ramas visitadas; repite las ejecuciones para comprobar si las diferencias persisten."
+    },
     "rich.961183259ea9": {
       "type": "rich",
       "source": " qwen puts reasoning in <think>...</think>",
@@ -540,11 +536,6 @@
       "type": "rich",
       "source": "<strong>Locally-perceive.</strong> That slice is rendered into a full\n        engineered context: the system prompt, the running <code>messages[]</code>\n        history, prior tool results, and the slice you just sampled. All of it is plain\n        text. For an LLM agent, perception <em>is</em> context engineering.",
       "value": "<strong>Percepción local.</strong> Esta parte se convierte en un contexto completo y preparado: el prompt de sistema, el historial <code>messages[]</code>, resultados de herramientas anteriores y la parte que acabas de muestrear. Todo esto es texto puro. Para un agente LLM, la percepción <em>es</em> ingeniería de contexto."
-    },
-    "rich.9d60ee03ea3a": {
-      "type": "rich",
-      "source": "The cell below makes that call by hand and shows both sides. Open <em>request</em> to\n     see what leaves your browser with the key redacted, and <em>raw response</em> to see\n     the full object <code>chat()</code> hands back.",
-      "value": "La celda siguiente realiza esta llamada manualmente y muestra el contenido enviado y la respuesta obtenida. Abre <em>request</em> para ver qué sale del navegador con la clave omitida y <em>raw response</em> para inspeccionar el objeto completo devuelto por <code>chat()</code>."
     },
     "rich.9e4527fb137f": {
       "type": "rich",
@@ -558,10 +549,10 @@
       "value": " Pull inline <think> reasoning out before parsing the answer.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "rich.aab394d8f84a": {
+    "rich.aba50b22d551": {
       "type": "rich",
-      "source": "<strong>Remove the strategy hint from the DIRECTIVE.</strong>\n        Delete the line that says to prefer unvisited branches over visited cells, then\n        rerun the same cell. Count the decisions against the run with the hint in place.\n        How much of the model's competence came from that one sentence?",
-      "value": "<strong>Retira la recomendación de estrategia de DIRECTIVE.</strong>\nElimina la línea que recomienda ramas aún no visitadas y ejecuta la misma celda. Compara\nla cantidad de decisiones con la ejecución que contenía el consejo. ¿Qué parte de la competitividad del modelo se derivaba de esa recomendación?"
+      "source": "The cell below makes that call by hand. Open <em>request</em> to inspect the URL, headers, and body, with any authorization value redacted. Open <em>raw response</em> to inspect the full object returned by <code>chat()</code>.",
+      "value": "La siguiente celda construye esa llamada manualmente. Abre <em>request</em> para examinar la URL, las cabeceras y el cuerpo, con cualquier valor de autorización oculto. Abre <em>raw response</em> para examinar el objeto completo devuelto por <code>chat()</code>."
     },
     "rich.b01585f706cb": {
       "type": "rich",
@@ -580,11 +571,6 @@
       "source": "<div style=\"color:#9ab\">rendered image:</div><img src=\"",
       "value": "<div style=\"color:#9ab\">rendered image:</div><img src=\"",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "rich.b9195912551e": {
-      "type": "rich",
-      "source": "<strong>Swap the decision model.</strong>\n        Change <code>model:\"reasoning\"</code> to <code>model:\"omni\"</code> and rerun.\n        The loop, maze, perception, and action do not change. Only the model making\n        the move does. Does the multimodal fallback reach the goal in fewer decisions?",
-      "value": "<strong>Cambia el modelo de decisión.</strong>\n        Cambia <code>model:\"reasoning\"</code> a <code>model:\"omni\"</code> y vuelve a ejecutar.\n        El ciclo, el laberinto, la percepción y la acción no cambian. Solo cambia el modelo que decide el movimiento. ¿El perfil multimodal alternativo alcanza el objetivo con menos decisiones?"
     },
     "rich.b91f4addbbbb": {
       "type": "rich",
@@ -608,11 +594,6 @@
       "source": " chars)</summary><div style=\"font:11px/1.5 ui-monospace,monospace;color:#7a9;background:#040d08;padding:8px;border-radius:4px;max-height:200px;overflow:auto;white-space:pre-wrap\">",
       "value": " caracteres)</summary><div style=\"font:11px/1.5 ui-monospace,monospace;color:#7a9;background:#040d08;padding:8px;border-radius:4px;max-height:200px;overflow:auto;white-space:pre-wrap\">"
     },
-    "rich.c2ccb83487c8": {
-      "type": "rich",
-      "source": "<strong>finish_reason is the loop's exit condition.</strong>\n        <code>\"stop\"</code> means the model has written its final\n        answer. <code>\"tool_calls\"</code> means it wants your code to\n        run a named function and report the result back.\n        <code>\"length\"</code> means the token budget ran out before\n        the model finished. A loop that drives an LLM-based agent is\n        built entirely around reading this one field and deciding what\n        to do next.",
-      "value": "<strong>finish_reason es la condición de salida del bucle.</strong>\n<code>\"stop\"</code> significa que el modelo escribió su respuesta final. <code>\"tool_calls\"</code> significa que quiere que el código ejecute una función con nombre y devuelva el resultado.\n<code>\"length\"</code> significa que el presupuesto de tokens se agotó antes de terminar. Durante el bucle se lee este campo para decidir qué hacer después."
-    },
     "rich.c4617e9ae323": {
       "type": "rich",
       "source": "<br>tools: ",
@@ -624,10 +605,20 @@
       "source": "<span style=\"color:#fbbf24\">guardrail: ",
       "value": "<span style=\"color:#fbbf24\">control: "
     },
+    "rich.c5690f27913f": {
+      "type": "rich",
+      "source": "\n    This chat starts with conversation history enabled. Tell it your name, then ask\n    what your name is. Turn the memory toggle off and ask again. Each <code>chat()</code>\n    call receives the messages assembled by the interface; with memory off, earlier\n    turns are omitted. Compare the replies and inspect how the code builds the request.\n  ",
+      "value": "Este chat comienza con el historial de conversación activado. Dile tu nombre y luego pregúntale cómo te llamas. Desactiva el control de memoria y vuelve a preguntar. Cada llamada a <code>chat()</code> recibe los mensajes que prepara la interfaz; con la memoria desactivada, se omiten los turnos anteriores. Compara las respuestas y examina cómo el código construye la solicitud."
+    },
     "rich.c6791c9d7c9c": {
       "type": "rich",
       "source": "<span style=\"color:#76b900\">goal in ",
       "value": "<span style=\"color:#76b900\">objetivo alcanzado en "
+    },
+    "rich.c67c1e5cc233": {
+      "type": "rich",
+      "source": "request headers; a custom endpoint may require an <code>Authorization</code> header,",
+      "value": "las cabeceras de la solicitud; un endpoint personalizado puede requerir una cabecera <code>Authorization</code>,"
     },
     "rich.c815f005e12d": {
       "type": "rich",
@@ -655,20 +646,20 @@
       "source": "\n      All of them <b>perceive</b> their environment through sensors and <b>act</b> on it through actuators.\n      Because each action feeds the next observation, perceiving and acting fold into one continuous cycle,\n      a <strong>perceive-reason-act loop</strong>, that lasts as long as the agent continues to interact.\n      The agents you will build all adopt the same cycle and are set apart only by how much they can perceive\n      and how far their actions reach.\n    ",
       "value": "Todos ellos <b> perciben </b> el entorno por medio de sensores y <b> actúan </b> sobre él por medio de actuadores.\nCada acción influye, por tanto, en la siguiente observación del entorno formando un bucle continuo:\nel <strong>bucle de percibir, razonar y actuar</strong>, que dura mientras el agente interactúa en dicho entorno.\nTodos los agentes construidos en el curso siguen este bucle. Lo que cambia es cuánto pueden entender el entorno\ny hasta dónde llegan sus acciones."
     },
+    "rich.cee21715c2e4": {
+      "type": "rich",
+      "source": "\n    <strong>Validate the requested action.</strong> The <code>choose_direction</code> schema\n    declares the allowed direction values. The model requests a direction, and the controller\n    checks the tool name and arguments before moving. Inspect the request and response to\n    distinguish the declared schema from the validation your code performs.\n  ",
+      "value": "<strong>Valida la acción solicitada.</strong> El esquema de <code>choose_direction</code> declara los valores de dirección permitidos. El modelo solicita una dirección y el controlador comprueba el nombre de la herramienta y sus argumentos antes de moverse. Examina la solicitud y la respuesta para distinguir el esquema declarado de la validación que realiza tu código."
+    },
+    "rich.cf35c227ca83": {
+      "type": "rich",
+      "source": "\n    The controller records visited cells and a return path, filters out visited branches,\n    and walks corridors. At junctions, the model reads the map and chooses the branch order\n    through <code>choose_direction</code>. The controller manages depth-first exploration;\n    it does not supply the model with a solved route.\n  ",
+      "value": "El controlador registra las celdas visitadas y una ruta de regreso, descarta las ramas visitadas y recorre los pasillos. En los cruces, el modelo lee el mapa y elige el orden de las ramas mediante <code>choose_direction</code>. El controlador gestiona la exploración en profundidad; no proporciona al modelo una ruta resuelta."
+    },
     "rich.d106759c1b2d": {
       "type": "rich",
       "source": "<strong>Locally-sample.</strong> Your code reads a slice of the\n        environment, which might be the maze cell and its valid moves, or the latest user\n        message, or the contents of a file. It never reaches for the whole world at once,\n        because all the turn requires is the narrow piece of state the model needs to act on\n        this time around.",
       "value": "<strong>Muestra local.</strong> El código lee una parte del entorno, que puede ser la celda del laberinto y sus movimientos válidos, o el último mensaje del usuario, o el contenido de un archivo. Nunca intenta abarcar el entorno entero de una vez, porque todo lo que el turno exige es el pedazo de estado que el modelo necesita para actuar esta vez."
-    },
-    "rich.d362383be48a": {
-      "type": "rich",
-      "source": "\n    <strong>Each pass of the loop acts only locally.</strong> The model reads one small\n    piece of the world such as a single maze cell and hands back one bounded action before the stateless text-to-text step between them forgets everything it just saw. An agent\n    that accomplishes a great deal is only this modest cycle repeated many times while the\n    environment carries the state forward from one pass to the next.\n    Module 1b builds that cycle in code where you can watch the context grow with each turn.\n  ",
-      "value": "<strong>Cada iteración del bucle actúa localmente.</strong> El modelo lee una parte pequeña del mundo, como una sola celda del laberinto, y devuelve una acción limitada. Después, esa transformación de texto sin estado olvida lo que acaba de ver. Un agente repite este sencillo bucle muchas veces; el entorno conserva el estado que alimentará el paso siguiente. El módulo 1b implementa este bucle y permite observar cómo crece el contexto en cada iteración."
-    },
-    "rich.d3689c04407c": {
-      "type": "rich",
-      "source": "\n    <strong>A schema turns the answer into a typed action.</strong> The constant rule\n    returned a string. BFS handed back a list. <code>choose_direction</code> gives the\n    model the same contract but enforces it through a JSON Schema, so the loop reads a\n    typed value instead of parsing free prose. With it, a language model can take the\n    decision step that BFS and A* held a moment ago.\n  ",
-      "value": "<strong>Un esquema transforma la respuesta en una acción tipada.</strong> La regla constante devuelve una cadena; BFS, una lista. <code>choose_direction</code> ofrece el mismo contrato\nal modelo y lo aplica por medio de un esquema JSON. Así, el bucle lee un valor tipado en lugar de\ninterpretar texto libre, y el modelo de lenguaje se encarga de la etapa de decisión antes ejecutada por BFS y A*."
     },
     "rich.d45434b3ac87": {
       "type": "rich",
@@ -801,11 +792,10 @@
       "value": "user",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.04f8996da763~6": {
+    "text.051865282de3": {
       "type": "text",
-      "source": "user",
-      "value": "user",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "source": "Custom endpoint selects ",
+      "value": "El endpoint personalizado selecciona "
     },
     "text.05529e9fe8b9": {
       "type": "text",
@@ -823,12 +813,6 @@
       "type": "text",
       "source": "My name is Ada. Remember it.",
       "value": "Me llamo Ada. Recuérdalo."
-    },
-    "text.06a6fc720b74": {
-      "type": "text",
-      "source": " junction (2+) or stuck (0)",
-      "value": " junction (2+) or stuck (0)",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
     "text.086a519fdeed": {
       "type": "text",
@@ -861,68 +845,56 @@
     "text.0a07f6594619": {
       "type": "text",
       "source": ", ",
-      "value": ", ",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "value": ",",
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
     },
     "text.0a07f6594619~1": {
       "type": "text",
       "source": ", ",
-      "value": ", ",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "value": ",",
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
     },
     "text.0a07f6594619~2": {
       "type": "text",
       "source": ", ",
-      "value": ", ",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "value": ",",
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
     },
     "text.0a07f6594619~3": {
       "type": "text",
       "source": ", ",
-      "value": ", ",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "value": ",",
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
     },
     "text.0a07f6594619~4": {
       "type": "text",
       "source": ", ",
-      "value": ", ",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "value": ",",
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
     },
     "text.0a07f6594619~5": {
       "type": "text",
       "source": ", ",
-      "value": ", ",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "value": ",",
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
     },
     "text.0a07f6594619~6": {
       "type": "text",
       "source": ", ",
-      "value": ", ",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "value": ",",
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
     },
     "text.0a07f6594619~7": {
       "type": "text",
       "source": ", ",
-      "value": ", ",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.0a07f6594619~8": {
-      "type": "text",
-      "source": ", ",
-      "value": ", ",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "value": ",",
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
     },
     "text.0a4e4c29432e": {
       "type": "text",
       "source": "usage",
       "value": "usage",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.0c4d01e81bb3": {
-      "type": "text",
-      "source": "reasoning",
-      "value": "reasoning",
-      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
     },
     "text.0cd59804b5ed": {
       "type": "text",
@@ -940,12 +912,6 @@
       "type": "text",
       "source": "Maze engine ready.",
       "value": "Motor del laberinto listo."
-    },
-    "text.0e73b79fc00b": {
-      "type": "text",
-      "source": " All knobs are optional. opts.model defaults to the text reasoning model.",
-      "value": " All knobs are optional. opts.model defaults to the text reasoning model.",
-      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
     },
     "text.0f2552acfc09": {
       "type": "text",
@@ -1009,11 +975,6 @@
       "source": "none",
       "value": "none",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.14499d2b39e3": {
-      "type": "text",
-      "source": "A direction already tried from this junction is an exhausted branch. Do not choose it again.",
-      "value": "Una dirección ya probada desde este cruce es una rama agotada. No vuelvas a elegirla."
     },
     "text.146dcd8c2e75": {
       "type": "text",
@@ -1082,6 +1043,11 @@
       "type": "text",
       "source": "ready · ",
       "value": "listo · "
+    },
+    "text.186bd116f8aa": {
+      "type": "text",
+      "source": "with conversation history",
+      "value": "con historial de conversación"
     },
     "text.18ac3e7343f0": {
       "type": "text",
@@ -1179,17 +1145,21 @@
       "source": " The same loop that ran DFS, BFS, and A* now drives a language model over this maze.",
       "value": " El mismo bucle de DFS, BFS y A* ahora dirige un modelo de lenguaje por el laberinto."
     },
-    "text.228e9f0cdd12": {
+    "text.227f92bcd588": {
       "type": "text",
-      "source": " capability-checked default; compare with \"omni\"",
-      "value": " capability-checked default; compare with \"omni\"",
-      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+      "source": "decision response",
+      "value": "respuesta de decisión"
     },
     "text.236b57c0c119": {
       "type": "text",
       "source": " -",
       "value": " -",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "text.237803fb21a2": {
+      "type": "text",
+      "source": "Choose an unvisited neighbor when one is allowed. The controller records the current search path.",
+      "value": "Elige una celda vecina no visitada cuando esté permitida. El controlador registra la ruta de búsqueda actual."
     },
     "text.23f0072689c8": {
       "type": "text",
@@ -1215,23 +1185,22 @@
       "value": " opts.directive overrides just the editable core; opts.systemPrompt overrides the whole thing.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.280393f38ee1": {
-      "type": "text",
-      "source": " corridor: follow it",
-      "value": " corridor: follow it",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
     "text.2958d416d08a": {
       "type": "text",
       "source": "object",
       "value": "object",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.29ba2f877f53": {
       "type": "text",
       "source": " move list, including backtracking moves, then replays that list as an animation.",
       "value": " move list, including backtracking moves, then replays that list as an animation.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "text.29cfbd35c76a": {
+      "type": "text",
+      "source": "Malformed tool response: expected unique call IDs and function arguments.",
+      "value": "Respuesta de herramienta mal formada: se esperaban identificadores de llamada únicos y argumentos de función."
     },
     "text.2a1cec988d3e": {
       "type": "text",
@@ -1283,6 +1252,11 @@
       "type": "text",
       "source": "Run the nodes in order. Compare fixed search strategies before the language model takes over; expand a decision rule when you want its implementation.",
       "value": "Ejecuta los nodos en orden. Setup exporta los helpers del laberinto; los de búsqueda muestran funciones de decisión fijas antes de la entrada del modelo de lenguaje. El código de infraestructura es simple porque la lección trata del comportamiento, pero puedes abrir cualquier regla."
+    },
+    "text.2fc7dc0c4e57": {
+      "type": "text",
+      "source": " Valid DFS moves cross each search-tree edge at most twice. Derive the",
+      "value": " Los movimientos DFS válidos recorren cada arista del árbol de búsqueda como máximo dos veces. Calcula el"
     },
     "text.30615e803a22": {
       "type": "text",
@@ -1398,139 +1372,145 @@
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~1": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~10": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~11": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~12": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~13": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~14": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~15": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~16": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~17": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~18": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~19": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~2": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~20": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~21": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~22": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
+    },
+    "text.334359b90efe~23": {
+      "type": "text",
+      "source": "#",
+      "value": "#",
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~3": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~4": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~5": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~6": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~7": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~8": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.334359b90efe~9": {
       "type": "text",
       "source": "#",
       "value": "#",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "ASCII maze wall sentinel compared by the controller."
     },
     "text.339f8ea3216c": {
       "type": "text",
@@ -1554,18 +1534,6 @@
       "value": "AbortError",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.35217c2db25b~1": {
-      "type": "text",
-      "source": "AbortError",
-      "value": "AbortError",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.35217c2db25b~2": {
-      "type": "text",
-      "source": "AbortError",
-      "value": "AbortError",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
     "text.3596ee8710cc": {
       "type": "text",
       "source": "-> (",
@@ -1584,11 +1552,27 @@
       "value": "Bearer ",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
+    "text.360cd27d23a6": {
+      "type": "text",
+      "source": "response model:",
+      "value": "modelo de la respuesta:"
+    },
     "text.363d049490fc": {
       "type": "text",
       "source": "finish_reason:",
       "value": "finish_reason:",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "Diagnostic label naming the exact API field; leave the identifier and delimiter recognizable."
+    },
+    "text.363d049490fc~1": {
+      "type": "text",
+      "source": "finish_reason:",
+      "value": "finish_reason:",
+      "untranslated": "Diagnostic label naming the exact API field; leave the identifier and delimiter recognizable."
+    },
+    "text.3726bbc870f8": {
+      "type": "text",
+      "source": "You are navigating a maze.\nYou are called only at JUNCTIONS (2+ open directions).\nYou get an ASCII map that marks walls, explored cells, your position, and the goal.\nCorridors are auto-walked, so your position can jump several cells between calls.\nChoose ONE direction from \"Allowed moves this turn\" and call choose_direction().\nChoose an unvisited neighbor when one is allowed; the controller records the search path.\nWhen no unvisited neighbor remains, take the allowed backtrack along that path.\nPrefer unvisited branches (-) over visited cells (·), and head toward G when you can see it.\nMinimize reasoning efforts and make immediate moves.",
+      "value": "Estás recorriendo un laberinto.\nSolo se te llama en CRUCES (2 o más direcciones abiertas).\nRecibes un mapa ASCII que marca paredes, celdas exploradas, tu posición y la meta.\nLos pasillos se recorren automáticamente, por lo que tu posición puede avanzar varias celdas entre llamadas.\nElige UNA dirección de \"Movimientos permitidos en este turno\" y llama a choose_direction().\nElige una celda vecina sin visitar cuando esté permitida; el controlador registra la ruta de búsqueda.\nCuando no queden celdas vecinas sin visitar, toma el retroceso permitido por esa ruta.\nPrefiere ramas sin visitar (-) a celdas visitadas (·) y dirígete hacia G cuando puedas verlo.\nReduce el esfuerzo de razonamiento y realiza movimientos inmediatos."
     },
     "text.376683ec4dac": {
       "type": "text",
@@ -1624,7 +1608,13 @@
       "type": "text",
       "source": "abort",
       "value": "abort",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "DOM abort event name used in cancellation listeners."
+    },
+    "text.3a53db8a2c8a~1": {
+      "type": "text",
+      "source": "abort",
+      "value": "abort",
+      "untranslated": "DOM abort event name used in cancellation listeners."
     },
     "text.3aa976e49f49": {
       "type": "text",
@@ -1699,6 +1689,11 @@
       "source": "</span>",
       "value": "</span>",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "text.4216b3db0ee6": {
+      "type": "text",
+      "source": " The model chooses branch order; the controller owns visited cells and a real return path.",
+      "value": " El modelo elige el orden de las ramas; el controlador registra las celdas visitadas y una ruta de regreso válida."
     },
     "text.42381f6af4f2": {
       "type": "text",
@@ -1787,23 +1782,57 @@
       "source": "BFS code is collapsed by default. If you expand it, read the two phases: first it marks every cell the search examined, then it walks the shortest path BFS found.",
       "value": "El código BFS está oculto por defecto. Al expandirlo se pueden observar dos fases: primero marca las celdas examinadas; luego recorre el camino más corto encontrado."
     },
+    "text.46dfad1fa091": {
+      "type": "text",
+      "source": "No unexplored route to the goal remains.",
+      "value": "No quedan rutas sin explorar hacia la meta."
+    },
+    "text.46dfad1fa091~1": {
+      "type": "text",
+      "source": "No unexplored route to the goal remains.",
+      "value": "No quedan rutas sin explorar hacia la meta."
+    },
     "text.473287f8298d": {
       "type": "text",
       "source": "string",
       "value": "string",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.473287f8298d~1": {
       "type": "text",
       "source": "string",
       "value": "string",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.473287f8298d~2": {
       "type": "text",
       "source": "string",
       "value": "string",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.473287f8298d~3": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.473287f8298d~4": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.473287f8298d~5": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.473287f8298d~6": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.475ad64997bc": {
       "type": "text",
@@ -1821,6 +1850,16 @@
       "source": "</pre>",
       "value": "</pre>",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "text.4abfe5c70453": {
+      "type": "text",
+      "source": "\n    The maze request can include the full map and prior turns. Open its request details\n    to see which context is present. Module 1b builds the tool loop with an explicit messages array.\n  ",
+      "value": "La solicitud del laberinto puede incluir el mapa completo y los turnos anteriores. Abre los detalles de la solicitud para ver qué contexto contiene. El módulo 1b construye el bucle de herramientas con un array explícito de mensajes."
+    },
+    "text.4c94d0866638": {
+      "type": "text",
+      "source": " · no conversation history",
+      "value": " · sin historial de conversación"
     },
     "text.4d9ebf6d2744": {
       "type": "text",
@@ -1868,10 +1907,10 @@
       "value": " (",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.503465224091": {
+    "text.4f8f25d39dd1": {
       "type": "text",
-      "source": "Try it · the model as a pure function",
-      "value": "Prueba · el modelo como una función pura"
+      "source": "Try it · compare conversation history",
+      "value": "Pruébalo · compara el historial de conversación"
     },
     "text.505e9ccbd2b5": {
       "type": "text",
@@ -1932,13 +1971,19 @@
       "type": "text",
       "source": "choose_direction",
       "value": "choose_direction",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.54936f10dfa9~1": {
       "type": "text",
       "source": "choose_direction",
       "value": "choose_direction",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "Tool function name used in schemas and dispatch."
+    },
+    "text.54936f10dfa9~2": {
+      "type": "text",
+      "source": "choose_direction",
+      "value": "choose_direction",
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.552e423045fc": {
       "type": "text",
@@ -1988,19 +2033,25 @@
       "type": "text",
       "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
       "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "Exact provider model ID sent in API requests."
     },
     "text.57b7e204b183~1": {
       "type": "text",
       "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
       "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "Exact provider model ID sent in API requests."
     },
     "text.57b7e204b183~2": {
       "type": "text",
       "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
       "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "Exact provider model ID sent in API requests."
+    },
+    "text.57b7e204b183~3": {
+      "type": "text",
+      "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
+      "untranslated": "Exact provider model ID sent in API requests."
     },
     "text.5807075108e2": {
       "type": "text",
@@ -2120,6 +2171,11 @@
       "value": "You are navigating a maze. You are called only at JUNCTIONS, the places where 2+ forward paths branch.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
+    "text.605f19fe29e8": {
+      "type": "text",
+      "source": "The model endpoint uses this format. Module 3's OpenClaw gateway exposes\n     a separate protocol for agent turns, sessions, and runtime operations.",
+      "value": "El endpoint del modelo utiliza este formato. El gateway de OpenClaw del módulo 3 expone un protocolo distinto para los turnos del agente, las sesiones y las operaciones del entorno de ejecución."
+    },
     "text.6105d6cc76af": {
       "type": "text",
       "source": "image",
@@ -2157,6 +2213,11 @@
       "type": "text",
       "source": "rendered below. Edit the config and Run.",
       "value": "artefacto renderizado abajo. Edita la configuración y vuelve a ejecutar."
+    },
+    "text.6894b7ee21a4": {
+      "type": "text",
+      "source": " All knobs are optional. The direct profile uses the text model without a reasoning budget.",
+      "value": " Todos los ajustes son opcionales. El perfil direct usa el modelo de texto sin presupuesto de razonamiento."
     },
     "text.6923a489c475": {
       "type": "text",
@@ -2202,6 +2263,17 @@
       "source": "east",
       "value": "east",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "text.6c3621593f06": {
+      "type": "text",
+      "source": " send past turns; controller search memory is always retained",
+      "value": " envía los turnos anteriores; la memoria de búsqueda del controlador siempre se conserva"
+    },
+    "text.6c45cb72a36e": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
     },
     "text.6db9cd5cc167": {
       "type": "text",
@@ -2255,6 +2327,16 @@
       "value": " Set up the tiny world the loop will inspect.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
+    "text.752532456654": {
+      "type": "text",
+      "source": " no reasoning budget; compare with \"reasoning\" or \"omni\"",
+      "value": " sin presupuesto de razonamiento; compara con \"reasoning\" u \"omni\""
+    },
+    "text.756685e3b320": {
+      "type": "text",
+      "source": "Choose exactly one allowed direction at this junction. The controller records the route and walks corridors.",
+      "value": "Elige exactamente una dirección permitida en este cruce. El controlador registra la ruta y recorre los pasillos."
+    },
     "text.757302eb77e9": {
       "type": "text",
       "source": "Current maze:",
@@ -2306,7 +2388,19 @@
       "type": "text",
       "source": "function",
       "value": "function",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
+    },
+    "text.78f9ac018e55~1": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
+    },
+    "text.78f9ac018e55~2": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
     },
     "text.799d97fba63e": {
       "type": "text",
@@ -2347,6 +2441,11 @@
       "source": "tool",
       "value": "tool",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "text.7d034532fb39": {
+      "type": "text",
+      "source": " Accept only the single direction letter declared by the tool schema.",
+      "value": " Acepta solo la letra de dirección declarada por el esquema de la herramienta."
     },
     "text.7d563ce8aa26": {
       "type": "text",
@@ -2502,18 +2601,6 @@
       "value": "N",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.8ce86a6ae65d~1": {
-      "type": "text",
-      "source": "N",
-      "value": "N",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.8ce86a6ae65d~2": {
-      "type": "text",
-      "source": "N",
-      "value": "N",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
     "text.8d32b26ed89f": {
       "type": "text",
       "source": "Run the 'Maze engine' node first.",
@@ -2561,17 +2648,11 @@
       "value": "S",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.8de0b3c47f11~6": {
+    "text.8e920ae7d06b": {
       "type": "text",
-      "source": "S",
-      "value": "S",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.8de0b3c47f11~7": {
-      "type": "text",
-      "source": "S",
-      "value": "S",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "source": "tool_calls",
+      "value": "tool_calls",
+      "untranslated": "OpenAI finish_reason enum and message field; compared by executable control flow."
     },
     "text.8f527220a0b5": {
       "type": "text",
@@ -2654,13 +2735,19 @@
       "type": "text",
       "source": "tool-calling",
       "value": "tool-calling",
-      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+      "untranslated": "Internal capability identifier in model profiles."
     },
     "text.96d0c6a06c95~1": {
       "type": "text",
       "source": "tool-calling",
       "value": "tool-calling",
-      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+      "untranslated": "Internal capability identifier in model profiles."
+    },
+    "text.96d0c6a06c95~2": {
+      "type": "text",
+      "source": "tool-calling",
+      "value": "tool-calling",
+      "untranslated": "Internal capability identifier in model profiles."
     },
     "text.9739e9e246b8": {
       "type": "text",
@@ -2758,6 +2845,11 @@
       "value": "·",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
+    "text.a157a77397ba": {
+      "type": "text",
+      "source": "seconds:",
+      "value": "segundos:"
+    },
     "text.a2629afe15ea": {
       "type": "text",
       "source": "What changes when reasoning calls an LLM",
@@ -2767,24 +2859,6 @@
       "type": "text",
       "source": "#0d1117",
       "value": "#0d1117",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.a2d1c681df8f": {
-      "type": "text",
-      "source": "aborted",
-      "value": "aborted",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.a2d1c681df8f~1": {
-      "type": "text",
-      "source": "aborted",
-      "value": "aborted",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.a30ef43a08bd": {
-      "type": "text",
-      "source": " include the history of past moves",
-      "value": " include the history of past moves",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
     "text.a318c24216de": {
@@ -2798,6 +2872,11 @@
       "source": " runMaze: one corridor-walk + LLM-at-junctions controller, shared by the run node.",
       "value": " runMaze: one corridor-walk + LLM-at-junctions controller, shared by the run node.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "text.a3769e6ab5bc": {
+      "type": "text",
+      "source": " decision budget from this grid; invalid replies also consume a turn.",
+      "value": " presupuesto de decisiones a partir de esta cuadrícula; las respuestas no válidas también consumen un turno."
     },
     "text.a387d52fa7d9": {
       "type": "text",
@@ -2862,27 +2941,10 @@
       "value": "E",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.a9f51566bd67~1": {
-      "type": "text",
-      "source": "E",
-      "value": "E",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.a9f51566bd67~2": {
-      "type": "text",
-      "source": "E",
-      "value": "E",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
     "text.aa12f65dcf9f": {
       "type": "text",
       "source": "Run the nodes in order. Each puts a different decision rule into the same maze-solving loop:",
       "value": "Ejecuta los nodos en orden. Cada uno aplica una regla de decisión diferente al mismo bucle que resuelve el laberinto:"
-    },
-    "text.aa88a0a85757": {
-      "type": "text",
-      "source": "with history",
-      "value": "con historial"
     },
     "text.aac32651b10f": {
       "type": "text",
@@ -2960,6 +3022,11 @@
       "source": "Three facts about that function shape how agents built on top of it have to work:",
       "value": "Tres aspectos de esta función determinan cómo deben funcionar los agentes construidos sobre ella:"
     },
+    "text.aefd4190e050": {
+      "type": "text",
+      "source": "One direction letter: N, S, E, or W. Choose from this turn's enum.",
+      "value": "Una letra de dirección: N, S, E o W. Elige entre los valores enum de este turno."
+    },
     "text.af1064dd7886": {
       "type": "text",
       "source": "Memory is on, so I follow the whole conversation. Tell me your name, then ask what it is. Flip 🧠 memory off and I answer each message cold, a stateless function with no recall of the last.",
@@ -2979,18 +3046,29 @@
       "type": "text",
       "source": "streaming",
       "value": "streaming",
-      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+      "untranslated": "Internal capability identifier in model profiles."
     },
     "text.b304adc33719~1": {
       "type": "text",
       "source": "streaming",
       "value": "streaming",
-      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+      "untranslated": "Internal capability identifier in model profiles."
+    },
+    "text.b304adc33719~2": {
+      "type": "text",
+      "source": "streaming",
+      "value": "streaming",
+      "untranslated": "Internal capability identifier in model profiles."
     },
     "text.b39f2870695c": {
       "type": "text",
       "source": " log.details(\"raw response\", reply);",
       "value": " log.details(\"respuesta sin procesar\", reply);"
+    },
+    "text.b46231c0b239": {
+      "type": "text",
+      "source": "When no unvisited neighbor remains, choose the allowed backtrack along the recorded search path.",
+      "value": "Cuando no queden celdas vecinas sin visitar, elige el retroceso permitido por la ruta de búsqueda registrada."
     },
     "text.b4b28b8ac166": {
       "type": "text",
@@ -3002,6 +3080,11 @@
       "type": "text",
       "source": "Both interfaces wrap the same stateless call. They differ only in who keeps the conversation between turns.",
       "value": "Las dos interfaces realizan la misma llamada sin estado. Solo cambia quién conserva la conversación entre llamadas."
+    },
+    "text.b5ba27698912": {
+      "type": "text",
+      "source": "; named profiles change budgets, not the model. Image support depends on that endpoint.",
+      "value": "; los perfiles con nombre cambian los presupuestos, pero el modelo sigue siendo el mismo. La compatibilidad con imágenes depende de ese endpoint."
     },
     "text.b5eaefb0d0b3": {
       "type": "text",
@@ -3019,11 +3102,6 @@
       "type": "text",
       "source": ": asking model...",
       "value": ": consultando al modelo..."
-    },
-    "text.b70882637398": {
-      "type": "text",
-      "source": "You are navigating a maze.\nYou are called only at JUNCTIONS (2+ open directions).\nYou get an ASCII map that marks walls, explored cells, your position, and the goal.\nCorridors are auto-walked, so your position can jump several cells between calls.\nChoose ONE direction from \"Allowed moves this turn\" and call choose_direction().\nDo not repeat a direction listed under \"Already tried here.\"\nWhen every branch is exhausted, take the allowed backtrack and continue.\nPrefer unvisited branches (-) over visited cells (·), and head toward G when you can see it.\nMinimize reasoning efforts and make immediate moves.",
-      "value": "You are navigating a maze.\nYou are called only at JUNCTIONS (2+ open directions).\nYou get an ASCII map that marks walls, explored cells, your position, and the goal.\nCorridors are auto-walked, so your position can jump several cells between calls.\nChoose ONE direction from \"Movimientos permitidos en este turno\" and call choose_direction().\nDo not repeat a direction listed under \"Already tried here.\"\nWhen every branch is exhausted, take the allowed backtrack and continue.\nPrefer unvisited branches (-) over visited cells (·), and head toward G when you can see it.\nMinimize reasoning efforts and make immediate moves."
     },
     "text.b70997a92d60": {
       "type": "text",
@@ -3054,11 +3132,6 @@
       "source": " direction letter taken into visited[i] (actions[i-1]); parallel to visited",
       "value": " direction letter taken into visited[i] (actions[i-1]); parallel to visited",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.b9499193cd85": {
-      "type": "text",
-      "source": "stateless",
-      "value": "sin estado"
     },
     "text.b9a205e02c1d": {
       "type": "text",
@@ -3168,11 +3241,6 @@
       "source": "BFS reasoner",
       "value": "Decisión por BFS"
     },
-    "text.c222cb42e1d2": {
-      "type": "text",
-      "source": "Every endpoint in this course speaks this same format, including the OpenClaw agent\n     runtime in Module 3.",
-      "value": "Todos los <i>endpoints</i> de este curso entienden este mismo formato, incluyendo el runtime del agente OpenClaw en el Módulo 3."
-    },
     "text.c23ca11f0198": {
       "type": "text",
       "source": " ── Edit this freely: it becomes the CORE of the system message. ──",
@@ -3218,6 +3286,11 @@
       "source": "MAP KEY:",
       "value": "MAP KEY:",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "text.c9494c6cbd93": {
+      "type": "text",
+      "source": " At a junction, the model chooses, including backtracking.",
+      "value": " En un cruce, el modelo elige el movimiento, incluido el retroceso."
     },
     "text.ca2d622740a5": {
       "type": "text",
@@ -3348,59 +3421,83 @@
       "source": "One stateless chat completion · a real call to the model",
       "value": "Una chat completion sin estado · llamada real al modelo"
     },
-    "text.cfc6b34af5d7": {
-      "type": "text",
-      "source": " normalizeDir: accept letters OR words ('E', 'EEN', 'east', 'east north') and return NSEW letters.",
-      "value": " normalizeDir: accept letters OR words ('E', 'EEN', 'east', 'east north') and return NSEW letters.",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
     "text.d03502c43d74": {
       "type": "text",
       "source": ",",
       "value": ",",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
     },
     "text.d03502c43d74~1": {
       "type": "text",
       "source": ",",
       "value": ",",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
     },
     "text.d03502c43d74~2": {
       "type": "text",
       "source": ",",
       "value": ",",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
     },
     "text.d03502c43d74~3": {
       "type": "text",
       "source": ",",
       "value": ",",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
     },
     "text.d03502c43d74~4": {
       "type": "text",
       "source": ",",
       "value": ",",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
     },
     "text.d03502c43d74~5": {
       "type": "text",
       "source": ",",
       "value": ",",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
     },
     "text.d03502c43d74~6": {
       "type": "text",
       "source": ",",
       "value": ",",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
+    },
+    "text.d03502c43d74~7": {
+      "type": "text",
+      "source": ",",
+      "value": ",",
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
+    },
+    "text.d03502c43d74~8": {
+      "type": "text",
+      "source": ",",
+      "value": ",",
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
+    },
+    "text.d03502c43d74~9": {
+      "type": "text",
+      "source": ",",
+      "value": ",",
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
+    },
+    "text.d0a3630555bb": {
+      "type": "text",
+      "source": "required",
+      "value": "required",
+      "untranslated": "OpenAI tool_choice protocol enum; controls whether a call must be requested."
     },
     "text.d11775b7ccf1": {
       "type": "text",
       "source": " The three fields you actually use: the text, why it stopped, and the token bill.",
       "value": " The three fields you actually use: the text, why it stopped, and the token bill.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "text.d15690f08a57": {
+      "type": "text",
+      "source": "direct",
+      "value": "direct",
+      "untranslated": "Named MAZE_MODELS selector; executable profile lookup, not learner prose."
     },
     "text.d2c70da7bcef": {
       "type": "text",
@@ -3455,11 +3552,6 @@
       "source": " Reading guide: this is infrastructure, not a required coding exercise.",
       "value": " Guía de lectura: esto es infraestructura, no un ejercicio obligatorio."
     },
-    "text.d84064ac3e29": {
-      "type": "text",
-      "source": "At each junction, return NSEW moves. Execution stops at a wall or goal, then walks any corridor automatically.",
-      "value": "En cada cruce, devuelve movimientos NSEW. La ejecución se detiene ante una pared o la meta y, después, recorre automáticamente cualquier pasillo."
-    },
     "text.d8980a134cfd": {
       "type": "text",
       "source": "raw response",
@@ -3512,6 +3604,11 @@
       "value": "north",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
+    "text.dd9b5e0ed9ae": {
+      "type": "text",
+      "source": "\\\\nVisited neighbors: ",
+      "value": "\\\\nCeldas vecinas visitadas: "
+    },
     "text.de9c609c0263": {
       "type": "text",
       "source": " call with a non-empty argument.",
@@ -3541,6 +3638,11 @@
       "source": " decisions (",
       "value": " decisiones ("
     },
+    "text.e35c1bae74bd": {
+      "type": "text",
+      "source": "no conversation history",
+      "value": "sin historial de conversación"
+    },
     "text.e46e7bc3db04": {
       "type": "text",
       "source": "Swapping the reasoning step while the loop stays fixed",
@@ -3561,18 +3663,29 @@
       "type": "text",
       "source": "generation",
       "value": "generation",
-      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+      "untranslated": "Internal capability identifier in model profiles."
     },
     "text.e661f4c935e8~1": {
       "type": "text",
       "source": "generation",
       "value": "generation",
-      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+      "untranslated": "Internal capability identifier in model profiles."
+    },
+    "text.e661f4c935e8~2": {
+      "type": "text",
+      "source": "generation",
+      "value": "generation",
+      "untranslated": "Internal capability identifier in model profiles."
     },
     "text.e8c84d27732d": {
       "type": "text",
       "source": "Pressing Run returns whatever the model produced for that single call, and running it again may give a different response because each call is independent with no shared state between them.",
       "value": "Run devuelve el resultado producido en esa llamada. Una nueva ejecución puede generar otra respuesta, ya que las llamadas son independientes y no comparten estado."
+    },
+    "text.e9847ab0e400": {
+      "type": "text",
+      "source": "Move left the recorded search path.",
+      "value": "El movimiento salió de la ruta de búsqueda registrada."
     },
     "text.e9cc834b3bdb": {
       "type": "text",
@@ -3639,15 +3752,15 @@
       "value": " chat() is a wrapper. Underneath, it makes one ordinary HTTP POST in the",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
+    "text.f322a209f7ac": {
+      "type": "text",
+      "source": "\n    Inspect both boundaries: the context supplied to the model and the validation\n    your code performs before applying a requested action.\n  ",
+      "value": "Examina ambos límites: el contexto que recibe el modelo y la validación que realiza tu código antes de aplicar una acción solicitada."
+    },
     "text.f350044e5ca4": {
       "type": "text",
       "source": "content (the actual answer)",
       "value": "content (respuesta efectiva)"
-    },
-    "text.f41e8a67ffb4": {
-      "type": "text",
-      "source": " Once every branch at a junction has been explored, expose only the corridor we",
-      "value": " Cuando ya se exploraron todas las ramas, expón solo el pasillo de llegada."
     },
     "text.f4b4157a02a6": {
       "type": "text",
@@ -3666,32 +3779,16 @@
       "value": "Corridors (one forward option) are walked for you automatically, so between calls your position can JUMP several cells. The exact list of coordinates you have already travelled is given to you every turn. Use it to connect your moves to where you ended up.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.f5a631b8a5f0": {
-      "type": "text",
-      "source": " · stateless",
-      "value": " · sin estado"
-    },
-    "text.f69b2e7e0c8d": {
-      "type": "text",
-      "source": " dead end: reverse out",
-      "value": " dead end: reverse out",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
     "text.f86b4d3007fd": {
       "type": "text",
       "source": "2d",
       "value": "2d",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.f94f864ca363": {
+    "text.f9f447043303": {
       "type": "text",
-      "source": "NSEW sequence such as 'E' or 'EEN'; direction words also work.",
-      "value": "Secuencia NSEW como 'E' o 'EEN'; también se aceptan palabras de dirección."
-    },
-    "text.f956b9e6ef93": {
-      "type": "text",
-      "source": " arrived through. The model still has to choose that backtrack and continue its search.",
-      "value": " El modelo todavía debe elegir ese retroceso y continuar la búsqueda."
+      "source": "Incomplete model decision; no move was applied. Inspect the response.",
+      "value": "La decisión del modelo está incompleta; no se aplicó ningún movimiento. Examina la respuesta."
     },
     "text.fa1171877ea1": {
       "type": "text",
@@ -3700,18 +3797,6 @@
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
     "text.fcb5f40df9be": {
-      "type": "text",
-      "source": "W",
-      "value": "W",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.fcb5f40df9be~1": {
-      "type": "text",
-      "source": "W",
-      "value": "W",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.fcb5f40df9be~2": {
       "type": "text",
       "source": "W",
       "value": "W",
@@ -3735,11 +3820,6 @@
       "value": "background:#f0a500;color:#000;font-weight:bold",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
-    "text.fdf91ea11fea": {
-      "type": "text",
-      "source": "When every branch is exhausted, use the allowed backtrack to continue the search.",
-      "value": "Cuando todas las ramas estén agotadas, usa el retroceso permitido para continuar la búsqueda."
-    },
     "text.fe79b26d0e6a": {
       "type": "text",
       "source": " default: list every coordinate travelled",
@@ -3757,11 +3837,6 @@
       "source": " default: send ASCII map",
       "value": " default: send ASCII map",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "text.ffbcd23cb803": {
-      "type": "text",
-      "source": "\\\\nAlready tried here: ",
-      "value": "\\\\nYa probadas aquí: "
     }
   }
 }
