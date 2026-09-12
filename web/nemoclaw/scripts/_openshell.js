@@ -29,9 +29,11 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
        Enter). A browser-bound session stays direct. A pasted access session tries
        direct first and then its approved provider-bound relay.
        <code>relayWebSocket: true</code> explicitly selects that recovery route.
-       Returns <code>{ output, raw, frames, exitCode, transport }</code> (<code>output</code>
+       Returns <code>{ output, raw, frames, exitCode, completion, transport }</code> (<code>output</code>
        is ANSI-stripped; <code>exitCode</code> is the command's PTY exit status, or null if none
-       arrived; <code>transport</code> identifies the direct or approved-relay route that opened).
+       arrived; <code>completion</code> distinguishes an exit frame from idle, deadline, or socket
+       closure; <code>transport</code> identifies the route that opened). A stopped call rejects.
+       An idle terminal or missing exit status does not establish command success.
        Reads the launchable URL from the OpenClaw probe. Launchable only.
   */
   const connection = getOpenClawConnection();
@@ -88,7 +90,7 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
     let raw = "", frames = 0, opened = false, idleT = null, exitCode = null;
     let ws = null, candidate = 0, openT = null, openedRoute = null;
     let finished = false, abortHandler = null;
-    const totalT = setTimeout(() => opened ? finish() : fail(terminalOpenError()), totalMs);
+    const totalT = setTimeout(() => opened ? finish("deadline") : fail(terminalOpenError()), totalMs);
     function settle() {
       if (finished) return false;
       finished = true;
@@ -97,13 +99,14 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
       try { ws.close(); } catch (_) {}
       return true;
     }
-    function finish() {
+    function finish(completion) {
       if (!settle()) return;
       resolve({
         output: clean(raw),
         raw: filterOpenClawRuntimeNoise(raw),
         frames,
         exitCode,
+        completion,
         transport: openedRoute?.viaProxy ? "approved-provider-relay-terminal" : "direct-terminal",
       });
     }
@@ -111,7 +114,7 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
       if (!settle()) return;
       reject(error);
     }
-    const bump = () => { if (!finished) { clearTimeout(idleT); idleT = setTimeout(finish, idleMs); } };
+    const bump = () => { if (!finished) { clearTimeout(idleT); idleT = setTimeout(() => finish("idle"), idleMs); } };
 
     function openNext() {
       if (finished) return;
@@ -148,20 +151,21 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
           t = (j.data != null ? j.data : "");
         } catch (_) { t = String(ev.data || ""); }
         raw += t; if (onChunk) { const chunk = clean(t); if (chunk) try { onChunk(chunk); } catch (_) {} }
+        if (exitCode !== null) return finish("exit");
         bump();
       };
       socket.onerror = () => {};
       socket.onclose = () => {
         if (finished || socket !== ws) return;
-        if (opened) finish();
+        if (opened) finish("disconnect");
         else { ws = null; openNext(); }
       };
     }
 
-    // External cancellation (the cell's Stop button) closes the socket and resolves with whatever arrived so far.
+    // Stop closes the socket; partial output must not masquerade as a completed call.
     if (signal) {
-      if (signal.aborted) return finish();
-      abortHandler = () => finish();
+      abortHandler = () => fail(signal.reason || new DOMException("Stopped", "AbortError"));
+      if (signal.aborted) return abortHandler();
       signal.addEventListener("abort", abortHandler, { once: true });
     }
     openNext();
@@ -208,8 +212,8 @@ export async function openclawLoopbackProbe(path, { baseUrl = null, signal = nul
 }
 
 // ── OpenShell policy engine (JS port of sandbox-policy.rego) ─────────────────
-// Computes a static allow/deny verdict (with the kernel proxy's deny-reason) for any candidate network or filesystem action, so a page can predict offline then confirm against the LIVE sandbox via `sandboxExec`.
-// Verdicts matched the live launchable on 2026-06-17, including binary-identity and L7 method/path denials.
+// Predicts an allow/deny decision from the supplied policy. The default is an offline snapshot.
+// Compare the prediction with a command result and the current policy; failures alone do not identify enforcement.
 
 // glob.match(pattern, [delim], str): "*" spans one segment, "**" spans across.
 function _globMatch(pattern, delim, str) {
@@ -263,9 +267,9 @@ function _matchedEndpoint(policy, net) {
 export function evalSandboxNetwork(candidate, policy = OPENSHELL_POLICY_HARDENED) {
   /* @doc <code>helpers.evalSandboxNetwork({binary,host,port,method,path}, policy?)</code> ::
        Static port of the OpenShell network Rego. Returns <code>{action, matched, reason}</code>
-       (deny-by-default; binary-identity + L7 method/path enforced) for a candidate connection,
-       without touching the network. Defaults to the live launchable's hardened policy. Pair
-       with <code>helpers.sandboxExec</code> to confirm the prediction live.
+       for a candidate connection without touching the network. The default is an offline policy
+       snapshot. Pass a policy read from the connected runtime, then compare the prediction with
+       <code>helpers.sandboxExec</code> output and status.
   */
   const policies = policy.network_policies || {};
   const net = { host: candidate.host, port: candidate.port };
@@ -294,7 +298,7 @@ export function evalSandboxFs(path, mode = "write", policy = OPENSHELL_POLICY_HA
   /* @doc <code>helpers.evalSandboxFs(path, mode, policy?)</code> ::
        Static port of the OpenShell filesystem (Landlock) policy. Returns
        <code>"allow"</code>/<code>"deny"</code> for reading or writing <code>path</code>.
-       Defaults to the live launchable's hardened policy.
+       Defaults to an offline policy snapshot; pass the current runtime policy for a comparison.
   */
   const fp = policy.filesystem_policy || policy;
   const under = (p, base) => p === base || p.startsWith(base.replace(/\/$/, "") + "/");
@@ -342,25 +346,39 @@ export const OPENSHELL_POLICY_HARDENED = {
   // They are granted by explicit onboard choice only.
 };
 
-// Run a command INSIDE the live sandbox via `openshell sandbox exec` over the /ws/terminal PTY, so the result is the real kernel verdict, not the model's.
+// Resolve identity from this connection; a previous launchable's name is not reusable.
+async function connectedSandbox(agent, signal) {
+  signal?.throwIfAborted();
+  const baseUrl = getOpenClawConnection().rawUrl;
+  if (!baseUrl) throw new Error("Connect the runtime before selecting a sandbox.");
+  let name = agent;
+  if (!name) {
+    const {openclawBootstrapRequest} = await import("./_openclaw.js");
+    const metadata = await openclawBootstrapRequest("/api/agent", {signal});
+    if (!metadata.ok) throw new Error("Could not read connected sandbox metadata.");
+    name = metadata.json?.agent?.name;
+  }
+  signal?.throwIfAborted();
+  if (getOpenClawConnection().rawUrl !== baseUrl) throw new Error("The connected runtime changed while selecting a sandbox.");
+  if (!/^[A-Za-z0-9_.-]+$/.test(name || "") || name.startsWith("-")) throw new Error("Agent metadata has no valid sandbox name; supply the sandbox name explicitly.");
+  return {name, baseUrl};
+}
+
+// Run a command inside the connected sandbox and return its observed output and status.
 // The command rides the cmd= query string rather than being retyped into the PTY.
 export async function sandboxExec(command, { agent = null, idleMs = 8000, totalMs = 30000, signal = null } = {}) {
   /* @doc <code>helpers.sandboxExec(command, {agent})</code> ::
        Run <code>command</code> inside your live OpenShell sandbox via <code>openshell sandbox
-       exec</code> and return its real output (the kernel's actual allow/deny). Discovers the
+       exec</code> and return its output and status. A failure alone does not identify which
+       mechanism rejected an operation. Discovers the
        sandbox name if <code>agent</code> is omitted. Use it to confirm a
        <code>helpers.evalSandboxNetwork</code> / <code>evalSandboxFs</code> prediction against
        the running sandbox. Launchable only.
   */
-  let name = agent || localStorage.getItem("nemoclaw_sandbox_name");
-  if (!name) {
-    const list = await terminal("openshell sandbox list", { idleMs: 6000, totalMs: 18000, signal });
-    const m = (list.output || "").match(/^\s*([A-Za-z0-9._-]+)\s+\d{4}-\d\d-\d\d.*?Ready/m);
-    name = m ? m[1] : "my-assistant";
-    try { localStorage.setItem("nemoclaw_sandbox_name", name); } catch (_) {}
-  }
-  const res = await terminal("openshell sandbox exec -n " + name + " -- " + command, { idleMs, totalMs, signal });
-  return { ...res, sandbox: name, command };
+  const {name, baseUrl} = await connectedSandbox(agent, signal);
+  const res = await terminal("openshell sandbox exec -n " + name + " -- " + command, {baseUrl, idleMs, totalMs, signal});
+  if (getOpenClawConnection().rawUrl !== baseUrl) throw new Error("The connected runtime changed during the command.");
+  return {...res, sandbox:name, command};
 }
 
 // Read and parse the launchable's live OpenShell policy, so a cell predicts from the SAME policy the kernel enforces rather than a baked copy.
@@ -374,9 +392,11 @@ export async function policyGet(agent = null, { idleMs = 8000, totalMs = 30000, 
        when no policy is available (the shape
        <code>evalSandboxNetwork</code> / <code>evalSandboxFs</code> read). Launchable only.
   */
-  const name = agent || localStorage.getItem("nemoclaw_sandbox_name") || "my-assistant";
+  const {name, baseUrl} = await connectedSandbox(agent, signal);
   const command = "openshell policy get " + name + " --full";
-  const res = await terminal(command, { idleMs, totalMs, signal });
+  const res = await terminal(command, {baseUrl, idleMs, totalMs, signal});
+  if (getOpenClawConnection().rawUrl !== baseUrl) throw new Error("The connected runtime changed while reading policy.");
+  if (res.exitCode !== 0) throw new Error("Policy command did not complete successfully: " + res.completion);
   const raw = (res.output || "").trim();
   const sep = raw.indexOf("---");
   const status = sep >= 0 ? raw.slice(0, sep).trim() : raw;
@@ -694,4 +714,25 @@ export function mountPolicyMap(sel, { policy = OPENSHELL_POLICY_HARDENED, binari
   render(BINS[0].path);
   renderSource();   // the policy source is shown by default, so the map is visibly policy-derived
   return { setBinary: p => { bin.value = p; render(p); } };
+}
+
+export async function courseShell(helpers, command) {
+  /* @doc <code>helpers.courseShell(helpers, command)</code> ::
+       Run a command in the connected sandbox and require an exit status of zero. Pass the current
+       cell helpers for cancellation. Returns terminal text; use readback to verify file content. */
+  helpers.signal?.throwIfAborted();
+  const result = await helpers.sandboxExec(command, {signal:helpers.signal});
+  helpers.signal?.throwIfAborted();
+  if (result.exitCode !== 0) throw new Error("Sandbox command did not complete successfully: " + (result.completion || "unknown status"));
+  return result.output;
+}
+export async function courseRead(helpers, path) {
+  /* @doc <code>helpers.courseRead(helpers, path)</code> ::
+       Read a course workspace file from the connected sandbox. Requires a complete framed
+       response and decodes its UTF-8 bytes. Pass the current cell helpers for cancellation. */
+  if (!/^\/sandbox\/\.openclaw\/workspace\/[a-zA-Z0-9_./-]+$/.test(path) || path.includes("..")) throw new Error("Invalid course file path");
+  const output = await courseShell(helpers, "printf '\\036' && base64 < '" + path + "' && printf '\\037'");
+  const encoded = output.match(/\x1e([A-Za-z0-9+/=\r\n]*)\x1f/);
+  if (!encoded) throw new Error("File read did not return a complete framed result");
+  return new TextDecoder().decode(Uint8Array.from(atob(encoded[1].replace(/\s/g, '')), c => c.charCodeAt(0)));
 }

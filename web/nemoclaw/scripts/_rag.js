@@ -5,11 +5,11 @@
 
 import {
   DEFAULT_EMBEDDING_MODEL, fetchRetry, getEmbeddingConfig, getEmbeddingKey,
-  getModelRequestPolicy, isDefaultModelApiBaseUrl, modelRequestCredentials, _apiHeaders,
+  getModelRequestPolicy, readModelJson, isDefaultModelApiBaseUrl, modelRequestCredentials, _apiHeaders,
 } from "./_shared.js";
 
 // Embed one or more strings and always return a list of vectors.
-export async function embed(input, { model = null, inputType = "query" } = {}) {
+export async function embed(input, { model = null, inputType = "query", signal = null } = {}) {
   /* @doc <code>helpers.embed(text, {model, inputType})</code> ::
        POST to the persistent embedding route <code>{cfg.url}/embeddings</code>.
        Returns an array of vectors (numbers[]). NVIDIA embed models require <code>inputType:
@@ -29,7 +29,7 @@ export async function embed(input, { model = null, inputType = "query" } = {}) {
     input_type: inputType,
   };
   const r = await fetchRetry(`${cfg.url}/embeddings`, {
-    method: "POST", headers, body: JSON.stringify(body), credentials: modelRequestCredentials(cfg.url),
+    signal, method: "POST", headers, body: JSON.stringify(body), credentials: modelRequestCredentials(cfg.url),
   }, getModelRequestPolicy());
   if (!r.ok) {
     const reason = r.status === 429 ? "rate limited" :
@@ -37,7 +37,8 @@ export async function embed(input, { model = null, inputType = "query" } = {}) {
       r.status >= 500 ? "upstream unavailable or starting" : "request rejected";
     throw new Error(`Embedding request failed: HTTP ${r.status} (${reason}). Check Request handling in course setup.`);
   }
-  const data = await r.json();
+  const data = await readModelJson(r, signal);
+  signal?.throwIfAborted();
   return data.data.map(d => d.embedding);
 }
 
@@ -48,7 +49,10 @@ export function cosineSim(a, b) {
        primitive.
   */
   let dot = 0, na = 0, nb = 0;
-  const n = Math.min(a.length, b.length);
+  if (!Array.isArray(a) || !Array.isArray(b) || !a.length || a.length !== b.length
+      || a.some(x => !Number.isFinite(x)) || b.some(x => !Number.isFinite(x)))
+    throw new Error("Cosine similarity requires finite vectors with the same nonzero dimension.");
+  const n = a.length;
   for (let i = 0; i < n; i++) { dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; }
   return dot / (Math.sqrt(na) * Math.sqrt(nb) + 1e-12);
 }

@@ -138,6 +138,7 @@ export async function openclawBootstrapRequest(path = "/api/agent", { signal = n
   if (!OPENCLAW_BOOTSTRAP_PATHS.has(actionPath)) {
     throw new Error("OpenClaw bootstrap requests are limited to /api/agent and /healthz");
   }
+  signal?.throwIfAborted();
   const connection = getOpenClawConnection();
   const rawUrl = String(connection.rawUrl || "").replace(/\/+$/, "");
   if (!rawUrl) throw new Error("Set the launchable URL in the Module 3a probe first.");
@@ -191,6 +192,7 @@ export async function openclawBootstrapRequest(path = "/api/agent", { signal = n
   };
 }
 
+let _verifiedGatewayAccess = { accessProvider: null, accessSession: null };
 let _verifiedGatewayToken = { rawUrl: "", token: "", verifiedAt: 0, metadataMatches: null };
 
 // The launchable access session and OpenClaw gateway token are separate credentials.
@@ -203,7 +205,9 @@ export async function refreshOpenClawGatewayToken({ signal = null, maxAgeMs = 30
   if (!rawUrl) throw new Error("Set the launchable URL in the Module 3a probe first.");
 
   const now = Date.now();
-  if (_verifiedGatewayToken.rawUrl === rawUrl && _verifiedGatewayToken.token &&
+  if (_verifiedGatewayToken.rawUrl === rawUrl && _verifiedGatewayToken.token === connection.token
+      && _verifiedGatewayAccess.accessProvider === connection.accessProvider
+      && _verifiedGatewayAccess.accessSession === connection.accessSession && _verifiedGatewayToken.token &&
       now - _verifiedGatewayToken.verifiedAt < Math.max(0, Number(maxAgeMs) || 0)) {
     return { ..._verifiedGatewayToken, source: "verified-cache", changed: connection.token !== _verifiedGatewayToken.token };
   }
@@ -212,7 +216,14 @@ export async function refreshOpenClawGatewayToken({ signal = null, maxAgeMs = 30
   try {
     const probe = await openclawBootstrapRequest("/api/agent", { signal });
     if (probe.ok) metadataToken = gatewayTokenFromAgentMetadata(probe.json) || "";
-  } catch (_) { /* fall back to the tab's last discovered token below */ }
+  } catch (error) {
+    if (signal?.aborted || error?.name === 'AbortError') throw error;
+  }
+  signal?.throwIfAborted();
+  const current = getOpenClawConnection();
+  if (current.rawUrl !== connection.rawUrl || current.accessSession !== connection.accessSession
+      || current.accessProvider !== connection.accessProvider || current.token !== connection.token)
+    throw new Error('The connected gateway changed; run Connect again before sending a turn.');
 
   const token = metadataToken || connection.token;
   if (!token) throw new Error("GET /api/agent did not provide a gateway token. Reopen the launchable, then try again.");
@@ -222,6 +233,7 @@ export async function refreshOpenClawGatewayToken({ signal = null, maxAgeMs = 30
     accessProvider: connection.accessProvider,
     accessSession: connection.accessSession,
   });
+  _verifiedGatewayAccess = {accessProvider:connection.accessProvider, accessSession:connection.accessSession};
   _verifiedGatewayToken = {
     rawUrl,
     token,
@@ -1778,8 +1790,101 @@ export function mountModelEndpointProbe(targetSel, opts = {}) {
 // openclawChat streams one chat turn to the live agent over /cli/gateway.
 // It keeps one socket per tab and reads the URL + token the probe stored.
 // The gateway-page artifacts use it as their mountChatUI respond.
+// A short key may be canonicalized for the gateway's configured agent. Match the
+// complete remainder, then independently require the acknowledged run ID.
+function matchesGatewaySession(key, session) {
+  if (key === session) return true;
+  if (session.startsWith("agent:")) return false;
+  const match = /^agent:[^:]+:(.+)$/.exec(key);
+  return Boolean(match && match[1] === session);
+}
+
+export async function courseTurn(state, helpers, session, message, {idleMs = 90000, totalMs = 240000} = {}) {
+  /* @doc <code>helpers.courseTurn(state, helpers, session, message)</code> ::
+       Send a turn on the gateway connection opened by this flow. Pass the current cell helpers
+       so Stop and event logs belong to this run. Completes only on the acknowledged run's final
+       chat event; records owned session IDs and observed events in the supplied state. */
+  const signal = helpers.signal;
+  signal?.throwIfAborted();
+  if (typeof state.call !== "function") throw new Error("Run Connect first.");
+  if (state._chatCb || state._courseTurn) throw new Error("Another turn is active on this gateway connection.");
+  if (state.courseGatewayUrl && helpers.getOpenClawConnection?.().rawUrl !== state.courseGatewayUrl)
+    throw new Error("The connected gateway changed; run Connect again before sending a turn.");
+  const owner = {};
+  state._courseTurn = owner;
+  state.courseEvents = [];
+  const call = state.call;
+  state.courseOwnedSessions ||= [];
+  if (!state.courseOwnedSessions.includes(session)) state.courseOwnedSessions.push(session);
+  helpers.log("request", {session, message});
+  const events = [];
+  try {
+    const answer = await new Promise((resolve, reject) => {
+      let runId = null, acknowledged = false, finished = false, idle, total, lastText = "";
+      const queued = [];
+      const abortRun = id => { if (id) Promise.resolve(call("chat.abort", {sessionKey:session, runId:id})).catch(() => {}); };
+      const settle = (error, text) => {
+        if (finished) return;
+        finished = true; clearTimeout(idle); clearTimeout(total);
+        signal?.removeEventListener("abort", stop);
+        if (state._chatCb === receive) state._chatCb = null;
+        if (state._onGatewayClose === closed) state._onGatewayClose = null;
+        if (error) { abortRun(runId); reject(error); }
+        else resolve(text);
+      };
+      const stop = () => settle(new DOMException("Stopped", "AbortError"));
+      const closed = error => settle(error);
+      const bump = () => { clearTimeout(idle); idle = setTimeout(() => settle(new Error("No matching agent activity before the idle deadline")), idleMs); };
+      const receive = event => {
+        if (finished) return;
+        const p = event.payload || {};
+        if (!matchesGatewaySession(p.sessionKey || "", session) || !['agent', 'chat'].includes(event.event) || p.isHeartbeat) return;
+        if (!acknowledged) { queued.push(event); return; }
+        if (!runId || p.runId !== runId) return;
+        bump(); events.push(event);
+        const data = p.data || {};
+        if (event.event === "agent" && p.stream === "assistant" && data.text && data.text !== lastText) {
+          helpers.log(data.text.startsWith(lastText) ? data.text.slice(lastText.length) : data.text);
+          lastText = data.text;
+        }
+        if (event.event === "agent" && p.stream === "tool") {
+          const label = (data.phase === "start" ? "⚙️ " : data.isError ? "✗ " : "✓ ") + (data.name || "tool") + " · " + (data.phase || "event");
+          helpers.log.details(label, helpers.filterOpenClawRuntimeValue(event));
+        }
+        if (event.event === "chat" && p.state === "error") return settle(new Error(p.errorMessage || "Agent run failed"));
+        if (event.event === "chat" && p.state === "aborted") return stop();
+        if (event.event === "chat" && p.state === "final") {
+          helpers.log.details("final event", helpers.filterOpenClawRuntimeValue(event));
+          settle(null, helpers.openclawMessageText(p.message));
+        }
+      };
+      state._chatCb = receive;
+      state._onGatewayClose = closed;
+      signal?.addEventListener("abort", stop, {once:true});
+      total = setTimeout(() => settle(new Error("Agent turn exceeded its total deadline")), totalMs);
+      bump();
+      if (signal?.aborted) return stop();
+      Promise.resolve().then(() => call("sessions.messages.subscribe", {key:session})).then(() => {
+        if (finished) return;
+        return call("chat.send", {sessionKey:session, idempotencyKey:crypto.randomUUID(), message}).then(result => {
+          if (finished) { abortRun(result?.runId); return; }
+          runId = result?.runId; acknowledged = true;
+          if (!runId) return settle(new Error("chat.send returned no runId"));
+          for (const event of queued) receive(event);
+        });
+      }).catch(error => settle(error));
+    });
+    state.courseEvents = events;
+    helpers.log("Final answer", answer);
+    return answer;
+  } finally {
+    if (state._courseTurn === owner) state._courseTurn = null;
+  }
+}
+
 let _ocSock = null;
-export async function openclawChat(message, { session = "main", onToken, onTool, view, signal = null, idleMs = 90000, totalMs = 240000, finalGraceMs = 1500 } = {}) {
+let _ocChatBusy = false;
+export async function openclawChat(message, { session = "main", onToken, onTool, onFinal, view, signal = null, idleMs = 90000, totalMs = 240000, finalGraceMs = 1500 } = {}) {
   /* @doc <code>helpers.openclawChat(message, {session, onToken, onTool, view})</code> :: Send one
        chat turn to the live OpenClaw agent over the <code>/cli/gateway</code>
        WebSocket and stream the reply. Reads the launchable URL + token from the OpenClaw probe
@@ -1788,10 +1893,17 @@ export async function openclawChat(message, { session = "main", onToken, onTool,
        stack-ordered chip per tool/command call (with its args and full result, errors marked),
        and the gateway-reported context-token budget. (Or pass
        <code>onToken(delta)</code>/<code>onTool(name,{id,args})</code> to handle events
-       yourself.) The gateway streams no reasoning channel, so none is shown. Reuse the same
+       yourself; use <code>onFinal(text)</code> or the returned string to reconcile any correction
+       to earlier deltas.) The gateway streams no reasoning channel, so none is shown. Reuse the same
        <code>session</code> for multi-turn. The gateway companion to chat()/createReactAgent.
   */
+  if (_ocChatBusy) throw new Error("Another OpenClaw chat turn is active. Wait or stop it first.");
+  const checkSignal = () => { if (signal?.aborted) throw new DOMException("Stopped", "AbortError"); };
+  checkSignal();
+  _ocChatBusy = true;
+  try {
   const refreshed = await refreshOpenClawGatewayToken({ signal });
+  checkSignal();
   const connection = getOpenClawConnection();
   const rawUrl = connection.rawUrl.replace(/\/+$/, "");
   const token = refreshed.token;
@@ -1804,8 +1916,17 @@ export async function openclawChat(message, { session = "main", onToken, onTool,
   async function connect() {
     return await new Promise((resolve, reject) => {
       const pend = {}, ws = new WebSocket(wsUrl);
-      let chatCb = null;
+      let chatCb = null, failureCb = null, connected = false, connectFinished = false, challengeTimer;
+      const finishConnect = (error) => {
+        if (connectFinished) return;
+        connectFinished = true; clearTimeout(challengeTimer);
+        signal?.removeEventListener("abort", abortConnect);
+        if (error) { try { ws.close(); } catch (_) {} reject(error); }
+        else { connected = true; resolve(sock); }
+      };
+      const abortConnect = () => finishConnect(new DOMException("Stopped", "AbortError"));
       const call = (method, params) => new Promise((res, rej) => {
+        if (ws.readyState !== 1) return rej(new Error("Gateway socket is not open"));
         const id = _uniqueId();
         const tmo = setTimeout(() => { delete pend[id]; rej(new Error(method + " timed out")); }, 20000);
         pend[id] = { res, rej, tmo };
@@ -1815,23 +1936,45 @@ export async function openclawChat(message, { session = "main", onToken, onTool,
         if (d.type === "res" && d.id && pend[d.id]) { const p = pend[d.id]; clearTimeout(p.tmo); delete pend[d.id]; d.ok ? p.res(d.payload) : p.rej(new Error(d.error?.message || "gateway error")); }
         if (d.type === "event" && chatCb) chatCb(d);
       };
-      ws.onerror = () => {};
-      ws.onclose = () => { if (_ocSock && _ocSock.ws === ws) _ocSock = null; };
-      const sock = { ws, call, setCb: cb => { chatCb = cb; }, subs: {} };
+      ws.onerror = () => { if (!connected) finishConnect(new Error("Gateway connection failed")); };
+      ws.onclose = () => {
+        if (_ocSock?.ws === ws) _ocSock = null;
+        const error = new Error("Gateway socket closed");
+        for (const id of Object.keys(pend)) { clearTimeout(pend[id].tmo); pend[id].rej(error); delete pend[id]; }
+        if (!connected) finishConnect(error);
+        failureCb?.(error);
+      };
+      const sock = { ws, url:wsUrl, token, call, setCb: cb => { chatCb = cb; }, setFailure:cb => { failureCb = cb; }, subs: {} };
+      signal?.addEventListener("abort", abortConnect, {once:true});
+      if (signal?.aborted) { abortConnect(); return; }
       const base = ws.onmessage;
       ws.onmessage = ev => { let d; try { d = JSON.parse(ev.data); } catch (_) { return; }
         if (d.event !== "connect.challenge") { base(ev); return; }
         ws.onmessage = base;
         call("connect", { minProtocol: 4, maxProtocol: 4, client: { id: "openclaw-control-ui", version: "0.1.0", platform: "browser", mode: "webchat" }, caps: ["tool-events"], role: "operator", scopes: ["operator.read", "operator.write", "operator.admin"], auth: { token } })
-          .then(() => resolve(sock)).catch(reject);
+          .then(() => finishConnect()).catch(error => finishConnect(error));
       };
-      setTimeout(() => reject(new Error("no challenge arrived within 15s. Open the launchable, then retry with a fresh matching access session in Module 3a.")), 15000);
+      challengeTimer = setTimeout(() => finishConnect(new Error("No gateway challenge within 15 seconds")), 15000);
     });
   }
 
+  checkSignal();
+  if (_ocSock && (_ocSock.url !== wsUrl || _ocSock.token !== token)) { _ocSock.ws.close(); _ocSock = null; }
   if (!_ocSock || _ocSock.ws.readyState !== 1) _ocSock = await connect();
+  checkSignal();
   const sock = _ocSock;
-  if (!sock.subs[session]) { await sock.call("sessions.messages.subscribe", { key: session }); sock.subs[session] = true; }
+  if (!sock.subs[session]) {
+    await new Promise((resolve, reject) => {
+      const stopSubscribe = () => { signal?.removeEventListener("abort", stopSubscribe); reject(new DOMException("Stopped", "AbortError")); };
+      signal?.addEventListener("abort", stopSubscribe, {once:true});
+      if (signal?.aborted) { stopSubscribe(); return; }
+      sock.call("sessions.messages.subscribe", {key:session}).then(value => {
+        signal?.removeEventListener("abort", stopSubscribe); resolve(value);
+      }, error => { signal?.removeEventListener("abort", stopSubscribe); reject(error); });
+    });
+    sock.subs[session] = true;
+  }
+  checkSignal();
   // Pull readable text out of a gateway tool result / partial result, in full.
   const resText = openclawResultText;
   // One-line summary of a tool's args for the chip label (command, path, query…).
@@ -1839,6 +1982,8 @@ export async function openclawChat(message, { session = "main", onToken, onTool,
     const v = a.command || a.path || a.query || a.file || Object.values(a)[0]; return v == null ? "" : String(v); };
   return await new Promise((resolve, reject) => {
     let text = "", deliveredText = "", myRun = null, idle, glob, endGrace, toolStarts = 0, usedTok = 0, winTok = 0, lastModel = "", finished = false;
+    let acknowledged = false;
+    const queued = [];
     const chips = {};   // toolCallId -> chip element (stack-ordered, never reused)
     const deliverFull = (full) => {
       full = filterOpenClawRuntimeNoise(full);
@@ -1850,22 +1995,30 @@ export async function openclawChat(message, { session = "main", onToken, onTool,
       if (full.length >= text.length) text = full;
       if (full.length >= deliveredText.length) deliveredText = full;
     };
-    const done = (stalled) => { if (finished) return; finished = true; clearTimeout(idle); clearTimeout(glob); clearTimeout(endGrace); sock.setCb(null);
-      if (stalled) sock.call("chat.abort", { sessionKey: session }).catch(() => {});
-      if (!text.trim()) deliverFull(toolStarts > 0
-        ? "The agent completed " + toolStarts + " tool call(s) but returned no final text. Retry once; if it repeats, run Health check on Kickstart."
-        : "The gateway completed the turn without a displayable reply. Retry once; if it repeats, run Health check on Kickstart.");
-      if (view && usedTok) view.usage({ context: usedTok, window: winTok || undefined, model: lastModel });
-      resolve(text); };
-    const bump = () => { clearTimeout(idle); idle = setTimeout(() => done(true), idleMs); };
-    glob = setTimeout(() => done(true), totalMs);
-    // Stop button: abort the agent run (chat.abort) and resolve with what we have.
-    if (signal) { if (signal.aborted) return done(true); signal.addEventListener("abort", () => done(true), { once: true }); }
+    const done = (error = null) => {
+      if (finished) return;
+      finished = true; clearTimeout(idle); clearTimeout(glob); clearTimeout(endGrace);
+      sock.setCb(null); sock.setFailure(null); signal?.removeEventListener("abort", stop);
+      if (view && usedTok) view.usage({context:usedTok, window:winTok || undefined, model:lastModel});
+      if (error) { sock.call("chat.abort", {sessionKey:session, ...(myRun ? {runId:myRun} : {})}).catch(() => {}); reject(error); }
+      else resolve(text);
+    };
+    const stop = () => done(new DOMException("Stopped", "AbortError"));
+    const bump = () => { clearTimeout(idle); idle = setTimeout(() => done(new Error("No matching agent activity before the idle deadline")), idleMs); };
+    glob = setTimeout(() => done(new Error("Agent turn exceeded its total deadline")), totalMs);
+    signal?.addEventListener("abort", stop, {once:true});
+    if (signal?.aborted) return stop();
+    sock.setFailure(error => done(error));
 
-    sock.setCb(d => {
+    const receive = d => {
+      if (finished) return;
       const pl = d.payload || {};
       if (pl.isHeartbeat || d.event === "health" || d.event === "tick") return;
-      if (myRun && pl.runId && pl.runId !== myRun) return;
+      const key = pl.sessionKey || "";
+      if (!matchesGatewaySession(key, session)) return;
+      if (d.event !== "chat" && d.event !== "agent") return;
+      if (!acknowledged) { queued.push(d); return; }
+      if (!myRun || pl.runId !== myRun) return;
       bump();
       // The gateway carries token accounting on its frames.
       // totalTokens is what is used; contextTokens is the agent's configured window.
@@ -1873,9 +2026,18 @@ export async function openclawChat(message, { session = "main", onToken, onTool,
       if (pl.totalTokens) usedTok = pl.totalTokens;
       if (pl.contextTokens) winTok = pl.contextTokens;
       if (pl.model) lastModel = pl.model;
-      if (d.event === "chat" && pl.state === "final") { deliverFull(openclawMessageText(pl.message)); done(false); return; }
+      if (d.event === "chat" && pl.state === "error") { done(new Error(pl.errorMessage || "Agent run failed")); return; }
+      if (d.event === "chat" && pl.state === "aborted") { stop(); return; }
+      if (d.event === "chat" && pl.state === "final") {
+        const finalText = openclawMessageText(pl.message);
+        if (finalText !== deliveredText && !finalText.startsWith(deliveredText)) {
+          if (view?.replaceAnswer) view.replaceAnswer(finalText);
+          else if (view) view.tool("Final answer", finalText);
+        } else deliverFull(finalText);
+        onFinal?.(finalText);
+        text = finalText; done(); return;
+      }
       if (d.event !== "agent") return;
-      const sk = pl.sessionKey || ""; if (sk !== session && !sk.endsWith(":" + session)) return;
       const data = pl.data || {}, stream = pl.stream || "";
       const id = data.toolCallId;
       if (stream === "assistant" || ("delta" in data && "text" in data)) {
@@ -1893,23 +2055,31 @@ export async function openclawChat(message, { session = "main", onToken, onTool,
         const c = chips[id], b = c.querySelector(".chatui-tool-body"); if (b) b.textContent = resText(data.result);
         if (data.isError) { c.classList.add("err"); const s = c.querySelector("summary"); if (s) s.textContent = s.textContent.replace("🔧", "✗"); }
       }
-      else if (data.phase === "end" && !data.itemId) {
-        clearTimeout(endGrace);
-        endGrace = setTimeout(() => done(false), finalGraceMs);
-      }
-    });
+      // Lifecycle end is not authoritative chat completion. Wait for chat.final.
+    };
+    sock.setCb(receive);
 
     bump();
+    if (signal?.aborted) return stop();
     sock.call("chat.send", { sessionKey: session, idempotencyKey: _uniqueId(), message })
-      .then(res => { myRun = (res && res.runId) || null; })
-      .catch(e => { clearTimeout(idle); clearTimeout(glob); sock.setCb(null); reject(e); });
+      .then(res => {
+        if (finished) {
+          if (res?.runId) sock.call("chat.abort", {sessionKey:session, runId:res.runId}).catch(() => {});
+          return;
+        }
+        myRun = res?.runId; acknowledged = true;
+        if (!myRun) return done(new Error("chat.send returned no runId"));
+        for (const event of queued) receive(event);
+      }).catch(error => done(error));
   });
+  } finally { _ocChatBusy = false; }
 }
 
 export const GW_CONNECT = `
 const refreshedGateway = await helpers.refreshOpenClawGatewayToken({ signal: helpers.signal });
 const connection = helpers.getOpenClawConnection();
 const rawUrl = connection.rawUrl;
+state.courseGatewayUrl = rawUrl;
 const token = refreshedGateway.token;
 const accessProvider = connection.accessProvider;
 const accessSession = connection.accessSession;
@@ -1948,12 +2118,23 @@ _ws.onmessage = ev => {
 };
 _ws.onerror = () => {};
 state._chatCb = null;
-state.call = (method, params) => new Promise((resolve, reject) => {
+const call = (method, params) => new Promise((resolve, reject) => {
+  if (_ws.readyState !== 1) return reject(new Error("Gateway socket is not open"));
   const id  = nextId();
   const tmo = setTimeout(() => { delete _pend[id]; reject(new Error(method + " timed out")); }, 20000);
   _pend[id] = { resolve, reject, tmo };
   _ws.send(JSON.stringify({ type: "req", id, method, params: params || {} }));
 });
+state.call = call;
+_ws.onclose = () => {
+  const error = new Error("Gateway socket closed");
+  for (const id of Object.keys(_pend)) {
+    clearTimeout(_pend[id].tmo);
+    _pend[id].reject(error);
+    delete _pend[id];
+  }
+  if (state.call === call) state._onGatewayClose?.(error);
+};
 await new Promise((resolve, reject) => {
   let challenged = false;
   let challengeTimer = null;
@@ -2034,37 +2215,32 @@ try {
   helpers.log("  pending exec approvals: " + pending);
 } catch (e) { helpers.log("  exec.approval.list failed: " + e.message); }
 
-// 3. Echo probe proves exec works; finish as soon as the marker returns.
+// The probe uses the same run/session filtering and cancellation as a course turn.
 const PROBE = nextId("quick-health-").slice(0, 21);
-await state.call("sessions.messages.subscribe", { key: PROBE });
-let ok = false, sawTool = false, runId = null;
-const trace = [], t0 = performance.now();
+let ok = false, sawTool = false, outcome = "no completed tool result";
+const t0 = performance.now();
 const secs = () => ((performance.now() - t0) / 1000).toFixed(1) + "s";
-helpers.log("  · probe: asked the agent to echo a marker with its exec tool…");
-const outcome = await new Promise((resolve) => {
-  const timer = setTimeout(() => resolve("timed out after " + PROBE_TIMEOUT_S + "s"), PROBE_TIMEOUT_S * 1000);
-  if (helpers.signal) helpers.signal.addEventListener("abort", () => resolve("stopped"), { once: true });
-  state._chatCb = d => {
-    const pl = d.payload || {};
-    if (pl.isHeartbeat || d.event === "health" || d.event === "tick") return;
-    if (runId && pl.runId && pl.runId !== runId) return;
-    if (d.event !== "agent") return;
-    const data = pl.data || {};
-    trace.push({ t: secs(), itemId: data.itemId, phase: data.phase, name: data.name, exitCode: data.exitCode, output: (data.output || "").slice(0, 80) });
-    if ((data.itemId || "").startsWith("tool:") && data.phase === "start" && !sawTool) {
-      sawTool = true; helpers.log("  · " + secs() + " agent called its " + (data.name || "exec") + " tool");
-    }
-    if ((data.itemId || "").startsWith("command:") && data.phase === "end") {
-      helpers.log("  · " + secs() + " exec returned, exit " + data.exitCode);
-      if (data.exitCode === 0 && (data.output || "").includes(PROBE_MARKER)) { ok = true; clearTimeout(timer); resolve("marker echoed"); }
-    }
-  };
-  state.call("chat.send", { sessionKey: PROBE, idempotencyKey: "h" + Date.now(), message: "Run exactly this with your exec tool and report nothing else: echo " + PROBE_MARKER })
-    .then(r => { runId = r && r.runId; }).catch(() => { clearTimeout(timer); resolve("chat.send failed"); });
-});
-state._chatCb = null;
-state.call("chat.abort", { sessionKey: PROBE }).catch(() => {});
-state.call("sessions.delete", { key: PROBE }).catch(() => {});   // don't leave the probe session behind
+try {
+  await helpers.courseTurn(state, helpers, PROBE,
+    "Run exactly this with your exec tool and report its result: echo " + PROBE_MARKER,
+    {totalMs: PROBE_TIMEOUT_S * 1000});
+  const toolEvents = state.courseEvents.filter(event => event.event === "agent" && event.payload?.stream === "tool");
+  sawTool = toolEvents.some(event => event.payload.data?.phase === "start");
+  ok = toolEvents.some(event => {
+    const data = event.payload.data || {};
+    const result = data.result;
+    const exitCode = result?.details?.exitCode ?? result?.exitCode;
+    return data.phase === "result" && !data.isError && exitCode === 0
+      && helpers.openclawResultText(result).includes(PROBE_MARKER);
+  });
+  if (ok) outcome = "marker returned with exit status zero";
+} catch (error) {
+  helpers.signal?.throwIfAborted();
+  outcome = error.message;
+} finally {
+  await state.call("sessions.delete", {key:PROBE}).catch(error => helpers.log("Probe cleanup failed: " + error.message));
+}
+const trace = state.courseEvents || [];
 
 if (ok) {
   helpers.log("✓ HEALTHY in " + secs() + ". The agent called its exec tool and the command returned. Tool calls work.");
@@ -2097,20 +2273,22 @@ if (cfg.parsed && cfg.parsed.tools && cfg.parsed.tools.toolSearch) {
 // stale session state is part of the failure you are diagnosing.
 const RESET_SESSIONS = false;
 if (RESET_SESSIONS) {
-  await state.call("sessions.reset", { key: "agent:main:main" }).catch(() => {});
-  let offset = 0, all = [];
-  for (;;) { const page = await state.call("sessions.list", { limit: 100, offset }); all = all.concat(page.sessions || []); if (!page.hasMore) break; offset = page.nextOffset; }
   let removed = 0;
-  for (const s of all.filter(s => !/:main$/.test(s.key))) { try { await state.call("sessions.delete", { key: s.key }); removed++; } catch (e) {} }
-  helpers.log("  ✓ reset agent:main:main and deleted " + removed + " throwaway session(s)");
+  const retained = [];
+  for (const key of state.courseOwnedSessions || []) {
+    try { await state.call("sessions.delete", {key}); removed++; }
+    catch (error) { retained.push(key); helpers.log("Session cleanup failed: " + error.message); }
+  }
+  state.courseOwnedSessions = retained;
+  helpers.log("Deleted " + removed + " session(s) recorded by this flow.");
 } else {
   helpers.log("  · session cleanup skipped (set RESET_SESSIONS = true only when needed)");
 }
 
-// 3. Restart only when a config patch was made and you want to apply it now.
+// 3. Restart is a separate explicit choice, including after an earlier repair.
 const DO_RESTART = false;
-if (DO_RESTART && configChanged) {
-  await state.call("gateway.restart.request", { reason: "course recovery: disable toolSearch" }).catch(e => helpers.log("  restart failed: " + e.message));
+if (DO_RESTART) {
+  await state.call("gateway.restart.request", { reason: "course recovery requested by operator" });
   helpers.log("  ⟳ restart requested. Wait ~40s, then re-run Connect and the 🩺 Health check.");
   helpers.log("  Still failing after that? The sandbox is wedged below the gateway, so relaunch the launchable from Brev.");
 } else if (configChanged) {

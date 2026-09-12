@@ -37,10 +37,9 @@ body {
   min-height: 100vh;
 }
 
-/* Page scroll remains normal; every descendant that becomes a scroll container
- * keeps wheel/touch momentum from chaining into the document. */
-html, body { overscroll-behavior: auto; }
-body * { overscroll-behavior: contain; }
+/* Shared pointer/wheel handling marks only regions with measured overflow. */
+html, body, body * { overscroll-behavior: auto !important; }
+body .course-scroll-containment { overscroll-behavior: contain !important; }
 
 /* ── Top bar ────────────────────────────────────────────────────────────────── */
 /* Minimal: brand on the left, key-pill on the right, nothing in between.

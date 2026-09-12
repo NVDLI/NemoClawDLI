@@ -138,7 +138,7 @@ export function makeViz(log) {
           <text x="${W - 10}" y="${H - 8}" text-anchor="end" font-size="9" font-family="ui-monospace,monospace" fill="#6f6f6f">USER=blue · ASSISTANT=green · TOOL=amber · SYSTEM=purple</text></svg>`);
       },
 
-      ganttBars(workers, wallSeconds, title = "Concurrency vs serial time") {
+      ganttBars(workers, wallSeconds, title = "Worker durations and wall time") {
         /* @doc <code>helpers.viz.ganttBars(workers, wallSeconds, title)</code> :: Gantt-style bar chart comparing per-worker duration against total wall time. */
         log.svg(ganttBarsSVG(workers, wallSeconds, title));
       },

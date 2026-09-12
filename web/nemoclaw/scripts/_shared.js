@@ -11,6 +11,27 @@ installNemoClawActivityTracking();
 // bounded NVIDIA DLI relay by default because the upstream browser CORS response is not stable.
 // Local file previews use the same relay; other origins stay direct unless the learner enables it.
 
+// Contain wheel chaining only while the pointer is over a region that can scroll.
+let courseScrollContainment = null;
+function canScroll(element) {
+  const overflowY = getComputedStyle(element).overflowY;
+  const overflowX = getComputedStyle(element).overflowX;
+  return /^(auto|scroll|overlay)$/.test(overflowY) && element.scrollHeight > element.clientHeight + 1
+    || /^(auto|scroll|overlay)$/.test(overflowX) && element.scrollWidth > element.clientWidth + 1;
+}
+function updateCourseScrollContainment(event) {
+  const next = event.composedPath().find(node => node instanceof Element
+    && node !== document.body && node !== document.documentElement && canScroll(node)) || null;
+  if (next === courseScrollContainment) return;
+  courseScrollContainment?.classList.remove("course-scroll-containment");
+  next?.classList.add("course-scroll-containment");
+  courseScrollContainment = next;
+}
+if (typeof document !== "undefined" && document.addEventListener) {
+  document.addEventListener("pointerover", updateCourseScrollContainment, {capture:true, passive:true});
+  document.addEventListener("wheel", updateCourseScrollContainment, {capture:true, passive:true});
+}
+
 export const DEFAULT_MODEL_API_BASE_URL = "https://integrate.api.nvidia.com/v1";
 const IFRAME_PROXY_URL = "https://nvidia-api-cors-proxy.experiments.courses.nvidia.com/v1";
 const IFRAME_PROXY_OPT_IN_KEY = "nemoclaw_iframe_proxy_opt_in";
@@ -542,13 +563,36 @@ export async function chat({ messages, tools = null, model = null, temperature =
   if (!resp.ok) {
     throw modelHttpFailure(resp);
   }
-  return resp.json();
+  return readModelJson(resp, signal);
 }
 
-export async function readModelStreamChunk(reader, timeoutMs) {
-  let timer;
+export async function readModelJson(resp, signal = null) {
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let content = "";
   try {
+    while (true) {
+      const { done, value } = await readModelStreamChunk(reader, getModelRequestPolicy().timeoutMs, signal);
+      if (done) break;
+      content += decoder.decode(value, { stream: true });
+    }
+    return JSON.parse(content + decoder.decode());
+  } finally {
+    try { await reader.cancel(); } catch (_) {}
+    reader.releaseLock();
+  }
+}
+
+export async function readModelStreamChunk(reader, timeoutMs, signal = null) {
+  let timer;
+  let onAbort;
+  try {
+    if (signal?.aborted) throw signal.reason || new DOMException("Stopped", "AbortError");
     return await Promise.race([
+      new Promise((_, reject) => {
+        onAbort = () => reject(signal.reason || new DOMException("Stopped", "AbortError"));
+        signal?.addEventListener("abort", onAbort, { once: true });
+      }),
       reader.read(),
       new Promise((_, reject) => {
         timer = setTimeout(() => reject(new Error(
@@ -562,6 +606,7 @@ export async function readModelStreamChunk(reader, timeoutMs) {
     throw error;
   } finally {
     clearTimeout(timer);
+    signal?.removeEventListener("abort", onAbort);
   }
 }
 
@@ -601,7 +646,7 @@ export async function chatStream(opts, onChunk, extra = {}) {
   const reader = resp.body.getReader();
   const dec = new TextDecoder();
   let buf = "";
-  let usage = null, finishReason = null, lastRaw = null;
+  let usage = null, finishReason = null, lastRaw = null, responseModel = useModel;
   let content = "", reasoning = "";
   // tool_calls arrive fragmented across frames: the streaming API splits function.arguments JSON into deltas, each tagged with an `index` for the call it belongs to.
   // Accumulate by index here so the caller ends with a flat [{id, function: {name, arguments}}] array.
@@ -621,8 +666,9 @@ export async function chatStream(opts, onChunk, extra = {}) {
 
   // Boundary-safe SSE frame parser: consume only complete "data: ...\n\n" frames.
   // Partial frames stay buffered for the next read.
+  try {
   outer: while (true) {
-    const { done, value } = await readModelStreamChunk(reader, requestPolicy.timeoutMs);
+    const { done, value } = await readModelStreamChunk(reader, requestPolicy.timeoutMs, signal);
     if (done) break;
     buf += dec.decode(value, { stream: true });
     let idx;
@@ -636,6 +682,7 @@ export async function chatStream(opts, onChunk, extra = {}) {
         let obj;
         try { obj = JSON.parse(payload); } catch (_) { continue; }
         lastRaw = obj;
+        if (obj.model) responseModel = obj.model;
         const choice = obj?.choices?.[0];
         const delta = choice?.delta;
         if (delta?.content) { content += delta.content; if (onChunk) onChunk(delta.content); }
@@ -649,11 +696,15 @@ export async function chatStream(opts, onChunk, extra = {}) {
       }
     }
   }
+  } finally {
+    try { await reader.cancel(); } catch (_) {}
+    reader.releaseLock();
+  }
 
   const summary = {
     content, reasoning,
     tool_calls: toolCalls.filter(Boolean),
-    finish_reason: finishReason, usage, model: useModel, raw: lastRaw,
+    finish_reason: finishReason, usage, model: responseModel, raw: lastRaw,
   };
   if (onMeta) onMeta(summary);
   return summary;
@@ -689,11 +740,11 @@ export {
 // Used by 04a/04b only.
 // Re-exported here so the helper registry/menu resolve these names and pages keep importing them from _shared.js.
 import {
-  terminal, openclawLoopbackProbe, evalSandboxNetwork, evalSandboxFs, OPENSHELL_POLICY_HARDENED,
+  terminal, courseShell, courseRead, openclawLoopbackProbe, evalSandboxNetwork, evalSandboxFs, OPENSHELL_POLICY_HARDENED,
   sandboxExec, policyGet, policyToYaml, annotatePolicyYaml, mountPolicyMap,
 } from "./_openshell.js";
 export {
-  terminal, openclawLoopbackProbe, evalSandboxNetwork, evalSandboxFs, OPENSHELL_POLICY_HARDENED,
+  terminal, courseShell, courseRead, openclawLoopbackProbe, evalSandboxNetwork, evalSandboxFs, OPENSHELL_POLICY_HARDENED,
   sandboxExec, policyGet, policyToYaml, annotatePolicyYaml, mountPolicyMap,
 };
 
@@ -776,9 +827,10 @@ export const VIZ_BUILDERS = makeViz(() => {});
 // The menu enumerates these and reads each one's source via Function.toString(), so the source cannot drift from the definition.
 // `viz.*` source comes from the live viz object once a node has run; `state`, `fetch`, `trace`, and `log` are described by SPECIALS, since they are values and closures, not module functions.
 export const HELPER_FNS = {
+  courseShell, courseRead,
   chat, chatStream, webSearch, instantAnswer, formatSearchResults,
-  embed, cosineSim, fetchRetry, delay, getConfig, getKey, getModelApiBaseUrl, setModelApiBaseUrl, isDefaultModelApiBaseUrl, terminal, openclawLoopbackProbe,
-  coursePage, coursePages, contextWindow, estimateTokens, browserChatFetch, diagramSVG, ganttBarsSVG, mountFigures, openFigureLightbox, wireFigureZoom, mountChatUI, mountAgentChat, mountConsole, mountOpenClawCli, mountKeyPanel, mountModelEndpointProbe, openclawBootstrapRequest, openclawChat, openclawGatewayWsUrl, refreshOpenClawGatewayToken, runOpenClawConnectionAudit, redactOpenClawDiagnostic, getOpenClawConnection, setOpenClawConnection,
+  embed, cosineSim, fetchRetry, delay, getConfig, getEmbeddingConfig, getKey, getModelApiBaseUrl, setModelApiBaseUrl, isDefaultModelApiBaseUrl, terminal, openclawLoopbackProbe,
+  coursePage, coursePages, contextWindow, estimateTokens, browserChatFetch, diagramSVG, ganttBarsSVG, mountFigures, openFigureLightbox, wireFigureZoom, mountChatUI, mountAgentChat, mountConsole, mountOpenClawCli, mountKeyPanel, mountModelEndpointProbe, openclawBootstrapRequest, openclawChat, courseTurn, openclawGatewayWsUrl, refreshOpenClawGatewayToken, runOpenClawConnectionAudit, redactOpenClawDiagnostic, getOpenClawConnection, setOpenClawConnection,
   filterOpenClawRuntimeNoise, filterOpenClawRuntimeValue, openclawMessageText, openclawResultText,
   evalSandboxNetwork, evalSandboxFs, sandboxExec, policyGet, mountPolicyMap,
 };
@@ -1157,13 +1209,13 @@ export { mountKeyPanel };
 // Re-exported here so the helper registry/menu and existing page imports are unchanged.
 import {
   gatewayTokenFromAgentMetadata, getOpenClawConnection, getOpenClawProxyConfig, mountClawGateway, mountClawProbe, mountOpenClawConnectionAudit,
-  mountEndpointProbe, mountModelEndpointProbe, openclawBootstrapRequest, openclawChat, openclawGatewayWsUrl, refreshOpenClawGatewayToken, runOpenClawConnectionAudit, redactOpenClawDiagnostic,
+  mountEndpointProbe, mountModelEndpointProbe, openclawBootstrapRequest, openclawChat, courseTurn, openclawGatewayWsUrl, refreshOpenClawGatewayToken, runOpenClawConnectionAudit, redactOpenClawDiagnostic,
   filterOpenClawRuntimeNoise, filterOpenClawRuntimeValue, openclawMessageText, openclawResultText,
   setOpenClawConnection, setOpenClawProxyConfig, GW_CONNECT, mountGwRecover,
 } from "./_openclaw.js";
 export {
   gatewayTokenFromAgentMetadata, getOpenClawConnection, getOpenClawProxyConfig, mountClawGateway, mountClawProbe, mountOpenClawConnectionAudit,
-  mountEndpointProbe, mountModelEndpointProbe, openclawBootstrapRequest, openclawChat, openclawGatewayWsUrl, refreshOpenClawGatewayToken, runOpenClawConnectionAudit, redactOpenClawDiagnostic,
+  mountEndpointProbe, mountModelEndpointProbe, openclawBootstrapRequest, openclawChat, courseTurn, openclawGatewayWsUrl, refreshOpenClawGatewayToken, runOpenClawConnectionAudit, redactOpenClawDiagnostic,
   filterOpenClawRuntimeNoise, filterOpenClawRuntimeValue, openclawMessageText, openclawResultText,
   setOpenClawConnection, setOpenClawProxyConfig, GW_CONNECT, mountGwRecover,
 };

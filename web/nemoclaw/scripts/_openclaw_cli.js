@@ -170,11 +170,18 @@ function createGatewayRpc(runtime) {
 function createArtifactView(target) {
   const output = target.querySelector(".da-out");
   let answer = null;
+  const answerParts = [];
   const view = { streamed: false };
   view.token = delta => {
     view.streamed = true;
-    if (!answer) { answer = document.createElement("div"); output.appendChild(answer); }
+    if (!answer) { answer = document.createElement("div"); output.appendChild(answer); answerParts.push(answer); }
     answer.textContent += delta;
+  };
+  view.replaceAnswer = text => {
+    for (const part of answerParts) part.remove();
+    answerParts.length = 0;
+    answer = null;
+    view.token(text);
   };
   view.tool = (label, body) => {
     // Tool output stays collapsed so the agent answer remains the dominant artifact.
