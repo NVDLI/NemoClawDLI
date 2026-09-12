@@ -86,32 +86,14 @@
      differ. Implementation detail varies too. Their combined cost and convenience form
      the <em>harness weight</em> used below.</p>
   <ul class="cli-list">
-    <li><a href="https://docs.claude.com/en/docs/claude-code" target="_blank" rel="noopener"><strong>Claude Code</strong></a> (Anthropic).
-        Beacon <code>CLAUDE.md</code> at the project root, plus <code>~/.claude/CLAUDE.md</code> for user-wide rules.
-        A rich palette (edit, bash, web, sub-agents, long tasks) with hooks that intercept tool calls, and conservative
-        defaults: you opt into broader file and network reach.</li>
-    <li><a href="https://github.com/openai/codex" target="_blank" rel="noopener"><strong>Codex CLI</strong></a> (OpenAI).
-        Beacon <code>AGENTS.md</code>. Its default sandbox is approval mode: every write or shell command waits for your
-        nod unless you pass <code>--full-auto</code>. The palette centres on shell, and even file-edit is shell.</li>
-    <li><a href="https://docs.cursor.com" target="_blank" rel="noopener"><strong>Cursor</strong></a> (IDE-resident).
-        Beacon <code>.cursor/rules/*.mdc</code>. The agent is wired through your
-        editor, so the palette is editor-shaped ("apply this diff to file X") and the sandbox is whatever your editor and
-        OS already grant.</li>
-    <li><a href="https://github.com/NousResearch/hermes-agent" target="_blank" rel="noopener"><strong>Hermes</strong></a> (Nous Research).
-        A self-improving terminal agent: it <em>creates skills from experience</em>, persists memory across sessions,
-        runs a built-in cron, and is reachable from Telegram, Discord, and Slack through its gateway. The same application
-        shape as OpenClaw, with self-modification and a messaging surface turned on.</li>
-    <li><a href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener"><strong>OpenClaw</strong></a> (in NVIDIA NemoClaw).
-        The one you have been driving. Its beacon is the whole <code>workspace/</code> folder (SOUL.md, AGENTS.md,
-        IDENTITY.md, and the rest). It supports unattended operation through gateway-managed triggers, and in the
-        NemoClaw reference stack it runs <em>inside</em> the OpenShell sandbox, so its tool palette is gated by a kernel policy
-        regardless of what the model decides.</li>
+    <li><a href="https://code.claude.com/docs/en/permissions" target="_blank" rel="noopener"><strong>Claude Code</strong></a> uses <code>CLAUDE.md</code> instructions. Tool rules, permission mode, and sandbox settings determine which actions run or require approval.</li>
+    <li><a href="https://learn.chatgpt.com/docs/agent-approvals-security" target="_blank" rel="noopener"><strong>Codex CLI</strong></a> uses <code>AGENTS.md</code> instructions. Sandbox settings limit access; approval policy controls review. Workspace edits and commands can run automatically within those limits.</li>
+    <li><a href="https://cursor.com/docs/agent/security" target="_blank" rel="noopener"><strong>Cursor</strong></a> uses <code>.cursor/rules/*.mdc</code>. Workspace edits generally run without approval; terminal commands require approval by default. Modes and settings can change those checks.</li>
+    <li><a href="https://hermes-agent.nousresearch.com/docs/user-guide/security/" target="_blank" rel="noopener"><strong>Hermes</strong></a> provides skills, persistent memory, scheduled jobs, and configured messaging integrations. Its approval mode and terminal backend determine command handling and isolation.</li>
+    <li><a href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener"><strong>OpenClaw</strong></a> uses workspace files such as SOUL.md and AGENTS.md, gateway sessions, and scheduled triggers. In this course it runs inside OpenShell. Inspect the active policy and gateway permissions to assess its reach.</li>
   </ul>
 
-  <p>Note that Hermes seems to differ from the editor CLIs because "automatic learning"
-    is supported by default as a flagship feature. This system still uses the same fundamental
-    primitives as the other agents (skills/cron/memory updates with write permissions),
-    so the risk is not unique to Hermes.</p>
+
 
   <div class="callout">
     <strong>OpenShell can host this class of agent application; NemoClaw is the
@@ -122,13 +104,12 @@
   </div>
 
   <h2>The degrees of freedom are the attack surface</h2>
-  <p>Every one of these agents is configured along the same axes, and each axis
-     names a capability you grant or withhold. The NemoClaw column below reads
-     straight from the OpenShell policy your launchable is running, the one you
-     read live and proved in <a href="04a-safety.html">Module 4a</a>.</p>
+  <p>These axes describe capabilities an operator can grant or withhold. The reference
+     configuration below gives you questions to compare with the policy and command evidence
+     you collected in <a href="04a-safety.html">Module 4a</a>.</p>
 
   <table class="dof-table">
-    <thead><tr><th>Degree of freedom</th><th>The knob</th><th>NemoClaw default (live policy)</th></tr></thead>
+    <thead><tr><th>Degree of freedom</th><th>The knob</th><th>NemoClaw reference configuration</th></tr></thead>
     <tbody>
       <tr><td>Filesystem</td><td>which paths are readable / writable</td>
         <td>write only <code>/tmp</code>, <code>/sandbox/.openclaw</code>, <code>/sandbox/.nemoclaw</code>, and the workdir; system paths read-only. Enforced by Landlock (<code>best_effort</code>).</td></tr>
@@ -139,7 +120,7 @@
       <tr><td>Binary identity</td><td>which executable may use a grant</td>
         <td>resolved by exe path plus an ancestor walk with a trust-on-first-use hash; <code>argv[0]</code> is distrusted because it is spoofable.</td></tr>
       <tr><td>Persistence</td><td>cron, skills, and the SOUL.md persona</td>
-        <td>writable inside the workspace. The policy schema cannot make a single file read-only, so SOUL.md protection is DAC plus <code>chattr +i</code> under "shields up", not the sandbox.</td></tr>
+        <td>Workspace permissions and host-managed file protection determine whether persona files can change. Verify the running configuration.</td></tr>
       <tr><td>Inference routing</td><td>which model endpoint calls leave through</td>
         <td>routed through the managed <code>inference.local</code> gateway; the Privacy Router decides what context may leave on the operator's policy, not the agent's.</td></tr>
     </tbody>
@@ -168,7 +149,7 @@
       label: "the Try-it artifact, in code",
       autorun: true,
       code: `// "Weigh the harnesses" artifact. Grounds on the vendored framework READMEs
-// Inline CLI extracts seed the prompt; README toggles add full docs for one turn.
+// Inline CLI extracts seed the prompt; reference toggles add context for one turn.
 const META = { frameworks: [
   { id: "claude-code", name: "Claude Code", note: "Anthropic. Beacon CLAUDE.md.", source: "https://raw.githubusercontent.com/anthropics/claude-code/main/README.md", extract: "Claude Code is an agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster by executing routine tasks, explaining complex code, and handling git workflows -- all through natural language commands. Use it in your terminal, IDE, or tag @claude on Github." },
   { id: "codex", name: "Codex CLI", note: "OpenAI. Beacon AGENTS.md.", source: "https://raw.githubusercontent.com/openai/codex/main/README.md", extract: "Codex CLI is a coding agent from OpenAI that runs locally on your computer. If you want Codex in your code editor (VS Code, Cursor, Windsurf), install in your IDE. If you want the desktop app experience, run codex app or visit the Codex App page." },
@@ -179,23 +160,35 @@ const META = { frameworks: [
 const FW = META.frameworks;                       // [{ id, name, note, source, extract }]
 const nameOf = (id) => (FW.find((f) => f.id === id) || {}).name || id;
 const _cache = {};
-async function readme(id) {
-  const fallback = () => (FW.find((f) => f.id === id) || {}).extract || "";
-  if (_cache[id] == null) {
-    try { const r = await helpers.fetch("assets/cli_readme_" + id + ".txt"); _cache[id] = r.ok ? await r.text() : fallback(); }
-    catch (e) { _cache[id] = fallback(); }
+async function readme(id, signal) {
+  signal?.throwIfAborted();
+  const framework = FW.find((f) => f.id === id);
+  const fallback = { text: framework.extract, label: "Course-authored description", source: framework.source };
+  if (id === "cursor") return fallback;
+  if (_cache[id]) return _cache[id];
+  try {
+    const response = await helpers.fetch("assets/cli_readme_" + id + ".txt", { signal });
+    if (!response.ok) throw new Error("README request failed: " + response.status);
+    const text = await response.text();
+    signal?.throwIfAborted();
+    if (!text.trim()) throw new Error("README was empty.");
+    const reference = { text, label: "Full README", source: framework.source };
+    _cache[id] = reference;
+    return reference;
+  } catch (error) {
+    signal?.throwIfAborted();
+    return { ...fallback, error: error.message };
   }
-  return _cache[id];
 }
 
-// A grounded system prompt, assembled from the READMEs instead of guessed.
+// Combine the short descriptions with any README context selected for this turn.
 const SYS =
   "These agent CLIs share one shape, a model looping over tools. Grounded descriptions from their docs:\\n" +
   FW.map((f) => "- " + f.name + " (" + f.note + "): " + f.extract).join("\\n") +
-  "\\n\\nThey are interchangeable for almost any task; what differs is harness weight: the abstractions each hides, the defaults it assumes, and the capabilities it makes first-class instead of leaving you to hand-roll. " +
+  "\\n\\nCompare the abstractions each hides, the defaults it assumes, and the capabilities it provides or leaves to the operator. " +
   "Self-modification is not unique to any one of them: any that can edit files can rewrite its own skills, so treat it as a difference of emphasis, not capability. " +
   "Ground every claim in the descriptions above and in any READMEs the user attached. If a detail is not supported there, say you are unsure instead of inventing a feature. " +
-  "For the user's task, answer in three parts. (1) In two sentences, the near-identical core loop all of them would run, so it is clear any could do it. (2) One line per CLI: the single thing that is first-class for THIS task versus what you would hand-roll, plus the default that sets its weight, citing the doc detail it rests on. (3) One sentence: none is more capable here, so the choice is how much harness weight the task is worth. Do not crown a single winner.";
+  "For the user's task, describe the needed workflow, then compare the documented capabilities and defaults of each CLI. Cite the supplied detail for each claim. Explain any capability gap or missing evidence. Give a task-dependent recommendation only when the supplied evidence supports it; otherwise name what the operator must verify.";
 
 // One toggle per framework; selection clears after the next question.
 const selected = new Set();
@@ -205,7 +198,7 @@ if (stale) stale.remove();
 const bar = document.createElement("div");
 bar.id = "clis-readme-bar"; bar.className = "chatui-mods";
 bar.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 8px";
-bar.innerHTML = "<label>READMEs</label>";
+bar.innerHTML = "<label>Reference text</label>";
 
 const btnFor = {};
 FW.forEach((f) => {
@@ -219,24 +212,28 @@ const clearSel = () => { selected.clear(); FW.forEach((f) => btnFor[f.id].classL
 
 helpers.mountChatUI("#clis-artifact", {
   growLog: true,   // flow with the page instead of an internal 480px scroll that traps the wheel
-  greeting: "Tell me a task and where it runs. I will show the one core loop all of these CLIs would run for it, then weigh each from its docs, rather than crowning a single winner. Toggle a README above to hand me its full text for your next question.",
+  greeting: "Tell me a task and where it runs. I will compare the needed workflow with the supplied documentation and identify differences or missing evidence. Select reference text above for your next question. Each attachment is labeled as a full README or a course-authored description.",
   examples: ["Refactor a large repo unattended overnight", "A personal assistant I message from my phone", "Triage prod incidents on a server 24/7"],
 
   respond: async (text, ctx) => {
     let primer = "";
     const sel = [...selected];
     if (sel.length) {
-      const parts = await Promise.all(sel.map(async (id) => "## " + nameOf(id) + " README\\n\\n" + (await readme(id))));
-      primer = "\\n\\nThe user attached these full READMEs as reference for this decision. Ground your answer in them:\\n\\n" + parts.join("\\n\\n---\\n\\n");
-      ctx.view.tool("injected READMEs: " + sel.map(nameOf).join(", "));
+      const references = await Promise.all(sel.map(async (id) => ({ id, ...await readme(id, ctx.signal) })));
+      ctx.signal?.throwIfAborted();
+      const parts = references.map(reference => "## " + nameOf(reference.id) + " · " + reference.label + "\\n\\n" + reference.text);
+      primer = "\\n\\nThe selected reference text follows. Each attachment identifies whether it is a full README or a course-authored description. Ground your answer in the supplied text:\\n\\n" + parts.join("\\n\\n---\\n\\n");
+      for (const reference of references) {
+        ctx.view.tool(nameOf(reference.id) + " · " + reference.label, { source: reference.source, ...(reference.error ? { error: reference.error } : {}) });
+      }
     }
     const s = await helpers.chatStream({ messages: [{ role: "system", content: SYS + primer }, { role: "user", content: text }], max_tokens: 8196, signal: ctx.signal },
       (t) => ctx.view.token(t), { onReasoning: (r) => ctx.view.reasoning(r) });
     if (s.usage) ctx.view.usage({ input: s.usage.prompt_tokens, output: s.usage.completion_tokens, model: s.model });
-    clearSel();                                   // deselect so the same README never double-injects
+    clearSel();                                   // deselect so the same reference never double-injects
   },
 });
-helpers.log("rendered below. Toggle a README to add it as context, then ask.");
+helpers.log("rendered below. Select reference text to add it as context, then ask.");
 
 /* mountChatUI renders the panel; respond() streams one chat call. */
 `,
@@ -248,13 +245,7 @@ helpers.log("rendered below. Toggle a README to add it as context, then ask.");
   <div class="learning-block-body">
   <h2>Build a CLI agent whose shell is this browser</h2>
   <p>
-    The CLIs above attach an agent to a terminal on a real machine. You can build the same
-    shape with the browser's own JavaScript runtime as the shell. The agent below has one
-    tool, <code>js</code>, with which it writes JavaScript that runs in this live page and
-    returns a result the agent reads before deciding what to run next. The runtime is already
-    loaded, so the harness weighs nothing to stand up. Its reach is still wide: the agent can
-    read the DOM, call <code>fetch</code>, and use the course helpers, all inside the tab you
-    are reading.
+    The browser agent has one <code>js</code> tool that runs JavaScript in this page. It can read the DOM, call <code>fetch</code>, and use course helpers within browser permissions. Stop cancels model requests and prevents later tool calls; it cannot interrupt synchronous JavaScript already executing or undo a completed action.
   </p>
   <p>
     Module 4c returns to this browser form factor and separates the transferable part&mdash;an
@@ -270,99 +261,114 @@ helpers.log("rendered below. Toggle a README to add it as context, then ask.");
       label: "a CLI agent bound to the browser runtime, in code",
       intro: "Give the mounted agent a goal and watch its JavaScript tool calls first. Open the implementation when you want to change the tool boundary, loop cap, or final-answer rule.",
       autorun: true,
-      code: `// A CLI agent whose shell is THIS browser's JS runtime. Its one tool, js, runs
-// code in the live page and returns a value, so the agent loops: reason, run, read, repeat.
-// The runtime is already loaded, nothing to install.
-const JS_TOOL = {
+      code: `const JS_TOOL = {
   type: "function",
   function: {
-    name: "js",
-    description: [
-      "Run JavaScript in this browser page and return a value.",
-      "You have access to window, document, fetch, location, and the course helpers object.",
-      "End with a return statement to report the result.",
-    ].join(" "),
-    parameters: {
-      type: "object",
-      properties: { code: { type: "string", description: "JavaScript to run. Use return." } },
-      required: ["code"],
-    },
+    name: "js", description: "Run JavaScript in this page using document, window, fetch and helpers. Return the requested data, not a success flag. Scoped console output is also returned as evidence.",
+    parameters: { type: "object", properties: { code: { type: "string" } }, required: ["code"] },
   },
 };
-
-// Run agent-written code against the live runtime. helpers is injected; document, window, and fetch are ambient.
-async function runJS(code) {
-  const fn = new Function("helpers", "return (async () => { " + code + " })();");
-  return await fn(helpers);
+function bounded(text, limit) {
+  const marker = "\\n[truncated]";
+  return text.length <= limit ? text : text.slice(0, limit - marker.length) + marker;
 }
-
+async function runJS(code) {
+  let logged = "", truncated = false, output;
+  const capture = level => (...args) => {
+    if (logged.length >= 1000) { truncated = true; return; }
+    const line = args.map(value => {
+      if (typeof value === "string") return value;
+      const seen = new WeakSet();
+      try {
+        return JSON.stringify(value, (_key, item) => {
+          if (typeof item === "bigint") return String(item) + "n";
+          if (item && typeof item === "object") {
+            if (seen.has(item)) return "[Circular]";
+            seen.add(item);
+          }
+          return item;
+        }) ?? String(value);
+      } catch (error) { return "[console serialization error: " + error.message + "]"; }
+    }).join(" ");
+    const next = logged + level + ": " + line + "\\n";
+    truncated ||= next.length > 1000;
+    logged = next.slice(0, 1000);
+  };
+  const scopedConsole = Object.fromEntries(["log", "info", "warn", "error", "debug", "table"].map(level => [level, capture(level)]));
+  try {
+    const fn = new Function("helpers", "console", "return (async () => { " + code + " })();");
+    const value = await fn(helpers, scopedConsole);
+    output = value === undefined ? "undefined (return the requested data or inspect the captured console output)"
+      : typeof value === "object" ? JSON.stringify(value) : String(value);
+    if (typeof output !== "string") output = "undefined (the result did not serialize to text)";
+  } catch (error) { output = "Error: " + (error?.message || String(error)); }
+  if (logged) output = bounded(output, 350) + "\\nConsole output:\\n" + logged + (truncated ? "\\n[truncated]" : "");
+  return bounded(output, 1500);
+}
 helpers.mountChatUI("#jsagent-artifact", {
-  growLog: true,   // flow with the page instead of an internal 480px scroll that traps the wheel
-  greeting: "Give me a goal. My shell is this page's JavaScript runtime, so I act by running JS right here in your tab.",
-  examples: [
-    "How many code editors are on this page?",
-    "List the H2 section headings on this page.",
-    "Fetch assets/rag_index.json and report the embed model and how many docs it pins.",
-    "How many links on this page open in a new tab?",
-    "Compute the 12th Fibonacci number and return it.",
-    "Which keys are in localStorage right now?",
-  ],
+  growLog: true,
+  greeting: "Give me a goal. I can run JavaScript in this page and inspect what it returns.",
+  examples: ["How many code editors are on this page?", "List the H2 section headings on this page.", "Fetch assets/rag_index.json and report the embed model and how many docs it pins.", "How many links on this page open in a new tab?", "Compute the 12th Fibonacci number and return it.", "Which keys are in localStorage right now?"],
   respond: async (goal, ctx) => {
+    const checkStopped = () => ctx.signal?.throwIfAborted();
     const messages = [
-      {
-        role: "system",
-        content: [
-          "You are a CLI agent whose shell is this browser's JavaScript runtime.",
-          "To learn anything, call the js tool with code that runs in the live page.",
-          "End each code snippet with a return statement.",
-          "Never claim a result you did not run.",
-          "Editable code cells render as .CodeMirror elements, not .code-editor.",
-          "If a selector returns nothing, inspect the DOM before concluding.",
-          "When you have enough, reply with a short plain-text answer and no tool call.",
-        ].join(" "),
-      },
+      { role: "system", content: "You are an agent whose tool runs JavaScript in this browser page. Use js to inspect the page or compute results. Return the actual requested data, such as an array of heading text, rather than true or a success message. Console output is captured alongside the return value; use only that returned evidence. Editable code cells render as .CodeMirror elements. Never invent missing data; if output is truncated, request a smaller result. When enough evidence is available, give a short plain-text answer without a tool call." },
       { role: "user", content: goal },
     ];
-
     let answered = false;
     for (let step = 0; step < 8; step++) {
-      const r = await helpers.chat({ messages, tools: [JS_TOOL], max_tokens: 8196 });
-      const m = r.choices[0].message;
-      messages.push(m);
-
-      const calls = m.tool_calls || [];
+      checkStopped();
+      const response = await helpers.chat({ messages, tools: [JS_TOOL], max_tokens: 8196, signal: ctx.signal });
+      checkStopped();
+      const choice = response.choices?.[0];
+      const message = choice?.message;
+      ctx.view.tool("Model response", { model: response.model || null, finishReason: choice?.finish_reason || null, raw: response });
+      if (!message || message.refusal || !["stop", "tool_calls"].includes(choice.finish_reason)) throw new Error("The model did not complete this turn. Inspect the response and output budget before retrying.");
+      messages.push(message);
+      const calls = message.tool_calls || [];
+      if (!Array.isArray(calls)) throw new Error("The model returned malformed tool calls. Inspect its response before retrying.");
+      if (calls.length && choice.finish_reason !== "tool_calls") throw new Error("Tool requests did not complete; no tools ran.");
+      if (new Set(calls.map(call => call?.id)).size !== calls.length) throw new Error("Duplicate tool-call IDs; no tools ran.");
       if (!calls.length) {
-        const txt = (m.content || "").trim();
-        if (txt) { ctx.view.token(txt); answered = true; break; }
-        messages.push({ role: "user", content: "Run js to gather what you need, or give your final plain-text answer." });
+        if (choice.finish_reason !== "stop") throw new Error("No complete answer arrived.");
+        const content = typeof message.content === "string" ? message.content.trim() : "";
+        if (content) { ctx.view.token(content); answered = true; break; }
+        messages.push({ role: "user", content: "Run js for evidence or give a plain-text answer. If you cannot continue, explain why." });
         continue;
       }
-      for (const tc of calls) {
-        let code = "";
-        try { code = JSON.parse(tc.function.arguments || "{}").code || ""; } catch (_) {}
-        if (!code.trim()) {
-          ctx.view.tool("$ js", "(empty)");
-          ctx.view.tool("returned", "no code submitted");
-          messages.push({ role: "tool", tool_call_id: tc.id, content: "Error: no code submitted. Put JavaScript in the code argument and end with a return statement." });
-          continue;
+      for (const call of calls) {
+        checkStopped();
+        if (!call || typeof call.id !== "string" || !call.id.trim()) throw new Error("A tool call has no valid ID. No further tools ran.");
+        let code, output;
+        try {
+          if (call.function?.name !== "js") throw new Error("Unsupported tool; use js.");
+          code = JSON.parse(call.function.arguments || "{}").code;
+          if (typeof code !== "string" || !code.trim()) throw new Error("Supply a nonempty code string ending with return.");
+          ctx.view.tool("$ js", code);
+          checkStopped();
+          output = await runJS(code);
+          checkStopped();
+        } catch (error) {
+          checkStopped();
+          output = "Error: " + (error?.message || String(error));
         }
-        ctx.view.tool("$ js", code);                       // the JS the agent chose to run
-
-        let out;
-        try { out = await runJS(code); } catch (e) { out = "Error: " + ((e && e.message) || e); }
-        const text = out === undefined ? "undefined (did the snippet end with a return?)" : (typeof out === "object" ? JSON.stringify(out) : String(out));
-        ctx.view.tool("returned", text.slice(0, 700));     // what the runtime handed back
-        messages.push({ role: "tool", tool_call_id: tc.id, content: text.slice(0, 1500) });
+        output = bounded(output, 1500);
+        ctx.view.tool("Returned", output);
+        messages.push({ role: "tool", tool_call_id: call.id, content: output });
       }
     }
-    // Always land on a plain-text answer instead of dead-ending at "(no answer)".
     if (!answered) {
-      const r = await helpers.chat({ messages: messages.concat([{ role: "user", content: "Give your best final answer now in one or two plain-text sentences, using only what the tool returned." }]), max_tokens: 8196 });
-      ctx.view.token((r.choices[0].message.content || "I could not determine that from the page.").trim());
+      checkStopped();
+      const response = await helpers.chat({ messages: messages.concat([{ role: "user", content: "Summarize only the returned evidence in one or two plain-text sentences. State any unresolved question." }]), max_tokens: 8196, signal: ctx.signal });
+      checkStopped();
+      const choice = response.choices?.[0];
+      ctx.view.tool("Final model response", { model: response.model || null, finishReason: choice?.finish_reason || null, raw: response });
+      if (choice?.finish_reason !== "stop" || choice?.message?.refusal || choice?.message?.tool_calls?.length || !choice?.message?.content?.trim()) throw new Error("No complete final answer arrived. Inspect the recorded tool results and model response.");
+      ctx.view.token(choice.message.content.trim());
     }
   },
 });
-helpers.log("CLI agent mounted below. Give it a goal and watch it drive the runtime.");
+helpers.log("Browser agent mounted below.");
 `,
     });
   </script>
@@ -488,21 +494,7 @@ return { mounted: cli.mounted, connected: cli.connected, session: cli.session };
     });
   </script>
 
-  <div class="callout">
-    <p><strong>The terminal above is the operator plane.</strong> From your launchable's host shell,
-    openshell manages the sandboxed agent, so the host is the control plane that sits above the policy, the
-    perimeter <a href="04a-safety.html">Module 4a</a> flagged. Commands you push into the agent with
-    <code>agent &lt;cmd&gt;</code> run under its deny-by-default policy. The host shell answers to the
-    operator instead.</p>
-    <ul>
-      <li><strong>Cost to stand up.</strong> The launchable was provisioned for you and is already running. On your own machine a CLI takes an install and a configured runtime before its first turn.</li>
-      <li><strong>Reach.</strong> Inside the agent the kernel policy gates every call, the deny-by-default rules you read in Module 4a. On your own machine the CLI can read and write your files and reach your whole network.</li>
-      <li><strong>Blast radius.</strong> A prompt injection inside the agent hits that sandbox and its audit trail. The same injection on your own machine runs against your real files, which is the degrees-of-freedom argument from the top of this page, now in your hands.</li>
-    </ul>
-    <p>A heavier harness earns its weight whenever a task calls for persistence and real work that a tab
-    cannot carry. The skill worth building is reading a task well enough to pick the weight it needs, which
-    is the layered view <a href="04c-going-further.html">Module 4c</a> closes on.</p>
-  </div>
+  <div class="callout"><p><strong>The terminal above is the operator plane.</strong> The host shell manages the sandboxed agent. Commands sent with <code>agent &lt;cmd&gt;</code> run inside that agent environment; host commands use operator permissions. Inspect both boundaries as in <a href="04a-safety.html">Module 4a</a>.</p><ul><li><strong>Setup.</strong> This runtime is already provisioned. A separate CLI needs its own installation and configuration.</li><li><strong>Reach.</strong> File, network, and process permissions depend on the environment. Inspect the actual grants.</li><li><strong>Blast radius.</strong> Prompt injection may cause harm through allowed capabilities. Compare available actions, enforcement, and audit evidence.</li></ul></div>
 
   <div class="foot-nav">
     <a href="04a-safety.html">← Module 4a: OpenShell</a>

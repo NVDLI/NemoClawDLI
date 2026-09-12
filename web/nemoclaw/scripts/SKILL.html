@@ -251,7 +251,7 @@ helpers.viz.scoreBarChart([
   { label: "live", score: helpers.getKey() ? 4 : 2 },
   { label: "lab", score: 1 },
 ], { title: "available now", threshold: 3 });
-helpers.viz.ganttBars([{ name: "static audit", start: 0, end: 1.2 }, { name: "render-only", start: 0, end: 3.9 }], 4, "test timing sketch");
+helpers.viz.ganttBars([{ label: "static audit", dt: 1.2 }, { label: "render-only", dt: 3.9 }], 4, "test timing sketch");
 helpers.viz.diffTable({
   left: "before", right: "after",
   rows: [
@@ -360,7 +360,7 @@ helpers.log.html(host.innerHTML);
 helpers.log.svg('<svg viewBox="0 0 220 54" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px"><text x="16" y="32" fill="#76b900" font-family="ui-monospace,monospace" font-size="14">RunCell log.svg</text></svg>');
 helpers.log.draw(220, 72, '<rect x="24" y="30" width="50" height="20" fill="#76b900"/><text x="92" y="45" fill="#f2f2f2" font-family="ui-monospace,monospace" font-size="13">RunCell log.draw</text>', { title: "shared log" });
 helpers.log.details("diagramSVG", helpers.diagramSVG({ nodes: [{ id: "ui", label: "UI", kind: "tool", x: 1, y: 1 }], edges: [] }).slice(0, 400));
-helpers.log.details("ganttBarsSVG", helpers.ganttBarsSVG([{ name: "mount", start: 0, end: 1 }], 1, "UI helper").slice(0, 400));
+helpers.log.details("ganttBarsSVG", helpers.ganttBarsSVG([{ label: "mount", dt: 1 }], 1, "UI helper").slice(0, 400));
 helpers.log("mountAgentChat, mountKeyPanel, and mountFigures are page-level mount helpers; use them with a real DOM target on course pages.");
 return { signalReady: !!helpers.signal, mounted: ["mountConsole", "mountChatUI"] };
 `,

@@ -89,10 +89,7 @@
   <div class="hero">
     <div class="eyebrow">Securing Agents · Going Further</div>
     <h1>Going <span>Further</span></h1>
-    <p class="lead">
-      By now you have built an agent loop from scratch, put it behind a
-      kernel-level sandbox, and measured the blast radius the policy leaves.
-    </p>
+
     <p class="lead">
       A real deployment adds its own data and users. You now need to choose where
       to deploy it, how to bring in your own knowledge, and which open
@@ -106,7 +103,7 @@
     <h2>Moving the exercises onto a real runtime</h2>
     <p>
       The in-browser exercises were sized for learning, with proxied
-      endpoints and sessions that reset between runs. Taking the same
+      endpoints and a mix of per-run state, browser persistence, and gateway sessions. Taking the same
       work to a persistent deployment means choosing a runtime, an inference
       provider, and an operating model for long-running sessions. Hosted endpoints require no
       learner-managed GPU; local inference requirements
@@ -121,11 +118,10 @@
       </li>
       <li>
         <a href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener">build.nvidia.com</a>
-        hosts OpenAI-compatible endpoints for every NVIDIA-hosted model.
-        The Python and JS examples in this course paste in here
-        unchanged; swap the <code>baseURL</code> from your launchable's
-        proxy to <code>https://integrate.api.nvidia.com/v1</code>
-        and supply an NVIDIA API key. Account access and quota follow the
+        provides model endpoints. This course uses the model route you configure.
+        For a separate deployment, configure <code>baseURL</code> as
+        <code>https://integrate.api.nvidia.com/v1</code> and supply an NVIDIA API key.
+        Verify the selected model's interface, account access, and quota under the
         current service terms.
       </li>
       <li>
@@ -143,7 +139,7 @@
         NVIDIA Inference Microservices package the model,
         tokenizer, and an OpenAI-compatible HTTP server into one
         container. The Persona, Tooled, and ReAct agents in
-        Modules 1 and 2 ship unchanged against a NIM endpoint.
+        Modules 1 and 2 can use a compatible NIM endpoint after you verify its model, tool-call, and structured-output support.
       </li>
       <li>
         Frameworks worth comparing:
@@ -210,23 +206,10 @@
         on-prem retrieval stack that keeps data inside your VPC.
       </li>
       <li>
-        <a href="https://build.nvidia.com/blueprints?ncid=ref-dli-146986" target="_blank" rel="noopener">NVIDIA AI Blueprints</a>
-        give reference implementations for common agent shapes: a RAG
-        chatbot, a multimodal PDF extractor, a research
-        assistant. Each blueprint is the Research Agent (2c)
-        configuration for one domain, fully deployable. They work
-        both as starting templates and as a sanity check on
-        your own architecture.
+        <a href="https://build.nvidia.com/blueprints?ncid=ref-dli-146986" target="_blank" rel="noopener">NVIDIA AI Blueprints</a> provide reference implementations for different workflows. Compare their requirements and architecture with the planner, tools, and memory from Module 2c before adapting one.
       </li>
       <li>
-        <a href="https://github.com/NVIDIA/NeMo-Curator" target="_blank" rel="noopener">NeMo Data Curator</a>
-        treats bringing your own corpus in cleanly as a project of its own.
-        It handles deduplication, language
-        filtering, PII removal, and exact-match scoring at the
-        scales where doing it by hand stops working. Retrieval
-        quality compounds on data quality, so cleaning the corpus
-        once pays off across every query the agent ever makes
-        against it.
+        <a href="https://github.com/NVIDIA/NeMo-Curator" target="_blank" rel="noopener">NeMo Data Curator</a> provides corpus preparation tools such as deduplication and filtering. Evaluate cleanup against your retrieval tasks; it does not guarantee that every answer improves.
       </li>
       <li>
         <a href="https://github.com/NVIDIA/NeMo-Guardrails" target="_blank" rel="noopener">NeMo Guardrails</a>
@@ -272,9 +255,7 @@
     <div class="section-eyebrow">References hub</div>
     <h2>Reading list, organised by module</h2>
     <p>
-      This hub gathers every source the modules' "References" tails
-      point back to, and every entry is freely available through arxiv or
-      the org's own docs and GitHub repositories.
+      These references extend the module reading lists. Papers and documentation may be freely accessible; some books require purchase or institutional access.
     </p>
     <p>The topic groups follow this course first, then extend into fleet and evaluation work.</p>
 
@@ -333,7 +314,7 @@
       <li>Zheng et al. (2023). <a href="https://arxiv.org/abs/2306.05685" target="_blank" rel="noopener">Judging LLM-as-a-Judge with MT-Bench.</a> <code>arXiv:2306.05685</code>.</li>
       <li>Liu et al. (2023). <a href="https://arxiv.org/abs/2303.16634" target="_blank" rel="noopener">G-Eval.</a> <code>arXiv:2303.16634</code>.</li>
       <li>Liang et al. (2022). <a href="https://arxiv.org/abs/2211.09110" target="_blank" rel="noopener">Holistic Evaluation of Language Models (HELM).</a> <code>arXiv:2211.09110</code>.</li>
-      <li>Saad-Falcon et al. (2024). <a href="https://arxiv.org/abs/2403.02419" target="_blank" rel="noopener">ARES: Automated Eval for RAG.</a> <code>arXiv:2403.02419</code>.</li>
+      <li>Saad-Falcon et al. (2023). <a href="https://arxiv.org/abs/2311.09476" target="_blank" rel="noopener">ARES: An Automated Evaluation Framework for Retrieval-Augmented Generation Systems.</a> <code>arXiv:2311.09476</code>.</li>
       <li>Greshake et al. (2023). <a href="https://arxiv.org/abs/2302.12173" target="_blank" rel="noopener">Not what you've signed up for.</a> <code>arXiv:2302.12173</code> (indirect prompt injection).</li>
       <li>Inan et al. (2023). <a href="https://arxiv.org/abs/2312.06674" target="_blank" rel="noopener">Llama Guard.</a> <code>arXiv:2312.06674</code>.</li>
       <li>Willison (2025). <a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" target="_blank" rel="noopener">The lethal trifecta</a>.</li>
@@ -410,7 +391,7 @@
     <ul class="lp-helpers">
       <li><a href="https://blogs.nvidia.com/blog/what-is-agentic-ai/" target="_blank" rel="noopener">What Is Agentic AI?</a> The plain-language definition the whole path starts from: reasoning and iterative planning to solve multi-step problems autonomously.</li>
       <li><a href="https://www.nvidia.com/en-us/glossary/deep-agents/" target="_blank" rel="noopener">Deep Agents glossary</a> Names the four pillars (planning, sub-agent delegation, filesystem memory, skills) that separate a deep agent from the shallow ReAct loop, the same split Module 2c draws.</li>
-      <li><a href="https://developer.nvidia.com/blog/traditional-rag-vs-agentic-rag-why-ai-agents-need-dynamic-knowledge-to-get-smarter/" target="_blank" rel="noopener">Traditional RAG vs. agentic RAG</a> Why an agent that plans its own retrieval beats a single fixed lookup, the reasoning behind the Index Agent in Module 2b.</li>
+      <li><a href="https://developer.nvidia.com/blog/traditional-rag-vs-agentic-rag-why-ai-agents-need-dynamic-knowledge-to-get-smarter/" target="_blank" rel="noopener">Traditional RAG vs. agentic RAG</a> compares fixed retrieval with an agent choosing retrieval steps. Evaluate quality, cost, and failures on your task.</li>
       <li><a href="https://developer.nvidia.com/blog/run-autonomous-self-evolving-agents-more-safely-with-nvidia-openshell/" target="_blank" rel="noopener">Run autonomous agents more safely with NVIDIA OpenShell</a> The OpenShell sandbox layer that backs the kernel-level containment you study in Modules 3 and 4.</li>
       <li><a href="https://developer.nvidia.com/blog/build-a-secure-always-on-local-ai-agent-with-nvidia-nemoclaw-and-openclaw/" target="_blank" rel="noopener">Build a secure always-on local AI agent with NemoClaw</a> A step-by-step install of NemoClaw on DGX Spark, showing how the reference stack assembles OpenClaw, OpenShell, policy, and local inference end to end.</li>
       <li><a href="https://blogs.nvidia.com/blog/what-openclaw-agents-mean-for-every-organization/" target="_blank" rel="noopener">What OpenClaw agents mean for every organization</a> When to reach for a long-running claw on your own infrastructure rather than a one-shot prompt, the design question Module 4 keeps returning to.</li>
@@ -419,18 +400,14 @@
 
   <!-- ── The harness around the model ─────────────────────────────── -->
   <div class="section">
-    <div class="section-eyebrow">What you actually built</div>
-    <h2>The course built a harness around a swappable model</h2>
+    <div class="section-eyebrow">Module connections</div>
+    <h2>Connect the loop, workflow, runtime, and policy</h2>
     <p>
-      The model never changed across these modules. The same frozen and stateless
-      model that filled the reasoning slot in Module 1 is the one running under
-      the deep agent, the OpenClaw persona, and the sandboxed claw.
+      The browser model route and the persistent agent runtime are configured separately.
+      Their models can differ. The reusable part is the surrounding orchestration,
+      whose behavior still needs testing with the model you choose.
     </p>
-    <p>
-      Everything else you wrote is the <em>harness</em>, the system that wraps a
-      raw model and makes it useful for sustained, autonomous work. Each module
-      added one layer of it.
-    </p>
+
     <ul style="font-size:.9rem;color:var(--td);line-height:1.7">
       <li>
         <strong>The loop.</strong> Module 1 turned a single
@@ -441,12 +418,7 @@
         so you do not hand-roll it.
       </li>
       <li>
-        <strong>The workflow.</strong> Module 2 scoped what each stage could see and
-        how results moved between fixed pipelines, retrieval, and research branches.
-        Choosing what to fold in and what to keep out is
-        <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents" target="_blank" rel="noopener">context engineering</a>,
-        and it shapes output quality at least as much as the wording of any one
-        prompt (<a href="https://lilianweng.github.io/posts/2023-06-23-agent/" target="_blank" rel="noopener">Weng, 2023</a>).
+        <strong>The workflow.</strong> Module 2 compared fixed pipelines, retrieval, and research branches. Evaluate context selection and prompt wording against the same task and evidence.
       </li>
       <li>
         <strong>The runtime.</strong> Module 3 moved those workflows into OpenClaw,
@@ -454,21 +426,18 @@
         a browser call.
       </li>
       <li>
-        <strong>The containment.</strong> Module 4 added the layer that does not
-        read the prompt at all. OpenShell enforces its rules at the syscall
-        boundary, so a successful injection still cannot exceed the policy.
+        <strong>The containment.</strong> Module 4 examined restrictions on files, network access, and process operations. Their effect depends on active policy and enforcement; harmful use of allowed capabilities remains possible.
       </li>
     </ul>
     <p>
-      Your engineering accumulates in these layers rather than in the model
-      itself. A stronger model drops into the same harness with little rework,
-      so you carry these layers forward across upgrades.
+      These layers can carry forward across model upgrades. Retest tool arguments,
+      output formats, context limits, cancellation, and task results on the replacement
+      endpoint before relying on the same behavior.
     </p>
     <p>
-      When an agent keeps failing the same way, the gap is usually a layer you
-      have not built yet, and a check enforced beneath it fixes the failure more
-      durably than another pass at the prompt. The patterns below show what that
-      work looks like in practice.
+      When an agent repeatedly fails, inspect its inputs, model responses, tool results,
+      and runtime constraints to locate the cause. Choose the repair from that evidence.
+      The deployment considerations below provide further questions to test.
     </p>
   </div>
 
@@ -480,62 +449,35 @@
     <ul class="pattern-list">
       <li class="pattern">
         <p>
-          <strong>Forecasts about agent productivity are systematically wrong.</strong>
-          <a href="https://metr.org/" target="_blank" rel="noopener">METR</a>'s randomised trial of experienced open-source developers
+          <strong>Measure productivity on the work you intend to automate.</strong>
+          <a href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/" target="_blank" rel="noopener">METR</a>'s early-2025 randomised trial of experienced open-source developers
           found a meaningful slowdown from using a coding agent, even though
           they expected to go faster and reported afterward that they had.
-          That distance between forecast and measured result is the finding to
-          carry forward, so weigh it when scoping the value of any agent you ship.
+          That result describes the tools, developers, and work studied at that time.
+          Compare forecasts with measurements on your own task and current tools.
         </p>
       </li>
       <li class="pattern">
         <p>
-          <strong>A single strong agent is the default.</strong>
-          A single strong agent beats a multi-agent system once a task crosses a
-          threshold of complexity (<a href="https://arxiv.org/abs/2403.02419" target="_blank" rel="noopener">Chen et al., 2024</a>).
-          Push N higher and the emergent behaviours can hurt more than the
-          failure modes you set out to fix. Before adding one more to the
-          topology, name the specific failure mode it is meant to fix. If you
-          can't name it, the extra complexity is unlikely to help.
+          <strong>Measure the value of additional model calls.</strong>
+          <a href="https://arxiv.org/abs/2403.02419" target="_blank" rel="noopener">Chen et al. (2024)</a>
+          studied repeated-call voting and filtering. On their studied tasks, adding calls
+          could improve results and then reduce them. That finding does not determine the
+          best agent architecture for your task. Measure whether an added call or agent
+          fixes a specific failure and whether its benefit justifies its cost.
         </p>
       </li>
       <li class="pattern">
         <p>
-          <strong>Kernel containment answers what survives a successful prompt injection.</strong>
-          Prompt rules and application guardrails help, but they only act on
-          what the model exposes to them, and an injected instruction that
-          looks valid will pass straight through.
+          <strong>Test application checks and runtime permissions.</strong> Requests that pass application checks can still cause harm. Evaluate both the handling of untrusted instructions and the capabilities available to the agent.
         </p>
         <p>
-          Any agent that can touch a real shell or filesystem or reach the
-          network therefore needs a layer beneath the prompt. That layer
-          enforces its rules at the syscall boundary, below the level any
-          instruction can reach.
+          Use independent execution controls when a workflow can read sensitive data, change files, or communicate externally. Verify that those controls apply to each execution path.
         </p>
       </li>
       <li class="pattern">
         <p>
-          <strong>The agent's admin token is a higher perimeter than the sandbox.</strong>
-          The kernel sandbox bounds what the agent can do to the world, yet it
-          says nothing about whoever holds the agent's operator token. That
-          holder sits above the boundary entirely, free to do any of the
-          following:
-        </p>
-        <ul>
-          <li>read the persona</li>
-          <li>plant cron jobs</li>
-          <li>patch the model and its tools</li>
-          <li>inject a turn into the conversation</li>
-        </ul>
-        <p>
-          The hardness of the box and the scope of that token are separate
-          measurements.
-        </p>
-        <p>
-          Module 4b showed the token reaching past the checkpoint
-          the sandbox never sees. Treat an <code>operator.admin</code> credential
-          like a root password: tight storage and regular rotation. For that
-          agent it reaches further than root does inside the box.
+          <strong>Check administrative authority separately.</strong> The read survey in Module 4a tests selected methods with the current token. Write authority depends on its scope and the gateway configuration. Inspect those grants and protect the credential; read success alone does not establish control over the agent.
         </p>
       </li>
     </ul>
@@ -543,14 +485,9 @@
 
   <h2>Keep the Course Assistant with you</h2>
   <p>
-    The <strong>Course Assistant</strong> behind the <strong>✦</strong> button is available on every English lesson, so this page no longer mounts a second capstone chat. It preloads the current page. When a question crosses modules, the assistant can inspect the course map, search the lessons, and read the relevant pages. Browser-local persistence means sessions stay in this browser: return to one after navigating or reloading, or create another for a clean line of inquiry. As a session grows, the assistant compacts older turns into durable memory, keeps the recent exchange verbatim, and starts a fresh bounded agent thread from that state.
+    The <strong>Course Assistant</strong> behind the <strong>✦</strong> button is available on every English lesson. It preloads the current page. When a question crosses modules, the assistant can inspect the course map, search the lessons, and read the relevant pages. Browser-local persistence means sessions stay in this browser: return to one after navigating or reloading, or create another for a clean line of inquiry. As a session grows, the assistant compacts older turns into durable memory, keeps the recent exchange verbatim, and starts a fresh bounded agent thread from that state.
   </p>
-  <div class="callout">
-    <strong>The shape you built runs in production.</strong> The OpenClaw agent you drove in Modules 3 and
-    4 is built on the <a href="https://github.com/earendil-works/pi-mono" target="_blank" rel="noopener">Pi
-    agent runtime</a> which OpenClaw leverages behind its agent gateway. Looking at this core, you'll see that under
-    all of these layers is the same perceive-reason-act loop, tool calls, and growing message history you relied on in Module 1.
-  </div>
+
   <p><button type="button" class="course-assistant-open" id="open-course-assistant">Open Course Assistant</button></p>
 
   <div class="section" id="course-finish">

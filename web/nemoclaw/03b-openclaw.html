@@ -58,9 +58,9 @@
       NemoClaw supplies the blueprint that packages this harness with OpenShell
       and deployment policy. OpenClaw, rather than a separate Python orchestrator, drives each
       turn and reads its workspace files into the active context. You will inspect those files,
-      compare two persona configurations, and save memory that survives beyond the model call.
+      compare two message instructions, and verify file memory from a fresh conversation.
     </p>
-<figure style="margin:1.4em 0"><div class="fig-embed" data-svg-src="assets/figures/03b-openclaw-1.svg" style="aspect-ratio:780 / 413"></div><figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">The directory layout is the configuration, so editing one file changes how the next turn reads.</figcaption></figure>
+<figure style="margin:1.4em 0"><div class="fig-embed" data-svg-src="assets/figures/03b-openclaw-1.svg" style="aspect-ratio:780 / 413"></div><figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">The workspace files supply context. After an edit, compare the next answer with the saved file.</figcaption></figure>
 
   </div>
 
@@ -84,12 +84,12 @@
   <p>Memory comes in <a href="https://arxiv.org/abs/2310.08560" target="_blank" rel="noopener">two tiers</a>. The agent appends raw notes to a dated file
      under <code>memory/</code> as it works, then distils the parts that
      should persist into its curated long-term store, <code>MEMORY.md</code>.
-     The runtime loads <code>MEMORY.md</code> in the main session and leaves
-     it out of any shared or group context, so personal notes stay private.
+     By default, <code>MEMORY.md</code> is included in the main session context and omitted
+     from shared or group prompts. This context choice does not restrict access to the file.
      You will read both straight off the live sandbox a few steps down.</p>
 
   <div class="callout">
-    <strong>Treat self-report as evidence.</strong> Ask the agent what its prompt contains,
+    <strong>Check self-report against the files.</strong> Ask the agent what its prompt contains,
     then compare the answer with the live workspace in Step 1b:
     <ul>
       <li>which persona rules are active,</li>
@@ -101,19 +101,18 @@
   <h2>Step 1 · Ask the agent to describe itself</h2>
   <p>In one turn the cell below asks OpenClaw to list its own workspace
      files and explain what each one does. Its answer reflects whatever the
-     harness folds into its prompt together with whatever its tools can see,
-     so editing a file and re-running changes the report.</p>
+     harness includes in its prompt and what its tools read.
+     After editing a file, compare the new report with an operator readback.</p>
 
   <figure style="margin:1.4em 0">
     <div id="fig-calls"></div>
-    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">Because the gateway folds the folder into the prompt before every turn, editing a file changes the next reply.</figcaption>
+    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">Compare the agent’s account of its context with the workspace readback. A changed file alone does not establish what a reply used.</figcaption>
   </figure>
 
   <div class="callout">
     <p><strong>Same runtime as Kickstart.</strong> These cells reuse the launchable
       connected in 3a. The course exposes its gateway rather than the internal
-      <code>/v1/chat/completions</code> route. If a cell logs <code>⚠ DEGRADED</code>
-      or stalls, run Recover once for that fresh instance. A local deployment can use the
+      <code>/v1/chat/completions</code> route. If a cell fails or stalls, run Health check and inspect its evidence before choosing a recovery action. A local deployment can use the
       <a href="https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986" target="_blank" rel="noopener">NemoClaw setup playbook</a>
       and the same gateway contract.</p>
   </div>
@@ -154,74 +153,30 @@
   <div class="callout">
     <strong>The launchable has two planes of authority.</strong> The first is the
     terminal, which runs as the operator above the sandbox boundary and can
-    therefore read every file and list the sandboxes. The agent occupies the second
+    inspect files permitted to that operator account and list its sandboxes. The agent occupies the second
     plane. It shares the machine with the terminal but runs under the narrower
     OpenShell policy tested in Module 4.
   </div>
   </div>
   </details>
 
-  <h2>Step 2 · Two scenarios, side by side</h2>
-  <p>Because the persona is just a file, swapping the SOUL definition changes the
-     agent's voice. The real mechanic behind that swap is writing the file itself,
-     where you save a new persona definition and the next turn picks it up on its own.</p>
-  <p>A real edit is slow to watch, so the cell below fakes the swap. It sends
-     two tagged sessions and your launchable maps each session key to a pre-built
-     SOUL variant that it keeps on hand. The upshot is one question answered by
-     two configurations with no editing on your part.</p>
-
-  <div class="callout">
-    <strong>The session-key routing here is a lab affordance.</strong> NemoClaw's
-    image ships a stash of pre-built SOUL variants and wires a session-key suffix
-    to one of them, only so this page can show two voices in one click. Outside
-    the lab the gateway has no such stash, so two session keys would read the one
-    SOUL.md you have and return two identical replies. In production you change
-    the persona by editing SOUL.md.
-  </div>
-
-  <div class="scenario">
-    <div class="card">
-      <h3>Scenario A · Default SOUL.md</h3>
-      <p>Stock OpenClaw: friendly, terse, and willing to use any tool the
-         policy permits, which makes it a good fit for development.</p>
-      <p>Asking it to summarise a doc gets you a tight summary plus a
-         note about what tools it would reach for next.</p>
-    </div>
-    <div class="card">
-      <h3>Scenario B · "Auditor" SOUL.md</h3>
-      <p>A persona slotted in for code review: it refuses to run code
-         until it has named the risk surface, and it cites the file it
-         is reviewing on every claim.</p>
-      <p>Asking it to summarise the same doc gets you a risk list plus
-         pointed questions about what's <em>not</em> in the doc.</p>
-    </div>
-  </div>
-
+  <h2>Step 2 · Compare message instructions</h2>
+  <p>Ask the same review question in two fresh sessions. The second request explicitly asks for
+    an auditor's evidence checks. Inspect both prompts and compare the replies. This changes
+    message instructions; it does not edit SOUL.md or route to another persona file.</p>
   <div id="cell-personas"></div>
 
-  <div class="callout">
-    <strong>The voice is in the file.</strong> Both replies differ because the
-    runtime folded a different SOUL definition into each prompt. To change the
-    persona for real you edit that file or add a <a href="https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview" target="_blank" rel="noopener">skill bundle</a> and the next turn
-    sees the change. Step 1b already had you read the live SOUL.md off the sandbox,
-    so editing it runs that same path in reverse.
-  </div>
-
   <h2>Step 3 · The agent edits its own context</h2>
-  <p>Ask the agent to write a preference to MEMORY.md, then ask it back on the
-     next turn. The model itself has no persistent state, so the second turn can
-     only answer because the runtime carried the preference forward through the
-     session history it holds and through the MEMORY.md the agent saved.</p>
-  <p>Those stores differ in reach. Session history belongs to its session.
-     <code>MEMORY.md</code> can carry a saved fact into a new session whose transcript starts empty.</p>
+  <p>Ask the agent to append a uniquely labeled preference to MEMORY.md. An operator read verifies
+    the saved reference before a new conversation asks the agent to read it. Acknowledging a save
+    is insufficient evidence. The appended note remains available for inspection.</p>
 
   <div id="cell-memory"></div>
 
   <div class="callout warn">
-    <strong>This split matters directly for safety.</strong> Because the agent can
-    rewrite its own context, the containment layer beneath it has to stop any bad write
-    from doing real harm. OpenClaw freely modifies the markdown in its own workspace,
-    while the OpenShell sandbox beneath it blocks that same write from ever reaching:
+    <strong>This split matters directly for safety.</strong> An agent that can rewrite workspace context can influence later runs.
+    The configured filesystem and network rules determine which other resources it can reach.
+    Inspect the live policy for access to:
     <ul>
       <li>the host filesystem,</li>
       <li>the wider network,</li>
@@ -247,9 +202,8 @@
 
   <h2>Try it · chat with your live agent</h2>
   <p>
-    Everything on this page collapses into one panel: a real conversation with the
-    OpenClaw agent running on your launchable. Ask it to do any of the following and
-    watch the tool chips fire as it works:
+    Use the chat to inspect one workspace file. Compare the answer with the operator read
+    and inspect any tool calls. You can ask the agent to:
   </p>
   <ul>
     <li>describe its workspace,</li>
@@ -257,7 +211,7 @@
     <li>or run a command.</li>
   </ul>
   <p>
-    Edit a workspace file, and the agent's next reply changes.
+    After editing a file, start a fresh session and check which content the agent uses.
   </p>
   <div id="openclaw-cell"></div>
   <div id="openclaw-artifact"></div>
@@ -310,7 +264,7 @@ mountDiagram("#fig-calls", {
   ],
 
   edges: [
-    { from: "files", to: "gw",    label: "read every turn", fromPort: "right", toPort: "left", labelDy: -42, tint: "data"  },
+    { from: "files", to: "gw",    label: "configured context", fromPort: "right", toPort: "left", labelDy: -42, tint: "data"  },
     { from: "gw",    to: "model", label: "system prompt",   fromPort: "right", toPort: "left", labelDy: -42, tint: "agent" },
     { from: "model", to: "gw",    label: "reply",           fromPort: "bottom-left", toPort: "right", toOffset: 30, labelDy: 34, return: true, tint: "model" },
     { from: "gw",    to: "files", label: "writes back",     fromPort: "bottom-left", toPort: "right", toOffset: 30, labelDy: 34, return: true, tint: "agent" },
@@ -321,74 +275,8 @@ mountDiagram("#fig-calls", {
 
 
 // Connect once, then store state.turn for later nodes.
-const setupTurn = GW_CONNECT + `
-// state.turn sends one gateway chat turn and returns final text.
-if (!state._subs) state._subs = {};
+const setupTurn = GW_CONNECT + "const courseTurn = helpers.courseTurn;\n\nstate.turn = (input, currentHelpers) => courseTurn(state, currentHelpers, input.session, input.content);\n";
 
-// ── tune these (apply to every state.turn call in this flow) ──────────────────
-const TURN_IDLE_S  = 90;    // give up if the agent goes silent this long (this model can be slow to first token)
-const TURN_TOTAL_S = 240;   // hard ceiling per turn
-const FINAL_EVENT_GRACE_MS = 1500; // lifecycle end can arrive just before chat.final
-// ──────────────────────────────────────────────────────────────────────────────
-
-state.turn = async ({ content, session }) => {
-  if (!state._subs[session]) { await state.call("sessions.messages.subscribe", { key: session }); state._subs[session] = true; }
-  let text = "", myRun = null, toolStarts = 0, didResult = false;
-  await new Promise((resolve, reject) => {
-    let idle, glob, endGrace, finished = false;
-    const done = (stalled) => { if (finished) return; finished = true; clearTimeout(idle); clearTimeout(glob); clearTimeout(endGrace); state._chatCb = null; if (stalled) state.call("chat.abort", { sessionKey: session }).catch(() => {}); resolve(); };
-    const bump = () => { clearTimeout(idle); idle = setTimeout(() => done(true), TURN_IDLE_S * 1000); };
-    glob = setTimeout(() => done(true), TURN_TOTAL_S * 1000);
-    if (helpers.signal) helpers.signal.addEventListener("abort", () => done(true), { once: true });
-
-    state._chatCb = d => {
-      const pl = d.payload || {};
-      // ignore heartbeats / keepalives: not real activity, never reset the idle timer
-      if (pl.isHeartbeat || d.event === "health" || d.event === "tick") return;
-      // Keep only our runId so stale frames cannot reset the idle timer.
-      if (myRun && pl.runId && pl.runId !== myRun) return;
-      bump();   // real activity on OUR run pushes the idle deadline back
-      if (d.event === "chat" && pl.state === "final") {
-        // final chat frame: fallback prose if no agent text deltas arrived
-        text = helpers.openclawMessageText(pl.message) || text;
-        done(false); return;
-      }
-
-      if (d.event !== "agent") return;
-      const sk = pl.sessionKey || "";
-      if (sk !== session && !sk.endsWith(":" + session)) return;   // not our session
-      const data = pl.data || {}, stream = pl.stream || "";
-      if (stream === "assistant" || ("delta" in data && "text" in data)) {
-        // the answer, streamed as cumulative text
-        text = data.text || text;
-      } else if (stream === "tool" && data.phase === "start") {
-        // a tool was invoked, so show its INPUT (the args reveal what was asked)
-        toolStarts++;
-        const inp = data.args ? JSON.stringify(data.args) : (data.meta || "");
-        helpers.log.details("\u2699\ufe0f " + (data.name || "tool") + (inp ? "  " + inp.replace(/\\n/g, " ").slice(0, 160) : ""), helpers.filterOpenClawRuntimeValue(d));
-
-      } else if (stream === "tool" && data.phase === "result") {
-        // a tool finished, so show its OUTPUT (exec, read, edit, browser, \u2026)
-        didResult = true;
-        const t = helpers.openclawResultText(data.result);
-        helpers.log.details((data.isError ? "\u2717" : "\u2713") + " " + (data.name || "tool") + (t ? "  " + t.trim().replace(/\\n/g, " \u23ce ").slice(0, 200) : ""), helpers.filterOpenClawRuntimeValue(d));
-      } else if (data.phase === "end" && !data.itemId) {
-        // chat.final is authoritative and can trail lifecycle end by one browser turn.
-        clearTimeout(endGrace); endGrace = setTimeout(() => done(false), FINAL_EVENT_GRACE_MS);
-      }
-    };
-
-    bump();
-    state.call("chat.send", { sessionKey: session, idempotencyKey: Math.random().toString(36).slice(2) + Date.now().toString(36), message: content })
-      .then(res => { myRun = (res && res.runId) || null; })
-      .catch(e => { clearTimeout(idle); clearTimeout(glob); state._chatCb = null; reject(e); });
-  });
-  if (!text.trim() && !didResult && toolStarts > 0) helpers.log("\u26a0 DEGRADED: started " + toolStarts + " tool(s) but got no result. Shape the runtime in Kickstart (3a): Health check + Recover.");
-  return text;
-};
-`;
-
-// Health / recover / logs flow is shared from _shared.js:
 mountGwRecover("#gw-recover");
 
 mountRunCell("#cell-introspect", {
@@ -399,7 +287,7 @@ mountRunCell("#cell-introspect", {
 const report = await state.turn({
   content: "Briefly list the files in your workspace and explain each in one bullet without dumping file contents.",
   session: "quick-3b-introspect",
-});
+}, helpers);
 helpers.log(report);
 `,
 });
@@ -409,7 +297,9 @@ mountRunCell("#cell-workspace-term", {
   label: "Read the live workspace over the operator terminal",
   intro: "Open the launchable's /ws/terminal WebSocket and read sandbox configuration without a model call. Edit the command list to explore.",
   code: `// ── what to read (edit freely; these run as shell lines INSIDE the sandbox) ──
-const AGENT = "my-assistant";   // your agent's name, from GET /api/agent on the Kickstart page
+const metadata = await helpers.openclawBootstrapRequest("/api/agent", {signal: helpers.signal});
+const AGENT = metadata.json?.agent?.name;
+if (!metadata.ok || !/^[A-Za-z0-9_.-]+$/.test(AGENT || "") || AGENT.startsWith("-")) throw new Error("No valid connected sandbox name.");
 const commands = [
   "ls .openclaw/workspace",
   "echo '=== SOUL.md ==='; cat .openclaw/workspace/SOUL.md",
@@ -426,86 +316,39 @@ helpers.log(output);
 helpers.log.details("raw transcript (" + frames + " WebSocket frames)", raw);
 `,
 });
+mountCanvasFlow("#cell-personas", {label:"Compare explicit instructions on the same review question", nodes:[{id: "ask-a", title: "General review", x: 0, y: 0, showCode: true, code: `${GW_CONNECT}state.question = "A proposed cron job deletes rows marked duplicate from production each minute. What should we check before enabling it?";
+const courseTurn = helpers.courseTurn;
 
-mountCanvasFlow("#cell-personas", {
-  label: "Two SOUL personas, same question",
-  intro: "Send one question to two prebuilt SOUL variants and compare their voices. Edit SOUL.md to change a real persona.",
+state.out = await courseTurn(state, helpers, "quick-3b-general-" + crypto.randomUUID(), "Give a concise code review. " + state.question);
+`},
+{id: "ask-b", title: "Risk-focused review", x: 1, y: 0, showCode: true, code: `if (!state.question) throw new Error("Run the general review first");
+const courseTurn = helpers.courseTurn;
 
-  edges: [
-    { from: "ask-a", to: "ask-b" },
-  ],
+state.out = await courseTurn(state, helpers, "quick-3b-review-" + crypto.randomUUID(),
+  "Review as an auditor: identify missing evidence and ask questions before recommending execution. " + state.question);
+helpers.log("Compare the requests and replies. Only the message instructions were varied; SOUL.md was not changed.");`}]});
+mountCanvasFlow("#cell-memory", {label:"Verify file memory across separate sessions", nodes:[{id: "write", title: "Save and verify a preference", x: 0, y: 0, showCode: true, code: `${GW_CONNECT}state.memoryVerified = false;
+state.memoryLabel = "course-review-" + crypto.randomUUID();
+state.memoryReference = "REF-" + crypto.randomUUID();
+const courseTurn = helpers.courseTurn;
 
-  nodes: [
-    {
-      id: "ask-a", icon: "🅰️", title: "Default SOUL", x: 0, y: 0,
-      showCode: false,
-      summary: "Send the question under the default SOUL session, a friendly, concise persona that reaches for tools when they are relevant.",
-      code: setupTurn + `
-state.question = [
-  "Review this incident in bullets and recommend the next step.",
-  "An admin cron job copies production rows to staging without a row-count guardrail and duplicated four hours of data.",
-].join(" ");
-state.a = await state.turn({ content: state.question, session: "quick-3b-soul-default" });
-helpers.log(state.a);
-`,
-    },
-    {
-      id: "ask-b", icon: "🅱️", title: "Auditor SOUL", x: 1, y: 0,
-      showCode: false,
-      summary: "Sends the same question under the auditor SOUL, which surfaces risks and cites its subject. Compare both replies.",
-      code: `// Reuses state.question + state.turn from the Default-SOUL node above. Run that first.
-if (typeof state.turn !== "function") {
-  helpers.log("Connect OpenClaw in Module 3a, then run Default SOUL first.");
-  return;
-}
-const b = await state.turn({ content: state.question, session: "quick-3b-soul-auditor" });
-helpers.log("── default ──"); helpers.log(state.a);
-helpers.log("\\n── auditor ──"); helpers.log(b);
-`,
-    },
-  ],
-});
+state.out = await courseTurn(state, helpers, "quick-3b-write-" + crypto.randomUUID(),
+  "Append this preference to MEMORY.md without replacing existing content: " + state.memoryLabel
+  + ": numbered review feedback, race conditions first; reference " + state.memoryReference);
+const {courseShell, courseRead} = helpers;
 
-mountCanvasFlow("#cell-memory", {
-  label: "The agent writes to MEMORY.md, then reads it back",
-  intro: "Save a preference to MEMORY.md, then ask for it in a fresh turn on the same session. The model weights remain unchanged.",
+const saved = await courseRead(helpers, "/sandbox/.openclaw/workspace/MEMORY.md");
+if (!saved.includes(state.memoryLabel) || !saved.includes(state.memoryReference)) throw new Error("File readback did not contain the saved preference");
+state.memoryVerified = true;
+helpers.log("Verified the appended note on disk. It remains in MEMORY.md for inspection.");`},
+{id: "recall", title: "Read from a fresh conversation", x: 1, y: 0, showCode: true, code: `if (!state.memoryVerified) throw new Error("Verify the file write first");
+const courseTurn = helpers.courseTurn;
 
-  edges: [
-    { from: "write", to: "recall" },
-  ],
+state.out = await courseTurn(state, helpers, "quick-3b-read-" + crypto.randomUUID(),
+  "Read MEMORY.md and report the review preference and reference for " + state.memoryLabel + ".");
+if (!state.out.includes(state.memoryReference)) throw new Error("Fresh-session answer did not retrieve the saved reference");
+helpers.log("Retrieved the disk-verified reference from a fresh conversation. Inspect the tool events.");`}]});
 
-  nodes: [
-    {
-      id: "write", icon: "📝", title: "Turn 1 · ask it to remember", x: 0, y: 0,
-      showCode: false,
-      summary: "Give the agent a preference and ask it to save the note to MEMORY.md so a later turn can see it.",
-      code: setupTurn + `
-state.r1 = await state.turn({
-  content: "Please remember that I prefer numbered code review feedback and care most about race conditions. Save this to MEMORY.md for the next session.",
-  session: "quick-3b-memory",
-});
-helpers.log(state.r1);
-`,
-    },
-    {
-      id: "recall", icon: "💭", title: "Turn 2 · ask it back", x: 1, y: 0,
-      showCode: false,
-      summary: "Asks what the agent remembers in a fresh turn, then checks that the saved preference returned through session and file state.",
-      code: `// Ask the same session what it retained after the write turn.
-if (typeof state.turn !== "function") {
-  helpers.log("Connect OpenClaw in Module 3a, then run Turn 1 first.");
-  return;
-}
-const r2 = await state.turn({
-  content: "What do you remember about how I like to receive code review?",
-  session: "quick-3b-memory",
-});
-helpers.log(r2);
-helpers.log(/numbered|race/i.test(r2) ? "✓ recalled the preference (carried by the session plus the MEMORY.md it saved)" : "✗ no recall this run");
-`,
-    },
-  ],
-});
 </script>
 </body>
 </html>

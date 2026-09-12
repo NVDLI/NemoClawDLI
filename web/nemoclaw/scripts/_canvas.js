@@ -446,7 +446,7 @@ const results = await Promise.all(tasks.map(doWork));
 helpers.viz.ganttBars(
   results.map((r, i) => ({ label: \`worker \${i+1}\`, dt: r.elapsed })),
   (performance.now() - t0) / 1000,
-  "Parallel vs serial"
+  "Worker durations and wall time"
 );`,
     "viz.retrievalBars": `// Draw retrieval scores in sorted order.
 // Top-k bars are green; the rest stay muted.
@@ -678,7 +678,7 @@ helpers.viz.sideBySide(
       </div>
       <div class="cf-panel-overview"></div>
       <details class="cf-panel-det cf-panel-code-det"${_showCode ? " open" : ""}>
-        ${_cellLangSummaryHTML({ sig: "async (state, helpers) =&gt; { … }", meta: _showCode ? "click to collapse" : "click to expand", metaAttr: "data-code-meta" })}
+        ${_cellLangSummaryHTML({ sig: "async (state, helpers) =&gt; { … }" })}
         <div class="cf-panel-code-body cell-code-body">
           <div class="cf-code-view cell-code-view" data-lang="js">
             <textarea class="cf-panel-code" spellcheck="false">${escapeHtml(node.code || "")}</textarea>
@@ -693,7 +693,7 @@ helpers.viz.sideBySide(
           <span class="cf-det-meta" data-results-meta>not yet run</span>
         </summary>
         <div class="cf-panel-stream"></div>
-        <div class="cf-panel-log cell-log"></div>
+        <div class="cf-panel-log cell-log" role="log" aria-live="polite" aria-relevant="additions" aria-atomic="false"></div>
         <div class="cf-panel-output cell-output-panel"></div>
       </details>
     `;
@@ -1135,16 +1135,7 @@ helpers.viz.sideBySide(
       // Cancellation wiring: expose the run's signal and auto-inject it into the network helpers, so a cell aborts on Stop without the student threading `signal` by hand.
       // A cell that passes its own signal keeps it; we only fill when absent.
       const _sig = runAC ? runAC.signal : null;
-      helpers.signal = _sig || undefined;
-      if (_sig) {
-        const _delay = helpers.delay;
-        helpers.delay = (ms, signal = _sig) => _delay(ms, signal);
-        const _withSig = (o) => (o && typeof o === "object" && o.signal == null) ? { ...o, signal: _sig } : o;
-        const _chat = helpers.chat, _stream = helpers.chatStream, _term = helpers.terminal;
-        if (_chat)   helpers.chat       = (o, ...r) => _chat(_withSig(o), ...r);
-        if (_stream) helpers.chatStream = (o, ...r) => _stream(_withSig(o), ...r);
-        if (_term)   helpers.terminal   = (cmd, o = {}, ...r) => _term(cmd, _withSig(o), ...r);
-      }
+      if (_sig) bindRunSignal(helpers, _sig);
       _liveHelpers = helpers; _liveViz = helpers.viz;   // expose to the self-deriving helper menu
       _auditHelperMenu(helpers);
       for (const [name, { fn: override }] of Object.entries(helperOverrides)) {
@@ -1380,6 +1371,23 @@ function appendLogLine(logEl, args, opts) {
   return div;
 }
 
+// Bind each invocation to its current controller, including artifacts mounted by RunCell.
+export function bindRunSignal(helpers, signal) {
+  helpers.signal = signal;
+  const options = (value = {}) => ({...value, signal: value.signal ?? signal});
+  for (const name of ["chat", "chatStream"]) {
+    const call = helpers[name];
+    if (call) helpers[name] = (opts, ...rest) => call(options(opts), ...rest);
+  }
+  for (const name of ["embed", "terminal", "sandboxExec", "fetch", "fetchRetry"]) {
+    const call = helpers[name];
+    if (call) helpers[name] = (input, opts, ...rest) => call(input, options(opts), ...rest);
+  }
+  const delay = helpers.delay;
+  if (delay) helpers.delay = (ms, ownSignal = signal) => delay(ms, ownSignal);
+  return helpers;
+}
+
 function _docFor(name, helperFns = HELPER_FNS, vizBuilders = VIZ_BUILDERS) {
   let fn = helperFns[name];
   if (!fn && name.startsWith("viz.") && vizBuilders) fn = vizBuilders[name.slice(4)];
@@ -1425,14 +1433,14 @@ export const HELPER_CATEGORIES = Object.freeze([
     ["Shared state",            ["state"]],
     ["Model calls",             ["chat", "chatStream", "browserChatFetch"]],
     ["Model configuration",     [
-      "getConfig", "getKey", "getModelApiBaseUrl", "setModelApiBaseUrl",
+      "getConfig", "getEmbeddingConfig", "getKey", "getModelApiBaseUrl", "setModelApiBaseUrl",
       "isDefaultModelApiBaseUrl", "mountModelEndpointProbe",
     ]],
     ["Web search",              ["webSearch", "instantAnswer", "formatSearchResults"]],
     ["Embeddings & similarity", ["embed", "cosineSim"]],
     ["Tokens & context",        ["contextWindow", "estimateTokens"]],
     ["Raw HTTP",                ["fetch", "fetchRetry"]],
-    ["Launchable terminal",     ["terminal"]],
+    ["Launchable terminal",     ["terminal", "courseShell", "courseRead"]],
     ["OpenShell policy",        [
       "evalSandboxNetwork", "evalSandboxFs", "sandboxExec", "policyGet", "mountPolicyMap",
     ]],
@@ -1444,7 +1452,7 @@ export const HELPER_CATEGORIES = Object.freeze([
     ]],
     ["Diagram strings",         ["diagramSVG", "ganttBarsSVG"]],
     ["OpenClaw gateway",        [
-      "openclawBootstrapRequest", "openclawChat", "openclawLoopbackProbe",
+      "openclawBootstrapRequest", "openclawChat", "courseTurn", "openclawLoopbackProbe",
       "openclawGatewayWsUrl", "runOpenClawConnectionAudit", "redactOpenClawDiagnostic",
       "refreshOpenClawGatewayToken", "getOpenClawConnection", "setOpenClawConnection",
       "filterOpenClawRuntimeNoise", "filterOpenClawRuntimeValue", "openclawMessageText",
@@ -1577,7 +1585,7 @@ export function mountRunCell(targetSel, opts) {
       ${_rcHelpersHTML}
       ${showSchemas ? `<details class="rc-schemas-det cell-schema-det"><summary><span class="cf-det-chip cf-det-chip-alt">schemas</span><span class="cf-det-sig">JSON · editable</span></summary><div class="rc-schemas"></div></details>` : ""}
       <details class="rc-code-det"${codeOpenAttr}>
-        ${_cellLangSummaryHTML({ sig: "javascript · editable · " + codeLines + " lines", meta: codeOpenAttr ? "click to collapse" : "click to expand", metaAttr: "data-code-meta" })}
+        ${_cellLangSummaryHTML({ sig: "javascript · editable · " + codeLines + " lines" })}
         <div class="rc-code-body cell-code-body">
           <button type="button" class="cf-code-copy rc-code-copy cell-code-copy" title="Copy current code" aria-label="Copy current code">⎘</button>
           <textarea class="rc-code" spellcheck="false"></textarea>
@@ -1808,11 +1816,9 @@ export function mountRunCell(targetSel, opts) {
       // `helpers` mirrors the canvas-cell convention (helpers.embed, helpers.log, helpers.mountChatUI) so a run-cell can mount a full artifact, not only call chat().
       // The bare names below stay for back-compat with older cells.
       const helpers = Object.assign({}, HELPER_FNS, { log, clear, fetch: (...a) => window.fetch(...a) });
-      helpers.signal = ac.signal;
-      const runDelay = helpers.delay;
-      helpers.delay = (ms, signal = ac.signal) => runDelay(ms, signal);
+      bindRunSignal(helpers, ac.signal);
       const argNames = ["chat", "chatStream", "webSearch", "instantAnswer", "formatSearchResults", "log", "clear", "MODEL", "REASONING_MODEL", "AbortSignal", "helpers", "state",       ...Object.keys(schemaVars)];
-      const argVals  = [chat,    chatStream,   webSearch,   instantAnswer,   formatSearchResults,   log,   clear,   null,    REASONING_MODEL,  ac.signal,    helpers,   _runCellState, ...Object.values(schemaVars)];
+      const argVals  = [helpers.chat, helpers.chatStream,   webSearch,   instantAnswer,   formatSearchResults,   log,   clear,   null,    REASONING_MODEL,  ac.signal,    helpers,   _runCellState, ...Object.values(schemaVars)];
       // Read from CodeMirror if present; otherwise from the textarea.
       const codeText = cm ? cm.getValue() : ta.value;
       jsBuffer = codeText;  // preserve the student's edits across re-runs/toggles

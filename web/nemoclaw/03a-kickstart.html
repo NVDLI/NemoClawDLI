@@ -152,10 +152,9 @@
 
     <div class="callout warn">
       <strong>If the NemoClaw check times out or returns a 502.</strong>
-      The agent harness likely has not finished booting, which usually means the
-      launchable started before OpenClaw finished loading its policy YAML. Wait
-      30 seconds and test again. If it stays down, use the Recover cell in
-      the gateway section below before continuing.
+      Inspect the failed route, connection diagnostics, and launchable runtime logs before choosing a recovery step.
+      A timeout or 502 alone does not identify the cause. If the gateway remains unavailable,
+      inspect the Recover cell below and its reported checks before continuing.
     </div>
 
     <h3>Inspect all four connection routes</h3>
@@ -187,7 +186,7 @@
     <details class="vocab-menu">
       <summary>Optional · Compare direct model latency</summary>
       <p>The optional benchmark pulls matching models from the catalog, streams one short prompt through
-        each, and records time to first token (TTFT) and time to finish. These are direct API measurements;
+        each, and records time to first nonempty content chunk, first answer, and completion. These are direct API measurements;
         they do not measure the planning, tools, or session work added by the OpenClaw gateway.</p>
       <div id="bench-llm"></div>
     </details>
@@ -232,7 +231,7 @@
 
     <figure style="margin:1.4em 0">
       <div id="fig-calls"></div>
-      <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">A single POST drives a loop inside the gateway, where the session key carries memory forward to the next call.</figcaption>
+      <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">A chat.send request drives a loop inside the gateway, where the session key carries memory forward to the next call.</figcaption>
     </figure>
 
     <h3>Check before changing runtime settings</h3>
@@ -255,10 +254,8 @@
 
     <div id="gw-recover"></div>
 
-    <p>With the runtime shaped, you can drop a message into the agent's loop. The three
-      cells below run in order so that the first ones connect and list models and crons
-      before a later cell sends a chat turn and the last one streams the trace back. Read
-      that trace row by row:</p>
+    <p>The three cells below connect to the gateway, list models and scheduled jobs,
+      then send a chat turn and display its trace. Read the trace row by row:</p>
     <ul>
       <li>Each <code>⚙️</code> row is a tool call with its input arguments.</li>
       <li>Each <code>✓</code>/<code>✗</code> row is that tool's result.</li>
@@ -266,8 +263,8 @@
         trace is the deepest per-step view. When a run stalls with no result, the
         📜 logs cell above tails the runtime instead.</li>
     </ul>
-    <p>Every chat run self-checks: if one logs <code>⚠ DEGRADED</code>, come back up
-      here, run Recover, then retry.</p>
+    <p>If a chat fails or reaches its deadline, inspect its trace and run Health check.
+      Use Recover only when those results identify a configuration or session problem.</p>
 
     <div id="gw-demo"></div>
 
@@ -277,37 +274,20 @@
         turns this from a convenience into the central security question.</p>
     </div>
 
-    <h2>Step 3 · Memory lives in the session key</h2>
-    <p>Every <code>chat.send</code> takes a <code>sessionKey</code>, and that key
-      decides what the turn remembers:</p>
-    <ul>
-      <li><strong>Same key, twice:</strong> the gateway rehydrates the first turn's
-        history before the second runs, so the agent answers from a conversation
-        your client never re-sent.</li>
-      <li><strong>Different key:</strong> a clean start, nothing carried over.</li>
-    </ul>
-    <p>The first cell below plants a fact and then asks for it back under the same key.
-      The agent answers from a turn your client never re-sent, because the gateway
-      rehydrated that history server-side. The other two cells let you manage the stored
-      state.</p>
-    <ul>
-      <li><strong>Clear</strong> wipes one session in a single call, so the next turn
-        starts from nothing. Every chat cell also carries a commented
-        <code>sessions.reset</code> line to start fresh in place.
-      </li>
-      <li><strong>Clean up</strong> sweeps the throwaway sessions that pile up in the
-        Control UI as you experiment (including Step 2's per-run keys), keeping only
-        the Main Session.</li>
-    </ul>
+    <h2>Step 3 · Compare conversation history</h2>
+    <p>Plant a fresh code, recall it without resending it, then reset that session and ask again.
+      Reset removes conversation history; shared workspace files remain. These prompts ask the agent
+      not to write the code to a file. Inspect the events before interpreting the result.</p>
+    <p>Cleanup removes only session IDs created by this flow. Re-run Recall on its own to ask again without replanting.</p>
 
     <div id="session-call"></div>
 
     <div class="callout warn">
       <strong>The session key is all the client sends to identify a conversation.</strong>
       From that one string the gateway resolves the full session server-side before every
-      call, so the client never has to ship the transcript itself. Any two keys
-      that differ at all address two separate sessions even when the conversations behind
-      them hold identical content.
+      call, so the client never has to ship the transcript itself. Distinct session IDs separate conversations. The gateway may also accept aliases,
+      such as a short key and its canonical <code>agent:&lt;agent-id&gt;:&lt;key&gt;</code> form,
+      for the same conversation.
     </div>
 
     <h2>What's next</h2>
@@ -321,8 +301,7 @@
         <li><a href="https://platform.openai.com/docs/api-reference/chat" target="_blank" rel="noopener">OpenAI Chat
             Completions API</a>. The wire format the model endpoint speaks, including the <code>finish_reason</code>
           field this page surfaces.</li>
-        <li><a href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener">NVIDIA build.nvidia.com</a>. The model API
-          behind the course proxy; paste your nvapi- key in the bearer field to authenticate.</li>
+        <li><a href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener">NVIDIA build.nvidia.com</a>. The model API behind the configured proxy. Check its authentication requirements before entering a bearer credential.</li>
         <li><a href="https://docs.anthropic.com/en/docs/claude-code/overview" target="_blank" rel="noopener">Anthropic,
             <em>Claude Code</em> (docs)</a>. The directory-as-session pattern that the next page edits to change what
           OpenClaw is.</li>
@@ -388,13 +367,13 @@ helpers.log("rendered below. Edit the config and Run.");
 
     // ── The call, expanded: one POST drives a loop inside the gateway ────────────
     mountDiagram("#fig-calls", {
-      kicker: "ONE POST · A LOOP INSIDE THE GATEWAY",
+      kicker: "ONE CHAT.SEND · A LOOP INSIDE THE GATEWAY",
       title: "One agent call, expanded",
       maxWidth: 760, boxW: 268, boxH: 116, gapX: 86, top: 58,
       nodes: [
         {
           id: "you", label: "your code", kind: "data", x: 0, y: 0,
-          lines: ["notebook or browser", "one POST per turn"]
+          lines: ["notebook or browser", "one chat.send per turn"]
         },
 
         {
@@ -404,7 +383,7 @@ helpers.log("rendered below. Edit the config and Run.");
         },
       ],
       edges: [
-        { from: "you", to: "gw", label: "POST", side: "top", tint: "data" },
+        { from: "you", to: "gw", label: "chat.send", side: "top", tint: "data" },
         { from: "gw", to: "you", label: "reply", side: "bottom", tint: "agent" },
         { from: "gw", to: "gw", tint: "agent" },
       ],
@@ -543,15 +522,19 @@ helpers.log("models:", state.models.join(", "));
 const MAX_TOKENS   = 256;     // reasoning models think first; too low and they never answer
 const TTFT_TIMEOUT = 30000;   // ms; give up on a model with no first token by now (some are slow to start)
 
-// Time first-token latency and count both reasoning and answer tokens.
+// Time first-token latency and count nonempty reasoning/answer chunks, not tokenizer tokens.
 async function bench(model) {
   const ctrl  = new AbortController();
   const stop = () => ctrl.abort();
   if (helpers.signal.aborted) ctrl.abort();
   else helpers.signal.addEventListener("abort", stop, { once: true });
-  const guard = setTimeout(() => ctrl.abort(), TTFT_TIMEOUT);   // first-token watchdog
+  const guard = setTimeout(() => ctrl.abort(new Error("No first content within 30 seconds")), TTFT_TIMEOUT);
+  const totalGuard = setTimeout(() => ctrl.abort(new Error("Stream exceeded 120 seconds")), 120000);
+  let reader = null;
+  const cancelReader = () => { if (reader) reader.cancel(ctrl.signal.reason).catch(() => {}); };
+  ctrl.signal.addEventListener("abort", cancelReader, {once:true});
   const t0 = performance.now();
-  let ttft = null, total = null, tokens = 0, reasoning = 0, gapSum = 0, last = t0;
+  let ttft = null, answerMs = null, total = null, tokens = 0, reasoning = 0, gapSum = 0, last = t0;
   let text = "", think = "", finish = null, err = null;
 
   try {
@@ -564,10 +547,13 @@ async function bench(model) {
 
     if (!r.ok) { err = "HTTP " + r.status; }
     else {
-      const reader = r.body.getReader(), dec = new TextDecoder();
+      reader = r.body.getReader();
+      const dec = new TextDecoder();
+      if (ctrl.signal.aborted) throw ctrl.signal.reason;
       let buf = "";
       for (;;) {
         const { value, done } = await reader.read();
+        if (ctrl.signal.aborted) throw ctrl.signal.reason || new Error("Stopped");
         if (done) break;
         buf += dec.decode(value, { stream: true });
         // Server-sent events: one "data: {json}" line per chunk.
@@ -591,19 +577,21 @@ async function bench(model) {
           else { gapSum += now - last; }
           last = now; tokens++;
           if (thought) { reasoning++; think += thought; }
-          if (answer)  { text += answer; }
+          if (answer)  { if (answerMs === null) answerMs = Math.round(now - t0); text += answer; }
         }
       }
       total = Math.round(performance.now() - t0);
     }
   } catch (e) {
-    err = e.name === "AbortError" ? ("no first token in " + (TTFT_TIMEOUT / 1000) + "s") : e.message;
+    err = helpers.signal.aborted ? "Stopped" : (ctrl.signal.reason?.message || e.message);
   } finally {
-    clearTimeout(guard);
+    clearTimeout(guard); clearTimeout(totalGuard);
+    ctrl.signal.removeEventListener("abort", cancelReader);
+    if (reader) { await reader.cancel().catch(() => {}); reader.releaseLock(); }
     helpers.signal.removeEventListener("abort", stop);
   }
-  const avgGap = tokens > 1 ? Math.round(gapSum / (tokens - 1)) : null;   // mean inter-token latency
-  return { model, ttft, total, tokens, reasoning, avgGap, text, think, finish, err };
+  const avgGap = tokens > 1 ? Math.round(gapSum / (tokens - 1)) : null;   // mean inter-chunk latency
+  return { model, ttft, answerMs, total, tokens, reasoning, avgGap, text, think, finish, err };
 }
 
 // Launch every model concurrently, then await them in catalog order, so the log prints in a stable order even though the requests overlap.
@@ -618,9 +606,9 @@ for (let i = 0; i < pending.length; i++) {
   }
 
   helpers.log("✓ " + res.model +
-    "  TTFT " + (res.ttft ?? "n/a") + "ms · total " + res.total + "ms · " +
-    res.tokens + " tok" + (res.reasoning ? " (" + res.reasoning + " thinking)" : "") + " · " +
-    (res.avgGap != null ? res.avgGap + "ms/tok" : "n/a") +
+    "  first content " + (res.ttft ?? "n/a") + "ms · first answer " + (res.answerMs ?? "n/a") + "ms · total " + res.total + "ms · " +
+    res.tokens + " chunks" + (res.reasoning ? " (" + res.reasoning + " thinking)" : "") + " · " +
+    (res.avgGap != null ? res.avgGap + "ms/chunk" : "n/a") +
     (res.finish === "length" ? " · hit max_tokens" : ""));
   // Show the answer; if the model spent its whole budget thinking, show that instead.
   const raw = res.text
@@ -636,7 +624,7 @@ if (ok.length) {
   helpers.log("\\n── ranked by TTFT ──────────────────────────");
   ok.forEach((r, i) => helpers.log(
     String(i + 1).padStart(2) + ". " + r.model.padEnd(46) +
-    String(r.ttft ?? "n/a").padStart(5) + "ms · " + String(r.avgGap ?? "n/a").padStart(4) + "ms/tok · " + r.tokens + " tok"));
+    String(r.ttft ?? "n/a").padStart(5) + "ms · " + String(r.avgGap ?? "n/a").padStart(4) + "ms/chunk · " + r.tokens + " chunks"));
 }
 state.results = results;
 // Optional visibility: uncomment to inspect the complete timing records.
@@ -648,7 +636,7 @@ return { ranked: ok.map(r => r.model), errors: results.filter(r => r.err).length
     // ── Probe OpenClaw runtime ───────────────────────────────────────────────────
     mountOpenClawConnectionAudit("#probe-claw", {
       label: "Connect NemoClaw",
-      intro: "Enter Base URL and Access session. Provider, relay route, and gateway token are discovered automatically.",
+      intro: "Enter the launchable Base URL and its matching Access session when required. The connection probe discovers the provider, relay route, and gateway token.",
     });
 
     // ── Editable connection audit: all four routes ────────────────────────────────
@@ -679,152 +667,10 @@ return redacted;
 
     // Shared chat-turn snippet. Subscribe first or tool events stay invisible.
     const gwChat = (sk, msg) => {
-      // sk is normally a literal string.
-      // Pass { raw: "<js expr>" } to compute the sessionKey at run time.
-      // A fresh unique-per-run key makes the agent re-run its tools; reuse replays.
-      const skExpr = (sk && typeof sk === "object" && sk.raw) ? sk.raw : JSON.stringify(sk);
-      // msg is normally a literal string.
-      // Pass { raw: "<js>" } for a custom message-assignment block.
-      const msgBlock = (msg && typeof msg === "object" && msg.raw)
-        ? msg.raw
-        : ("let message = " + JSON.stringify(msg) + ";");
-
-      return `if (!state.call) { helpers.log("Run Connect first."); return; }
-
-// ── tune these ──────────────────────────────────────────────────────────────
-${msgBlock}
-const sessionKey      = ${skExpr};   // which agent session to talk to
-const IDLE_TIMEOUT_S  = 90;          // give up if the agent goes silent this long
-const TOTAL_TIMEOUT_S = 240;         // hard ceiling for the whole turn
-const FINAL_EVENT_GRACE_MS = 1500;   // lifecycle end can arrive just before chat.final
-// ──────────────────────────────────────────────────────────────────────────────
-helpers.log("→ " + message);
-
-// chat.send returns prose; subscribed agent frames carry tool steps.
-if (!state._subs) state._subs = {};
-if (!state._subs[sessionKey]) {
-  await state.call("sessions.messages.subscribe", { key: sessionKey });
-  state._subs[sessionKey] = true;
-}
-
-// Uncomment to clear this session and force fresh tool work.
-// await state.call("sessions.reset", { key: sessionKey }); helpers.log("🧹 cleared session memory: " + sessionKey);
-
-const _params = {
-  sessionKey,
-  idempotencyKey: Math.random().toString(36).slice(2) + Date.now().toString(36),
-  message,
+const session = sk?.raw || JSON.stringify(sk);
+const message = msg?.raw || ("let message = " + JSON.stringify(msg) + ";");
+return "const courseTurn = helpers.courseTurn;\n" + message + "\nstate.out = await courseTurn(state, helpers, " + session + ", message);";
 };
-
-// ── stream handler ───────────────────────────────────────────────────────────
-
-// Frames are tagged by pl.stream. The "tool" stream is the trace:
-//   phase "start"  = the tool's args (INPUT)
-//   phase "result" = result + isError (OUTPUT), for every tool
-
-// The "assistant" stream is the answer text; "lifecycle" phase:end ends the run.
-
-// Gateway omits reasoning; tool args/results are the deepest step view here.
-
-// Two timers guard the run: an idle timer (reset only by REAL activity, never by heartbeats) and a global backstop.
-let _text = "", _finalEv, _t0 = performance.now(), _ttft = 0, _myRun = null;
-let _toolStarts = 0, _didResult = false;            // for the degradation check below
-const IDLE_MS = IDLE_TIMEOUT_S * 1000, GLOBAL_MS = TOTAL_TIMEOUT_S * 1000;
-await new Promise((resolve, reject) => {
-  let _idle, _global, _endGrace, _finished = false;
-  function finish(why, stalled) {
-    if (_finished) return; _finished = true;
-    clearTimeout(_idle); clearTimeout(_global); clearTimeout(_endGrace); state._chatCb = null;
-    if (why) helpers.log(why);
-
-    // Abort timed-out runs server-side so they stop consuming work and leaking frames.
-    if (stalled) {
-      helpers.log("⛔ aborting the run on " + sessionKey + " so it does not keep running in the background…");
-      state.call("chat.abort", { sessionKey }).catch(() => {});
-    }
-    resolve();
-  }
-
-  function bumpIdle() { clearTimeout(_idle); _idle = setTimeout(() => finish("⏱ no agent activity for " + (IDLE_MS / 1000) + "s; stopping", true), IDLE_MS); }
-  _global = setTimeout(() => finish("⏱ hit the " + (GLOBAL_MS / 1000) + "s global cap", true), GLOBAL_MS);
-  if (helpers.signal) helpers.signal.addEventListener("abort", () => finish("⏹ stopped", true), { once: true });
-  state._chatCb = d => {
-   try {
-    const pl = d.payload || {};
-    // Heartbeats stream the whole time the socket is open, and are NOT activity.
-    // Ignore them; otherwise a stalled run emitting only heartbeats would keep the idle timer alive and never time out.
-    if (pl.isHeartbeat || d.event === "health" || d.event === "tick") return;
-
-    // Keep only this runId before bumpIdle, or stale frames can mask a stall.
-    if (_myRun && pl.runId && pl.runId !== _myRun) return;
-    bumpIdle();   // real activity on OUR run pushes the idle deadline back
-    if (d.event === "chat" && pl.state === "final") {
-      // final chat frame: fallback prose if no agent text deltas arrived
-      _finalEv = d;
-      _text = helpers.openclawMessageText(pl.message) || _text;
-      finish(); return;
-    }
-    if (d.event !== "agent") return;
-
-    const sk = pl.sessionKey || "";
-    if (sk !== sessionKey && !sk.endsWith(":" + sessionKey)) return;   // not our session
-    const data = pl.data || {};
-    const stream = pl.stream || "";
-
-    if (stream === "assistant" || ("delta" in data && "text" in data)) {
-      // the answer, streamed as cumulative text
-      if (!_ttft) _ttft = performance.now() - _t0;
-      _text = data.text || _text;
-    } else if (stream === "tool" && data.phase === "start") {
-      // Show tool input; bad args often explain hangs.
-      _toolStarts++;
-      const inp = data.args ? JSON.stringify(data.args) : (data.meta || "");
-      helpers.log.details("⚙️ " + (data.name || "tool") + (inp ? "  " + inp.replace(/\\n/g, " ").slice(0, 160) : ""), helpers.filterOpenClawRuntimeValue(d));
-
-    } else if (stream === "tool" && data.phase === "result") {
-      // a tool finished, so show its OUTPUT (works for exec, read, edit, browser, …)
-      _didResult = true;
-      const txt = helpers.openclawResultText(data.result);
-      const mark = data.isError ? "✗" : "✓";
-      helpers.log.details(mark + " " + (data.name || "tool") + (txt ? "  " + txt.trim().replace(/\\n/g, " ⏎ ").slice(0, 200) : ""), helpers.filterOpenClawRuntimeValue(d));
-
-    } else if (data.phase === "end" && !data.itemId) {
-      // chat.final is authoritative and can trail lifecycle end by one browser turn.
-      clearTimeout(_endGrace); _endGrace = setTimeout(() => finish(), FINAL_EVENT_GRACE_MS);
-    }
-   } catch (e) {
-    // A throw inside a WS frame handler is otherwise swallowed silently and looks like a hang, so surface it instead of hiding the failure.
-    helpers.log("⚠ frame-handler error: " + (e && e.message ? e.message : e));
-   }
-  };
-
-  bumpIdle();
-  // Lock onto this runId so shared-session chatter is ignored.
-  state.call("chat.send", _params)
-    .then(res => { _myRun = (res && res.runId) || null; })
-    .catch(e => { clearTimeout(_idle); clearTimeout(_global); state._chatCb = null; reject(e); });
-});
-
-// ── response ─────────────────────────────────────────────────────────────────
-helpers.log(_text);
-if (_finalEv) helpers.log.details("← final chat frame", _finalEv);
-const _secs = (performance.now() - _t0) / 1000;
-const _toks = Math.round(_text.length / 4);          // rough estimate: ~4 chars/token
-helpers.log("⏱ " + _secs.toFixed(1) + "s · ~" + _toks + " tok · " +
-            (_secs ? (_toks / _secs).toFixed(1) : "0") + " tok/s" +
-            (_ttft ? " · first token " + (_ttft / 1000).toFixed(2) + "s" : ""));
-state.out = _text;
-
-// Degradation check: a healthy run returns text and/or a tool result.
-// If tools STARTED but none returned a result, a tool is hung or the model is looping, a runtime problem rather than your code.
-// The ⚙️ rows show which tools ran; the Health check flags toolSearch.
-if (!_text.trim() && !_didResult && _toolStarts > 0) {
-  helpers.log("⚠ DEGRADED: started " + _toolStarts + " tool call(s) but none returned a result or answer.");
-  helpers.log("   A tool is hung or the model is looping. The ⚙️ rows above show the exact tool + args it got stuck on.");
-  helpers.log("   Run the 🩺 Health check (it flags toolSearch) + 🛠 Recover; for a deeper look, the 📜 logs cell tails the runtime.");
-}
-`;
-    };
 
     // ── Gateway demo: connect → list → chat ──────────────────────────────────────
     mountCanvasFlow("#gw-demo", {
@@ -883,82 +729,30 @@ message = "Use your exec tool to run \`whoami\` and \`pwd\` in your sandbox, the
     mountGwRecover("#gw-recover");
 
     // ── One session, carried memory: recall the earlier gw-chat turn ─────────────
-    mountCanvasFlow("#session-call", {
-      label: "The sessionKey rehydrates history across turns",
-      intro: "Plant a fact and recall it under the same sessionKey, then clear that history and remove the throwaway sessions. The recall sends only the question; the gateway restores the earlier turn server-side.",
-      edges: [
-        { from: "sk-memory", to: "sk-clear" },
-        { from: "sk-clear", to: "sk-cleanup" },
-      ],
+mountCanvasFlow("#session-call", {label:"Compare conversation history before and after reset", nodes:[{id: "sk-memory", title: "Plant a fresh fact", x: 0, y: 0, showCode: true, code: `${GW_CONNECT}state.memorySession = "quick-3a-" + crypto.randomUUID();
+state.memoryFact = "CODE-" + crypto.randomUUID();
+const courseTurn = helpers.courseTurn;
 
-      nodes: [
-        {
-          id: "sk-memory", icon: "🧠", title: "Plant a fact, then ask it back", x: 0, y: 0,
-          showCode: false,
-          summary: "Sends two turns under one sessionKey so the second can recall the first. Another key creates separate history.",
-          code: GW_CONNECT + `
-helpers.log("turn 1 · plant a fact");
-{
-${gwChat("quick-3a-memory", "Remember this for later: my access code is BLUEJAY-7. Just acknowledge it in a few words.")}
+state.out = await courseTurn(state, helpers, state.memorySession, "Remember this only in our conversation: " + state.memoryFact + ". Do not write it to a file.");
+`},
+{id: "sk-recall", title: "Recall without replanting", x: 1, y: 0, showCode: true, code: `if (!state.memorySession) throw new Error("Plant a fact first");
+const courseTurn = helpers.courseTurn;
+
+state.out = await courseTurn(state, helpers, state.memorySession, "What code did I give you earlier? If absent, say unknown. Do not read files.");
+helpers.log({recalled: state.out.includes(state.memoryFact)});`},
+{id: "sk-clear", title: "Reset, then recall again", x: 2, y: 0, showCode: true, code: `if (!state.memorySession) throw new Error("Plant a fact first");
+await state.call("sessions.reset", {key:state.memorySession});
+const courseTurn = helpers.courseTurn;
+
+state.out = await courseTurn(state, helpers, state.memorySession, "What code did I give you earlier? If absent, say unknown. Do not read files.");
+helpers.log({recalledAfterReset:state.out.includes(state.memoryFact)});`},
+{id: "sk-cleanup", title: "Remove only this flow’s sessions", x: 3, y: 0, showCode: true, code: `const owned = [...(state.courseOwnedSessions || [])];
+for (const key of owned) {
+  await state.call("sessions.delete", {key});
+  state.courseOwnedSessions = state.courseOwnedSessions.filter(item => item !== key);
 }
+helpers.log({removed:owned});`}]});
 
-helpers.log("turn 2 · ask it back (only the question is sent)");
-{
-${gwChat("quick-3a-memory", "What access code did I give you earlier? Reply with just the code.")}
-}
-
-helpers.log(/BLUEJAY-7/i.test(state.out)
-  ? "✓ recalled across turns; the gateway rehydrated the planted fact server-side"
-  : "✗ no recall; confirm both turns used the same sessionKey");
-`,
-        },
-
-        {
-          id: "sk-clear", icon: "🧹", title: "Clear the session memory", x: 1, y: 0,
-          showCode: false,
-          summary: "Clears server-side history for one sessionKey. Rerun the recall turn to confirm the planted fact is gone.",
-          code: GW_CONNECT + `
-// One call wipes the conversation the gateway holds for this key.
-const sessionKey = "quick-3a-memory";
-helpers.log("🧹 clearing session memory for " + sessionKey + " …");
-const res = await state.call("sessions.reset", { key: sessionKey });
-helpers.log(res && res.ok
-  ? "✓ cleared; that session now has no history."
-  : "✗ sessions.reset returned an unexpected payload (see below).");
-helpers.log.details("sessions.reset response", res);
-helpers.log("Re-run the recall turn above and the planted code is gone.");
-`,
-        },
-
-        {
-          id: "sk-cleanup", icon: "🗑", title: "Clean up old sessions", x: 2, y: 0,
-          showCode: false,
-          summary: "Lists sessions and removes throwaway entries while retaining KEEP. Use /:(main|quick-3c-skill)$/ to preserve another named session.",
-          code: GW_CONNECT + `
-// Keep these; delete the rest. The default keeps only the Main Session.
-const KEEP = /:main$/;
-
-// sessions.list is paginated, so walk every page before deleting anything.
-let offset = 0, all = [];
-for (;;) {
-  const page = await state.call("sessions.list", { limit: 100, offset });
-  all = all.concat(page.sessions || []);
-  if (!page.hasMore) break;
-  offset = page.nextOffset;
-}
-const doomed = all.filter(s => !KEEP.test(s.key));
-helpers.log("found " + all.length + " session(s); keeping " + (all.length - doomed.length) + ", deleting " + doomed.length + ".");
-
-let removed = 0;
-for (const s of doomed) {
-  try { await state.call("sessions.delete", { key: s.key }); helpers.log("  🗑  " + s.key); removed++; }
-  catch (e) { helpers.log("  ✗ " + s.key + ": " + (e.message || e)); }
-}
-helpers.log(removed ? ("✓ removed " + removed + " stale session(s).") : "nothing to remove; already tidy.");
-`,
-        },
-      ],
-    });
   </script>
 </body>
 

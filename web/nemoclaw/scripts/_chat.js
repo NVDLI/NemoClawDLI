@@ -393,6 +393,11 @@ export function mountChatUI(container, opts = {}) {
         const c = cur; c._t += t;
         if (!c._raf) c._raf = requestAnimationFrame(() => { c._raf = 0; renderMd(c.el, c._t); scroll(); });
         snapshotTurn("running"); },
+      replaceAnswer(text) {
+        if (!roundAnswer) { newAnswer(); roundAnswer = cur; }
+        else cur = roundAnswer;
+        cur._t = String(text); flush(); snapshotTurn("running"); scroll();
+      },
       // A tool call closes the current streaming block and appends its own.
       // A read that happens after some reasoning therefore renders below it.
       tool(label, detail) { endThink(); flush(); cur = null; roundThink = null; roundAnswer = null; let c;

@@ -5,6 +5,10 @@
 // The manifest lists only built locales; each locale lists pages that passed localization review.
 
 const PT_TEXT = new Map(Object.entries({
+  "Worker durations and wall time": "Duração dos workers e tempo total",
+  "duration sum": "soma das durações",
+  "wall time": "tempo total",
+  "Worker durations come from the same concurrent run.": "As durações dos workers vêm da mesma execução concorrente.",
   "This lab uses HTTP. Someone on the network could read or alter your progress and session. Enable syncing only if you accept this risk.": "Este laboratório usa HTTP. Alguém na rede pode ler ou alterar seu progresso e sua sessão. Ative a sincronização apenas se aceitar esse risco.",
   "If enabled, this course sends its version, a session identifier, and completed checkpoints to NVIDIA to save your progress. Link tracking is a separate choice. The service also receives connection metadata such as your IP address.": "Se você ativar a sincronização, o curso enviará à NVIDIA sua versão, um identificador de sessão e as etapas concluídas para salvar seu progresso. O registro de links é opcional e independente. O serviço também recebe metadados de conexão, como seu endereço IP.",
   "Disconnect stops future syncing and clears this tab's Activity session. Closing the tab also clears the session. Neither action deletes records already sent to NVIDIA.": "Desconectar interrompe a sincronização e apaga a sessão do Activity nesta aba. Fechar a aba também apaga a sessão. Nenhuma dessas ações exclui registros já enviados à NVIDIA.",
@@ -321,6 +325,10 @@ const PT_ATTRS = new Map(Object.entries({
 }));
 
 const ES_TEXT = new Map(Object.entries({
+  "Worker durations and wall time": "Duración de los workers y tiempo total",
+  "duration sum": "suma de duraciones",
+  "wall time": "tiempo total",
+  "Worker durations come from the same concurrent run.": "Las duraciones de los workers proceden de la misma ejecución concurrente.",
   "This lab uses HTTP. Someone on the network could read or alter your progress and session. Enable syncing only if you accept this risk.": "Este laboratorio usa HTTP. Alguien en la red podría leer o modificar tu progreso y tu sesión. Activa la sincronización solo si aceptas este riesgo.",
   "If enabled, this course sends its version, a session identifier, and completed checkpoints to NVIDIA to save your progress. Link tracking is a separate choice. The service also receives connection metadata such as your IP address.": "Si activas la sincronización, el curso enviará a NVIDIA su versión, un identificador de sesión y las etapas completadas para guardar tu progreso. El registro de enlaces es una opción independiente. El servicio también recibe metadatos de conexión, como tu dirección IP.",
   "Disconnect stops future syncing and clears this tab's Activity session. Closing the tab also clears the session. Neither action deletes records already sent to NVIDIA.": "Desconectar detiene la sincronización y borra la sesión de Activity de esta pestaña. Cerrar la pestaña también borra la sesión. Ninguna de estas acciones elimina los registros ya enviados a NVIDIA.",
@@ -561,6 +569,10 @@ const ES_ATTRS = new Map(Object.entries({
 }));
 
 const ZH_TEXT = new Map(Object.entries({
+  "Worker durations and wall time": "工作智能体耗时与总耗时",
+  "duration sum": "耗时之和",
+  "wall time": "总耗时",
+  "Worker durations come from the same concurrent run.": "工作智能体耗时来自同一次并发运行。",
   "This lab uses HTTP. Someone on the network could read or alter your progress and session. Enable syncing only if you accept this risk.": "此实验环境使用 HTTP。网络中的其他人可能读取或篡改你的进度和会话。仅在接受此风险时启用同步。",
   "If enabled, this course sends its version, a session identifier, and completed checkpoints to NVIDIA to save your progress. Link tracking is a separate choice. The service also receives connection metadata such as your IP address.": "启用同步后，课程会向 NVIDIA 发送课程版本、会话标识符和已完成的检查点，以保存你的进度。是否记录链接点击由你单独选择。服务还会接收 IP 地址等连接元数据。",
   "Disconnect stops future syncing and clears this tab's Activity session. Closing the tab also clears the session. Neither action deletes records already sent to NVIDIA.": "断开连接会停止后续同步，并清除此标签页的 Activity 会话。关闭标签页也会清除会话。这两种操作都不会删除已发送给 NVIDIA 的记录。",
@@ -905,6 +917,10 @@ const ZH_ATTRS = new Map(Object.entries({
 // Helper signatures stay in English because learners call them from code. Descriptions
 // are keyed by the discovered helper name, so code spans never enter text replacement.
 const TW_TEXT = new Map(Object.entries({
+  "Worker durations and wall time": "工作代理程式耗時與總耗時",
+  "duration sum": "耗時總和",
+  "wall time": "總耗時",
+  "Worker durations come from the same concurrent run.": "工作代理程式耗時取自同一次並行執行。",
   "This lab uses HTTP. Someone on the network could read or alter your progress and session. Enable syncing only if you accept this risk.": "此實驗環境使用 HTTP。網路上的其他人可能讀取或竄改你的進度與工作階段。僅在接受此風險時啟用同步。",
   "If enabled, this course sends its version, a session identifier, and completed checkpoints to NVIDIA to save your progress. Link tracking is a separate choice. The service also receives connection metadata such as your IP address.": "啟用同步後，課程會將課程版本、工作階段識別碼及已完成的檢查點傳送至 NVIDIA，以儲存你的進度。是否記錄連結點選由你另外選擇。服務也會接收 IP 位址等連線中繼資料。",
   "Disconnect stops future syncing and clears this tab's Activity session. Closing the tab also clears the session. Neither action deletes records already sent to NVIDIA.": "中斷連線會停止後續同步，並清除此分頁的 Activity 工作階段。關閉分頁也會清除工作階段。這兩種操作都不會刪除已傳送至 NVIDIA 的紀錄。",
@@ -1249,11 +1265,15 @@ const TW_ATTRS = new Map(Object.entries({
 // Helper signatures stay in English because learners call them from code. Descriptions
 // are keyed by the discovered helper name, so code spans never enter text replacement.
 const PT_HELPER_DESCRIPTIONS = new Map(Object.entries({
+  courseTurn: "Envia um turno pela conexão de gateway deste fluxo e aguarda o evento final da execução confirmada. Recebe os helpers da célula atual para usar seu botão Parar e registrar os eventos e as sessões criadas.",
+  courseShell: "Executa um comando no sandbox conectado e exige código de saída zero. Recebe os helpers da célula atual para cancelamento. Retorna o texto do terminal; releia o arquivo para verificar seu conteúdo.",
+  getEmbeddingConfig: "Retorna a configuração persistente de embeddings, com URL, modelo e necessidade de chave. Essa rota é independente do chat.",
+  courseRead: "Lê um arquivo do workspace do curso no sandbox conectado. Exige uma resposta completa, decodifica os bytes UTF-8 e usa os helpers da célula atual para permitir o cancelamento.",
   chat: "Executa uma conclusão de chat não streaming e retorna a resposta no formato OpenAI.", chatStream: "Executa uma conclusão em streaming e expõe conteúdo, raciocínio, ferramentas, motivo de término e uso.",
   webSearch: "Pesquisa o catálogo de materiais do curso sem exigir uma chave.", instantAnswer: "Retorna uma definição selecionada quando a consulta contém um termo conhecido.", formatSearchResults: "Converte resultados de pesquisa em texto numerado para uma mensagem de ferramenta.",
   embed: "Gera vetores pela rota persistente de embeddings.", cosineSim: "Calcula a similaridade de cosseno entre dois vetores.", fetchRetry: "Executa <code>fetch</code> com timeout e novas tentativas limitadas.", delay: "Espera pelo período indicado e respeita o sinal de cancelamento da célula.",
   getConfig: "Retorna a configuração atual de chat.", getKey: "Retorna a chave bearer mantida apenas nesta aba.", getModelApiBaseUrl: "Retorna a URL salva da API de modelos ou o padrão do curso.", setModelApiBaseUrl: "Valida e salva a URL base da API de modelos.", isDefaultModelApiBaseUrl: "Indica se a URL usa a rota de modelos NVIDIA aprovada pelo curso.",
-  terminal: "Executa um comando no terminal PTY do launchable conectado.", openclawLoopbackProbe: "Lê um endpoint de bootstrap pelo terminal de um launchable Pomerium sem expor o cookie.",
+  terminal: "Executa um comando no terminal PTY conectado. Retorna output, raw, frames, exitCode, completion e transport. completion distingue exit, idle, deadline e disconnect. Apenas um código de saída recebido confirma o término do comando; Stop cancela a operação.", openclawLoopbackProbe: "Lê um endpoint de bootstrap pelo terminal de um launchable Pomerium sem expor o cookie.",
   coursePage: "Retorna em Markdown o conteúdo de uma aula pelo ID.", coursePages: "Lista as páginas do curso como <code>[{ id, title }]</code>.", contextWindow: "Retorna o tamanho publicado da janela de contexto de um modelo.", estimateTokens: "Estima a contagem de tokens de texto ou mensagens.", browserChatFetch: "Cria um <code>fetch</code> compatível com SDKs para chamadas de chat no navegador.",
   diagramSVG: "Gera uma figura SVG de nós e arestas a partir de uma especificação.", ganttBarsSVG: "Gera uma figura SVG que compara duração de workers e tempo total.", mountFigures: "Carrega os SVGs da página e habilita o lightbox.", openFigureLightbox: "Abre uma cópia do SVG no lightbox acessível.", wireFigureZoom: "Habilita abertura do SVG por clique, Enter ou Espaço.",
   mountChatUI: "Monta uma interface de chat observável com streaming, histórico e controles.", mountAgentChat: "Monta uma interface de agente ReAct baseada em LangChain.", mountConsole: "Monta um console com histórico, sugestões, conclusão e cancelamento.", mountOpenClawCli: "Monta a interface de comandos e chat do OpenClaw.", mountKeyPanel: "Monta o painel de configuração da chave de API.", mountModelEndpointProbe: "Monta o espelho somente leitura do endpoint do modelo.",
@@ -1265,11 +1285,15 @@ const PT_HELPER_DESCRIPTIONS = new Map(Object.entries({
 }));
 
 const ES_HELPER_DESCRIPTIONS = new Map(Object.entries({
+  courseTurn: "Envía un turno por la conexión de gateway de este flujo y espera el evento final de la ejecución confirmada. Recibe los helpers de la celda actual para usar su botón Detener y registrar los eventos y las sesiones creadas.",
+  courseShell: "Ejecuta un comando en el sandbox conectado y exige un código de salida cero. Recibe los helpers de la celda actual para cancelarlo. Devuelve el texto del terminal; vuelve a leer el archivo para verificar su contenido.",
+  getEmbeddingConfig: "Devuelve la configuración persistente de embeddings: URL, modelo y necesidad de clave. Esta ruta es independiente del chat.",
+  courseRead: "Lee un archivo del workspace del curso en el sandbox conectado. Exige una respuesta completa, decodifica los bytes UTF-8 y usa los helpers de la celda actual para permitir la cancelación.",
   chat: "Ejecuta una finalización de chat sin streaming y devuelve la respuesta con formato OpenAI.", chatStream: "Ejecuta una finalización en streaming y expone contenido, razonamiento, herramientas, motivo de finalización y uso.",
   webSearch: "Busca en el catálogo de materiales del curso sin exigir una clave.", instantAnswer: "Devuelve una definición seleccionada cuando la consulta contiene un término conocido.", formatSearchResults: "Convierte resultados de búsqueda en texto numerado para un mensaje de herramienta.",
   embed: "Genera vectores mediante la ruta persistente de embeddings.", cosineSim: "Calcula la similitud coseno entre dos vectores.", fetchRetry: "Ejecuta <code>fetch</code> con tiempo de espera y reintentos limitados.", delay: "Espera el periodo indicado y respeta la señal de cancelación de la celda.",
   getConfig: "Devuelve la configuración actual del chat.", getKey: "Devuelve la clave bearer conservada solo en esta pestaña.", getModelApiBaseUrl: "Devuelve la URL guardada de la API de modelos o el valor predeterminado del curso.", setModelApiBaseUrl: "Valida y guarda la URL base de la API de modelos.", isDefaultModelApiBaseUrl: "Indica si la URL usa la ruta de modelos NVIDIA aprobada por el curso.",
-  terminal: "Ejecuta un comando en el terminal PTY del launchable conectado.", openclawLoopbackProbe: "Lee un endpoint de arranque mediante el terminal de un launchable Pomerium sin exponer la cookie.",
+  terminal: "Ejecuta un comando en el terminal PTY conectado. Devuelve output, raw, frames, exitCode, completion y transport. completion distingue exit, idle, deadline y disconnect. Solo un código de salida recibido confirma que el comando terminó; Stop cancela la operación.", openclawLoopbackProbe: "Lee un endpoint de arranque mediante el terminal de un launchable Pomerium sin exponer la cookie.",
   coursePage: "Devuelve en Markdown el contenido de una lección por su ID.", coursePages: "Enumera las páginas del curso como <code>[{ id, title }]</code>.", contextWindow: "Devuelve el tamaño publicado de la ventana de contexto de un modelo.", estimateTokens: "Estima el número de tokens de texto o mensajes.", browserChatFetch: "Crea un <code>fetch</code> compatible con SDK para llamadas de chat desde el navegador.",
   diagramSVG: "Genera una figura SVG de nodos y aristas a partir de una especificación.", ganttBarsSVG: "Genera una figura SVG que compara la duración de workers y el tiempo total.", mountFigures: "Carga los SVG de la página y habilita el visor ampliado.", openFigureLightbox: "Abre una copia del SVG en el visor ampliado accesible.", wireFigureZoom: "Habilita la apertura del SVG por clic, Intro o Espacio.",
   mountChatUI: "Monta una interfaz de chat observable con streaming, historial y controles.", mountAgentChat: "Monta una interfaz de agente ReAct basada en LangChain.", mountConsole: "Monta una consola con historial, sugerencias, autocompletado y cancelación.", mountOpenClawCli: "Monta la interfaz de comandos y chat de OpenClaw.", mountKeyPanel: "Monta el panel de configuración de la clave de API.", mountModelEndpointProbe: "Monta el reflejo de solo lectura del endpoint del modelo.",
@@ -1281,6 +1305,10 @@ const ES_HELPER_DESCRIPTIONS = new Map(Object.entries({
 }));
 
 const ZH_HELPER_DESCRIPTIONS = new Map(Object.entries({
+  courseTurn: "通过此工作流已建立的网关连接发送一个轮次，等待已确认运行的最终聊天事件。传入当前单元格的辅助函数，以便使用本次运行的停止按钮，并记录事件和创建的会话。",
+  courseShell: "在已连接的 sandbox 中执行命令，并要求退出状态为零。传入当前单元格的辅助函数以支持取消。返回终端文本；请重新读取文件以验证内容。",
+  getEmbeddingConfig: "返回持久化嵌入配置，包括 URL、模型和是否需要密钥。嵌入路由与聊天路由相互独立。",
+  courseRead: "从已连接的 sandbox 读取课程工作区文件。要求返回完整的带边界标记的响应，并解码 UTF-8 字节。传入当前单元格的辅助函数以支持取消操作。",
   chat: "单次、非流式聊天补全。返回原始 OpenAI 格式响应。只需要最终消息时使用。",
   chatStream: "流式聊天补全；token 到达时会实时显示在此面板的结果视图中。返回的摘要包含 <code>.content</code>、<code>.reasoning</code>、<code>.tool_calls</code>、<code>.finish_reason</code> 和 <code>.usage</code>。",
   webSearch: "无需密钥即可对课程资料目录（<code>assets/materials_index.json</code>）进行排序搜索。目录包含已缓存的 NVIDIA 术语表条目，以及从 Web 收录、按需访问的论文和博客。查询会与各条目的名称、标签和摘要进行匹配；任何页面都能运行，无需密钥或实验环境。每项结果都包含 <code>tier</code>：<code>cached</code> 表示课程附带全文，<code>on_demand</code> 表示通过 <code>href</code> 访问来源。返回 <code>{ results: [{title, body, href, tier, kind}], count, unreachable }</code>。",
@@ -1293,7 +1321,7 @@ const ZH_HELPER_DESCRIPTIONS = new Map(Object.entries({
   getConfig: "返回当前聊天配置 <code>{ mode, url, model, needsKey, iframeProxy }</code>。学习者可以在课程主页保存一个兼容的聊天 API 入口和模型；嵌入服务使用独立路由。已发布的课程来源和本地文件预览默认使用受限的 NVIDIA DLI 中继，其它来源保持直连；自定义聊天 API 入口始终绕过该中继。",
   getEmbeddingConfig: "返回持久化嵌入路由 <code>{ url, model }</code>。默认使用 NVIDIA 托管 API，学习者选择其它聊天 API 入口时不会随之改变。已发布的课程来源会与聊天路由使用相同的受限中继选择逻辑；自定义嵌入 API 入口仍保持直连。",
   getKey: "返回当前浏览器标签页保存在 <code>sessionStorage</code> 中的模型 bearer 密钥；未设置时返回 <code>null</code>。NVIDIA 密钥以 <code>nvapi-</code> 开头。模型调用会自动使用此标签页范围内的值，关闭标签页后该值即被丢弃。",
-  terminal: "通过可启动实例的 <code>/ws/terminal</code> WebSocket 打开 PTY 并运行 <code>cmd</code>。使用 <code>\"bash\"</code> 进入虚拟机 shell，或使用 <code>\"openshell sandbox connect &lt;agent&gt;\"</code> 进入受内核 sandbox 保护的智能体。<code>send</code> 是依次输入 PTY 的 shell 命令行数组，每行都会附加 Enter。绑定浏览器的会话保持直连；粘贴的访问会话会先尝试直连，再尝试获准的提供商专用中继。设置 <code>relayWebSocket: true</code> 可明确选择该恢复路由。返回 <code>{ output, raw, frames, exitCode, transport }</code>；<code>output</code> 已移除 ANSI 控制码，<code>exitCode</code> 是 PTY 返回的退出状态，未收到时为 null，<code>transport</code> 表示成功打开的直连或获准中继路由。可启动实例 URL 从 OpenClaw 探测结果中读取。仅适用于可启动实例。",
+  terminal: "通过可启动实例的 <code>/ws/terminal</code> WebSocket 打开 PTY 并运行 <code>cmd</code>。使用 <code>\"bash\"</code> 进入虚拟机 shell，或使用 <code>\"openshell sandbox connect &lt;agent&gt;\"</code> 进入受内核 sandbox 保护的智能体。<code>send</code> 是依次输入 PTY 的 shell 命令行数组，每行都会附加 Enter。绑定浏览器的会话保持直连；粘贴的访问会话会先尝试直连，再尝试获准的提供商专用中继。设置 <code>relayWebSocket: true</code> 可明确选择该恢复路由。返回 <code>{ output, raw, frames, exitCode, completion, transport }</code>；<code>output</code> 已移除 ANSI 控制码，<code>exitCode</code> 是 PTY 返回的退出状态，未收到时为 null，<code>transport</code> 表示成功打开的直连或获准中继路由。completion 区分 exit、idle、deadline 和 disconnect；只有收到退出状态才能确认命令结束。Stop 会取消操作。可启动实例 URL 从 OpenClaw 探测结果中读取。仅适用于可启动实例。",
   coursePage: "<code>helpers.coursePage(id)</code> 以 Markdown 形式返回一个课程页面的正文。<code>id</code> 是类似 <code>\"01b-react\"</code> 的文件 ID；可以使用 <code>helpers.coursePages()</code> 列出。该请求为同源请求，无需密钥。可将其接入 <code>read_course_page</code> 工具，使回答基于实际课程内容。",
   coursePages: "<code>helpers.coursePages()</code> 以 <code>[{ id, title }]</code> 形式返回页面列表。它是模块菜单或 <code>read_course_page</code> 工具 <code>enum</code> 字段的唯一来源。",
   contextWindow: "<code>helpers.contextWindow(model)</code> 返回模型公布的上下文窗口大小，单位为 token。课程中的交互页面使用它显示上下文预算；未知模型默认按 131072 处理。",
@@ -1308,7 +1336,7 @@ const ZH_HELPER_DESCRIPTIONS = new Map(Object.entries({
   mountKeyPanel: "使用现有的 <code>.key-panel</code> CSS 类渲染内联 API 密钥设置面板。保存密钥后，面板会显示紧凑的“? 已保存”行和“更改”按钮。保存时会移除不可见 Unicode 字符、在线验证密钥，然后更新顶部栏中的 <code>#key-status</code> 状态标签。",
   openclawBootstrapRequest: "通过从模块 3a 标准化连接中选择的提供商读取 <code>/api/agent</code> 或 <code>/healthz</code>。对于 Pomerium，这些固定 API 入口会通过终端 WebSocket 从可启动实例的 loopback 读取；系统先尝试已登录的浏览器会话，再尝试获准的提供商专用中继。返回响应元数据和解析后的 JSON，不暴露任何访问凭据。",
   openclawChat: "通过 <code>/cli/gateway</code> WebSocket 向实时 OpenClaw 智能体发送一轮聊天并流式接收回复。可启动实例 URL 和 token 从 OpenClaw 探测结果（Kickstart 页面）中读取。传入 <code>view</code>（即 <code>mountChatUI</code> 的 <code>ctx.view</code>）后，它会完整驱动可观察的执行过程：回答文本、按执行顺序排列的每个工具或命令调用标签（包含参数和完整结果，并标记错误），以及网关报告的上下文 token 预算。也可以传入 <code>onToken(delta)</code> 和 <code>onTool(name,{id,args})</code> 自行处理事件。网关不会传输推理通道，因此页面不显示推理内容。多轮对话应复用同一个 <code>session</code>。它是 chat()/createReactAgent 对应的网关辅助函数。",
-  evalSandboxNetwork: "OpenShell 网络 Rego 的静态实现。针对候选连接返回 <code>{action, matched, reason}</code>，采用默认拒绝策略，并执行二进制程序身份以及 L7 方法/路径检查；不会实际访问网络。默认使用实时可启动实例的强化策略。可与 <code>helpers.sandboxExec</code> 配合，在线确认预测结果。",
+  evalSandboxNetwork: "静态评估候选连接与 OpenShell 网络策略，返回 {action, matched, reason}，不发送网络请求。默认使用课程内置策略快照。先用 policyGet 读取实时策略，再传入评估函数；命令失败本身不能证明是哪种机制拒绝了访问。",
   evalSandboxFs: "OpenShell 文件系统（Landlock）策略的静态实现。针对 <code>path</code> 的读取或写入返回 <code>\"allow\"</code> 或 <code>\"deny\"</code>。默认使用实时可启动实例的强化策略。",
   sandboxExec: "通过 <code>openshell sandbox exec</code> 在实时 OpenShell sandbox 内运行 <code>command</code>，并返回内核实际允许或拒绝后的输出。未提供 <code>agent</code> 时会自动发现 sandbox 名称。可使用它对正在运行的 sandbox 验证 <code>helpers.evalSandboxNetwork</code> 或 <code>evalSandboxFs</code> 的预测。仅适用于可启动实例。",
   policyGet: "读取可启动实例的实时 OpenShell 策略。通过 operator 终端运行 <code>openshell policy get &lt;agent&gt; --full</code> 并解析 YAML 正文。返回 <code>{ agent, command, raw, status, policy, parseError }</code>，其中包括实际运行的命令、原始返回文本、状态标头、解析后的策略对象，以及策略不可用时的明确解析错误；<code>evalSandboxNetwork</code> 和 <code>evalSandboxFs</code> 会读取该结构。仅适用于可启动实例。",
@@ -1348,6 +1376,10 @@ const ZH_HELPER_DESCRIPTIONS = new Map(Object.entries({
 }));
 
 const TW_HELPER_DESCRIPTIONS = new Map(Object.entries({
+  courseTurn: "透過此工作流程已建立的閘道連線傳送一個輪次，等待已確認執行的最終聊天事件。傳入目前儲存格的輔助函式，以使用本次執行的停止按鈕，並記錄事件與建立的工作階段。",
+  courseShell: "在已連線的 sandbox 中執行命令，並要求結束狀態為零。傳入目前儲存格的輔助函式以支援取消。傳回終端機文字；請重新讀取檔案以驗證內容。",
+  getEmbeddingConfig: "傳回持久化嵌入設定，包括 URL、模型與是否需要金鑰。嵌入路由與聊天路由彼此獨立。",
+  courseRead: "從已連線的 sandbox 讀取課程工作區檔案。要求傳回完整且含有邊界標記的回應，並解碼 UTF-8 位元組。傳入目前儲存格的輔助函式以支援取消操作。",
   chat: "單次、非流式聊天補全。傳回原始 OpenAI 格式回應。只需要最終訊息時使用。",
   chatStream: "流式聊天補全；token 到達時會即時顯示在此面板的結果檢視中。傳回的摘要包含 <code>.content</code>、<code>.reasoning</code>、<code>.tool_calls</code>、<code>.finish_reason</code> 和 <code>.usage</code>。",
   webSearch: "無需金鑰即可對課程資料目錄（<code>assets/materials_index.json</code>）進行排序搜尋。目錄包含已快取的 NVIDIA 術語表條目，以及從 Web 收錄、按需存取的論文和部落格。查詢會與各條目的名稱、標籤和摘要進行匹配；任何頁面都能執行，無需金鑰或實驗環境。每項結果都包含 <code>tier</code>：<code>cached</code> 表示課程附帶全文，<code>on_demand</code> 表示透過 <code>href</code> 存取來源。傳回 <code>{ results: [{title, body, href, tier, kind}], count, unreachable }</code>。",
@@ -1360,7 +1392,7 @@ const TW_HELPER_DESCRIPTIONS = new Map(Object.entries({
   getConfig: "傳回當前聊天設定 <code>{ mode, url, model, needsKey, iframeProxy }</code>。學習者可以在課程首頁儲存一個相容的聊天 API 入口和模型；嵌入服務使用獨立路由。已釋出的課程來源和本機檔案預覽預設使用受限的 NVIDIA DLI 中繼，其他來源保持直連；自訂聊天 API 入口始終繞過該中繼。",
   getEmbeddingConfig: "傳回持久化嵌入路由 <code>{ url, model }</code>。預設使用 NVIDIA 託管 API，學習者選擇其他聊天 API 入口時不會隨之改變。已釋出的課程來源會與聊天路由使用相同的受限中繼選擇邏輯；自訂嵌入 API 入口仍保持直連。",
   getKey: "傳回當前瀏覽器標籤頁儲存在 <code>sessionStorage</code> 中的模型 bearer 金鑰；未設排程傳回 <code>null</code>。NVIDIA 金鑰以 <code>nvapi-</code> 開頭。模型呼叫會自動使用此標籤頁範圍內的值，關閉標籤頁後該值即被丟棄。",
-  terminal: "透過可啟動執行個體的 <code>/ws/terminal</code> WebSocket 開啟 PTY 並執行 <code>cmd</code>。使用 <code>\"bash\"</code> 進入虛擬機器 shell，或使用 <code>\"openshell sandbox connect &lt;agent&gt;\"</code> 進入受核心 sandbox 保護的代理程式。<code>send</code> 是依次輸入 PTY 的 shell 命令列陣列，每行都會附加 Enter。繫結瀏覽器的會話保持直連；貼上的存取會話會先嚐試直連，再嘗試獲准的提供商專用中繼。設定 <code>relayWebSocket: true</code> 可明確選擇該恢復路由。傳回 <code>{ output, raw, frames, exitCode, transport }</code>；<code>output</code> 已移除 ANSI 控制碼，<code>exitCode</code> 是 PTY 傳回的退出狀態，未收到時為 null，<code>transport</code> 表示成功開啟的直連或獲准中繼路由。可啟動執行個體 URL 從 OpenClaw 探測結果中讀取。僅適用於可啟動執行個體。",
+  terminal: "透過可啟動執行個體的 <code>/ws/terminal</code> WebSocket 開啟 PTY 並執行 <code>cmd</code>。使用 <code>\"bash\"</code> 進入虛擬機器 shell，或使用 <code>\"openshell sandbox connect &lt;agent&gt;\"</code> 進入受核心 sandbox 保護的代理程式。<code>send</code> 是依次輸入 PTY 的 shell 命令列陣列，每行都會附加 Enter。繫結瀏覽器的會話保持直連；貼上的存取會話會先嚐試直連，再嘗試獲准的提供商專用中繼。設定 <code>relayWebSocket: true</code> 可明確選擇該恢復路由。傳回 <code>{ output, raw, frames, exitCode, completion, transport }</code>；<code>output</code> 已移除 ANSI 控制碼，<code>exitCode</code> 是 PTY 傳回的退出狀態，未收到時為 null，<code>transport</code> 表示成功開啟的直連或獲准中繼路由。可啟動執行個體 URL 從 OpenClaw 探測結果中讀取。僅適用於可啟動執行個體。",
   coursePage: "<code>helpers.coursePage(id)</code> 以 Markdown 形式傳回一個課程頁面的正文。<code>id</code> 是類似 <code>\"01b-react\"</code> 的檔案 ID；可以使用 <code>helpers.coursePages()</code> 列出。該請求為同源請求，無需金鑰。可將其接入 <code>read_course_page</code> 工具，使回答基於實際課程內容。",
   coursePages: "<code>helpers.coursePages()</code> 以 <code>[{ id, title }]</code> 形式傳回頁面列表。它是模組選單或 <code>read_course_page</code> 工具 <code>enum</code> 欄位的唯一來源。",
   contextWindow: "<code>helpers.contextWindow(model)</code> 傳回模型公佈的上下文視窗大小，單位為 token。課程中的互動頁面使用它顯示上下文預算；未知模型預設按 131072 處理。",
@@ -1375,7 +1407,7 @@ const TW_HELPER_DESCRIPTIONS = new Map(Object.entries({
   mountKeyPanel: "使用現有的 <code>.key-panel</code> CSS 類呈現內聯 API 金鑰設定面板。儲存金鑰後，面板會顯示緊湊的“? 已儲存”行和“更改”按鈕。儲存時會移除不可見 Unicode 字元、線上驗證金鑰，然後更新頂部欄中的 <code>#key-status</code> 狀態標籤。",
   openclawBootstrapRequest: "透過從模組 3a 標準化連線中選擇的提供商讀取 <code>/api/agent</code> 或 <code>/healthz</code>。對於 Pomerium，這些固定 API 入口會透過終端機 WebSocket 從可啟動執行個體的 loopback 讀取；系統先嚐試已登入的瀏覽器會話，再嘗試獲准的提供商專用中繼。傳回回應後設資料和解析後的 JSON，不暴露任何存取憑證。",
   openclawChat: "透過 <code>/cli/gateway</code> WebSocket 向即時 OpenClaw 代理程式傳送一輪聊天並流式接收回復。可啟動執行個體 URL 和 token 從 OpenClaw 探測結果（Kickstart 頁面）中讀取。傳入 <code>view</code>（即 <code>mountChatUI</code> 的 <code>ctx.view</code>）後，它會完整驅動可觀察的執行過程：回答文字、按執行順序排列的每個工具或命令呼叫標籤（包含引數和完整結果，並標記錯誤），以及閘道器報告的上下文 token 預算。也可以傳入 <code>onToken(delta)</code> 和 <code>onTool(name,{id,args})</code> 自行處理事件。閘道器不會傳輸推理通道，因此頁面不顯示推理內容。多輪對話應複用同一個 <code>session</code>。它是 chat()/createReactAgent 對應的閘道器輔助函式。",
-  evalSandboxNetwork: "OpenShell 網路 Rego 的靜態實現。針對候選連線傳回 <code>{action, matched, reason}</code>，採用預設拒絕策略，並執行二進位制程式身分以及 L7 方法/路徑檢查；不會實際存取網路。預設使用即時可啟動執行個體的強化策略。可與 <code>helpers.sandboxExec</code> 配合，線上確認預測結果。",
+  evalSandboxNetwork: "靜態評估候選連線與 OpenShell 網路政策，傳回 {action, matched, reason}，不傳送網路請求。預設使用課程內建政策快照。先用 policyGet 讀取即時政策，再傳入評估函式；命令失敗本身無法證明是哪種機制拒絕存取。",
   evalSandboxFs: "OpenShell 檔案系統（Landlock）策略的靜態實現。針對 <code>path</code> 的讀取或寫入傳回 <code>\"allow\"</code> 或 <code>\"deny\"</code>。預設使用即時可啟動執行個體的強化策略。",
   sandboxExec: "透過 <code>openshell sandbox exec</code> 在即時 OpenShell sandbox 內執行 <code>command</code>，並傳回核心實際允許或拒絕後的輸出。未提供 <code>agent</code> 時會自動發現 sandbox 名稱。可使用它對正在執行的 sandbox 驗證 <code>helpers.evalSandboxNetwork</code> 或 <code>evalSandboxFs</code> 的預測。僅適用於可啟動執行個體。",
   policyGet: "讀取可啟動執行個體的即時 OpenShell 策略。透過 operator 終端機執行 <code>openshell policy get &lt;agent&gt; --full</code> 並解析 YAML 正文。傳回 <code>{ agent, command, raw, status, policy, parseError }</code>，其中包括實際執行的命令、原始傳回文字、狀態標頭、解析後的策略物件，以及策略不可用時的明確解析錯誤；<code>evalSandboxNetwork</code> 和 <code>evalSandboxFs</code> 會讀取該結構。僅適用於可啟動執行個體。",
