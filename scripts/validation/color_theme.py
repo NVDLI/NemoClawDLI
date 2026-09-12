@@ -324,6 +324,11 @@ def scan_svg_attrs(text: str):
 # into a color-bearing attribute / style. It is a regression guard: with diagramSVG emitting var(),
 # nothing trips it; reintroducing a render-time bake lights it back up.
 _GCS = re.compile(r"\bgetComputedStyle\b|\.getPropertyValue\s*\(")
+# Direct overflow reads decide scroll containment; they cannot resolve a color.
+# Keep indirect, dynamic, and unrecognized reads in the conservative bake check.
+_OVERFLOW_READ = re.compile(
+    r"\bgetComputedStyle\s*\([^();]*\)\s*\.\s*overflow(?:X|Y)?\b(?![\w$])"
+)
 _MARKUP_COLOR = re.compile(
     r"""(?:fill|stroke|stop-color|flood-color|color|background(?:-color)?)\s*[:=]\s*["']?\$\{""",
     re.I)
@@ -341,6 +346,7 @@ def scan_js_theme_bake(text: str):
     """(snippet, reason) for a render-time color bake: a file that reads computed styles and feeds a
     value straight into color markup, freezing that output against the theme toggle."""
     code = _strip_js_comments(text)
+    code = _OVERFLOW_READ.sub("undefined", code)
     g = _GCS.search(code)
     if not g or not _MARKUP_COLOR.search(code):
         return []

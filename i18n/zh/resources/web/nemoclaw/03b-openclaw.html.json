@@ -6,10 +6,10 @@
     "web/nemoclaw/assets/figures/03b-openclaw-1.svg"
   ],
   "values": {
-    "link.05536e0e6c7f": {
+    "link.1292fd81eee2": {
       "type": "link",
-      "source": "\n    <p><strong>Same runtime as Kickstart.</strong> These cells reuse the launchable\n      connected in 3a. The course exposes its gateway rather than the internal\n      <code>/v1/chat/completions</code> route. If a cell logs <code>⚠ DEGRADED</code>\n      or stalls, run Recover once for that fresh instance. A local deployment can use the\n      <a href=\"https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NemoClaw setup playbook</a>\n      and the same gateway contract.</p>\n  ",
-      "value": "\n    <p><strong>与快速入门使用相同的运行时。</strong>这些单元会复用\n      3a 中连接的可启动实例。课程开放的是实例网关，而不是内部\n      <code>/v1/chat/completions</code> 路由。如果单元记录 <code>⚠ DEGRADED</code>\n      或停滞不动，请为该新实例运行一次 Recover。本地部署可以使用\n      <a href=\"https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NemoClaw 设置指南</a>和相同的网关契约。</p>\n  "
+      "source": "Memory comes in <a href=\"https://arxiv.org/abs/2310.08560\" target=\"_blank\" rel=\"noopener\">two tiers</a>. The agent appends raw notes to a dated file\n     under <code>memory/</code> as it works, then distils the parts that\n     should persist into its curated long-term store, <code>MEMORY.md</code>.\n     By default, <code>MEMORY.md</code> is included in the main session context and omitted\n     from shared or group prompts. This context choice does not restrict access to the file.\n     You will read both straight off the live sandbox a few steps down.",
+      "value": "记忆分为<a href=\"https://arxiv.org/abs/2310.08560\" target=\"_blank\" rel=\"noopener\">两层</a>。智能体工作时会将原始笔记追加到 <code>memory/</code> 下以日期命名的文件，再把应保留的内容整理到长期记忆 <code>MEMORY.md</code>。默认情况下，<code>MEMORY.md</code> 会纳入主会话的上下文，并从共享或群组提示词中省略。这项上下文选择并不限制文件访问。稍后您将直接从运行中的 sandbox 读取这两种记忆。"
     },
     "link.1be52ce4d6ee": {
       "type": "link",
@@ -20,6 +20,11 @@
       "type": "link",
       "source": "<a href=\"https://docs.anthropic.com/en/docs/claude-code/overview\" target=\"_blank\" rel=\"noopener\">Claude Code</a>. The production CLI agent; live reference for how a workspace directory, persistent memory, and a tool surface fit together at scale.",
       "value": "<a href=\"https://docs.anthropic.com/en/docs/claude-code/overview\" target=\"_blank\" rel=\"noopener\">Claude Code</a>。生产级 CLI 智能体；可作为实时参考，了解工作区目录、持久记忆和工具界面如何大规模协同工作。"
+    },
+    "link.4895ece5217c": {
+      "type": "link",
+      "source": "\n    <p><strong>Same runtime as Kickstart.</strong> These cells reuse the launchable\n      connected in 3a. The course exposes its gateway rather than the internal\n      <code>/v1/chat/completions</code> route. If a cell fails or stalls, run Health check and inspect its evidence before choosing a recovery action. A local deployment can use the\n      <a href=\"https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NemoClaw setup playbook</a>\n      and the same gateway contract.</p>\n  ",
+      "value": "<p><strong>与快速入门使用相同的运行时。</strong>这些单元复用 3a 中连接的可启动实例。课程开放的是实例网关，而非内部 <code>/v1/chat/completions</code> 路由。如果单元失败或停滞，请先运行 Health check 并检查其证据，再选择恢复操作。本地部署可以使用 <a href=\"https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NemoClaw 设置指南</a>和相同的网关契约。</p>"
     },
     "link.80a3a52bed5f": {
       "type": "link",
@@ -41,11 +46,6 @@
       "source": "<a href=\"https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-safer-autonomous-agent-using-openclaw\" target=\"_blank\" rel=\"noopener\">NVIDIA, <em>How to Build a Safer Autonomous Agent using OpenClaw</em></a>. The course companion reference for OpenClaw, OpenShell, and the sandboxed-agent shape used here.",
       "value": "<a href=\"https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-safer-autonomous-agent-using-openclaw\" target=\"_blank\" rel=\"noopener\">NVIDIA, <em>How to Build a Safer Autonomous Agent using OpenClaw</em></a>。本课程有关 OpenClaw、OpenShell 及此处所用沙盒化智能体架构的配套参考资料。"
     },
-    "link.a32c63c257b5": {
-      "type": "link",
-      "source": "\n    <strong>The voice is in the file.</strong> Both replies differ because the\n    runtime folded a different SOUL definition into each prompt. To change the\n    persona for real you edit that file or add a <a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">skill bundle</a> and the next turn\n    sees the change. Step 1b already had you read the live SOUL.md off the sandbox,\n    so editing it runs that same path in reverse.\n  ",
-      "value": "\n    <strong>表达风格由文件决定。</strong>两个回复之所以不同，是因为运行时将不同的\n    SOUL 定义分别纳入了各自的提示词。要真正更改角色，可以编辑该文件或添加<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">技能包</a>，下一轮交互就会看到变化。步骤 1b 已让您从沙盒读取实时 SOUL.md，因此编辑该文件就是反向执行同一条路径。\n  "
-    },
     "link.a87b60eb0a28": {
       "type": "link",
       "source": "<a href=\"https://man7.org/linux/man-pages/man2/seccomp.2.html\" target=\"_blank\" rel=\"noopener\">seccomp (man 2)</a>. The syscall-filtering layer in the kernel sandbox you meet in Module 4.",
@@ -56,30 +56,20 @@
       "source": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">Anthropic, <em>Claude Skills</em> (docs)</a>. The file-as-context pattern OpenClaw uses: a markdown file the runtime folds into the system prompt becomes a callable agent capability.",
       "value": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">Anthropic, <em>Claude Skills</em> (docs)</a>。OpenClaw 使用的“文件即上下文”模式：运行时将一个 Markdown 文件纳入系统提示词后，该文件便会成为可调用的智能体能力。"
     },
-    "link.cd14bf8a5e57": {
-      "type": "link",
-      "source": "Memory comes in <a href=\"https://arxiv.org/abs/2310.08560\" target=\"_blank\" rel=\"noopener\">two tiers</a>. The agent appends raw notes to a dated file\n     under <code>memory/</code> as it works, then distils the parts that\n     should persist into its curated long-term store, <code>MEMORY.md</code>.\n     The runtime loads <code>MEMORY.md</code> in the main session and leaves\n     it out of any shared or group context, so personal notes stay private.\n     You will read both straight off the live sandbox a few steps down.",
-      "value": "记忆分为<a href=\"https://arxiv.org/abs/2310.08560\" target=\"_blank\" rel=\"noopener\">两个层级</a>。智能体工作时会将原始笔记追加到\n     <code>memory/</code> 下按日期命名的文件中，再把应当长期保留的内容提炼到整理后的长期存储 <code>MEMORY.md</code> 中。运行时会在主会话中加载 <code>MEMORY.md</code>，但不会将其纳入任何共享或群组上下文，因而个人笔记仍保持私密。稍后几个步骤中，您将直接从实时沙盒读取这两类文件。"
-    },
-    "rich.358f62e56c19": {
-      "type": "rich",
-      "source": "Those stores differ in reach. Session history belongs to its session.\n     <code>MEMORY.md</code> can carry a saved fact into a new session whose transcript starts empty.",
-      "value": "这两种存储的作用范围不同。会话历史只属于相应会话。\n     <code>MEMORY.md</code> 可以将已保存的信息带入一个对话记录为空的新会话。"
-    },
     "rich.37cc9edf3743": {
       "type": "rich",
       "source": "<code>helpers.terminal(\"bash\")</code> opens the host VM shell, where\n        you can run <code>openshell sandbox list</code>.",
       "value": "<code>helpers.terminal(\"bash\")</code> 打开主机的 VM shell，可以在其中运行\n        <code>openshell sandbox list</code>。"
     },
-    "rich.37dfaa1ff6d5": {
+    "rich.56fdbaffc0e9": {
       "type": "rich",
-      "source": "\n    <strong>The launchable has two planes of authority.</strong> The first is the\n    terminal, which runs as the operator above the sandbox boundary and can\n    therefore read every file and list the sandboxes. The agent occupies the second\n    plane. It shares the machine with the terminal but runs under the narrower\n    OpenShell policy tested in Module 4.\n  ",
-      "value": "\n    <strong>该可启动实例有两个权限平面。</strong>第一个是终端，它以沙盒边界上层的\n    operator 身份运行，因此能够读取所有文件并列出沙盒。智能体位于第二个平面。它与终端共享同一台机器，但受模块 4 中所测试的、更严格的 OpenShell 策略约束。\n  "
+      "source": "\n    <strong>Check self-report against the files.</strong> Ask the agent what its prompt contains,\n    then compare the answer with the live workspace in Step 1b:\n    <ul>\n      <li>which persona rules are active,</li>\n      <li>what is on its tool list,</li>\n      <li>or what it remembers about you.</li>\n    </ul>\n  ",
+      "value": "<strong>用文件核对智能体的自述。</strong>询问智能体的提示词包含哪些内容，再在步骤 1b 中将回答与实时工作区对照：<ul><li>当前生效的角色规则，</li><li>工具列表中的工具，</li><li>或它记得哪些与您有关的信息。</li></ul>"
     },
-    "rich.62e61aecc4b3": {
+    "rich.766fb0c61853": {
       "type": "rich",
-      "source": "\n    <strong>Treat self-report as evidence.</strong> Ask the agent what its prompt contains,\n    then compare the answer with the live workspace in Step 1b:\n    <ul>\n      <li>which persona rules are active,</li>\n      <li>what is on its tool list,</li>\n      <li>or what it remembers about you.</li>\n    </ul>\n  ",
-      "value": "\n    <strong>将智能体的自述视为证据。</strong>询问智能体的提示词包含哪些内容，然后在步骤 1b 中将答案与实时工作区进行比较：\n    <ul>\n      <li>当前启用了哪些角色规则，</li>\n      <li>工具列表中有哪些工具，</li>\n      <li>或它记得哪些信息。</li>\n    </ul>\n  "
+      "source": "\n    <strong>The launchable has two planes of authority.</strong> The first is the\n    terminal, which runs as the operator above the sandbox boundary and can\n    inspect files permitted to that operator account and list its sandboxes. The agent occupies the second\n    plane. It shares the machine with the terminal but runs under the narrower\n    OpenShell policy tested in Module 4.\n  ",
+      "value": "<strong>可启动实例具有两个权限层面。</strong>第一层是终端，它以 sandbox 边界之上的操作员身份运行，可以检查该操作员账户获准访问的文件并列出其 sandbox。智能体位于第二层。它与终端共用同一台机器，但在模块 4 所测试的、更严格的 OpenShell 策略下运行。"
     },
     "rich.7a5c772b689c": {
       "type": "rich",
@@ -101,10 +91,10 @@
       "source": "The launchable also exposes an operator terminal, a shell on the host\n     <em>above</em> the agent's sandbox that Cloudflare puts in front of every\n     launchable. The <code>helpers.terminal()</code> helper opens that shell\n     straight from this page through two entry points:",
       "value": "该可启动实例还提供 operator 终端，即智能体沙盒<em>上层</em>的主机 shell；\n     Cloudflare 会将它置于每个可启动实例之前。\n     <code>helpers.terminal()</code> 辅助函数可通过两个入口直接从本页打开该 shell："
     },
-    "rich.da8874fc113d": {
+    "rich.ca22c0859047": {
       "type": "rich",
-      "source": "\n    <strong>The session-key routing here is a lab affordance.</strong> NemoClaw's\n    image ships a stash of pre-built SOUL variants and wires a session-key suffix\n    to one of them, only so this page can show two voices in one click. Outside\n    the lab the gateway has no such stash, so two session keys would read the one\n    SOUL.md you have and return two identical replies. In production you change\n    the persona by editing SOUL.md.\n  ",
-      "value": "\n    <strong>此处基于会话键的路由是实验专用功能。</strong>NemoClaw 镜像附带一组预先构建的\n    SOUL 变体，并将会话键后缀路由到其中一个变体，这只是为了让本页能够一键展示两种表达风格。在实验之外，网关没有这组变体，因此两个会话键都会读取您唯一的\n    SOUL.md，并返回两个相同的回复。在生产环境中，您需要通过编辑 SOUL.md 来更改角色。\n  "
+      "source": "\n    <strong>This split matters directly for safety.</strong> An agent that can rewrite workspace context can influence later runs.\n    The configured filesystem and network rules determine which other resources it can reach.\n    Inspect the live policy for access to:\n    <ul>\n      <li>the host filesystem,</li>\n      <li>the wider network,</li>\n      <li>or a neighbouring agent's workspace.</li>\n    </ul>\n    <p>You will see that boundary tested directly in the next module, where a deliberately\n    over-privileged agent tries to cross it.</p>\n  ",
+      "value": "<strong>这种划分直接影响安全。</strong>能够改写工作区上下文的智能体可以影响后续运行。配置的文件系统和网络规则决定了它还能访问哪些资源。请检查当前策略是否允许访问：<ul><li>主机文件系统，</li><li>更广泛的网络，</li><li>或相邻智能体的工作区。</li></ul><p>下一模块将直接测试这条边界：一个被刻意赋予过高权限的智能体会尝试越过它。</p>"
     },
     "rich.db0dcea49173": {
       "type": "rich",
@@ -116,26 +106,32 @@
       "source": "OpenShell is the kernel-level sandbox that holds the agent. For now you can\n     treat it as the boundary between operator and agent that Module 4 goes on to\n     define in full and to test directly. The agent's name in the connect command\n     comes from <code>GET /api/agent</code>, the same call the Kickstart page made\n     to discover your launchable.",
       "value": "OpenShell 是容纳智能体的内核级沙盒。目前，可以将它视为 operator 与智能体之间的边界；模块 4 将完整定义并直接测试该边界。连接命令中的智能体名称来自 <code>GET /api/agent</code>，即快速入门页面用于发现可启动实例的同一调用。"
     },
-    "rich.eb2a3738197c": {
-      "type": "rich",
-      "source": "\n    <strong>This split matters directly for safety.</strong> Because the agent can\n    rewrite its own context, the containment layer beneath it has to stop any bad write\n    from doing real harm. OpenClaw freely modifies the markdown in its own workspace,\n    while the OpenShell sandbox beneath it blocks that same write from ever reaching:\n    <ul>\n      <li>the host filesystem,</li>\n      <li>the wider network,</li>\n      <li>or a neighbouring agent's workspace.</li>\n    </ul>\n    <p>You will see that boundary tested directly in the next module, where a deliberately\n    over-privileged agent tries to cross it.</p>\n  ",
-      "value": "\n    <strong>这种划分对安全至关重要。</strong>由于智能体能够重写自己的上下文，它下方的隔离层必须阻止任何不当写入造成实际损害。OpenClaw 可以自由修改自己工作区中的 Markdown，而下层的 OpenShell 沙盒会阻止同样的写入触及：\n    <ul>\n      <li>主机文件系统，</li>\n      <li>更广泛的网络，</li>\n      <li>或相邻智能体的工作区。</li>\n    </ul>\n    <p>您将在下一模块中直接测试这条边界：一个被刻意赋予过高权限的智能体将尝试越过它。</p>\n  "
-    },
-    "rich.ecd302405be8": {
-      "type": "rich",
-      "source": "Asking it to summarise the same doc gets you a risk list plus\n         pointed questions about what's <em>not</em> in the doc.",
-      "value": "让它概述同一份文档时，您会得到一份风险清单，以及针对文档中<em>未包含</em>内容的尖锐问题。"
-    },
-    "text.04e6c67cfa69": {
+    "text.01402db5da5e": {
       "type": "text",
-      "source": "quick-3b-soul-auditor",
-      "value": "quick-3b-soul-auditor",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "source": "Compare the requests and replies. Only the message instructions were varied; SOUL.md was not changed.",
+      "value": "比较请求和回答。只有消息指令发生变化；SOUL.md 未被修改。"
+    },
+    "text.02afd034dd9d": {
+      "type": "text",
+      "source": "quick-3b-general-",
+      "value": "quick-3b-general-",
+      "untranslated": "Session-key prefix for the independent general review conversation."
+    },
+    "text.0642235f30e5": {
+      "type": "text",
+      "source": "quick-3b-review-",
+      "value": "quick-3b-review-",
+      "untranslated": "Session-key prefix for the independent constrained review conversation."
     },
     "text.088879d8c28c": {
       "type": "text",
       "source": "The cell below connects into the sandbox and reads three files off the\n     running instance: SOUL.md alongside the daily memory and the curated\n     MEMORY.md. Edit the command list and re-run to poke at anything you like.",
       "value": "下面的单元会连接到沙盒，并从运行中的实例读取三个文件：\n     SOUL.md、每日记忆文件以及整理后的 MEMORY.md。可以随意编辑命令列表并重新运行，以探索任何感兴趣的内容。"
+    },
+    "text.08d5a9c2ad7f": {
+      "type": "text",
+      "source": "Verify the file write first",
+      "value": "请先验证文件写入"
     },
     "text.0f0b7dcb85b3": {
       "type": "text",
@@ -146,6 +142,12 @@
       "type": "text",
       "source": "← Module 3a: Connect NemoClaw",
       "value": "← 模块 3a：连接 NemoClaw"
+    },
+    "text.141d1c8a724f": {
+      "type": "text",
+      "source": "course-review-",
+      "value": "course-review-",
+      "untranslated": "Unique memory-label prefix appended to MEMORY.md and requested in the separate readback conversation."
     },
     "text.156a4206e78c": {
       "type": "text",
@@ -158,48 +160,30 @@
       "value": " ── what to read (edit freely; these run as shell lines INSIDE the sandbox) ──",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
-    "text.17643270cf44": {
-      "type": "text",
-      "source": "\\u2699\\ufe0f ",
-      "value": "\\u2699\\ufe0f ",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
     "text.17df8b94e2c7": {
       "type": "text",
       "source": "Open the launchable's /ws/terminal WebSocket and read sandbox configuration without a model call. Edit the command list to explore.",
       "value": "打开 launchable 的 /ws/terminal WebSocket，无需调用模型即可读取沙箱配置。编辑命令列表以进一步探索。"
     },
-    "text.18087b062677": {
+    "text.180d5de32810": {
       "type": "text",
-      "source": "quick-3b-memory",
-      "value": "quick-3b-memory",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.18087b062677~1": {
-      "type": "text",
-      "source": "quick-3b-memory",
-      "value": "quick-3b-memory",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "source": "Read MEMORY.md and report the review preference and reference for ",
+      "value": "读取 MEMORY.md，报告以下标签对应的审查偏好和参考码："
     },
     "text.198411dc2ef7": {
       "type": "text",
       "source": "opening operator terminal → sandbox '",
       "value": "正在打开 operator 终端 → 沙箱 '"
     },
-    "text.1b8157052c93": {
-      "type": "text",
-      "source": "Asks what the agent remembers in a fresh turn, then checks that the saved preference returned through session and file state.",
-      "value": "在新一轮中询问智能体记得什么，然后检查已保存的偏好是否通过会话状态和文件状态成功返回。"
-    },
     "text.1bf6b4904ad6": {
       "type": "text",
       "source": "into the prompt",
       "value": "到提示词中"
     },
-    "text.1ca4db6555cf": {
+    "text.1e78c17ba945": {
       "type": "text",
-      "source": "Asking it to summarise a doc gets you a tight summary plus a\n         note about what tools it would reach for next.",
-      "value": "让它概述文档时，您会得到一份精炼的摘要，以及它接下来会选用哪些工具的说明。"
+      "source": "configured context",
+      "value": "已配置的上下文"
     },
     "text.207bee365d84": {
       "type": "text",
@@ -216,15 +200,15 @@
       "source": "workspace files",
       "value": "工作区文件"
     },
-    "text.25d7d2a63c19": {
+    "text.23b0f26819ac": {
       "type": "text",
-      "source": "A real edit is slow to watch, so the cell below fakes the swap. It sends\n     two tagged sessions and your launchable maps each session key to a pre-built\n     SOUL variant that it keeps on hand. The upshot is one question answered by\n     two configurations with no editing on your part.",
-      "value": "实际编辑的过程不便快速演示，因此下面的单元会模拟替换操作。它会发送两个带标记的会话，可启动实例则将每个会话键映射到预先构建并保存的\n     SOUL 变体。这样无需您编辑文件，就能看到两种配置对同一个问题的回答。"
+      "source": "Read from a fresh conversation",
+      "value": "从新对话读取"
     },
-    "text.2605f97a4542": {
+    "text.24e128e20c78": {
       "type": "text",
-      "source": " tool(s) but got no result. Shape the runtime in Kickstart (3a): Health check + Recover.",
-      "value": " 个工具，但未获得结果。请在快速入门 (3a) 中调整运行时：运行“运行状况检查 + 恢复”。"
+      "source": "File readback did not contain the saved preference",
+      "value": "读回的文件不包含已保存的偏好"
     },
     "text.26b5bc082777": {
       "type": "text",
@@ -236,10 +220,10 @@
       "source": "THE DIRECTORY IS THE CONFIGURATION",
       "value": "THE 目录 IS THE 配置"
     },
-    "text.2926a80aa6c0": {
+    "text.2844f023987d": {
       "type": "text",
-      "source": "✗ no recall this run",
-      "value": "✗ 本次运行未能回想起来"
+      "source": "Give a concise code review. ",
+      "value": "请简洁地审查代码。"
     },
     "text.293c1ebed009": {
       "type": "text",
@@ -258,6 +242,11 @@
       "value": "art-",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
+    "text.2efebc0c7fe2": {
+      "type": "text",
+      "source": "\n    Use the chat to inspect one workspace file. Compare the answer with the operator read\n    and inspect any tool calls. You can ask the agent to:\n  ",
+      "value": "使用聊天界面检查一个工作区文件。将回答与操作界面读取的内容对比，并检查工具调用。您可以让智能体："
+    },
     "text.2f04e594ed7b": {
       "type": "text",
       "source": "Module 3c: Always-On →",
@@ -268,21 +257,41 @@
       "source": "daily logs, one file per day",
       "value": "每日日志，每天一个文件"
     },
+    "text.306c56026a31": {
+      "type": "text",
+      "source": "Append this preference to MEMORY.md without replacing existing content: ",
+      "value": "将以下偏好追加到 MEMORY.md，不要替换现有内容："
+    },
+    "text.3148cc3f6dd7": {
+      "type": "text",
+      "source": "\n      NemoClaw supplies the blueprint that packages this harness with OpenShell\n      and deployment policy. OpenClaw, rather than a separate Python orchestrator, drives each\n      turn and reads its workspace files into the active context. You will inspect those files,\n      compare two message instructions, and verify file memory from a fresh conversation.\n    ",
+      "value": "NemoClaw 提供 Blueprint，将此智能体运行框架与 OpenShell 及部署策略整合。每轮都由 OpenClaw 驱动，并将工作区文件读入当前上下文，无需独立的 Python 编排程序。您将检查这些文件、比较两种消息指令，并从新对话验证文件中的记忆。"
+    },
+    "text.356378af4178": {
+      "type": "text",
+      "source": "A proposed cron job deletes rows marked duplicate from production each minute. What should we check before enabling it?",
+      "value": "拟议的 cron 任务每分钟从生产环境删除标记为重复的数据行。启用前应检查什么？"
+    },
     "text.36cc7e3d6f62": {
       "type": "text",
       "source": "the model",
       "value": "模型"
     },
+    "text.396fb7436d61": {
+      "type": "text",
+      "source": "Verified the appended note on disk. It remains in MEMORY.md for inspection.",
+      "value": "已在磁盘上验证追加的笔记。它保留在 MEMORY.md 中，供您检查。"
+    },
+    "text.3973e022e932": {
+      "type": "text",
+      "source": "-",
+      "value": "-",
+      "untranslated": "Literal option-prefix guard character checked by startsWith when rejecting an unsafe sandbox name."
+    },
     "text.3a5eedf1bc52": {
       "type": "text",
       "source": "SOUL.md, AGENTS.md,",
       "value": "SOUL.md、AGENTS.md、"
-    },
-    "text.3bb1d67f065e": {
-      "type": "text",
-      "source": "\\u2717",
-      "value": "\\u2717",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
     "text.3bb4de0b7650": {
       "type": "text",
@@ -294,36 +303,15 @@
       "source": "Read the live workspace over the operator terminal",
       "value": "通过 operator 终端读取实时工作区"
     },
-    "text.3c1e086d7432": {
-      "type": "text",
-      "source": "── default ──",
-      "value": "── 默认 ──"
-    },
     "text.3c251a8ff3fe": {
       "type": "text",
       "source": "What tools do you have access to?",
       "value": "可以使用哪些工具？"
     },
-    "text.3f9cc9146c6f": {
-      "type": "text",
-      "source": " Ask the same session what it retained after the write turn.",
-      "value": " Ask the same session what it retained after the write turn.",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
-    "text.3fc1f12a4eb1": {
-      "type": "text",
-      "source": "Scenario A · Default SOUL.md",
-      "value": "场景 A · 默认 SOUL.md"
-    },
     "text.415e24e50bf9": {
       "type": "text",
       "source": "per-skill markdown bundles (next page)",
       "value": "各技能的 Markdown 文件包（下一页）"
-    },
-    "text.423f27b5bde7": {
-      "type": "text",
-      "source": "\\\\n── auditor ──",
-      "value": "\\\\n── 审核者 ──"
     },
     "text.4906a6ec2e78": {
       "type": "text",
@@ -346,31 +334,16 @@
       "source": "Run one turn, then compare the answer with the live workspace in Step 1b.",
       "value": "运行一轮，然后将回答与步骤 1b 中的实时工作区进行比较。"
     },
-    "text.521f8cf7b893": {
+    "text.552d63878f29": {
       "type": "text",
-      "source": "Ask the agent to write a preference to MEMORY.md, then ask it back on the\n     next turn. The model itself has no persistent state, so the second turn can\n     only answer because the runtime carried the preference forward through the\n     session history it holds and through the MEMORY.md the agent saved.",
-      "value": "让智能体将一项偏好写入 MEMORY.md，然后在下一轮询问该偏好。模型本身没有持久状态，因此第二轮之所以能够回答，只是因为运行时通过其保存的会话历史以及智能体所保存的 MEMORY.md，将该偏好传递到了下一轮。"
-    },
-    "text.55d3bc8af29a": {
-      "type": "text",
-      "source": "read every turn",
-      "value": "每轮都会读取"
-    },
-    "text.57331f7795ba": {
-      "type": "text",
-      "source": "Please remember that I prefer numbered code review feedback and care most about race conditions. Save this to MEMORY.md for the next session.",
-      "value": "请记住，我希望代码审查反馈采用编号形式，并且最关注竞态条件。请将此偏好保存到 MEMORY.md，供下个会话使用。"
+      "source": "REF-",
+      "value": "REF-",
+      "untranslated": "Unique memory reference prefix used to verify the write and later retrieval."
     },
     "text.5782b18687e6": {
       "type": "text",
       "source": "reply",
       "value": "回复"
-    },
-    "text.583509574233": {
-      "type": "text",
-      "source": "quick-3b-soul-default",
-      "value": "quick-3b-soul-default",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
     "text.595b8f18e370": {
       "type": "text",
@@ -383,15 +356,20 @@
       "value": "openshell sandbox connect ",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
+    "text.5c60fa086d31": {
+      "type": "text",
+      "source": "The workspace files supply context. After an edit, compare the next answer with the saved file.",
+      "value": "工作区文件提供上下文。编辑后，将下一条回答与保存的文件进行比较。"
+    },
     "text.5e13b1ec1721": {
       "type": "text",
       "source": "echo '=== daily memory ==='; ls -1 .openclaw/workspace/memory/ 2>/dev/null",
       "value": "echo '=== 每日记忆 ==='; ls -1 .openclaw/workspace/memory/ 2>/dev/null"
     },
-    "text.627ae925a6bc": {
+    "text.5f5b030cc3bb": {
       "type": "text",
-      "source": "Because the gateway folds the folder into the prompt before every turn, editing a file changes the next reply.",
-      "value": "由于网关会在每一轮交互前将该文件夹的内容纳入提示词，编辑文件会改变下一次回复。"
+      "source": "Verify file memory across separate sessions",
+      "value": "跨会话验证文件记忆"
     },
     "text.67a5bdf2a82d": {
       "type": "text",
@@ -420,25 +398,15 @@
       "source": "References",
       "value": "参考资料"
     },
-    "text.6a6d6612372e": {
+    "text.6d65b3390687": {
       "type": "text",
-      "source": "Auditor SOUL",
-      "value": "审计员 SOUL"
+      "source": ": numbered review feedback, race conditions first; reference ",
+      "value": "：审查反馈采用编号形式，优先关注竞态条件；参考码 "
     },
     "text.70313152d2ca": {
       "type": "text",
       "source": "Chat with your live agent (connect on the Kickstart page first). Try asking it to inspect the workspace with exec or read SOUL.md.",
       "value": "与实时智能体对话（请先在快速入门页面连接）。可以让它使用 exec 检查工作区，或读取 SOUL.md。"
-    },
-    "text.7032421e369e": {
-      "type": "text",
-      "source": "\\u26a0 DEGRADED: started ",
-      "value": "\\u26a0 性能下降：已启动 "
-    },
-    "text.7052f0ac228b": {
-      "type": "text",
-      "source": "✓ recalled the preference (carried by the session plus the MEMORY.md it saved)",
-      "value": "✓ 已回想起该偏好（由会话及其保存的 MEMORY.md 共同保留）"
     },
     "text.707b45eeb0be": {
       "type": "text",
@@ -455,44 +423,16 @@
       "source": "Module 3 · Part B of 3",
       "value": "模块 3 · 第 2 部分（共 3 部分）"
     },
-    "text.78f9ac018e55": {
-      "type": "text",
-      "source": "function",
-      "value": "function",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.78f9ac018e55~1": {
-      "type": "text",
-      "source": "function",
-      "value": "function",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
     "text.79f42a2505c9": {
       "type": "text",
       "source": "raw transcript (",
       "value": "原始记录（"
     },
-    "text.7c72e610551c": {
+    "text.7c2e51e70777": {
       "type": "text",
-      "source": "Turn 1 · ask it to remember",
-      "value": "第 1 轮 · 让它记住"
-    },
-    "text.7c9bbe5ec9b3": {
-      "type": "text",
-      "source": "tool",
-      "value": "tool",
-      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
-    },
-    "text.7c9bbe5ec9b3~1": {
-      "type": "text",
-      "source": "tool",
-      "value": "tool",
-      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
-    },
-    "text.7ee8dad6314b": {
-      "type": "text",
-      "source": "The agent writes to MEMORY.md, then reads it back",
-      "value": "智能体先写入 MEMORY.md，再将其读回"
+      "source": "/sandbox/.openclaw/workspace/MEMORY.md",
+      "value": "/sandbox/.openclaw/workspace/MEMORY.md",
+      "untranslated": "Literal memory file read/write target used for independent operator readback."
     },
     "text.806f3d0616e1": {
       "type": "text",
@@ -505,6 +445,11 @@
       "source": "IDENTITY.md",
       "value": "IDENTITY.md",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.85dc53fe6a85": {
+      "type": "text",
+      "source": "Risk-focused review",
+      "value": "以风险为重点的审查"
     },
     "text.867193307f82": {
       "type": "text",
@@ -532,16 +477,10 @@
       "source": "curated long-term memory (loaded in the main session only)",
       "value": "整理后的长期记忆（仅在主会话中加载）"
     },
-    "text.8e3544166292": {
+    "text.8d3a744fc91f": {
       "type": "text",
-      "source": "\\u2713",
-      "value": "\\u2713",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.91b338691b07": {
-      "type": "text",
-      "source": "The directory layout is the configuration, so editing one file changes how the next turn reads.",
-      "value": "目录布局本身就是配置，因此编辑一个文件便会改变下一轮读取上下文的方式。"
+      "source": "Retrieved the disk-verified reference from a fresh conversation. Inspect the tool events.",
+      "value": "已从新对话中获取经过磁盘验证的参考码。请检查工具事件。"
     },
     "text.960028729f18": {
       "type": "text",
@@ -552,11 +491,6 @@
       "type": "text",
       "source": "Each file in that folder feeds a different slice of the prompt.\n     The mapping is stable, so you can predict which behaviour an edit\n     will move before you make it.",
       "value": "该文件夹中的每个文件都会为提示词提供不同部分的内容。这种映射关系是固定的，因此在编辑之前，您就能预判会改变哪项行为。"
-    },
-    "text.96ecfff4549a": {
-      "type": "text",
-      "source": "Review this incident in bullets and recommend the next step.",
-      "value": "请用要点形式审查此事件，并建议下一步措施。"
     },
     "text.985d59ede940": {
       "type": "text",
@@ -586,25 +520,21 @@
       "source": "TOOLS.md, USER.md",
       "value": "TOOLS.md、USER.md"
     },
-    "text.9fc0174f7aa6": {
-      "type": "text",
-      "source": "\n    Everything on this page collapses into one panel: a real conversation with the\n    OpenClaw agent running on your launchable. Ask it to do any of the following and\n    watch the tool chips fire as it works:\n  ",
-      "value": "\n    本页的所有内容最终都汇集到一个面板中：可以与在 launchable 上运行的\n    OpenClaw 智能体进行真实对话。让它完成以下任一任务，并观察它工作时工具标签如何依次触发：\n  "
-    },
     "text.9fe101a0ec7e": {
       "type": "text",
       "source": "OpenClaw gateway",
       "value": "OpenClaw 网关"
     },
-    "text.a01c560d94cd": {
+    "text.a132e6a926e6": {
       "type": "text",
-      "source": "Give the agent a preference and ask it to save the note to MEMORY.md so a later turn can see it.",
-      "value": "告诉智能体一项偏好，并让它将该备注保存到 MEMORY.md，供后续轮次读取。"
+      "source": "Save and verify a preference",
+      "value": "保存并验证偏好设置"
     },
-    "text.a2970f020221": {
+    "text.a284adfef8c6": {
       "type": "text",
-      "source": "Send one question to two prebuilt SOUL variants and compare their voices. Edit SOUL.md to change a real persona.",
-      "value": "向两个预构建的 SOUL 变体发送同一个问题，并比较它们的表达风格。编辑 SOUL.md 可更改真实人设。"
+      "source": "quick-3b-read-",
+      "value": "quick-3b-read-",
+      "untranslated": "Session-key prefix for the independent memory retrieval conversation."
     },
     "text.a54ff182c7e8": {
       "type": "text",
@@ -612,10 +542,15 @@
       "value": "AGENTS.md",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.a608e60ce048": {
+    "text.a5f6ec60d4b5": {
       "type": "text",
-      "source": "Two SOUL personas, same question",
-      "value": "两个 SOUL 人设，同一个问题"
+      "source": "Run the general review first",
+      "value": "请先运行常规审查"
+    },
+    "text.a7a72cf946af": {
+      "type": "text",
+      "source": "Fresh-session answer did not retrieve the saved reference",
+      "value": "新会话的回答未获取已保存的参考码"
     },
     "text.a7efa8894b51": {
       "type": "text",
@@ -628,21 +563,21 @@
       "source": "reads, then answers",
       "value": "读取后作答"
     },
+    "text.ad456d59e8f7": {
+      "type": "text",
+      "source": "In one turn the cell below asks OpenClaw to list its own workspace\n     files and explain what each one does. Its answer reflects whatever the\n     harness includes in its prompt and what its tools read.\n     After editing a file, compare the new report with an operator readback.",
+      "value": "下方单元会在一个轮次中，要求 OpenClaw 列出工作区文件并说明各文件的用途。回答反映执行框架纳入提示的内容，以及工具读取的内容。编辑文件后，请将新报告与操作员读回的内容进行比较。"
+    },
     "text.ae3f53994b15": {
       "type": "text",
       "source": "memory/",
       "value": "memory/",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.af7a8c35f687": {
+    "text.b06093bb3216": {
       "type": "text",
-      "source": "Scenario B · \"Auditor\" SOUL.md",
-      "value": "场景 B · “审计员”SOUL.md"
-    },
-    "text.afc623d04635": {
-      "type": "text",
-      "source": "Turn 2 · ask it back",
-      "value": "第 2 轮 · 向它询问"
+      "source": "\n    After editing a file, start a fresh session and check which content the agent uses.\n  ",
+      "value": "编辑文件后，启动新会话，并检查智能体使用了哪些内容。"
     },
     "text.b0c2537fa19b": {
       "type": "text",
@@ -650,31 +585,20 @@
       "value": "#openclaw-artifact",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.b187e515c100": {
-      "type": "text",
-      "source": "What do you remember about how I like to receive code review?",
-      "value": "您还记得我希望以什么方式接收代码审查反馈吗？"
-    },
     "text.b18b38b731e5": {
       "type": "text",
       "source": "Read SOUL.md and summarize who you are",
       "value": "读取 SOUL.md，并总结身份"
     },
-    "text.b48ca5820def": {
+    "text.b81ca0d8705c": {
       "type": "text",
-      "source": " Reuses state.question + state.turn from the Default-SOUL node above. Run that first.",
-      "value": " Reuses state.question + state.turn from the Default-SOUL node above. Run that first.",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
+      "source": "Compare the agent’s account of its context with the workspace readback. A changed file alone does not establish what a reply used.",
+      "value": "将智能体对上下文的描述与工作区读回的内容进行比较。仅凭文件已更改，无法确定回答使用了哪些内容。"
     },
     "text.baa90a8826ea": {
       "type": "text",
       "source": "Ask OpenClaw to describe its workspace",
       "value": "让 OpenClaw 描述其工作区"
-    },
-    "text.bd470823a182": {
-      "type": "text",
-      "source": "Step 2 · Two scenarios, side by side",
-      "value": "步骤 2 · 并排比较两个场景"
     },
     "text.bde0ac766bf0": {
       "type": "text",
@@ -682,30 +606,16 @@
       "value": "SOUL.md",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.bfd5e33cda5d": {
+    "text.c1ed5fe7c29e": {
       "type": "text",
-      "source": "Save a preference to MEMORY.md, then ask for it in a fresh turn on the same session. The model weights remain unchanged.",
-      "value": "将一项偏好保存到 MEMORY.md，然后在同一会话的新一轮中询问该偏好。模型权重保持不变。"
+      "source": "No valid connected sandbox name.",
+      "value": "已连接的 sandbox 名称无效或缺失。"
     },
-    "text.c32fb0c268e2": {
+    "text.cdb4ee2aea69": {
       "type": "text",
-      "source": "Default SOUL",
-      "value": "默认 SOUL"
-    },
-    "text.c83753bb3d9a": {
-      "type": "text",
-      "source": "Connect OpenClaw in Module 3a, then run Default SOUL first.",
-      "value": "请在模块 3a 中连接 OpenClaw，然后先运行 Default SOUL。"
-    },
-    "text.c847f3b22727": {
-      "type": "text",
-      "source": "\n    Edit a workspace file, and the agent's next reply changes.\n  ",
-      "value": "\n    编辑工作区文件后，智能体下一次的回复也会随之改变。\n  "
-    },
-    "text.cb7800161898": {
-      "type": "text",
-      "source": "Send the question under the default SOUL session, a friendly, concise persona that reaches for tools when they are relevant.",
-      "value": "在默认 SOUL 会话中发送问题。该人设友好而简洁，并会在适当时使用工具。"
+      "source": ".",
+      "value": ".",
+      "untranslated": "Exact punctuation suffix concatenated into the constructed prompt; contains no language-bearing words."
     },
     "text.cfd45dac6e8a": {
       "type": "text",
@@ -717,21 +627,11 @@
       "source": "or run a command.",
       "value": "或运行命令。"
     },
-    "text.d448951728b3": {
+    "text.d245234894bb": {
       "type": "text",
-      "source": "Sends the same question under the auditor SOUL, which surfaces risks and cites its subject. Compare both replies.",
-      "value": "在审计员 SOUL 中发送同一个问题。它会指出风险，并引用所审查的内容。请比较两者的回复。"
-    },
-    "text.d6471f83468f": {
-      "type": "text",
-      "source": "In one turn the cell below asks OpenClaw to list its own workspace\n     files and explain what each one does. Its answer reflects whatever the\n     harness folds into its prompt together with whatever its tools can see,\n     so editing a file and re-running changes the report.",
-      "value": "下面的单元会在一轮交互中要求 OpenClaw 列出自己的工作区文件，并说明每个文件的作用。它的回答既反映框架纳入提示词的内容，也反映其工具能够看到的内容。因此，编辑文件后重新运行，报告也会随之改变。"
-    },
-    "text.d83b58bdc785": {
-      "type": "text",
-      "source": " \\u23ce ",
-      "value": " \\u23ce ",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "source": "/api/agent",
+      "value": "/api/agent",
+      "untranslated": "Gateway metadata request route consumed by the course connection code."
     },
     "text.dae703e59b2d": {
       "type": "text",
@@ -743,16 +643,10 @@
       "source": "OpenClaw · Securing Agents",
       "value": "OpenClaw · 安全智能体"
     },
-    "text.de115745db34": {
+    "text.df8de7cd6852": {
       "type": "text",
-      "source": "my-assistant",
-      "value": "my-assistant",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.e0197ea5d618": {
-      "type": "text",
-      "source": "A persona slotted in for code review: it refuses to run code\n         until it has named the risk surface, and it cites the file it\n         is reviewing on every claim.",
-      "value": "一种为代码审查配置的角色：在明确风险面之前，它会拒绝运行代码；提出每项判断时，它都会引用正在审查的文件。"
+      "source": "General review",
+      "value": "一般审查"
     },
     "text.e16202309c92": {
       "type": "text",
@@ -764,16 +658,16 @@
       "source": "per-tool usage notes",
       "value": "各工具的使用说明"
     },
-    "text.e30fed6c7b9c": {
-      "type": "text",
-      "source": "An admin cron job copies production rows to staging without a row-count guardrail and duplicated four hours of data.",
-      "value": "某个管理员 cron 作业在没有行数防护机制的情况下，将生产环境中的数据行复制到预发布环境，导致四个小时的数据发生重复。"
-    },
     "text.e3e438e9ffe1": {
       "type": "text",
       "source": " This is the Try-it artifact: a real conversation with the OpenClaw agent on",
       "value": " This is the Try-it artifact: a real conversation with the OpenClaw agent on",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.e54a58a475bd": {
+      "type": "text",
+      "source": "Step 2 · Compare message instructions",
+      "value": "步骤 2 · 比较消息指令"
     },
     "text.e932beada909": {
       "type": "text",
@@ -785,20 +679,21 @@
       "source": "Briefly list the files in your workspace and explain each in one bullet without dumping file contents.",
       "value": "简要列出工作区中的文件，用一个项目符号说明每个文件，不要输出文件内容。"
     },
-    "text.ea3fb2768572": {
+    "text.e993aa799509": {
       "type": "text",
-      "source": "Connect OpenClaw in Module 3a, then run Turn 1 first.",
-      "value": "请在模块 3a 中连接 OpenClaw，然后先运行第 1 轮。"
+      "source": "quick-3b-write-",
+      "value": "quick-3b-write-",
+      "untranslated": "Session-key prefix for the conversation that requests the memory write."
+    },
+    "text.ea7fc55bddc3": {
+      "type": "text",
+      "source": "Ask the same review question in two fresh sessions. The second request explicitly asks for\n    an auditor's evidence checks. Inspect both prompts and compare the replies. This changes\n    message instructions; it does not edit SOUL.md or route to another persona file.",
+      "value": "在两个新会话中提出相同的审查问题。第二个请求会明确要求执行审计人员的证据检查。检查两条提示并比较回答。这会改变消息中的指令，不会修改 SOUL.md，也不会切换到其他角色配置文件。"
     },
     "text.eac85dac0bb9": {
       "type": "text",
       "source": "raw notes the agent appends as it works",
       "value": "智能体工作时追加的原始笔记"
-    },
-    "text.ed7445d4d6f1": {
-      "type": "text",
-      "source": "Because the persona is just a file, swapping the SOUL definition changes the\n     agent's voice. The real mechanic behind that swap is writing the file itself,\n     where you save a new persona definition and the next turn picks it up on its own.",
-      "value": "由于角色只是一个文件，替换 SOUL 定义就会改变智能体的表达风格。这一替换背后的实际机制是写入文件：您保存新的角色定义后，下一轮交互会自动读取它。"
     },
     "text.f123a0c1152f": {
       "type": "text",
@@ -816,16 +711,25 @@
       "source": "operating instructions and rules",
       "value": "操作指令和规则"
     },
-    "text.f612a61bab20": {
+    "text.f4fba360e86d": {
       "type": "text",
-      "source": " your agent's name, from GET /api/agent on the Kickstart page",
-      "value": " your agent's name, from GET /api/agent on the Kickstart page",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
+      "source": "Review as an auditor: identify missing evidence and ask questions before recommending execution. ",
+      "value": "以审计员的角度审查：找出缺失的证据，并在建议执行前提出问题。"
+    },
+    "text.f505d6caea2f": {
+      "type": "text",
+      "source": "Compare explicit instructions on the same review question",
+      "value": "针对相同审查问题比较明确指令"
     },
     "text.f6a8216eadbb": {
       "type": "text",
       "source": "who the human is, preferences",
       "value": "用户身份和偏好"
+    },
+    "text.f70c03689684": {
+      "type": "text",
+      "source": "Ask the agent to append a uniquely labeled preference to MEMORY.md. An operator read verifies\n    the saved reference before a new conversation asks the agent to read it. Acknowledging a save\n    is insufficient evidence. The appended note remains available for inspection.",
+      "value": "让智能体在 MEMORY.md 中追加一项带唯一标签的偏好设置。先通过操作界面读取文件，确认保存的参考码，再在新对话中让智能体读取。仅声称已保存并不足以作为证据。追加的笔记会保留供您检查。"
     },
     "text.f8bc87e24651": {
       "type": "text",
@@ -833,21 +737,11 @@
       "value": "2026-06-11.md",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.fb9ef9e8f372": {
-      "type": "text",
-      "source": "Stock OpenClaw: friendly, terse, and willing to use any tool the\n         policy permits, which makes it a good fit for development.",
-      "value": "原版 OpenClaw：友好、简洁，并愿意使用策略允许的任何工具，因而非常适合开发场景。"
-    },
     "text.fe1ee8635685": {
       "type": "text",
       "source": "MEMORY.md",
       "value": "MEMORY.md",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.ff5d8859e7af": {
-      "type": "text",
-      "source": "\n      NemoClaw supplies the blueprint that packages this harness with OpenShell\n      and deployment policy. OpenClaw, rather than a separate Python orchestrator, drives each\n      turn and reads its workspace files into the active context. You will inspect those files,\n      compare two persona configurations, and save memory that survives beyond the model call.\n    ",
-      "value": "\n      NemoClaw 提供 blueprint，将此框架与 OpenShell\n      及部署策略打包在一起。每一轮交互都由 OpenClaw 驱动，而非单独的 Python 编排器；它还会将工作区文件读入当前上下文。您将检查这些文件、比较两种角色配置，并保存能够在模型调用结束后继续保留的记忆。\n    "
     }
   }
 }

@@ -13,6 +13,7 @@ import argparse
 import json
 import re
 import sys
+from html.parser import HTMLParser
 from pathlib import Path
 
 for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
@@ -115,8 +116,8 @@ CHECKS = [
     {
         "page": "02c-deep.html",
         "label": "deep research connected to the module workflow through-line",
-        "before": "Module 2 treats workflow scope as a control surface",
-        "after": "How the workflow boundary changes",
+        "semantic": "workflow-scope",
+        "after": "Index workflow.",
     },
     {
         "page": "02c-deep.html",
@@ -167,7 +168,7 @@ CHECKS = [
     {
         "page": "04a-safety.html",
         "label": "sandbox authority motivated by persistent autonomous behavior",
-        "before": "Module 3 gave OpenClaw persistent context and unattended triggers",
+        "semantic": "persistent-authority",
         "after": "Keep the three product roles separate as you trace enforcement.",
     },
     {
@@ -268,7 +269,14 @@ def norm(raw: str) -> str:
 def _lesson_pages(discovered_pages: set[str] | None = None) -> set[str]:
     if discovered_pages is not None:
         return set(discovered_pages)
-    return {path.stem for path in COURSE.glob("0[1-4][a-c]-*.html")}
+    pages = set()
+    for path in COURSE.rglob("*.html"):
+        raw = path.read_text(encoding="utf-8")
+        # A lesson remains discoverable when renamed or nested; a broken conventional
+        # lesson still enters reconciliation even when its navigation was removed.
+        if ('id="journey-map"' in raw or re.match(r"^\d+[a-z]-", path.name)):
+            pages.add(path.relative_to(COURSE).with_suffix("").as_posix())
+    return pages
 
 
 def _profile_findings(
@@ -313,6 +321,7 @@ def _profile_findings(
     expected_pages = _lesson_pages(discovered_pages)
     seen: set[str] = set()
     mapped: set[str] = set()
+    roles: set[tuple[int, int]] = set()
     page_overrides = page_overrides or {}
     for index, lesson in enumerate(lessons):
         prefix = f"learning-profile.json: lesson {index + 1}"
@@ -327,14 +336,18 @@ def _profile_findings(
             findings.append(f"learning-profile.json: duplicate lesson id {lesson_id}")
         seen.add(lesson_id)
         mapped.add(lesson_id)
-        match = LESSON_RE.fullmatch(lesson_id)
-        if not match:
+        if not re.fullmatch(r"[a-z0-9-]+(?:/[a-z0-9-]+)*", lesson_id):
             findings.append(f"{prefix} has malformed id {lesson_id}")
+        role = (lesson.get("module"), lesson.get("lesson"))
+        if any(type(number) is not int or number < 1 for number in role):
+            findings.append(f"{prefix} needs positive module/lesson metadata")
+        elif role in roles:
+            findings.append(f"{prefix} has duplicate module/lesson role {role}")
         else:
-            expected_module = int(match.group("module"))
-            expected_lesson = ord(match.group("part")) - ord("a") + 1
-            if lesson.get("module") != expected_module or lesson.get("lesson") != expected_lesson:
-                findings.append(f"{prefix} module/lesson does not match {lesson_id}")
+            roles.add(role)
+        match = LESSON_RE.fullmatch(lesson_id)
+        if match and role != (int(match.group("module")), ord(match.group("part")) - ord("a") + 1):
+            findings.append(f"{prefix} module/lesson does not match {lesson_id}")
         if lesson.get("objective") not in allowed_objectives:
             findings.append(f"{prefix} maps unknown objective {lesson.get('objective')!r}")
         retired = {
@@ -356,6 +369,77 @@ def _profile_findings(
     return findings
 
 
+class VisibleBlocks(HTMLParser):
+    """Keep concept evidence in visible prose, excluding hidden code and comments."""
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.hidden = []
+        self.parts = []
+        self.blocks = []
+
+    def handle_starttag(self, tag, attrs):
+        attributes = dict(attrs)
+        hidden = any(value for _, value in self.hidden) or tag in {"script", "style", "template", "pre"} or "hidden" in attributes or attributes.get("aria-hidden") == "true"
+        if tag not in {"br", "img", "input", "meta", "link", "hr"}:
+            self.hidden.append((tag, hidden))
+        if tag in {"p", "li", "h1", "h2", "h3", "div"}:
+            self.flush()
+
+    def handle_endtag(self, tag):
+        if tag in {"p", "li", "h1", "h2", "h3", "div"}:
+            self.flush()
+        for index in range(len(self.hidden) - 1, -1, -1):
+            if self.hidden[index][0] == tag:
+                del self.hidden[index:]
+                break
+
+    def handle_data(self, text):
+        if not any(hidden for _, hidden in self.hidden):
+            self.parts.append(text)
+
+    def flush(self):
+        text = norm("".join(self.parts)).strip()
+        if text:
+            self.blocks.append(text)
+        self.parts.clear()
+
+
+def semantic_order(raw: str, kind: str, after: str) -> bool:
+    parser = VisibleBlocks()
+    parser.feed(raw)
+    parser.flush()
+    uses = [i for i, block in enumerate(parser.blocks) if after.lower() in block.lower()]
+    if not uses:
+        return False
+    for index, block in enumerate(parser.blocks):
+        if index >= uses[0]:
+            break
+        text = block.lower()
+        if re.search(r"\b(?:not|never|no)\b", text):
+            continue
+        if kind == "workflow-scope":
+            match = re.search(r"(?:outer workflow|workflow boundary).{0,60}(?:owns|controls|defines|governs).{0,40}scope.{0,30}data flow", text)
+        else:
+            match = (re.search(r"(?:module 3|previous module)", text)
+                     and re.search(r"files?.{0,35}(?:persistent )?context", text)
+                     and re.search(r"(?:scheduled|unattended).{0,35}(?:jobs|work|operations)", text)
+                     and re.search(r"(?:depend|rely).{0,55}authority", text))
+        if match:
+            return True
+    return False
+
+
+def _role_pages(profile: dict[str, object]) -> dict[str, str]:
+    roles = {}
+    for lesson in profile.get("lessons", []):
+        if not isinstance(lesson, dict):
+            continue
+        module, part = lesson.get("module"), lesson.get("lesson")
+        if type(module) is int and type(part) is int and 1 <= part <= 26 and isinstance(lesson.get("id"), str):
+            roles[f"{module:02}{chr(96 + part)}"] = lesson["id"] + ".html"
+    return roles
+
+
 def audit(
     overrides: dict[str, str] | None = None,
     profile_override: dict[str, object] | None = None,
@@ -365,11 +449,25 @@ def audit(
     findings: list[str] = []
     cache: dict[str, str] = {}
     overrides = overrides or {}
+    profile = profile_override if profile_override is not None else json.loads(LEARNING_PROFILE.read_text(encoding="utf-8"))
+    roles = _role_pages(profile)
+    def source(page):
+        if page not in cache:
+            try:
+                cache[page] = overrides[page] if page in overrides else read(page)
+            except OSError:
+                findings.append(f"{page}: required concept source is missing or unreadable")
+                cache[page] = ""
+        return cache[page]
     for check in CHECKS:
-        page = check["page"]
-        raw = cache.setdefault(page, overrides.get(page, read(page)))
+        page = roles.get(check["page"][:3], check["page"])
+        raw = source(page)
         text = norm(raw)
         label = check["label"]
+        if "semantic" in check:
+            if not semantic_order(raw, check["semantic"], check["after"]):
+                findings.append(f"{page}: missing or misplaced visible concept bridge: {label}")
+            continue
         if "required" in check:
             if check["required"] not in text:
                 findings.append(f"{page}: missing required concept framing: {label}")
@@ -385,7 +483,8 @@ def audit(
         if b >= 0 and a >= 0 and b > a:
             findings.append(f"{page}: concept appears after first use: {label}")
     for page, tokens in BAD_TOKENS.items():
-        text = cache.setdefault(page, overrides.get(page, read(page)))
+        page = roles.get(page[:3], page)
+        text = source(page)
         for token in tokens:
             if token in text:
                 findings.append(f"{page}: stale confusing wording remains: {token}")

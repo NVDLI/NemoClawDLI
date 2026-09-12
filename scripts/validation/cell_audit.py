@@ -285,10 +285,13 @@ def audit_runtime_contract():
          "RunCell failures need a stable marker for Studio all-cell validation")
     need("export function delay(ms, signal = null)" in shared and "fetchRetry, delay," in shared,
          "student cells need one shared Stop-aware helpers.delay implementation")
-    need("helpers.signal = ac.signal;" in src and "helpers.delay = (ms, signal = ac.signal)" in src,
-         "RunCell must expose its Stop signal and inject it into helpers.delay")
-    need("helpers.delay = (ms, signal = _sig)" in src,
-         "CanvasFlow must inject its Stop signal into helpers.delay")
+    need("bindRunSignal(helpers, ac.signal)" in src,
+         "RunCell must bind helpers to its current Stop signal")
+    need("bindRunSignal(helpers, _sig)" in src,
+         "CanvasFlow must bind helpers to its current Stop signal")
+    need("helpers.signal = signal" in src and "ownSignal = signal" in src and
+         "delay(ms, ownSignal)" in src and "signal: value.signal ?? signal" in src,
+         "shared invocation binding must pass the current signal through network and delay helpers")
     need("if (!ac.signal.aborted && outputCount === 0)" not in src and
          'else if (result !== undefined && typeof result === "object"' in src and
          '_appendJson(result, "returned value")' in src,
