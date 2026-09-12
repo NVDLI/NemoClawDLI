@@ -57,10 +57,10 @@
       "source": "<a href=\"https://modelcontextprotocol.io/specification\" target=\"_blank\" rel=\"noopener\">Model Context Protocol (MCP) specification</a>. The cross-vendor tool-discovery and tool-serving layer covered in this module's MCP section (originated by Anthropic, now an open project); complements function calling at the agent-runtime layer.",
       "value": "<a href=\"https://modelcontextprotocol.io/specification\" target=\"_blank\" rel=\"noopener\">Especificação do Protocolo de Contexto de Modelo (MCP)</a>. A camada de descoberta de ferramentas e serviço de ferramentas entre fornecedores coberta na seção MCP deste módulo (originada pela Anthropic, agora um projeto aberto); complementa a chamada de função na camada de tempo de execução do agente."
     },
-    "rich.0ef33c65b4aa": {
+    "rich.05c8ad503b82": {
       "type": "rich",
-      "source": "\n    <strong>The cognitive-load lever.</strong>\n    Every additional tool, schema field, and description sentence consumes\n    context the main agent could use for its task. A sprawling flat tool\n    list tends to perform worse than a small set of tools backed by\n    sub-agents, because each loop only sees the tools relevant to its level.\n  ",
-      "value": "\n <strong>A alavanca da carga cognitiva.</strong>\n Cada ferramenta adicional, campo de esquema e frase de descrição consome\n contexto que o agente principal poderia usar para sua tarefa. Uma lista de ferramentas plana e extensa tende a ter um desempenho pior do que um pequeno conjunto de ferramentas apoiadas por\n sub-agentes, porque cada ciclo só vê as ferramentas relevantes para seu nível.\n "
+      "source": "\n    <strong>Validate the tool request before execution.</strong> The schema tells the model\n    which arguments the tool accepts. Check the returned name, parse the arguments, and validate\n    their values before dispatch. The examples below show the requested calls and stop on invalid input.\n  ",
+      "value": "<strong>Valide a solicitação de ferramenta antes da execução.</strong> O esquema informa ao modelo quais argumentos a ferramenta aceita. Confira o nome retornado, faça o parsing dos argumentos e valide seus valores antes de executar a chamada. Os exemplos abaixo mostram as chamadas solicitadas e param quando a entrada é inválida."
     },
     "rich.29756b43c66f": {
       "type": "rich",
@@ -77,11 +77,6 @@
       "type": "rich",
       "source": "Wiring <code>glossary_search</code> to a real tool",
       "value": "Conectando <code>glossary_search</code> a uma ferramenta real"
-    },
-    "rich.3ca94d8b3cef": {
-      "type": "rich",
-      "source": "\n    <strong>The server enforces the schema.</strong> Before structured\n    function calling, applications often parsed custom XML or hand-written JSON from model text.\n    A paraphrase could break that parser. The tools field carries the contract separately, so the\n    serving engine can constrain arguments to the schema and return a consistent\n    <code>tool_calls</code> field. Your dispatch code can then count on <code>tc.function.name</code> and\n    <code>tc.function.arguments</code> being present and parseable.\n  ",
-      "value": "\n <strong>O servidor aplica o esquema.</strong> Antes da chamada de função estruturada, as aplicações costumavam extrair XML personalizado ou JSON escrito à mão do texto do modelo. Uma paráfrase podia quebrar o analisador. O campo de ferramentas transporta o contrato separadamente; assim, o mecanismo de serviço pode restringir os argumentos ao esquema e retornar um campo <code>tool_calls</code> consistente. Seu código de encaminhamento pode então contar com <code>tc.function.name</code> e <code>tc.function.arguments</code> presentes e analisáveis.\n "
     },
     "rich.4920003cfc87": {
       "type": "rich",
@@ -205,6 +200,11 @@
       "value": " the whole NVIDIA glossary article",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
+    "text.06fc16213ae0": {
+      "type": "text",
+      "source": "Invalid discovered-tool batch; no tools ran.",
+      "value": "Lote inválido de solicitações às ferramentas descobertas; nenhuma ferramenta foi executada."
+    },
     "text.074b16527fe8": {
       "type": "text",
       "source": "How the model picks between several tools",
@@ -251,10 +251,20 @@
       "value": " Describe the calculator tool so the model knows when to route to it.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
+    "text.131ecf2bd8fa": {
+      "type": "text",
+      "source": " No further tools are offered; the prompt asks the model to use the search results.",
+      "value": "Não são oferecidas mais ferramentas; o prompt pede ao modelo que use os resultados da busca."
+    },
     "text.142450e69ab8": {
       "type": "text",
       "source": "Tool B · explain_concept",
       "value": "Ferramenta B · explicar_conceito"
+    },
+    "text.147db24d1f51": {
+      "type": "text",
+      "source": "search model response",
+      "value": "resposta do modelo para a busca"
     },
     "text.15419f8f9c68": {
       "type": "text",
@@ -284,6 +294,11 @@
       "value": " Send the prepared messages and stream the model response.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
+    "text.17ceb760ae58": {
+      "type": "text",
+      "source": "article answer",
+      "value": "resposta sobre o artigo"
+    },
     "text.1d1ec0e0e8bd": {
       "type": "text",
       "source": "Tool A · calculate",
@@ -305,6 +320,16 @@
       "source": "question",
       "value": "question",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
+    "text.208dab1956b1": {
+      "type": "text",
+      "source": "The model returned no complete final answer; inspect the response.",
+      "value": "O modelo não retornou uma resposta final completa; examine a resposta."
+    },
+    "text.22482049c59d": {
+      "type": "text",
+      "source": "model answered without the required search; the answer is ungrounded",
+      "value": "o modelo respondeu sem a busca obrigatória; a resposta não tem fundamentação nos resultados"
     },
     "text.2258a0dc936a": {
       "type": "text",
@@ -334,12 +359,6 @@
       "source": "Streams the routing decision. Edit either tool description and rerun to see how it changes the route.",
       "value": "Transmite o modelo enquanto ele raciocina sobre as descrições das duas ferramentas e, em seguida, retorna a decisão de roteamento. A rota depende quase inteiramente das strings de descrição, então edite uma e execute novamente para ver o modelo mudar de ideia."
     },
-    "text.2842081fe7fd": {
-      "type": "text",
-      "source": "model answered directly; no search needed",
-      "value": "model answered directly; no search needed",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
     "text.28bd94ec94a9": {
       "type": "text",
       "source": " require the search; don't let it answer from (stale) memory",
@@ -350,31 +369,37 @@
       "type": "text",
       "source": "object",
       "value": "object",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.2958d416d08a~1": {
       "type": "text",
       "source": "object",
       "value": "object",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.2958d416d08a~2": {
       "type": "text",
       "source": "object",
       "value": "object",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.2958d416d08a~3": {
       "type": "text",
       "source": "object",
       "value": "object",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.2958d416d08a~4": {
       "type": "text",
       "source": "object",
       "value": "object",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.2958d416d08a~5": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.2aeac8f57d37": {
       "type": "text",
@@ -397,6 +422,12 @@
       "type": "text",
       "source": "Editing either description shifts how the model routes, since the description field is one of the most consequential prompt-engineering surfaces in any tool-using agent.",
       "value": "Editar qualquer descrição altera o roteamento do modelo, pois o campo de descrição é uma das superfícies de engenharia de prompt com maior impacto em um agente que usa ferramentas."
+    },
+    "text.2dba2454d800": {
+      "type": "text",
+      "source": "integer",
+      "value": "integer",
+      "untranslated": "JSON Schema numeric type name."
     },
     "text.2e5e2a4d57ca": {
       "type": "text",
@@ -433,11 +464,31 @@
       "value": "Define agentic AI",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
+    "text.3263a89858a2": {
+      "type": "text",
+      "source": "\n    The cell below exposes a sub-agent that reads a small customer table through one\n    natural-language tool. The rows are omitted from the main agent's initial context, but the\n    sub-agent's returned answer can include row data. This separates context; it does not enforce data access control.\n  ",
+      "value": "A célula abaixo expõe um subagente que lê uma pequena tabela de clientes por meio de uma ferramenta em linguagem natural. As linhas são omitidas do contexto inicial do agente principal, mas a resposta do subagente pode incluir dados dessas linhas. Isso separa os contextos; não impõe controle de acesso aos dados."
+    },
     "text.32ebb1abcc1c": {
       "type": "text",
       "source": "(",
       "value": "(",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
+    "text.335bb28fbc57": {
+      "type": "text",
+      "source": "final model response",
+      "value": "resposta final do modelo"
+    },
+    "text.335bb28fbc57~1": {
+      "type": "text",
+      "source": "final model response",
+      "value": "resposta final do modelo"
+    },
+    "text.335bb28fbc57~2": {
+      "type": "text",
+      "source": "final model response",
+      "value": "resposta final do modelo"
     },
     "text.34426c5d0088": {
       "type": "text",
@@ -445,16 +496,21 @@
       "value": " The same in-page glossary server the search cell called directly, now reached through",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
+    "text.35a9682c4e0f": {
+      "type": "text",
+      "source": "The model returned no complete final answer.",
+      "value": "O modelo não retornou uma resposta final completa."
+    },
+    "text.35a9682c4e0f~1": {
+      "type": "text",
+      "source": "The model returned no complete final answer.",
+      "value": "O modelo não retornou uma resposta final completa."
+    },
     "text.38e7b324bdc5": {
       "type": "text",
       "source": "calculate only accepts arithmetic.",
       "value": "calculate only accepts arithmetic.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
-    "text.3a3e43fce08a": {
-      "type": "text",
-      "source": "Give the top-level agent one query_customer_db tool backed by a schema-aware sub-agent. The caller receives an answer, not raw rows.",
-      "value": "O agente de nível superior recebe uma única ferramenta de consulta ao banco de dados do cliente, apoiada por um subagente que conhece o esquema; um pequeno array JavaScript faz as vezes de SQL. As linhas brutas nunca chegam ao agente principal: ele formula uma pergunta e recebe uma resposta em linguagem natural."
     },
     "text.3a83362c50c7": {
       "type": "text",
@@ -528,24 +584,6 @@
       "value": "{}",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
-    "text.44136fa355b3~1": {
-      "type": "text",
-      "source": "{}",
-      "value": "{}",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
-    "text.44136fa355b3~2": {
-      "type": "text",
-      "source": "{}",
-      "value": "{}",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
-    "text.44136fa355b3~3": {
-      "type": "text",
-      "source": "{}",
-      "value": "{}",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
     "text.4575d9a0bb39": {
       "type": "text",
       "source": "Nemotron 3.5 Lightning 30B · fast",
@@ -573,31 +611,73 @@
       "type": "text",
       "source": "string",
       "value": "string",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.473287f8298d~1": {
       "type": "text",
       "source": "string",
       "value": "string",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.473287f8298d~10": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.473287f8298d~11": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.473287f8298d~2": {
       "type": "text",
       "source": "string",
       "value": "string",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.473287f8298d~3": {
       "type": "text",
       "source": "string",
       "value": "string",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.473287f8298d~4": {
       "type": "text",
       "source": "string",
       "value": "string",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.473287f8298d~5": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.473287f8298d~6": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.473287f8298d~7": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.473287f8298d~8": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.473287f8298d~9": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.47e71bf4ba06": {
       "type": "text",
@@ -613,6 +693,11 @@
       "type": "text",
       "source": "two tools, the model routes",
       "value": "duas ferramentas, o modelo roteia"
+    },
+    "text.4a3d1a1f6483": {
+      "type": "text",
+      "source": "Invalid glossary tool request.",
+      "value": "Solicitação inválida de ferramenta do glossário."
     },
     "text.4aa773643287": {
       "type": "text",
@@ -684,8 +769,7 @@
     "text.5620fbf32f8a": {
       "type": "text",
       "source": "You are a customer-database analyst. Use ONLY the rows provided. If the rows do not contain the answer, say so. Be concise.\\\\n\\\\n",
-      "value": "You are a customer-database analyst. Use ONLY the rows provided. If the rows do not contain the answer, say so. Be concise.\\\\n\\\\n",
-      "untranslated": "carried from the qualified pt-BR review at 1324ea214b69f7df81614c2ebaad451a3dcdc30b"
+      "value": "Você analisa um banco de dados de clientes. Use SOMENTE as linhas fornecidas. Se elas não contiverem a resposta, informe isso. Seja conciso.\\\\n\\\\n"
     },
     "text.56525bf8e45b": {
       "type": "text",
@@ -712,12 +796,22 @@
       "type": "text",
       "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
       "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "Exact provider model ID sent in API requests."
     },
     "text.58677db268a0": {
       "type": "text",
       "source": "sub → main",
       "value": "Sub → principal"
+    },
+    "text.58a6606896fb": {
+      "type": "text",
+      "source": "This exercise expects one glossary_search call; inspect all returned calls before rerunning.",
+      "value": "Este exercício espera uma chamada a glossary_search; examine todas as chamadas retornadas antes de executar novamente."
+    },
+    "text.59425c9bd4b1": {
+      "type": "text",
+      "source": "Rows enter the sub-agent's context. A real database version would need authorization for queries and returned data.",
+      "value": "As linhas entram no contexto do subagente. Uma versão com banco de dados real precisaria de autorização para consultas e dados retornados."
     },
     "text.59743150252a": {
       "type": "text",
@@ -736,10 +830,10 @@
       "value": " Ask the mock MCP server which tools it exposes.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
-    "text.5bb298f9ab91": {
+    "text.5c8101ceac8b": {
       "type": "text",
-      "source": "agents as tools · hide the database, expose the question",
-      "value": "agentes como ferramentas · oculte o banco de dados, exponha a pergunta"
+      "source": "Incomplete model response; no search was executed.",
+      "value": "Resposta do modelo incompleta; nenhuma busca foi executada."
     },
     "text.5df1403bfd50": {
       "type": "text",
@@ -768,6 +862,11 @@
       "source": "the agent + your tools, in code",
       "value": "o agente + suas ferramentas, em código"
     },
+    "text.628bbbe6d3c7": {
+      "type": "text",
+      "source": "note: rows were supplied directly to the sub-agent; its returned answer may include row data",
+      "value": "nota: as linhas foram fornecidas diretamente ao subagente; a resposta retornada pode incluir dados dessas linhas"
+    },
     "text.62c6ddbc00c6": {
       "type": "text",
       "source": "What is a vector database, and how does it use embeddings?",
@@ -779,6 +878,11 @@
       "source": "(answered directly)",
       "value": "(answered directly)",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
+    "text.64562f1285cb": {
+      "type": "text",
+      "source": "Sub-agent question must be nonempty text.",
+      "value": "A pergunta para o subagente deve conter texto."
     },
     "text.64ae88a21895": {
       "type": "text",
@@ -823,6 +927,60 @@
       "source": "Hiding a whole agent behind a single tool",
       "value": "Ocultando um agente inteiro atrás de uma única ferramenta"
     },
+    "text.6c45cb72a36e": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~1": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~2": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~3": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~4": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~5": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~6": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~7": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~8": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
     "text.6d3104c8a001": {
       "type": "text",
       "source": " Fetch the full article when cached; shallow glossary terms fall back to their blurb.",
@@ -839,43 +997,55 @@
       "type": "text",
       "source": "glossary_search",
       "value": "glossary_search",
-      "untranslated": "kept English: glossary_search is the canonical MCP tool identifier"
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.723234e1a9d3~1": {
       "type": "text",
       "source": "glossary_search",
       "value": "glossary_search",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.723234e1a9d3~2": {
       "type": "text",
       "source": "glossary_search",
       "value": "glossary_search",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.723234e1a9d3~3": {
       "type": "text",
       "source": "glossary_search",
       "value": "glossary_search",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.723234e1a9d3~4": {
       "type": "text",
       "source": "glossary_search",
       "value": "glossary_search",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.723234e1a9d3~5": {
       "type": "text",
       "source": "glossary_search",
       "value": "glossary_search",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.723234e1a9d3~6": {
       "type": "text",
       "source": "glossary_search",
       "value": "glossary_search",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "Tool function name used in schemas and dispatch."
+    },
+    "text.723234e1a9d3~7": {
+      "type": "text",
+      "source": "glossary_search",
+      "value": "glossary_search",
+      "untranslated": "Tool function name used in schemas and dispatch."
+    },
+    "text.723234e1a9d3~8": {
+      "type": "text",
+      "source": "glossary_search",
+      "value": "glossary_search",
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.75c43e137307": {
       "type": "text",
@@ -883,15 +1053,20 @@
       "value": " Call the in-page MCP server the same way you would a remote one: tools/call.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
-    "text.762399209128": {
-      "type": "text",
-      "source": "note: the main agent never saw the rows; only the sub-agent's natural-language summary",
-      "value": "Nota: o agente principal nunca viu as linhas; apenas o sub-agente viu o resumo em linguagem natural."
-    },
     "text.7685c2ed417e": {
       "type": "text",
       "source": "Three roots feed into one LLM, and editing either tool description shifts how the model routes. The description string is one of the most consequential prompt-engineering surfaces in any tool-using agent.",
       "value": "Três raízes se conectam a um LLM, e editar qualquer descrição de ferramenta altera a forma como o modelo roteia. A string de descrição é uma das superfícies de engenharia de prompt mais consequenciais em qualquer agente que usa ferramentas."
+    },
+    "text.77312cfd8cad": {
+      "type": "text",
+      "source": "No complete direct answer arrived.",
+      "value": "Nenhuma resposta direta completa foi recebida."
+    },
+    "text.77312cfd8cad~1": {
+      "type": "text",
+      "source": "No complete direct answer arrived.",
+      "value": "Nenhuma resposta direta completa foi recebida."
     },
     "text.775c1f9044f4": {
       "type": "text",
@@ -907,49 +1082,61 @@
       "type": "text",
       "source": "function",
       "value": "function",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
     },
     "text.78f9ac018e55~1": {
       "type": "text",
       "source": "function",
       "value": "function",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
     },
     "text.78f9ac018e55~2": {
       "type": "text",
       "source": "function",
       "value": "function",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
     },
     "text.78f9ac018e55~3": {
       "type": "text",
       "source": "function",
       "value": "function",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
     },
     "text.78f9ac018e55~4": {
       "type": "text",
       "source": "function",
       "value": "function",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
     },
     "text.78f9ac018e55~5": {
       "type": "text",
       "source": "function",
       "value": "function",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
     },
     "text.78f9ac018e55~6": {
       "type": "text",
       "source": "function",
       "value": "function",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
     },
     "text.78f9ac018e55~7": {
       "type": "text",
       "source": "function",
       "value": "function",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
+    },
+    "text.78f9ac018e55~8": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
+    },
+    "text.78f9ac018e55~9": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
     },
     "text.795a9e2f7ad7": {
       "type": "text",
@@ -978,6 +1165,11 @@
       "source": "2024-07-30",
       "value": "2024-07-30",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
+    "text.7c7569797e0a": {
+      "type": "text",
+      "source": "model response",
+      "value": "resposta do modelo"
     },
     "text.7c9bbe5ec9b3": {
       "type": "text",
@@ -1025,13 +1217,19 @@
       "type": "text",
       "source": "query_customer_db",
       "value": "query_customer_db",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.7f16edc7c823~1": {
       "type": "text",
       "source": "query_customer_db",
       "value": "query_customer_db",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "untranslated": "Tool function name used in schemas and dispatch."
+    },
+    "text.7f16edc7c823~2": {
+      "type": "text",
+      "source": "query_customer_db",
+      "value": "query_customer_db",
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.7fefb50eff47": {
       "type": "text",
@@ -1039,10 +1237,10 @@
       "value": " Edit the system prompt or the tools, then Run to re-render.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
-    "text.810a24cd0d6f": {
+    "text.8112cf29a132": {
       "type": "text",
-      "source": "Writes the final answer from retrieved results. No tools are passed, so the model must use the returned evidence.",
-      "value": "Sintetize a resposta final a partir dos resultados da pesquisa. Essa chamada não recebe nenhuma ferramenta, portanto deve responder com base no que a primeira chamada recuperou, em vez de solicitar outra pesquisa. É isso que transforma o resultado da ferramenta em uma resposta final."
+      "source": "Expected one complete glossary_search request; inspect the model response.",
+      "value": "Era esperada uma solicitação completa de glossary_search; examine a resposta do modelo."
     },
     "text.842bc6e20dfa": {
       "type": "text",
@@ -1060,12 +1258,6 @@
       "source": "Try it · an agent with two real tools",
       "value": "Tente · um agente com duas ferramentas reais"
     },
-    "text.8a8de823d5ed": {
-      "type": "text",
-      "source": "?",
-      "value": "?",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
     "text.8ab5748765d4": {
       "type": "text",
       "source": "Evaluate (17 * 43) + Math.sqrt(144) / Math.log(2).",
@@ -1078,15 +1270,39 @@
       "value": "(no text)",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
+    "text.8e920ae7d06b": {
+      "type": "text",
+      "source": "tool_calls",
+      "value": "tool_calls",
+      "untranslated": "OpenAI finish_reason enum and message field; compared by executable control flow."
+    },
+    "text.8e920ae7d06b~1": {
+      "type": "text",
+      "source": "tool_calls",
+      "value": "tool_calls",
+      "untranslated": "OpenAI finish_reason enum and message field; compared by executable control flow."
+    },
+    "text.8e920ae7d06b~2": {
+      "type": "text",
+      "source": "tool_calls",
+      "value": "tool_calls",
+      "untranslated": "OpenAI finish_reason enum and message field; compared by executable control flow."
+    },
+    "text.8e920ae7d06b~3": {
+      "type": "text",
+      "source": "tool_calls",
+      "value": "tool_calls",
+      "untranslated": "OpenAI finish_reason enum and message field; compared by executable control flow."
+    },
+    "text.901eadac9d8e": {
+      "type": "text",
+      "source": "Invalid sub-agent tool batch; no tools ran.",
+      "value": "Lote inválido de ferramentas do subagente; nenhuma ferramenta foi executada."
+    },
     "text.9223d910909b": {
       "type": "text",
       "source": "discovered ",
       "value": "Descoberto"
-    },
-    "text.92669bf3e2dc": {
-      "type": "text",
-      "source": "An in-page customer table that the main agent will never see and that a real version would replace with a SQL connection plus row-level auth.",
-      "value": "Uma tabela de clientes em página que o agente principal nunca verá e que uma versão real substituiria por uma conexão SQL mais autenticação de nível de linha."
     },
     "text.9267d76c423b": {
       "type": "text",
@@ -1098,11 +1314,26 @@
       "source": " TODO: Choose an example or write a question that makes the tool choice interesting.",
       "value": " TODO: Escolha um exemplo ou escreva uma pergunta que torne a escolha da ferramenta interessante."
     },
+    "text.9333bb971a13": {
+      "type": "text",
+      "source": "Customer data (the sub-agent's context)",
+      "value": "Dados de clientes (contexto do subagente)"
+    },
+    "text.9752350a36c6": {
+      "type": "text",
+      "source": "Missing tool arguments.",
+      "value": "Faltam argumentos da ferramenta."
+    },
     "text.983987033f0e": {
       "type": "text",
       "source": "**",
       "value": "**",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
+    "text.9a92d5fa0471": {
+      "type": "text",
+      "source": "Asks the model to answer from retrieved results without offering further tools. Check its claims against the returned passages.",
+      "value": "Pede ao modelo que responda a partir dos resultados recuperados sem oferecer mais ferramentas. Confira suas afirmações com os trechos retornados."
     },
     "text.9bb0026a8b4b": {
       "type": "text",
@@ -1202,6 +1433,21 @@
       "value": "Dara Okafor",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
+    "text.aa3d3d505709": {
+      "type": "text",
+      "source": " Handle only the current turn; a prior skipped search must not survive a rerun.",
+      "value": " Processe apenas o turno atual; uma busca ignorada antes não deve continuar marcada como ignorada ao executar novamente."
+    },
+    "text.aa606cd45751": {
+      "type": "text",
+      "source": "Argument does not match the discovered string/integer schema: ",
+      "value": "O argumento não corresponde ao esquema string/integer descoberto: "
+    },
+    "text.aabd8313773d": {
+      "type": "text",
+      "source": " Supply the rows to the sub-agent; its answer is forwarded to the main agent.",
+      "value": " Forneça as linhas ao subagente; sua resposta é encaminhada ao agente principal."
+    },
     "text.aba42d59b10e": {
       "type": "text",
       "source": " Strip stray tool-call text from reasoning models that emit it anyway.",
@@ -1226,12 +1472,6 @@
       "value": " Handle the tool-call result from the previous model turn.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
-    "text.abd19ab703e9~3": {
-      "type": "text",
-      "source": " Handle the tool-call result from the previous model turn.",
-      "value": " Handle the tool-call result from the previous model turn.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
     "text.ac5243b61be1": {
       "type": "text",
       "source": "main → sub: ",
@@ -1240,14 +1480,18 @@
     "text.ac601321d308": {
       "type": "text",
       "source": "); raise max_tokens",
-      "value": "); raise max_tokens",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "value": "); aumente max_tokens"
     },
     "text.ad03eb5e16bb": {
       "type": "text",
       "source": "no answer",
       "value": "no answer",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
+    "text.ad53ef60b459": {
+      "type": "text",
+      "source": "agents as tools · ask a sub-agent about customer data",
+      "value": "agentes como ferramentas · consultar um subagente sobre dados de clientes"
     },
     "text.ad6f49470459": {
       "type": "text",
@@ -1294,6 +1538,11 @@
       "type": "text",
       "source": "Keep the glossary_search contract and swap in a richer backend that returns the best term's cached article. Edit the question and rerun; full articles include vector database, RAG, LLMs, AI agents, and deep agents.",
       "value": "Mantenha o contrato de pesquisa de glossário e troque por um backend mais rico que retorna o artigo em cache do melhor termo. Edite a pergunta e execute novamente; artigos completos incluem banco de dados de vetores, geração aumentada por recuperação (RAG), grandes modelos de linguagem (LLMs), agentes de IA e agentes profundos."
+    },
+    "text.b2f4c1dab1e6": {
+      "type": "text",
+      "source": "Give the top-level agent one query_customer_db tool backed by a schema-aware sub-agent. The caller sends a question and receives the sub-agent's answer.",
+      "value": "Forneça ao agente principal uma ferramenta query_customer_db apoiada por um subagente que conhece o esquema. O agente que a chama envia uma pergunta e recebe a resposta do subagente."
     },
     "text.b3842f35c7fd": {
       "type": "text",
@@ -1466,6 +1715,11 @@
       "source": "Dispatch to the sub-agent and answer",
       "value": "Encaminhar para o sub-agente · sintetizar resposta final"
     },
+    "text.c86d82e60f09": {
+      "type": "text",
+      "source": "Sub-agent returned no complete answer; inspect its response.",
+      "value": "O subagente não retornou uma resposta completa; examine sua resposta."
+    },
     "text.c9f6aee2dc65": {
       "type": "text",
       "source": "no search was run on this turn",
@@ -1496,29 +1750,21 @@
       "value": "(empty)",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
-    "text.d29a0939bcb5~1": {
-      "type": "text",
-      "source": "(empty)",
-      "value": "(empty)",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
-    "text.d29a0939bcb5~2": {
-      "type": "text",
-      "source": "(empty)",
-      "value": "(empty)",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
-    "text.d29a0939bcb5~3": {
-      "type": "text",
-      "source": "(empty)",
-      "value": "(empty)",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
     "text.d2b9d9f4e779": {
       "type": "text",
       "source": "call #1 stopped before answering (finish_reason: ",
       "value": "call #1 stopped before answering (finish_reason: ",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
+    "text.d5b6219f115a": {
+      "type": "text",
+      "source": "Search query must be a nonempty string.",
+      "value": "A consulta de busca deve ser uma string não vazia."
+    },
+    "text.d5b6219f115a~1": {
+      "type": "text",
+      "source": "Search query must be a nonempty string.",
+      "value": "A consulta de busca deve ser uma string não vazia."
     },
     "text.d70bd34cd925": {
       "type": "text",
@@ -1530,12 +1776,6 @@
       "type": "text",
       "source": "Each node writes into a shared state object that later nodes read. Open any node to edit its JS and rerun it alone, or run the whole graph.",
       "value": "Cada nó escreve em um objeto de estado compartilhado que os nós posteriores lêem. Abra qualquer nó para editar seu JS e executá-lo sozinho ou execute todo o gráfico."
-    },
-    "text.d74c1e98e2dd": {
-      "type": "text",
-      "source": " The sub-agent's world: a tight system prompt that hides the table, and the rows as context.",
-      "value": " The sub-agent's world: a tight system prompt that hides the table, and the rows as context.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
     "text.da5e11efa367": {
       "type": "text",
@@ -1599,6 +1839,11 @@
       "value": " Return the chosen tool, if any, plus the arguments the model filled in.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
+    "text.e41932c2d892": {
+      "type": "text",
+      "source": "Article synthesis did not return a complete answer.",
+      "value": "A síntese do artigo não retornou uma resposta completa."
+    },
     "text.e766695f7eca": {
       "type": "text",
       "source": "Discover two in-page MCP tools through tools/list, then dispatch model requests through tools/call. The agent loop stays unchanged.",
@@ -1647,22 +1892,6 @@
       "source": "Scoped to definitions and conceptual questions only. Its description tells the model not to use it for arithmetic, which keeps the two tools from competing on overlapping inputs.",
       "value": "Limitado a definições e perguntas conceituais apenas. Sua descrição instrui o modelo a não usá-lo para operações aritméticas, o que impede que as duas ferramentas concorram em entradas sobrepostas."
     },
-    "text.ec134d5a90b8": {
-      "type": "text",
-      "source": "(model answered directly)",
-      "value": "(model answered directly)",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
-    "text.eccec404dc6c": {
-      "type": "text",
-      "source": "\n    The cell below exposes a sub-agent that knows a small customer table\n    as one natural-language tool. Its caller never sees the rows\n    and can only ask questions.\n  ",
-      "value": "\n A célula abaixo expõe um sub-agente que conhece uma pequena tabela de clientes\n como uma ferramenta de linguagem natural. O agente principal nunca vê as linhas\n e só pode fazer perguntas.\n "
-    },
-    "text.ed095df3c69e": {
-      "type": "text",
-      "source": "Hidden data (the sub-agent's world)",
-      "value": "Dados ocultos (o mundo do sub-agente)"
-    },
     "text.edca249d8d1f": {
       "type": "text",
       "source": "calculate",
@@ -1686,11 +1915,10 @@
       "value": " No tool call here: the model either answered from training (it has content) or ran out of tokens mid-call.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
-    "text.ef4d3114723c": {
+    "text.f10c082ad810": {
       "type": "text",
-      "source": " No tools here; the model must answer from the search results it already has.",
-      "value": " No tools here; the model must answer from the search results it already has.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+      "source": "\n    The outer model receives the sub-agent's answer, so errors or omissions in that\n    answer become its evidence. Inspect both responses before deciding whether the result is supported by the table.\n  ",
+      "value": "O modelo principal recebe a resposta do subagente, de modo que os erros ou omissões dessa resposta passam a compor sua evidência. Examine ambas as respostas antes de decidir se a tabela sustenta o resultado."
     },
     "text.f11462ba0d58": {
       "type": "text",
@@ -1724,6 +1952,16 @@
       "source": "What is 2 to the power of 10?",
       "value": "What is 2 to the power of 10?",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
+    "text.f955b12c007d": {
+      "type": "text",
+      "source": "Tool requests did not complete; no tools ran.",
+      "value": "As solicitações de ferramentas não foram concluídas; nenhuma ferramenta foi executada."
+    },
+    "text.f955b12c007d~1": {
+      "type": "text",
+      "source": "Tool requests did not complete; no tools ran.",
+      "value": "As solicitações de ferramentas não foram concluídas; nenhuma ferramenta foi executada."
     },
     "text.f9e235789471": {
       "type": "text",

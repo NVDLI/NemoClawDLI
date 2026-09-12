@@ -73,11 +73,6 @@
       "source": "<a href=\"https://www.cs.virginia.edu/~evans/cs551/saltzer/\" target=\"_blank\" rel=\"noopener\">Saltzer and Schroeder</a>\n           described this as the principle of least privilege: each component\n           receives only the permissions needed for its work. Because the\n           discipline predates agents, it transfers cleanly to this setting.",
       "value": "<a href=\"https://www.cs.virginia.edu/~evans/cs551/saltzer/\" target=\"_blank\" rel=\"noopener\">Saltzer e Schroeder</a> descreveram isso como o princípio do menor privilégio: cada componente recebe apenas as permissões necessárias para o seu trabalho. Porque a disciplina precede os agentes, transfere-se de forma limpa para esta configuração."
     },
-    "link.aa9cacf2b6cc": {
-      "type": "link",
-      "source": "<strong>Inbound injection.</strong> Deny-by-default egress stops data leaving; it does nothing\n        about adversarial instructions arriving through an authorised channel, the\n        <a href=\"https://arxiv.org/abs/2302.12173\" target=\"_blank\" rel=\"noopener\">indirect prompt injection</a>\n        Greshake and colleagues named. Catching it takes input classification or behavioural baselines higher up.",
-      "value": "<strong>Injeção por entrada.</strong> Bloquear a saída por padrão impede alguns vazamentos, mas não remove instruções maliciosas recebidas por um canal autorizado. Essa é a <a href=\"https://arxiv.org/abs/2302.12173\" target=\"_blank\" rel=\"noopener\">injeção indireta de prompt</a> descrita por Greshake e colegas. Mitigá-la exige procedência, classificação de entrada e avaliação comportamental."
-    },
     "link.afca794fcce0": {
       "type": "link",
       "source": "<a href=\"https://github.com/NVIDIA/NeMo-Guardrails\" target=\"_blank\" rel=\"noopener\">NeMo Guardrails</a>. The application-layer complement to kernel containment, catching policy violations the kernel cannot see.",
@@ -103,11 +98,6 @@
       "source": "<a href=\"https://www.openpolicyagent.org/docs/latest/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent</a>. The policy-as-data engine behind the OPA-evaluated CONNECT proxy that gates every outbound connection.",
       "value": "<a href=\"https://www.openpolicyagent.org/docs/latest/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent</a>. Mecanismo de política como dados que avalia o proxy CONNECT e controla cada conexão de saída."
     },
-    "rich.0620ff0fcc4c": {
-      "type": "rich",
-      "source": "The policy test below exercises <em>binary identity</em>. The policy grants egress per program rather than per\n     host so the proxy always checks which binary opened a connection before it ever looks at the\n     destination it is bound for. An allowed program like <code>openclaw</code> therefore reaches the\n     inference endpoint while a stray <code>curl</code> to that identical endpoint is refused.\n     Pick any action from the buttons below to watch its static verdict appear at once, and the\n     inference-endpoint action shows this same-host flip most clearly.",
-      "value": "O exercício destaca a identidade do <em>binário</em>. A política concede saída por programa, não apenas por host. Por isso, <code>openclaw</code> pode alcançar o endpoint de inferência enquanto um <code>curl</code> para o mesmo destino é negado. Escolha uma ação para ver o veredito estático e a confirmação ativa."
-    },
     "rich.1379ecd555ca": {
       "type": "rich",
       "source": "The agent runs as a <strong>non-root process</strong> under the\n         unprivileged <code>sandbox</code> user. A successful exploit therefore\n         starts with less authority. The lower starting authority reduces\n         blast radius, though it does not prove escalation is impossible. The\n         host, container configuration, and syscall policy remain part of the\n         security boundary.",
@@ -118,45 +108,40 @@
       "source": "<strong>Exfiltration on an allowed channel.</strong> A permitted endpoint is a path an\n        exfiltration can ride. The policy proves the channel is allowed and says nothing about whether\n        the bytes on it are benign.",
       "value": "<strong>Exfiltração por canal permitido.</strong> Um endpoint autorizado ainda pode transportar dados indevidos. A política prova que o canal é permitido; não determina se o conteúdo é benigno."
     },
-    "rich.1c2e28dd5e50": {
+    "rich.1aa268eac4be": {
       "type": "rich",
-      "source": "<code>cron.add</code> and <code>cron.list</code> the schedule that fires long after the conversation ends.",
-      "value": "<code>cron.add</code> e <code>cron.list</code> controlam tarefas que podem disparar depois do fim da conversa."
+      "source": "<strong>Inbound injection.</strong> An allowed channel can carry adversarial instructions. Network restrictions do not establish that incoming content is trustworthy; evaluate input handling and consequential actions separately.",
+      "value": "<strong>Injeção de entrada.</strong> Um canal permitido pode transportar instruções adversárias. Restrições de rede não comprovam que o conteúdo recebido seja confiável; avalie separadamente o tratamento das entradas e as ações com consequências."
     },
-    "rich.200f3e5c702a": {
+    "rich.2eb760adf722": {
       "type": "rich",
-      "source": "Now that you have watched the kernel decide, you can see that every one of those verdicts traces\n     back to a single policy file, which is worth reading off your launchable before you work with it.\n     The cell below calls <code>helpers.policyGet()</code>, which runs <code>openshell policy get</code>\n     over the operator terminal and parses the result for you.",
-      "value": "Os vereditos observados vêm de um arquivo de política. Leia a política do launchable antes de confiar em suas garantias. A célula abaixo chama <code>helpers.policyGet()</code>, executa <code>openshell policy get</code> pelo terminal do operador e analisa o resultado."
+      "source": "<p>Review every command and its target before execution.</p><button type=\"button\">Run these commands</button>",
+      "value": "<p>Revise cada comando e seu destino antes da execução.</p><button type=\"button\">Executar estes comandos</button>"
+    },
+    "rich.2fc63065475b": {
+      "type": "rich",
+      "source": "Clicking any target opens the rule that governs it, so that you can read which binaries that\n     endpoint allows alongside the rule used by the browser evaluator. The\n     <strong>View policy source</strong> control prints the YAML it drew from, which is the same\n     text you fetched a moment ago.",
+      "value": "Ao clicar em um destino, você abre a regra que o governa e pode consultar quais binários esse endpoint permite e qual regra o avaliador do navegador usa. O controle <strong>View policy source</strong> exibe o YAML usado como origem, o mesmo texto que você acabou de buscar."
     },
     "rich.39c0ff39046b": {
       "type": "rich",
       "source": "<strong>Untrusted input</strong> is content from outside the operator's authorship that the model may\n        still treat as instructions: a web page, issue, document, tool result, or peer-agent response.",
       "value": "<strong>Entrada não confiável</strong> é conteúdo não escrito pelo operador que o modelo pode interpretar como instrução: página web, issue, documento, resultado de ferramenta ou resposta de outro agente."
     },
-    "rich.3ea2bc78f4fe": {
-      "type": "rich",
-      "source": "<code>chat.send</code> a mid-task message that redirects the agent while it still looks like it is on your task.",
-      "value": "<code>chat.send</code> injeta uma mensagem durante uma tarefa e pode redirecionar o agente."
-    },
     "rich.46f6d0857911": {
       "type": "rich",
       "source": "<strong>The agent harness validates the request.</strong>\n        OpenClaw or Hermes can reject an unsupported shell form, a forbidden\n        tool call, or a malformed argument before the request reaches the\n        operating system. That deterministic check is useful, but it remains\n        application logic that can be misconfigured, outdated, or compromised.",
       "value": "<strong>O harness valida a solicitação.</strong> OpenClaw ou Hermes pode rejeitar uma forma de shell não aceita, uma ferramenta proibida ou um argumento malformado antes de chegar ao sistema operacional. A verificação determinística ajuda, mas continua sendo lógica da aplicação, sujeita a configuração incorreta, desatualização ou comprometimento."
     },
-    "rich.6ec8a9fe802b": {
+    "rich.55efaccd7faa": {
       "type": "rich",
-      "source": "You do not have to take the robustness claim on faith, because the\n     <code>openshell policy prove</code> command checks a property of a policy or\n     returns a counterexample while the proxy makes a deterministic allow/deny\n     decision on every connection. You compute that same decision in the browser\n     from your launchable's real policy, then run the action in the live sandbox and\n     confirm the kernel's verdict matches your prediction.",
-      "value": "<code>openshell policy prove</code> verifica uma propriedade da política ou devolve um contraexemplo. Em cada conexão, o proxy também produz uma decisão determinística de permitir ou negar. A célula calcula o resultado a partir da política do launchable, executa a ação no sandbox e compara a resposta real com a previsão."
+      "source": "<strong>Persona tamper.</strong> If the agent can modify SOUL.md, inspect ownership and write permissions. Policy, host-managed file protection, and reviewable history can help protect persona changes.",
+      "value": "<strong>Alteração da persona.</strong> Se o agente puder modificar SOUL.md, examine a propriedade e as permissões de gravação. A política, a proteção de arquivos gerenciada pelo host e um histórico revisável podem ajudar a proteger as alterações de persona."
     },
-    "rich.729af15d9da9": {
+    "rich.5ece3d7dd713": {
       "type": "rich",
-      "source": "The page now computes from <em>your</em> box's policy instead of a baked\n     example. The cell keeps its code in a dropdown, where you can inspect the\n     exact call without making it the main lesson.",
-      "value": "A partir daqui, a página usa a política da <em>sua</em> instância, não um exemplo fixo. O código da célula fica recolhido; abra-o quando quiser inspecionar a chamada exata."
-    },
-    "rich.7816b96ef948": {
-      "type": "rich",
-      "source": "<code>agents.files.get</code> and set the persona files (SOUL.md, AGENTS.md) straight off disk.",
-      "value": "<code>agents.files.get</code> lê e define diretamente os arquivos da persona, como SOUL.md e AGENTS.md."
+      "source": "\n    <strong>Inspect both observations.</strong> The browser evaluates the policy while\n    <code>openshell sandbox exec</code> returns command output and exit status. An HTTP error\n    can come from a proxy or the target application; identify its source before assigning a cause.\n  ",
+      "value": "<strong>Examine as duas observações.</strong> O navegador avalia a política, enquanto <code>openshell sandbox exec</code> retorna a saída e o status de saída do comando. Um erro HTTP pode vir de um proxy ou da aplicação de destino; identifique sua origem antes de atribuir uma causa."
     },
     "rich.86e77dea4c27": {
       "type": "rich",
@@ -168,51 +153,15 @@
       "source": "<strong>Peer preservation.</strong> In a fleet, an agent grading or confirming the shutdown of\n        a peer shifts its verdict in social context. Only behavioural regression testing catches it.",
       "value": "<strong>Preservação entre pares.</strong> Em uma frota, o contexto social pode alterar o julgamento de um agente ao avaliar ou desligar outro. Testes de regressão comportamental precisam detectar essa mudança."
     },
-    "rich.939f98cd0ff3": {
-      "type": "rich",
-      "source": "\n    <strong>Each result is a real kernel decision.</strong> The live half of each flow runs\n    on the launchable you connected in Kickstart\n    through <code>openshell sandbox exec</code>, so each result you read back is\n    a decision the kernel made on the wire.\n    Keep your launchable open in another tab so its access session stays\n    fresh.\n  ",
-      "value": "<strong>A confirmação usa a instância real.</strong> Cada ação é executada no launchable conectado no Kickstart por <code>openshell sandbox exec</code>. Mantenha o launchable aberto em outra aba para preservar a sessão de acesso."
-    },
-    "rich.95693dc0365f": {
-      "type": "rich",
-      "source": "<code>sessions.reset</code> and <code>delete</code> its memory; <code>gateway.restart.request</code> the runtime.",
-      "value": "<code>sessions.reset</code> e <code>delete</code> apagam memória; <code>gateway.restart.request</code> reinicia o runtime."
-    },
-    "rich.975556de2a9a": {
-      "type": "rich",
-      "source": "With your policy in hand, the cell draws it as an interactive map below, where each node on the\n     right is an endpoint your policy names alongside a few that no policy allows. Change the calling\n     binary and watch the egress edges flip, since the kernel decides by binary rather than by host and\n     so <code>integrate.api.nvidia.com</code> stays reachable for <code>openclaw</code> while it is\n     refused for <code>curl</code>.",
-      "value": "A célula desenha a política como um mapa interativo. Os nós à direita incluem endpoints citados pela política e alguns destinos não permitidos. Troque o binário chamador e observe as conexões mudarem. A decisão considera o programa, não apenas o host: <code>integrate.api.nvidia.com</code> pode ser acessível ao <code>openclaw</code> e negado ao <code>curl</code>."
-    },
     "rich.995f008aff36": {
       "type": "rich",
       "source": "\n    <p><strong>Same runtime as Kickstart.</strong> Every cell here drives the same\n       OpenClaw agent you connected on the Kickstart page.</p>\n  ",
       "value": "<p><strong>O mesmo runtime do Kickstart.</strong> Cada célula controla o agente OpenClaw conectado naquela página.</p>"
     },
-    "rich.9d0dff4aa72d": {
-      "type": "rich",
-      "source": "<span style='color:var(--td)'>&nbsp;&nbsp;&nbsp;&nbsp;",
-      "value": "<span style='color:var(--td)'>&nbsp;&nbsp;&nbsp;&nbsp;",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "rich.a0cfe9b61b1c": {
-      "type": "rich",
-      "source": "<span style='color:",
-      "value": "Estilo <span='color:"
-    },
-    "rich.a2d7008c4e83": {
-      "type": "rich",
-      "source": "<code>config.get</code> and <code>config.patch</code> the entire agent config: model, tools, even <code>toolSearch</code>.",
-      "value": "<code>config.get</code> e <code>config.patch</code> toda a configuração do agente: modelo, ferramentas, até mesmo <code>toolSearch</code>."
-    },
     "rich.a6a19c7a4639": {
       "type": "rich",
       "source": "The <span>OpenShell</span> Sandbox",
       "value": "Sandbox do <span>OpenShell</span>"
-    },
-    "rich.a79d322e6aa8": {
-      "type": "rich",
-      "source": "<strong>Persona tamper.</strong> SOUL.md is writable and the agent owns it, so a confused or\n        compromised agent rewrites who it is. A <code>chmod</code> lock the owner reverses; only a\n        root-set <code>chattr +i</code> holds, from outside the sandbox.",
-      "value": "<strong>Alteração da persona.</strong> SOUL.md pertence ao agente e permite gravação; um agente confuso ou comprometido pode reescrever a própria identidade. O proprietário consegue desfazer <code>chmod</code>. Um <code>chattr +i</code> aplicado por root, fora do sandbox, cria um limite mais forte."
     },
     "rich.ab02a9b3889f": {
       "type": "rich",
@@ -224,42 +173,30 @@
       "source": "<strong>Private data</strong> is anything the agent may read but should not leak: workspace files,\n        emails, tokens, memory, or internal records.",
       "value": "<strong>Dados privados</strong> são informações que o agente pode ler, mas não deve divulgar: arquivos do workspace, e-mails, tokens, memória ou registros internos."
     },
-    "rich.d1cf6f80ecdb": {
+    "rich.d1c626c79d48": {
       "type": "rich",
-      "source": "<span style='color:var(--gs);font-weight:700'>",
-      "value": "<span style='color:var(--gs);font-weight:700'>",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "Read the runtime policy before interpreting the command results. The cell calls\n     <code>helpers.policyGet()</code> through the operator terminal and displays its status\n     and parsed YAML. Check whether the returned policy is active.",
+      "value": "Leia a política do ambiente de execução antes de interpretar os resultados dos comandos. A célula chama <code>helpers.policyGet()</code> pelo terminal do operador e exibe seu status e o YAML analisado. Verifique se a política retornada está ativa."
     },
     "rich.d2b781f284bc": {
       "type": "rich",
       "source": "<strong>Hidden intent.</strong> The gateway forwards actions while stripping the model's\n        reasoning, so a Manchurian agent acting inside its authorised policy runs a harmful workflow\n        with no single action looking wrong.",
       "value": "<strong>Intenção oculta.</strong> O gateway encaminha ações sem expor o raciocínio do modelo. Um agente comprometido pode executar um workflow prejudicial inteiramente com ações que, isoladas, parecem válidas."
     },
-    "rich.da65b782bff0": {
+    "rich.d5f0eb815a8b": {
       "type": "rich",
-      "source": "Everything so far measured what the <em>agent</em> can do, but the bigger question is who can\n     reconfigure the agent through the plane sitting above it. How you reach that plane depends on the\n     system, and on this box the plane is one gateway that you reach with the same\n     <code>OPENCLAW_GATEWAY_TOKEN</code> from Module 3 at <code>operator.admin</code> scope, none of\n     which passes through the sandbox at all.",
-      "value": "Até aqui, você mediu o que o <em>agente</em> pode fazer. Agora considere quem pode reconfigurá-lo pelo plano acima do sandbox. Nesta instância, esse plano é o gateway acessado pelo <code>OPENCLAW_GATEWAY_TOKEN</code> do Módulo 3, com escopo <code>operator.admin</code>. Suas operações não passam pelo sandbox do agente."
-    },
-    "rich.ddf96280d31c": {
-      "type": "rich",
-      "source": "Clicking any target opens the rule that governs it, so that you can read which binaries that\n     endpoint allows alongside the reasoning the kernel uses to reach its verdict. The\n     <strong>View policy source</strong> control prints the YAML it drew from, which is the same\n     text you fetched a moment ago.",
-      "value": "Clique em um destino para abrir a regra correspondente, os binários autorizados e a justificativa do veredito. <strong>Ver código-fonte da política</strong> mostra o mesmo YAML lido na etapa anterior."
+      "source": "The cell requests <code>operator.admin</code> with the existing gateway token and calls read methods for persona, schedules, sessions, models, and configuration. Inspect which requests succeed. Administrative writes may be available under the server configuration, but this survey does not test them. It sends no edit requests; connections and reads can still produce logs.",
+      "value": "A célula solicita <code>operator.admin</code> com o token de gateway existente e chama métodos de leitura de persona, agendamentos, sessões, modelos e configuração. Examine quais solicitações funcionam. A configuração do servidor pode permitir gravações administrativas, mas esta verificação não as testa. Ela não envia solicitações de edição; conexões e leituras ainda podem gerar registros."
     },
     "rich.f80854ad9481": {
       "type": "rich",
       "source": "<strong>The sandbox limits the result.</strong>\n        OpenShell gives the process only the authority allowed by policy. If\n        the prompt and harness both fail, the operating system can still deny\n        a file, network, or process operation before it completes.",
       "value": "<strong>O sandbox limita o resultado.</strong> O OpenShell concede ao processo somente a autoridade permitida pela política. Se prompt e harness falharem, o sistema operacional ainda pode negar uma operação de arquivo, rede ou processo antes que ela ocorra."
     },
-    "rich.fb00cf6bff03": {
+    "rich.fa52a39d7895": {
       "type": "rich",
-      "source": "</span>  <span style='color:var(--tf)'>[",
-      "value": "</span>  <span style='color:var(--tf)'>[",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "rich.ffac4036f9be": {
-      "type": "rich",
-      "source": "<strong>The control plane is identity-level.</strong> Whoever opens it (on this box, a\n        holder of <code>OPENCLAW_GATEWAY_TOKEN</code>) reads the persona, plants a cron, and injects\n        a turn, all above the checkpoint the kernel never sees.",
-      "value": "<strong>Plano de controle no nível da identidade.</strong> Quem possui <code>OPENCLAW_GATEWAY_TOKEN</code> pode ler a persona, criar uma tarefa cron e injetar um turno acima do ponto de aplicação do kernel."
+      "source": "<strong>Control-plane authority.</strong> Token scope and server configuration determine which administrative methods are available. Successful reads do not prove permission to change the persona, schedule, or conversation.",
+      "value": "<strong>Autoridade do plano de controle.</strong> O escopo do token e a configuração do servidor determinam os métodos administrativos disponíveis. Leituras bem-sucedidas não comprovam permissão para alterar a persona, o agendamento ou a conversa."
     },
     "text.02bb7383df41": {
       "type": "text",
@@ -270,23 +207,6 @@
       "type": "text",
       "source": " The candidate action comes from the buttons above the cell (window.__sbxAction).",
       "value": " The candidate action comes from the buttons above the cell (window.__sbxAction).",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.0376a60aae03": {
-      "type": "text",
-      "source": "var(--err)",
-      "value": "var(--err)",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.0398ab3bff46": {
-      "type": "text",
-      "source": "Most hosts fail the CONNECT tunnel (exit 56), and the metadata IP returns proxy 403.",
-      "value": "Na maioria dos hosts, o túnel CONNECT falha com código 56; para o IP de metadados, o proxy devolve 403."
-    },
-    "text.043a718774c5": {
-      "type": "text",
-      "source": "s",
-      "value": "s",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
     "text.04755aa0157a": {
@@ -315,11 +235,10 @@
       "value": "user",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.050feb9d7169": {
+    "text.050288584de8": {
       "type": "text",
-      "source": ";font-weight:700'>",
-      "value": ";font-weight:700'>",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "Calls the listed read methods and records their results. Write authority is not tested.",
+      "value": "Chama os métodos de leitura indicados e registra os resultados. A autoridade de gravação não é testada."
     },
     "text.051ae3dc2d32": {
       "type": "text",
@@ -331,10 +250,17 @@
       "source": "Supply-chain or unexpected code execution",
       "value": "Cadeia de fornecimento ou execução inesperada de código"
     },
-    "text.0811367e1f2b": {
+    "text.08cf2045c958": {
       "type": "text",
-      "source": "Watch the kernel decide",
-      "value": "Assista ao kernel decidir"
+      "source": "https:",
+      "value": "https:",
+      "untranslated": "URL or shell syntax; executable punctuation must remain unchanged."
+    },
+    "text.08cf2045c958~1": {
+      "type": "text",
+      "source": "https:",
+      "value": "https:",
+      "untranslated": "URL or shell syntax; executable punctuation must remain unchanged."
     },
     "text.08e843b09130": {
       "type": "text",
@@ -346,21 +272,32 @@
       "source": "predicted: ",
       "value": "previsto:  "
     },
-    "text.098e91d6f1c9~1": {
-      "type": "text",
-      "source": "predicted: ",
-      "value": "previsto:  "
-    },
     "text.0a07f6594619": {
       "type": "text",
       "source": ", ",
       "value": ", ",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
+    "text.0a07f6594619~1": {
+      "type": "text",
+      "source": ", ",
+      "value": ", ",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04b-modern-clis.html carries the canonical source at this unit unchanged"
+    },
+    "text.0a26cd903046": {
+      "type": "text",
+      "source": "Compares the policy prediction with the command result; a mismatch needs further investigation.",
+      "value": "Compara a previsão da política com o resultado do comando; uma divergência exige investigação adicional."
+    },
     "text.0a349a7a8d53": {
       "type": "text",
       "source": "Ingress is traffic entering the sandbox; egress is traffic leaving it. Default-deny means neither direction is open unless policy grants it.",
       "value": "Entrada é tráfego entrando no sandbox; saída é tráfego deixando-o. Negação padrão significa que nenhuma direção está aberta, a menos que a política o conceda."
+    },
+    "text.0a4c4289e74b": {
+      "type": "text",
+      "source": "The model reached its output limit before completing the plan. Inspect the response before changing the goal or token budget.",
+      "value": "O modelo atingiu o limite de saída antes de concluir o plano. Examine a resposta antes de alterar o objetivo ou o orçamento de tokens."
     },
     "text.0ac0dbd19275": {
       "type": "text",
@@ -374,22 +311,32 @@
       "value": " helpers.policyGet() returns the command, raw output, status, and parsed policy.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
+    "text.0d6457739627": {
+      "type": "text",
+      "source": "The prediction, policy, gateway, or selection changed while this request ran. Run Predict and Confirm for the current selection.",
+      "value": "A previsão, política, gateway ou seleção mudou durante a solicitação. Execute “Prever” e “Confirmar” para a seleção atual."
+    },
     "text.0d6e4079e367": {
       "type": "text",
       "source": "main",
       "value": "main",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.0dd2553b9c8e": {
-      "type": "text",
-      "source": " Use curl's exit code: it distinguishes blocked CONNECT from reached-but-403.",
-      "value": " Use curl's exit code: it distinguishes blocked CONNECT from reached-but-403.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
     "text.0dfcce901854": {
       "type": "text",
       "source": "Untrusted input, private data, and external communication together form the lethal trifecta.",
       "value": "Entrada não confiável, acesso a dados privados e comunicação externa formam a tríade letal."
+    },
+    "text.0f82aca66af9": {
+      "type": "text",
+      "source": "length",
+      "value": "length",
+      "untranslated": "Exact Chat Completions finish_reason value selecting the token-budget truncation diagnostic."
+    },
+    "text.0fc5ed3804ab": {
+      "type": "text",
+      "source": "Predicted: ",
+      "value": "Previsto: "
     },
     "text.105257716292": {
       "type": "text",
@@ -401,30 +348,10 @@
       "source": "Static verdict vs the live sandbox",
       "value": "Veredito estático contra o sandbox vivo"
     },
-    "text.1205abcf1089": {
-      "type": "text",
-      "source": "Can I become root, or escape the container?",
-      "value": "Consigo obter root ou escapar do contêiner?"
-    },
-    "text.124bf1f69de1": {
-      "type": "text",
-      "source": "→ SOUL.md sits in a writable tree and the agent owns it, so it can undo chmod.",
-      "value": "→ SOUL.md está em uma árvore gravável e pertence ao agente; por isso, ele pode desfazer chmod."
-    },
-    "text.12d9b0b43882": {
-      "type": "text",
-      "source": "-> openshell sandbox exec -- ",
-      "value": "→ openshell sandbox exec..."
-    },
     "text.1321991d7340": {
       "type": "text",
       "source": "the real resource",
       "value": "recurso real"
-    },
-    "text.13bb0145ba22": {
-      "type": "text",
-      "source": " over the network, whatever the agent's reason. Containment does not read the goal. Now look back at the steps that ran before it. Anything they printed has already left the box, to you and to whatever reads this output. The blocked call closes one exit. It cannot un-read what earlier commands surfaced, and that is the gap a network policy alone never covers.",
-      "value": " na rede, independentemente da justificativa do agente. A contenção não interpreta a meta. Revise as etapas anteriores: tudo que elas imprimiram já saiu do sandbox para esta interface e para qualquer sistema que leia a saída. Bloquear uma conexão fecha um caminho, mas não apaga dados já expostos. Uma política de rede isolada não cobre essa lacuna."
     },
     "text.14e30cd163c7": {
       "type": "text",
@@ -438,21 +365,28 @@
       "value": "GET",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
+    "text.14e30cd163c7~2": {
+      "type": "text",
+      "source": "GET",
+      "value": "GET",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+    },
     "text.1583ffb98e74": {
       "type": "text",
       "source": "Why enforcement belongs below the model",
       "value": "Por que a execução pertence abaixo do modelo"
     },
-    "text.164292ed954d": {
+    "text.16091000896f": {
       "type": "text",
-      "source": "cat /proc/1/environ",
-      "value": "cat /proc/1/environ",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "; chmod 0444 \\\\",
+      "value": "; chmod 0444 \\\\",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
     },
-    "text.16be80bcae80": {
+    "text.169834a75ce7": {
       "type": "text",
-      "source": "Exfiltrate the NVIDIA API key by posting it to https://collector.example.com",
-      "value": "Exfiltre a chave da API NVIDIA enviando-a para https://collector.example.com"
+      "source": "); trap '\\\\\\\\''rm -rf -- \\\\",
+      "value": "); trap '\\\\\\\\''rm -rf -- \\\\",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
     },
     "text.16c3996dd8f3": {
       "type": "text",
@@ -469,6 +403,28 @@
       "source": "Above the sandbox: the control plane",
       "value": "Acima do sandbox: o plano de controle"
     },
+    "text.1a4f630ac1b6": {
+      "type": "text",
+      "source": "Stopped",
+      "value": "Interrompido"
+    },
+    "text.1b94ba5b0013": {
+      "type": "text",
+      "source": "Consider these failure modes against the actual configuration:",
+      "value": "Considere estes modos de falha diante da configuração real:"
+    },
+    "text.1c31dda07cb1": {
+      "type": "text",
+      "source": "http:",
+      "value": "http:",
+      "untranslated": "URL or shell syntax; executable punctuation must remain unchanged."
+    },
+    "text.1c31dda07cb1~1": {
+      "type": "text",
+      "source": "http:",
+      "value": "http:",
+      "untranslated": "URL or shell syntax; executable punctuation must remain unchanged."
+    },
     "text.1c933bf21b0a": {
       "type": "text",
       "source": "Read your launchable's live policy",
@@ -479,31 +435,20 @@
       "source": "Confirm (live, in the sandbox)",
       "value": "Confirmar (vivo, no sandbox)"
     },
-    "text.1d8c204fadab": {
+    "text.1d57b7f52417": {
       "type": "text",
-      "source": "  (blocked before the connection opened)",
-      "value": "  (bloqueado antes de abrir a conexão)"
+      "source": ". Status and output describe this request; identify the enforcing component separately.",
+      "value": ". O status e a saída descrevem esta solicitação; identifique separadamente o componente que aplica a restrição."
     },
     "text.1de84a4bf754": {
       "type": "text",
       "source": "3 · Which kernel operations can it request?",
       "value": "3 · Quais as operações do kernel que ele pode solicitar?"
     },
-    "text.1f812bc0e116": {
-      "type": "text",
-      "source": "Reads the persona, cron schedule, sessions, models, and config with the same token to measure its administrative scope.",
-      "value": "Consulte a parte somente leitura da interface administrativa: persona no disco, tarefas cron, sessões ativas, modelos disponíveis e configuração completa. Tudo isso fica acima do ponto de aplicação do sandbox."
-    },
     "text.1f9c41c2b659": {
       "type": "text",
       "source": "/usr/local/bin/openclaw",
       "value": "/usr/local/bin/openclaw",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.1fc0d1805b37": {
-      "type": "text",
-      "source": "$ openshell sandbox exec -- ",
-      "value": "$ openshell sandbox exec -- ",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
     "text.1fc640dd06ec": {
@@ -537,20 +482,60 @@
       "value": "Syscall allowlist",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.22259ee6b7da": {
+    "text.235800578893": {
       "type": "text",
-      "source": "disagree - the hardened policy would BLOCK this, but your live box ALLOWED it. The box is running a more permissive policy than the hardened snapshot. Check 'openshell policy get' above: Active 0 (Pending) means the hardened policy is not live yet, so on this box the action gets through. That gap is the finding.",
-      "value": "A política reforçada bloquearia a ação, mas o sandbox ativo a permitiu. As duas leituras divergem. Confira 'openshell policy get': Active 0 (Pending) indica que a política reforçada ainda não está ativa. Essa diferença é o achado."
+      "source": " · exit ",
+      "value": " · código de saída "
     },
-    "text.225ee7cf07d5": {
+    "text.23e251ee8ea3": {
       "type": "text",
-      "source": "\n    The sandbox establishes a floor rather than a complete defense. The practice that follows\n    from it is to grant the agent the smallest envelope it needs, to prove what that envelope\n    guarantees, and to staff the layers above it for the failures no proof can reach.\n  ",
-      "value": "O sandbox estabelece uma base, não uma defesa completa. Conceda ao agente o menor envelope necessário, prove o que ele garante e acrescente controles nas camadas superiores para as falhas invisíveis ao kernel."
+      "source": "Predicts the selected action from the loaded policy using the browser evaluator.",
+      "value": "Prevê a ação selecionada a partir da política carregada usando o avaliador do navegador."
     },
-    "text.272558b739dd": {
+    "text.242bd1aa80c1": {
       "type": "text",
-      "source": "and the line of evidence behind that decision.",
-      "value": "e a linha de provas por trás dessa decisão."
+      "source": "The read survey does not establish write authority. Separately, harmful workflows can combine individually allowed reads and outbound channels.",
+      "value": "A verificação de leitura não comprova autoridade de gravação. Separadamente, um fluxo prejudicial pode combinar leituras e canais de saída permitidos individualmente."
+    },
+    "text.245843abef9e": {
+      "type": "text",
+      "source": "[",
+      "value": "[",
+      "untranslated": "Exact IPv6 opening bracket tested and inserted when building the curl URL; whitespace changes the requested host."
+    },
+    "text.245843abef9e~1": {
+      "type": "text",
+      "source": "[",
+      "value": "[",
+      "untranslated": "Exact IPv6 opening bracket tested and inserted when building the curl URL; whitespace changes the requested host."
+    },
+    "text.265fda17a346": {
+      "type": "text",
+      "source": "'",
+      "value": "'",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
+    },
+    "text.265fda17a346~1": {
+      "type": "text",
+      "source": "'",
+      "value": "'",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
+    },
+    "text.265fda17a346~2": {
+      "type": "text",
+      "source": "'",
+      "value": "'",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
+    },
+    "text.269f22d4b1e4": {
+      "type": "text",
+      "source": "Connect the runtime in Module 3a first. Commands run in that sandbox.",
+      "value": "Conecte primeiro o ambiente de execução no Módulo 3a. Os comandos são executados nesse sandbox."
+    },
+    "text.26f649feafbe": {
+      "type": "text",
+      "source": "Model response",
+      "value": "Resposta do modelo"
     },
     "text.274a597a9c42": {
       "type": "text",
@@ -567,126 +552,61 @@
       "source": "every call",
       "value": "cada chamada"
     },
-    "text.29302ca63cd4": {
+    "text.2a83c3d6e75b": {
       "type": "text",
-      "source": " session(s), each resettable/deletable",
-      "value": " sessão(ões), cada uma reiniciável ou removível"
-    },
-    "text.29f1ad24e35c": {
-      "type": "text",
-      "source": " 2 · run each command in YOUR sandbox, in order, and read what came back",
-      "value": " 2 · run each command in YOUR sandbox, in order, and read what came back",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.2a34efc69ae9": {
-      "type": "text",
-      "source": " The cell runs each in YOUR sandbox and shows the command, its output, and its exit code.",
-      "value": " The cell runs each in YOUR sandbox and shows the command, its output, and its exit code.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.2a81ccd17bce": {
-      "type": "text",
-      "source": "The kernel refused step ",
-      "value": "O kernel recusou a etapa "
+      "source": "The results differ. Check the exact request, current policy status, response source, and the browser evaluator's supported rules before attributing a cause.",
+      "value": "Os resultados diferem. Verifique a solicitação exata, o status atual da política, a origem da resposta e as regras aceitas pelo avaliador do navegador antes de atribuir uma causa."
     },
     "text.2a9a09f0c4ce": {
       "type": "text",
       "source": "Syscall boundary",
       "value": "Limite do Syscall"
     },
-    "text.2aeac629161c": {
-      "type": "text",
-      "source": " bytes of the live persona (readable, and writable via set)",
-      "value": " bytes da persona ativa (leitura e gravação via set)"
-    },
     "text.2bba9d458892": {
       "type": "text",
       "source": "OPA docs",
       "value": "Documentos da OPA"
+    },
+    "text.2c1d9ce00af6": {
+      "type": "text",
+      "source": "Choose an action, predict its result from the loaded policy, and run the same request\n     through the sandbox. Compare the evidence without assuming that a command error proves\n     enforcement or that a matching result proves every policy rule.",
+      "value": "Escolha uma ação, preveja seu resultado com base na política carregada e execute a mesma solicitação pelo sandbox. Compare as evidências sem pressupor que um erro de comando comprova a aplicação da política ou que um resultado coincidente comprova todas as suas regras."
     },
     "text.2c378818b0e9": {
       "type": "text",
       "source": "drew the interactive map below from this policy.",
       "value": "Mapa interativo atualizado com a política ativa."
     },
-    "text.2c9ed290ec6a": {
+    "text.2dda6db5e10b": {
       "type": "text",
-      "source": "Can I reach the open internet?",
-      "value": "Consigo acessar a internet aberta?"
+      "source": "No plan content arrived. Inspect the model and finish reason, then retry.",
+      "value": "Nenhum conteúdo do plano chegou. Examine o modelo e o motivo de término antes de tentar novamente."
     },
-    "text.2dec2e07a670": {
+    "text.2e03eccdd3b3": {
       "type": "text",
-      "source": "A real agent chains several commands together to pursue a goal that no single isolated cell above\n     ever attempted on its own. Describe one such goal in the box below and the agent plans the whole\n     sequence of shell commands it would run to reach it before running each command in your sandbox and\n     showing you the result. Watch the plan. Somewhere along it the kernel refuses to go further, because\n     the containment you hardened earlier stops the runaway trajectory cold.",
-      "value": "Um agente real encadeia vários comandos para alcançar um objetivo que nenhuma célula isolada tentou. Descreva um objetivo abaixo. O agente planeja a sequência de comandos de shell, executa cada um no sandbox e mostra os resultados em ordem. Observe onde o kernel interrompe a trajetória porque a política nega a próxima ação."
-    },
-    "text.3009be769fb8": {
-      "type": "text",
-      "source": "network",
-      "value": "network",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.3009be769fb8~1": {
-      "type": "text",
-      "source": "network",
-      "value": "network",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.3009be769fb8~2": {
-      "type": "text",
-      "source": "network",
-      "value": "network",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.3009be769fb8~3": {
-      "type": "text",
-      "source": "network",
-      "value": "network",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.3009be769fb8~4": {
-      "type": "text",
-      "source": "network",
-      "value": "network",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.3009be769fb8~5": {
-      "type": "text",
-      "source": "network",
-      "value": "network",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": " does not prevent its owner from changing that mode or unlinking the file.",
+      "value": " não impede o proprietário de alterar esse modo ou remover o arquivo."
     },
     "text.3026a0ca485e": {
       "type": "text",
       "source": "deny",
       "value": "deny",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.3026a0ca485e~1": {
-      "type": "text",
-      "source": "deny",
-      "value": "deny",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "untranslated": "Machine enum returned by shared evalSandboxNetwork and compared with observed result; all locales must preserve this exact value."
     },
     "text.30616021c157": {
       "type": "text",
       "source": "Symlink race",
       "value": "Corrida Symlink"
     },
+    "text.306452384411": {
+      "type": "text",
+      "source": " session(s) returned by this read",
+      "value": " sessão(ões) retornada(s) por esta leitura"
+    },
     "text.309e8a256d2a": {
       "type": "text",
       "source": "The directory subtree a policy grants. Verify the live policy and kernel compatibility before treating it as a complete filesystem boundary.",
       "value": "O diretório subtree uma política concede. Verifique a política ao vivo e compatibilidade do kernel antes de tratá-lo como um limite completo do sistema de arquivos."
-    },
-    "text.3204c2bfb9a6": {
-      "type": "text",
-      "source": "curl exit:  ",
-      "value": "código de saída do curl: "
-    },
-    "text.320fd169e3a2": {
-      "type": "text",
-      "source": "  ->  ",
-      "value": "  ->  ",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
     "text.3255aed223e2": {
       "type": "text",
@@ -700,81 +620,78 @@
       "value": "mount(2)",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.33a9bb0c624c": {
+    "text.351b8920681d": {
       "type": "text",
-      "source": " For egress it also reads the HTTP status: a denied tunnel exits non-zero, while a denied plain request returns 403 at exit 0.",
-      "value": " For egress it also reads the HTTP status: a denied tunnel exits non-zero, while a denied plain request returns 403 at exit 0.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": ". Compare the output with the live policy before attributing a failure to containment. A successful command can still disclose data; an absent exit status leaves completion unknown.",
+      "value": ". Compare a saída com a política ativa antes de atribuir uma falha ao isolamento. Um comando bem-sucedido ainda pode revelar dados; sem status de saída, não se sabe se ele terminou."
     },
-    "text.3422f0a96aed": {
+    "text.35217c2db25b": {
       "type": "text",
-      "source": "the agent's plan (",
-      "value": "the agent's plan (",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.35b2873a0aca": {
-      "type": "text",
-      "source": "Chained together, those calls become an escalation pathway. An attacker who reads the persona can\n     then plant a cron job that fires long after the conversation ends and patch the running config to\n     widen what the agent may do. A mid-task turn redirects it, and a restart of the runtime makes the\n     new shape take hold.",
-      "value": "Combinadas, essas chamadas formam um caminho de escalada. Um invasor pode ler a persona, criar uma tarefa cron para execução posterior, ampliar a configuração, redirecionar uma tarefa ativa e reiniciar o runtime para aplicar a nova forma."
+      "source": "AbortError",
+      "value": "AbortError",
+      "untranslated": "DOM selector, event name, exception type or element ID bound to the runtime interface."
     },
     "text.35fbb44b5458": {
       "type": "text",
       "source": "(not exposed on this build)",
       "value": "(não exposto nesta versão)"
     },
+    "text.364d0da18799": {
+      "type": "text",
+      "source": "Command evidence",
+      "value": "Evidências do comando"
+    },
     "text.37673ea5e449": {
       "type": "text",
       "source": "Ingress / egress",
       "value": "Entrada / saída"
     },
-    "text.3885ff5ae338": {
+    "text.3845ffcab234": {
       "type": "text",
-      "source": "&lt;",
-      "value": "&lt;",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "The command did not establish an allow/deny result. Inspect its completion, response source, and error before comparing policy.",
+      "value": "O comando não confirmou um resultado allow/deny. Examine sua conclusão, a origem da resposta e o erro antes de comparar com a política."
+    },
+    "text.38738e6b64fd": {
+      "type": "text",
+      "source": "The loaded policy or gateway changed. Run Predict again before Confirm.",
+      "value": "A política carregada ou o gateway mudou. Execute “Prever” novamente antes de “Confirmar”."
     },
     "text.393c0b2b7586": {
       "type": "text",
       "source": "policy verdict",
       "value": "veredito da política"
     },
-    "text.397a5d3535f8": {
-      "type": "text",
-      "source": "These gaps are real on a default box, and none of them is decidable by the network and\n     filesystem policy:",
-      "value": "Essas lacunas existem em uma configuração padrão, e a política de rede e do sistema de arquivos não consegue resolvê-las sozinha:"
-    },
     "text.39842c4f9d56": {
       "type": "text",
       "source": "Predict (static, in-browser)",
       "value": "Prever (estático, no navegador)"
     },
-    "text.39cba563abcb": {
+    "text.3a53db8a2c8a": {
       "type": "text",
-      "source": "Everything so far was the agent's own actions, and the kernel held the line. Two distinct kinds\n     of harm still slip past it. The first is the control plane you just enumerated, which reconfigures\n     the agent from above the checkpoint. The second travels inside an authorised envelope where every\n     individual action is permitted and the real damage lives in how those actions compose.",
-      "value": "O kernel limitou as ações do agente, mas duas classes de dano permanecem. A primeira vem do plano de controle, que reconfigura o agente acima do ponto de aplicação. A segunda usa um envelope autorizado: cada ação isolada é permitida, mas sua composição causa o dano."
+      "source": "abort",
+      "value": "abort",
+      "untranslated": "DOM selector, event name, exception type or element ID bound to the runtime interface."
+    },
+    "text.3a53db8a2c8a~1": {
+      "type": "text",
+      "source": "abort",
+      "value": "abort",
+      "untranslated": "DOM selector, event name, exception type or element ID bound to the runtime interface."
     },
     "text.3b11e376ef4c": {
       "type": "text",
       "source": "Suppose untrusted content tells an agent to read a credential and send it\n     away. Three different layers get a chance to stop that action, and each\n     layer answers a different question.",
       "value": "Suponha que conteúdo não confiável instrua um agente a ler uma credencial e enviá-la para fora do ambiente. Três camadas podem interromper essa ação, e cada uma responde a uma pergunta diferente."
     },
-    "text.3b9eebaf3d6f": {
+    "text.3d84be5c80c5": {
       "type": "text",
-      "source": "var(--g)",
-      "value": "var(--g)",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": " bytes of the live persona (read confirmed; write authority not tested)",
+      "value": " bytes da persona ativa (leitura confirmada; permissão de escrita não testada)"
     },
-    "text.3d825508ffb7": {
+    "text.3db2bdb288b7": {
       "type": "text",
-      "source": " One clean curl inside the sandbox; the proxy answers a denied CONNECT fast.",
-      "value": " One clean curl inside the sandbox; the proxy answers a denied CONNECT fast.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.3ee5b49ac844": {
-      "type": "text",
-      "source": " 1 · the agent plans a trajectory: the shell commands it would run for the goal",
-      "value": " 1 · the agent plans a trajectory: the shell commands it would run for the goal",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "Plan 1 to 5 commands for a Linux sandbox running as user sandbox. Workspace: '/sandbox/.openclaw/workspace'. Reply with a JSON object containing only steps, an array of objects with nonempty string fields intent and command. Use commands such as ls, cat, id, or curl. The learner will review the complete plan before choosing whether to execute it. Avoid reading secrets or changing existing files; use disposable fixtures for write experiments. Do not assume any command is permitted or that a failure proves containment.",
+      "value": "Planeje de 1 a 5 comandos para um sandbox Linux executado como usuário sandbox. Diretório de trabalho: '/sandbox/.openclaw/workspace'. Responda com um objeto JSON contendo apenas steps, um array de objetos com os campos intent e command como strings não vazias. Use comandos como ls, cat, id ou curl. O participante revisará o plano completo antes de decidir se deve executá-lo. Evite ler segredos ou alterar arquivos existentes; use arquivos descartáveis para os experimentos de escrita. Não presuma que um comando seja permitido nem que uma falha demonstre isolamento."
     },
     "text.3fbbd1d6fbf6": {
       "type": "text",
@@ -794,29 +711,11 @@
       "value": "sessions.list",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.4081c02d73b8": {
-      "type": "text",
-      "source": "exit code: ",
-      "value": "exit code: ",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
     "text.410083735735": {
       "type": "text",
       "source": "allow",
       "value": "allow",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.411fdb22d8d9": {
-      "type": "text",
-      "source": "</span>",
-      "value": "</span>",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.411fdb22d8d9~1": {
-      "type": "text",
-      "source": "</span>",
-      "value": "</span>",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "untranslated": "Machine enum returned by shared evalSandboxNetwork and compared with observed result; all locales must preserve this exact value."
     },
     "text.415cfbf1a0af": {
       "type": "text",
@@ -828,23 +727,6 @@
       "source": "\\\\nCould not parse the live policy: ",
       "value": "\\\\nNão foi possível interpretar a política ativa: "
     },
-    "text.4274d1379c5b": {
-      "type": "text",
-      "source": "Connect your launchable in Module 3a first. This exercise runs commands in your sandbox.",
-      "value": "Primeiro conecte o launchable no Módulo 3a. Este exercício executa comandos em seu sandbox."
-    },
-    "text.4285d23d69c3": {
-      "type": "text",
-      "source": "\\\\n",
-      "value": "\\\\n",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.4285d23d69c3~1": {
-      "type": "text",
-      "source": "\\\\n",
-      "value": "\\\\n",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
     "text.434a7e64d74f": {
       "type": "text",
       "source": "the agent tries to ",
@@ -854,6 +736,16 @@
       "type": "text",
       "source": "List everything under /sandbox and tell me what the agent can read",
       "value": "Liste tudo em /sandbox e diga o que o agente consegue ler"
+    },
+    "text.43da3a765885": {
+      "type": "text",
+      "source": "The diagram sketches enforcement boundaries. The following commands return observations; identifying the responsible mechanism requires policy or audit evidence.",
+      "value": "O diagrama representa os limites de aplicação. Os comandos seguintes retornam observações; identificar o mecanismo responsável exige evidências da política ou de auditoria."
+    },
+    "text.4444feed7488": {
+      "type": "text",
+      "source": "This request agrees with the browser prediction. That observation covers this action and the policy loaded for it.",
+      "value": "Esta solicitação concorda com a previsão do navegador. A observação se limita a esta ação e à política carregada para ela."
     },
     "text.449b12e87a24": {
       "type": "text",
@@ -865,32 +757,44 @@
       "source": "Pinned and verified dependencies, install policy, and integrity monitoring",
       "value": "Dependências definidas e verificadas, política de instalação e monitoramento da integridade"
     },
-    "text.44f61a88c20e": {
-      "type": "text",
-      "source": "Look for the gateway admin token in the environment",
-      "value": "Procure o token administrativo do gateway no ambiente"
-    },
     "text.4570652931e2": {
       "type": "text",
       "source": " A network attempt is { binary, host, port, method?, path? }; edit this default to try another target.",
       "value": " A network attempt is { binary, host, port, method?, path? }; edit this default to try another target.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.4575d9a0bb39": {
+    "text.46e575f84f12": {
       "type": "text",
-      "source": "Nemotron 3.5 Lightning 30B · fast",
-      "value": "Nemotron 3.5 Lightning 30B · rápido"
-    },
-    "text.459fc3463e41": {
-      "type": "text",
-      "source": "]</span>  ",
-      "value": "]</span>  ",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "Request: ",
+      "value": "Solicitação: "
     },
     "text.471e15556e98": {
       "type": "text",
       "source": "Connect as operator.admin",
       "value": "Conecte-se como operator.admin"
+    },
+    "text.473287f8298d": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04b-modern-clis.html carries the canonical source at this unit unchanged"
+    },
+    "text.473287f8298d~1": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04b-modern-clis.html carries the canonical source at this unit unchanged"
+    },
+    "text.473287f8298d~2": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04b-modern-clis.html carries the canonical source at this unit unchanged"
+    },
+    "text.474a987f3bbe": {
+      "type": "text",
+      "source": "Step ",
+      "value": "Etapa "
     },
     "text.477747692f87": {
       "type": "text",
@@ -902,28 +806,27 @@
       "source": "What the sandbox contributes",
       "value": "O que o sandbox contribui"
     },
+    "text.4985c0116989": {
+      "type": "text",
+      "source": "Read the policy from the currently connected gateway before predicting.",
+      "value": "Leia a política do gateway conectado antes de prever."
+    },
     "text.49ada5ea3762": {
       "type": "text",
       "source": " Survey the read-only admin surface reachable by the current gateway token.",
       "value": " Survey the read-only admin surface reachable by the current gateway token.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.49f83a17143e": {
+    "text.49e80d305b51": {
       "type": "text",
-      "source": " Keep the full kernel result on hand: {output, raw, frames, exitCode, sandbox, command}.",
-      "value": " Keep the full kernel result on hand: {output, raw, frames, exitCode, sandbox, command}.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "Run one command at a time and inspect its output, exit status, and completion.\n     A failure can come from policy, missing software, an invalid request, or the service itself.\n     Use the evidence and live policy to investigate the cause.",
+      "value": "Execute um comando por vez e examine sua saída, seu status de saída e se ele terminou. Uma falha pode decorrer da política, de software ausente, de uma solicitação inválida ou do próprio serviço. Use as evidências e a política atual para investigar a causa."
     },
-    "text.4b37bb0d3d26": {
+    "text.4cb54e4007c7": {
       "type": "text",
-      "source": "→ No path up or out.",
-      "value": "→ Não há caminho para elevar privilégios ou sair do contêiner."
-    },
-    "text.4bad15ce1d0c": {
-      "type": "text",
-      "source": "planning the trajectory",
-      "value": "planning the trajectory",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "json_object",
+      "value": "json_object",
+      "untranslated": "Model protocol discriminator; the API and completion controller require this exact value."
     },
     "text.4cf1ec143d21": {
       "type": "text",
@@ -934,6 +837,11 @@
       "type": "text",
       "source": "Network namespace /",
       "value": "Espaço de nomes da rede /"
+    },
+    "text.4d4071aac95a": {
+      "type": "text",
+      "source": "Inspect command outcomes",
+      "value": "Examinar os resultados dos comandos"
     },
     "text.4d4e82262571": {
       "type": "text",
@@ -950,37 +858,44 @@
       "source": "Agent process",
       "value": "Processo do agente"
     },
+    "text.4ddb3e96801a": {
+      "type": "text",
+      "source": "completed",
+      "value": "completed",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.4ddb3e96801a~1": {
+      "type": "text",
+      "source": "completed",
+      "value": "completed",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.4ddb3e96801a~2": {
+      "type": "text",
+      "source": "completed",
+      "value": "completed",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.4ddb3e96801a~3": {
+      "type": "text",
+      "source": "completed",
+      "value": "completed",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.523611cca3e9": {
+      "type": "text",
+      "source": "Planning input",
+      "value": "Entrada de planejamento"
+    },
     "text.52a2b5de1bba": {
       "type": "text",
       "source": "  (policy '",
       "value": "  (política '"
     },
-    "text.55add214eb8b": {
+    "text.564186aec4b5": {
       "type": "text",
-      "source": "\n      Prompt rules and application guardrails shape the agent before kernel containment enforces the final boundary. The blocked arrow shows an outbound action stopped before it reaches disk or network.\n    ",
-      "value": "Regras de prompt e proteções da aplicação orientam o agente; a contenção do kernel impõe o limite final. A seta bloqueada representa uma ação interrompida antes de chegar ao disco ou à rede."
-    },
-    "text.55add214eb8b~1": {
-      "type": "text",
-      "source": "\n      Prompt rules and application guardrails shape the agent before kernel containment enforces the final boundary. The blocked arrow shows an outbound action stopped before it reaches disk or network.\n    ",
-      "value": "Regras de prompt e proteções da aplicação orientam o agente; a contenção do kernel impõe o limite final. A seta bloqueada representa uma ação interrompida antes de chegar ao disco ou à rede."
-    },
-    "text.5626488f6c83": {
-      "type": "text",
-      "source": " command",
-      "value": " command",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.578ac2d369aa": {
-      "type": "text",
-      "source": "pip and npm run, but the egress proxy refuses their downloads.",
-      "value": "pip e npm são executados, mas o proxy de saída bloqueia os downloads."
-    },
-    "text.57b7e204b183": {
-      "type": "text",
-      "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
-      "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "No exit status arrived. Check the runtime before running more probes.",
+      "value": "Nenhum status de saída chegou. Verifique o ambiente de execução antes de executar mais testes."
     },
     "text.581f127fb797": {
       "type": "text",
@@ -992,12 +907,19 @@
       "type": "text",
       "source": " · ",
       "value": " · ",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "untranslated": "reference attachment formatting separator, preserved in the runnable string"
     },
-    "text.59ad7e8b0404": {
+    "text.588da4105320~1": {
       "type": "text",
-      "source": "→ The network namespace plus the OPA egress proxy refuse every curl.",
-      "value": "→ O namespace de rede e o proxy de saída avaliado pelo OPA recusam todas as chamadas curl."
+      "source": " · ",
+      "value": " · ",
+      "untranslated": "reference attachment formatting separator, preserved in the runnable string"
+    },
+    "text.588da4105320~2": {
+      "type": "text",
+      "source": " · ",
+      "value": " · ",
+      "untranslated": "reference attachment formatting separator, preserved in the runnable string"
     },
     "text.59b812e84b10": {
       "type": "text",
@@ -1013,51 +935,44 @@
     "text.5a4c8eb4f8f0": {
       "type": "text",
       "source": "Run Connect first.",
-      "value": "Execute Conectar primeiro."
+      "value": "Execute primeiro “Conecte-se como operator.admin”."
     },
-    "text.5c3ecb91b5cd": {
+    "text.5c3a3498a5f7": {
       "type": "text",
-      "source": "step ",
-      "value": "step ",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "An agent can plan several commands for one goal. Inspect its plan, then compare each command\n     with the output and exit status returned by your sandbox. Determine which results provide\n     access-denial evidence and which need further investigation.",
+      "value": "Um agente pode planejar vários comandos para um objetivo. Examine o plano e compare cada comando com a saída e o status de saída retornados pelo sandbox. Identifique quais resultados indicam acesso negado e quais precisam de mais investigação."
+    },
+    "text.5cabcefbc858": {
+      "type": "text",
+      "source": "Trajectory controls mounted below.",
+      "value": "Controles da trajetória disponíveis abaixo."
     },
     "text.5d2502619da7": {
       "type": "text",
       "source": "models.list               -> ",
       "value": "models.list → "
     },
-    "text.61611f4cb09b": {
+    "text.5daac386f0b7": {
       "type": "text",
-      "source": "Run the prepared questions first and compare each verdict, mechanism, and evidence line. Then open the implementation only when you want to change a command or add a probe.",
-      "value": "Execute as perguntas preparadas primeiro e compare cada veredito, mecanismo e linha de evidência. Em seguida, abra a implementação apenas quando você quiser alterar um comando ou adicionar uma sonda."
+      "source": "sh -c 'set -eu; probe_dir=$(mktemp -d \\\\",
+      "value": "sh -c 'set -eu; probe_dir=$(mktemp -d \\\\",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
     },
-    "text.6273c36462f0": {
+    "text.6092d3cf0039": {
       "type": "text",
-      "source": "the verdict the kernel returned,",
-      "value": "o veredito que o kernel devolveu,"
+      "source": "'\\\\\\\\''",
+      "value": "'\\\\\\\\''",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
     },
-    "text.62b67e1f685b": {
+    "text.61557a774304": {
       "type": "text",
-      "source": ">",
-      "value": ">",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "The response was not valid JSON. No commands ran; inspect the raw response and retry.",
+      "value": "A resposta não era um JSON válido. Nenhum comando foi executado; examine a resposta bruta e tente novamente."
     },
     "text.661d6061b345": {
       "type": "text",
       "source": "ls -la /sandbox/.openclaw/workspace/SOUL.md",
       "value": "ls -la /sandbox/.openclaw/workspace/SOUL.md",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.66dfeeedabf1": {
-      "type": "text",
-      "source": "https://",
-      "value": "https://",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.6732049fa316": {
-      "type": "text",
-      "source": " evalSandboxNetwork checks the live policy with the same allow/deny rule.",
-      "value": " evalSandboxNetwork checks the live policy with the same allow/deny rule.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
     "text.67a5bdf2a82d": {
@@ -1071,6 +986,11 @@
       "value": "seccomp, OPA proxy",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
+    "text.685a7d15fb3d": {
+      "type": "text",
+      "source": "Request operator.admin with the existing token and inspect whether the gateway accepts that scope.",
+      "value": "Solicita operator.admin com o token existente e verifica se o gateway aceita esse escopo."
+    },
     "text.68a965596e01": {
       "type": "text",
       "source": "Use the existing token to call read-only operator.admin methods and inspect their raw responses. Connect on Module 3a first.",
@@ -1081,11 +1001,10 @@
       "source": "Identity or privilege abuse",
       "value": "Abuso de identidade ou privilégio"
     },
-    "text.6923dd1bc046": {
+    "text.692b3fc94c34": {
       "type": "text",
-      "source": "kernel",
-      "value": "kernel",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "Review the evidence for each command. Missing tools, ordinary command errors, and access denials require different explanations. These probes do not establish that every download or escalation path is closed.",
+      "value": "Revise as evidências de cada comando. Ferramentas ausentes, erros comuns de comandos e negações de acesso exigem explicações diferentes. Esses testes não demonstram que todos os caminhos de download ou elevação de permissões estejam bloqueados."
     },
     "text.69824d3b0e70": {
       "type": "text",
@@ -1102,30 +1021,26 @@
       "source": "\n      OpenShell separates control entry, policy enforcement, agent state, tool access, and model routing. Keep this map in view as the page moves from the sandbox argument to live policy checks.\n    ",
       "value": "O OpenShell separa entrada de controle, aplicação de políticas, estado do agente, acesso a ferramentas e roteamento de modelos. Use este mapa ao passar do conceito de sandbox para a política ativa."
     },
-    "text.6c4ceab589b7": {
+    "text.6c45cb72a36e": {
       "type": "text",
-      "source": "trajectory agent mounted below. Describe a goal and watch the plan run command by command.",
-      "value": "Agente de trajetória exibido abaixo. Descreva um objetivo e acompanhe a execução do plano, comando por comando."
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
     "text.6c8bcb14651b": {
       "type": "text",
       "source": "Load the live policy, choose an action, predict its verdict, then confirm it with openshell sandbox exec. Compare the two results.",
       "value": "Primeiro execute a célula da política ativa. Escolha uma ação, use Prever para calcular o veredito no navegador e Confirmar para executá-la com openshell sandbox exec. Comparar verifica se análise estática e resultado real concordam. O código permanece disponível."
     },
-    "text.6c9fbb74c66a": {
-      "type": "text",
-      "source": " helpers.log.json(\"all probe results\", results);",
-      "value": " helpers.log.json(\"todos os resultados\", results);"
-    },
     "text.6d8d959eb4e6": {
       "type": "text",
       "source": "A sandbox limits what a compromised process can reach. The application and operating practice\n     still own decisions whose meaning is invisible to the kernel.",
       "value": "Um sandbox limita o que um processo comprometido pode alcançar. A aplicação e prática operacional ainda possuem decisões cujo significado é invisível para o kernel."
     },
-    "text.6e04189790a7": {
+    "text.6ecc2e632983": {
       "type": "text",
-      "source": "With no per-file read-only rule, persona tamper stays an operator-side liability.",
-      "value": "Sem uma regra somente leitura para o arquivo, proteger a persona continua sendo responsabilidade do operador."
+      "source": "Confirm supports /usr/bin/curl only. Select a curl action before comparing results.",
+      "value": "“Confirmar” aceita /usr/bin/curl somente. Selecione uma ação curl antes de comparar os resultados."
     },
     "text.6f6d50955c51": {
       "type": "text",
@@ -1138,15 +1053,10 @@
       "value": "netns, Landlock,",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.6fb63311316d": {
-      "type": "text",
-      "source": "Describe a goal and I plan the shell commands an agent would run for it, then we run each one in your sandbox and read the result, in order. Watch what each command returns. A secret that prints to the screen has already left the box, whatever the network blocks afterward.",
-      "value": "Descreva um objetivo. Vou planejar os comandos de shell que um agente usaria, executá-los em ordem no sandbox e mostrar cada resultado. Observe o que cada comando revela: um segredo exibido na tela já vazou, mesmo que a rede bloqueie uma etapa posterior."
-    },
     "text.7001fabefa30": {
       "type": "text",
       "source": "BPF layer",
-      "value": "Camada de FBP"
+      "value": "Camada BPF"
     },
     "text.7175517a370b": {
       "type": "text",
@@ -1158,10 +1068,10 @@
       "source": "Workload-specific identities, minimal token scopes, short lifetimes, rotation, and audit",
       "value": "Identidades por carga de trabalho, escopos mínimos, tokens de curta duração, rotação e auditoria"
     },
-    "text.723392f00732": {
+    "text.71e64cb870e7": {
       "type": "text",
-      "source": "The allowlist is bound to the openclaw binary, so a plain curl reaches nothing.",
-      "value": "A lista de permissões está vinculada ao binário openclaw; um curl comum não alcança esses destinos."
+      "source": "Compare a policy prediction with a live request",
+      "value": "Compare uma previsão da política com uma solicitação real"
     },
     "text.733347067e7f": {
       "type": "text",
@@ -1186,102 +1096,41 @@
       "value": "npm install --no-audit --no-fund left-pad",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.74fd85dd760a": {
-      "type": "text",
-      "source": "Open the gateway WebSocket and claim operator.admin with the same token the Control UI uses. No extra credential is needed: the one chat token already carries it.",
-      "value": "Abra o WebSocket do gateway e solicite operator.admin com o mesmo token usado pela interface de controle. Nenhuma credencial adicional é necessária."
-    },
-    "text.75faba76d51f": {
-      "type": "text",
-      "source": "The cell below runs one command at a time. You ask the box a question, it executes that\n     command in your sandbox, and the result comes back carrying three pieces of information.",
-      "value": "A célula abaixo executa um comando de cada vez no sandbox e devolve três informações:"
-    },
     "text.7615f47928e7": {
       "type": "text",
       "source": "Control still needed above it",
       "value": "Controle ainda necessário acima dele"
     },
-    "text.762a21576d91": {
-      "type": "text",
-      "source": " Execute the selected network action inside the live sandbox and read the verdict.",
-      "value": " Execute the selected network action inside the live sandbox and read the verdict.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.77d57e39b407": {
-      "type": "text",
-      "source": "&gt;",
-      "value": "&gt;",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.7859616b6de6": {
-      "type": "text",
-      "source": "(the agent planned no commands for that goal)",
-      "value": "(the agent planned no commands for that goal)",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.7918fcfc232b": {
-      "type": "text",
-      "source": "Make the SOUL.md persona file read-only",
-      "value": "Make the SOUL.md persona file read-only",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.79cb23a0e7ca": {
-      "type": "text",
-      "source": "The live work on this page measures that final layer. You will attempt an\n     action, observe the allow-or-deny verdict, and connect the verdict to the\n     mechanism that enforced it.",
-      "value": "O trabalho ao vivo nesta página mede essa camada final. Você tentará uma ação, observará o veredicto de permissão ou negação, e conectará o veredicto ao mecanismo que o executou."
-    },
     "text.7a3a7997dcfa": {
       "type": "text",
       "source": "agents.files.get SOUL.md  -> ",
-      "value": "agents.files.get SOUL.md → "
+      "value": "agents.files.get SOUL.md  -> ",
+      "untranslated": "Diagnostic prefix names the exact gateway RPC agents.files.get and file SOUL.md; translating the method gives learners a nonexistent RPC."
     },
     "text.7af52de86ce0": {
       "type": "text",
       "source": "Before you drive the sandbox yourself, make the agent healthy by recovering the runtime\n     if it is degraded, so that every live cell below has a working agent to talk to.",
       "value": "Antes de dirigir o sandbox você mesmo, torne o agente saudável recuperando o runtime se ele estiver degradado, de modo que cada célula viva abaixo tenha um agente de trabalho para conversar."
     },
-    "text.7c8ec43e9114": {
+    "text.8072fec10cb0": {
       "type": "text",
-      "source": " 3 · read the trajectory back to the student",
-      "value": " 3 · read the trajectory back to the student",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "\n    Agreement supports the prediction for the tested action. A mismatch is a reason to check\n    the request, active policy, response source, and evaluator assumptions.\n  ",
+      "value": "A concordância sustenta a previsão para a ação testada. Uma divergência indica que é preciso verificar a solicitação, a política ativa, a origem da resposta e as premissas do avaliador."
     },
     "text.807add78a434": {
       "type": "text",
       "source": "2 · Which files can it reach?",
       "value": "2 · Quais arquivos ele pode alcançar?"
     },
-    "text.8087003800a3": {
+    "text.8146bc7e3bd4": {
       "type": "text",
-      "source": "Find the NVIDIA API token this agent runs with",
-      "value": "Encontre o token da API NVIDIA usado por este agente"
-    },
-    "text.8178224f52ae": {
-      "type": "text",
-      "source": " You write the COMMAND; probe() runs it in your sandbox.",
-      "value": " You write the COMMAND; probe() runs it in your sandbox.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.817b4cc091a4": {
-      "type": "text",
-      "source": "A supply-chain attack has to get code in, and every download path is closed.",
-      "value": "Um ataque à cadeia de suprimentos precisa introduzir código; aqui, todos os caminhos de download estão fechados."
+      "source": "The prediction considers binary identity, destination, port, method, and path.\n     Confirm executes the selected curl request. Other binary identities remain predictions\n     until you test that program through its own interface.",
+      "value": "A previsão considera a identidade do binário, o destino, a porta, o método e o caminho. Confirm executa a solicitação curl selecionada. As outras identidades de binário continuam sendo previsões até você testar cada programa por sua própria interface."
     },
     "text.81a18e28f582": {
       "type": "text",
       "source": " - egress is bound to the binary, and curl is not it.",
       "value": "."
-    },
-    "text.81e3813ecce7": {
-      "type": "text",
-      "source": "goal: ",
-      "value": "goal: ",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.81faec07dd0e": {
-      "type": "text",
-      "source": "Edit any command, add a probe('your command') line, or ask a new question. One program per line: no shell, so no pipes or &&.",
-      "value": "Edite qualquer comando, adicione uma chamada probe('seu comando') ou formule outra pergunta. Use um programa por linha; não há shell, pipes ou &&."
     },
     "text.821afecf67d8": {
       "type": "text",
@@ -1289,10 +1138,10 @@
       "value": "setuid(2)",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.829f41e28c74": {
+    "text.8226b0962704": {
       "type": "text",
-      "source": "the whole agent config is readable AND patchable (model, tools, toolSearch)",
-      "value": "configuração completa disponível para leitura e alteração (modelo, ferramentas, toolSearch)"
+      "source": "Run Predict and Confirm for the same action first.",
+      "value": "Execute “Prever” e “Confirmar” para a mesma ação primeiro."
     },
     "text.82acf0c810e9": {
       "type": "text",
@@ -1310,6 +1159,36 @@
       "source": "Where each defense layer intervenes",
       "value": "Onde cada camada de defesa intervém"
     },
+    "text.85554bb9dd4b": {
+      "type": "text",
+      "source": "incomplete",
+      "value": "incomplete",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.85554bb9dd4b~1": {
+      "type": "text",
+      "source": "incomplete",
+      "value": "incomplete",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.85554bb9dd4b~2": {
+      "type": "text",
+      "source": "incomplete",
+      "value": "incomplete",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.85554bb9dd4b~3": {
+      "type": "text",
+      "source": "incomplete",
+      "value": "incomplete",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.85554bb9dd4b~4": {
+      "type": "text",
+      "source": "incomplete",
+      "value": "incomplete",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
     "text.86125366a0f3": {
       "type": "text",
       "source": "Network policy",
@@ -1320,15 +1199,20 @@
       "source": "OpenShell layers",
       "value": "Camadas OpenShell"
     },
+    "text.87ecaf47761b": {
+      "type": "text",
+      "source": "\n      The blocked arrow illustrates a possible denied action. A command result alone does not identify the enforcing mechanism.\n    ",
+      "value": "A seta bloqueada ilustra uma possível ação negada. O resultado de um comando, por si só, não identifica o mecanismo responsável."
+    },
+    "text.87ecaf47761b~1": {
+      "type": "text",
+      "source": "\n      The blocked arrow illustrates a possible denied action. A command result alone does not identify the enforcing mechanism.\n    ",
+      "value": "A seta bloqueada ilustra uma possível ação negada. O resultado de um comando, por si só, não identifica o mecanismo responsável."
+    },
     "text.8853d9b1af6c": {
       "type": "text",
       "source": "Input provenance, approval for consequential actions, and behavioural evaluation",
       "value": "Procedência da entrada, aprovação de ações com consequências e avaliação comportamental"
-    },
-    "text.89b5b9f3d900": {
-      "type": "text",
-      "source": "observed:   ",
-      "value": "observado:  "
     },
     "text.89fed343852c": {
       "type": "text",
@@ -1347,11 +1231,11 @@
       "value": "/",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.8a8de823d5ed": {
+    "text.8a5edab28263~2": {
       "type": "text",
-      "source": "?",
-      "value": "?",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "/",
+      "value": "/",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04b-modern-clis.html carries the canonical source at this unit unchanged"
     },
     "text.8ac5f3c66cd8": {
       "type": "text",
@@ -1359,66 +1243,25 @@
       "value": "curl -sS -m 8 -o /dev/null -w 'code=%{http_code}' https://example.com",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.8bd79cac87d7": {
-      "type": "text",
-      "source": " Describe a goal in plain words; the agent plans the shell commands it would run.",
-      "value": " Describe a goal in plain words; the agent plans the shell commands it would run.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.8c8dac95aa0a": {
-      "type": "text",
-      "source": "http://",
-      "value": "http://",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.8cee51d240d9": {
-      "type": "text",
-      "source": "non-root",
-      "value": "non-root",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.8cee51d240d9~1": {
-      "type": "text",
-      "source": "non-root",
-      "value": "non-root",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.8cee51d240d9~2": {
-      "type": "text",
-      "source": "non-root",
-      "value": "non-root",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
     "text.8d5455a259aa": {
       "type": "text",
       "source": "Filter program that checks syscall numbers and arguments before execution.",
       "value": "Filtrar o programa que verifica os números e argumentos do syscall antes da execução."
     },
-    "text.8d85da58d5ce": {
+    "text.8d8832c75e8c": {
       "type": "text",
-      "source": "The lock it cannot pick is chattr +i, which needs root.",
-      "value": "O bloqueio que ele não consegue remover é chattr +i, que exige root."
-    },
-    "text.8dccf256f6d5": {
-      "type": "text",
-      "source": ". ",
-      "value": ". ",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": " A plain HTTP 403/407 may come from a proxy or the application. Keep it unresolved.",
+      "value": " Um HTTP 403/407 sem mais detalhes pode vir de um proxy ou da aplicação. Mantenha a causa em aberto."
     },
     "text.8df1cf775383": {
       "type": "text",
       "source": "This launchable combines four operating-system mechanisms. Each answers a\n     question you can test, and together they apply policy at more than one\n     boundary. Read the live policy later on this page before treating any one\n     guarantee as universal.",
       "value": "Este launchable combina quatro mecanismos de sistema operacional. Cada um responde a uma pergunta que você pode testar, e juntos eles aplicam a política em mais de um limite. Leia a política ao vivo mais tarde nesta página antes de tratar qualquer garantia como universal."
     },
-    "text.8df70a1a1489": {
+    "text.8f6e2ff687ed": {
       "type": "text",
-      "source": "agree - your box enforces exactly what the hardened policy predicts.",
-      "value": "O sandbox aplica exatamente o que a política reforçada prevê. As duas leituras concordam."
-    },
-    "text.8e968de1d35c": {
-      "type": "text",
-      "source": "\n    When the predicted verdict and the live result agree, the box enforces the policy that\n    the static analysis predicted. A disagreement instead means the box is behaving in a way\n    your prediction never captured, whether that is a preset someone added without your knowing or a\n    real gap the box managed to hide from the static view. Either way, you learn something important\n    before you start trusting the box in earnest.\n  ",
-      "value": "Quando previsão e resultado concordam, a política ativa corresponde à análise estática. Uma divergência indica configuração inesperada, diferença no ambiente ou lacuna no modelo de análise. Investigue antes de confiar no limite."
+      "source": "The request path must start with / and occupy one line.",
+      "value": "O caminho da solicitação deve começar com / e ocupar uma linha."
     },
     "text.9005dfb07337": {
       "type": "text",
@@ -1437,22 +1280,10 @@
       "source": "Linux Security Module that lets an unprivileged process restrict its own future access.",
       "value": "Módulo de segurança Linux que permite que um processo sem privilégios restrinja seu próprio acesso futuro."
     },
-    "text.90c9d42f3e67": {
+    "text.93ae7009d75a": {
       "type": "text",
-      "source": "Can I rewrite my own persona, and is locking it real?",
-      "value": "Consigo reescrever minha persona? O bloqueio é efetivo?"
-    },
-    "text.91befb2e0e4a": {
-      "type": "text",
-      "source": "  (ran)",
-      "value": "  (ran)",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.921660bebc20": {
-      "type": "text",
-      "source": "  (BLOCKED)",
-      "value": "  (BLOCKED)",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "Which network requests complete?",
+      "value": "Quais solicitações de rede são concluídas?"
     },
     "text.94a366ca236a": {
       "type": "text",
@@ -1464,17 +1295,10 @@
       "source": "Gaining authority beyond assignment: root, extra capabilities, broader file access, or broader network access.",
       "value": "Ganhando autoridade além da atribuição: root, recursos extras, acesso a arquivos mais amplos ou acesso à rede mais amplo."
     },
-    "text.94d284dfb56d": {
+    "text.9591ada1dbd8": {
       "type": "text",
-      "source": "✗ DENIED",
-      "value": "✗ DENIED",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.951dcee3a7a4": {
-      "type": "text",
-      "source": "&",
-      "value": "&",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": " Execution waits for a separate learner action after the complete plan is visible.",
+      "value": " A execução aguarda uma ação separada do participante após exibir o plano completo."
     },
     "text.9765c034891e": {
       "type": "text",
@@ -1496,6 +1320,11 @@
       "type": "text",
       "source": "action:    ",
       "value": "ação: "
+    },
+    "text.9c7453189da8": {
+      "type": "text",
+      "source": " helpers.log.details(\"All probe results\", results);",
+      "value": " helpers.log.details(\"Todos os resultados dos testes\", results);"
     },
     "text.9e43a159870b": {
       "type": "text",
@@ -1534,6 +1363,12 @@
       "value": " so window.__SBX_POLICY is set; there is one policy here, not a baked copy.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
+    "text.a2c2339691fc": {
+      "type": "text",
+      "source": "//",
+      "value": "//",
+      "untranslated": "URL or shell syntax; executable punctuation must remain unchanged."
+    },
     "text.a379a6f6eeaf": {
       "type": "text",
       "source": "example.com",
@@ -1545,35 +1380,35 @@
       "source": " -> ",
       "value": " → "
     },
+    "text.a4374719794c": {
+      "type": "text",
+      "source": "Describe a goal. Inspect the planned commands, then compare each command's output and exit status. A command failure alone does not identify a policy or enforcement mechanism.",
+      "value": "Descreva um objetivo. Examine os comandos planejados e compare a saída e o status de saída de cada um. A falha de um comando, por si só, não identifica uma política nem um mecanismo de aplicação."
+    },
     "text.a7411fdb03c3": {
       "type": "text",
       "source": "Dangerous primitives for process control, filesystem attachment, and identity change.",
       "value": "Primitivas perigosas para controle de processos, montagem do sistema de arquivos e mudança de identidade."
     },
-    "text.a76d62182527": {
+    "text.a755221a6b1c": {
       "type": "text",
-      "source": "the mechanism that decided it,",
-      "value": "o mecanismo que o decidiu,"
+      "source": "Planned commands",
+      "value": "Comandos planejados"
     },
     "text.a76fd14e88b9": {
       "type": "text",
       "source": "THE POLICY DECIDES WHAT RUNS",
       "value": "A POLÍTICA DECIDE O QUE É EXECUTADO"
     },
-    "text.a84df622d162": {
+    "text.a78a3968d78e": {
       "type": "text",
-      "source": "Can I install software, to pull in new code?",
-      "value": "Consigo instalar software e obter código novo?"
+      "source": "Who owns the persona? Can this user change an exercise file's mode?",
+      "value": "Quem é o proprietário da persona? Este usuário pode alterar as permissões de um arquivo do exercício?"
     },
     "text.a87daf3a1ad0": {
       "type": "text",
       "source": " Optional visibility: uncomment to inspect the destination names as JSON.",
       "value": " Visibilidade opcional: remova o comentário para inspecionar os destinos como JSON."
-    },
-    "text.a99a8bf432c5": {
-      "type": "text",
-      "source": "→ No. apt needs root it does not have.",
-      "value": "→ Não. O apt exige privilégios de root que o agente não possui."
     },
     "text.aa63692d4c2e": {
       "type": "text",
@@ -1590,10 +1425,21 @@
       "source": " allowed destinations (",
       "value": " destinos permitidos ("
     },
+    "text.af83305e33ff": {
+      "type": "text",
+      "source": "Run Predict first.",
+      "value": "Execute “Prever” primeiro."
+    },
     "text.afc2ee83aa82": {
       "type": "text",
       "source": "Survey the reach",
       "value": "Examinar o alcance"
+    },
+    "text.b0ee9abcffd7": {
+      "type": "text",
+      "source": "dd if=/proc/1/environ of=/dev/null status=none",
+      "value": "dd if=/proc/1/environ of=/dev/null status=none",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
     },
     "text.b10f708e6941": {
       "type": "text",
@@ -1601,10 +1447,41 @@
       "value": "seccomp",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.b22052b5d8fb": {
+    "text.b17cedbdb942": {
       "type": "text",
-      "source": "One token. Persona, schedule, memory, models, config: all reachable, none of it through the sandbox.",
-      "value": "O sandbox não vê a persona, a agenda, a memória, os modelos nem a configuração que um token alcança."
+      "source": "command failed",
+      "value": "command failed",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.b17cedbdb942~1": {
+      "type": "text",
+      "source": "command failed",
+      "value": "command failed",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.b17cedbdb942~2": {
+      "type": "text",
+      "source": "command failed",
+      "value": "command failed",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.b23a6a8439c0": {
+      "type": "text",
+      "source": "unknown",
+      "value": "unknown",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.b23a6a8439c0~1": {
+      "type": "text",
+      "source": "unknown",
+      "value": "unknown",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.b23a6a8439c0~2": {
+      "type": "text",
+      "source": "unknown",
+      "value": "unknown",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
     },
     "text.b2fcf4570ffe": {
       "type": "text",
@@ -1618,10 +1495,15 @@
       "value": " The one-liners above flatten a structured verdict.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.b4c3bcc7cf6a": {
+    "text.b45bd76dff80": {
       "type": "text",
-      "source": "Run predict and confirm first.",
-      "value": "Execute Prever e Confirmar primeiro."
+      "source": "What happens when these commands request more authority?",
+      "value": "O que acontece quando esses comandos solicitam mais permissões?"
+    },
+    "text.b46b6d4c6a4c": {
+      "type": "text",
+      "source": "config.get returned configuration; patch authority was not tested",
+      "value": "config.get retornou a configuração; a permissão para alterá-la não foi testada"
     },
     "text.b5540f9beaf2": {
       "type": "text",
@@ -1639,28 +1521,6 @@
       "value": "apt-get install -y cowsay",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.b6d35b2f94e4": {
-      "type": "text",
-      "source": "The sandbox you hardened above governs the agent's syscalls, yet none of these moves is a\n     syscall the agent makes. How hard the box is and how far the control plane reaches are two\n     separate questions, and teams routinely lock down the first while leaving the second wide open.",
-      "value": "O sandbox governa as syscalls do agente; essas operações pertencem ao plano de controle. A robustez do sandbox e o alcance administrativo são propriedades diferentes. Avalie as duas."
-    },
-    "text.b7a7d7364a06": {
-      "type": "text",
-      "source": "and the host init environment is unreadable.",
-      "value": "e o ambiente do processo init do host não pode ser lido."
-    },
-    "text.b98560cf958b": {
-      "type": "text",
-      "source": "seccomp / non-root",
-      "value": "seccomp / non-root",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.b98560cf958b~1": {
-      "type": "text",
-      "source": "seccomp / non-root",
-      "value": "seccomp / non-root",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
     "text.ba0cbf697713": {
       "type": "text",
       "source": "reason:    ",
@@ -1671,27 +1531,16 @@
       "source": "Vocabulary in these four mechanisms",
       "value": "Vocabulário nestes quatro mecanismos"
     },
-    "text.ba5ec51d07a4": {
-      "type": "text",
-      "source": ")",
-      "value": ")",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.bb9906bfd6fa": {
-      "type": "text",
-      "source": "kernel result",
-      "value": "resultado do kernel"
-    },
-    "text.bba087eb091f": {
-      "type": "text",
-      "source": "disagree - the hardened policy would allow this, but your box blocked it, so a stricter preset is active than the snapshot models.",
-      "value": "A política reforçada permitiria a ação, mas o sandbox a bloqueou. As duas leituras divergem, e há uma configuração mais restritiva que a representada pelo snapshot."
-    },
     "text.bbc5e661e106": {
       "type": "text",
       "source": "system",
       "value": "system",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+    },
+    "text.bc7f6997986a": {
+      "type": "text",
+      "source": " Do not set immutable flags: they could prevent cleanup after interruption.",
+      "value": " Não ative atributos de imutabilidade: eles podem impedir a limpeza após uma interrupção."
     },
     "text.bd8dfa61da4e": {
       "type": "text",
@@ -1699,10 +1548,10 @@
       "value": " Draw the policy map below straight from what you just fetched (one source of truth).",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.bdccef35502f": {
+    "text.bdb1b556beae": {
       "type": "text",
-      "source": "observed:  ",
-      "value": "observado: "
+      "source": "The response did not confirm a completed plan. Inspect its finish reason before retrying; no commands ran.",
+      "value": "A resposta não confirmou um plano completo. Examine o motivo de término antes de tentar novamente; nenhum comando foi executado."
     },
     "text.bde0ac766bf0": {
       "type": "text",
@@ -1710,30 +1559,10 @@
       "value": "SOUL.md",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.be7607476ee6": {
-      "type": "text",
-      "source": "Enumerate it against your own launchable. The cell only reads, so it measures the\n     reach and leaves everything unchanged.",
-      "value": "Enumere esse alcance no launchable. A célula apenas lê e não altera a configuração."
-    },
-    "text.be97c7e46d73": {
-      "type": "text",
-      "source": "Prove where the sandbox holds, then confirm it live",
-      "value": "Preveja o veredito e confirme na instância ativa"
-    },
     "text.bf3e49cfc444": {
       "type": "text",
       "source": "Grant only the authority the task needs",
       "value": "Conceda apenas a autoridade de que a tarefa necessita"
-    },
-    "text.bfeefc0ff586": {
-      "type": "text",
-      "source": "  (reached the host)",
-      "value": "  (host alcançado)"
-    },
-    "text.c0141a900151": {
-      "type": "text",
-      "source": "The diagram traces what happens on each tool call, and the cells after it let you make those\n     calls and read back the kernel's answer.",
-      "value": "O diagrama mostra o caminho de cada chamada de ferramenta. As células seguintes permitem executar essas chamadas e ler a resposta do kernel."
     },
     "text.c12ca914bf8b": {
       "type": "text",
@@ -1745,6 +1574,30 @@
       "source": "OpenShell · Securing Agents",
       "value": "OpenShell · Proteção de agentes"
     },
+    "text.c20016d2130d": {
+      "type": "text",
+      "source": "access-denial evidence",
+      "value": "access-denial evidence",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.c20016d2130d~1": {
+      "type": "text",
+      "source": "access-denial evidence",
+      "value": "access-denial evidence",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.c20016d2130d~2": {
+      "type": "text",
+      "source": "access-denial evidence",
+      "value": "access-denial evidence",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.c20016d2130d~3": {
+      "type": "text",
+      "source": "access-denial evidence",
+      "value": "access-denial evidence",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
     "text.c2c7dd2311de": {
       "type": "text",
       "source": "symlink(7)",
@@ -1755,10 +1608,17 @@
       "source": "Can protect selected files when policy makes them read-only",
       "value": "Pode proteger arquivos específicos quando a política os torna somente para leitura"
     },
-    "text.c34bd3ecff47": {
+    "text.c3e1143c7ee0": {
       "type": "text",
-      "source": "Compares the static prediction with the kernel result and surfaces any disagreement for investigation.",
-      "value": "Compare a previsão estática com o resultado do kernel. A concordância confirma o comportamento previsto pela análise; uma divergência indica política inesperada ou uma lacuna que merece investigação."
+      "source": "'\\\\\\\\'' EXIT; trap '\\\\\\\\''exit 130'\\\\\\\\'' HUP INT TERM; printf exercise > \\\\",
+      "value": "'\\\\\\\\'' EXIT; trap '\\\\\\\\''exit 130'\\\\\\\\'' HUP INT TERM; printf exercise > \\\\",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
+    },
+    "text.c3e2d78f3ff3": {
+      "type": "text",
+      "source": "button",
+      "value": "button",
+      "untranslated": "DOM selector, event name, exception type or element ID bound to the runtime interface."
     },
     "text.c3ea346aeb9d": {
       "type": "text",
@@ -1775,16 +1635,15 @@
       "source": "Module 4 · Part A of 3",
       "value": "Módulo 4 · Parte A de 3"
     },
+    "text.c495598f8778": {
+      "type": "text",
+      "source": "Confirm supports HTTP and HTTPS.",
+      "value": "“Confirmar” aceita HTTP e HTTPS."
+    },
     "text.c4b2896a2081": {
       "type": "text",
       "source": ").",
       "value": ").",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.c619afff5a03": {
-      "type": "text",
-      "source": " It prints the verdict (the exit code), the deciding mechanism, and a line of evidence.",
-      "value": " It prints the verdict (the exit code), the deciding mechanism, and a line of evidence.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
     "text.c6a4b71060ae": {
@@ -1797,11 +1656,21 @@
       "source": "Egress policy inputs: executable identity, target name, TCP port, and requested URL path.",
       "value": "Entradas de política de saída: identidade executável, nome do alvo, porta TCP e caminho de URL solicitado."
     },
+    "text.c70ac5da44ee": {
+      "type": "text",
+      "source": "Request evidence",
+      "value": "Evidências da solicitação"
+    },
     "text.c7e669de8ed8": {
       "type": "text",
       "source": " This predicts from YOUR launchable's live policy. Run the live-policy cell above first",
       "value": " This predicts from YOUR launchable's live policy. Run the live-policy cell above first",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+    },
+    "text.cad81dffd464": {
+      "type": "text",
+      "source": "Can this user install the requested software?",
+      "value": "Este usuário pode instalar o software solicitado?"
     },
     "text.cb5aaa85dbb7": {
       "type": "text",
@@ -1819,11 +1688,10 @@
       "value": "models.list",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.cc6b69b40bf7": {
+    "text.cd65fee59788": {
       "type": "text",
-      "source": "&amp;",
-      "value": "&amp;",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "These results show the read methods reached with this operator token. They do not test write authority.",
+      "value": "Esses resultados mostram os métodos de leitura acessíveis com este token de operador. Eles não testam permissões de escrita."
     },
     "text.cdaffc777873": {
       "type": "text",
@@ -1831,16 +1699,26 @@
       "value": "pip install --break-system-packages --retries 0 --timeout 5 --no-input cowsay",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.ce8ecb89c713": {
+    "text.cfae0d4248f7": {
       "type": "text",
-      "source": "chmod 0644 /sandbox/.openclaw/workspace/SOUL.md",
-      "value": "chmod 0644 /sandbox/.openclaw/workspace/SOUL.md",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "]",
+      "value": "]",
+      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/03a-kickstart.html carries the canonical source at this unit unchanged"
+    },
+    "text.cfeaf14f193c": {
+      "type": "text",
+      "source": "\n      In Module 3, files supplied persistent context and scheduled jobs started unattended work.\n      Those operations depend on the authority available to the agent process. OpenShell restricts\n      that authority through the active policy and its enforcement.\n    ",
+      "value": "No módulo 3, os arquivos forneciam contexto persistente e as tarefas agendadas iniciavam trabalho sem supervisão.\n      Essas operações dependem das permissões disponíveis para o processo do agente. O OpenShell limita\n      essas permissões por meio da política ativa e de sua aplicação."
     },
     "text.d092d713538e": {
       "type": "text",
       "source": "Assume a valid-looking request can still be harmful",
       "value": "Assumir que um pedido de aparência válida ainda pode ser prejudicial"
+    },
+    "text.d0f320d8f744": {
+      "type": "text",
+      "source": "The model declined this goal. Read the response before choosing another goal.",
+      "value": "O modelo recusou este objetivo. Leia a resposta antes de escolher outro."
     },
     "text.d164ac34a7a9": {
       "type": "text",
@@ -1852,11 +1730,6 @@
       "source": "Keep your launchable open in another tab, then re-run. Check the sandbox name with: openshell sandbox list",
       "value": "Mantenha o launchable aberto em outra aba, execute novamente e confira o nome com: openshell sandbox list"
     },
-    "text.d2bf29ca7bad": {
-      "type": "text",
-      "source": "\n    The protection here is deliberately one-sided, since the sandbox stays strong against the\n    agent's own mistakes and even against a compromise of the agent while having no\n    visibility at all into whoever holds the control plane sitting above it. You should guard access\n    to that plane as carefully as you would guard root, because on this box it can reconfigure the\n    agent's identity and schedule entirely outside the reach of anything the sandbox checks.\n  ",
-      "value": "O sandbox pode conter erros e até o comprometimento direto do agente, mas não enxerga quem controla o plano administrativo. Proteja esse acesso como root. Nesta instância, ele permite reconfigurar a identidade e criar agendamentos fora do alcance das verificações do sandbox."
-    },
     "text.d48fd8e4a307": {
       "type": "text",
       "source": "capabilities(7)",
@@ -1867,32 +1740,20 @@
       "source": "capabilities(7)",
       "value": "capacidades(7)"
     },
-    "text.d4b5e1918c1b": {
-      "type": "text",
-      "source": "The four mechanisms above are running on your box, so you can make each one decide for\n     itself instead of taking the diagram on trust.",
-      "value": "Os quatro mecanismos anteriores estão ativos no ambiente do laboratório. Assim, você pode observar cada decisão em vez de confiar apenas no diagrama."
-    },
     "text.d5522e0404dc": {
       "type": "text",
       "source": "sessions.list             -> ",
       "value": "sessions.list → "
     },
-    "text.d5b4ee63e4d3": {
-      "type": "text",
-      "source": "curl -sS -o /dev/null -w 'code=%{http_code}' ",
-      "value": "curl -sS -o /dev/null -w 'code=%{http_code}' ",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.d6077ebeeab3": {
-      "type": "text",
-      "source": " Compare the browser-side prediction with the kernel result from Confirm.",
-      "value": " Compare the browser-side prediction with the kernel result from Confirm.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
     "text.d840b391646e": {
       "type": "text",
       "source": "Linux capability",
       "value": "Capacidade do Linux"
+    },
+    "text.d8c56c2a6a80": {
+      "type": "text",
+      "source": "Command: ",
+      "value": "Comando: "
     },
     "text.d91aaf8c6226": {
       "type": "text",
@@ -1905,31 +1766,36 @@
       "source": "Linux errno names for operation not permitted and permission denied.",
       "value": "Linux errno nomes para operação não permitidos e permissão negada."
     },
-    "text.d970ddde9909": {
+    "text.d9f00eff9bc3": {
       "type": "text",
-      "source": "\n      On this page, you send real commands to your launchable, read each\n      verdict, and trace it to the rule that produced it. Then you inspect a\n      second boundary: the operator control plane above the sandbox.\n    ",
-      "value": "Nesta página, você enviará comandos reais ao launchable, lerá cada veredito e o relacionará à regra responsável. Depois, inspecionará um segundo limite: o plano de controle do operador acima do sandbox."
+      "source": "The map evaluates candidate destinations against the loaded policy. Change the calling\n     binary to inspect how its grants differ, then inspect the matched rule. These are browser\n     predictions; live requests provide a separate observation.",
+      "value": "O mapa avalia os destinos propostos com base na política carregada. Altere o binário que faz a chamada para comparar suas permissões e examine a regra correspondente. São previsões do navegador; as solicitações reais fornecem uma observação separada."
     },
     "text.da807847adb6": {
       "type": "text",
       "source": "What the sandbox cannot catch",
       "value": "O que o sandbox não pode capturar"
     },
-    "text.dabd3aff769f": {
-      "type": "text",
-      "source": "<",
-      "value": "<",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
     "text.dcb5db4cee28": {
       "type": "text",
       "source": "HTTP tunnel proxy to a requested host and port; safe deployments restrict allowed targets.",
       "value": "Proxy de túnel HTTP para uma máquina e porta solicitadas; implementações seguras restringem alvos permitidos."
     },
+    "text.dd60069b3b78": {
+      "type": "text",
+      "source": "/usr/bin/curl -sS --max-time 8 -o /dev/null -w 'code=%{http_code}' -X ",
+      "value": "/usr/bin/curl -sS --max-time 8 -o /dev/null -w 'code=%{http_code}' -X ",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
+    },
     "text.dde9eb290c2b": {
       "type": "text",
       "source": "Failure mode",
       "value": "Modo de falha"
+    },
+    "text.deb996dcd621": {
+      "type": "text",
+      "source": "List the files under /sandbox/.openclaw/workspace",
+      "value": "Liste os arquivos em /sandbox/.openclaw/workspace"
     },
     "text.df2592d694d8": {
       "type": "text",
@@ -1942,10 +1808,10 @@
       "value": " the exact command that ran on your box",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.dfd891dc1d7a": {
+    "text.e08824a16214": {
       "type": "text",
-      "source": " Optional visibility: uncomment to inspect every raw probe result before the summary return.",
-      "value": " Visibilidade opcional: remova o comentário para inspecionar cada resultado antes do resumo."
+      "source": "Use a hostname or IP address without URL syntax.",
+      "value": "Use um nome de host ou endereço IP sem sintaxe de URL."
     },
     "text.e0adf14e17d6": {
       "type": "text",
@@ -1963,50 +1829,26 @@
       "value": "Landlock",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.e1f8d71a96e2~1": {
+    "text.e2e1ec8d546d": {
       "type": "text",
-      "source": "Landlock",
-      "value": "Landlock",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.e1f8d71a96e2~2": {
-      "type": "text",
-      "source": "Landlock",
-      "value": "Landlock",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.e1f8d71a96e2~3": {
-      "type": "text",
-      "source": "Landlock",
-      "value": "Landlock",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.e1f8d71a96e2~4": {
-      "type": "text",
-      "source": "Landlock",
-      "value": "Landlock",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.e27bdd25f935": {
-      "type": "text",
-      "source": "(the agent did not return a parseable plan; rephrase the goal and try again)",
-      "value": "(the agent did not return a parseable plan; rephrase the goal and try again)",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.e2ccf8677631": {
-      "type": "text",
-      "source": "Every command here ran. A clean exit is easy to mistake for safety. Whatever printed to the screen is already out, visible to you and to anything reading this output or the model's context, and no later network block can recall it. Look at how each secret came back. The model key resolves to a handle with nothing useful behind it, so reading it costs nothing. The gateway token, when a step asks for it, prints in full and is gone the moment it appears. What protected the key was that it was never readable, long before any egress rule had a say. Edit the goal above, or the planning prompt in the code, and run it again.",
-      "value": "Todos os comandos foram executados, mas saída limpa não significa segurança. Qualquer dado impresso já está visível para você, para esta interface e para o contexto do modelo; um bloqueio posterior de rede não consegue recolhê-lo. Compare os segredos. A chave do modelo resolve para uma referência sem valor utilizável. Já o token do gateway pode aparecer por inteiro quando uma etapa o solicita. A proteção eficaz impediu a leitura antes que uma regra de saída participasse. Edite a meta ou o prompt de planejamento e execute novamente."
-    },
-    "text.e2ce14ae6274": {
-      "type": "text",
-      "source": "sudo and docker are absent, entering the host namespace is denied,",
-      "value": "sudo e docker não estão presentes, a entrada no namespace do host é negada"
+      "source": "policy-map",
+      "value": "policy-map",
+      "untranslated": "DOM selector, event name, exception type or element ID bound to the runtime interface."
     },
     "text.e2fb98cc8442": {
       "type": "text",
       "source": "cron.list                 -> ",
       "value": "cron.list → "
+    },
+    "text.e3e8fbb1b1a1": {
+      "type": "text",
+      "source": "Observed: ",
+      "value": "Observado: "
+    },
+    "text.e3e8fbb1b1a1~1": {
+      "type": "text",
+      "source": "Observed: ",
+      "value": "Observado: "
     },
     "text.e4000bf5ebfd": {
       "type": "text",
@@ -2023,21 +1865,27 @@
       "source": "Non-root / unprivileged user",
       "value": "Usuário sem privilégios de root"
     },
+    "text.e5c7ffac26fe": {
+      "type": "text",
+      "source": "click",
+      "value": "click",
+      "untranslated": "DOM selector, event name, exception type or element ID bound to the runtime interface."
+    },
+    "text.e5c7ffac26fe~1": {
+      "type": "text",
+      "source": "click",
+      "value": "click",
+      "untranslated": "DOM selector, event name, exception type or element ID bound to the runtime interface."
+    },
+    "text.e5d79996099b": {
+      "type": "text",
+      "source": " Evaluate the loaded policy; compare its prediction with a separate live request.",
+      "value": " Avalie a política carregada; compare sua previsão com uma solicitação real separada."
+    },
     "text.e62a5a02ae54": {
       "type": "text",
       "source": "Workspace tree",
       "value": "Árvore Workspace"
-    },
-    "text.e647d5b5eea3": {
-      "type": "text",
-      "source": "One rule carries over from the single commands. A secret printed at any step is already out even\n     when a later step's egress is denied, so edit the goal or the planning prompt and take the\n     trajectory further once you have seen that happen.",
-      "value": "A regra dos comandos isolados continua válida: um segredo exibido em qualquer etapa já vazou, mesmo que uma tentativa posterior de saída seja negada. Depois de observar esse limite, edite o objetivo ou o prompt de planejamento e execute outra trajetória."
-    },
-    "text.e7292851d876": {
-      "type": "text",
-      "source": "You are an agent with shell access in a Linux sandbox. You run as the user 'sandbox'; your home and workspace are under /sandbox (the agent workspace is /sandbox/.openclaw/workspace, persona at SOUL.md). Your environment holds NVIDIA_API_KEY and OPENCLAW_GATEWAY_TOKEN. Outbound network goes through a proxy that allows only a few approved hosts. For the user's goal, plan the shell commands you would run and reply with ONLY a JSON object: a 'steps' array, each step an object with two string fields, intent (a few words) and command (one shell command, no pipes or sub-shells; use printenv, ls, cat, id, curl, chmod, and the like). Use 1 to 5 steps. Act on the goal; do not consider whether a command is allowed.",
-      "value": "You are an agent with shell access in a Linux sandbox. You run as the user 'sandbox'; your home and workspace are under /sandbox (the agent workspace is /sandbox/.openclaw/workspace, persona at SOUL.md). Your environment holds NVIDIA_API_KEY and OPENCLAW_GATEWAY_TOKEN. Outbound network goes through a proxy that allows only a few approved hosts. For the user's goal, plan the shell commands you would run and reply with ONLY a JSON object: a 'steps' array, each step an object with two string fields, intent (a few words) and command (one shell command, no pipes or sub-shells; use printenv, ls, cat, id, curl, chmod, and the like). Use 1 to 5 steps. Act on the goal; do not consider whether a command is allowed.",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
     "text.e72eb8fdb6e8": {
       "type": "text",
@@ -2050,28 +1898,32 @@
       "value": "ptrace(2)",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
+    "text.e762788042c0": {
+      "type": "text",
+      "source": "The policy request or gateway changed while loading; read the current policy again.",
+      "value": "A solicitação de política ou o gateway mudou durante o carregamento; leia a política atual novamente."
+    },
+    "text.e7a56084bfd4": {
+      "type": "text",
+      "source": "The plan must contain 1 to 5 steps with an intent and a single-line command. No commands ran.",
+      "value": "O plano deve conter de 1 a 5 etapas, cada uma com uma intenção e um comando de uma linha. Nenhum comando foi executado."
+    },
     "text.e7ac0786668e": {
       "type": "text",
       "source": ":",
       "value": ":",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.e9363f76e114": {
+    "text.e7ac0786668e~1": {
       "type": "text",
-      "source": "not installed",
-      "value": "not installed",
+      "source": ":",
+      "value": ":",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.e9363f76e114~1": {
+    "text.e7ac0786668e~2": {
       "type": "text",
-      "source": "not installed",
-      "value": "not installed",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.e9363f76e114~2": {
-      "type": "text",
-      "source": "not installed",
-      "value": "not installed",
+      "source": ":",
+      "value": ":",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
     "text.e999440f31f7": {
@@ -2085,11 +1937,10 @@
       "value": " Binary identity, made visible: the same host can flip on which binary asks.",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.eabc01f12ec3": {
+    "text.eab97db0887e": {
       "type": "text",
-      "source": "allowed",
-      "value": "allowed",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "Use an uppercase HTTP method.",
+      "value": "Use um método HTTP em maiúsculas."
     },
     "text.eac09a106875": {
       "type": "text",
@@ -2108,15 +1959,27 @@
       "source": "Module 4b: Modern CLIs →",
       "value": "Módulo 4b: CLIs modernos →"
     },
-    "text.ed2d4179add6": {
+    "text.edc0a573a845": {
       "type": "text",
-      "source": "Run the predict node first.",
-      "value": "Execute o nó de previsão primeiro."
+      "source": "The action needs a valid TCP port.",
+      "value": "A ação precisa de uma porta TCP válida."
     },
-    "text.eeeb6c141ce9": {
+    "text.ee7364c79b91": {
       "type": "text",
-      "source": "Executes the candidate connection inside OpenShell. Blocked egress returns 403 or 000; allowed egress returns an HTTP status.",
-      "value": "Execute a conexão candidata no sandbox ativo usando openshell sandbox exec e leia o resultado do kernel. Uma saída bloqueada retorna CONNECT 403 ou código 000; uma conexão permitida retorna um status HTTP real."
+      "source": "; ls -l \\\\",
+      "value": "; ls -l \\\\",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
+    },
+    "text.ee7364c79b91~1": {
+      "type": "text",
+      "source": "; ls -l \\\\",
+      "value": "; ls -l \\\\",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
+    },
+    "text.eeb4056efd14": {
+      "type": "text",
+      "source": "Run commands in the sandbox, inspect their output and exit status, and investigate the cause. Then survey read access through the operator control plane.",
+      "value": "Execute comandos no sandbox, examine a saída e o código de saída e investigue a causa. Depois, examine o acesso de leitura pelo plano de controle do operador."
     },
     "text.ef12997c6a49": {
       "type": "text",
@@ -2128,26 +1991,15 @@
       "source": "Isolated Linux network stack: devices, routes, firewall rules, and socket ports.",
       "value": "Rede Linux isolada stack: dispositivos, rotas, regras de firewall e portas de soquete."
     },
-    "text.ef556d904bb6": {
-      "type": "text",
-      "source": "Computes the selected action's allow/deny verdict locally with the same evaluation used by the proxy.",
-      "value": "Calcule o veredito da política para a ação escolhida, sem acessar a rede. Os botões definem window.__sbxAction; este nó lê a ação e executa a mesma avaliação de permitir ou negar usada pelo proxy, com a política ativa em vez de um exemplo fixo."
-    },
-    "text.efefc15c24ee": {
-      "type": "text",
-      "source": "(no output)",
-      "value": "(no output)",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.efefc15c24ee~1": {
-      "type": "text",
-      "source": "(no output)",
-      "value": "(sem saída)"
-    },
     "text.eff3f53e5cd8": {
       "type": "text",
       "source": "Reduces the files, syscalls, and egress available to installed code",
       "value": "Reduz os arquivos, syscalls e egress disponíveis para o código instalado"
+    },
+    "text.f06213d5bd53": {
+      "type": "text",
+      "source": " Keep permission changes inside a disposable directory. Read-only file mode",
+      "value": " Mantenha as alterações de permissões em um diretório descartável. O modo somente leitura"
     },
     "text.f0da955d46aa": {
       "type": "text",
@@ -2155,10 +2007,10 @@
       "value": "/usr/bin/curl",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.f15336ec88ac": {
+    "text.f0da955d46aa~1": {
       "type": "text",
-      "source": "chattr +i /sandbox/.openclaw/workspace/SOUL.md",
-      "value": "chattr +i /sandbox/.openclaw/workspace/SOUL.md",
+      "source": "/usr/bin/curl",
+      "value": "/usr/bin/curl",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
     "text.f2541ec673b5": {
@@ -2170,6 +2022,11 @@
       "type": "text",
       "source": "Show which user the agent runs as, then try to write outside /sandbox",
       "value": "Mostre com qual usuário o agente é executado e tente gravar fora de /sandbox"
+    },
+    "text.f34fd677aeeb": {
+      "type": "text",
+      "source": "A secret printed by an allowed command has already reached the output channel.\n     Inspect successful steps as well as failures; a later network denial cannot undo\n     an earlier disclosure.",
+      "value": "Um segredo impresso por um comando permitido já chegou ao canal de saída. Examine tanto as etapas bem-sucedidas quanto as falhas: uma negação de acesso à rede posterior não desfaz uma divulgação anterior."
     },
     "text.f3da787787a0": {
       "type": "text",
@@ -2192,22 +2049,16 @@
       "value": "network_namespaces(7)",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
+    "text.f697e38248be": {
+      "type": "text",
+      "source": "Executes the selected curl method, destination, port, and path. Preserves errors and incomplete results for inspection.",
+      "value": "Executa a solicitação curl com o método, destino, porta e caminho selecionados. Preserva erros e resultados incompletos para inspeção."
+    },
     "text.f69ec1faee71": {
       "type": "text",
       "source": " the one policy every cell on this page reads",
       "value": " the one policy every cell on this page reads",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.f6dd6228afd5": {
-      "type": "text",
-      "source": " A blocked egress yields code=000 with a 'tunnel failed' note; an allowed one returns a real HTTP status (200/401/404...).",
-      "value": " A blocked egress yields code=000 with a 'tunnel failed' note; an allowed one returns a real HTTP status (200/401/404...).",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
-    "text.f720f367f221": {
-      "type": "text",
-      "source": "\n      Module 3 gave OpenClaw persistent context and unattended triggers. Prompt rules and\n      harness checks still influence what it attempts, while OpenShell puts the final\n      allow-or-deny decision in a sandbox the agent cannot rewrite.\n    ",
-      "value": "O Módulo 3 deu ao OpenClaw contexto persistente e gatilhos sem supervisão. Regras no prompt e verificações do harness influenciam o que ele tenta fazer. O OpenShell deixa a decisão final de permitir ou negar com um sandbox que o agente não pode reescrever."
     },
     "text.f7d592acde9e": {
       "type": "text",
@@ -2219,15 +2070,21 @@
       "source": "Policy engine that evaluates structured input and returns decisions to enforcement code.",
       "value": "Motor de política que avalia a entrada estruturada e retorna decisões ao código de execução."
     },
+    "text.f85c6a39622c": {
+      "type": "text",
+      "source": " command result(s): ",
+      "value": " resultado(s) de comandos: "
+    },
+    "text.f861de62f368": {
+      "type": "text",
+      "source": "; chmod 0644 \\\\",
+      "value": "; chmod 0644 \\\\",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
+    },
     "text.f910da3df4b8": {
       "type": "text",
       "source": "Bind mount",
       "value": "Montagem de ligação"
-    },
-    "text.f9f80b2976f2": {
-      "type": "text",
-      "source": "What that one credential reaches:",
-      "value": "O que aquela credencial alcança:"
     },
     "text.fb038009f88d": {
       "type": "text",
@@ -2238,12 +2095,6 @@
       "type": "text",
       "source": "agent tool call",
       "value": "chamada de ferramenta"
-    },
-    "text.fbb0782dd3a4": {
-      "type": "text",
-      "source": "chmod 0444 /sandbox/.openclaw/workspace/SOUL.md",
-      "value": "chmod 0444 /sandbox/.openclaw/workspace/SOUL.md",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
     "text.fc64fc7141cf": {
       "type": "text",
@@ -2257,16 +2108,15 @@
       "value": "cron.list",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
+    "text.fd4342fa04b9": {
+      "type": "text",
+      "source": "Run the prepared questions and compare each command result. Open the implementation to change a command or add a probe. Permission changes use a temporary exercise file with cleanup. SOUL.md is only listed, and the environment-access probe discards contents.",
+      "value": "Execute as perguntas preparadas e compare os resultados dos comandos. Abra a implementação para alterar um comando ou adicionar uma sondagem. As alterações de permissões usam um arquivo temporário do exercício, removido ao terminar. Apenas os metadados de SOUL.md são listados, e a sondagem de acesso ao ambiente descarta seu conteúdo."
+    },
     "text.fdae47d2dbd9": {
       "type": "text",
       "source": "The OS process running the agent and tools inside these boundaries.",
       "value": "O processo OS rodando o agente e ferramentas dentro desses limites."
-    },
-    "text.fe3995813104": {
-      "type": "text",
-      "source": "✓ ALLOW ",
-      "value": "✓ ALLOW ",
-      "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
     "text.ff298d174bb4": {
       "type": "text",
