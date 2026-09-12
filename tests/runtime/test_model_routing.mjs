@@ -35,6 +35,90 @@ function memoryStorage() {
   };
 }
 
+test('Stop cancels a pending body read and removes its listener', async () => {
+  const controller = new AbortController();
+  let canceled = false;
+  let added = 0;
+  let removed = 0;
+  const add = controller.signal.addEventListener.bind(controller.signal);
+  const remove = controller.signal.removeEventListener.bind(controller.signal);
+  controller.signal.addEventListener = (...args) => { added++; return add(...args); };
+  controller.signal.removeEventListener = (...args) => { removed++; return remove(...args); };
+  const reader = new ReadableStream({ cancel() { canceled = true; } }).getReader();
+  const pending = readModelStreamChunk(reader, 1000, controller.signal);
+  controller.abort(new Error('learner stopped the body read'));
+  await assert.rejects(pending, /learner stopped the body read/);
+  assert.equal(canceled, true);
+  assert.equal(added, removed);
+  reader.releaseLock();
+});
+
+test('successful body reads remove listeners and retain byte content', async () => {
+  const controller = new AbortController();
+  let added = 0;
+  let removed = 0;
+  const add = controller.signal.addEventListener.bind(controller.signal);
+  const remove = controller.signal.removeEventListener.bind(controller.signal);
+  controller.signal.addEventListener = (...args) => { added++; return add(...args); };
+  controller.signal.removeEventListener = (...args) => { removed++; return remove(...args); };
+  const bytes = new TextEncoder().encode('model response');
+  const reader = new ReadableStream({ start(stream) { stream.enqueue(bytes); stream.close(); } }).getReader();
+  assert.deepEqual((await readModelStreamChunk(reader, 100, controller.signal)).value, bytes);
+  assert.equal((await readModelStreamChunk(reader, 100, controller.signal)).done, true);
+  assert.equal(added, removed);
+  controller.abort();
+  reader.releaseLock();
+});
+
+for (const operation of ['chat', 'chatStream']) {
+  test(`${operation} observes Stop after the HTTP headers arrive`, async () => {
+    const previous = { fetch:globalThis.fetch, localStorage:globalThis.localStorage };
+    globalThis.localStorage = memoryStorage();
+    setModelApiBaseUrl('https://models.example.test/v1');
+    const controller = new AbortController();
+    let canceled = false;
+    globalThis.fetch = async () => {
+      setTimeout(() => controller.abort(new Error('stopped after headers')), 10);
+      return new Response(new ReadableStream({ cancel() { canceled = true; } }));
+    };
+    try {
+      await assert.rejects(sharedRuntime[operation]({ messages:[], signal:controller.signal }), /stopped after headers/);
+      assert.equal(canceled, true);
+    } finally {
+      for (const [name, value] of Object.entries(previous)) {
+        if (value === undefined) delete globalThis[name];
+        else globalThis[name] = value;
+      }
+    }
+  });
+}
+
+test('DONE cancels an open response body and preserves the provider model identity', async () => {
+  const previous = { fetch:globalThis.fetch, localStorage:globalThis.localStorage };
+  globalThis.localStorage = memoryStorage();
+  setModelApiBaseUrl('https://models.example.test/v1');
+  let canceled = false;
+  globalThis.fetch = async () => new Response(new ReadableStream({
+    start(stream) {
+      const frame = { model:'provider/actual-model', choices:[{ delta:{ content:'ready' }, finish_reason:'stop' }] };
+      stream.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(frame)}\n\ndata: [DONE]\n\n`));
+    },
+    cancel() { canceled = true; },
+  }));
+  try {
+    const result = await sharedRuntime.chatStream({ messages:[] });
+    assert.equal(result.model, 'provider/actual-model');
+    assert.equal(result.content, 'ready');
+    assert.equal(result.finish_reason, 'stop');
+    assert.equal(canceled, true);
+  } finally {
+    for (const [name, value] of Object.entries(previous)) {
+      if (value === undefined) delete globalThis[name];
+      else globalThis[name] = value;
+    }
+  }
+});
+
 test('only the former NVIDIA hosted embedding default migrates', () => {
   const previous = globalThis.localStorage;
   globalThis.localStorage = memoryStorage();

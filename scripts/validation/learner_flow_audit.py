@@ -34,7 +34,7 @@ CODE_RE = re.compile(r"code:\s*`((?:\\.|[^`\\])*)`", re.S)
 DOM_CODE_RE = re.compile(r'code:\s*document\.getElementById\(["\']([^"\']+)["\']\)\.textContent\.trim\(\)')
 MOUNT_RE = re.compile(r"mount(?:RunCell|CanvasFlow)\s*\(")
 LAUNCHABLE_HELPER_RE = re.compile(
-    r"helpers\.(?:openclawChat|terminal|sandboxExec|policyGet|sandboxNetwork|evalSandboxNetwork|evalSandboxFs)\b"
+    r"helpers\.(?:openclawChat|courseTurn|courseRead|courseShell|terminal|sandboxExec|policyGet|sandboxNetwork|evalSandboxNetwork|evalSandboxFs)\b"
 )
 MODEL_HELPER_RE = re.compile(r"(?:helpers\.)?(?:chat|chatStream)\s*\(|helpers\.mountAgentChat\s*\(")
 COURSE_SOURCE_URI_RE = re.compile(
@@ -58,17 +58,6 @@ LEARNING_VIEW_MIN_BLOCKS = {
 LEARNING_TIERS = {"applied", "deep"}
 LEARNING_ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 REFERENCE_DISCLOSURE_ID_RE = re.compile(r"(?:references|reading-list)$")
-RUNTIME_MODULES = (
-    "01a-loop",
-    "01b-react",
-    "01c-tools",
-    "02c-deep",
-    "03a-kickstart",
-    "03b-openclaw",
-    "03c-always-on",
-    "04a-safety",
-    "04b-modern-clis",
-)
 
 
 # Endpoint guidance the course does not support. Each rule matches the shape of the claim
@@ -143,8 +132,8 @@ def learner_surface_files(root: Path) -> list[Path]:
     for _locale, course in locale_course_roots(root):
         if not course.is_dir():
             continue
-        files.extend(sorted(course.glob("*.html")))
-        files.extend(sorted((course / "scripts").glob("*.js")))
+        files.extend(sorted(course.rglob("*.html")))
+        files.extend(sorted(course.rglob("*.js")))
     return files
 
 
@@ -423,31 +412,95 @@ def localized_lesson_pages(root: Path) -> dict[str, str]:
             if LESSON_PAGE_RE.search("/" + rel)}
 
 
-def load_runtime_pages(root: Path) -> dict[str, str]:
-    # A locale page is the bytes the build publishes. Reading the locale tree directly would only
-    # find pages that still ship from a reviewed HTML overlay and would silently skip the rest.
+class RuntimePages(dict[str, str]):
+    """Role views for existing checks plus the complete discovered consumer inventory."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.surfaces: dict[str, str] = {}
+        self.findings: list[str] = []
+
+
+def load_runtime_pages(root: Path) -> RuntimePages:
+    # Resolve locale bytes through the publication owner. This does not grant locale
+    # review authority: the separate localization gate still owns that requirement.
     from translate.locale_pages import published_pages
 
     localized = published_pages(root)
-    pages: dict[str, str] = {}
+    pages = RuntimePages()
+    canonical = root / 'web/nemoclaw'
+    profile_path = canonical / 'learning-profile.json'
+    try:
+        profile = json.loads(profile_path.read_text(encoding='utf-8'))
+        lessons = profile['lessons']
+        if not isinstance(lessons, list):
+            raise ValueError('lessons must be a list')
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        pages.findings.append(f'{profile_path}: runtime-discovery: invalid lesson metadata: {error}')
+        lessons = []
+    roles: dict[str, str] = {}
+    for entry in lessons:
+        if not isinstance(entry, dict):
+            pages.findings.append(f'{profile_path}: runtime-discovery: malformed lesson entry')
+            continue
+        ident, module, lesson = entry.get('id'), entry.get('module'), entry.get('lesson')
+        if (not isinstance(ident, str) or not re.fullmatch(r'[a-zA-Z0-9_/-]+', ident)
+                or '..' in Path(ident).parts or ident.startswith('/')
+                or type(module) is not int or module < 1
+                or type(lesson) is not int or not 1 <= lesson <= 26):
+            pages.findings.append(f'{profile_path}: runtime-discovery: malformed lesson identity {ident!r}')
+            continue
+        role = f'{module:02d}{chr(96 + lesson)}'
+        if role in roles or ident + '.html' in roles.values():
+            pages.findings.append(f'{profile_path}: runtime-discovery: duplicate lesson role or identity {ident!r}')
+        roles[role] = ident + '.html'
+    # These are established curriculum responsibilities, not a source-file allowlist.
+    # Every additional discovered consumer below still enters the generic checks.
+    required_roles = ('01a', '01b', '01c', '02c', '03a', '03b', '03c', '04a', '04b')
+    for role in required_roles:
+        if role not in roles:
+            pages.findings.append(f'{profile_path}: runtime-discovery: missing required curriculum role {role}')
+    declared = set(roles.values())
+    beacon = canonical / 'SKILL.html'
+    if beacon.is_file():
+        meta = re.search(r'<script\b[^>]*id=["\']skill-meta["\'][^>]*>(.*?)</script>',
+                         beacon.read_text(encoding='utf-8'), re.S)
+        try:
+            children = json.loads(meta.group(1))['children'] if meta else []
+            for child in children:
+                child_path = Path(child['path'])
+                relative = child_path.relative_to(Path('web/nemoclaw'))
+                if relative.suffix == '.html':
+                    declared.add(relative.as_posix())
+        except (ValueError, KeyError, TypeError) as error:
+            pages.findings.append(f'{beacon}: runtime-discovery: malformed course child metadata: {error}')
     for locale, prefix in locale_course_roots(root):
-        for module in RUNTIME_MODULES:
-            page = prefix / f"{module}.html"
-            raw = localized.get(page.relative_to(root).as_posix())
-            if raw is None and page.is_file():
-                raw = page.read_text(encoding="utf-8")
-            if raw is None:
-                raise FileNotFoundError(f"{page}: runtime-contract page is missing")
-            pages[f"{locale}-{module[:3]}"] = raw
+        physical = {page.relative_to(prefix).as_posix(): page.read_text(encoding='utf-8')
+                    for page in sorted(prefix.rglob('*.html'))} if prefix.is_dir() else {}
+        for rel, raw in localized.items():
+            try:
+                local_rel = (root / rel).relative_to(prefix).as_posix()
+            except ValueError:
+                continue
+            physical[local_rel] = raw
+        for relative, raw in physical.items():
+            name = (prefix / relative).relative_to(root).as_posix()
+            pages.surfaces[name] = raw
+            if MOUNT_RE.search(raw) and relative not in declared:
+                pages.findings.append(f'{name}: runtime-discovery: runnable page is absent from course/lesson metadata')
+        for page in sorted(prefix.rglob('*.js')) if prefix.is_dir() else []:
+            pages.surfaces[page.relative_to(root).as_posix()] = page.read_text(encoding='utf-8')
+        for role in sorted(set(roles) | set(required_roles)):
+            relative = roles.get(role)
+            raw = physical.get(relative) if relative else None
+            if relative and raw is None:
+                pages.findings.append(f'{prefix / relative}: runtime-discovery: declared consumer is missing')
+            pages[f'{locale}-{role}'] = raw or ''
     return pages
 
 
 def runtime_page_locales(pages: dict[str, str]) -> list[str]:
-    return sorted({
-        key.rsplit("-", 1)[0]
-        for key in pages
-        if re.search(r"-0[1-4][a-c]$", key)
-    })
+    return sorted({key.rsplit('-', 1)[0] for key in pages if re.search(r'-\d{2,}[a-z]$', key)})
 
 
 class LearningBlockParser(HTMLParser):
@@ -897,12 +950,192 @@ def audit_model_routes(shared: str, keypanel: str, rag: str, chat: str, openclaw
     return findings
 
 
+# The static checks below guard inspectable structure. Actual gateway, cancellation,
+# file and cleanup outcomes are exercised from the displayed cells by Module 3 tests.
+_JS_TOKEN = re.compile(
+    r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\''
+    r'|`(?:\\.|[^`\\])*`|[A-Za-z_$][\w$]*|\d+(?:\.\d+)?|===|!==|=>|\?\.|\|\||&&|[^\s]',
+    re.S,
+)
+
+
+def _js_tokens(source: str) -> list[str]:
+    return [m.group() for m in _JS_TOKEN.finditer(source)
+            if not m.group().startswith(('//', '/*'))]
+
+
+def _group_end(tokens: list[str], start: int) -> int | None:
+    pairs = {'{': '}', '(': ')', '[': ']'}
+    stack: list[str] = []
+    for index in range(start, len(tokens)):
+        token = tokens[index]
+        if token in pairs:
+            stack.append(pairs[token])
+        elif token in pairs.values():
+            if not stack or token != stack.pop():
+                return None
+            if not stack:
+                return index
+    return None
+
+
+def _object_fields(tokens: list[str]) -> dict[str, list[str]] | None:
+    if not tokens or tokens[0] != '{' or _group_end(tokens, 0) != len(tokens) - 1:
+        return None
+    fields: dict[str, list[str]] = {}
+    index = 1
+    while index < len(tokens) - 1:
+        key = tokens[index].strip('"\'')
+        if key in fields:
+            return None
+        index += 1
+        value: list[str] = []
+        if tokens[index] == ':':
+            index += 1
+            while index < len(tokens) - 1 and tokens[index] != ',':
+                end = _group_end(tokens, index) if tokens[index] in '{([' else index
+                if end is None:
+                    return None
+                value.extend(tokens[index:end + 1])
+                index = end + 1
+        else:
+            value = [key]  # object shorthand, e.g. {name}
+        fields[key] = value
+        if index < len(tokens) - 1:
+            if tokens[index] != ',':
+                return None
+            index += 1
+    return fields
+
+
+def _literal(tokens: list[str] | None, value: str) -> bool:
+    return bool(tokens and len(tokens) == 1 and tokens[0] in (f'"{value}"', f"'{value}'"))
+
+
+def displayed_code_sources(name: str, text: str) -> list[tuple[str, str]]:
+    """Discover literal and DOM-backed cells; shared JS is inspected at its owner."""
+    sources = [(f'{name}:cell-{index}', match.group(1))
+               for index, match in enumerate(CODE_RE.finditer(text), 1)]
+    for match in DOM_CODE_RE.finditer(text):
+        script = re.search(r'<script\b[^>]*\bid=["\']' + re.escape(match.group(1))
+                           + r'["\'][^>]*>(.*?)</script>', text, re.S | re.I)
+        if script:
+            sources.append((f'{name}:source-{match.group(1)}', script.group(1)))
+    if name.endswith('.js') and not sources:
+        sources.append((name, text))
+    return sources
+
+
+def audit_owned_cron(source: str, name: str) -> list[str]:
+    """Inspect each scheduling consumer independently of its filename and spellings."""
+    tokens = _js_tokens(source)
+    adds = [index for index, token in enumerate(tokens) if token.strip('"\'') == 'cron.add']
+    if not adds:
+        return []
+    findings: list[str] = []
+    flat = ' '.join(tokens)
+    for index in adds:
+        fields = None
+        if index + 2 < len(tokens) and tokens[index + 1:index + 3] == [',', '{']:
+            end = _group_end(tokens, index + 2)
+            if end is not None:
+                fields = _object_fields(tokens[index + 2:end + 1])
+        if fields is None:
+            findings.append(f'{name}: cron-schema: cron.add needs an inspectable structured argument')
+            continue
+        schedule = _object_fields(fields.get('schedule', []))
+        payload = _object_fields(fields.get('payload', []))
+        _need(findings, bool(schedule and any(_literal(schedule.get('kind'), kind)
+                                            for kind in ('at', 'cron', 'every'))),
+              f'{name}: cron-schema: schedule must use a supported structured kind')
+        _need(findings, bool(payload and _literal(payload.get('kind'), 'agentTurn') and payload.get('message')),
+              f'{name}: cron-schema: agentTurn message belongs inside payload')
+        _need(findings, not {'id', 'prompt'} & fields.keys(),
+              f'{name}: cron-schema: legacy top-level id/prompt fields are invalid')
+        _need(findings, _literal(fields.get('sessionTarget'), 'isolated') and
+              _literal(fields.get('wakeMode'), 'now'),
+              f'{name}: cron-schema: exercise needs isolated sessions and explicit wake behavior')
+        if schedule and _literal(schedule.get('kind'), 'at'):
+            _need(findings, bool(schedule.get('at')) and fields.get('deleteAfterRun') == ['true'],
+                  f'{name}: cron-schema: one-shot work needs a timestamp and deleteAfterRun')
+    owned = re.search(r'state \. (\w+) = (\w+) \. id\b', flat)
+    _need(findings, bool(owned), f'{name}: cron-owner: retain the server-returned owned ID')
+    if owned:
+        identifier, added = owned.groups()
+        _need(findings, bool(re.search(r'cron\.runs["\'] , \{ id : ' + re.escape(added) + r' \. id\b', flat)),
+              f'{name}: cron-owner: inspect history by the returned ID')
+        _need(findings, bool(re.search(r'cron\.remove["\'] , \{ id : state \. ' + re.escape(identifier) + r'\b', flat)),
+              f'{name}: cron-owner: remove the retained ID, never a name-selected job')
+        _need(findings, bool(re.search(r'\. id === state \. ' + re.escape(identifier) + r'\b', flat)),
+              f'{name}: cron-cleanup: verify owned-job absence before clearing recovery state')
+    _need(findings, 'crypto . randomUUID (' in flat and 'sessionStorage . setItem (' in flat
+          and 'sessionStorage . getItem (' in flat and bool(re.search(r'state \. \w+ !== owner', flat)),
+          f'{name}: cron-owner: unique work and gateway-bound recovery must prevent overlapping jobs')
+    _need(findings, 'finally {' in flat and 'cron.list' in source and 'sessionStorage . removeItem (' in flat
+          and 'courseCleanupSocket ?. close (' in flat,
+          f'{name}: cron-cleanup: cleanup must verify removal and close its reserved transport on every exit')
+    _need(findings, 'delete state . _ws' in flat,
+          f'{name}: cron-cleanup: Stop must leave the owned cleanup transport available')
+    _need(findings, bool(re.search(r'while \( Date \. now \( \) < \w+ \)', flat))
+          and bool(re.search(r'const \w+ = \w+ \+ [1-9]\d{2,6}\b', flat))
+          and bool(re.search(r'helpers \. delay \( \d+ , helpers \. signal \)', flat))
+          and 'helpers . signal ?. aborted' in flat,
+          f'{name}: cron-poll: history polling needs a finite deadline and abortable waits')
+    _need(findings, bool(re.search(r'\. status === ["\']ok["\']', flat))
+          and bool(re.search(r'\. status === ["\']error["\']', flat))
+          and 'helpers . log (' in flat and 'Date . now (' in flat,
+          f'{name}: cron-poll: announce elapsed progress and distinguish terminal success from failure')
+    _need(findings, bool(re.search(r'await courseRead \( helpers , state \. \w+ \)', flat))
+          and bool(re.search(r'\. trim \( \) !== state \. \w+', flat)),
+          f'{name}: cron-readback: verify the unique scheduled output through independent file readback')
+    return findings
+
+
+def audit_exercise_consumers(surfaces: dict[str, str], openclaw: str, canvas: str) -> list[str]:
+    findings: list[str] = []
+    turn_consumers = False
+    cron_consumers = False
+    for name, text in sorted(surfaces.items()):
+        sources = displayed_code_sources(name, text)
+        for location, source in sources:
+            if any(re.fullmatch(r'cron\.ad\w*', token.strip('"\''))
+                   and token.strip('"\'') != 'cron.add' for token in _js_tokens(source)):
+                findings.append(f'{location}: cron-discovery: malformed scheduling method; expected cron.add')
+            if re.search(r'\bcourseTurn\s*\(', source):
+                turn_consumers = True
+                _need(findings, bool(re.search(r'courseTurn\(\s*state\s*,\s*(?:helpers|currentHelpers)\s*,', source)),
+                      f'{location}: turn-prerequisite: pass this cell state and helpers to the shared turn owner')
+            if 'cron.add' in source:
+                cron_consumers = True
+                findings.extend(audit_owned_cron(source, location))
+        # A broken/renamed near-match cannot quietly remove the capability from discovery.
+        executable = text if name.endswith('.js') else '\n'.join(
+            match.group(1) for match in re.finditer(r'<script\b[^>]*>(.*?)</script>', text, re.S | re.I))
+        if 'cron.add' in executable and not any('cron.add' in source for _, source in sources):
+            findings.append(f'{name}: cron-discovery: scheduling consumer has no inspectable displayed code')
+        if MOUNT_RE.search(text) and re.search(r'\bcode\s*:', text) and not sources:
+            findings.append(f'{name}: cell-discovery: runnable consumer has no inspectable code source')
+    if turn_consumers:
+        owner = javascript_function(openclaw, 'export async function courseTurn')
+        _need(findings, bool(re.search(r'typeof state\.call\s*!==\s*["\']function["\']\)\s*throw new Error\(', owner)),
+              'courseTurn: turn-prerequisite: missing connection must fail with an actionable prerequisite error')
+        _need(findings, 'signal?.throwIfAborted()' in owner,
+              'courseTurn: turn-prerequisite: observe the current cell cancellation before sending')
+    if cron_consumers:
+        log = re.search(r'<div\b[^>]*class=["\'][^"\']*\bcf-panel-log\b[^"\']*["\'][^>]*>', canvas)
+        _need(findings, bool(log and re.search(r'role=["\']log["\']', log.group())
+                             and re.search(r'aria-live=["\']polite["\']', log.group())),
+              'CanvasFlow: cron-progress: actual polling log must announce additions through a live log region')
+    return findings
+
+
 def audit_runtime_integrations(
-    openclaw: str, openshell: str, chat: str, pages: dict[str, str]
+    openclaw: str, openshell: str, chat: str, pages: dict[str, str],
+    *, root: Path = ROOT, surfaces: dict[str, str] | None = None,
 ) -> list[str]:
     """Guard browser/runtime handoffs whose partial success can mislead learners."""
     findings: list[str] = []
-    cli_runtime = (ROOT / "web/nemoclaw/scripts/_openclaw_cli.js").read_text(encoding="utf-8")
+    cli_runtime = (root / "web/nemoclaw/scripts/_openclaw_cli.js").read_text(encoding="utf-8")
     _need(findings, 'class="claw-help-mark"' in openclaw and
           'class="claw-help-hint"' in openclaw,
           "OpenClaw probe field help needs a visible question-mark cue and instruction")
@@ -944,35 +1177,10 @@ def audit_runtime_integrations(
               f"{locale} Module 3a must expose two-field setup and automatic token discovery")
         _need(findings, r'CFG.url.replace(/\\/+$/, "")' in kickstart,
               f"{locale} Module 3a must preserve the slash regex escape inside its runnable template")
-        _need(findings, workspace.count('if (typeof state.turn !== "function")') >= 2,
-              f"{locale} Module 3b dependent turns must explain a missing OpenClaw setup instead of throwing")
-        _need(findings, 'if (typeof state.call !== "function" || !state.demoCronId)' in cron,
-              f"{locale} Module 3c cron watch must explain a missing OpenClaw setup instead of throwing")
-        for token in (
-            'name = "quick-3c-demo"',
-            'schedule: { kind: "cron", expr: "* * * * *", tz: "UTC" }',
-            'sessionTarget: "isolated"',
-            'wakeMode: "now"',
-            'kind: "agentTurn"',
-            "state.demoCronId = added.id",
-            'state.demoCronId || j.name === "quick-3c-demo"',
-            'state.call("cron.remove", { id: job.id })',
-            'state.call("cron.runs", { id: state.demoCronId, limit: 20 })',
-            "const POLL_MS = 5000",
-            "progress.textContent =",
-            'progress.setAttribute("aria-live", "polite")',
-            "const { output, raw, frames } = await helpers.terminal(",
-        ):
-            _need(findings, token in cron,
-                  f"{locale} Module 3c must keep the current structured cron contract: {token}")
-        for obsolete in (
-            'id:       "quick-3c-demo"',
-            'schedule: "* * * * *"',
-            'prompt:   "Append one short line',
-            "const WAIT_S = 70",
-        ):
-            _need(findings, obsolete not in cron,
-                  f"{locale} Module 3c restored obsolete cron.add field: {obsolete.strip()}")
+        _need(findings, any('cron.add' in source for _, source in displayed_code_sources('03c.html', cron)),
+              f"{locale}: cron-discovery: scheduled-work lesson needs an inspectable scheduling consumer")
+        _need(findings, 'helpers.courseTurn' in workspace and 'courseRead(helpers,' in workspace,
+              f"{locale}: turn-prerequisite: file-memory lesson needs shared turns and independent readback")
         _need(findings, "p.parseError" in safety,
               f"{locale} Module 4a must explain live-policy parser failure")
         _need(findings, cli.count('return { status: "error", message:') >= 2,
@@ -986,6 +1194,28 @@ def audit_runtime_integrations(
               f"{locale} Module 1c must use the shared same-origin agent runtime")
         _need(findings, "cdn.jsdelivr.net/npm/@langchain" not in react + tools,
               f"{locale} Modules 1b/1c must not restore remote LangChain imports")
+    findings.extend(audit_exercise_consumers(
+        surfaces if surfaces is not None else pages, openclaw,
+        (root / "web/nemoclaw/scripts/_canvas.js").read_text(encoding="utf-8"),
+    ))
+    return findings
+
+
+def audit_deep_research_timing(source: str) -> list[str]:
+    """Report measured fan-out time without fabricating a sequential experiment."""
+    findings: list[str] = []
+    wall = re.search(r'(\w+)\.toFixed\(1\)\s*\+\s*["\'][^"\']*wall time', source)
+    summed = re.search(r'summed?\s+(?:concurrent\s+)?(?:worker\s+)?durations\s*["\']\s*\+\s*(\w+)\.toFixed', source, re.I)
+    wall_measurement = bool(wall and re.search(
+        r'const\s+' + re.escape(wall.group(1)) + r'\s*=\s*\(performance\.now\(\)\s*-\s*\w+\)\s*/\s*1000', source))
+    sum_measurement = bool(summed and re.search(
+        r'const\s+' + re.escape(summed.group(1)) + r'\s*=\s*\w+\.reduce\(\s*\([^)]*\)\s*=>\s*\w+\s*\+\s*\w+\.dt', source))
+    _need(findings, wall_measurement and sum_measurement,
+          'deep-timing: retain observed wall time and summed concurrent worker durations')
+    _need(findings, bool(wall and summed),
+          'deep-timing: label the sum as concurrent durations, not a measured serial baseline')
+    _need(findings, not re.search(r's serial|serial baseline|speedup|times faster|[x×] faster', source, re.I),
+          'deep-timing: concurrent durations cannot claim an observed serial run or speedup')
     return findings
 
 
@@ -1002,7 +1232,6 @@ def audit_deep_research_artifact(text: str) -> list[str]:
         '(token) => streamWorker(worker, token)': "02c must stream each worker into its own panel",
         'Promise.all(branches.map(runBranch))': "02c workers must retain parallel fan-out",
         'worker.stream.scrollTop = worker.stream.scrollHeight': "02c active worker output must follow its own stream",
-        's wall time vs " + serial.toFixed(1) + "s serial': "02c must preserve the parallel-versus-serial lesson without a timing SVG",
         '.research-thread-rail { display: flex; justify-content: flex-start;': "02c worker rail must stay left-aligned",
         'overflow-x: auto; overscroll-behavior-inline: contain;': "02c worker rail must remain horizontally inspectable",
         '.research-thread-stream { flex: 1; min-height: 0;': "02c worker output must use bounded internal scrolling",
@@ -1015,6 +1244,7 @@ def audit_deep_research_artifact(text: str) -> list[str]:
     }
     for token, message in contract.items():
         _need(findings, token in text or token in source, message)
+    findings.extend(audit_deep_research_timing(source))
     _need(findings, "helpers.diagramSVG(" not in source and "helpers.ganttBarsSVG(" not in source,
           "02c live artifact must not replace active workers with wait-then-render SVGs")
     _need(findings, 'source === "web"' not in source and '\\"source\\":\\"web\\"|\\"section\\"' not in source,
@@ -1494,12 +1724,13 @@ def audit_tree(root: Path = ROOT) -> list[str]:
         (root / "scripts/runtime/SKILL.html").read_text(encoding="utf-8"),
     ))
     runtime_pages = load_runtime_pages(root)
-    helper_pages = {
-        str(page.relative_to(root)): page.read_text(encoding="utf-8")
-        for page in sorted((root / "web/nemoclaw").glob("0*.html"))
-    }
+    findings.extend(runtime_pages.findings)
+    helper_pages = {name: raw for name, raw in runtime_pages.surfaces.items()
+                    if name.endswith(".html")}
     helper_pages.update({
-        rel: raw for rel, raw in sorted(localized_lesson_pages(root).items())
+        name: '\n'.join(source for _, source in displayed_code_sources(name, raw))
+        for name, raw in runtime_pages.surfaces.items()
+        if name.endswith('.js') and CODE_RE.search(raw)
     })
     findings.extend(audit_cell_helper_registry(
         (root / "web/nemoclaw/scripts/_shared.js").read_text(encoding="utf-8"),
@@ -1518,6 +1749,7 @@ def audit_tree(root: Path = ROOT) -> list[str]:
         (root / "web/nemoclaw/scripts/_openshell.js").read_text(encoding="utf-8"),
         (root / "web/nemoclaw/scripts/_chat.js").read_text(encoding="utf-8"),
         runtime_pages,
+        root=root, surfaces=runtime_pages.surfaces,
     ))
     findings.extend(audit_launchable_learning_path(runtime_pages))
     authored_surfaces = {
@@ -1842,23 +2074,37 @@ def self_test() -> list[str]:
         ("terminal fallback removed", openclaw, openshell.replace('? [direct.url, routed.url]', '? [direct.url]', 1), runtime_chat, runtime_pages, "Cloudflare relay fallback"),
         ("terminal fallback consumes full budget", openclaw, openshell.replace('Math.min(8000, openMs)', 'openMs', 1), runtime_chat, runtime_pages, "preserve time"),
     ]
+    integration_baseline = audit_runtime_integrations(openclaw, openshell, runtime_chat, runtime_pages)
     for label, mutated_openclaw, mutated_openshell, mutated_chat, mutated_pages, expected in integration_cases:
+        if (mutated_openclaw, mutated_openshell, mutated_chat, mutated_pages) == (openclaw, openshell, runtime_chat, runtime_pages):
+            misses.append(f"mutation did not change {label}")
+            continue
+        if any(expected in finding for finding in integration_baseline):
+            misses.append(f"mutation baseline already fails {label}")
+            continue
         if not any(expected in finding for finding in audit_runtime_integrations(
                 mutated_openclaw, mutated_openshell, mutated_chat, mutated_pages)):
             misses.append(f"detector missed {label}")
     page_cases = [
         ("Module 3a restores legacy probe", "en-03a", 'mountOpenClawConnectionAudit("#probe-claw"', 'mountClawProbe("#probe-claw"', "two-field setup"),
         ("Module 3a consumed regex escape", "en-03a", r'CFG.url.replace(/\\/+$/, "")', r'CFG.url.replace(/\/+$/, "")', "regex escape"),
-        ("Module 3c string schedule", "en-03c", 'schedule: { kind: "cron", expr: "* * * * *", tz: "UTC" }', 'schedule: "* * * * *"', "structured cron contract"),
-        ("Module 3c fixed blind wait", "en-03c", "const POLL_MS = 5000", "const WAIT_S = 70", "structured cron contract"),
-        ("Module 3b missing setup guard", "en-03b", 'if (typeof state.turn !== "function")', 'if (typeof state.turn === "function")', "missing OpenClaw setup"),
-        ("Module 3c missing setup guard", "en-03c", 'if (typeof state.call !== "function" || !state.demoCronId)', 'if (typeof state.call === "function")', "missing OpenClaw setup"),
+        ("Module 3c string schedule", "en-03c", 'schedule:{kind:"at", at:new Date(Date.now() + 15000).toISOString()}', 'schedule: "* * * * *"', "cron-schema"),
+        ("Module 3c fixed blind wait", "en-03c", "await helpers.delay(5000, helpers.signal)", "await helpers.delay(70000)", "cron-poll"),
+        ("Module 3b missing current helpers", "en-03b", "courseTurn(state, helpers,", "courseTurn(state, {},", "turn-prerequisite"),
+        ("Module 3c loses owned ID", "en-03c", "state.demoCronId = added.id", "state.demoCronId = name", "cron-owner"),
         ("Module 4b stale Ready state", "pt-04b", 'return { status: "error", message:', 'return con.write(', "preserve an error state"),
         ("Module 4a hidden parse failure", "pt-04a", "p.parseError", "p.hiddenError", "explain live-policy parser failure"),
         ("Module 1b module-relative import", "es-01b", 'import(new URL("./vendor/langchain-1.4.7.esm.js", location.href).href)', 'import("./vendor/langchain-1.4.7.esm.js")', "lesson URL"),
         ("Module 2c module-relative import", "pt-02c", 'import(new URL("./vendor/langchain-1.4.7.esm.js", location.href).href)', 'import("./vendor/langchain-1.4.7.esm.js")', "lesson URL"),
     ]
+    integration_baseline = audit_runtime_integrations(openclaw, openshell, runtime_chat, runtime_pages)
     for label, key, old, new, expected in page_cases:
+        if old not in runtime_pages[key] or old == new:
+            misses.append(f"mutation did not change {label}")
+            continue
+        if any(expected in finding for finding in integration_baseline):
+            misses.append(f"mutation baseline already fails {label}")
+            continue
         mutated_pages = dict(runtime_pages)
         mutated_pages[key] = mutated_pages[key].replace(old, new, 1)
         if not any(expected in finding for finding in audit_runtime_integrations(
@@ -1918,6 +2164,7 @@ def self_test() -> list[str]:
     if not any("DOM code source" in finding for finding in audit_lesson(dom_page_path, broken_dom_page)):
         misses.append("detector missed unresolved RunCell DOM code source")
     deep_cases = [
+        ("fabricated serial timing", dom_page.replace("summed concurrent durations", "serial baseline", 1), "deep-timing"),
         ("wait-then-render SVG", dom_page.replace('ctx.view.html(\n      \'<section class="research-board"', 'ctx.view.html(helpers.diagramSVG({}));\n    ctx.view.html(\n      \'<section class="research-board"', 1), "wait-then-render SVGs"),
         ("worker token stream removed", dom_page.replace('(token) => streamWorker(worker, token)', 'null', 1), "stream each worker"),
         ("worker focus removed", dom_page.replace('card.tabIndex = 0;', '', 1), "keyboard focusable"),
@@ -1926,7 +2173,14 @@ def self_test() -> list[str]:
         ("materials topics hidden from planner", dom_page.replace('const MATERIAL_TOPICS = [', 'const UNLISTED_TOPICS = [', 1), "planner-visible supported topics"),
         ("coverage gap hidden", dom_page.replace('gap ? "gap" : "done"', '"done"', 1), "partial coverage"),
     ]
+    deep_baseline = audit_deep_research_artifact(dom_page)
     for label, mutated, expected in deep_cases:
+        if mutated == dom_page:
+            misses.append(f"mutation did not change {label}")
+            continue
+        if any(expected in finding for finding in deep_baseline):
+            misses.append(f"mutation baseline already fails {label}")
+            continue
         if not any(expected in finding for finding in audit_deep_research_artifact(mutated)):
             misses.append(f"detector missed {label}")
 
@@ -2006,14 +2260,27 @@ def self_test() -> list[str]:
          '<p>Follow <a href="https://build.nvidia.com/spark/nemoclaw-applications">the local setup playbook</a>.</p><h3>Authorize the gateway</h3>'),
     )
     for label, old, new in launch_page_mutations:
+        if old not in runtime_pages['en-03a'] or old == new:
+            misses.append(f'mutation did not change {label}')
+            continue
         mutated_pages = dict(runtime_pages)
         mutated_pages["en-03a"] = mutated_pages["en-03a"].replace(old, new, 1)
         if not audit_launchable_learning_path(mutated_pages):
             misses.append(f"detector missed {label} mutation")
-    mutated_pages = dict(runtime_pages)
-    mutated_pages["tw-03a"] = mutated_pages["tw-03a"].replace("瀏覽器 Cookie", "瀏覽器工作階段", 1)
-    if not audit_launchable_learning_path(mutated_pages):
-        misses.append("detector missed Taiwan launchable access cookie mutation")
+    # An unreviewed locale may correctly publish the English fallback. Exercise the
+    # Chinese wording detector with an explicit language fixture, not a no-op edit
+    # of that fallback. This fixture does not claim localized publication acceptance.
+    taiwan_fixture = dict(runtime_pages)
+    taiwan_fixture['tw-03a'] = runtime_pages['en-03a'].replace('browser cookie', '瀏覽器 Cookie')
+    if ('瀏覽器 Cookie' not in taiwan_fixture['tw-03a']
+            or audit_launchable_learning_path(taiwan_fixture)):
+        misses.append('Taiwan cookie detector fixture lacks a valid baseline')
+    else:
+        mutated_pages = dict(taiwan_fixture)
+        mutated_pages['tw-03a'] = mutated_pages['tw-03a'].replace('瀏覽器 Cookie', '瀏覽器工作階段')
+        if not any('tw-03a: launchable access guidance' in finding
+                   for finding in audit_launchable_learning_path(mutated_pages)):
+            misses.append('detector missed Taiwan launchable access cookie mutation')
 
     # Unsupported endpoint guidance must be rejected by shape, on any learner surface,
     # including files this audit has never been told about by name.

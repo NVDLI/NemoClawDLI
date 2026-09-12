@@ -113,11 +113,16 @@ async function inspect(page, language, file, viewport, sourceUi, isDefault) {
       description: row.cells[1]?.textContent.trim() || '',
     }));
     const scrollLeaks = [...document.querySelectorAll('body *')].flatMap(node => {
-      const style = getComputedStyle(node), x = node.scrollWidth > node.clientWidth + 1, y = node.scrollHeight > node.clientHeight + 1;
-      if ((!x && !y) || !/(auto|scroll)/.test(`${style.overflowX} ${style.overflowY}`)) return [];
+      let style = getComputedStyle(node);
+      const x = node.scrollWidth > node.clientWidth + 1 && /^(auto|scroll|overlay)$/.test(style.overflowX);
+      const y = node.scrollHeight > node.clientHeight + 1 && /^(auto|scroll|overlay)$/.test(style.overflowY);
+      if (!x && !y) return [];
+      node.dispatchEvent(new PointerEvent('pointerover', {bubbles:true, composed:true}));
+      style = getComputedStyle(node);
       if ((!x || style.overscrollBehaviorX === 'contain') && (!y || style.overscrollBehaviorY === 'contain')) return [];
       return [`${node.tagName}.${String(node.className || '').replace(/\s+/g,'.').slice(0,100)}`];
     });
+    document.body.dispatchEvent(new PointerEvent('pointerover', {bubbles:true, composed:true}));
     const diagramEscapes = [...new Set(document.querySelectorAll('[data-svg-src] svg,svg.dg-svg'))].flatMap(svg => {
       const cards = [...svg.querySelectorAll('rect')].filter(node => {
         const stroke = node.getAttribute('stroke');
@@ -173,30 +178,40 @@ async function wheelProbe(page, language, files) {
   for (const file of files) {
     const route = `/${language.url.replace(/^\/+|\/+$/g, '')}/${file}`;
     await open(page, route);
-    const helpers = page.locator('details.cf-helpers').filter({has: page.locator('tr[data-helper]')}).first();
-    if (!await helpers.count()) continue;
-    await helpers.evaluate(node => {
-      for (let current = node; current; current = current.parentElement) {
-        if (current.tagName === 'DETAILS') current.open = true;
-      }
-    });
-    const showAll = helpers.locator('.cf-helpers-showall:visible').first();
-    if (await showAll.count()) await showAll.click();
-    const helper = helpers.locator('tr[data-helper]:visible').first();
-    if (!await helper.count()) continue;
-    await helper.click();
-    const editor = helpers.locator('tr.cf-helpers-source-row:visible .CodeMirror-scroll').first();
-    if (!await editor.count()) continue;
-    await editor.evaluate(node => { node.scrollTop = node.scrollHeight; node.scrollIntoView({block:'center'}); });
-    await editor.hover();
-    await page.waitForTimeout(500);
-    const before = await page.evaluate(() => scrollY);
-    await page.mouse.wheel(0, 480); await page.waitForTimeout(100);
-    const after = await page.evaluate(() => scrollY);
-    if (Math.abs(after - before) > 2) record('scroll-chain-wheel', route, `${before} -> ${after}`);
-    return;
+    await page.evaluate(() => document.querySelectorAll('details').forEach(node => { node.open = true; }));
+    let expandedEditor = null;
+    for (const editor of await page.locator('.CodeMirror-scroll:visible').all()) {
+      const handle = await editor.evaluateHandle(node => {
+        for (let current=node; current && current!==document.body && current!==document.documentElement; current=current.parentElement) {
+          if (current.clientHeight > 0 && current.scrollHeight > current.clientHeight + 1
+              && /^(auto|scroll|overlay)$/.test(getComputedStyle(current).overflowY)) return current;
+        }
+        return null;
+      });
+      const region = handle.asElement();
+      if (!region) { expandedEditor ||= editor; await handle.dispose(); continue; }
+      await region.evaluate(node => { node.scrollTop = node.scrollHeight; node.scrollIntoView({block:'center',behavior:'instant'}); });
+      await region.hover();
+      await page.waitForTimeout(500);
+      const before = await page.evaluate(() => scrollY);
+      await page.mouse.wheel(0, 480); await page.waitForTimeout(100);
+      const after = await page.evaluate(() => scrollY);
+      if (Math.abs(after - before) > 2) record('scroll-chain-wheel', route, `${before} -> ${after}`);
+      return;
+    }
+    if (expandedEditor) {
+      await expandedEditor.evaluate(node => node.scrollIntoView({block:'center',behavior:'instant'}));
+      await expandedEditor.hover();
+      await page.waitForTimeout(500);
+      const before = await page.evaluate(() => ({y:scrollY, room:document.documentElement.scrollHeight-innerHeight-scrollY}));
+      if (before.room < 480) continue;
+      await page.mouse.wheel(0,480); await page.waitForTimeout(100);
+      const after = await page.evaluate(() => scrollY);
+      if (after <= before.y + 2) record('scroll-page-wheel',route,'expanded editor with no vertical scroll region traps page scrolling');
+      return;
+    }
   }
-  record('wheel-probe-missing', language.code, 'no discovered learner page exposes a helper editor');
+  record('wheel-probe-missing', language.code, 'no discovered learner page exposes a code editor with room to test wheel behavior');
 }
 
 (async () => {
@@ -263,7 +278,7 @@ async function wheelProbe(page, language, files) {
   await browser.close(); server.close();
   if (findings.length) throw new Error(JSON.stringify(findings, null, 2));
   console.log(JSON.stringify({ok:true, locales:languages.map(item => item.code), screenshots:fs.readdirSync(shots).sort()}));
-})().catch(error => { try { server.close(); } catch (_) {} console.error(error.stack || String(error)); process.exit(1); });
+})().catch(error => { try { server.close(); } catch (_) {} console.error(error.stack || String(error)); process.exitCode = 1; });
 """
 
 

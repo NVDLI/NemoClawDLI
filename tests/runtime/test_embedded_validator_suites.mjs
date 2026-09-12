@@ -12,6 +12,8 @@ import './test_model_routing.mjs';
 import './test_activity_sdk.mjs';
 import './test_activity_course_integration.mjs';
 import './test_activity_checkpoint_wiring.mjs';
+import './test_course_exercises.mjs';
+import './test_course_gateway.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -31,3 +33,10 @@ for (const [name, script] of [
     assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
   });
 }
+
+test('native invocation and reference attachment contracts', {timeout:120000}, () => {
+  const result = spawnSync(process.execPath, ['--test', path.join(ROOT, 'tests/runtime/test_course_runtime_contract.mjs')], {
+    cwd:ROOT, encoding:'utf8', timeout:110000,
+  });
+  assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
+});

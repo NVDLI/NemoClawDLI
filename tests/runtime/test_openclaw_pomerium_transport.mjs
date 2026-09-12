@@ -18,6 +18,8 @@ globalThis.location = new URL('https://cdn.dli.learn.nvidia.com/course-static/te
 
 const terminalUrls = [];
 let failDirectTerminal = false;
+let terminalResult = 'exit';
+let terminalExitCode = 0;
 class FakeWebSocket {
   static OPEN = 1;
   constructor(url) {
@@ -38,8 +40,10 @@ class FakeWebSocket {
         ? JSON.stringify({ agent: { dashboardUrl: '/#token=test-gateway-token' } })
         : JSON.stringify({ status: 'ok' });
       this.onmessage?.({ data: JSON.stringify({ type: 'data', data: body }) });
-      this.onmessage?.({ data: JSON.stringify({ type: 'exit', code: 0 }) });
-      this.close();
+      if (terminalResult === 'exit') {
+        this.onmessage?.({ data: JSON.stringify({ type: 'exit', code: terminalExitCode }) });
+      }
+      if (terminalResult !== 'pending') this.close();
     }, 0);
   }
   send() {}
@@ -168,4 +172,46 @@ test('Cloudflare terminal retries through relay only after direct failure', asyn
   const fallback = new URL(terminalUrls[1]);
   assert.equal(fallback.origin, 'wss://openclaw-cors-proxy.experiments.courses.nvidia.com');
   assert.equal(fallback.searchParams.get('cf_access_jwt'), 'cloudflare-session');
+});
+
+test('terminal distinguishes command exit, disconnected output, and idle output', async () => {
+  connection.setOpenClawConnection({ rawUrl:launchable, accessProvider:'pomerium', accessSession:'' });
+  try {
+    terminalExitCode = 23;
+    const failed = await openshell.terminal('false', { baseUrl:launchable, idleMs:20 });
+    assert.equal(failed.exitCode, 23);
+    assert.equal(failed.completion, 'exit');
+
+    terminalResult = 'disconnect';
+    const disconnected = await openshell.terminal('printf partial', { baseUrl:launchable, idleMs:20 });
+    assert.equal(disconnected.exitCode, null);
+    assert.equal(disconnected.completion, 'disconnect');
+
+    terminalResult = 'pending';
+    const idle = await openshell.terminal('bash', { baseUrl:launchable, idleMs:20 });
+    assert.equal(idle.exitCode, null);
+    assert.equal(idle.completion, 'idle');
+  } finally {
+    terminalResult = 'exit';
+    terminalExitCode = 0;
+  }
+});
+
+test('terminal Stop rejects and prevents an already stopped socket from opening', async () => {
+  connection.setOpenClawConnection({ rawUrl:launchable, accessProvider:'pomerium', accessSession:'' });
+  terminalResult = 'pending';
+  try {
+    const controller = new AbortController();
+    const pending = openshell.terminal('bash', { baseUrl:launchable, signal:controller.signal });
+    setTimeout(() => controller.abort(), 10);
+    await assert.rejects(pending, { name:'AbortError' });
+    const count = terminalUrls.length;
+    await assert.rejects(
+      openshell.terminal('bash', { baseUrl:launchable, signal:controller.signal }),
+      { name:'AbortError' },
+    );
+    assert.equal(terminalUrls.length, count);
+  } finally {
+    terminalResult = 'exit';
+  }
 });

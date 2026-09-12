@@ -56,12 +56,6 @@
     <div class="eyebrow">Module 2 · Part C of 3</div>
     <h1><span>Deep</span> Agents</h1>
     <p class="lead">
-      Module 2 treats workflow scope as a control surface. Part A introduced a
-      harness that decides what context crosses each boundary, what can branch,
-      and how results move through a pipeline. Part B applied that control to a
-      developer-defined retrieval pipeline and its bounded context bundle.
-    </p>
-    <p class="lead">
       A <em>deep research agent</em> applies the same idea to a question whose
       evidence would outgrow one conversation. At run time, a planner chooses
       independent branches and gives each worker only the original question,
@@ -140,15 +134,14 @@
   <div id="deep-artifact"></div>
 
   <h2>Inspect the implementation</h2>
-  <p>The next three cells isolate one implementation layer at a time, beginning
-     with the model adapter and ending with the complete research agent. Each
-     cell runs independently.</p>
+  <p>The next three independent examples connect a model client, build a clock-tool graph,
+     and save worker drafts in shared files. The last example isolates file exchange
+     without retrieving external evidence.</p>
 
   <div class="callout warn">
     <strong>The implementation cells use the vendored browser bundle.</strong> They
     import the exact same-origin bundle recorded in the
-    <a href="dependencies.html">browser dependency inventory</a>. CI blocks publication when the
-    bundle, lock, license evidence, or source references drift.
+    <a href="dependencies.html">browser dependency inventory</a>, where you can inspect its version and source.
   </div>
 
   <details class="learning-block" open data-learning-id="deep-agent-implementation" data-learning-tier="applied" data-learning-artifact="optional" data-learning-exercise="optional" data-localization-scope="en-shell">
@@ -181,10 +174,10 @@
   <p>Use a graph once a simple loop can no longer express the required control flow.</p>
 
   <!-- ── Part 5: Deep agent (planner + sub-agents + VFS) ──────────────────── -->
-  <h2>3 · Assemble the research agent</h2>
+  <h2>3 · Save and combine worker drafts</h2>
   <p>
-    Each stage runs as its own node, and shared files remain visible between
-    delegation and synthesis. The <a href="https://github.com/langchain-ai/deepagentsjs" target="_blank" rel="noopener"><code>deepagents</code></a>
+    This example drafts from model knowledge: workers have file tools but no retrieval tool or supplied sources.
+    Files preserve their drafts, not independently checked evidence. The workers run sequentially and share saved files. The <a href="https://github.com/langchain-ai/deepagentsjs" target="_blank" rel="noopener"><code>deepagents</code></a>
     package wraps a similar pattern for Node.js applications.
   </p>
 
@@ -263,33 +256,56 @@ helpers.mountChatUI("#deep-artifact", {
 
     const planRes = await helpers.chatStream(
       { messages: [{ role: "system", content: planSys }, { role: "user", content: text }],
-        model: ctx.model, max_tokens: window.DEEP_AGENT_MAX_TOKENS, signal: sig }, null);
+        model: ctx.model, max_tokens: window.DEEP_AGENT_MAX_TOKENS, signal: sig,
+        response_format: { type: "json_schema", json_schema: {
+          name: "research_plan", strict: true,
+          schema: {
+            type: "object", additionalProperties: false, required: ["branches"],
+            properties: { branches: {
+              type: "array", minItems: 3, maxItems: 4,
+              items: {
+                type: "object", additionalProperties: false,
+                required: ["source", "target", "goal"],
+                properties: {
+                  source: { type: "string", enum: ["materials", "section"] },
+                  target: { type: "string", enum: [...PAGES.map(p => p.id), ...MATERIAL_TOPICS] },
+                  goal: { type: "string", minLength: 1 },
+                },
+              },
+            } },
+          },
+        } },
+      }, null);
 
-    let branches = [];
-    try { branches = JSON.parse(planRes.content.match(/\{[\s\S]*\}/)[0]).branches || []; } catch (_) {}
+    ctx.view.tool('planner response', { content: planRes.content, finish_reason: planRes.finish_reason });
+    if (planRes.finish_reason !== 'stop') throw new Error('Planner did not finish its answer. Inspect the response before retrying.');
+    let planned;
+    try { planned = JSON.parse((planRes.content || '').replace(/^\s*```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '')); }
+    catch (_) { throw new Error('Planner must return a JSON object with a branches array.'); }
     const ids = new Set(PAGES.map(p => p.id));
-    branches = branches
-      .filter(b => b && b.goal && (b.source === "materials" || (b.source === "section" && ids.has(b.target))));
-
-    // Guarantee the fan-out spans both the web and this course's sections, even if the planner under-specified.
-    // Section pick uses title/id keyword overlap.
-    const pickSection = () => {
-      const words = text.toLowerCase().match(/[a-z]{4,}/g) || [];
-      let best = PAGES.find(p => p.id === "overview") || PAGES[0], score = 0;
-      for (const p of PAGES) {
-        const hay = (p.id + " " + p.title).toLowerCase();
-        const s = words.filter(w => hay.includes(w)).length;
-        if (s > score) { score = s; best = p; }
+    if (!planned || !Array.isArray(planned.branches) || planned.branches.length < 3
+      || planned.branches.some(b => !b || typeof b.goal !== 'string' || !b.goal.trim()
+        || typeof b.target !== 'string'
+        || !(b.source === 'materials' ? MATERIAL_TOPICS.includes(b.target) : b.source === 'section' && ids.has(b.target))))
+      throw new Error('Planner returned an invalid source, target, goal, or branches array.');
+    // The controller reserves space for the two source types before filling the cap.
+    const branches = [];
+    const adjustments = [];
+    for (const source of ['section', 'materials']) {
+      let branch = planned.branches.find(b => b.source === source);
+      if (!branch) {
+        const target = source === 'section' ? (PAGES.find(p => p.id === 'overview') || PAGES[0]).id : 'AI Agents';
+        branch = { source, target, goal: text };
+        adjustments.push('Controller added ' + source + ' branch: ' + target + '. The source may not cover the question.');
       }
-      return best.id;
-    };
-
-    if (!branches.some(b => b.source === "section")) branches.push({ source: "section", target: pickSection(), goal: text });
-    if (!branches.some(b => b.source === "materials")) branches.push({ source: "materials", target: "AI Agents", goal: text });
-    branches = branches.slice(0, 4);
-
-    // Show the parsed plan so each branch's source, target, and goal are visible.
-    ctx.view.tool("plan", { branches });
+      branches.push(branch);
+    }
+    for (const branch of planned.branches) {
+      if (branches.length >= 4) break;
+      if (!branches.includes(branch)) branches.push(branch);
+    }
+    if (planned.branches.some(branch => !branches.includes(branch))) adjustments.push('Controller limited the run to four branches.');
+    ctx.view.tool('plan', { model_branches: planned.branches, branches, controller_adjustments: adjustments });
 
     // Build a live HTML operation board with one independently scrollable, left-aligned panel per branch.
     // Each panel begins updating before its siblings finish.
@@ -368,7 +384,8 @@ helpers.mountChatUI("#deep-artifact", {
           finding = (r.content || "").trim();
           if (repetitive(finding)) throw new Error("model returned repetitive text twice");
         }
-        if (!finding) throw new Error("model returned no finding");
+        if (r.finish_reason !== "stop" || r.tool_calls?.length || !finding)
+          throw new Error("model returned no complete finding; inspect the partial response");
         worker.text = finding;
         worker.stream.textContent = finding;
         const gap = /^not covered\.?$/i.test(finding) || /\bcoverage gap:/i.test(finding);
@@ -399,7 +416,7 @@ helpers.mountChatUI("#deep-artifact", {
     }
     ctx.view.activitySuccess();
     boardStatus.textContent = accepted.length + " workers complete · " + wall.toFixed(1) +
-      "s wall time vs " + serial.toFixed(1) + "s serial" + (gaps ? " · " + gaps + (gaps === 1 ? " coverage gap" : " coverage gaps") : "") + " · synthesizing…";
+      "s wall time; summed concurrent durations " + serial.toFixed(1) + "s" + (gaps ? " · " + gaps + (gaps === 1 ? " coverage gap" : " coverage gaps") : "") + " · synthesizing…";
 
     // ── 3. SYNTHESIZE: one grounded answer from the findings ────────────
     const findings = accepted.map(r => "[" + r.n + "] (" + r.label + ")\n" + r.finding).join("\n\n");
@@ -417,6 +434,11 @@ helpers.mountChatUI("#deep-artifact", {
       { role: "user", content: "QUESTION: " + text + "\n\nFINDINGS:\n" + findings + unavailable }],
       model: ctx.model, max_tokens: window.DEEP_AGENT_MAX_TOKENS, signal: sig },
       (tok) => ctx.view.token(tok));   // no reasoning here: the sub-agents did the thinking; keep the synthesis one clean answer
+    if (s.finish_reason !== "stop" || s.tool_calls?.length || !s.content?.trim()) {
+      board.dataset.state = "failed";
+      boardStatus.textContent = "Synthesis incomplete; inspect the partial response.";
+      throw new Error("Synthesis did not return a complete answer.");
+    }
     board.dataset.state = "complete";
     boardStatus.textContent = accepted.length + " workers + synthesis complete · " + wall.toFixed(1) + "s parallel fan-out";
     if (failureStatus) boardStatus.textContent += " · " + failureStatus;
@@ -487,7 +509,9 @@ const messages = [
   { role: "user",   content: "What is the difference between LangChain Runnable.invoke() and our chatStream()?" },
 ];
 
-const result = await state.llm.invoke(messages);
+const result = await state.llm.invoke(messages, { signal: helpers.signal });
+helpers.log.details('model response', result);
+if (result.response_metadata?.finish_reason === 'length') throw new Error('Model output reached the token limit. Inspect its response before changing the budget.');
 return {
   content: result.content,
   type:    result.constructor.name,
@@ -564,14 +588,19 @@ return { graph_compiled: true };
       id: "invoke", icon: "🚀", title: "Inspect the trajectory", x: 0, y: 3,
       summary: "Run the graph and render its messages, including tool calls and results.",
       code: `// Ask the agent a concrete question to drive the loop.
-const question = "What time is it right now in UTC?";
+const question = "What time is it right now in UTC? Use get_current_time to read the clock.";
 // Try another (uncomment one) and rerun to watch the trajectory change:
 // const question = "What is the capital of France?";               // answered directly, no tool call
-// const question = "What time is it, and is that AM or PM in UTC?"; // one tool call, a longer answer
+// const question = "What time is it, and is that AM or PM in UTC?"; // inspect whether the model requests the clock
 const result = await state.agent.invoke({
   messages: [{ role: "user", content: question }],
-});
+}, { signal: helpers.signal });
 
+helpers.log.details('graph response', result);
+if (result.messages.some(m => m.response_metadata?.finish_reason === 'length'))
+  throw new Error('A graph response reached the token limit. Inspect the trajectory before changing the budget.');
+if (!result.messages.some(m => m.tool_call_id && m.name === 'get_current_time'))
+  helpers.log('No clock result was returned. Any current-time claim in the reply is unsupported.');
 // Map LangGraph message objects to the role-tagged shape viz.messageList wants.
 const roleFor = type =>
   /Human/i.test(type) ? "user"
@@ -597,8 +626,8 @@ return {
 
 // ── M3c P3: hand-rolled deep agent (planner + sub-agents + VFS) ─────────────
 mountCanvasFlow("#cell-m3c-p3", {
-  label: "Assemble the research workflow",
-  intro: "These nodes expose the context boundaries, saved evidence, and synthesis path.",
+  label: "Assemble a workflow over saved drafts",
+  intro: "Set the goal and expected file paths together. Workers draft from model knowledge without external sources; synthesis requires every expected draft to be written in this dispatch and nonempty.",
   edges: [
     { from: "setup",      to: "planner" },
     { from: "vfs",        to: "dispatcher" },
@@ -631,18 +660,24 @@ return { imports: Object.keys(state.deps) };
     },
 
     {
-      id: "vfs", icon: "🗂", title: "Create shared evidence tools", x: 2, y: 0,
-      summary: "Workers exchange evidence through in-memory files rather than shared histories.",
+      id: "vfs", icon: "🗂", title: "Create shared draft tools", x: 2, y: 0,
+      summary: "Workers exchange drafts through in-memory files. Saving a file does not verify its facts.",
       code: `// Pull the LangChain helpers this agent cell needs.
 const { tool, z } = state.deps;
 state.vfs = {};
 
-state.writeFile = tool(
-  async ({ path, content }) => { state.vfs[path] = content; return "wrote " + path + " (" + content.length + " chars)"; },
+state.createWriteFile = dispatch => tool(
+  async ({ path, content }) => {
+    if (dispatch && !dispatch.current()) throw new Error("This dispatch is no longer current; its write was not saved.");
+    state.vfs[path] = content;
+    dispatch?.writtenPaths.add(path);
+    return "wrote " + path + " (" + content.length + " chars)"; },
   { name: "write_file",
     description: "Save a completed deliverable to a file that persists across sub-agent calls.",
     schema: z.object({ path: z.string(), content: z.string() }) },
 );
+
+state.writeFile = state.createWriteFile(null);
 
 state.readFile = tool(
   async ({ path }) => state.vfs[path] || ("(file " + path + " not found)"),
@@ -661,38 +696,84 @@ return { tools: ["write_file", "read_file", "list_files"], vfs_state: Object.key
     {
       id: "planner", icon: "🧠", title: "Plan typed subtasks", x: 1, y: 1,
       summary: "Structured output avoids parsing a free-text plan.",
-      code: `// TODO: Change the deliverable and watch the planner create new typed subtasks.
+      code: `state.dispatch = null;
+state.synthesis = "";
+if (state.vfs) delete state.vfs["final_report.md"];
+state.subResults = [];
+state.subtasks = [];
+state.planInput = null;
+// TODO: Change state.goal and state.expectedFiles together, then inspect the plan and saved drafts.
+state.expectedFiles = ["nim_overview.md", "nim_use_cases.md", "nim_vs_hosting.md"];
 state.goal = [
-  "Research NVIDIA NIM (NVIDIA Inference Microservices) and produce three files: ",
+  "Draft from model knowledge about NVIDIA NIM (NVIDIA Inference Microservices), label unverified claims, and produce three files: ",
   "nim_overview.md, a technical overview of what NIM is and how it works; ",
   "nim_use_cases.md, three concrete deployment scenarios with a sentence on why NIM fits each one; ",
-  "nim_vs_hosting.md, a short comparison of using a managed NIM endpoint versus self-hosting a model directly, ",
+  "nim_vs_hosting.md, a draft comparison of using a hosted NIM endpoint versus self-hosting a model directly, ",
   "covering latency, operational overhead, and when each makes sense.",
 ].join("");
 // state.goal = "Compare RAG evaluation methods and produce metrics.md, risks.md, and test_plan.md.";
+// state.expectedFiles = ["metrics.md", "risks.md", "test_plan.md"];
 // state.goal = "Research agent memory and produce short_term.md, long_term.md, and tradeoffs.md.";
+// state.expectedFiles = ["short_term.md", "long_term.md", "tradeoffs.md"];
 
-// withStructuredOutput binds the output to this schema and returns a parsed object.
+// withStructuredOutput returns the raw response and parsed plan so both can be checked.
 
+const goal = state.goal;
+const expected = [...state.expectedFiles];
+if (!Array.isArray(expected) || !expected.length
+  || expected.some(file => typeof file !== 'string' || !file.trim() || file === 'final_report.md')
+  || new Set(expected).size !== expected.length)
+  throw new Error('Set distinct expected draft paths before planning; final_report.md is reserved.');
 const planner = state.llm.withStructuredOutput({
   type: "object", additionalProperties: false,
   properties: {
-    subtasks: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 4 },
+    subtasks: {
+      type: "array", minItems: expected.length, maxItems: expected.length,
+      items: {
+        type: "object", additionalProperties: false,
+        properties: {
+          file: { type: "string", enum: expected },
+          instruction: { type: "string", description: "A concrete, self-contained drafting instruction for this file." },
+        },
+        required: ["file", "instruction"],
+      },
+    },
   },
   required: ["subtasks"],
-}, { name: "plan" });
+}, { name: "plan", includeRaw: true });
 
-const out = await planner.invoke([
+const response = await planner.invoke([
   {
     role: "system",
     content: [
-      "Decompose the user goal into 3-4 self-contained subtasks.",
-      "Each subtask is one imperative sentence a sub-agent can execute independently.",
-      "Every subtask must produce a file via write_file.",
+      "Return exactly one subtask for each expected file. Each object must contain file and instruction; cover every expected file once.",
+      "Each instruction must describe the work needed for that file in a self-contained imperative sentence.",
+      "Every subtask must produce a concise 100–150 word file via write_file. Workers have no retrieval or external sources; require unverified claims to be labeled.",
     ].join(" "),
   },
-  { role: "user",   content: state.goal },
-]);
+  { role: "user",   content: goal + " Expected files: " + JSON.stringify(expected) },
+], { signal: helpers.signal });
+helpers.signal?.throwIfAborted();
+helpers.log.details('structured plan response', response);
+const raw = response.raw;
+const calls = raw?.tool_calls || [];
+const completedPlan = raw?.response_metadata?.finish_reason === 'stop' && !calls.length
+  || raw?.response_metadata?.finish_reason === 'tool_calls' && calls.length === 1
+    && calls[0].name === 'plan' && typeof calls[0].id === 'string' && calls[0].id.trim()
+    && JSON.stringify(calls[0].args) === JSON.stringify(response.parsed);
+if (!completedPlan || raw?.invalid_tool_calls?.length || raw?.additional_kwargs?.refusal)
+  throw new Error('Planner did not finish its structured response. Inspect the raw response before retrying.');
+const out = response.parsed;
+if (!out || Object.keys(out).length !== 1 || !Array.isArray(out.subtasks)
+  || out.subtasks.length !== expected.length
+  || !out.subtasks.every(task => task && Object.keys(task).length === 2
+    && expected.includes(task.file) && typeof task.instruction === 'string'
+    && /\\p{L}/u.test(task.instruction))
+  || new Set(out.subtasks.map(task => task.file)).size !== expected.length)
+  throw new Error('Planner must cover every expected file exactly once with a file and a drafting instruction containing words. Inspect its raw response.');
+if (state.goal !== goal || JSON.stringify(state.expectedFiles) !== JSON.stringify(expected))
+  throw new Error("Run the planner before dispatching workers.");
+state.planInput = {goal, expectedFiles: expected};
 state.subtasks = out.subtasks;
 return out;
 `,
@@ -704,11 +785,28 @@ return out;
       code: `// Pull the LangChain helpers this agent cell needs.
 const { createReactAgent } = state.deps;
 state.subResults = [];
+// Keep prior files readable. Completion and writes belong to this invocation.
+state.dispatch = null;
+state.synthesis = "";
+if (state.vfs) delete state.vfs["final_report.md"];
+if (!state.planInput || state.planInput.goal !== state.goal
+  || JSON.stringify(state.planInput.expectedFiles) !== JSON.stringify(state.expectedFiles))
+  throw new Error("Run the planner before dispatching workers.");
+const dispatch = { goal: state.goal, expectedFiles: [...(state.expectedFiles || [])],
+  files: state.vfs, writtenPaths: new Set(), complete: false };
+state.dispatch = dispatch;
+dispatch.current = () => !helpers.signal?.aborted && state.dispatch === dispatch && state.goal === dispatch.goal
+  && state.vfs === dispatch.files
+  && JSON.stringify(state.expectedFiles) === JSON.stringify(dispatch.expectedFiles);
+state.writtenPaths = dispatch.writtenPaths;
+const tasks = [...state.subtasks];
+if (!tasks.length) throw new Error("Run the planner before dispatching workers.");
+const writeFile = state.createWriteFile(dispatch);
 
-for (let i = 0; i < state.subtasks.length; i++) {
+for (let i = 0; i < tasks.length; i++) {
   const sub = createReactAgent({
     llm: state.llm,
-    tools: [state.writeFile, state.readFile, state.listFiles],
+    tools: [writeFile, state.readFile, state.listFiles],
   });
   const ctx = i === 0
     ? "(no prior files)"
@@ -716,29 +814,56 @@ for (let i = 0; i < state.subtasks.length; i++) {
   const r = await sub.invoke({
     messages: [{
       role: "user",
-      content: state.subtasks[i] + "\\n\\nContext: " + ctx + ". Use write_file when saving deliverables.",
+      content: "Draft from model knowledge without retrieval or external sources. "
+        + "Label unverified claims in the saved file. Keep each file to 100–150 words. "
+        + "Call write_file to save the draft to " + tasks[i].file + ". "
+        + "Then give a brief completion reply. " + tasks[i].instruction + "\\n\\nContext: " + ctx + ". Use write_file when saving deliverables.",
     }],
-  });
+  }, { signal: helpers.signal });
+  helpers.signal?.throwIfAborted();
 
-  const last = r.messages.at(-1).content || "";
-  helpers.log("subtask " + (i+1) + " · " + state.subtasks[i].slice(0, 80));
+  helpers.log.details('worker ' + (i + 1) + ' trajectory', r);
+  if (r.messages.some(m => m.response_metadata?.finish_reason === 'length'))
+    throw new Error('Worker output reached the token limit. Inspect its trajectory before retrying.');
+  if (!dispatch.current()) throw new Error('The goal or dispatcher changed; run the workers again.');
+  const final = r.messages.at(-1);
+  if (r.messages.some(m => m.status === 'error')
+    || final?.response_metadata?.finish_reason !== 'stop'
+    || final.tool_calls?.length || final.invalid_tool_calls?.length
+    || typeof final.content !== 'string' || !final.content.trim())
+    throw new Error('Worker did not return a complete answer without tool errors. Inspect its trajectory before retrying.');
+  const last = final.content;
+  helpers.log("subtask " + (i+1) + " · " + tasks[i].file + " · " + tasks[i].instruction.slice(0, 80));
   helpers.log("  reply: " + last);
-  state.subResults.push({ subtask: state.subtasks[i], message_count: r.messages.length, last_reply: last });
+  state.subResults.push({ subtask: tasks[i].instruction, file: tasks[i].file, message_count: r.messages.length, last_reply: last });
 }
+if (!dispatch.current()) throw new Error("The goal or dispatcher changed; run the workers again.");
+dispatch.complete = true;
 return state.subResults;
 `,
     },
 
     {
-      id: "synth", icon: "🧠", title: "Synthesize saved evidence", x: 1, y: 3,
-      summary: "Read the worker files, cite their names, and write final_report.md.",
+      id: "synth", icon: "🧠", title: "Combine saved drafts", x: 1, y: 3,
+      summary: "Read worker drafts and name their files for traceability. File names are not independent sources.",
       code: `// Inspect the virtual files the deep agent can read.
-const paths = Object.keys(state.vfs);
-if (!paths.length) {
-  state.synthesis = "(no files on the virtual filesystem to synthesise)";
-  helpers.log("nothing to synthesise: the sub-agents wrote no files");
-  return { synthesised: false };
-}
+// A prior report is not evidence that this run produced its requested drafts.
+delete state.vfs["final_report.md"];
+state.synthesis = "";
+const paths = state.expectedFiles;
+if (!Array.isArray(paths) || !paths.length
+    || paths.some(p => typeof p !== "string" || !p.trim() || p === "final_report.md")
+    || new Set(paths).size !== paths.length)
+  throw new Error("Set state.expectedFiles to distinct draft paths matching state.goal; final_report.md is reserved.");
+const dispatch = state.dispatch;
+if (!dispatch?.complete || !dispatch.current())
+  throw new Error("Run all workers successfully for the current goal and expected files before synthesis.");
+const missing = paths.filter(p => !dispatch.writtenPaths.has(p)
+  || typeof state.vfs[p] !== "string" || !state.vfs[p].trim());
+helpers.log.details("draft file check", { expected: paths, missing,
+  written: Array.from(state.writtenPaths || []), available: Object.keys(state.vfs) });
+if (missing.length)
+  throw new Error("Missing or empty expected drafts, or not written in this dispatch: " + missing.join(", ") + ". Inspect the worker outputs before synthesis.");
 const corpus = paths.map(p => "### " + p + "\\n" + state.vfs[p]).join("\\n\\n");
 
 const out = await helpers.chatStream({
@@ -748,7 +873,7 @@ const out = await helpers.chatStream({
       content: [
         "You are the synthesiser for a research agent.",
         "Read every file below and write one combined deliverable that answers the original goal.",
-        "Reference each source file by name.",
+        "Name the draft files used, state that they were generated from model knowledge without retrieval, and preserve uncertainty.",
         "Do not invent facts that are not in the files.",
       ].join(" "),
     },
@@ -757,7 +882,13 @@ const out = await helpers.chatStream({
   max_tokens: window.DEEP_AGENT_MAX_TOKENS,
 });
 
-state.synthesis = (out.content || out.reasoning || "").trim() || "(synthesiser produced no text)";
+helpers.log.details('synthesis response', out);
+if (out.finish_reason !== 'stop' || !(out.content || '').trim())
+  throw new Error('Synthesis did not return a complete answer. Inspect its response before retrying.');
+if (!dispatch.current() || !dispatch.complete)
+  throw new Error('The goal or dispatcher changed during synthesis; run synthesis again after the workers complete.');
+state.synthesis = out.content.trim();
+state.synthesisDispatch = dispatch;
 state.vfs["final_report.md"] = state.synthesis;
 helpers.log("synthesised " + paths.length + " files into final_report.md (" + state.synthesis.length + " chars)");
 return { synthesised: true, source_files: paths, report_chars: state.synthesis.length };
@@ -784,7 +915,10 @@ const workers = state.subResults.map((r, i) => ({
 }));
 
 const sourceCount = Object.keys(state.vfs).filter(p => p !== "final_report.md").length;
-const reportChars = (state.synthesis || "").length;
+const currentReport = state.synthesisDispatch === state.dispatch
+  && state.dispatch?.complete && state.dispatch.current()
+  && state.vfs["final_report.md"] === state.synthesis ? state.synthesis : "";
+const reportChars = currentReport.length;
 const spec = {
   title: "Deep-research run",
   nodes: [
@@ -792,7 +926,7 @@ const spec = {
       lines: ["plans " + workers.length + " subtasks"] },
     ...workers,
     { id: "synth", label: "synthesiser", kind: "model", x: Math.max(0, (workers.length - 1) / 2), y: 2,
-      lines: ["reads " + sourceCount + " files", "writes final_report.md (" + reportChars + " chars)"] },
+      lines: [sourceCount + " files available", reportChars ? "writes final_report.md (" + reportChars + " chars)" : "no current final report"] },
   ],
 
   edges: [
@@ -807,7 +941,7 @@ return {
   goal:            state.goal,
   subtasks_run:    state.subResults.length,
   vfs_paths:       Object.keys(state.vfs),
-  final_report:    state.synthesis,
+  final_report:    currentReport,
   vfs_contents:    Object.fromEntries(Object.entries(state.vfs)),
 };
 `,

@@ -59,12 +59,9 @@
   </figure>
 
   <div class="callout">
-    <strong>The server enforces the schema.</strong> Before structured
-    function calling, applications often parsed custom XML or hand-written JSON from model text.
-    A paraphrase could break that parser. The tools field carries the contract separately, so the
-    serving engine can constrain arguments to the schema and return a consistent
-    <code>tool_calls</code> field. Your dispatch code can then count on <code>tc.function.name</code> and
-    <code>tc.function.arguments</code> being present and parseable.
+    <strong>Validate the tool request before execution.</strong> The schema tells the model
+    which arguments the tool accepts. Check the returned name, parse the arguments, and validate
+    their values before dispatch. The examples below show the requested calls and stop on invalid input.
   </div>
 
   <h2>How the model picks between several tools</h2>
@@ -139,19 +136,16 @@
     main loop.
   </p>
   <p>
-    The cell below exposes a sub-agent that knows a small customer table
-    as one natural-language tool. Its caller never sees the rows
-    and can only ask questions.
+    The cell below exposes a sub-agent that reads a small customer table through one
+    natural-language tool. The rows are omitted from the main agent's initial context, but the
+    sub-agent's returned answer can include row data. This separates context; it does not enforce data access control.
   </p>
 
   <div id="cell-m2b-p5"></div>
 
   <div class="callout">
-    <strong>The cognitive-load lever.</strong>
-    Every additional tool, schema field, and description sentence consumes
-    context the main agent could use for its task. A sprawling flat tool
-    list tends to perform worse than a small set of tools backed by
-    sub-agents, because each loop only sees the tools relevant to its level.
+    The outer model receives the sub-agent's answer, so errors or omissions in that
+    answer become its evidence. Inspect both responses before deciding whether the result is supported by the table.
   </div>
   </div>
   </details>
@@ -601,18 +595,27 @@ return {
     {
       id: "search", icon: "🌐", title: "glossary_search", x: 1, y: 2,
       summary: "Calls the in-page MCP server through tools/call and returns ranked NVIDIA glossary entries. The search stays local to the browser.",
-      code: `// Handle the tool-call result from the previous model turn.
+      code: `// Handle only the current turn; a prior skipped search must not survive a rerun.
+state.skipped = false;
+state.reason = "";
+helpers.log.details("search model response", state.s1);
+if (!["stop", "tool_calls"].includes(state.s1.finish_reason))
+  throw new Error("Incomplete model response; no search was executed.");
 if (!state.s1.tool_calls.length) {
   // No tool call here: the model either answered from training (it has content) or ran out of tokens mid-call.
   // Distinguish the two so we never report a direct answer for a truncated call.
   state.skipped = true;
-  state.reason = state.s1.content ? "model answered directly; no search needed"
+  state.reason = state.s1.content ? "model answered without the required search; the answer is ungrounded"
             : "call #1 stopped before answering (finish_reason: " + state.s1.finish_reason + "); raise max_tokens";
   helpers.log(state.reason);
   return { skipped: true, reason: state.reason };
 }
-const tc      = state.s1.tool_calls[0];
-state.query   = JSON.parse(tc.function.arguments).query;
+if (state.s1.tool_calls.length !== 1) throw new Error("This exercise expects one glossary_search call; inspect all returned calls before rerunning.");
+const tc = state.s1.tool_calls[0];
+if (!tc.id || tc.function?.name !== "glossary_search") throw new Error("Invalid glossary tool request.");
+const searchArgs = JSON.parse(tc.function.arguments);
+if (typeof searchArgs.query !== "string" || !searchArgs.query.trim()) throw new Error("Search query must be a nonempty string.");
+state.query = searchArgs.query;
 // Call the in-page MCP server the same way you would a remote one: tools/call.
 state.search  = await glossaryMCP.request("tools/call", { name: "glossary_search", arguments: { query: state.query, limit: 4 } });
 state.toolMsg = state.search.content[0].text;          // the text block the model reads
@@ -630,17 +633,20 @@ return { query: state.query, count: meta.count, source: meta.source };
     },
     {
       id: "llm2", icon: "🧠", title: "LLM call #2", x: 1, y: 3,
-      summary: "Writes the final answer from retrieved results. No tools are passed, so the model must use the returned evidence.",
+      summary: "Asks the model to answer from retrieved results without offering further tools. Check its claims against the returned passages.",
       code: `// Handle the tool-call result from the previous model turn.
 if (state.skipped) {
   return { final_answer: state.s1.content || "(" + (state.reason || "no answer") + ")",
            note: "no search was run on this turn" };
 }
-// No tools here; the model must answer from the search results it already has.
+// No further tools are offered; the prompt asks the model to use the search results.
 state.s2 = await helpers.chatStream({
   messages:   state.messages,
   max_tokens: 8196,   // room for the reasoning model to think AND write the answer
 });
+helpers.log.details("final model response", state.s2);
+if (state.s2.finish_reason !== "stop" || !state.s2.content?.trim() || state.s2.tool_calls?.length)
+  throw new Error("The model returned no complete final answer; inspect the response.");
 // Strip stray tool-call text from reasoning models that emit it anyway.
 const answer = (state.s2.content || "")
   .replace(/<tool_call>[\\s\\S]*?<\\/tool_call>/g, "")
@@ -673,7 +679,12 @@ const messages = [
 
 // Require the call so the swapped backend is always exercised. The model streams its reasoning.
 const s1   = await chatStream({ messages, tools: SEARCH_SCHEMA, tool_choice: { type: "function", function: { name: "glossary_search" } }, max_tokens: 8196 });
-const args = JSON.parse(s1.tool_calls[0].function.arguments || "{}");
+helpers.log.details("model response", s1);
+if (!["stop", "tool_calls"].includes(s1.finish_reason) || s1.tool_calls.length !== 1
+    || !s1.tool_calls[0].id || s1.tool_calls[0].function?.name !== "glossary_search")
+  throw new Error("Expected one complete glossary_search request; inspect the model response.");
+const args = JSON.parse(s1.tool_calls[0].function.arguments);
+if (typeof args.query !== "string" || !args.query.trim()) throw new Error("Search query must be a nonempty string.");
 
 // Fetch the full article when cached; shallow glossary terms fall back to their blurb.
 const article = await glossaryFull(args.query || "");
@@ -684,7 +695,9 @@ messages.push({ role: "tool", tool_call_id: s1.tool_calls[0].id, content: toolMs
 messages.push({ role: "user", content: "Using only the article above, write the final answer now." });
 
 // Streams the grounded answer; the return surfaces the full article the model actually read.
-await chatStream({ messages, max_tokens: 8196 });
+const answer = await chatStream({ messages, max_tokens: 8196 });
+helpers.log.details("article answer", answer);
+if (answer.finish_reason !== "stop" || answer.tool_calls?.length || !answer.content?.trim()) throw new Error("Article synthesis did not return a complete answer.");
 return article
   ? { term: article.term, slug: article.slug, chars: article.body.length, full_entry: article.body }
   : { error: "no full article cached for that term" };
@@ -693,8 +706,8 @@ return article
 
 // ── agents as tools ────────────────────────────────────────
 mountCanvasFlow("#cell-m2b-p5", {
-  label: "agents as tools · hide the database, expose the question",
-  intro: "Give the top-level agent one query_customer_db tool backed by a schema-aware sub-agent. The caller receives an answer, not raw rows.",
+  label: "agents as tools · ask a sub-agent about customer data",
+  intro: "Give the top-level agent one query_customer_db tool backed by a schema-aware sub-agent. The caller sends a question and receives the sub-agent's answer.",
   edges: [
     { from: "sub_data",  to: "sub_agent" },
     { from: "tool_spec", to: "main_llm" },
@@ -704,8 +717,8 @@ mountCanvasFlow("#cell-m2b-p5", {
   ],
   nodes: [
     {
-      id: "sub_data", icon: "🗃", title: "Hidden data (the sub-agent's world)", x: 0, y: 0,
-      summary: "An in-page customer table that the main agent will never see and that a real version would replace with a SQL connection plus row-level auth.",
+      id: "sub_data", icon: "🗃", title: "Customer data (the sub-agent's context)", x: 0, y: 0,
+      summary: "Rows enter the sub-agent's context. A real database version would need authorization for queries and returned data.",
       code: `// Seed the small dataset this retrieval example searches.
 state.customers = [
   { id: 1001, name: "Aiyana Brooks",  plan: "pro",   region: "us-west", joined: "2024-03-12", tickets_30d: 1 },
@@ -723,7 +736,7 @@ return { rows: state.customers.length, schema_fields: Object.keys(state.customer
       summary: "Knows the table schema and answers a natural-language question through one LLM call with the rows embedded in its system prompt.",
       code: `// Define the mock database tool the agent may call.
 state.queryCustomerDB = async function(question) {
-  // The sub-agent's world: a tight system prompt that hides the table, and the rows as context.
+  // Supply the rows to the sub-agent; its answer is forwarded to the main agent.
   const schemaText = "Customer rows have fields: id (int), name (string), plan (free|pro|team), region (us-east|us-west|eu|apac), joined (YYYY-MM-DD), tickets_30d (int).";
   const rowsText   = state.customers.map(c => JSON.stringify(c)).join("\\n");
   const sub = await helpers.chatStream({
@@ -737,7 +750,9 @@ state.queryCustomerDB = async function(question) {
     ],
     max_tokens: 8196,
   });
-  return (sub.content || sub.reasoning || "(empty)").trim();
+  if (sub.finish_reason !== "stop" || sub.tool_calls?.length || !sub.content?.trim())
+    throw new Error("Sub-agent returned no complete answer; inspect its response.");
+  return sub.content.trim();
 };
 return { sub_agent: "query_customer_db", world_rows: state.customers.length };
 `,
@@ -789,7 +804,7 @@ state.s1 = await helpers.chatStream({
 });
 return {
   finish_reason: state.s1.finish_reason,
-  tool_calls:    state.s1.tool_calls.map(tc => ({ name: tc.function.name, args: tc.function.arguments })),
+  tool_calls:    state.s1.tool_calls.map(tc => ({ name: tc.function?.name, args: tc.function?.arguments })),
 };
 `,
     },
@@ -797,29 +812,44 @@ return {
       id: "dispatch", icon: "📤", title: "Dispatch to the sub-agent and answer", x: 1, y: 3,
       summary: "Once the top-level agent calls the tool, we hand the natural-language question to the sub-agent, append its answer, and ask for the user-facing reply.",
       code: `// Handle the tool-call result from the previous model turn.
-if (!state.s1.tool_calls.length) {
+const calls = state.s1.tool_calls || [];
+if (!calls.length) {
+  if (state.s1.finish_reason !== "stop" || !state.s1.content?.trim()) throw new Error("No complete direct answer arrived.");
   helpers.log("main agent answered directly without using the sub-agent");
   return { final: state.s1.content || "(empty)" };
 }
+if (state.s1.finish_reason !== "tool_calls" || !Array.isArray(calls)) throw new Error("Tool requests did not complete; no tools ran.");
+const ids = new Set();
+const batch = calls.map(tc => {
+  if (typeof tc?.id !== "string" || !tc.id.trim() || ids.has(tc.id)
+      || tc.type !== "function" || tc.function?.name !== "query_customer_db") throw new Error("Invalid sub-agent tool batch; no tools ran.");
+  ids.add(tc.id);
+  const args = JSON.parse(tc.function.arguments);
+  if (!args || Object.keys(args).length !== 1 || typeof args.question !== "string" || !args.question.trim()) throw new Error("Sub-agent question must be nonempty text.");
+  return {tc, args};
+});
 state.mainMessages.push({
   role: "assistant",
   content: state.s1.content || null,
   tool_calls: state.s1.tool_calls,
 });
-for (const tc of state.s1.tool_calls) {
-  const args   = JSON.parse(tc.function.arguments || "{}");
-  helpers.log("main → sub: " + (args.question || "?"));
+for (const {tc, args} of batch) {
+  helpers.signal?.throwIfAborted();
+  helpers.log("main → sub: " + args.question);
   const answer = await state.queryCustomerDB(args.question || "");
   helpers.log.details("sub → main", answer);
   state.mainMessages.push({ role: "tool", tool_call_id: tc.id, content: answer });
 }
 const s2 = await helpers.chatStream({
-  messages: state.mainMessages, tools: state.TOOLS, max_tokens: 8196,
+  messages: state.mainMessages, max_tokens: 8196,
 });
 
-helpers.log("note: the main agent never saw the rows; only the sub-agent's natural-language summary");
+helpers.log("note: rows were supplied directly to the sub-agent; its returned answer may include row data");
 
-return s2.content || s2.reasoning || "(empty)";
+helpers.log.details("final model response", s2);
+if (s2.finish_reason !== "stop" || s2.tool_calls?.length || !s2.content?.trim())
+  throw new Error("The model returned no complete final answer.");
+return s2.content;
 `,
     },
   ],
@@ -886,7 +916,7 @@ state.messages.push({
 });
 return {
   finish_reason: state.s1.finish_reason,
-  tool_calls: state.s1.tool_calls.map(tc => ({ name: tc.function.name, args: tc.function.arguments })),
+  tool_calls: state.s1.tool_calls.map(tc => ({ name: tc.function?.name, args: tc.function?.arguments })),
 };
 `,
     },
@@ -894,18 +924,43 @@ return {
       id: "dispatch", icon: "📤", title: "Dispatch tools, then answer", x: 1, y: 3,
       summary: "Forwards each tool_call through tools/call, appends the result, and asks the model for the final answer.",
       code: `// Handle the tool-call result from the previous model turn.
-if (!state.s1.tool_calls.length) return state.s1.content || "(model answered directly)";
-for (const tc of state.s1.tool_calls) {
-  const args = JSON.parse(tc.function.arguments || "{}");
+const calls = state.s1.tool_calls || [];
+if (!calls.length) {
+  if (state.s1.finish_reason !== "stop" || !state.s1.content?.trim()) throw new Error("No complete direct answer arrived.");
+  return state.s1.content;
+}
+if (state.s1.finish_reason !== "tool_calls" || !Array.isArray(calls)) throw new Error("Tool requests did not complete; no tools ran.");
+const ids = new Set();
+const batch = calls.map(tc => {
+  const schema = state.tools.find(tool => tool.function.name === tc?.function?.name)?.function.parameters;
+  if (typeof tc?.id !== "string" || !tc.id.trim() || ids.has(tc.id)
+      || tc.type !== "function" || !schema) throw new Error("Invalid discovered-tool batch; no tools ran.");
+  ids.add(tc.id);
+  const args = JSON.parse(tc.function.arguments);
+  if (!args || typeof args !== "object" || Array.isArray(args) || (schema.required || []).some(key => !(key in args))) throw new Error("Missing tool arguments.");
+  for (const [key, value] of Object.entries(args)) {
+    const type = schema.properties?.[key]?.type;
+    const invalid = type === "integer" ? !Number.isInteger(value)
+      : type !== "string" || typeof value !== "string" || !value.trim();
+    if (invalid)
+      throw new Error("Argument does not match the discovered string/integer schema: " + key);
+  }
+  return {tc, args};
+});
+for (const {tc, args} of batch) {
+  helpers.signal?.throwIfAborted();
   const out  = await state.mcpServer.request("tools/call", { name: tc.function.name, arguments: args });
   const txt  = out.content?.[0]?.text || "(no text)";
   helpers.log.details("server → " + tc.function.name, out);
   state.messages.push({ role: "tool", tool_call_id: tc.id, content: txt });
 }
 const s2 = await helpers.chatStream({
-  messages: state.messages, tools: state.tools, max_tokens: 8196,
+  messages: state.messages, max_tokens: 8196,
 });
-return s2.content || s2.reasoning || "(empty)";
+helpers.log.details("final model response", s2);
+if (s2.finish_reason !== "stop" || s2.tool_calls?.length || !s2.content?.trim())
+  throw new Error("The model returned no complete final answer.");
+return s2.content;
 `,
     },
   ],

@@ -38,9 +38,8 @@
     <div class="eyebrow">Module 2 · Part B of 3</div>
     <h1>The <span>Index</span> Agent</h1>
     <p class="lead">
-      Data comes in several shapes, and each shape wants a different retrieval
-      strategy; matching the wrong one to your data is the most common reason an
-      Index Agent fails silently in production.
+      A retrieval system needs to return the evidence a question requires.
+      The shape of the data helps you choose how to search it.
     </p>
     <p class="lead">
       The Index Agent applies that workflow idea to outside knowledge with a
@@ -79,15 +78,12 @@
     <summary data-localization-scope="en"><span class="learning-scope">Deep · History</span><span class="learning-question">Trace RAG from joint training to retrieval?</span></summary>
     <div class="learning-block-body">
   <h2>Where RAG came from: one system, trained end to end</h2>
-  <p>
-    The version of RAG everyone runs today drops most of what the original design did, and knowing that reframes the
-    retriever you are about to wire in.
-  </p>
+
   <p>
     When
     <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Lewis and colleagues</a> named
-    retrieval-augmented generation in 2020, it was not a model with a search box bolted on. The <strong>retriever and
-    the generator were trained together</strong> on the task they had to perform. Read the figure from left to
+    retrieval-augmented generation in 2020, they trained the <strong>retriever and
+    generator together</strong> on the task. Read the figure from left to
     right before looking at the arrow across the top.
   </p>
   <div style="display:flex;justify-content:center;margin:1.4em 0">
@@ -111,32 +107,23 @@
   </p>
 
   <!-- ── Why production simplified it ── -->
-  <h2>Why today's RAG drops the joint training</h2>
+  <h2>Using pretrained models for RAG</h2>
   <p>
-    Almost nobody trains RAG that way now for two practical reasons. You cannot
-    backpropagate into a frontier model you reach through an API, and even self-hosted
-    end-to-end retrieval training is expensive and easy to destabilize.
+    An inference API does not provide access to update model weights. Jointly training
+    a self-hosted retriever and generator requires the model weights, training data, and compute.
   </p>
   <p>
-    Practice settled on a simpler assembly. You take a model that already exists, freeze it, and put a retriever in
-    front of it so the prompt arrives pre-loaded with evidence and nothing is trained at all. The parts were built
-    separately and bolted together, and over time "RAG" came to mean that bolt-on rather than the jointly optimized
-    system the paper described.
+    The workflow here uses pretrained models without updating their weights. A retriever
+    selects passages to include in the generation prompt. You can change retrieval and inspect
+    its results without training the generator.
   </p>
-  <div class="callout">
-    <strong>The cost of the bolt-on.</strong> A retriever that never sees the generator's loss can only guess what the
-    generator needs, so retrieval quality is capped by how well the embedding model fits your data. Reranking, query
-    rewriting, and a fine-tuned embedder each buy back a little of what end-to-end training gave for free. A serious
-    retrieval stack keeps adding stages to recover the rest. Read the bolt-on as a pragmatic stand-in for a once-unified
-    system, and you can see where its ceiling sits and which knobs raise it.
-  </div>
     </div>
   </details>
 
   <!-- ── The practical pipeline you build ── -->
   <h2>The retrieve-then-generate pipeline you build</h2>
   <p>
-    With that ceiling in mind, here is the whole assembly. A retriever runs in front of the frozen model across two
+    A retriever runs in front of the frozen model across two
     separate timelines. One timeline builds the index ahead of time so the other can serve a live request against it.
     The figure below traces both.
   </p>
@@ -171,9 +158,7 @@
   </ul>
   <p>
     The bundle principle is a planning discipline: <em>define the bundle before
-    you pick the database</em>. Picking a vector store first and hoping it covers
-    everything is the origin of most "worked in demo but failed in production"
-    stories. The four-shape taxonomy below checks whether your
+    you pick the database</em>. The table below helps check whether your
     candidate primitive can deliver the bundle for your task.
   </p>
 
@@ -203,17 +188,16 @@
   <!-- ── Part 2: Four data shapes ──────────────────────────────────────────── -->
   <h2>Matching a retrieval primitive to the shape of your data</h2>
   <p>
-    Each data shape calls for its own retrieval primitive. Pick the
-    wrong lane and retrieval keeps returning results that look fine while
-    quietly missing what the query wanted, with no error to warn
-    you. The table below tells you which primitive each shape calls for.
+    The table lists retrieval approaches to consider for different data shapes.
+    Choose using representative questions, the evidence each answer needs, and the cost
+    of retrieving it; evaluate whether the returned results cover that evidence.
   </p>
 
   <table style="width:100%;border-collapse:collapse;font-size:.9rem;margin:.8em 0">
     <thead><tr style="border-bottom:2px solid var(--bd)">
       <th style="text-align:left;padding:8px 12px;color:var(--td);font-size:.78rem;text-transform:uppercase">Shape</th>
       <th style="text-align:left;padding:8px 12px;color:var(--td);font-size:.78rem;text-transform:uppercase">Examples</th>
-      <th style="text-align:left;padding:8px 12px;color:var(--td);font-size:.78rem;text-transform:uppercase">Right primitive</th>
+      <th style="text-align:left;padding:8px 12px;color:var(--td);font-size:.78rem;text-transform:uppercase">Candidate approach</th>
     </tr></thead>
     <tbody>
       <tr><td style="padding:8px 12px"><strong>Unstructured prose</strong></td><td style="padding:8px 12px">Docs, articles, code comments, transcripts</td><td style="padding:8px 12px">Dense vector + cross-encoder rerank</td></tr>
@@ -224,8 +208,8 @@
   </table>
 
   <p>
-    The <strong>unstructured-prose</strong> example carries a corpus through retrieval and generation
-    to a grounded answer.
+    The <strong>unstructured-prose</strong> example retrieves passages from a corpus and
+    asks the model to answer from them. Check whether the answer is supported by those passages.
   </p>
   <figure style="margin:1.4em 0">
     <div class="fig-embed" data-svg-src="assets/figures/02b-rag-2.svg" style="aspect-ratio:900 / 420"></div>
@@ -235,7 +219,7 @@
     <li><strong>Embed</strong> the query into a vector.</li>
     <li><strong>Search</strong> the passage index for the top-K nearest passages.</li>
     <li><strong>Concatenate</strong> those passages onto the prompt.</li>
-    <li><strong>Generate</strong> an answer grounded in them.</li>
+    <li><strong>Generate</strong> an answer with an instruction to use those passages.</li>
   </ul>
   <p>
     Index agents that manage other primitives largely take the same shape while varying the search/embed/verification logic, so don't feel intimidated to experiment with shapes that better fit your data.
@@ -257,9 +241,10 @@
     <p class="embedding-consequence"><strong>Store:</strong> a vector index organizes texts by their position in that space for efficient nearest-neighbour search.</p>
   </div>
   <p>
-    Both rest on a single primitive, the embedding model. This course calls NVIDIA's hosted
-    embedding model through <code>helpers.embed</code>. The browser sends your text through
-    the course relay; inference runs on NVIDIA's service and requires your API key.
+    Both use the embedding model, called through <code>helpers.embed</code> in this course.
+    Configure the embedding endpoint and its required credential in the model panel.
+    The browser sends your text through the selected route. Inspect the request and
+    returned error if the embedding service is unavailable.
   </p>
 
   <div id="cell-m3b-p1"></div>
@@ -276,13 +261,10 @@
       <li><code>input_type</code> is either <code>"query"</code> or <code>"passage"</code>.</li>
       <li>The response carries a <code>data</code> array whose entries each hold an <code>embedding</code> of <code>number[]</code>.</li>
     </ul>
-    <p>The NVIDIA embed models assign the same text a different vector depending on the
-    <code>input_type</code> you pass. The training objective pulls a question
-    toward the passages that answer it rather than toward texts that merely
-    repeat its words, so a cosine score between two correctly typed inputs
-    tracks relevance well. Embedding a query with the
-    <code>"passage"</code> type or the reverse breaks the score function
-    silently and produces lower recall with no error message.</p>
+    <p>The NVIDIA embedding model uses <code>input_type</code> to distinguish queries from
+    passages. Its retrieval training aims to match questions with passages that answer them.
+    Reversing <code>"query"</code> and <code>"passage"</code> can change the scores and reduce
+    retrieval quality without causing an API error. Check the types and evaluate the returned passages.</p>
   </div>
     </div>
   </details>
@@ -329,13 +311,12 @@
     solves. You must choose between short chunks and long documents:
   </p>
   <ul>
-    <li>Short chunks embed precisely (the vector represents a focused idea) but lack context (one sentence is rarely enough to answer with).</li>
-    <li>Long documents have context (every fact lands in its setting) but embed fuzzily (the vector is the average of many ideas).</li>
+    <li>Short chunks focus the embedding on a narrower passage, but may omit context needed to answer the question.</li>
+    <li>Long documents include more surrounding context, but covering several topics in one embedding can dilute the match to a specific question.</li>
   </ul>
   <p>
-    The production pattern indexes at two levels. You embed the small chunks so retrieval stays
-    precise, and when one matches you return its parent document so the model still sees the full
-    context around it.
+    One approach indexes at two levels. Small chunks are embedded for retrieval; a match
+    selects the parent document to supply more surrounding context to a later generation step.
   </p>
   <p>
     The exercise below builds this with three parent docs, each split into short
@@ -344,7 +325,7 @@
 
   <figure style="margin:1.4em 0">
     <div id="cell-m3b-p3"></div>
-    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">We embed and search the small child chunks, and each match hands its full parent document to the LLM.</figcaption>
+    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">We embed and search the small child chunks, and each match selects its full parent document as context for a later generation step.</figcaption>
   </figure>
     </div>
   </details>
@@ -368,10 +349,9 @@
     <li>A second LLM call writes the final answer grounded in the retrieved passages.</li>
   </ol>
   <p>
-    The "retriever-as-tool" shape you just wired scales straight to production.
-    Swapping the in-memory cosine function for a server-side FAISS+<a href="https://en.wikipedia.org/wiki/Okapi_BM25" target="_blank" rel="noopener">BM25</a>+rerank pipeline
-    changes only the executor; the tool schema, the agent loop, and the final
-    answer step all stay identical.
+    You can retain the tool interface while replacing the in-memory cosine search
+    with a server-side FAISS+<a href="https://en.wikipedia.org/wiki/Okapi_BM25" target="_blank" rel="noopener">BM25</a>+rerank pipeline
+    executor. Validate its results and failure behavior before using it in the loop.
   </p>
 
   <div id="cell-m3b-p4"></div>
@@ -409,8 +389,8 @@
     and you find that the answer is too diffuse to live in any one passage and emerges only from the corpus taken as a whole.
   </p>
   <p>
-    Top-K hands back only its three best matches, so the model summarizes those three chunks while staying completely
-    blind to the other nine hundred and ninety-seven passages in the corpus. GraphRAG
+    With K set to 3, top-K returns three matches from the thousand-passage example.
+    Generation receives those selected passages; they may not cover themes elsewhere in the corpus. GraphRAG
     (<a href="https://arxiv.org/abs/2404.16130" target="_blank" rel="noopener">Edge et al. 2024</a>)
     changes the shape of that problem instead of raising K. It spends an LLM up front at indexing time to:
   </p>
@@ -436,11 +416,10 @@
 
   <p>
     The cell below makes the difference concrete on a small corpus, and it
-    runs the real pipeline rather than playing back a script. It asks one global
-    question two ways: plain top-K retrieval, and GraphRAG's map-reduce over named
-    communities. Watch top-K answer from whichever chunks happen to match the
-    question's words while the community pass recovers the corpus-wide theme. Edit the
-    corpus, the communities, or the question and run it again.
+    compares top-K retrieval with the community-summary stage used in GraphRAG.
+    The groups below are authored labels, not a graph extracted by the model.
+    The summary route receives every group and its name; top-K receives only its selected passages.
+    Inspect which claims each answer supports, then change K, the groups, or the question.
   </p>
   <div id="cell-graphrag"></div>
   <script type="module">
@@ -465,16 +444,28 @@ const CORPUS = [
   { text: "Quicksort partitions around a pivot, then recursively sorts the elements below and above it.", community: "Divide and conquer" },
 ];
 
-// A GLOBAL question: no single chunk states the answer, so top-K is at a
-// disadvantage and the community pass should win.
+// A global question. The routes receive different coverage and labels;
+// compare their evidence rather than assuming one answer will be better.
 const QUESTION = "What are the main families of algorithms in this corpus, and how do they differ?";
 
 const TOP_K = 2;
 
+function completeAnswer(response) {
+  helpers.log.details("generation response", response);
+  const choice = response.choices?.[0];
+  if (choice?.finish_reason !== "stop" || choice.message?.tool_calls?.length
+      || !choice.message?.content?.trim())
+    throw new Error("Generation did not return a complete answer; inspect the response.");
+  return choice.message.content;
+}
 
 // Basic top-K: embed, rank by cosine similarity, answer from the top chunks.
+const embeddingConfig = await helpers.getEmbeddingConfig();
 const chunkVecs = await helpers.embed(CORPUS.map(d => d.text), { model: "nvidia/nemotron-3-embed-1b", inputType: "passage" });
 const [qVec]    = await helpers.embed(QUESTION, { model: "nvidia/nemotron-3-embed-1b", inputType: "query" });
+const currentEmbeddingConfig = await helpers.getEmbeddingConfig();
+if (embeddingConfig.url !== currentEmbeddingConfig.url || embeddingConfig.model !== currentEmbeddingConfig.model)
+  throw new Error('The corpus or embedding configuration changed; rebuild the index.');
 
 const ranked = CORPUS
   .map((d, i) => ({ ...d, score: helpers.cosineSim(qVec, chunkVecs[i]) }))
@@ -490,7 +481,7 @@ const basicResp = await helpers.chat({
   ],
   max_tokens: 8196,
 });
-const basicAnswer = basicResp.choices[0].message.content;
+const basicAnswer = completeAnswer(basicResp);
 
 
 // ── 2 · GRAPHRAG map-reduce ────────────────────────────────────────────────────
@@ -507,12 +498,12 @@ for (const name of communities) {
     ],
     max_tokens: 8196,
   });
-  summaries.push({ name, summary: resp.choices[0].message.content });
+  summaries.push({ name, summary: completeAnswer(resp) });
 }
 helpers.log("community summaries:", summaries.map(s => s.name));
 
 // REDUCE: answer from the community summaries only, never the raw chunks.
-// Every family rides in through its summary, so the answer covers all of them.
+// Every family has a summary available; check whether the answer covers them accurately.
 const graphResp = await helpers.chat({
   messages: [
     { role: "system", content: "Answer the question using ONLY these community summaries. Be concise.\\n\\n" + summaries.map(s => s.name + ": " + s.summary).join("\\n") },
@@ -520,7 +511,7 @@ const graphResp = await helpers.chat({
   ],
   max_tokens: 8196,
 });
-const graphAnswer = graphResp.choices[0].message.content;
+const graphAnswer = completeAnswer(graphResp);
 
 
 // ── 3 · render both answers side by side ────────────────────────────────────────
@@ -535,20 +526,19 @@ const panel = (title, sub, body) =>
 helpers.log.html(
   '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">' +
     panel("Basic RAG · top-" + TOP_K, "answer from the " + TOP_K + " chunks nearest the question", basicAnswer) +
-    panel("GraphRAG · map-reduce", "summarize each community, then answer from the summaries", graphAnswer) +
+    panel("Authored groups · community summaries", "summarize each community, then answer from the summaries", graphAnswer) +
   '</div>'
 );
 
-helpers.log("Notice the global theme top-K misses but the community pass recovers.");
+helpers.log("Compare which families each answer supports. The summary route saw authored group names and all passages; top-K saw only its selected passages.");
 `,
     });
   </script>
 
   <p>
-    A frozen model with a top-K retriever in
-    front answers local questions well and global ones not at all. Restructuring the
-    corpus into summarized communities buys the global answer, paid for by an
-    expensive indexing pass you run once.
+    Small top-K selections can omit evidence needed for corpus-wide questions.
+    Community summaries can broaden coverage, but their grouping and summaries also need evaluation.
+    This example runs summarization each time; a larger system can build and store summaries ahead of queries.
   </p>
     </div>
   </details>
@@ -574,8 +564,8 @@ helpers.log("Notice the global theme top-K misses but the community pass recover
     <ul>
       <li><a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Lewis et al., <em>Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</em> (NeurIPS 2020)</a>. The canonical retrieve-then-generate paper; the figure above is redrawn from it.</li>
       <li><a href="https://arxiv.org/abs/2004.04906" target="_blank" rel="noopener">Karpukhin et al., <em>Dense Passage Retrieval</em> (EMNLP 2020)</a>. The dual-encoder formulation behind query / passage embedding asymmetry that the NVIDIA embed model enforces.</li>
-      <li><a href="https://arxiv.org/abs/1702.08734" target="_blank" rel="noopener">Johnson, Douze &amp; Jégou, <em>Billion-scale similarity search with GPUs</em> (FAISS, 2017)</a>. The vector-index data structure used by every "vector database" you have ever heard of.</li>
-      <li><a href="https://arxiv.org/abs/2212.10496" target="_blank" rel="noopener">Gao et al., <em>HyDE: Precise Zero-Shot Dense Retrieval without Relevance Labels</em> (2022)</a>. Generates a hypothetical answer and embeds that instead of the question; a quick win for short or ambiguous queries.</li>
+      <li><a href="https://arxiv.org/abs/1702.08734" target="_blank" rel="noopener">Johnson, Douze &amp; Jégou, <em>Billion-scale similarity search with GPUs</em> (FAISS, 2017)</a>. A library for similarity search over dense vectors.</li>
+      <li><a href="https://arxiv.org/abs/2212.10496" target="_blank" rel="noopener">Gao et al., <em>HyDE: Precise Zero-Shot Dense Retrieval without Relevance Labels</em> (2022)</a>. Generates a hypothetical answer and embeds it for retrieval.</li>
       <li><a href="https://arxiv.org/abs/2010.06467" target="_blank" rel="noopener">Lin et al., <em>Pretrained Transformers for Text Ranking</em> (2020)</a>. The reranker pattern that a production retrieval stack uses as its second stage.</li>
       <li><a href="https://arxiv.org/abs/2404.16130" target="_blank" rel="noopener">Edge et al., <em>From Local to Global: A Graph RAG Approach to Query-Focused Summarization</em> (2024)</a>. Builds an LLM-derived knowledge graph and pre-summarizes its communities so global, corpus-wide questions can be answered; the pipeline figure above is redrawn from it.</li>
     </ul>
@@ -620,18 +610,21 @@ const CORPUS = [
 
 // Load the index once; recompute vectors if the embedding model changed.
 let _index = null;
-async function loadIndex() {
-  if (_index) return _index;
+async function loadIndex(signal) {
+  const config = await helpers.getEmbeddingConfig();
+  const key = JSON.stringify([config.url, config.model]);
+  if (_index?.key === key) return _index;
   try {
-    const m = await (await helpers.fetch("assets/rag_index.json")).json();
-    const ok = m.model === MODEL_PIN;
-    if (!ok) helpers.log("prebuilt index was built for " + m.model + ", not " + MODEL_PIN + "; embedding live instead.");
+    const m = await (await helpers.fetch("assets/rag_index.json", { signal })).json();
+    const ok = m.model === config.model;
+    if (!ok) helpers.log("prebuilt index was built for " + m.model + ", not " + config.model + "; embedding live instead.");
     _index = ok
       ? { byDoc: new Map(m.docs.map(d => [d.text, d.vec])), byQuery: new Map(m.queries.map(q => [q.text, q.vec])) }
       : { byDoc: new Map(), byQuery: new Map() };
   } catch (e) {
     _index = { byDoc: new Map(), byQuery: new Map() };
   }
+  _index.key = key;
   return _index;
 }
 
@@ -643,14 +636,26 @@ helpers.mountChatUI("#rag-artifact", {
   ],
   examples: ["What is retrieval-augmented generation?", "Why use cosine similarity?", "How does the ReAct loop work?", "What is a tool, mechanically?", "What does the OpenShell sandbox do?", "What is a deep research agent?"],
   respond: async (text, ctx) => {
-    const idx = await loadIndex();
+    const idx = await loadIndex(ctx.signal);
+    const checkIndex = async () => {
+      ctx.signal?.throwIfAborted();
+      const current = await helpers.getEmbeddingConfig();
+      if (idx.key !== JSON.stringify([current.url, current.model])) throw new Error("Embedding configuration changed during retrieval; retry with one model.");
+    };
+    await checkIndex();
     // corpus vectors come from the prebuilt index; only passages it does not cover (edits) embed live
     const miss = CORPUS.filter(t => !idx.byDoc.has(t));
-    if (miss.length) { ctx.view.tool("embedding " + miss.length + " edited passage(s); the rest load from the prebuilt index"); (await helpers.embed(miss, { inputType: "passage" })).forEach((v, i) => idx.byDoc.set(miss[i], v)); }
+    if (miss.length) {
+      ctx.view.tool("embedding " + miss.length + " edited passage(s); the rest load from the prebuilt index");
+      const vectors = await helpers.embed(miss, { inputType: "passage", signal: ctx.signal });
+      await checkIndex();
+      vectors.forEach((v, i) => idx.byDoc.set(miss[i], v));
+    }
     const docVecs = CORPUS.map(t => idx.byDoc.get(t));
     // the example questions are prebuilt too, so they retrieve with no embed call; anything you type embeds live
     let qv = idx.byQuery.get(text);
-    if (!qv) { [qv] = await helpers.embed(text, { inputType: "query" }); }
+    if (!qv) { [qv] = await helpers.embed(text, { inputType: "query", signal: ctx.signal }); }
+    await checkIndex();
     const ranked = CORPUS.map((t, i) => ({ t, s: helpers.cosineSim(qv, docVecs[i]) })).sort((a, b) => b.s - a.s);
     const max = ranked[0].s || 1;
     ctx.view.html('<table><tr><th>passage</th><th>cosine</th></tr>' + ranked.map(r =>
@@ -665,6 +670,9 @@ helpers.mountChatUI("#rag-artifact", {
       { role: "system", content: "Answer ONLY from these passages and cite them as [n]. If they do not cover the question, say so.\\n\\n" + top },
       ...(ctx.history || []),
       { role: "user", content: text }], model: ctx.model, max_tokens: 8196, signal: ctx.signal }, (t) => ctx.view.token(t), { onReasoning: (r) => ctx.view.reasoning(r) });
+    ctx.view.tool("generation response", s);
+    if (s.finish_reason !== "stop" || s.tool_calls?.length || !s.content?.trim())
+      throw new Error("Generation did not return a complete answer; inspect the response.");
     if (s.usage) ctx.view.usage({ input: s.usage.prompt_tokens, output: s.usage.completion_tokens, model: s.model });
   },
 });
@@ -768,11 +776,20 @@ return { n_docs: state.corpus.length };
       id: "index", icon: "🗂", title: "Build index (embed all)", x: 0, y: 1,
       summary: "Embeds every passage using the \'passage\' input type and stores each one as an object pairing the original text with its vector.",
       code: `// Embed the text so similarity search can compare vectors.
-const vecs = await helpers.embed(state.corpus, {
+state.index = null;
+const corpus = [...state.corpus];
+const config = await helpers.getEmbeddingConfig();
+const indexConfig = JSON.stringify([config.url, config.model]);
+const vecs = await helpers.embed(corpus, {
   model:     "nvidia/nemotron-3-embed-1b",
   inputType: "passage",
 });
-state.index = state.corpus.map((text, i) => ({ text, vector: vecs[i] }));
+const current = await helpers.getEmbeddingConfig();
+if (indexConfig !== JSON.stringify([current.url, current.model]) || JSON.stringify(corpus) !== JSON.stringify(state.corpus))
+  throw new Error('The corpus or embedding configuration changed; rebuild the index.');
+state.index = corpus.map((text, i) => ({ text, vector: vecs[i] }));
+state.indexConfig = indexConfig;
+state.indexCorpus = JSON.stringify(corpus);
 return { indexed: state.index.length, dim: vecs[0].length };
 `,
     },
@@ -790,12 +807,21 @@ return state.query;
       id: "retrieve", icon: "🎯", title: "Embed the query and rank matches", x: 1, y: 1,
       summary: "Embeds the query with the 'query' input type, cosine-scores it against every passage, and returns the top three.",
       code: `// Embed the text so similarity search can compare vectors.
-const [qv] = await helpers.embed(state.query, {
+const config = await helpers.getEmbeddingConfig();
+const indexConfig = JSON.stringify([config.url, config.model]);
+if (!state.index || state.indexConfig !== indexConfig || state.indexCorpus !== JSON.stringify(state.corpus))
+  throw new Error('The corpus or embedding configuration changed; rebuild the index.');
+const query = state.query, index = state.index;
+const [qv] = await helpers.embed(query, {
   model:     "nvidia/nemotron-3-embed-1b",
   inputType: "query",
 });
+const current = await helpers.getEmbeddingConfig();
+if (state.index !== index || state.indexCorpus !== JSON.stringify(state.corpus) || indexConfig !== JSON.stringify([current.url, current.model]))
+  throw new Error('The corpus or embedding configuration changed; rebuild the index.');
+if (state.query !== query) throw new Error('The query changed during retrieval; run retrieval again.');
 state.qv = qv;
-const scored = state.index.map((d, i) => ({
+const scored = index.map((d, i) => ({
   idx: i,
   score: helpers.cosineSim(qv, d.vector),
   text: d.text,
@@ -838,6 +864,7 @@ return { n_docs: state.docs.length };
       summary: "Split each parent document into sentence chunks and retain its parent ID. The narrower units improve search precision while preserving a route back to the full document.",
       code: `// Seed the small dataset this retrieval example searches.
 state.chunks = [];
+state.chunkSource = JSON.stringify(state.docs);
 for (const d of state.docs) {
   const sentences = d.body.split(/(?<=\\.) /);
   for (let i = 0; i < sentences.length; i++) {
@@ -851,11 +878,22 @@ return { n_chunks: state.chunks.length, per_doc: state.docs.map(d => ({ id: d.id
       id: "index", icon: "🗂", title: "Embed chunks", x: 0, y: 2,
       summary: "Embeds child chunks for precise search, then returns the matching parent document for context.",
       code: `// Embed the text so similarity search can compare vectors.
-const vecs = await helpers.embed(state.chunks.map(c => c.text), {
+state.chunkIndex = null;
+if (state.chunkSource !== JSON.stringify(state.docs)) throw new Error('Parent documents changed; split and index them again.');
+const chunks = state.chunks.map(chunk => ({ ...chunk }));
+const config = await helpers.getEmbeddingConfig();
+const indexConfig = JSON.stringify([config.url, config.model]);
+const vecs = await helpers.embed(chunks.map(c => c.text), {
   model:     "nvidia/nemotron-3-embed-1b",
   inputType: "passage",
 });
-state.chunkIndex = state.chunks.map((c, i) => ({ ...c, vector: vecs[i] }));
+const current = await helpers.getEmbeddingConfig();
+if (state.chunkSource !== JSON.stringify(state.docs) || JSON.stringify(chunks) !== JSON.stringify(state.chunks))
+  throw new Error('Parent documents changed; split and index them again.');
+if (indexConfig !== JSON.stringify([current.url, current.model])) throw new Error('The corpus or embedding configuration changed; rebuild the index.');
+state.chunkIndex = chunks.map((c, i) => ({ ...c, vector: vecs[i] }));
+state.chunkIndexConfig = indexConfig;
+state.indexedChunks = JSON.stringify(chunks);
 return { indexed: state.chunkIndex.length };
 `,
     },
@@ -875,11 +913,22 @@ return state.query;
       summary: "Selects the top chunk by cosine and returns its parent document. Expand the code to inspect the visualisation data.",
       code: `// Reading guide: the retrieval happens first: embed the query, score chunks, pick the
 // top hit, then return that hit's parent document. The lower half renders the score bars and cards.
-const [qv] = await helpers.embed(state.query, {
+const config = await helpers.getEmbeddingConfig();
+const indexConfig = JSON.stringify([config.url, config.model]);
+if (!state.chunkIndex || state.chunkIndexConfig !== indexConfig || state.indexedChunks !== JSON.stringify(state.chunks))
+  throw new Error('The corpus or embedding configuration changed; rebuild the index.');
+if (state.chunkSource !== JSON.stringify(state.docs)) throw new Error('Parent documents changed; split and index them again.');
+const query = state.query, index = state.chunkIndex;
+const [qv] = await helpers.embed(query, {
   model:     "nvidia/nemotron-3-embed-1b",
   inputType: "query",
 });
-const scored = state.chunkIndex.map(c => ({ ...c, score: helpers.cosineSim(qv, c.vector) }));
+const current = await helpers.getEmbeddingConfig();
+if (state.chunkIndex !== index || indexConfig !== JSON.stringify([current.url, current.model]) || state.indexedChunks !== JSON.stringify(state.chunks))
+  throw new Error('The corpus or embedding configuration changed; rebuild the index.');
+if (state.chunkSource !== JSON.stringify(state.docs)) throw new Error('Parent documents changed; split and index them again.');
+if (state.query !== query) throw new Error('The query changed during retrieval; run retrieval again.');
+const scored = index.map(c => ({ ...c, score: helpers.cosineSim(qv, c.vector) }));
 const ranked = [...scored].sort((a, b) => b.score - a.score);
 const top = ranked[0];
 const parent = state.docs.find(d => d.id === top.parent);
@@ -911,7 +960,7 @@ const cards = state.docs.map((d) => {
   return '<div style="flex:1 1 280px;border:1px solid ' + (isWinnerParent ? "var(--g,#76b900)" : "var(--bd,#2a2a2a)") + ';border-radius:8px;padding:10px 12px">' +
     '<div style="font-weight:600;color:var(--tx,#e6edf3)">' + esc(d.title) + '</div>' +
     '<div style="font-size:11px;color:var(--tf,#8a8a8a);margin-bottom:5px">' + docChunks.length + " chunks · " + d.body.length + " chars" +
-    (isWinnerParent ? ' · <span style="color:var(--gs,#aee23a)">full parent returned to the LLM</span>' : "") + '</div>' + rows + '</div>';
+    (isWinnerParent ? ' · <span style="color:var(--gs,#aee23a)">full parent selected as context</span>' : "") + '</div>' + rows + '</div>';
 }).join("");
 helpers.log.html('<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">' + cards + '</div>');
 
@@ -920,7 +969,7 @@ return {
   chunk_score:           top.score.toFixed(4),
   parent_returned:       parent.title,
   parent_chars:          parent.body.length,
-  precision_gain:        "child chunk score; FULL parent body delivered to the LLM",
+  precision_gain:        "child chunk score; full parent body returned by retrieval",
 };
 `,
     },
@@ -947,13 +996,22 @@ mountCanvasFlow("#cell-m3b-p4", {
 state.corpus = [
   "NVIDIA Nemotron is a family of NVIDIA's open-weights reasoning models. Nano variants are small and fast; Super and Ultra are larger.",
   "Nemotron-3-Nano-30B-A3B is a text reasoning model with a hybrid mixture-of-experts architecture and 3 billion active parameters. Its Omni sibling, Nemotron-3-Nano-Omni-30B-A3B, is the multimodal variant that also reads images.",
-  "This course routes model and embedding calls to build.nvidia.com through a hosted Cloudflare worker proxy. No API key is required in the browser.",
+  "The browser course sends model requests through the route selected in its connection settings. Inspect the endpoint and credential settings before sending a request.",
   "Web search in this course (helpers.webSearch) ranks a glossary of NVIDIA AI terms shipped with the course, searched directly in the browser with no key; a separate helpers.instantAnswer returns one term's definition when the query names it.",
   "Cosine similarity between two embedding vectors measures their semantic closeness. Ranges -1 to 1; higher means more similar.",
   "LangChain.js provides ChatOpenAI for chat completions and OpenAIEmbeddings for embeddings; both accept a custom baseURL.",
 ];
-const vecs = await helpers.embed(state.corpus, { inputType: "passage" });
-state.index = state.corpus.map((text, i) => ({ text, vector: vecs[i] }));
+state.index = null;
+const corpus = [...state.corpus];
+const config = await helpers.getEmbeddingConfig();
+const indexConfig = JSON.stringify([config.url, config.model]);
+const vecs = await helpers.embed(corpus, { inputType: "passage" });
+const current = await helpers.getEmbeddingConfig();
+if (indexConfig !== JSON.stringify([current.url, current.model]) || JSON.stringify(corpus) !== JSON.stringify(state.corpus))
+  throw new Error('The corpus or embedding configuration changed; rebuild the index.');
+state.index = corpus.map((text, i) => ({ text, vector: vecs[i] }));
+state.indexConfig = indexConfig;
+state.indexCorpus = JSON.stringify(corpus);
 return { indexed: state.index.length, dim: vecs[0].length };
 `,
     },
@@ -969,9 +1027,10 @@ state.RETRIEVE_SCHEMA = [{
     description: "Look up passages in the knowledge base that are likely relevant to a question.",
     parameters: {
       type: "object",
+      additionalProperties: false,
       properties: {
         question: { type: "string", description: "The question to look up. Use the user's exact phrasing." },
-        k:        { type: "integer", description: "Number of passages to return; default 3.", default: 3 },
+        k:        { type: "integer", description: "Number of passages to return, from 1 to 10; default 3.", minimum: 1, maximum: 10, default: 3 },
       },
       required: ["question"],
     },
@@ -1011,16 +1070,32 @@ return state.query;
       id: "agent", icon: "🧠", title: "Agent decides", x: 1, y: 1,
       summary: "Calls the model with retrieval exposed. tool_calls requests evidence; finish_reason 'stop' means the model answered directly.",
       code: `// Send the prepared messages and stream the model response.
-state.s1 = await helpers.chatStream({
+state.skipped = false;
+state.s1 = null;
+state.retrievalQuery = null;
+state.retrievals = [];
+state.retrieved = [];
+state.s2 = null;
+const query = state.query;
+const input = JSON.stringify(state.messages);
+const decision = await helpers.chatStream({
   messages:   state.messages,
   tools:      state.RETRIEVE_SCHEMA,
   max_tokens: 8196,   // a reasoning model thinks before it emits the tool call; 1500 can truncate mid-thought
 });
+helpers.log.details('retrieval decision response', decision);
+if (!['stop', 'tool_calls'].includes(decision.finish_reason))
+  throw new Error('Retrieval decision did not finish (finish_reason: ' + decision.finish_reason + '). Inspect the response.');
+if (state.query !== query || JSON.stringify(state.messages) !== input)
+  throw new Error('The retrieval input changed; run the decision again.');
+state.s1 = decision;
+state.decisionQuery = query;
 state.messages.push({
   role: "assistant",
   content: state.s1.content || null,
   tool_calls: state.s1.tool_calls.length ? state.s1.tool_calls : undefined,
 });
+state.decisionMessages = JSON.stringify(state.messages);
 return {
   finish_reason: state.s1.finish_reason,
   wants_to_retrieve: state.s1.tool_calls.length > 0,
@@ -1031,45 +1106,96 @@ return {
       id: "retrieve", icon: "🎯", title: "Retrieve by cosine similarity", x: 1, y: 2,
       summary: "Embeds the question, scores every passage, and returns top-K while plotting the full score distribution.",
       code: `// Handle the tool-call result from the previous model turn.
-if (!state.s1.tool_calls.length) { state.skipped = true; return { skipped: "model answered directly" }; }
-const tc        = state.s1.tool_calls[0];
-const args      = JSON.parse(tc.function.arguments || "{}");
-const k         = args.k || 3;
-const question  = args.question || state.query;
-const [qv]      = await helpers.embed(question, { inputType: "query" });
-const scored    = state.index.map((d, idx) => ({ text: d.text, score: helpers.cosineSim(qv, d.vector), origIdx: idx }));
-const sorted    = [...scored].sort((a, b) => b.score - a.score);
-state.retrieved = sorted.slice(0, k);
-const toolMsg = state.retrieved.map((r, i) => \`[\${i+1}] (score \${r.score.toFixed(3)}) \${r.text}\`).join("\\n");
-state.messages.push({ role: "tool", tool_call_id: tc.id, content: toolMsg });
-// Steer the synthesis call: answer from these passages, no more retrieval.
-state.messages.push({ role: "user", content: "Using only the retrieved passages above, write the final answer now. Do not retrieve again or output any tool-call syntax." });
-
-helpers.viz.retrievalBars(
-  sorted.map(r => ({ score: r.score, text: r.text })),
-  k,
-  "Cosine scores · top-" + k + " (★) becomes the LLM context",
-);
-helpers.log("retrieved " + k + " of " + sorted.length + " passages for the LLM context");
-
-return { question, k, top_scores: state.retrieved.map(r => r.score.toFixed(3)) };
+state.retrievalQuery = null;
+if (!state.s1 || !['stop', 'tool_calls'].includes(state.s1.finish_reason)
+    || state.decisionQuery !== state.query || state.decisionMessages !== JSON.stringify(state.messages))
+  throw new Error('Run a complete decision for the current retrieval input first.');
+state.skipped = !state.s1.tool_calls.length;
+if (state.skipped) {
+  if (state.s1.finish_reason !== 'stop' || !state.s1.content?.trim())
+    throw new Error('Model stopped without an answer or retrieval request. Inspect the decision response.');
+  return { skipped: "model answered directly" };
+}
+// Validate the entire tool turn before retrieving or appending any results.
+const ids = new Set();
+const calls = state.s1.tool_calls.map(tc => {
+  if (!tc || typeof tc.id !== 'string' || !tc.id || ids.has(tc.id)
+    || tc.type !== 'function' || tc.function?.name !== 'retrieve'
+    || typeof tc.function.arguments !== 'string') throw new Error('Invalid retrieve tool call or duplicate call ID.');
+  ids.add(tc.id);
+  let args;
+  try { args = JSON.parse(tc.function.arguments); } catch (_) { throw new Error('Retrieve arguments must be valid JSON.'); }
+  if (!args || Array.isArray(args) || typeof args !== 'object'
+    || Object.keys(args).some(key => !['question', 'k'].includes(key))
+    || typeof args.question !== 'string' || !args.question.trim()) throw new Error('Retrieve requires a nonempty question.');
+  const k = args.k === undefined ? 3 : args.k;
+  if (!Number.isInteger(k) || k < 1 || k > 10) throw new Error('Retrieve k must be an integer from 1 to 10.');
+  return { tc, question: args.question, k };
+});
+const query = state.query;
+const input = JSON.stringify(state.messages);
+const messages = [...state.messages];
+const config = await helpers.getEmbeddingConfig();
+const indexConfig = JSON.stringify([config.url, config.model]);
+if (!state.index || state.indexConfig !== indexConfig || state.indexCorpus !== JSON.stringify(state.corpus))
+  throw new Error('The corpus or embedding configuration changed; rebuild the index.');
+const index = state.index;
+state.retrievals = [];
+for (const { tc, question, k } of calls) {
+  const [qv] = await helpers.embed(question, { inputType: "query" });
+  const current = await helpers.getEmbeddingConfig();
+  if (state.index !== index || state.indexCorpus !== JSON.stringify(state.corpus) || indexConfig !== JSON.stringify([current.url, current.model]))
+    throw new Error('The corpus or embedding configuration changed; rebuild the index.');
+  const sorted = index.map(d => ({ text: d.text, score: helpers.cosineSim(qv, d.vector) }))
+    .sort((a, b) => b.score - a.score);
+  const passages = sorted.slice(0, k);
+  const toolMsg = passages.map((r, i) => \`[\${tc.id}:\${i + 1}] (score \${r.score.toFixed(3)}) \${r.text}\`).join("\\n");
+  messages.push({ role: "tool", tool_call_id: tc.id, content: toolMsg });
+  state.retrievals.push({ question, requested_k: k, passages });
+  helpers.viz.retrievalBars(sorted.map(r => ({ score: r.score, text: r.text })), Math.min(k, sorted.length), "Retrieved passages for " + question);
+  helpers.log("retrieved", passages.length, "passages for", question);
+}
+helpers.signal?.throwIfAborted();
+if (state.query !== query || JSON.stringify(state.messages) !== input)
+  throw new Error('The retrieval input changed; run the decision again.');
+state.retrieved = state.retrievals.flatMap(result => result.passages);
+messages.push({ role: "user",
+  content: "Using only the retrieved passages above, write the final answer now. If they do not cover the question, say so. Do not retrieve again." });
+state.messages = messages;
+state.retrievalQuery = query;
+state.retrievalMessages = JSON.stringify(messages);
+return state.retrievals;
 `,
     },
     {
       id: "answer", icon: "🧠", title: "Final answer (LLM #2)", x: 1, y: 3,
       summary: "Appends the retrieved passages as a tool message, then asks the model for a grounded answer.",
       code: `// Handle the tool-call result from the previous model turn.
-if (state.skipped) return state.s1.content || "(model answered directly but produced no text; raise max_tokens)";
+if (!state.s1 || !['stop', 'tool_calls'].includes(state.s1.finish_reason)
+    || state.decisionQuery !== state.query)
+  throw new Error('Run a complete decision for the current retrieval input first.');
+if (state.skipped) {
+  if (state.decisionMessages !== JSON.stringify(state.messages))
+    throw new Error('The retrieval input changed; run the decision again.');
+  if (state.s1.finish_reason !== 'stop' || state.s1.tool_calls?.length || !(state.s1.content || '').trim())
+    throw new Error('Model stopped without an answer or retrieval request. Inspect the decision response.');
+  return state.s1.content;
+}
+if (state.retrievalQuery !== state.query || state.retrievalMessages !== JSON.stringify(state.messages))
+  throw new Error('Complete retrieval for the current input before generating an answer.');
+const query = state.query;
+const input = JSON.stringify(state.messages);
 // No tools here: the model must synthesize from retrieved passages.
 state.s2 = await helpers.chatStream({
   messages:   state.messages,
   max_tokens: 8196,
 });
-// Strip stray tool-call markup from models that emit it as text.
-const answer = (state.s2.content || "")
-  .replace(/<tool_call>[\\s\\S]*?<\\/tool_call>/g, "")
-  .replace(/<\\/?function[^>]*>|<\\/?parameter[^>]*>/g, "").trim();
-return answer || "(the model did not produce a final answer; try Run again)";
+helpers.log.details('retrieval answer response', state.s2);
+if (state.query !== query || JSON.stringify(state.messages) !== input)
+  throw new Error('The retrieval input changed; run the decision again.');
+if (state.s2.finish_reason !== 'stop' || state.s2.tool_calls?.length || !(state.s2.content || '').trim())
+  throw new Error('Synthesis did not return a complete answer. Inspect its finish reason and response.');
+return state.s2.content;
 `,
     },
   ],

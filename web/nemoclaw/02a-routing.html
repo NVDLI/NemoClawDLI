@@ -120,11 +120,7 @@
   </div>
 
   <h2>When a single loop beats splitting into agents</h2>
-  <p>
-    Without independent workstreams, the coordination overhead of multi-agent
-    composition buys nothing, and one plain loop stays faster and easier
-    to debug.
-  </p>
+
 
   <div class="callout warn">
     <strong>The overhead tax in concrete terms.</strong>
@@ -134,19 +130,12 @@
   </div>
 
   <p>
-    That tax is fixed regardless of the task, so the question becomes whether the work
-    returns enough to cover it. A linear job that one prompt already handles will never
-    recoup the extra calls and the routing logic that they require. The split begins to
-    earn its keep only once the task itself carries the kind of structure that a single
-    loop has no choice but to flatten down into one timeline. Any one of the conditions
-    below makes the trade pay off.
+    Compare the added calls and coordination with the work they enable.
+    Different prompts or tools can help specialists focus; independent work can overlap.
+    Measure the resulting latency and answer quality before deciding whether to split the task.
+    Failure isolation also needs explicit handling: the examples below use
+    <code>Promise.all</code>, which rejects if any branch rejects.
   </p>
-  <ul>
-    <li><strong>Specialization matters.</strong> Different workstreams need different system prompts, tools, or models. One agent forced into both roles degrades both.</li>
-    <li><strong>Parallelism is possible.</strong> Two workers run concurrently, where one agent could only run them in sequence. Three independent searches finish in the time of the slowest.</li>
-    <li><strong>Context bloat is real.</strong> A single agent doing everything accumulates 10000-token context. Specialists stay focused on their slice.</li>
-    <li><strong>Failure isolation helps.</strong> A crashed worker does not kill the whole task. The orchestrator retries, skips, or routes around it.</li>
-  </ul>
 
   <!-- ── Part 3: A real ReWOO research pipeline ───────────────────────────── -->
   <details class="learning-block" open data-learning-id="rewoo-glossary-pipeline" data-learning-tier="applied" data-learning-artifact="optional" data-localization-scope="en-shell">
@@ -221,25 +210,18 @@
   <h2>Declaring specialists from a factory instead of hand-writing each</h2>
 
   <p>
-    Each of the four exercises above built a small agent by hand from the same few
-    pieces of boilerplate that production code should never have to retype for every new
-    specialist. Those pieces are a role label, a system prompt, a tool list, and an
-    invocation. The factory pattern parameterises those four moving parts, so you declare
-    specialists instead of writing them:
+    The specialists above each define a role label, a system prompt, a tool list, and
+    an invocation. The factory below exposes these inputs as parameters so that another
+    specialist can reuse the same construction.
   </p>
   <ul>
     <li><strong>Role.</strong> A short label, used for logs and routing.</li>
     <li><strong>System prompt.</strong> The behaviour contract: what it does, what it refuses, and how it phrases its replies.</li>
-    <li><strong>Tools.</strong> The <a href="https://json-schema.org/" target="_blank" rel="noopener">JSON-Schema</a>-described functions it can call, if any.</li>
-    <li><strong>Invoke contract.</strong> A consistent shape (<code>specialist.run(input)</code>) that returns the final reply.</li>
+    <li><strong>Tools.</strong> Optional schemas the model may request. This one-call wrapper returns requests for inspection; it does not execute them.</li>
+    <li><strong>Invoke contract.</strong> <code>specialist.run(input)</code> returns one model response, including its finish reason and any tool requests.</li>
   </ul>
   <p>
-    <a href="https://www.crewai.com/" target="_blank" rel="noopener">CrewAI</a>,
-    <a href="https://www.langchain.com/" target="_blank" rel="noopener">LangChain</a>, and
-    <a href="https://www.langchain.com/langgraph" target="_blank" rel="noopener">LangGraph</a>
-    all expose this same factory under names that vary by framework, whether
-    <code>Agent</code> or <code>create_agent</code> or a role/goal dataclass.
-    The cell below builds two specialists from the same four parameters, an
+    The cell below builds two specialists with one factory, an
     arithmetic tutor and a translator that both run on one input with their replies
     rendered side by side.
   </p>
@@ -282,13 +264,10 @@
 
   <h2>Try it · the triage router, live</h2>
   <p>
-    Ask a support question and the artifact classifies it into one category with a
-    single model call before it routes that ticket to the matching specialist's system
-    prompt and streams the answer back in that voice. It runs the same
-    classify-then-specialist pattern shown above. The categories here are a
-    customer-support set rather than the IT help-desk enum. Its four values are billing,
-    technical, account, and other. Only the category list changes when the domain
-    changes, while the routing mechanism underneath stays identical.
+    Ask a support question. One model call classifies it as billing, technical, account,
+    or other; the selected specialist then answers. This reuses the classify-then-specialist
+    pattern above with a different classifier prompt, category contract, parser, and
+    specialist prompts.
   </p>
   <div id="router-cell"></div>
   <div id="router-artifact"></div>
@@ -327,13 +306,19 @@ helpers.mountChatUI("#router-artifact", {
       },
       { role: "user", content: text }], model: ctx.model, max_tokens: 8196, signal: ctx.signal });   // nano reasons first; give it room to reach the word
     const raw = ((r.choices && r.choices[0] && r.choices[0].message.content) || "").trim();
-    const cat = raw.toLowerCase().match(/billing|technical|account|other/);
-    const c = cat ? cat[0] : "other";
-    ctx.view.tool("routed → " + c, "classifier replied: " + (raw || "(empty)"));
-    if (cat) ctx.view.activitySuccess();
+    const finish = r.choices?.[0]?.finish_reason;
+    const c = raw.toLowerCase();
+    ctx.view.tool('classifier response', { reply: raw, finish_reason: finish, response: r });
+    if (finish !== 'stop' || !Object.hasOwn(SPECIALISTS, c))
+      throw new Error('Classifier did not return one complete allowed category. Inspect its response and retry.');
+    ctx.view.tool('routed → ' + c, 'classifier replied: ' + raw);
+    ctx.view.activitySuccess();
 
     const s = await helpers.chatStream({ messages: [{ role: "system", content: SPECIALISTS[c] }, ...(ctx.history || []), { role: "user", content: text }], model: ctx.model, max_tokens: 8196, signal: ctx.signal },
       (t) => ctx.view.token(t), { onReasoning: (x) => ctx.view.reasoning(x) });
+    ctx.view.tool("answer response", s);
+    if (s.finish_reason !== "stop" || s.tool_calls?.length || !s.content?.trim())
+      throw new Error("No complete answer arrived; inspect the response.");
     const inTok  = (r.usage && r.usage.prompt_tokens || 0)     + (s.usage && s.usage.prompt_tokens || 0);
     const outTok = (r.usage && r.usage.completion_tokens || 0) + (s.usage && s.usage.completion_tokens || 0);
     if (inTok || outTok) ctx.view.usage({ input: inTok, output: outTok, model: s.model });
@@ -387,6 +372,25 @@ function extractJson(text) {
   return null;
 }
 window.__extractJson = extractJson;
+window.__validateCourseObject = function(response, kind) {
+  if (response.finish_reason !== 'stop')
+    throw new Error(kind + ' did not finish a JSON answer (finish_reason: ' + response.finish_reason + '). Inspect the response before retrying.');
+  const value = extractJson(response.content);
+  const string = x => typeof x === 'string' && x.trim().length > 0;
+  if (!value || Array.isArray(value) || typeof value !== 'object')
+    throw new Error(kind + ' must return a JSON object.');
+  if (kind === 'Planner') {
+    if (Object.keys(value).sort().join(',') !== 'queries,topic' || !string(value.topic)
+      || !Array.isArray(value.queries) || value.queries.length < 3 || value.queries.length > 5
+      || !value.queries.every(string)) throw new Error('Planner must return a topic and 3–5 nonempty search queries.');
+  } else if (kind === 'Triage') {
+    if (Object.keys(value).sort().join(',') !== 'category,priority,summary'
+      || !['network', 'hardware', 'software', 'account'].includes(value.category)
+      || !['high', 'medium', 'low'].includes(value.priority) || !string(value.summary))
+      throw new Error('Triage returned an invalid category, priority, or summary.');
+  } else throw new Error('Unknown output contract: ' + kind);
+  return value;
+};
 
 // ── Part 3: ReWOO research pipeline ──────────────────────────────────────────
 mountCanvasFlow("#cell-m2a-rewoo", {
@@ -426,6 +430,10 @@ state.PLAN_SCHEMA = {
   },
 };
 
+state.plan = null;
+state.searches = null;
+state.context = null;
+const plannedGoal = state.goal;
 const plan = await helpers.chatStream({
   messages: [
     {
@@ -441,22 +449,31 @@ const plan = await helpers.chatStream({
   response_format: { type: "json_schema", json_schema: state.PLAN_SCHEMA },
   max_tokens: 8196,
 });
-state.plan = (
-  window.__extractJson(plan.content)
-  || window.__extractJson(plan.reasoning)
-  || { topic: state.goal, queries: [state.goal] }
-);
+helpers.log.details('planner response', plan);
+if (state.goal !== plannedGoal) throw new Error('The goal changed while planning; plan again.');
+state.plan = window.__validateCourseObject(plan, 'Planner');
+state.plannedGoal = plannedGoal;
+return state.plan;
 `,
     },
 
     {
       id: "executor", icon: "🌐", title: "Executor (parallel searches)", x: 0, y: 2,
       summary: "Runs every planned search concurrently with Promise.all. Wall time follows the slowest query instead of their sum.",
-      code: `// Call the model and time the routed response.
+      code: `// Time the parallel glossary searches; this stage makes no model call.
 const t0 = performance.now();
-state.searches = await Promise.all(
-  state.plan.queries.map(q => helpers.webSearch(q, { maxResults: 3 }))
+if (!state.plan || state.plannedGoal !== state.goal) throw new Error("Plan the current goal before searching.");
+state.context = null;
+state.searchPlan = null;
+const plan = state.plan, goal = state.goal;
+const searches = await Promise.all(
+  plan.queries.map(q => helpers.webSearch(q, { maxResults: 3 }))
 );
+if (state.plan !== plan || state.goal !== goal)
+  throw new Error("Run searches for the current goal before synthesis.");
+state.searches = searches;
+state.searchPlan = plan;
+state.searchedGoal = goal;
 const wall = ((performance.now() - t0) / 1000).toFixed(2);
 const unreachable = state.searches.filter(s => s.unreachable);
 if (unreachable.length) {
@@ -484,6 +501,10 @@ return {
       summary: "Reads the search results and writes the brief. Expand the code to inspect the pipeline diagram data.",
       code: `// Reading guide: the first block is the actual synthesis call. The rest converts the
 // planner/search data into a diagram spec so the page can show the pipeline beside the answer.
+if (!state.context || state.searchPlan !== state.plan || state.searchedGoal !== state.goal
+    || state.plannedGoal !== state.goal)
+  throw new Error("Run searches for the current goal before synthesis.");
+const goal = state.goal, plan = state.plan, context = state.context;
 const synth = await helpers.chatStream({
   messages: [
     { role: "system", content: "You are a research synthesizer. Write a 4-6 sentence brief grounded in the sources. Cite as [search N] when referencing a result." },
@@ -491,6 +512,11 @@ const synth = await helpers.chatStream({
   ],
   max_tokens: 8196,
 });
+helpers.log.details("answer response", synth);
+if (synth.finish_reason !== "stop" || synth.tool_calls?.length || !synth.content?.trim())
+  throw new Error("No complete answer arrived; inspect the response.");
+if (state.goal !== goal || state.plan !== plan || state.context !== context || state.searchPlan !== plan)
+  throw new Error("Run searches for the current goal before synthesis.");
 
 // Build a node/edge spec from the plan the planner emitted, then let helpers.viz.diagram lay it out and theme it.
 // The N search queries become N tool nodes in one grid row; the planner fans out to each, each fans back into the synthesizer.
@@ -523,7 +549,7 @@ helpers.viz.diagram({
   nodes, edges,
 });
 
-return synth.content || synth.reasoning || "(empty)";
+return synth.content;
 `,
     },
   ],
@@ -545,9 +571,9 @@ mountCanvasFlow("#cell-m2a-triage", {
     {
       id: "ticket", icon: "👤", title: "User ticket", x: 0, y: 0,
       summary: "The support ticket the triage agent will classify. Edit it to try different problem types and watch the router pick a different specialist each time.",
-      code: `// TODO: Try a billing or account-access ticket and watch the route change.
+      code: `// TODO: Try a hardware or account-access ticket and watch the route change.
 state.ticket = "My laptop won't connect to the VPN. I've tried restarting and re-installing the client.";
-// state.ticket = "I was charged twice for the same subscription this month.";
+// state.ticket = "The laptop screen flickers when I move the lid.";
 // state.ticket = "My account is locked after I changed phones.";
 return state.ticket;
 `,
@@ -576,8 +602,11 @@ return state.TRIAGE_SCHEMA.schema.properties.category.enum;
 
     {
       id: "triage", icon: "🧠", title: "Triage (LLM)", x: 1, y: 1,
-      summary: "Emits the triage schema through response_format. extractJson handles fenced or reasoning-channel JSON.",
+      summary: "Requests the triage schema, then validates the final response before routing.",
       code: `// Send the prepared messages and stream the model response.
+state.classification = null;
+state.specialistPrompt = null;
+const plannedTicket = state.ticket;
 const t = await helpers.chatStream({
   messages: [
     {
@@ -594,8 +623,10 @@ const t = await helpers.chatStream({
   max_tokens: 8196,
 });
 
-state.classification = window.__extractJson(t.content) || window.__extractJson(t.reasoning);
-if (!state.classification) throw new Error("could not parse triage JSON; would fall back to a catch-all in production");
+helpers.log.details('triage response', t);
+if (state.ticket !== plannedTicket) throw new Error('The ticket changed during triage; classify again.');
+state.classification = window.__validateCourseObject(t, 'Triage');
+state.plannedTicket = plannedTicket;
 return state.classification;
 `,
     },
@@ -610,7 +641,9 @@ const SPECIALISTS = {
   software: "You are a software support specialist. Give 3-5 concise, numbered steps to resolve the software issue.",
   account:  "You are an account support specialist. Give 3-5 clear, numbered steps for account access and permission issues.",
 };
-state.specialistPrompt = SPECIALISTS[state.classification.category] || SPECIALISTS.software;
+if (!Object.hasOwn(SPECIALISTS, state.classification.category))
+  throw new Error('Unknown specialist category: ' + state.classification.category);
+state.specialistPrompt = SPECIALISTS[state.classification.category];
 return { picked: state.classification.category };
 `,
     },
@@ -619,6 +652,7 @@ return { picked: state.classification.category };
       id: "specialist", icon: "🧠", title: "Specialist (LLM)", x: 1, y: 3,
       summary: "Answers under the selected specialist prompt, keeping the model focused on one support domain.",
       code: `// Send the prepared messages and stream the model response.
+if (!state.specialistPrompt || state.plannedTicket !== state.ticket) throw new Error("Route the current ticket before calling a specialist.");
 const r = await helpers.chatStream({
   messages: [
     { role: "system", content: state.specialistPrompt },
@@ -626,7 +660,9 @@ const r = await helpers.chatStream({
   ],
   max_tokens: 8196,
 });
-return r.content || r.reasoning || "(empty)";
+helpers.log.details("answer response", r);
+if (r.finish_reason !== "stop" || r.tool_calls?.length || !r.content?.trim()) throw new Error("No complete answer arrived; inspect the response.");
+return r.content;
 `,
     },
   ],
@@ -679,7 +715,9 @@ async function specialist(label, systemPrompt) {
     ],
     max_tokens: 8196,
   }, null);
-  return { label, content: s.content || s.reasoning || "(empty)", dt: (performance.now() - t0) / 1000 };
+  helpers.log.details(label + " response", s);
+  if (s.finish_reason !== "stop" || s.tool_calls?.length || !s.content?.trim()) throw new Error("Specialist did not complete its answer.");
+  return { label, content: s.content, dt: (performance.now() - t0) / 1000 };
 }
 
 const t0 = performance.now();
@@ -694,23 +732,23 @@ return state.specialists.map(s => ({ label: s.label, wall_s: s.dt.toFixed(2), pr
     },
 
     {
-      id: "summary", icon: "📊", title: "Compare timing and speedup", x: 0, y: 3,
-      summary: "Plots each specialist's duration against the shared wall-clock window to show the concurrency gain.",
-      code: `// Compare the routed work against a serial baseline.
+      id: "summary", icon: "📊", title: "Compare concurrent durations and wall time", x: 0, y: 3,
+      summary: "Compares concurrent durations with elapsed wall time. The ratio estimates overlap; it is not a measured serial speedup.",
+      code: `// Sum concurrent durations as an estimate; no serial run was measured.
 const serial = state.specialists.reduce((s, x) => s + x.dt, 0);
 
 // Draw worker, serial-total, wall-clock, and speedup bars from the same timings.
 helpers.viz.ganttBars(
   state.specialists.map(s => ({ label: s.label.split(" · ")[0], dt: s.dt })),
   state.wall,
-  "Three specialists · wall clock vs serial total",
+  "Three specialists · wall clock vs summed concurrent durations",
 );
 
 return {
   total_wall_s:           state.wall.toFixed(2),
   max_specialist_wall_s:  Math.max(...state.specialists.map(s => s.dt)).toFixed(2),
-  serial_cost_s:          serial.toFixed(2),
-  parallel_speedup:       (serial / state.wall).toFixed(2) + "x",
+  summed_concurrent_durations_s:          serial.toFixed(2),
+  estimated_overlap_ratio:       (serial / state.wall).toFixed(2) + "x",
   note:                   "See the Gantt chart in the cell's log area: three bars (specialists) inside a dashed wall-clock window.",
 };
 `,
@@ -730,26 +768,30 @@ mountCanvasFlow("#cell-m2a-factory", {
   nodes: [
     {
       id: "factory", icon: "🏭", title: "Define the factory", x: 0, y: 0,
-      summary: "Defines a factory over role, system prompt, and tools. Each returned specialist shares the same run loop.",
+      summary: "Defines a one-call specialist over role, prompt, and optional tool schemas. Tool requests are returned for inspection.",
       code: `// Build one reusable specialist wrapper around a prompt and tools.
 state.createSpecialist = function({ role, systemPrompt, tools = [] }) {
   return {
     role,
-    async run(input) {
+    async run(input, runHelpers) {
       const messages = [
         { role: "system", content: systemPrompt },
         { role: "user",   content: input },
       ];
 
-      const s = await helpers.chatStream({
+      const s = await runHelpers.chatStream({
         messages,
         tools: tools.length ? tools : undefined,
         max_tokens: 8196,   // reasoning model: leave room to think AND emit the tool call / answer
       });
+      runHelpers.log.details(role + ' response', s);
+      if (!['stop', 'tool_calls'].includes(s.finish_reason))
+        throw new Error(role + ' response did not finish (finish_reason: ' + s.finish_reason + ').');
       return {
         role,
         finish_reason: s.finish_reason,
-        reply:         (s.content || s.reasoning || "").trim(),
+        reply:         (s.content || "").trim(),
+        tool_requests: s.tool_calls || [],
       };
     },
   };
@@ -795,10 +837,12 @@ state.input = "Translate 'thirty-seven times eleven' and then evaluate the arith
 helpers.log("input:", state.input);
 
 const [arithRes, transRes] = await Promise.all([
-  state.arithmetician.run(state.input),
-  state.translator.run(state.input),
+  state.arithmetician.run(state.input, helpers),
+  state.translator.run(state.input, helpers),
 ]);
 
+helpers.log.details("arithmetic specialist response", arithRes);
+helpers.log.details("translation specialist response", transRes);
 helpers.log("[" + arithRes.role + "]", arithRes.reply.slice(0, 200));
 helpers.log("[" + transRes.role + "]", transRes.reply.slice(0, 200));
 

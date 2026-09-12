@@ -217,10 +217,10 @@ test('the complete candidate diff contains no private or non-production activity
     'git', ['merge-base', 'origin/main', 'HEAD'], { encoding: 'utf8' },
   ).trim();
   const committedDiff = execFileSync(
-    'git', ['diff', '--no-ext-diff', '--unified=0', candidateBase, 'HEAD'], { encoding: 'utf8' },
+    'git', ['diff', '--no-ext-diff', '--unified=0', candidateBase, 'HEAD'], { encoding: 'utf8', maxBuffer:64 * 1024 * 1024 },
   );
   const worktreeDiff = execFileSync(
-    'git', ['diff', '--no-ext-diff', '--unified=0', 'HEAD'], { encoding: 'utf8' },
+    'git', ['diff', '--no-ext-diff', '--unified=0', 'HEAD'], { encoding: 'utf8', maxBuffer:64 * 1024 * 1024 },
   );
   const candidateDiff = `${committedDiff}\n${worktreeDiff}`;
 

@@ -143,11 +143,10 @@ test('parameterized helper controls are translated in every shipped locale', () 
   }
 });
 
-test('every nested scroll surface contains wheel chaining', () => {
+test('measured nested scroll surfaces contain wheel chaining', () => {
   const css = fs.readFileSync(new URL('../../web/nemoclaw/styles/_style.css', import.meta.url), 'utf8');
-  const containsNestedScroll = source => /body\s+\*\s*\{[^}]*overscroll-behavior:\s*contain/s.test(source);
-  assert.equal(containsNestedScroll(css), true);
-  assert.equal(containsNestedScroll(css.replace(/body\s+\*\s*\{[^}]*overscroll-behavior:\s*contain;?[^}]*\}/s, '')), false);
+  assert.match(css, /body \.course-scroll-containment\s*\{[^}]*overscroll-behavior:\s*contain/s);
+  assert.doesNotMatch(css, /body\s+\*\s*\{[^}]*overscroll-behavior:\s*contain/s);
   let wheel;
   const node = { scrollHeight: 500, clientHeight: 200, scrollTop: 300,
     addEventListener: (type, listener, options) => { assert.equal(type, 'wheel'); assert.deepEqual(options, { passive: false, capture: true }); wheel = listener; } };

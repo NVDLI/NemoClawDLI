@@ -107,3 +107,60 @@ class ConceptOrderContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class VisibleConceptBridgeTests(unittest.TestCase):
+    def test_current_visible_bridges_and_paraphrases(self):
+        cases = [
+            ('workflow-scope', 'Index workflow.', '<p>The outer workflow controls scope and data flow.</p><p>Index workflow.</p>'),
+            ('persistent-authority', 'Product roles', '<p>In the previous module, files supplied context and scheduled jobs did work. Those operations rely on process authority.</p><h2>Product roles</h2>'),
+        ]
+        for kind, after, source in cases:
+            with self.subTest(kind=kind):
+                self.assertTrue(concept_order_audit.semantic_order(source, kind, after))
+                for changed in [source.replace('<p>', '<p hidden>', 1),
+                                '<script>' + source + '</script>',
+                                source.replace('controls scope', 'does not control scope').replace('rely on', 'never rely on'),
+                                source.replace('data flow', 'flowchart').replace('authority', 'popularity'),
+                                '<h2>' + after + '</h2>' + source]:
+                    self.assertNotEqual(source, changed)
+                    self.assertFalse(concept_order_audit.semantic_order(changed, kind, after))
+
+    def test_real_tree_discovery_rename_deletion_and_malformed_metadata(self):
+        import tempfile
+        import shutil
+        from pathlib import Path
+        from unittest.mock import patch
+        original = concept_order_audit.COURSE
+        with tempfile.TemporaryDirectory() as folder:
+            course = Path(folder)
+            for item in original.glob('*.html'):
+                shutil.copy(item, course / item.name)
+            for name in ['learning-profile.json', 'course_contract.json']:
+                shutil.copy(original / name, course / name)
+            with patch.object(concept_order_audit, 'COURSE', course), \
+                 patch.object(concept_order_audit, 'LEARNING_PROFILE', course / 'learning-profile.json'), \
+                 patch.object(concept_order_audit, 'COURSE_CONTRACT', course / 'course_contract.json'):
+                self.assertEqual(concept_order_audit.audit(), [])
+                profile = json.loads((course / 'learning-profile.json').read_text())
+                source = course / '02c-deep.html'
+                novel = course / 'nested' / 'research.html'
+                novel.parent.mkdir()
+                shutil.copy(source, novel)
+                self.assertTrue(any('discovered lesson nested/research.html is not mapped' in x for x in concept_order_audit.audit()))
+                novel.unlink()
+                source.rename(novel)
+                findings = concept_order_audit.audit()
+                self.assertTrue(any('mapped lesson 02c-deep.html does not exist' in x for x in findings))
+                self.assertTrue(any('required concept source is missing' in x for x in findings))
+                for lesson in profile['lessons']:
+                    if lesson['id'] == '02c-deep':
+                        lesson['id'] = 'nested/research'
+                (course / 'learning-profile.json').write_text(json.dumps(profile))
+                self.assertEqual(concept_order_audit.audit(), [])
+                source_text = novel.read_text()
+                changed = source_text.replace('owns scope and data flow', 'contains a flowchart')
+                self.assertNotEqual(source_text, changed)
+                novel.write_text(changed)
+                self.assertTrue(any('missing or misplaced visible concept bridge' in x for x in concept_order_audit.audit()))
+                novel.unlink()
+                self.assertTrue(any('mapped lesson nested/research.html does not exist' in x for x in concept_order_audit.audit()))

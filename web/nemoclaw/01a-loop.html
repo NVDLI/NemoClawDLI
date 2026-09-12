@@ -165,20 +165,14 @@
         remember the previous turn, you send that turn again.
         The "memory" of a conversation is a list of messages your code
         maintains and re-sends each time.</li>
-    <li><strong>The output has two channels.</strong> Reasoning models
-        return their working notes in
-        <code>reasoning_content</code> and their final answer in
-        <code>content</code>. You inspect those working notes during
-        development, while the next stage of the loop reads and acts on the
-        answer in <code>content</code>.</li>
+    <li><strong>Reasoning output is optional.</strong> Some models and modes return reasoning text in <code>reasoning_content</code>; others return only answer content or tool requests. Inspect the fields actually returned. The loop reads <code>content</code>, the finish reason, and tool requests before choosing its next step.</li>
     <li><strong>finish_reason is the loop's exit condition.</strong>
         <code>"stop"</code> means the model has written its final
         answer. <code>"tool_calls"</code> means it wants your code to
         run a named function and report the result back.
         <code>"length"</code> means the token budget ran out before
-        the model finished. A loop that drives an LLM-based agent is
-        built entirely around reading this one field and deciding what
-        to do next.</li>
+        the model finished. Read this field alongside the returned content and tool requests
+        before deciding what to do next.</li>
   </ul>
 
   <details class="learning-block" open data-learning-id="conversation-state-apis" data-learning-tier="deep" data-localization-scope="en-shell">
@@ -203,10 +197,7 @@
   </details>
 
   <h2>A real call, in your browser</h2>
-  <p>The cell below sends one chat-completion to the model. It needs an
-     <a href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener">NVIDIA API key</a>,
-     though the free tier covers every exercise. You enter it once, and the course then
-     keeps it in your browser and reuses it on every page so you never paste it twice.</p>
+
 
   <div id="key-panel"></div>
 
@@ -223,37 +214,26 @@
      <code>POST</code> in the OpenAI-compatible wire format. That request carries three things:</p>
   <ul>
     <li>the endpoint to send to,</li>
-    <li>an <code>Authorization</code> header carrying your key,</li>
+    <li>request headers; a custom endpoint may require an <code>Authorization</code> header,</li>
     <li>and a JSON body with <code>model</code> and <code>messages</code>.</li>
   </ul>
-  <p>The cell below makes that call by hand and shows both sides. Open <em>request</em> to
-     see what leaves your browser with the key redacted, and <em>raw response</em> to see
-     the full object <code>chat()</code> hands back.</p>
-  <p>Every endpoint in this course speaks this same format, including the OpenClaw agent
-     runtime in Module 3.</p>
+  <p>The cell below makes that call by hand. Open <em>request</em> to inspect the URL, headers, and body, with any authorization value redacted. Open <em>raw response</em> to inspect the full object returned by <code>chat()</code>.</p>
+  <p>The model endpoint uses this format. Module 3's OpenClaw gateway exposes
+     a separate protocol for agent turns, sessions, and runtime operations.</p>
 
   <div id="cell-wire"></div>
 
   <div class="callout">
-  <strong>Two things that call is quietly doing, and why.</strong> Neither is
-  magic, and both are worth understanding before you trust them.
-  <ul>
-    <li><strong>Your request may go through a proxy.</strong> If you selected the 
-        learning management system/iframe setting when you put in your API key, your 
-        request does not hit <code>build.nvidia.com</code> directly. That
-        endpoint does not return the <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS" target="_blank" rel="noopener">cross-origin (CORS)</a> headers a browser
-        <code>fetch</code> requires, so the call is routed through a small
-        pass-through proxy that adds them. The proxy also adds a course attribution
-        header so DLI can identify traffic from this resource. The lesson sends your
-        API key with that request without storing it or substituting another key.</li>
-    <li><strong>Streaming is wrapped in a helper.</strong>
-        <code>chatStream()</code> sends the same chat request with streaming enabled,
-        then parses the returned event stream into answer text, reasoning text,
-        usage metadata, and the final done signal. The helper also connects those
-        pieces to the lesson panel and Stop button, so the cell can focus on the
-        concept instead of the streaming plumbing. You can open the helper source
-        from the cell menu to inspect exactly what it does.</li>
-    </ul>
+  <p>Configure a compatible endpoint in the model panel before running the cell.
+    NVIDIA-hosted endpoints require an
+    <a href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener">NVIDIA API key</a>.
+    Check the selected service's access and quota. The panel shows the active endpoint
+    and credential settings; inspect the redacted request below before sending.</p>
+  <p>The selected route determines which service receives the request and its credential.
+    A browser call requires the endpoint to permit the course origin. The course can use
+    its configured relay when the provider does not allow that direct browser request.
+    Inspect the active route and request headers in the model panel.</p>
+  <strong>Inspect the streaming helper.</strong> <code>chatStream()</code> parses answer text, any returned reasoning text, usage metadata, and the end-of-stream signal. It connects the response to the lesson panel and Stop button. Open the helper source from the cell menu to inspect the request and event handling.
   </div>
   </div>
   </details>
@@ -283,17 +263,16 @@
     <strong>The decision step is the only part that varies.</strong>
     DFS, BFS, and A* all read the current maze state and return a move. One line in the
     last node chooses the decision function; the loop below runs the same way for each
-    choice. The <code>chat()</code> call you just ran can fill that
-    same step. It changes two edges: your code renders perception as text, and the
-    model returns a tool call that your code applies. The next section zooms in on those
-    two edges.
+    choice. The next example gives the model a choice of branches while a controller
+    records explored cells and the return path.
   </div>
 
   <h2>Using a language model to choose maze moves</h2>
   <p>
-    The maze loop still samples the world and applies one validated move. Only the
-    decision step changes. Instead of DFS, BFS, or A*, the model reads the rendered maze
-    and asks your code to call <code>choose_direction</code>.
+    The controller records visited cells and a return path, filters out visited branches,
+    and walks corridors. At junctions, the model reads the map and chooses the branch order
+    through <code>choose_direction</code>. The controller manages depth-first exploration;
+    it does not supply the model with a solved route.
   </p>
   <p>Run the cells in this order, then vary one control at a time:</p>
   <ol>
@@ -305,19 +284,16 @@
   <div id="cell-llm-maze"></div>
 
   <div class="callout">
-    <strong>A schema turns the answer into a typed action.</strong> The constant rule
-    returned a string. BFS handed back a list. <code>choose_direction</code> gives the
-    model the same contract but enforces it through a JSON Schema, so the loop reads a
-    typed value instead of parsing free prose. With it, a language model can take the
-    decision step that BFS and A* held a moment ago.
+    <strong>Validate the requested action.</strong> The <code>choose_direction</code> schema
+    declares the allowed direction values. The model requests a direction, and the controller
+    checks the tool name and arguments before moving. Inspect the request and response to
+    distinguish the declared schema from the validation your code performs.
   </div>
 
   <h2>The loop, drawn locally</h2>
   <p>
     Place the <code>chat()</code> call inside the loop that re-sends history, and a single
-    turn of any LLM agent in this course takes the same four-stage shape. Name the stages
-    now, because every security and reliability question later traces back to one of these
-    four arrows.
+    turn of any LLM agent in this course takes the same four-stage shape.
   </p>
   <ul>
     <li><strong>Locally-sample.</strong> Your code reads a slice of the
@@ -347,9 +323,8 @@
     and turning an intent into a real change remain your code's job on both sides of that mapping.
   </p>
   <p>
-    That leaves the green box below as the <em>only</em> piece you did not write. An agent
-    therefore has just two choices: what you feed into its context, and what you do with
-    the intent it returns.
+    Inspect both boundaries: the context supplied to the model and the validation
+    your code performs before applying a requested action.
   </p>
 
   <figure style="margin:1.4em 0">
@@ -358,37 +333,38 @@
   </figure>
 
   <div class="callout">
-    <strong>Each pass of the loop acts only locally.</strong> The model reads one small
-    piece of the world such as a single maze cell and hands back one bounded action before the stateless text-to-text step between them forgets everything it just saw. An agent
-    that accomplishes a great deal is only this modest cycle repeated many times while the
-    environment carries the state forward from one pass to the next.
-    Module 1b builds that cycle in code where you can watch the context grow with each turn.
+    The maze request can include the full map and prior turns. Open its request details
+    to see which context is present. Module 1b builds the tool loop with an explicit messages array.
   </div>
 
   <h2>Before you continue</h2>
   <p>Each question is answerable by editing a knob in the LLM-maze cell above and rerunning it.</p>
   <ol>
-    <li><strong>Take the move history away.</strong>
-        Set <code>includeHistory:false</code>, then rerun with the same model and maze.
-        Does the agent repeat explored branches or need more junction decisions without prior turns?</li>
+    <li><strong>Compare conversation history.</strong>
+        Set <code>includeHistory:false</code>, then rerun with the same profile and maze.
+        Compare branch order, junction decisions, and elapsed time with history enabled.
+        The controller retains visited cells and the return path in both runs.</li>
     <li><strong>Remove the strategy hint from the DIRECTIVE.</strong>
         Delete the line that says to prefer unvisited branches over visited cells, then
-        rerun the same cell. Count the decisions against the run with the hint in place.
-        How much of the model's competence came from that one sentence?</li>
-    <li><strong>Swap the decision model.</strong>
-        Change <code>model:"reasoning"</code> to <code>model:"omni"</code> and rerun.
-        The loop, maze, perception, and action do not change. Only the model making
-        the move does. Does the multimodal fallback reach the goal in fewer decisions?</li>
+        rerun with the same profile and maze. Compare branch order, junction decisions,
+        and elapsed time. The controller still filters visited branches; use repeated
+        runs to check whether any difference persists.</li>
+    <li><strong>Compare model profiles.</strong>
+        Start with <code>model:"direct"</code>, then compare <code>model:"reasoning"</code>
+        and <code>model:"omni"</code> on the same maze. Inspect each request's model,
+        token budget, temperature, and reasoning settings. These profiles change several
+        settings; compare branch order and latency without attributing every difference
+        to model identity alone.</li>
   </ol>
   </div>
   </details>
 
-  <h2>Try it · the model as a pure function</h2>
+  <h2>Try it · compare conversation history</h2>
   <p>
-    The smallest artifact in the course is a single <code>chat()</code> call with no tools
-    and no memory wrapped around it. Each message you send stands on its own, running the
-    bare stateless function that the loop will later wrap. Type something below and watch
-    the reply stream back.
+    This chat starts with conversation history enabled. Tell it your name, then ask
+    what your name is. Turn the memory toggle off and ask again. Each <code>chat()</code>
+    call receives the messages assembled by the interface; with memory off, earlier
+    turns are omitted. Compare the replies and inspect how the code builds the request.
   </p>
   <div id="loop-cell"></div>
   <div id="loop-artifact"></div>
@@ -585,9 +561,9 @@ function generateMaze(columns, rows, seed, loopFactor = 0.15) {
   for (let y = 1; y < height - 1; y++) {
     for (let x = 1; x < width - 1; x++) {
       if (grid[y][x] !== '#' || loopRandom() > loopFactor) continue;
-      const horizontalOpening = y % 2 === 0 && x % 2 === 1
+      const horizontalOpening = y % 2 === 1 && x % 2 === 0
         && grid[y][x - 1] !== '#' && grid[y][x + 1] !== '#';
-      const verticalOpening = x % 2 === 0 && y % 2 === 1
+      const verticalOpening = x % 2 === 1 && y % 2 === 0
         && grid[y - 1][x] !== '#' && grid[y + 1][x] !== '#';
       if (horizontalOpening || verticalOpening) grid[y][x] = '.';
     }
@@ -948,9 +924,9 @@ function generateMaze(columns, rows, seed, loopFactor = 0.15) {
   for (let y = 1; y < height - 1; y++) {
     for (let x = 1; x < width - 1; x++) {
       if (grid[y][x] !== '#' || loopRandom() > loopFactor) continue;
-      const horizontalOpening = y % 2 === 0 && x % 2 === 1
+      const horizontalOpening = y % 2 === 1 && x % 2 === 0
         && grid[y][x - 1] !== '#' && grid[y][x + 1] !== '#';
-      const verticalOpening = x % 2 === 0 && y % 2 === 1
+      const verticalOpening = x % 2 === 1 && y % 2 === 0
         && grid[y - 1][x] !== '#' && grid[y + 1][x] !== '#';
       if (horizontalOpening || verticalOpening) grid[y][x] = '.';
     }
@@ -1040,14 +1016,14 @@ state.DECISION_TOOL = {
   type: "function",
   function: {
     name: "choose_direction",
-    description: "At each junction, return NSEW moves. Execution stops at a wall or goal, then walks any corridor automatically.",
+    description: "Choose exactly one allowed direction at this junction. The controller records the route and walks corridors.",
 
     parameters: {
       type: "object",
       properties: {
         direction: {
           type: "string",
-          description: "NSEW sequence such as 'E' or 'EEN'; direction words also work.",
+          description: "One direction letter: N, S, E, or W. Choose from this turn's enum.",
         },
       },
       required: ["direction"],
@@ -1062,8 +1038,8 @@ state.SYS_DIRECTIVE = [
   "You are navigating a maze. You are called only at JUNCTIONS, the places where 2+ forward paths branch.",
   "Corridors (one forward option) are walked for you automatically, so between calls your position can JUMP several cells. The exact list of coordinates you have already travelled is given to you every turn. Use it to connect your moves to where you ended up.",
   "Each call: study the maze, choose ONE direction from the allowed moves, and call choose_direction().",
-  "A direction already tried from this junction is an exhausted branch. Do not choose it again.",
-  "When every branch is exhausted, use the allowed backtrack to continue the search.",
+  "Choose an unvisited neighbor when one is allowed. The controller records the current search path.",
+  "When no unvisited neighbor remains, choose the allowed backtrack along the recorded search path.",
   "STRATEGY: prefer unvisited branches (-) over visited cells (·); head toward G when you can see it.",
 ].join("\\n");
 
@@ -1079,6 +1055,8 @@ state.SYS = state.SYS_DIRECTIVE + "\\n\\n" + state.SYS_REFERENCE;
 // Capability-checked choices for this tool-calling maze task.
 // Pass one key to runMaze, e.g. { model: "reasoning" }.
 state.MAZE_MODELS = {
+  direct:     { id: "nvidia/nemotron-3.5-lightning-30b-a3b", capabilities: ["generation", "streaming", "tool-calling"], maxTok: 1024, temp: 1.0,
+                extra_body: { chat_template_kwargs: { enable_thinking: false } } },
   reasoning:  { id: "nvidia/nemotron-3.5-lightning-30b-a3b", capabilities: ["generation", "reasoning-metadata", "streaming", "tool-calling"], maxTok: 16384, temp: 1.0,
                 extra_body: { reasoning_budget: 4096, chat_template_kwargs: { enable_thinking: true } } },
   omni:       { id: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning", capabilities: ["generation", "reasoning-metadata", "streaming", "tool-calling", "vision", "vision-tool-calling"], maxTok: 20480, temp: 0.6,
@@ -1140,7 +1118,7 @@ state.mazeToDataURL = function(grid, pos, goal, visited, cell) {
 
 
 // runMaze: one corridor-walk + LLM-at-junctions controller, shared by the run node.
-// All knobs are optional. opts.model defaults to the text reasoning model.
+// All knobs are optional. The direct profile uses the text model without a reasoning budget.
 // opts.advanced swaps in the bigger, loopier maze.
 
 state.runMaze = async function(h, state, opts) {
@@ -1158,18 +1136,24 @@ state.runMaze = async function(h, state, opts) {
   // ── model selection (pick a capability-probed key from state.MAZE_MODELS) ──
   var MODELS = state.MAZE_MODELS;
   function resolveModel(m) {
-    if (!m) return MODELS.reasoning;
+    if (!m) return MODELS.direct;
     if (typeof m === 'string' && MODELS[m]) return MODELS[m];
     throw new Error('Unknown maze model profile: ' + String(m));
   }
   var MODEL = resolveModel(opts.model);
-  if (includeImage && MODEL.capabilities.indexOf('vision') < 0) {
+  var endpoint = await h.getConfig();
+  var customModel = !h.isDefaultModelApiBaseUrl(endpoint.url);
+  if (customModel) {
+    MODEL = Object.assign({}, MODEL, {id:endpoint.model, extra_body:null});
+    h.log('Custom endpoint selects ' + MODEL.id + '; named profiles change budgets, not the model. Image support depends on that endpoint.');
+  }
+  if (!customModel && includeImage && MODEL.capabilities.indexOf('vision') < 0) {
     throw new Error('Maze model profile ' + opts.model + ' does not accept image input.');
   }
 
   var cfg = advanced
-    ? { w: 15, h: 11, seed: 99, loop: 0.55, max: 40 }
-    : { w: 11, h: 9, seed: 42, loop: 0.30, max: 20 };
+    ? { w: 7, h: 5, seed: 99, loop: 0.55 }
+    : { w: 5, h: 4, seed: 42, loop: 0.30 };
 
   var log = h.log;
   var generateMaze = state.generateMaze, findCell = state.findCell, validMoves = state.validMoves,
@@ -1201,7 +1185,7 @@ state.runMaze = async function(h, state, opts) {
     return 'You are at (' + ctx.pos[0] + ',' + ctx.pos[1] + ').\\n'
       + (ctx.first ? 'Maze:' : 'Current maze:') + '\\n' + ctx.ascii
       + (ctx.trail ? '\\nPath travelled (move into each cell): ' + ctx.trail : '')
-      + '\\nAlready tried here: ' + (ctx.tried || 'none')
+      + '\\nVisited neighbors: ' + (ctx.tried || 'none')
       + '\\nAllowed moves this turn: ' + ctx.avail
       + '\\nPick your next move.';
   };
@@ -1211,20 +1195,27 @@ state.runMaze = async function(h, state, opts) {
   var ac = new AbortController(), sig = ac.signal;
   var wrap = document.getElementById(wrapId);
   if (wrap) wrap.firstChild.onclick = function() { ac.abort(); };
-  function abortable(p) {
-    if (sig.aborted) return Promise.reject(new DOMException('aborted', 'AbortError'));
-    return Promise.race([p, new Promise(function(_res, rej) {
-      sig.addEventListener('abort', function() { rej(new DOMException('aborted', 'AbortError')); }, { once: true });
-    })]);
+  var stopFromParent = function() { ac.abort(); };
+  if (h.signal) {
+    if (h.signal.aborted) ac.abort();
+    else h.signal.addEventListener('abort', stopFromParent, { once: true });
   }
 
   var grid = generateMaze(cfg.w, cfg.h, cfg.seed, cfg.loop);
+  // Valid DFS moves cross each search-tree edge at most twice. Derive the
+  // decision budget from this grid; invalid replies also consume a turn.
+  cfg.max = 2 * grid.reduce(function(total, row) {
+    return total + Array.from(row).filter(function(cell) { return cell !== '#'; }).length;
+  }, 0);
   var start = findCell(grid, 'S'), goal = findCell(grid, 'G');
   var pos = [start[0], start[1]], prevPos = null, visited = [[pos[0], pos[1]]];
   var actions = [];   // direction letter taken into visited[i] (actions[i-1]); parallel to visited
   var L2D = { N: 'north', S: 'south', E: 'east', W: 'west' };
   var D2L = { north: 'N', south: 'S', east: 'E', west: 'W' };
-  var triedByJunction = Object.create(null), guardrails = 0;
+  var guardrails = 0;
+  // The model chooses branch order; the controller owns visited cells and a real return path.
+  var searchPath = [[start[0], start[1]]];
+  var seen = new Set([start.join(',')]);
 
   var UID = 'rm' + Math.random().toString(36).slice(2, 7);
   log.html('<div id="' + UID + '" style="margin:6px 0"></div>');
@@ -1233,25 +1224,27 @@ state.runMaze = async function(h, state, opts) {
   function availStr(p) { var m = validMoves(grid, p); return m.length ? m.join(', ') : 'none'; }
 
   function junctionChoices(p) {
-    var key = p[0] + ',' + p[1];
     var all = validMoves(grid, p).map(function(dir) { return D2L[dir]; });
-    var tried = triedByJunction[key] || [];
-    var fresh = all.filter(function(letter) { return tried.indexOf(letter) < 0; });
-    if (fresh.length) return { key: key, all: all, tried: tried.slice(), allowed: fresh, backtracking: false };
-
-    // Once every branch at a junction has been explored, expose only the corridor we
-    // arrived through. The model still has to choose that backtrack and continue its search.
-    var back = null;
-    if (prevPos) {
-      var dx = prevPos[0] - p[0], dy = prevPos[1] - p[1];
-      back = dx === 1 ? 'E' : dx === -1 ? 'W' : dy === 1 ? 'S' : dy === -1 ? 'N' : null;
-    }
-    return { key: key, all: all, tried: tried.slice(), allowed: back && all.indexOf(back) >= 0 ? [back] : all, backtracking: true };
+    var fresh = all.filter(function(letter) {
+      var delta = DIRS[L2D[letter]];
+      return !seen.has([p[0] + delta[0], p[1] + delta[1]].join(','));
+    });
+    var tried = all.filter(function(letter) { return fresh.indexOf(letter) < 0; });
+    if (fresh.length) return { allowed: fresh, tried: tried, backtracking: false };
+    var parent = searchPath.length > 1 ? searchPath[searchPath.length - 2] : null;
+    var back = parent ? all.filter(function(letter) {
+      var delta = DIRS[L2D[letter]];
+      return p[0] + delta[0] === parent[0] && p[1] + delta[1] === parent[1];
+    }) : [];
+    return { allowed: back, tried: tried, backtracking: true };
   }
 
-  function rememberChoice(choice, letter) {
-    if (!triedByJunction[choice.key]) triedByJunction[choice.key] = [];
-    if (triedByJunction[choice.key].indexOf(letter) < 0) triedByJunction[choice.key].push(letter);
+  function recordMove(next) {
+    var key = next.join(',');
+    if (!seen.has(key)) { seen.add(key); searchPath.push([next[0], next[1]]); return; }
+    var parent = searchPath.length > 1 ? searchPath[searchPath.length - 2] : null;
+    if (!parent || parent.join(',') !== key) throw new Error('Move left the recorded search path.');
+    searchPath.pop();
   }
 
   function toolFor(letters) {
@@ -1261,11 +1254,9 @@ state.runMaze = async function(h, state, opts) {
     return tool;
   }
 
-  // normalizeDir: accept letters OR words ('E', 'EEN', 'east', 'east north') and return NSEW letters.
+  // Accept only the single direction letter declared by the tool schema.
   function normalizeDir(raw) {
-    return String(raw || '').toUpperCase()
-      .replace(/NORTH/g, 'N').replace(/SOUTH/g, 'S').replace(/EAST/g, 'E').replace(/WEST/g, 'W')
-      .replace(/[^NSEW]/g, '');
+    return typeof raw === 'string' && /^[NSEW]$/.test(raw) ? raw : '';
   }
 
   // Pull inline <think> reasoning out before parsing the answer.
@@ -1310,7 +1301,7 @@ state.runMaze = async function(h, state, opts) {
     }).join('');
     var meta = 'model: ' + escH(req.model) + '  ·  max_tokens: ' + req.max_tokens + '  ·  temp: ' + req.temperature
       + (req.extra_body ? '<br>extra_body: ' + escH(JSON.stringify(req.extra_body)) : '')
-      + '<br>tools: ' + escH((req.tools || []).map(function(t) { return t.function.name; }).join(', '));
+      + '<br>tools: ' + escH(JSON.stringify(req.tools || [])) + '<br>tool_choice: ' + escH(req.tool_choice);
     return '<details style="margin:2px 0"><summary style="cursor:pointer;color:#6a9;font-size:11px">→ full context sent to model (' + sent.length + ' msgs)</summary>'
       + '<div style="font:11px/1.5 ui-monospace,monospace;margin:4px 0;background:#070b0f;padding:8px;border-radius:4px;max-height:420px;overflow:auto">'
       + ctxBlock + '<div style="color:#778;margin-bottom:4px">raw messages · ' + meta + '</div>' + rows + '</div></details>';
@@ -1320,19 +1311,13 @@ state.runMaze = async function(h, state, opts) {
   async function corridorWalk(label) {
     while (!sig.aborted) {
       var moves = validMoves(grid, pos);
-      var fwd = moves.filter(function(dir) {
-        if (!prevPos) return true;
-        var d = DIRS[dir];
-        return !(pos[0] + d[0] === prevPos[0] && pos[1] + d[1] === prevPos[1]);
-      });
-
-      var step;
-      if (fwd.length === 1)                      step = fwd[0];     // corridor: follow it
-      else if (fwd.length === 0 && moves.length) step = moves[0];   // dead end: reverse out
-      else break;                                                   // junction (2+) or stuck (0)
+      var choices = junctionChoices(pos);
+      if (!choices.allowed.length) throw new Error('No unexplored route to the goal remains.');
+      if (moves.length > 2) break; // At a junction, the model chooses, including backtracking.
+      var step = L2D[choices.allowed[0]];
       var mv = doMove(grid, pos, step);
       if (!mv.ok) break;
-      prevPos = pos; pos = mv.pos; visited.push([pos[0], pos[1]]); actions.push(step[0].toUpperCase());
+      recordMove(mv.pos); prevPos = pos; pos = mv.pos; visited.push([pos[0], pos[1]]); actions.push(step[0].toUpperCase());
       show((label || 'walk') + ' ' + step[0].toUpperCase());
       await h.delay(60);
       if (mv.done) return true;
@@ -1352,9 +1337,9 @@ state.runMaze = async function(h, state, opts) {
 
   var modelName = MODEL.id.split('/').pop();
   var modeStr = [includeText ? 'text' : null, includeImage ? 'image' : null].filter(Boolean).join('+') || 'none';
-  show('ready · ' + modeStr + (includeHistory ? ' · history' : ' · stateless'));
+  show('ready · ' + modeStr + (includeHistory ? ' · history' : ' · no conversation history'));
   info('<strong style="color:#76b900">' + modelName + '</strong> · input: ' + modeStr
-    + ' · ' + (includeHistory ? 'with history' : 'stateless')
+    + ' · ' + (includeHistory ? 'with conversation history' : 'no conversation history')
     + ' · ' + (advanced ? 'advanced 15x11 maze' : 'simple 11x9 maze')
     + ' · tool-spec in system: ' + (toolSpecInSystem ? 'yes' : 'no'));
 
@@ -1379,8 +1364,9 @@ state.runMaze = async function(h, state, opts) {
       var ascii = toAscii(grid, pos, goal, visited);
       var imageUrl = includeImage ? state.mazeToDataURL(grid, pos, goal, visited) : null;
       var choices = junctionChoices(pos);
+      if (!choices.allowed.length) throw new Error('No unexplored route to the goal remains.');
       if (choices.backtracking) {
-        info('<span style="color:#fbbf24"><strong>search state:</strong> every branch at this junction has been explored. The model must choose the allowed backtrack and continue.</span>');
+        info('<span style="color:#fbbf24"><strong>search state:</strong> no unvisited neighbor remains here. Choose the allowed backtrack along the recorded search path.</span>');
       }
       var userText = promptFormat({
         ascii: ascii,
@@ -1396,14 +1382,20 @@ state.runMaze = async function(h, state, opts) {
       var sent = includeHistory ? [sysMsg].concat(history, [userMsg]) : [sysMsg, userMsg];
 
       var turnTool = toolFor(choices.allowed);
-      var req = { model: MODEL.id, messages: sent, tools: [turnTool], max_tokens: MODEL.maxTok, temperature: MODEL.temp };
+      var req = { model: MODEL.id, messages: sent, tools: [turnTool], tool_choice: 'required', max_tokens: MODEL.maxTok, temperature: MODEL.temp, signal: sig };
       if (MODEL.extra_body) req.extra_body = MODEL.extra_body;
       info('<strong style="color:#eee">decision ' + decision + '</strong> · ' + modelName + ' at ' + JSON.stringify(pos) + ' untried: [' + choices.allowed.join(', ') + '] · ' + sent.length + ' msgs');
       log.html(renderRequest({ pos: pos, trail: trail, ascii: ascii, imageUrl: imageUrl }, sent, req));   // full context BEFORE the model responds
       show('decision ' + decision + ': asking model...');
       var summary;
       try {
-        summary = await abortable(h.chatStream(req, null, { onReasoning: makeReasonStream(log) }));
+        var decisionStarted = Date.now();
+        summary = await h.chatStream(req, null, { onReasoning: makeReasonStream(log) });
+        log('response model:', summary.model || MODEL.id, 'seconds:', (Date.now() - decisionStarted) / 1000,
+            'finish_reason:', summary.finish_reason);
+        log.details('decision response', summary);
+        if (summary.finish_reason !== 'tool_calls' && summary.finish_reason !== 'stop')
+          throw new Error('Incomplete model decision; no move was applied. Inspect the response.');
       } catch (e) {
         if (e.name === 'AbortError' || sig.aborted) { info('<span style="color:#777">stopped</span>'); break; }
         info('<span style="color:#f87171">error: ' + e.message + '</span>');
@@ -1420,13 +1412,20 @@ state.runMaze = async function(h, state, opts) {
         info('<details style="margin:2px 0"><summary style="cursor:pointer;color:#555;font-size:11px">reasoning (' + split.reasoning.length + ' chars)</summary><div style="font:11px/1.5 ui-monospace,monospace;color:#7a9;background:#040d08;padding:8px;border-radius:4px;max-height:200px;overflow:auto;white-space:pre-wrap">' + escH(split.reasoning) + '</div></details>');
 
       var tcs = summary.tool_calls || [];
-      var toolId = tcs.length ? tcs[0].id : null;
+      if (tcs.some(function(tc) {
+        return !tc.id || tc.type !== 'function' || !tc.function
+          || typeof tc.function.name !== 'string' || typeof tc.function.arguments !== 'string';
+      }) || new Set(tcs.map(function(tc) { return tc.id; })).size !== tcs.length)
+        throw new Error('Malformed tool response: expected unique call IDs and function arguments.');
+      var singleDirectionCall = tcs.length === 1 && tcs[0].type === 'function'
+        && tcs[0].function && tcs[0].function.name === 'choose_direction';
       var rawDir = '';
-      if (tcs.length) { try { rawDir = JSON.parse(tcs[0].function.arguments || '{}').direction || ''; } catch (e2) {} }
+      if (singleDirectionCall) { try { rawDir = JSON.parse(tcs[0].function.arguments || '{}').direction || ''; } catch (e2) {} }
+      if (typeof rawDir !== 'string') rawDir = '';
 
       // Parse text-form choose_direction(...) calls from models without structured tool calls.
       var fromText = false;
-      if (!rawDir && replyText) {
+      if (!tcs.length && !rawDir && replyText) {
         var ci = replyText.toLowerCase().indexOf('choose_direction');
         if (ci >= 0) {
           var lp = replyText.indexOf('(', ci), rp = lp >= 0 ? replyText.indexOf(')', lp) : -1;
@@ -1439,7 +1438,7 @@ state.runMaze = async function(h, state, opts) {
       var steps = normalizeDir(rawDir);
 
       if (includeHistory) {
-        history.push({ role: 'user', content: userText });
+        history.push(userMsg);
         var entry = { role: 'assistant', content: replyText || null };
         if (tcs.length) entry.tool_calls = tcs;
         history.push(entry);
@@ -1447,9 +1446,10 @@ state.runMaze = async function(h, state, opts) {
       // Use tool feedback only after a real tool_call; otherwise use a user message.
       function reply(content) {
         if (!includeHistory) return;
-        history.push(toolId
-          ? { role: 'tool', tool_call_id: toolId, content: content }
-          : { role: 'user', content: content });
+        if (tcs.length) tcs.forEach(function(tc) {
+          history.push({ role: 'tool', tool_call_id: tc.id, content: content });
+        });
+        else history.push({ role: 'user', content: content });
       }
 
       var requested = steps ? steps[0] : '';
@@ -1467,7 +1467,6 @@ state.runMaze = async function(h, state, opts) {
         reply(guardrailNote);
         continue;
       }
-      rememberChoice(choices, selected);
       steps = selected;
       if (fromText) info('<span style="color:#9cf">honored text-form call → ' + escH(steps) + '</span>');
 
@@ -1476,7 +1475,7 @@ state.runMaze = async function(h, state, opts) {
         if (sig.aborted) break;
         var mv2 = doMove(grid, pos, L2D[steps[s]]);
         if (!mv2.ok) { walled = L2D[steps[s]]; break; }
-        pathStr += steps[s]; prevPos = pos; pos = mv2.pos; visited.push([pos[0], pos[1]]); actions.push(steps[s]);
+        recordMove(mv2.pos); pathStr += steps[s]; prevPos = pos; pos = mv2.pos; visited.push([pos[0], pos[1]]); actions.push(steps[s]);
         show('decision ' + decision + ' · ' + pathStr);
         await h.delay(80);
         if (mv2.done) { done = true; break; }
@@ -1508,6 +1507,7 @@ state.runMaze = async function(h, state, opts) {
       await h.delay(200);
     }
   } finally {
+    if (h.signal) h.signal.removeEventListener('abort', stopFromParent);
     if (wrap) wrap.style.display = 'none';
   }
   if (sig.aborted) return { decisions: null, won: false, stopped: true, guardrails: guardrails };
@@ -1533,18 +1533,18 @@ You are called only at JUNCTIONS (2+ open directions).
 You get an ASCII map that marks walls, explored cells, your position, and the goal.
 Corridors are auto-walked, so your position can jump several cells between calls.
 Choose ONE direction from "Allowed moves this turn" and call choose_direction().
-Do not repeat a direction listed under "Already tried here."
-When every branch is exhausted, take the allowed backtrack and continue.
+Choose an unvisited neighbor when one is allowed; the controller records the search path.
+When no unvisited neighbor remains, take the allowed backtrack along that path.
 Prefer unvisited branches (-) over visited cells (·), and head toward G when you can see it.
 Minimize reasoning efforts and make immediate moves.\`;
 
 return await state.runMaze(helpers, state, {
 
-  model:           "reasoning", // capability-checked default; compare with "omni"
+  model:           "direct",   // no reasoning budget; compare with "reasoning" or "omni"
   directive:        DIRECTIVE,  // editable core of the system message (above)
   advanced:         false,      // false = simple 11x9 maze. true = larger 15x11 maze with more loops
   includeText:      true,       // send the ASCII map alongside the picture
-  includeHistory:   true,       // include the history of past moves
+  includeHistory:   true,       // send past turns; controller search memory is always retained
   includeCoords:    true,       // list every coordinate travelled
   toolSpecInSystem: true,       // repeat the tool spec in the system message when the server does not inject it clearly
 
