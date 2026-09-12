@@ -6,10 +6,10 @@
     "web/nemoclaw/assets/figures/03b-openclaw-1.svg"
   ],
   "values": {
-    "link.05536e0e6c7f": {
+    "link.1292fd81eee2": {
       "type": "link",
-      "source": "\n    <p><strong>Same runtime as Kickstart.</strong> These cells reuse the launchable\n      connected in 3a. The course exposes its gateway rather than the internal\n      <code>/v1/chat/completions</code> route. If a cell logs <code>⚠ DEGRADED</code>\n      or stalls, run Recover once for that fresh instance. A local deployment can use the\n      <a href=\"https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NemoClaw setup playbook</a>\n      and the same gateway contract.</p>\n  ",
-      "value": "<p><strong>El mismo runtime de Kickstart.</strong> Estas celdas reutilizan el launchable conectado en 3a. El curso expone su gateway, no la ruta interna <code>/v1/chat/completions</code>. Si una celda registra <code>⚠ DEGRADED</code> o deja de responder, ejecuta Recuperar una vez para esa instancia nueva. En una implementación local, usa el <a href=\"https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">playbook de configuración de NemoClaw</a> y mantén el mismo contrato del gateway.</p>"
+      "source": "Memory comes in <a href=\"https://arxiv.org/abs/2310.08560\" target=\"_blank\" rel=\"noopener\">two tiers</a>. The agent appends raw notes to a dated file\n     under <code>memory/</code> as it works, then distils the parts that\n     should persist into its curated long-term store, <code>MEMORY.md</code>.\n     By default, <code>MEMORY.md</code> is included in the main session context and omitted\n     from shared or group prompts. This context choice does not restrict access to the file.\n     You will read both straight off the live sandbox a few steps down.",
+      "value": "La memoria tiene <a href=\"https://arxiv.org/abs/2310.08560\" target=\"_blank\" rel=\"noopener\">dos niveles</a>. Mientras trabaja, el agente añade notas sin procesar a un archivo fechado en <code>memory/</code> y resume lo que debe conservarse en su memoria a largo plazo, <code>MEMORY.md</code>. De forma predeterminada, <code>MEMORY.md</code> se incluye en el contexto de la sesión principal y se omite en los prompts compartidos o de grupo. Esta elección de contexto no restringe el acceso al archivo. Unos pasos más adelante leerás ambos directamente desde el sandbox en ejecución."
     },
     "link.1be52ce4d6ee": {
       "type": "link",
@@ -20,6 +20,11 @@
       "type": "link",
       "source": "<a href=\"https://docs.anthropic.com/en/docs/claude-code/overview\" target=\"_blank\" rel=\"noopener\">Claude Code</a>. The production CLI agent; live reference for how a workspace directory, persistent memory, and a tool surface fit together at scale.",
       "value": "<a href=\"https://docs.anthropic.com/en/docs/claude-code/overview\" target=\"_blank\" rel=\"noopener\">Claude Code</a>. Agente de CLI utilizado en producción; muestra cómo un directorio de workspace, la memoria persistente y una superficie de herramientas se combinan a escala."
+    },
+    "link.4895ece5217c": {
+      "type": "link",
+      "source": "\n    <p><strong>Same runtime as Kickstart.</strong> These cells reuse the launchable\n      connected in 3a. The course exposes its gateway rather than the internal\n      <code>/v1/chat/completions</code> route. If a cell fails or stalls, run Health check and inspect its evidence before choosing a recovery action. A local deployment can use the\n      <a href=\"https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NemoClaw setup playbook</a>\n      and the same gateway contract.</p>\n  ",
+      "value": "<p><strong>El mismo runtime de Kickstart.</strong> Estas celdas reutilizan el launchable conectado en 3a. El curso expone su gateway en lugar de la ruta interna <code>/v1/chat/completions</code>. Si una celda falla o deja de responder, ejecuta Comprobación de estado y examina sus pruebas antes de elegir una acción de recuperación. Una implementación local puede usar el <a href=\"https://build.nvidia.com/spark/nemoclaw-applications?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">playbook de configuración de NemoClaw</a> y el mismo contrato del gateway.</p>"
     },
     "link.80a3a52bed5f": {
       "type": "link",
@@ -41,11 +46,6 @@
       "source": "<a href=\"https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-safer-autonomous-agent-using-openclaw\" target=\"_blank\" rel=\"noopener\">NVIDIA, <em>How to Build a Safer Autonomous Agent using OpenClaw</em></a>. The course companion reference for OpenClaw, OpenShell, and the sandboxed-agent shape used here.",
       "value": "<a href=\"https://developer.nvidia.com/topics/ai/agentic-ai-learning-path/how-to-build-safer-autonomous-agent-using-openclaw\" target=\"_blank\" rel=\"noopener\">NVIDIA, <em>How to Build a Safer Autonomous Agent using OpenClaw</em></a>. Referencia complementaria sobre OpenClaw, OpenShell y la arquitectura de agente en sandbox usada aquí."
     },
-    "link.a32c63c257b5": {
-      "type": "link",
-      "source": "\n    <strong>The voice is in the file.</strong> Both replies differ because the\n    runtime folded a different SOUL definition into each prompt. To change the\n    persona for real you edit that file or add a <a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">skill bundle</a> and the next turn\n    sees the change. Step 1b already had you read the live SOUL.md off the sandbox,\n    so editing it runs that same path in reverse.\n  ",
-      "value": "<strong>La voz está en el archivo.</strong> Las respuestas difieren porque el runtime incorporó al prompt de cada sesión una definición de SOUL distinta. Para cambiar la personalidad real, edita ese archivo o añade un <a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">paquete de skills</a>; el turno siguiente verá el cambio. En el Paso 1b leíste el SOUL.md activo desde el sandbox. Editarlo recorre la misma ruta en sentido inverso."
-    },
     "link.a87b60eb0a28": {
       "type": "link",
       "source": "<a href=\"https://man7.org/linux/man-pages/man2/seccomp.2.html\" target=\"_blank\" rel=\"noopener\">seccomp (man 2)</a>. The syscall-filtering layer in the kernel sandbox you meet in Module 4.",
@@ -56,30 +56,20 @@
       "source": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">Anthropic, <em>Claude Skills</em> (docs)</a>. The file-as-context pattern OpenClaw uses: a markdown file the runtime folds into the system prompt becomes a callable agent capability.",
       "value": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/overview\" target=\"_blank\" rel=\"noopener\">Anthropic, <em>Claude Skills</em> (docs)</a>. OpenClaw utiliza el mismo patrón de archivo como contexto: el runtime incorpora un archivo Markdown al prompt de sistema y lo convierte en una capacidad que el agente puede invocar."
     },
-    "link.cd14bf8a5e57": {
-      "type": "link",
-      "source": "Memory comes in <a href=\"https://arxiv.org/abs/2310.08560\" target=\"_blank\" rel=\"noopener\">two tiers</a>. The agent appends raw notes to a dated file\n     under <code>memory/</code> as it works, then distils the parts that\n     should persist into its curated long-term store, <code>MEMORY.md</code>.\n     The runtime loads <code>MEMORY.md</code> in the main session and leaves\n     it out of any shared or group context, so personal notes stay private.\n     You will read both straight off the live sandbox a few steps down.",
-      "value": "La memoria se organiza en torno a <a href=\"https://arxiv.org/abs/2310.08560\" target=\"_blank\" rel=\"noopener\">dos niveles</a>. Mientras trabaja, el agente añade notas sin procesar a un archivo con fecha dentro de <code>memory/</code>. Después resume lo que debe perdurar en la memoria seleccionada a largo plazo, <code>MEMORY.md</code>. El runtime carga <code>MEMORY.md</code> en la sesión principal y lo excluye de contextos compartidos o grupales, de modo que las notas personales permanezcan privadas. Más adelante leerás ambos archivos directamente desde el sandbox activo."
-    },
-    "rich.358f62e56c19": {
-      "type": "rich",
-      "source": "Those stores differ in reach. Session history belongs to its session.\n     <code>MEMORY.md</code> can carry a saved fact into a new session whose transcript starts empty.",
-      "value": "Esos almacenes tienen alcances distintos. El historial pertenece a tu sesión actual únicamente. <code>MEMORY.md</code> puede trasladar un dato guardado a una sesión nueva cuya transcripción empieza vacía."
-    },
     "rich.37cc9edf3743": {
       "type": "rich",
       "source": "<code>helpers.terminal(\"bash\")</code> opens the host VM shell, where\n        you can run <code>openshell sandbox list</code>.",
       "value": "<code>helpers.terminal(\"bash\")</code> abre el shell de la VM del host, donde puedes ejecutar <code>openshell sandbox list</code>."
     },
-    "rich.37dfaa1ff6d5": {
+    "rich.56fdbaffc0e9": {
       "type": "rich",
-      "source": "\n    <strong>The launchable has two planes of authority.</strong> The first is the\n    terminal, which runs as the operator above the sandbox boundary and can\n    therefore read every file and list the sandboxes. The agent occupies the second\n    plane. It shares the machine with the terminal but runs under the narrower\n    OpenShell policy tested in Module 4.\n  ",
-      "value": "<strong>El launchable tiene dos planos de autoridad.</strong> El primero es la terminal, que se ejecuta como operador por encima del límite del sandbox y puede leer todos los archivos y enumerar los sandboxes. El agente ocupa el segundo plano. Comparte la máquina con la terminal, pero se ejecuta bajo la política más restrictiva de OpenShell que pondremos a prueba en el Módulo 4."
+      "source": "\n    <strong>Check self-report against the files.</strong> Ask the agent what its prompt contains,\n    then compare the answer with the live workspace in Step 1b:\n    <ul>\n      <li>which persona rules are active,</li>\n      <li>what is on its tool list,</li>\n      <li>or what it remembers about you.</li>\n    </ul>\n  ",
+      "value": "<strong>Contrasta lo que afirma el agente con los archivos.</strong> Pregunta al agente qué contiene su prompt y compara la respuesta con el espacio de trabajo activo en el paso 1b:<ul><li>qué reglas de personalidad están activas,</li><li>qué herramientas aparecen en su lista,</li><li>o qué recuerda sobre ti.</li></ul>"
     },
-    "rich.62e61aecc4b3": {
+    "rich.766fb0c61853": {
       "type": "rich",
-      "source": "\n    <strong>Treat self-report as evidence.</strong> Ask the agent what its prompt contains,\n    then compare the answer with the live workspace in Step 1b:\n    <ul>\n      <li>which persona rules are active,</li>\n      <li>what is on its tool list,</li>\n      <li>or what it remembers about you.</li>\n    </ul>\n  ",
-      "value": "\n    <strong>Trata el autoinforme como evidencia.</strong> Pregunta al agente qué contiene su prompt y compara la respuesta con el workspace activo en el Paso 1b:\n    <ul>\n      <li>qué reglas de personalidad están activas,</li>\n      <li>qué herramientas aparecen en su lista</li>\n      <li>o qué recuerda sobre ti.</li>\n    </ul>\n  "
+      "source": "\n    <strong>The launchable has two planes of authority.</strong> The first is the\n    terminal, which runs as the operator above the sandbox boundary and can\n    inspect files permitted to that operator account and list its sandboxes. The agent occupies the second\n    plane. It shares the machine with the terminal but runs under the narrower\n    OpenShell policy tested in Module 4.\n  ",
+      "value": "<strong>El launchable tiene dos planos de autoridad.</strong> El primero es la terminal, que se ejecuta como operador por encima del límite del sandbox y puede examinar los archivos permitidos a esa cuenta de operador y enumerar sus sandboxes. El agente ocupa el segundo plano. Comparte la máquina con la terminal, pero se ejecuta bajo la política más restrictiva de OpenShell que se prueba en el Módulo 4."
     },
     "rich.7a5c772b689c": {
       "type": "rich",
@@ -101,10 +91,10 @@
       "source": "The launchable also exposes an operator terminal, a shell on the host\n     <em>above</em> the agent's sandbox that Cloudflare puts in front of every\n     launchable. The <code>helpers.terminal()</code> helper opens that shell\n     straight from this page through two entry points:",
       "value": "El launchable también expone una terminal: un shell en el host, <em>por encima</em> del sandbox del agente, al que Cloudflare protege. La función de ayuda <code>helpers.terminal()</code> abre ese shell directamente desde esta página a través de dos puntos de entrada:"
     },
-    "rich.da8874fc113d": {
+    "rich.ca22c0859047": {
       "type": "rich",
-      "source": "\n    <strong>The session-key routing here is a lab affordance.</strong> NemoClaw's\n    image ships a stash of pre-built SOUL variants and wires a session-key suffix\n    to one of them, only so this page can show two voices in one click. Outside\n    the lab the gateway has no such stash, so two session keys would read the one\n    SOUL.md you have and return two identical replies. In production you change\n    the persona by editing SOUL.md.\n  ",
-      "value": "<strong>El enrutamiento por clave de sesión es un recurso del laboratorio.</strong> La imagen de NemoClaw incluye un conjunto de variantes predefinidas de SOUL.md y vincula el sufijo de una clave de sesión con una de ellas, únicamente para mostrar dos voces con un clic. Fuera del laboratorio, el gateway no dispone de esas variantes: dos claves leerían el mismo SOUL.md y devolverían respuestas con la misma personalidad. En una implementación real, cambiarás la personalidad editando SOUL.md."
+      "source": "\n    <strong>This split matters directly for safety.</strong> An agent that can rewrite workspace context can influence later runs.\n    The configured filesystem and network rules determine which other resources it can reach.\n    Inspect the live policy for access to:\n    <ul>\n      <li>the host filesystem,</li>\n      <li>the wider network,</li>\n      <li>or a neighbouring agent's workspace.</li>\n    </ul>\n    <p>You will see that boundary tested directly in the next module, where a deliberately\n    over-privileged agent tries to cross it.</p>\n  ",
+      "value": "<strong>Esta separación afecta directamente a la seguridad.</strong> Un agente que puede reescribir el contexto del espacio de trabajo puede influir en ejecuciones posteriores. Las reglas configuradas del sistema de archivos y de red determinan qué otros recursos puede alcanzar. Examina la política activa para comprobar el acceso a:<ul><li>el sistema de archivos del host,</li><li>el resto de la red,</li><li>o el espacio de trabajo de otro agente.</li></ul><p>En el próximo módulo verás cómo se prueba directamente ese límite, cuando un agente al que se han concedido demasiados privilegios de forma deliberada intenta cruzarlo.</p>"
     },
     "rich.db0dcea49173": {
       "type": "rich",
@@ -116,26 +106,32 @@
       "source": "OpenShell is the kernel-level sandbox that holds the agent. For now you can\n     treat it as the boundary between operator and agent that Module 4 goes on to\n     define in full and to test directly. The agent's name in the connect command\n     comes from <code>GET /api/agent</code>, the same call the Kickstart page made\n     to discover your launchable.",
       "value": "OpenShell es el sandbox a nivel del kernel que contiene al agente. Por ahora, trátalo como el límite entre operador y agente que el Módulo 4 definirá por completo y probará directamente. El nombre del agente en el comando de conexión procede de <code>GET /api/agent</code>, la misma llamada que usó Kickstart para descubrir el launchable."
     },
-    "rich.eb2a3738197c": {
-      "type": "rich",
-      "source": "\n    <strong>This split matters directly for safety.</strong> Because the agent can\n    rewrite its own context, the containment layer beneath it has to stop any bad write\n    from doing real harm. OpenClaw freely modifies the markdown in its own workspace,\n    while the OpenShell sandbox beneath it blocks that same write from ever reaching:\n    <ul>\n      <li>the host filesystem,</li>\n      <li>the wider network,</li>\n      <li>or a neighbouring agent's workspace.</li>\n    </ul>\n    <p>You will see that boundary tested directly in the next module, where a deliberately\n    over-privileged agent tries to cross it.</p>\n  ",
-      "value": "\n    <strong>Esta separación afecta directamente a la seguridad.</strong> Dado que el agente puede reescribir su propio contexto, la capa de contención situada debajo debe impedir que una escritura incorrecta cause daños reales. OpenClaw modifica libremente los archivos Markdown de su workspace, mientras que el sandbox de OpenShell impide que esa misma escritura alcance:\n    <ul>\n      <li>el sistema de archivos de host,</li>\n      <li>la red más amplia</li>\n      <li>o el workspace de otro agente.</li>\n    </ul>\n    <p>En el Módulo 4, un agente con privilegios deliberadamente excesivos intentará cruzar ese límite.</p>\n  "
-    },
-    "rich.ecd302405be8": {
-      "type": "rich",
-      "source": "Asking it to summarise the same doc gets you a risk list plus\n         pointed questions about what's <em>not</em> in the doc.",
-      "value": "Al resumir el mismo documento, produce una lista de riesgos y preguntas directas sobre lo que <em>no</em> está documentado."
-    },
-    "text.04e6c67cfa69": {
+    "text.01402db5da5e": {
       "type": "text",
-      "source": "quick-3b-soul-auditor",
-      "value": "quick-3b-soul-auditor",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
+      "source": "Compare the requests and replies. Only the message instructions were varied; SOUL.md was not changed.",
+      "value": "Compara las solicitudes y las respuestas. Solo cambiaron las instrucciones de los mensajes; SOUL.md no se modificó."
+    },
+    "text.02afd034dd9d": {
+      "type": "text",
+      "source": "quick-3b-general-",
+      "value": "quick-3b-general-",
+      "untranslated": "Session-key prefix for the independent general review conversation."
+    },
+    "text.0642235f30e5": {
+      "type": "text",
+      "source": "quick-3b-review-",
+      "value": "quick-3b-review-",
+      "untranslated": "Session-key prefix for the independent constrained review conversation."
     },
     "text.088879d8c28c": {
       "type": "text",
       "source": "The cell below connects into the sandbox and reads three files off the\n     running instance: SOUL.md alongside the daily memory and the curated\n     MEMORY.md. Edit the command list and re-run to poke at anything you like.",
       "value": "La celda siguiente se conecta al sandbox y lee tres archivos de la instancia activa: SOUL.md, la memoria diaria y el MEMORY.md seleccionado. Edita la lista de comandos y vuelve a ejecutar la celda para explorar cualquier otro archivo."
+    },
+    "text.08d5a9c2ad7f": {
+      "type": "text",
+      "source": "Verify the file write first",
+      "value": "Verifica primero la escritura del archivo"
     },
     "text.0f0b7dcb85b3": {
       "type": "text",
@@ -146,6 +142,12 @@
       "type": "text",
       "source": "← Module 3a: Connect NemoClaw",
       "value": "← Módulo 3a: Conecta NemoClaw"
+    },
+    "text.141d1c8a724f": {
+      "type": "text",
+      "source": "course-review-",
+      "value": "course-review-",
+      "untranslated": "Unique memory-label prefix appended to MEMORY.md and requested in the separate readback conversation."
     },
     "text.156a4206e78c": {
       "type": "text",
@@ -158,48 +160,30 @@
       "value": " ── what to read (edit freely; these run as shell lines INSIDE the sandbox) ──",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
     },
-    "text.17643270cf44": {
-      "type": "text",
-      "source": "\\u2699\\ufe0f ",
-      "value": "\\u2699\\ufe0f",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
-    },
     "text.17df8b94e2c7": {
       "type": "text",
       "source": "Open the launchable's /ws/terminal WebSocket and read sandbox configuration without a model call. Edit the command list to explore.",
       "value": "helpers.terminal() abre el WebSocket /ws/terminal del launchable, la misma terminal del operador que utiliza la consola de Brev. La conexión entra en el sandbox del agente y lee directamente sus archivos de configuración, sin llamar al modelo. Edita la lista de comandos y vuelve a ejecutar la celda para explorar."
     },
-    "text.18087b062677": {
+    "text.180d5de32810": {
       "type": "text",
-      "source": "quick-3b-memory",
-      "value": "quick-3b-memory",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
-    },
-    "text.18087b062677~1": {
-      "type": "text",
-      "source": "quick-3b-memory",
-      "value": "quick-3b-memory",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
+      "source": "Read MEMORY.md and report the review preference and reference for ",
+      "value": "Lee MEMORY.md e indica la preferencia de revisión y la referencia de "
     },
     "text.198411dc2ef7": {
       "type": "text",
       "source": "opening operator terminal → sandbox '",
       "value": "abriendo el terminal del operador → sandbox '"
     },
-    "text.1b8157052c93": {
-      "type": "text",
-      "source": "Asks what the agent remembers in a fresh turn, then checks that the saved preference returned through session and file state.",
-      "value": "Un turno nuevo en la misma sesión pregunta qué recuerda el agente. El modelo no conserva el turno 1; la preferencia perdura porque el runtime conserva el historial de la sesión y el archivo MEMORY.md que escribió el agente. La comprobación confirma que las palabras clave llegaron."
-    },
     "text.1bf6b4904ad6": {
       "type": "text",
       "source": "into the prompt",
       "value": "al prompt"
     },
-    "text.1ca4db6555cf": {
+    "text.1e78c17ba945": {
       "type": "text",
-      "source": "Asking it to summarise a doc gets you a tight summary plus a\n         note about what tools it would reach for next.",
-      "value": "Al resumir un documento, produce una síntesis corta e indica qué herramientas usaría a continuación."
+      "source": "configured context",
+      "value": "contexto configurado"
     },
     "text.207bee365d84": {
       "type": "text",
@@ -216,15 +200,15 @@
       "source": "workspace files",
       "value": "archivos del workspace"
     },
-    "text.25d7d2a63c19": {
+    "text.23b0f26819ac": {
       "type": "text",
-      "source": "A real edit is slow to watch, so the cell below fakes the swap. It sends\n     two tagged sessions and your launchable maps each session key to a pre-built\n     SOUL variant that it keeps on hand. The upshot is one question answered by\n     two configurations with no editing on your part.",
-      "value": "Observar una edición real en el disco lleva tiempo, por lo que la celda de abajo simula dicho intercambio. Envía dos sesiones etiquetadas y el launchable asigna cada clave de sesión a una variante predefinida de SOUL.md. Así, dos configuraciones responden a la misma pregunta sin que edites ningún archivo."
+      "source": "Read from a fresh conversation",
+      "value": "Lee desde una conversación nueva"
     },
-    "text.2605f97a4542": {
+    "text.24e128e20c78": {
       "type": "text",
-      "source": " tool(s) but got no result. Shape the runtime in Kickstart (3a): Health check + Recover.",
-      "value": " llamadas a herramientas, pero ninguna devolvió un resultado o una respuesta. Prepara el runtime en Kickstart (3a): Comprobación de estado y Recuperar."
+      "source": "File readback did not contain the saved preference",
+      "value": "La lectura del archivo no contenía la preferencia guardada"
     },
     "text.26b5bc082777": {
       "type": "text",
@@ -236,11 +220,10 @@
       "source": "THE DIRECTORY IS THE CONFIGURATION",
       "value": "EL DIRECTORIO ES LA CONFIGURACIÓN"
     },
-    "text.2926a80aa6c0": {
+    "text.2844f023987d": {
       "type": "text",
-      "source": "✗ no recall this run",
-      "value": "✗ no recall this run",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
+      "source": "Give a concise code review. ",
+      "value": "Haz una revisión de código concisa. "
     },
     "text.293c1ebed009": {
       "type": "text",
@@ -259,6 +242,11 @@
       "value": "art-",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
     },
+    "text.2efebc0c7fe2": {
+      "type": "text",
+      "source": "\n    Use the chat to inspect one workspace file. Compare the answer with the operator read\n    and inspect any tool calls. You can ask the agent to:\n  ",
+      "value": "Usa el chat para examinar un archivo del espacio de trabajo. Compara la respuesta con la lectura desde la interfaz de operador y examina las llamadas a herramientas. Puedes pedir al agente que:"
+    },
     "text.2f04e594ed7b": {
       "type": "text",
       "source": "Module 3c: Always-On →",
@@ -269,21 +257,41 @@
       "source": "daily logs, one file per day",
       "value": "registros diarios, un archivo al día"
     },
+    "text.306c56026a31": {
+      "type": "text",
+      "source": "Append this preference to MEMORY.md without replacing existing content: ",
+      "value": "Añade esta preferencia a MEMORY.md sin sustituir el contenido existente: "
+    },
+    "text.3148cc3f6dd7": {
+      "type": "text",
+      "source": "\n      NemoClaw supplies the blueprint that packages this harness with OpenShell\n      and deployment policy. OpenClaw, rather than a separate Python orchestrator, drives each\n      turn and reads its workspace files into the active context. You will inspect those files,\n      compare two message instructions, and verify file memory from a fresh conversation.\n    ",
+      "value": "NemoClaw proporciona el blueprint que integra este entorno de ejecución con OpenShell y la política de implementación. OpenClaw dirige cada turno y carga los archivos de su espacio de trabajo en el contexto activo, sin un orquestador Python independiente. Examinarás esos archivos, compararás dos instrucciones de mensaje y verificarás la memoria guardada en archivos desde una conversación nueva."
+    },
+    "text.356378af4178": {
+      "type": "text",
+      "source": "A proposed cron job deletes rows marked duplicate from production each minute. What should we check before enabling it?",
+      "value": "Una tarea cron propuesta elimina de producción las filas marcadas como duplicadas cada minuto. ¿Qué debemos comprobar antes de activarla?"
+    },
     "text.36cc7e3d6f62": {
       "type": "text",
       "source": "the model",
       "value": "el modelo"
     },
+    "text.396fb7436d61": {
+      "type": "text",
+      "source": "Verified the appended note on disk. It remains in MEMORY.md for inspection.",
+      "value": "Se verificó la nota añadida en disco. Permanece en MEMORY.md para examinarla."
+    },
+    "text.3973e022e932": {
+      "type": "text",
+      "source": "-",
+      "value": "-",
+      "untranslated": "Literal option-prefix guard character checked by startsWith when rejecting an unsafe sandbox name."
+    },
     "text.3a5eedf1bc52": {
       "type": "text",
       "source": "SOUL.md, AGENTS.md,",
       "value": "SOUL.md, AGENTS.md,",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
-    },
-    "text.3bb1d67f065e": {
-      "type": "text",
-      "source": "\\u2717",
-      "value": "\\u2717",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
     },
     "text.3bb4de0b7650": {
@@ -296,38 +304,15 @@
       "source": "Read the live workspace over the operator terminal",
       "value": "Lee el workspace en vivo en la terminal del operador"
     },
-    "text.3c1e086d7432": {
-      "type": "text",
-      "source": "── default ──",
-      "value": "── default ──",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
-    },
     "text.3c251a8ff3fe": {
       "type": "text",
       "source": "What tools do you have access to?",
       "value": "¿A qué herramientas tienes acceso?"
     },
-    "text.3f9cc9146c6f": {
-      "type": "text",
-      "source": " Ask the same session what it retained after the write turn.",
-      "value": " Ask the same session what it retained after the write turn.",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
-    },
-    "text.3fc1f12a4eb1": {
-      "type": "text",
-      "source": "Scenario A · Default SOUL.md",
-      "value": "Escenario A · SOUL.md predeterminado"
-    },
     "text.415e24e50bf9": {
       "type": "text",
       "source": "per-skill markdown bundles (next page)",
       "value": "paquetes Markdown para cada skill (página siguiente)"
-    },
-    "text.423f27b5bde7": {
-      "type": "text",
-      "source": "\\\\n── auditor ──",
-      "value": "\\\\n── auditor ──",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
     },
     "text.4906a6ec2e78": {
       "type": "text",
@@ -350,32 +335,16 @@
       "source": "Run one turn, then compare the answer with the live workspace in Step 1b.",
       "value": "Ejecuta un turno y compara la respuesta con el workspace activo en el Paso 1b."
     },
-    "text.521f8cf7b893": {
+    "text.552d63878f29": {
       "type": "text",
-      "source": "Ask the agent to write a preference to MEMORY.md, then ask it back on the\n     next turn. The model itself has no persistent state, so the second turn can\n     only answer because the runtime carried the preference forward through the\n     session history it holds and through the MEMORY.md the agent saved.",
-      "value": "Pídele al agente que guarde una preferencia en MEMORY.md y solicítala en el turno siguiente. El modelo no tiene estado persistente, por lo que el segundo turno solo puede responder porque el runtime conservó la preferencia en el historial de sesión y en el MEMORY.md que guardó el agente."
-    },
-    "text.55d3bc8af29a": {
-      "type": "text",
-      "source": "read every turn",
-      "value": "lee en cada turno"
-    },
-    "text.57331f7795ba": {
-      "type": "text",
-      "source": "Please remember that I prefer numbered code review feedback and care most about race conditions. Save this to MEMORY.md for the next session.",
-      "value": "Please remember that I prefer numbered code review feedback and care most about race conditions. Save this to MEMORY.md for the next session.",
-      "untranslated": "carried from the qualified es-ES review at 1324ea214b69f7df81614c2ebaad451a3dcdc30b"
+      "source": "REF-",
+      "value": "REF-",
+      "untranslated": "Unique memory reference prefix used to verify the write and later retrieval."
     },
     "text.5782b18687e6": {
       "type": "text",
       "source": "reply",
       "value": "respuesta"
-    },
-    "text.583509574233": {
-      "type": "text",
-      "source": "quick-3b-soul-default",
-      "value": "quick-3b-soul-default",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
     },
     "text.595b8f18e370": {
       "type": "text",
@@ -388,16 +357,21 @@
       "value": "openshell sandbox connect ",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
     },
+    "text.5c60fa086d31": {
+      "type": "text",
+      "source": "The workspace files supply context. After an edit, compare the next answer with the saved file.",
+      "value": "Los archivos del espacio de trabajo aportan contexto. Después de una edición, compara la siguiente respuesta con el archivo guardado."
+    },
     "text.5e13b1ec1721": {
       "type": "text",
       "source": "echo '=== daily memory ==='; ls -1 .openclaw/workspace/memory/ 2>/dev/null",
       "value": "echo '=== daily memory ==='; ls -1 .openclaw/workspace/memory/ 2>/dev/null",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
     },
-    "text.627ae925a6bc": {
+    "text.5f5b030cc3bb": {
       "type": "text",
-      "source": "Because the gateway folds the folder into the prompt before every turn, editing a file changes the next reply.",
-      "value": "Dado que el gateway incorpora la carpeta al prompt antes de cada turno, editar un archivo cambia la respuesta siguiente de forma inmediata."
+      "source": "Verify file memory across separate sessions",
+      "value": "Verifica la memoria en archivos entre sesiones distintas"
     },
     "text.67a5bdf2a82d": {
       "type": "text",
@@ -426,27 +400,15 @@
       "source": "References",
       "value": "Referencias"
     },
-    "text.6a6d6612372e": {
+    "text.6d65b3390687": {
       "type": "text",
-      "source": "Auditor SOUL",
-      "value": "Auditor SOUL",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
+      "source": ": numbered review feedback, race conditions first; reference ",
+      "value": ": comentarios de revisión numerados, primero las condiciones de carrera; referencia "
     },
     "text.70313152d2ca": {
       "type": "text",
       "source": "Chat with your live agent (connect on the Kickstart page first). Try asking it to inspect the workspace with exec or read SOUL.md.",
       "value": "Habla con tu agente en vivo (primero, conéctate en la página Kickstart). Pídele que inspeccione el workspace con exec o lea SOUL.md."
-    },
-    "text.7032421e369e": {
-      "type": "text",
-      "source": "\\u26a0 DEGRADED: started ",
-      "value": "\\u26a0 DEGRADED: se iniciaron "
-    },
-    "text.7052f0ac228b": {
-      "type": "text",
-      "source": "✓ recalled the preference (carried by the session plus the MEMORY.md it saved)",
-      "value": "✓ recalled the preference (carried by the session plus the MEMORY.md it saved)",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
     },
     "text.707b45eeb0be": {
       "type": "text",
@@ -463,44 +425,16 @@
       "source": "Module 3 · Part B of 3",
       "value": "Módulo 3 · Parte B de 3"
     },
-    "text.78f9ac018e55": {
-      "type": "text",
-      "source": "function",
-      "value": "function",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
-    },
-    "text.78f9ac018e55~1": {
-      "type": "text",
-      "source": "function",
-      "value": "function",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
-    },
     "text.79f42a2505c9": {
       "type": "text",
       "source": "raw transcript (",
       "value": "transcripción sin procesar ("
     },
-    "text.7c72e610551c": {
+    "text.7c2e51e70777": {
       "type": "text",
-      "source": "Turn 1 · ask it to remember",
-      "value": "Turno 1 · guarda la preferencia"
-    },
-    "text.7c9bbe5ec9b3": {
-      "type": "text",
-      "source": "tool",
-      "value": "tool",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
-    },
-    "text.7c9bbe5ec9b3~1": {
-      "type": "text",
-      "source": "tool",
-      "value": "tool",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
-    },
-    "text.7ee8dad6314b": {
-      "type": "text",
-      "source": "The agent writes to MEMORY.md, then reads it back",
-      "value": "El agente escribe en MEMORY.md y recupera el dato"
+      "source": "/sandbox/.openclaw/workspace/MEMORY.md",
+      "value": "/sandbox/.openclaw/workspace/MEMORY.md",
+      "untranslated": "Literal memory file read/write target used for independent operator readback."
     },
     "text.806f3d0616e1": {
       "type": "text",
@@ -513,6 +447,11 @@
       "source": "IDENTITY.md",
       "value": "IDENTITY.md",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
+    },
+    "text.85dc53fe6a85": {
+      "type": "text",
+      "source": "Risk-focused review",
+      "value": "Revisión centrada en los riesgos"
     },
     "text.867193307f82": {
       "type": "text",
@@ -541,16 +480,10 @@
       "source": "curated long-term memory (loaded in the main session only)",
       "value": "memoria a largo plazo seleccionada (solo en la sesión principal)"
     },
-    "text.8e3544166292": {
+    "text.8d3a744fc91f": {
       "type": "text",
-      "source": "\\u2713",
-      "value": "\\u2713",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
-    },
-    "text.91b338691b07": {
-      "type": "text",
-      "source": "The directory layout is the configuration, so editing one file changes how the next turn reads.",
-      "value": "La estructura del directorio es la configuración: editar un archivo cambia la información que leerá el turno siguiente."
+      "source": "Retrieved the disk-verified reference from a fresh conversation. Inspect the tool events.",
+      "value": "Se recuperó desde una conversación nueva la referencia verificada en disco. Examina los eventos de herramientas."
     },
     "text.960028729f18": {
       "type": "text",
@@ -561,12 +494,6 @@
       "type": "text",
       "source": "Each file in that folder feeds a different slice of the prompt.\n     The mapping is stable, so you can predict which behaviour an edit\n     will move before you make it.",
       "value": "Cada archivo de la carpeta aporta una parte distinta del prompt. Como la correspondencia es estable, puedes anticipar qué comportamiento modificará cada edición."
-    },
-    "text.96ecfff4549a": {
-      "type": "text",
-      "source": "Review this incident in bullets and recommend the next step.",
-      "value": "Review this incident in bullets and recommend the next step.",
-      "untranslated": "carried from the qualified es-ES review at 1324ea214b69f7df81614c2ebaad451a3dcdc30b"
     },
     "text.985d59ede940": {
       "type": "text",
@@ -597,25 +524,21 @@
       "value": "TOOLS.md, USER.md",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
     },
-    "text.9fc0174f7aa6": {
-      "type": "text",
-      "source": "\n    Everything on this page collapses into one panel: a real conversation with the\n    OpenClaw agent running on your launchable. Ask it to do any of the following and\n    watch the tool chips fire as it works:\n  ",
-      "value": "Todo lo visto en esta página converge en un panel: una conversación real con el agente OpenClaw que se ejecuta en tu launchable. Pídele que realice cualquiera de estas acciones y observa los indicadores de herramientas mientras trabaja:"
-    },
     "text.9fe101a0ec7e": {
       "type": "text",
       "source": "OpenClaw gateway",
       "value": "gateway de OpenClaw"
     },
-    "text.a01c560d94cd": {
+    "text.a132e6a926e6": {
       "type": "text",
-      "source": "Give the agent a preference and ask it to save the note to MEMORY.md so a later turn can see it.",
-      "value": "Indica una preferencia y pide al agente que la guarde en MEMORY.md para que un turno posterior pueda verla."
+      "source": "Save and verify a preference",
+      "value": "Guarda y verifica una preferencia"
     },
-    "text.a2970f020221": {
+    "text.a284adfef8c6": {
       "type": "text",
-      "source": "Send one question to two prebuilt SOUL variants and compare their voices. Edit SOUL.md to change a real persona.",
-      "value": "El laboratorio asigna dos claves de sesión a variantes predefinidas de SOUL.md y envía la misma pregunta al mismo modelo. Compara las voces. Fuera de este recurso del laboratorio, cambia la personalidad editando SOUL.md."
+      "source": "quick-3b-read-",
+      "value": "quick-3b-read-",
+      "untranslated": "Session-key prefix for the independent memory retrieval conversation."
     },
     "text.a54ff182c7e8": {
       "type": "text",
@@ -623,10 +546,15 @@
       "value": "AGENTS.md",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
     },
-    "text.a608e60ce048": {
+    "text.a5f6ec60d4b5": {
       "type": "text",
-      "source": "Two SOUL personas, same question",
-      "value": "Dos personalidades SOUL, la misma pregunta"
+      "source": "Run the general review first",
+      "value": "Ejecuta primero la revisión general"
+    },
+    "text.a7a72cf946af": {
+      "type": "text",
+      "source": "Fresh-session answer did not retrieve the saved reference",
+      "value": "La respuesta de la sesión nueva no recuperó la referencia guardada"
     },
     "text.a7efa8894b51": {
       "type": "text",
@@ -639,21 +567,21 @@
       "source": "reads, then answers",
       "value": "lee y luego responde"
     },
+    "text.ad456d59e8f7": {
+      "type": "text",
+      "source": "In one turn the cell below asks OpenClaw to list its own workspace\n     files and explain what each one does. Its answer reflects whatever the\n     harness includes in its prompt and what its tools read.\n     After editing a file, compare the new report with an operator readback.",
+      "value": "En un turno, la celda de abajo pide a OpenClaw que enumere los archivos de su espacio de trabajo y explique para qué sirve cada uno. Su respuesta refleja lo que el entorno incluye en el prompt y lo que leen sus herramientas. Después de editar un archivo, compara el nuevo informe con una lectura realizada como operador."
+    },
     "text.ae3f53994b15": {
       "type": "text",
       "source": "memory/",
       "value": "memory/",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
     },
-    "text.af7a8c35f687": {
+    "text.b06093bb3216": {
       "type": "text",
-      "source": "Scenario B · \"Auditor\" SOUL.md",
-      "value": "Escenario B · SOUL.md de auditoría"
-    },
-    "text.afc623d04635": {
-      "type": "text",
-      "source": "Turn 2 · ask it back",
-      "value": "Turno 2 · solicita la preferencia"
+      "source": "\n    After editing a file, start a fresh session and check which content the agent uses.\n  ",
+      "value": "Después de editar un archivo, inicia una sesión nueva y comprueba qué contenido utiliza el agente."
     },
     "text.b0c2537fa19b": {
       "type": "text",
@@ -661,32 +589,20 @@
       "value": "#openclaw-artifact",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
     },
-    "text.b187e515c100": {
-      "type": "text",
-      "source": "What do you remember about how I like to receive code review?",
-      "value": "What do you remember about how I like to receive code review?",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
-    },
     "text.b18b38b731e5": {
       "type": "text",
       "source": "Read SOUL.md and summarize who you are",
       "value": "Lee SOUL.md y resume quién eres"
     },
-    "text.b48ca5820def": {
+    "text.b81ca0d8705c": {
       "type": "text",
-      "source": " Reuses state.question + state.turn from the Default-SOUL node above. Run that first.",
-      "value": " Reuses state.question + state.turn from the Default-SOUL node above. Run that first.",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
+      "source": "Compare the agent’s account of its context with the workspace readback. A changed file alone does not establish what a reply used.",
+      "value": "Compara lo que el agente afirma sobre su contexto con la lectura del espacio de trabajo. Un archivo modificado por sí solo no demuestra qué contenido utilizó una respuesta."
     },
     "text.baa90a8826ea": {
       "type": "text",
       "source": "Ask OpenClaw to describe its workspace",
       "value": "Pide a OpenClaw que describa su workspace"
-    },
-    "text.bd470823a182": {
-      "type": "text",
-      "source": "Step 2 · Two scenarios, side by side",
-      "value": "Paso 2 · Dos escenarios, lado a lado"
     },
     "text.bde0ac766bf0": {
       "type": "text",
@@ -694,30 +610,16 @@
       "value": "SOUL.md",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
     },
-    "text.bfd5e33cda5d": {
+    "text.c1ed5fe7c29e": {
       "type": "text",
-      "source": "Save a preference to MEMORY.md, then ask for it in a fresh turn on the same session. The model weights remain unchanged.",
-      "value": "Dos turnos en una sesión: el agente guarda una preferencia en MEMORY.md y un turno nuevo la solicita. El modelo no conserva estado. La preferencia perdura porque el runtime conserva el historial de la sesión y el archivo MEMORY.md que escribió el agente; los pesos no cambian."
+      "source": "No valid connected sandbox name.",
+      "value": "No hay un nombre válido de sandbox conectado."
     },
-    "text.c32fb0c268e2": {
+    "text.cdb4ee2aea69": {
       "type": "text",
-      "source": "Default SOUL",
-      "value": "SOUL estándar"
-    },
-    "text.c83753bb3d9a": {
-      "type": "text",
-      "source": "Connect OpenClaw in Module 3a, then run Default SOUL first.",
-      "value": "Conecta OpenClaw en el Módulo 3a y ejecuta primero Default SOUL."
-    },
-    "text.c847f3b22727": {
-      "type": "text",
-      "source": "\n    Edit a workspace file, and the agent's next reply changes.\n  ",
-      "value": "Edita un archivo del workspace y cambiará la respuesta siguiente del agente."
-    },
-    "text.cb7800161898": {
-      "type": "text",
-      "source": "Send the question under the default SOUL session, a friendly, concise persona that reaches for tools when they are relevant.",
-      "value": "Envía la pregunta en la sesión SOUL predeterminada, una personalidad cordial y concisa que utiliza herramientas cuando resultan pertinentes."
+      "source": ".",
+      "value": ".",
+      "untranslated": "Exact punctuation suffix concatenated into the constructed prompt; contains no language-bearing words."
     },
     "text.cfd45dac6e8a": {
       "type": "text",
@@ -729,21 +631,11 @@
       "source": "or run a command.",
       "value": "o ejecutar un comando."
     },
-    "text.d448951728b3": {
+    "text.d245234894bb": {
       "type": "text",
-      "source": "Sends the same question under the auditor SOUL, which surfaces risks and cites its subject. Compare both replies.",
-      "value": "Envía la misma pregunta a la sesión de auditoría. Su SOUL.md indica al agente que exponga primero los riesgos y cite el fragmento que comenta. Ambas respuestas aparecen aquí para comparar las voces ante una entrada idéntica."
-    },
-    "text.d6471f83468f": {
-      "type": "text",
-      "source": "In one turn the cell below asks OpenClaw to list its own workspace\n     files and explain what each one does. Its answer reflects whatever the\n     harness folds into its prompt together with whatever its tools can see,\n     so editing a file and re-running changes the report.",
-      "value": "En un turno, la celda siguiente pide a OpenClaw que enumere los archivos de su workspace y explique la función de cada uno. La respuesta refleja tanto lo que el entorno incorpora al prompt como lo que sus herramientas pueden ver, por lo que editar un archivo y volver a ejecutar la celda cambiará el informe generado."
-    },
-    "text.d83b58bdc785": {
-      "type": "text",
-      "source": " \\u23ce ",
-      "value": " \\u23ce ",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
+      "source": "/api/agent",
+      "value": "/api/agent",
+      "untranslated": "Gateway metadata request route consumed by the course connection code."
     },
     "text.dae703e59b2d": {
       "type": "text",
@@ -755,16 +647,10 @@
       "source": "OpenClaw · Securing Agents",
       "value": "OpenClaw · Seguridad de agentes"
     },
-    "text.de115745db34": {
+    "text.df8de7cd6852": {
       "type": "text",
-      "source": "my-assistant",
-      "value": "my-assistant",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
-    },
-    "text.e0197ea5d618": {
-      "type": "text",
-      "source": "A persona slotted in for code review: it refuses to run code\n         until it has named the risk surface, and it cites the file it\n         is reviewing on every claim.",
-      "value": "Una personalidad orientada a la revisión de código: se niega a ejecutar código antes de identificar la superficie de riesgo y cita el archivo que examina en cada afirmación."
+      "source": "General review",
+      "value": "Revisión general"
     },
     "text.e16202309c92": {
       "type": "text",
@@ -776,17 +662,16 @@
       "source": "per-tool usage notes",
       "value": "notas de uso para cada herramienta"
     },
-    "text.e30fed6c7b9c": {
-      "type": "text",
-      "source": "An admin cron job copies production rows to staging without a row-count guardrail and duplicated four hours of data.",
-      "value": "An admin cron job copies production rows to staging without a row-count guardrail and duplicated four hours of data.",
-      "untranslated": "carried from the qualified es-ES review at 1324ea214b69f7df81614c2ebaad451a3dcdc30b"
-    },
     "text.e3e438e9ffe1": {
       "type": "text",
       "source": " This is the Try-it artifact: a real conversation with the OpenClaw agent on",
       "value": " This is the Try-it artifact: a real conversation with the OpenClaw agent on",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
+    },
+    "text.e54a58a475bd": {
+      "type": "text",
+      "source": "Step 2 · Compare message instructions",
+      "value": "Paso 2 · Compara las instrucciones de los mensajes"
     },
     "text.e932beada909": {
       "type": "text",
@@ -799,20 +684,21 @@
       "value": "Briefly list the files in your workspace and explain each in one bullet without dumping file contents.",
       "untranslated": "carried from the qualified es-ES review at 1324ea214b69f7df81614c2ebaad451a3dcdc30b"
     },
-    "text.ea3fb2768572": {
+    "text.e993aa799509": {
       "type": "text",
-      "source": "Connect OpenClaw in Module 3a, then run Turn 1 first.",
-      "value": "Conecta OpenClaw en el Módulo 3a y ejecuta primero el Turno 1."
+      "source": "quick-3b-write-",
+      "value": "quick-3b-write-",
+      "untranslated": "Session-key prefix for the conversation that requests the memory write."
+    },
+    "text.ea7fc55bddc3": {
+      "type": "text",
+      "source": "Ask the same review question in two fresh sessions. The second request explicitly asks for\n    an auditor's evidence checks. Inspect both prompts and compare the replies. This changes\n    message instructions; it does not edit SOUL.md or route to another persona file.",
+      "value": "Plantea la misma pregunta de revisión en dos sesiones nuevas. La segunda solicitud pide explícitamente las comprobaciones de evidencia de un auditor. Examina ambos prompts y compara las respuestas. Cambian las instrucciones del mensaje; no se modifica SOUL.md ni se selecciona otro archivo de personalidad."
     },
     "text.eac85dac0bb9": {
       "type": "text",
       "source": "raw notes the agent appends as it works",
       "value": "notas sin procesar que el agente añade mientras trabaja"
-    },
-    "text.ed7445d4d6f1": {
-      "type": "text",
-      "source": "Because the persona is just a file, swapping the SOUL definition changes the\n     agent's voice. The real mechanic behind that swap is writing the file itself,\n     where you save a new persona definition and the next turn picks it up on its own.",
-      "value": "Como la personalidad es un archivo, sustituir la definición de SOUL.md cambia la voz del agente. El mecanismo real consiste en escribir el archivo: guarda una nueva definición de personalidad y el turno siguiente la incorpora por sí solo."
     },
     "text.f123a0c1152f": {
       "type": "text",
@@ -830,16 +716,25 @@
       "source": "operating instructions and rules",
       "value": "instrucciones de operación y reglas"
     },
-    "text.f612a61bab20": {
+    "text.f4fba360e86d": {
       "type": "text",
-      "source": " your agent's name, from GET /api/agent on the Kickstart page",
-      "value": " your agent's name, from GET /api/agent on the Kickstart page",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
+      "source": "Review as an auditor: identify missing evidence and ask questions before recommending execution. ",
+      "value": "Revisa como auditor: identifica las pruebas que faltan y plantea preguntas antes de recomendar la ejecución. "
+    },
+    "text.f505d6caea2f": {
+      "type": "text",
+      "source": "Compare explicit instructions on the same review question",
+      "value": "Compara instrucciones explícitas para una misma pregunta de revisión"
     },
     "text.f6a8216eadbb": {
       "type": "text",
       "source": "who the human is, preferences",
       "value": "quién es la persona y cuáles son sus preferencias"
+    },
+    "text.f70c03689684": {
+      "type": "text",
+      "source": "Ask the agent to append a uniquely labeled preference to MEMORY.md. An operator read verifies\n    the saved reference before a new conversation asks the agent to read it. Acknowledging a save\n    is insufficient evidence. The appended note remains available for inspection.",
+      "value": "Pide al agente que añada una preferencia con una etiqueta única a MEMORY.md. Una lectura desde la interfaz de operador verifica la referencia guardada antes de pedir al agente que la lea en una conversación nueva. Afirmar que se ha guardado no basta como evidencia. La nota añadida permanece disponible para examinarla."
     },
     "text.f8bc87e24651": {
       "type": "text",
@@ -847,21 +742,11 @@
       "value": "2026-06-11.md",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
     },
-    "text.fb9ef9e8f372": {
-      "type": "text",
-      "source": "Stock OpenClaw: friendly, terse, and willing to use any tool the\n         policy permits, which makes it a good fit for development.",
-      "value": "OpenClaw estándar: amigable, conciso y dispuesto a utilizar cualquier herramienta permitida por la política; una configuración adecuada para el desarrollo."
-    },
     "text.fe1ee8635685": {
       "type": "text",
       "source": "MEMORY.md",
       "value": "MEMORY.md",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/03b-openclaw.html carries the canonical source at this unit unchanged"
-    },
-    "text.ff5d8859e7af": {
-      "type": "text",
-      "source": "\n      NemoClaw supplies the blueprint that packages this harness with OpenShell\n      and deployment policy. OpenClaw, rather than a separate Python orchestrator, drives each\n      turn and reads its workspace files into the active context. You will inspect those files,\n      compare two persona configurations, and save memory that survives beyond the model call.\n    ",
-      "value": "NemoClaw aporta el blueprint que empaqueta este entorno con OpenShell y la política de despliegue. Es OpenClaw, en lugar de un orquestador independiente escrito en Python, quien dirige cada turno en la conversación e incorpora los archivos del workspace al contexto activo. En esta página examinarás esos archivos, compararás dos configuraciones de personalidad y guardarás información en una memoria que perdura más allá de una llamada al modelo."
     }
   }
 }
