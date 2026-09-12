@@ -9,11 +9,6 @@
     "web/nemoclaw/assets/figures/01b-react-4.svg"
   ],
   "values": {
-    "link.0bbec6a67870": {
-      "type": "link",
-      "source": "\n    <strong>The cell produces an artifact.</strong> When you run it, you get a working\n    chat panel rather than a wall of logs, rendered from the agent's own code, that you\n    can hold a conversation with. The word itself is older than its current use, since\n    build pipelines and machine-learning training runs have produced \"artifacts\" and\n    \"model artifacts\" for years. Anthropic's recent <a href=\"https://support.claude.com/en/articles/14729249-use-live-artifacts-in-claude-cowork\" target=\"_blank\" rel=\"noopener\">live artifacts</a>\n    sharpened the idea for agents, where an artifact becomes a persistent, interactive\n    HTML surface that the agent builds and that you keep using long after the reply which\n    produced it. The panel below builds one on a small scale, and an agent that can hand\n    back a full interface rather than plain text is a thread that runs through the rest of\n    this course.\n  ",
-      "value": "\n    <strong>该单元格会生成一个制品。</strong>运行后，您得到的不是满屏日志，而是由智能体自身代码渲染、可与之对话的聊天面板。“制品”一词早在当前用法出现前就已存在，因为构建工作流和机器学习训练运行多年来一直会生成“制品”和“模型制品”。Anthropic 最近推出的 <a href=\"https://support.claude.com/en/articles/14729249-use-live-artifacts-in-claude-cowork\" target=\"_blank\" rel=\"noopener\">live artifacts</a>\n    进一步明确了这一概念在智能体领域中的含义：制品是由智能体构建、可持久使用的 HTML 交互界面；即使生成它的回复早已结束，您仍可继续使用。下方面板以较小规模构建了一个这样的制品。智能体不仅能返回纯文本，还能交付完整界面；这一主题将贯穿本课程的后续内容。\n  "
-    },
     "link.18fdb5153bc7": {
       "type": "link",
       "source": "\n    Zoom in on the agent and you find the decomposition\n    <a href=\"https://lilianweng.github.io/posts/2023-06-23-agent/\" target=\"_blank\" rel=\"noopener\">Lilian Weng drew in\n    2023</a>. A language model sits at the center. Around it sit <strong>memory</strong>, <strong>planning</strong>, <strong>tools</strong>,\n    and the <strong>actions</strong> that reach the world.\n  ",
@@ -44,15 +39,20 @@
       "source": "\n      An agent built on a language model runs the same perceive-reason-act\n      loop as anything else, with one detail that gives the pattern its name:\n      the model reasons in words between the actions it takes.\n      <a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al. (2022)</a>\n      called this <strong>ReAct</strong>, for reasoning and acting. They found that\n      interleaving short reasoning traces with tool use handles many tasks more\n      reliably than planning everything first or acting with no reasoning step.\n    ",
       "value": "\n      基于语言模型构建的智能体与其它系统一样，运行“感知—推理—行动”循环。但其中有一个细节赋予了这一模式名称：模型会在每次行动之间用文字进行推理。\n      <a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al. (2022)</a>\n      将这种结合推理与行动的模式称为 <strong>ReAct</strong>。他们发现，将简短的推理轨迹与工具使用交替进行，在许多任务上比预先规划全部步骤或不经推理直接行动更可靠。\n    "
     },
+    "link.5df192642c7d": {
+      "type": "link",
+      "source": "\n    The loop above hard-wires one tiny tool. LangChain's <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n    generalizes the same machinery to support more tools, standard interfaces, and observability integrations. The agent below uses a single tool,\n    <code>read_course_page</code>, which hands the agent any page of this course as markdown. The model decides which pages to read for your question, so give it a try.\n  ",
+      "value": "\n    上面的循环硬编码了一个很小的工具。LangChain 的 <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n    对相同机制进行了泛化，可支持更多工具、标准接口和可观测性集成。下面的智能体只使用一个工具，<code>read_course_page</code>，它可以将本课程任意页面以 markdown 格式提供给智能体。模型会根据问题决定读取哪些页面，请亲自试一试。\n  "
+    },
     "link.64ae525d2a06": {
       "type": "link",
       "source": "<a href=\"https://arxiv.org/abs/2201.11903\" target=\"_blank\" rel=\"noopener\">Wei et al., <em>Chain-of-Thought Prompting</em> (2022)</a>. The \"reason\" half of ReAct; what the model is doing inside <code>reasoning_content</code> when it deliberates before acting.",
       "value": "<a href=\"https://arxiv.org/abs/2201.11903\" target=\"_blank\" rel=\"noopener\">Wei et al., <em>Chain-of-Thought Prompting</em> (2022)</a>。这是 ReAct 中的“推理”部分，即模型在行动前进行斟酌时，在 <code>reasoning_content</code> 内部执行的过程。"
     },
-    "link.6726ddaf5bfd": {
+    "link.701fae3a00f7": {
       "type": "link",
-      "source": "\n    The loop above hard-wires one tiny tool. LangChain's <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n    generalizes the same machinery to support more tools, standard interfaces, and observability integrations. An instance of this class is wired below to a single tool,\n    <code>read_course_page</code>, which hands the agent any page of this course as markdown. The model decides which pages to read for your question, so give it a try.\n  ",
-      "value": "\n    上面的循环硬编码了一个很小的工具。LangChain 的 <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n    对相同机制进行了泛化，可支持更多工具、标准接口和可观测性集成。下方的课程实例只接入了一个工具 <code>read_course_page</code>，它可以将本课程任意页面以 markdown 格式提供给智能体。模型会根据问题决定读取哪些页面，请亲自试一试。\n  "
+      "source": "Return to <a href=\"#cell-m2c-p3\">the clock-loop canvas</a> and edit its inputs for these comparisons.",
+      "value": "返回<a href=\"#cell-m2c-p3\">时钟循环画布</a>，修改输入以进行这些比较。"
     },
     "link.7abcb40c63bb": {
       "type": "link",
@@ -64,15 +64,15 @@
       "source": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer</em> (2023)</a>. Covered again in 1c's references; revisit here for the underlying mechanism the ReAct loop exploits.",
       "value": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer</em> (2023)</a>。1c 的参考资料中还会再次介绍；此处可通过该论文回顾 ReAct 循环所利用的底层机制。"
     },
-    "link.a733bbaab3fa": {
-      "type": "link",
-      "source": "\n    This issue becomes more likely as the context grows. <strong>Context rot</strong> is the\n    tendency for contradictions, stale observations, and poor conventions to accumulate in the\n    prompt history until the model's next decision gets worse. The effect also has a positional\n    component: <a href=\"https://arxiv.org/abs/2307.03172\" target=\"_blank\" rel=\"noopener\">Liu et al. (2023)</a>\n    showed that models can underuse information buried in the middle of a long context. The further an\n    important signal drifts from the current turn, the easier it is for the loop to ignore or contradict it.\n  ",
-      "value": "\n    随着上下文增长，这个问题更容易出现。<strong>上下文退化</strong>是指矛盾、过时的观察结果和不良约定不断积累在提示词历史中，最终导致模型下一次决策质量下降的趋势。这种影响还与信息所在的位置有关：<a href=\"https://arxiv.org/abs/2307.03172\" target=\"_blank\" rel=\"noopener\">Liu et al. (2023)</a>的研究表明，模型可能无法充分利用埋藏在长上下文中部的信息。重要信号距离当前轮次越远，循环就越容易忽略它或产生与之矛盾的结果。\n  "
-    },
     "link.a904f9e69da1": {
       "type": "link",
       "source": "\n      This loop is the foundation that most general-purpose agent frameworks\n      are built on, LangChain's <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n      among them, and the rest of this module works up to it.\n    ",
       "value": "\n      大多数通用智能体框架都以这一循环为基础，LangChain 的 <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n      也是如此。本模块的后续内容将逐步构建这一循环。\n    "
+    },
+    "link.cce736bafb5e": {
+      "type": "link",
+      "source": "\n    <strong>Context rot</strong> is the\n    tendency for contradictions, stale observations, and poor conventions to accumulate in the\n    prompt history until the model's next decision gets worse. The effect also has a positional\n    component: <a href=\"https://arxiv.org/abs/2307.03172\" target=\"_blank\" rel=\"noopener\">Liu et al. (2023)</a>\n    showed that models can underuse information buried in the middle of a long context. The further an\n    important signal drifts from the current turn, the easier it is for the loop to ignore or contradict it.\n  ",
+      "value": "\n    <strong>上下文退化</strong>是指矛盾、过时的观察结果和不良约定不断积累在提示词历史中，最终导致模型下一次决策质量下降的趋势。这种影响还与信息所在的位置有关：<a href=\"https://arxiv.org/abs/2307.03172\" target=\"_blank\" rel=\"noopener\">Liu et al. (2023)</a>的研究表明，模型可能无法充分利用埋藏在长上下文中部的信息。重要信号距离当前轮次越远，循环就越容易忽略它或产生与之矛盾的结果。\n  "
     },
     "link.e672069b0c2f": {
       "type": "link",
@@ -88,6 +88,11 @@
       "type": "placeholder",
       "source": "(tool \"\\${name}\" not found)",
       "value": "（未找到工具“\\${name}”）"
+    },
+    "rich.04b481fa123f": {
+      "type": "rich",
+      "source": "\n    Every chat-completions response carries a <code>finish_reason</code>\n    field that tells you why the model stopped generating. Inside an agent\n    loop, read it alongside the response content and tool requests to decide what to do next:\n    run a tool, return the answer to the user, or handle an error. Before reading\n    what its values mean, make two calls and compare their replies.\n  ",
+      "value": "每个 Chat Completions 响应都包含 <code>finish_reason</code>，用于说明模型停止生成的原因。在智能体循环中，将它与响应内容和工具请求一起检查，决定执行工具、返回回答还是处理错误。在了解各个值之前，先发出两次调用并比较回复。"
     },
     "rich.1cbfc5ef05f8": {
       "type": "rich",
@@ -124,15 +129,20 @@
       "source": "\n    As an exercise, we can try to create a simple loop from scratch.\n    All we need is a single tool named <code>get_current_time</code> plus one system prompt\n    and one <code>while</code> loop. Run it with \"What time is it in UTC?\" to start, and see what else you can ask:\n  ",
       "value": "\n    接下来尝试从头创建一个简单循环。只需要一个名为 <code>get_current_time</code> 的工具、一条系统提示词和一个 <code>while</code> 循环。先用“现在 UTC 时间是多少？”运行它，再看看您还能提出哪些问题：\n  "
     },
+    "rich.5e25607d98f1": {
+      "type": "rich",
+      "source": "\n    Run the cell to build the panel. Before your first message, select <b>Pages</b> to include in the initial context, or leave them unselected and let the agent choose what to read. If you change the pinned pages later, click <b>New chat</b> before sending another message. Expand each source chip to inspect what the agent read. The panel shows the answer, token usage, and any reasoning trace the model returns. It keeps the conversation within each chat. Edit the cell and rerun to rebuild the panel.\n  ",
+      "value": "运行单元格以创建面板。发送第一条消息前，选择要纳入初始上下文的 <b>Pages</b>，或不选择任何页面，让智能体自行选择阅读内容。如果之后更改固定页面，请先点击<b>新建对话</b>，再发送下一条消息。展开各来源标签，检查智能体读取的内容。面板会显示答案、token 用量，以及模型返回的推理记录，并在各个聊天中保留对话。编辑单元格后重新运行，即可重建面板。"
+    },
     "rich.84d160e88d5a": {
       "type": "rich",
       "source": "<code>\"length\"</code> means the token budget ran out before the answer finished.",
       "value": "<code>\"length\"</code> 表示答案尚未生成完毕，token 预算就已耗尽。"
     },
-    "rich.9cf78b159479": {
+    "rich.925eff5b49ae": {
       "type": "rich",
-      "source": "\n    The flow is short: the model asks for the tool, the executor appends the timestamp as a\n    <code>tool</code>-role message, the model reads that timestamp, and the loop exits when\n    <code>finish_reason</code> reads <code>\"stop\"</code>.\n  ",
-      "value": "\n    整个流程很短：模型请求使用工具，执行器将时间戳追加为一条 <code>tool</code> 角色消息，模型读取该时间戳；当 <code>finish_reason</code> 的值为 <code>\"stop\"</code> 时，循环退出。\n  "
+      "source": "<strong>Count the steps on a genuinely tool-needing question.</strong>\n        \"How many minutes until 17:00 UTC?\" needs a clock reading and a calculation.\n        Run it a few times. Did the model call\n        <code>get_current_time</code> once, twice, or three times? Why\n        would a model re-call a tool whose output it already has,\n        and how would you discourage that in the system prompt?",
+      "value": "<strong>统计需要工具的问题所用的步骤。</strong>“距离 17:00 UTC 还有多少分钟？”需要读取时钟并进行计算。运行几次，看看模型调用 <code>get_current_time</code> 一次、两次还是三次。为什么模型会重复调用已获取结果的工具？您会如何修改系统提示词来减少重复调用？"
     },
     "rich.a5ec72e450db": {
       "type": "rich",
@@ -159,15 +169,25 @@
       "source": "<strong>Action</strong> is the tool call the harness executes.",
       "value": "<strong>行动</strong>是运行框架执行的工具调用。"
     },
-    "rich.dab40f3dcbce": {
+    "rich.d503e5a1f6fe": {
       "type": "rich",
-      "source": "\n    Run the cell to build the panel, then chat with it. Pin one or more with\n    the <b>Pages</b> chips to ground every answer in them, or pin nothing and let the\n    agent choose what to read. The reply renders as markdown, with a chip for each source\n    the agent read so you can expand it to see the text it pulled back. Alongside the answer,\n    you also get the reasoning trace and the token usage. It remembers the conversation per chat.\n    Edit the cell and rerun to rebuild the artifact.\n  ",
-      "value": "\n    运行单元格构建面板，然后与它对话。可以使用 <b>Pages</b> 标签固定一个或多个页面，使每个答案都以这些页面为依据；也可以不固定任何页面，让智能体自行选择要读取的内容。回复会渲染为 markdown，并为智能体读取的每个来源显示一个标签；展开标签即可查看它检索到的文本。除答案外，您还会看到推理轨迹和 token 使用情况。它会分别记住每个聊天中的对话。编辑单元格并重新运行即可重建制品。\n  "
+      "source": "\n    The first call offers no tools. In the second, the model is offered a tool and asked\n    for the current time. It still chooses whether to request the clock tool. Compare the displayed questions, replies, and\n    <code>finish_reason</code>. If both calls return <code>\"stop\"</code>, inspect the\n    second reply: did it admit it cannot check the time, or give an unsupported answer?\n    Change the model or question and rerun. A tool request names work for your code;\n    this preview does not execute it.\n  ",
+      "value": "第一次调用不提供工具。第二次调用向模型提供工具并询问当前时间。是否请求使用时钟工具仍由模型决定。比较显示的问题、回复和 <code>finish_reason</code>。如果两次都返回 <code>\"stop\"</code>，请检查第二条回复：模型承认无法查询时间，还是给出了未经验证的回答？更换模型或问题后重新运行。工具请求只是指明需要代码执行的工作；此预览不会执行工具。"
+    },
+    "rich.f72c22dd2753": {
+      "type": "rich",
+      "source": "\n    <strong>What just happened inside the messages array.</strong><br>\n    When the model requests the clock, the loop adds these turns to <code>state.messages</code>: <ul><li>the system\n    prompt (turn 0),</li><li>the user question (turn 1),</li><li>an assistant message with a\n    <code>tool_calls</code> field (turn 2, the request),</li><li>and a\n    <code>tool</code>-role message holding the function's return value (turn\n    3).</li></ul> The next model call receives those messages, including the clock result. Inspect its response to see whether it answers or requests another tool. The growing array is the only \"memory\" this\n    agent has. Saving and reloading that array preserves the supplied conversation history; external facts and model behavior may change.\n  ",
+      "value": "\n    <strong>刚才 messages 数组内部发生了什么。</strong><br>\n当模型请求时钟时，循环会向 <code>state.messages</code> 中加入以下四项：<ul><li>系统提示词（第 0 轮），</li><li>用户的问题（第 1 轮），</li><li>一条带有 <code>tool_calls</code> 字段的 assistant 消息（第 2 轮，即请求），</li><li>以及一条保存函数返回值的 <code>tool</code> 角色消息（第 3 轮）。</li></ul>下一次模型调用会收到这些消息，包括时钟结果。检查模型的响应，确认它是作答还是再次请求工具。这个不断增长的数组就是该智能体拥有的全部“记忆”。保存并重新加载该数组可以保留所提供的对话历史；外部事实和模型行为仍可能发生变化。\n  "
     },
     "rich.feee3c133cfe": {
       "type": "rich",
       "source": "<strong>Planning</strong> is the <code>finish_reason</code> router.",
       "value": "<strong>规划</strong>是 <code>finish_reason</code> 路由逻辑。"
+    },
+    "text.0017dac66b84": {
+      "type": "text",
+      "source": "Model output reached its token limit; inspect the response before rerunning.",
+      "value": "模型输出已达到 token 上限；请先检查响应，再重新运行。"
     },
     "text.026e6c091cf3": {
       "type": "text",
@@ -209,11 +229,16 @@
       "value": " advertised context window per model",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
+    "text.089570aa5dfb": {
+      "type": "text",
+      "source": "The model returned no final answer or tool request.",
+      "value": "模型未返回最终答案或工具请求。"
+    },
     "text.0a07f6594619": {
       "type": "text",
       "source": ", ",
-      "value": ", ",
-      "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
+      "value": ",",
+      "untranslated": "Canonical separator inside request construction; retain exact bytes to avoid unnecessary request changes."
     },
     "text.0ab6e677de64": {
       "type": "text",
@@ -224,35 +249,43 @@
       "type": "text",
       "source": "get_current_time",
       "value": "get_current_time",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.0bbebf6e464f~1": {
       "type": "text",
       "source": "get_current_time",
       "value": "get_current_time",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.0bbebf6e464f~2": {
       "type": "text",
       "source": "get_current_time",
       "value": "get_current_time",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
     "text.0bbebf6e464f~3": {
       "type": "text",
       "source": "get_current_time",
       "value": "get_current_time",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
-    "text.0e836f28df3b": {
+    "text.0bbebf6e464f~4": {
       "type": "text",
-      "source": "I have a meeting tomorrow morning at 10am in France. How many hours do I have to prepare?",
-      "value": "我明天上午 10 点在法国有一个会议。我还有多少小时可以准备？"
+      "source": "get_current_time",
+      "value": "get_current_time",
+      "untranslated": "Tool function name used in schemas and dispatch."
     },
-    "text.0fe9c7c06710": {
+    "text.0bbebf6e464f~5": {
       "type": "text",
-      "source": "You are a helpful assistant. Use the tools available ",
-      "value": "您是一位乐于助人的助手。请使用可用工具，"
+      "source": "get_current_time",
+      "value": "get_current_time",
+      "untranslated": "Tool function name used in schemas and dispatch."
+    },
+    "text.0f82aca66af9": {
+      "type": "text",
+      "source": "length",
+      "value": "length",
+      "untranslated": "OpenAI finish_reason enum; token-budget failure comparison must retain this exact value."
     },
     "text.1397e960f2a1": {
       "type": "text",
@@ -269,6 +302,11 @@
       "source": "pages as the question needs, one reason/read step at a time, then answer. For a ",
       "value": "问题需要阅读足够多的页面，每次执行一个推理或阅读步骤，然后作答。对于"
     },
+    "text.15fb6fadb175": {
+      "type": "text",
+      "source": "Use get_current_time when the question needs the current time. ",
+      "value": "问题需要当前时间时，请使用 get_current_time。"
+    },
     "text.1603672b492c": {
       "type": "text",
       "source": "Module 1 · Part B of 3",
@@ -280,10 +318,21 @@
       "value": "→",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
+    "text.182ac4f6825e": {
+      "type": "text",
+      "source": " Optional comparison: remove the explicit clock instruction from QUESTION_2, then rerun.",
+      "value": " Optional comparison: remove the explicit clock instruction from QUESTION_2, then rerun.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
     "text.183e9eb41c65": {
       "type": "text",
       "source": "The loop is unchanged. With a language model in the reasoning step, the agent reads tool results and acts by calling tools.",
       "value": "循环本身没有变化。以语言模型执行推理步骤时，智能体读取工具结果，并通过调用工具采取行动。"
+    },
+    "text.1a319929e92d": {
+      "type": "text",
+      "source": "Malformed or duplicate tool request; no tool was executed.",
+      "value": "工具请求格式有误或重复；未执行任何工具。"
     },
     "text.1b12f21798d2": {
       "type": "text",
@@ -301,10 +350,20 @@
       "source": "\n    This course's minimal agent fills each slot with the simplest thing that works:\n  ",
       "value": "\n    本课程的最小智能体使用能满足需求的最简单方式实现每个部分：\n  "
     },
-    "text.21b6ab9e7a81": {
+    "text.1f5087db919c": {
       "type": "text",
-      "source": "· tool_calls:",
-      "value": "· tool_calls："
+      "source": "question",
+      "value": "问题"
+    },
+    "text.1f5087db919c~1": {
+      "type": "text",
+      "source": "question",
+      "value": "问题"
+    },
+    "text.1f5087db919c~2": {
+      "type": "text",
+      "source": "question",
+      "value": "问题"
     },
     "text.2298879d8c60": {
       "type": "text",
@@ -316,28 +375,33 @@
       "source": "Think, act, observe, repeat. The turn exits the moment finish_reason is \"stop\".",
       "value": "思考、行动、观察、重复。一旦 finish_reason 为 \"stop\"，当前轮次立即结束。"
     },
-    "text.288ec2e40f38": {
-      "type": "text",
-      "source": " state.userPrompt   = \"What time is it in UTC?\";",
-      "value": " state.userPrompt   = \"What time is it in UTC?\";",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
     "text.28ecba64c585": {
       "type": "text",
       "source": "← Module 1a: The Agent",
       "value": "← 模块 1a：智能体"
     },
+    "text.290c9ad24bc8": {
+      "type": "text",
+      "source": "Malformed tool arguments; no tool was executed.",
+      "value": "工具参数格式有误；未执行任何工具。"
+    },
     "text.2958d416d08a": {
       "type": "text",
       "source": "object",
       "value": "object",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.2958d416d08a~1": {
       "type": "text",
       "source": "object",
       "value": "object",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.2958d416d08a~2": {
+      "type": "text",
+      "source": "object",
+      "value": "object",
+      "untranslated": "JSON Schema type and JavaScript typeof result."
     },
     "text.2bcdea9e3abf": {
       "type": "text",
@@ -349,6 +413,11 @@
       "source": " Suppress raw tokens so only the curated trace appears.",
       "value": " Suppress raw tokens so only the curated trace appears.",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.2d27e607c67d": {
+      "type": "text",
+      "source": "(no answer content; inspect the raw response)",
+      "value": "（没有回答内容；请查看原始响应）"
     },
     "text.3203b6e01a14": {
       "type": "text",
@@ -366,25 +435,58 @@
       "value": ".chatui-tool-body",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
+    "text.3404b2ab6d56": {
+      "type": "text",
+      "source": "(malformed request)",
+      "value": "（请求格式有误）"
+    },
+    "text.3404b2ab6d56~1": {
+      "type": "text",
+      "source": "(malformed request)",
+      "value": "（请求格式有误）"
+    },
     "text.34612a45e6ff": {
       "type": "text",
       "source": "Prompt ~",
       "value": "提示词约 "
     },
+    "text.35f6ea4da28f": {
+      "type": "text",
+      "source": "Training data cannot provide a live clock reading. Answer from the tool result.",
+      "value": "训练数据无法提供实时时钟读数。请根据工具结果回答。"
+    },
+    "text.360cd27d23a6": {
+      "type": "text",
+      "source": "response model:",
+      "value": "响应模型："
+    },
+    "text.360cd27d23a6~1": {
+      "type": "text",
+      "source": "response model:",
+      "value": "响应模型："
+    },
+    "text.360cd27d23a6~2": {
+      "type": "text",
+      "source": "response model:",
+      "value": "响应模型："
+    },
     "text.363d049490fc": {
       "type": "text",
       "source": "finish_reason:",
-      "value": "finish_reason："
+      "value": "finish_reason:",
+      "untranslated": "Diagnostic label naming the exact API field; leave the identifier and delimiter recognizable."
     },
     "text.363d049490fc~1": {
       "type": "text",
       "source": "finish_reason:",
-      "value": "finish_reason："
+      "value": "finish_reason:",
+      "untranslated": "Diagnostic label naming the exact API field; leave the identifier and delimiter recognizable."
     },
     "text.363d049490fc~2": {
       "type": "text",
       "source": "finish_reason:",
-      "value": "finish_reason："
+      "value": "finish_reason:",
+      "untranslated": "Diagnostic label naming the exact API field; leave the identifier and delimiter recognizable."
     },
     "text.3a417d05647e": {
       "type": "text",
@@ -396,6 +498,21 @@
       "source": " same loop with a different model.",
       "value": " same loop with a different model.",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.408f13277d8d": {
+      "type": "text",
+      "source": "model:",
+      "value": "模型："
+    },
+    "text.408f13277d8d~1": {
+      "type": "text",
+      "source": "model:",
+      "value": "模型："
+    },
+    "text.408f13277d8d~2": {
+      "type": "text",
+      "source": "model:",
+      "value": "模型："
     },
     "text.40f3d65d3288": {
       "type": "text",
@@ -423,6 +540,11 @@
       "source": "\\\\n",
       "value": "\\\\n",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.44a36db1abd1": {
+      "type": "text",
+      "source": "call 1 raw response",
+      "value": "调用 1 的原始响应"
     },
     "text.44b7b4576467": {
       "type": "text",
@@ -458,7 +580,24 @@
       "type": "text",
       "source": "string",
       "value": "string",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.473287f8298d~1": {
+      "type": "text",
+      "source": "string",
+      "value": "string",
+      "untranslated": "JSON Schema type and JavaScript typeof result."
+    },
+    "text.4809d1df83ab": {
+      "type": "text",
+      "source": " Optional visibility: inspect the exact schema offered to the model.",
+      "value": " Optional visibility: inspect the exact schema offered to the model.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.4d369a6b96b9": {
+      "type": "text",
+      "source": "What time is it in UTC? Use get_current_time to read the clock.",
+      "value": "现在的 UTC 时间是几点？请使用 get_current_time 读取时钟。"
     },
     "text.4f9bdbf133c6": {
       "type": "text",
@@ -477,10 +616,10 @@
       "source": "User input",
       "value": "用户输入"
     },
-    "text.576f5af82d14": {
+    "text.552e423045fc": {
       "type": "text",
-      "source": "\n    Each of those costs something in latency or fidelity or complexity, and each is worth weighing against the task at hand.\n  ",
-      "value": "\n    每种方法都会在延迟、保真度或复杂度方面付出代价，因此都需要结合当前任务权衡取舍。\n  "
+      "source": "(none)",
+      "value": "（无）"
     },
     "text.5777416ae489": {
       "type": "text",
@@ -492,19 +631,19 @@
       "type": "text",
       "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
       "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "Exact provider model ID sent in API requests."
     },
     "text.57b7e204b183~1": {
       "type": "text",
       "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
       "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "Exact provider model ID sent in API requests."
     },
     "text.57b7e204b183~2": {
       "type": "text",
       "source": "nvidia/nemotron-3.5-lightning-30b-a3b",
       "value": "nvidia/nemotron-3.5-lightning-30b-a3b",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "Exact provider model ID sent in API requests."
     },
     "text.5846418c93e3": {
       "type": "text",
@@ -528,6 +667,16 @@
       "value": " Save the system prompt that frames the agent loop.",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
+    "text.5db94652ba22": {
+      "type": "text",
+      "source": "reply:",
+      "value": "回复："
+    },
+    "text.5db94652ba22~1": {
+      "type": "text",
+      "source": "reply:",
+      "value": "回复："
+    },
     "text.60902ba79bb1": {
       "type": "text",
       "source": "✓ artifact mounted below. Scroll down and chat with it.",
@@ -537,11 +686,6 @@
       "type": "text",
       "source": " window ~",
       "value": "，窗口约 "
-    },
-    "text.64945d606a53": {
-      "type": "text",
-      "source": "⚠ step cap reached",
-      "value": "⚠ 已达到步骤上限"
     },
     "text.6569018015a4": {
       "type": "text",
@@ -563,15 +707,15 @@
       "source": "NVIDIA · Securing Agents",
       "value": "NVIDIA · 安全智能体"
     },
-    "text.68e84543a986": {
-      "type": "text",
-      "source": "when the user asks for something you cannot answer from training data alone.",
-      "value": "处理用户提出的、仅凭训练数据无法回答的问题。"
-    },
     "text.69824d3b0e70": {
       "type": "text",
       "source": "References",
       "value": "参考资料"
+    },
+    "text.6998c813031f": {
+      "type": "text",
+      "source": "Compare two questions, the offered tools, and the actual replies. A model may answer or decline without requesting a tool.",
+      "value": "比较两个问题、提供的工具和实际回复。模型可能直接回答或表示无法回答，而不请求工具。"
     },
     "text.6a0c24f0658f": {
       "type": "text",
@@ -585,11 +729,29 @@
       "value": "✗",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
+    "text.6b9eac8f14cf": {
+      "type": "text",
+      "source": " Offering a tool lets the model request it; it does not execute the function.",
+      "value": " Offering a tool lets the model request it; it does not execute the function.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
     "text.6c45cb72a36e": {
       "type": "text",
       "source": "stop",
       "value": "stop",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~1": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
+    },
+    "text.6c45cb72a36e~2": {
+      "type": "text",
+      "source": "stop",
+      "value": "stop",
+      "untranslated": "OpenAI finish_reason enum; controls completion checks."
     },
     "text.6e58c818e00c": {
       "type": "text",
@@ -602,6 +764,11 @@
       "value": " Pin each selected page in full so the chip reflects the actual context.",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
+    "text.73677634555b": {
+      "type": "text",
+      "source": "raw model response",
+      "value": "原始模型响应"
+    },
     "text.761b7ad8ad43": {
       "type": "text",
       "source": "summary",
@@ -612,13 +779,19 @@
       "type": "text",
       "source": "function",
       "value": "function",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
     },
     "text.78f9ac018e55~1": {
       "type": "text",
       "source": "function",
       "value": "function",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
+    },
+    "text.78f9ac018e55~2": {
+      "type": "text",
+      "source": "function",
+      "value": "function",
+      "untranslated": "OpenAI tool-call type enum and JavaScript typeof result."
     },
     "text.7ac1012b98c8": {
       "type": "text",
@@ -635,11 +808,6 @@
       "source": "tool",
       "value": "tool",
       "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
-    },
-    "text.7f55b8a3a9c4": {
-      "type": "text",
-      "source": "What time is it right now in UTC?",
-      "value": "UTC 现在几点？"
     },
     "text.850d8ef32ee1": {
       "type": "text",
@@ -684,6 +852,12 @@
       "source": "The one field that tells the loop what to do next",
       "value": "决定循环下一步操作的唯一字段"
     },
+    "text.8e920ae7d06b": {
+      "type": "text",
+      "source": "tool_calls",
+      "value": "tool_calls",
+      "untranslated": "OpenAI finish_reason enum and message field; compared by executable control flow."
+    },
     "text.8ef829c1a7ee": {
       "type": "text",
       "source": "(reading)",
@@ -694,10 +868,33 @@
       "source": "Set the prompt, register one tool, then watch the loop call the model, execute requests, append observations, and stop.",
       "value": "设置提示词并注册一个工具，然后观察循环如何调用模型、执行请求、追加观察结果并停止。"
     },
+    "text.9024eab41188": {
+      "type": "text",
+      "source": " helpers.log.kv({ \"system prompt\": state.systemPrompt });",
+      "value": " helpers.log.kv({ \"system prompt\": state.systemPrompt });",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.90dfb008f2c5": {
+      "type": "text",
+      "source": "call 2 raw response",
+      "value": "调用 2 的原始响应"
+    },
     "text.94e16b93ac9d": {
       "type": "text",
       "source": " tok > ",
       "value": " 个词元 > "
+    },
+    "text.99de16babaa5": {
+      "type": "text",
+      "source": " Optional visibility: inspect the instruction guiding tool use.",
+      "value": " Optional visibility: inspect the instruction guiding tool use.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.99e1a8e15403": {
+      "type": "text",
+      "source": " On a custom endpoint, change the model in the connection card; that setting owns the route.",
+      "value": " On a custom endpoint, change the model in the connection card; that setting owns the route.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
     "text.99e67b933e08": {
       "type": "text",
@@ -736,6 +933,11 @@
       "source": "Summarize the whole course",
       "value": "总结整门课程"
     },
+    "text.a58b54c7b9bd": {
+      "type": "text",
+      "source": "Incomplete model turn; no tool was executed.",
+      "value": "模型轮次未完成；未执行任何工具。"
+    },
     "text.a66f9c25a653": {
       "type": "text",
       "source": " includes \"overview\" (the course home)",
@@ -753,6 +955,11 @@
       "value": "🔧",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
+    "text.ab7f4bfeb159": {
+      "type": "text",
+      "source": "\n    The model can revise its plan after reading a tool result. Whenever a tool returns something it did not expect, that result\n    joins the next round of reasoning, and the model can reconsider where it stands\n    before deciding what to do next.\n  ",
+      "value": "\n    模型读取工具结果后，可以修改原先的计划。每当工具返回意料之外的结果时，该结果都会进入下一轮推理，模型可以重新评估当前状况，再决定下一步操作。\n  "
+    },
     "text.ace774147c7e": {
       "type": "text",
       "source": "The complete ReAct loop, built from scratch",
@@ -768,6 +975,12 @@
       "source": "What is the ReAct loop?",
       "value": "什么是 ReAct 循环？"
     },
+    "text.b36bb3d4c569": {
+      "type": "text",
+      "source": " Next compare: a meeting tomorrow at 10am in France also requires a timezone assumption.",
+      "value": " Next compare: a meeting tomorrow at 10am in France also requires a timezone assumption.",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
     "text.b3d417190c5a": {
       "type": "text",
       "source": "no-key-needed",
@@ -778,6 +991,11 @@
       "type": "text",
       "source": "loading LangChain ...",
       "value": "正在加载 LangChain ..."
+    },
+    "text.b6d8f3ef94a9": {
+      "type": "text",
+      "source": "(no answer content)",
+      "value": "（没有回答内容）"
     },
     "text.b6e64b0566a3": {
       "type": "text",
@@ -818,6 +1036,12 @@
       "source": "Ask me anything about the course. I read the relevant pages before I answer.",
       "value": "可以向我询问任何课程相关问题。我会先阅读相关页面，再作答。"
     },
+    "text.becc7f440ae3": {
+      "type": "text",
+      "source": " log.json(\"offered tool schema\", TOOLS);",
+      "value": " log.json(\"offered tool schema\", TOOLS);",
+      "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
     "text.c0f625cb51db": {
       "type": "text",
       "source": "Common mitigations keep each decision close to the evidence it needs:",
@@ -857,11 +1081,6 @@
       "value": " Tool results get their own chip, including failed reads.",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
-    "text.d06de1005fcb": {
-      "type": "text",
-      "source": "\n    The four-piece frame gives you a checklist that applies regardless of how the\n    surrounding code is organized.\n  ",
-      "value": "\n    无论外围代码采用何种组织方式，这个四部分框架都能为您提供一份通用检查清单。\n  "
-    },
     "text.d2270e91a061": {
       "type": "text",
       "source": "or the router misreading the signal.",
@@ -895,16 +1114,21 @@
       "value": "agent",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.d9bda0c06ee1": {
-      "type": "text",
-      "source": "The same loop, prebuilt and pointed at this course",
-      "value": "使用预构建的相同循环读取本课程"
-    },
     "text.d9eb253e0698": {
       "type": "text",
       "source": "err",
       "value": "err",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.dbacd9211eb0": {
+      "type": "text",
+      "source": "requested tools:",
+      "value": "请求的工具："
+    },
+    "text.dbacd9211eb0~1": {
+      "type": "text",
+      "source": "requested tools:",
+      "value": "请求的工具："
     },
     "text.de92d152d782": {
       "type": "text",
@@ -933,21 +1157,31 @@
       "source": "course-wide question (\\\\",
       "value": "涉及整个课程的问题（\\\\"
     },
+    "text.e18b187cecf8": {
+      "type": "text",
+      "source": "call 2 · get_current_time offered",
+      "value": "调用 2 · 提供 get_current_time"
+    },
     "text.e632b7095b0b": {
       "type": "text",
       "source": "T",
       "value": "T",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.e7c2cf88bdec": {
+    "text.e6d146897856": {
       "type": "text",
-      "source": "Each question is answerable by editing inputs in the canvas above and rerunning.",
-      "value": "编辑上方画布中的输入并重新运行，即可回答以下每个问题。"
+      "source": "Expected get_current_time with an empty argument object; no tool was executed.",
+      "value": "需要 get_current_time 和空参数对象；未执行任何工具。"
     },
-    "text.e85366647d21": {
+    "text.e841a730d0ac": {
       "type": "text",
-      "source": "\n    The arrangement is strong because the model is never bound to the plan it\n    started with. Whenever a tool returns something it did not expect, that result\n    joins the next round of reasoning, and the model can reconsider where it stands\n    before deciding what to do next.\n  ",
-      "value": "\n    这种设计的优势在于，模型从不受最初计划的束缚。每当工具返回意料之外的结果时，该结果都会进入下一轮推理，模型可以重新评估当前状况，再决定下一步操作。\n  "
+      "source": "Step cap reached without a final answer. Inspect the tool history.",
+      "value": "已达到步骤上限，但未获得最终答案。请检查工具历史记录。"
+    },
+    "text.e869af251171": {
+      "type": "text",
+      "source": "No clock reading was taken. Inspect the reply, then change the question or model and compare.",
+      "value": "尚未读取时钟。检查回复，然后更换问题或模型并比较结果。"
     },
     "text.ed95eccd3e94": {
       "type": "text",
@@ -987,6 +1221,11 @@
       "value": "messages",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
+    "text.f86e9a14473f": {
+      "type": "text",
+      "source": "Applying the Same Loop to the Course",
+      "value": "将相同的循环应用到本课程"
+    },
     "text.f8e308dfc942": {
       "type": "text",
       "source": "In one sentence, what is an agent's ReAct loop?",
@@ -1008,162 +1247,10 @@
       "value": "tools",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "rich.04b481fa123f": {
-      "type": "rich",
-      "source": "\n    Every chat-completions response carries a <code>finish_reason</code>\n    field that tells you why the model stopped generating. Inside an agent\n    loop, read it alongside the response content and tool requests to decide what to do next:\n    run a tool, return the answer to the user, or handle an error. Before reading\n    what its values mean, make two calls and compare their replies.\n  ",
-      "value": "每个 Chat Completions 响应都包含 <code>finish_reason</code>，用于说明模型停止生成的原因。在智能体循环中，将它与响应内容和工具请求一起检查，决定执行工具、返回回答还是处理错误。在了解各个值之前，先发出两次调用并比较回复。"
-    },
-    "rich.d503e5a1f6fe": {
-      "type": "rich",
-      "source": "\n    The first call offers no tools. In the second, the model is offered a tool and asked\n    for the current time. It still chooses whether to request the clock tool. Compare the displayed questions, replies, and\n    <code>finish_reason</code>. If both calls return <code>\"stop\"</code>, inspect the\n    second reply: did it admit it cannot check the time, or give an unsupported answer?\n    Change the model or question and rerun. A tool request names work for your code;\n    this preview does not execute it.\n  ",
-      "value": "第一次调用不提供工具。第二次调用向模型提供工具并询问当前时间。是否请求使用时钟工具仍由模型决定。比较显示的问题、回复和 <code>finish_reason</code>。如果两次都返回 <code>\"stop\"</code>，请检查第二条回复：模型承认无法查询时间，还是给出了未经验证的回答？更换模型或问题后重新运行。工具请求只是指明需要代码执行的工作；此预览不会执行工具。"
-    },
-    "rich.71d5f7e1b268": {
-      "type": "rich",
-      "source": "\n    <strong>What just happened inside the messages array.</strong><br>\n    When the model requests the clock, the loop adds these turns to <code>state.messages</code>: <ul><li>the system\n    prompt (turn 0),</li><li>the user question (turn 1),</li><li>an assistant message with a\n    <code>tool_calls</code> field (turn 2, the request),</li><li>and a\n    <code>tool</code>-role message holding the function's return value (turn\n    3).</li></ul> The second LLM call read all four of those including the new tool result and\n    wrote the final answer. The growing array is the only \"memory\" this\n    agent has. If you saved that array to disk and reloaded it next week, the\n    model would resume the conversation without noticing the gap.\n  ",
-      "value": "\n    <strong>刚才 messages 数组内部发生了什么。</strong><br>\n当模型请求时钟时，循环会向 <code>state.messages</code> 中加入以下四项：<ul><li>系统提示词（第 0 轮），</li><li>用户的问题（第 1 轮），</li><li>一条带有 <code>tool_calls</code> 字段的 assistant 消息（第 2 轮，即请求），</li><li>以及一条保存函数返回值的 <code>tool</code> 角色消息（第 3 轮）。</li></ul>第二次 LLM 调用读取了这四项，包括新增的工具结果，然后生成最终答案。这个不断增长的数组就是该智能体拥有的全部“记忆”。如果您将该数组保存到磁盘，并在下周重新加载，模型会继续对话，甚至不会察觉中间曾中断过。\n  "
-    },
-    "rich.925eff5b49ae": {
-      "type": "rich",
-      "source": "<strong>Count the steps on a genuinely tool-needing question.</strong>\n        \"How many minutes until 17:00 UTC?\" needs a clock reading and a calculation.\n        Run it a few times. Did the model call\n        <code>get_current_time</code> once, twice, or three times? Why\n        would a model re-call a tool whose output it already has,\n        and how would you discourage that in the system prompt?",
-      "value": "<strong>统计需要工具的问题所用的步骤。</strong>“距离 17:00 UTC 还有多少分钟？”需要读取时钟并进行计算。运行几次，看看模型调用 <code>get_current_time</code> 一次、两次还是三次。为什么模型会重复调用已获取结果的工具？您会如何修改系统提示词来减少重复调用？"
-    },
-    "text.6998c813031f": {
+    "text.fe3d028d68ff": {
       "type": "text",
-      "source": "Compare two questions, the offered tools, and the actual replies. A model may answer or decline without requesting a tool.",
-      "value": "比较两个问题、提供的工具和实际回复。模型可能直接回答或表示无法回答，而不请求工具。"
-    },
-    "text.99e1a8e15403": {
-      "type": "text",
-      "source": " On a custom endpoint, change the model in the connection card; that setting owns the route.",
-      "value": " On a custom endpoint, change the model in the connection card; that setting owns the route.",
-      "untranslated": "Canonical executable comment retained in English under the Chinese locale contract."
-    },
-    "text.408f13277d8d": {
-      "type": "text",
-      "source": "model:",
-      "value": "模型："
-    },
-    "text.1f5087db919c": {
-      "type": "text",
-      "source": "question",
-      "value": "问题"
-    },
-    "text.360cd27d23a6": {
-      "type": "text",
-      "source": "response model:",
-      "value": "响应模型："
-    },
-    "text.5db94652ba22": {
-      "type": "text",
-      "source": "reply:",
-      "value": "回复："
-    },
-    "text.2d27e607c67d": {
-      "type": "text",
-      "source": "(no answer content; inspect the raw response)",
-      "value": "（没有回答内容；请查看原始响应）"
-    },
-    "text.44a36db1abd1": {
-      "type": "text",
-      "source": "call 1 raw response",
-      "value": "调用 1 的原始响应"
-    },
-    "text.6b9eac8f14cf": {
-      "type": "text",
-      "source": " Offering a tool lets the model request it; it does not execute the function.",
-      "value": " Offering a tool lets the model request it; it does not execute the function.",
-      "untranslated": "Canonical executable comment retained in English under the Chinese locale contract."
-    },
-    "text.4809d1df83ab": {
-      "type": "text",
-      "source": " Optional visibility: inspect the exact schema offered to the model.",
-      "value": " Optional visibility: inspect the exact schema offered to the model.",
-      "untranslated": "Canonical executable comment retained in English under the Chinese locale contract."
-    },
-    "text.becc7f440ae3": {
-      "type": "text",
-      "source": " log.json(\"offered tool schema\", TOOLS);",
-      "value": " log.json(\"offered tool schema\", TOOLS);",
-      "untranslated": "Editable JavaScript diagnostic statement with preserved identifiers."
-    },
-    "text.e18b187cecf8": {
-      "type": "text",
-      "source": "call 2 · get_current_time offered",
-      "value": "调用 2 · 提供 get_current_time"
-    },
-    "text.408f13277d8d~1": {
-      "type": "text",
-      "source": "model:",
-      "value": "模型："
-    },
-    "text.1f5087db919c~1": {
-      "type": "text",
-      "source": "question",
-      "value": "问题"
-    },
-    "text.360cd27d23a6~1": {
-      "type": "text",
-      "source": "response model:",
-      "value": "响应模型："
-    },
-    "text.5db94652ba22~1": {
-      "type": "text",
-      "source": "reply:",
-      "value": "回复："
-    },
-    "text.b6d8f3ef94a9": {
-      "type": "text",
-      "source": "(no answer content)",
-      "value": "（没有回答内容）"
-    },
-    "text.dbacd9211eb0": {
-      "type": "text",
-      "source": "requested tools:",
-      "value": "请求的工具："
-    },
-    "text.552e423045fc": {
-      "type": "text",
-      "source": "(none)",
-      "value": "（无）"
-    },
-    "text.90dfb008f2c5": {
-      "type": "text",
-      "source": "call 2 raw response",
-      "value": "调用 2 的原始响应"
-    },
-    "text.e869af251171": {
-      "type": "text",
-      "source": "No clock reading was taken. Inspect the reply, then change the question or model and compare.",
-      "value": "尚未读取时钟。检查回复，然后更换问题或模型并比较结果。"
-    },
-    "text.c9d2fde3d3f2": {
-      "type": "text",
-      "source": " Optional comparison: ask QUESTION_2 to explicitly request the clock tool, then rerun.",
-      "value": " Optional comparison: ask QUESTION_2 to explicitly request the clock tool, then rerun.",
-      "untranslated": "Canonical executable comment retained in English under the Chinese locale contract."
-    },
-    "text.408f13277d8d~2": {
-      "type": "text",
-      "source": "model:",
-      "value": "模型："
-    },
-    "text.1f5087db919c~2": {
-      "type": "text",
-      "source": "question",
-      "value": "问题"
-    },
-    "text.99de16babaa5": {
-      "type": "text",
-      "source": " Optional visibility: inspect the instruction guiding tool use.",
-      "value": " Optional visibility: inspect the instruction guiding tool use.",
-      "untranslated": "Canonical executable comment retained in English under the Chinese locale contract."
-    },
-    "text.9024eab41188": {
-      "type": "text",
-      "source": " helpers.log.kv({ \"system prompt\": state.systemPrompt });",
-      "value": " helpers.log.kv({ \"system prompt\": state.systemPrompt });",
-      "untranslated": "Editable JavaScript diagnostic statement with preserved identifiers."
+      "source": "What time is it right now in UTC? Use get_current_time to read the clock.",
+      "value": "现在的 UTC 时间是几点？请使用 get_current_time 读取时钟。"
     }
   }
 }
