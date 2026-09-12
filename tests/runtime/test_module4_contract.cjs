@@ -213,7 +213,7 @@ test(language.label + ': valid trajectory retains output and avoids invented net
 });
 
 // Use the materialized policy evaluator with external runtime responses only mocked.
-const policySource = fs.readFileSync(path.join(course, 'scripts/_openshell.js'), 'utf8');
+const policySource = fs.readFileSync(path.join(root, 'web', path.basename(course), 'scripts/_openshell.js'), 'utf8');
 const evaluatorStart = policySource.indexOf('function _globMatch(');
 const evaluatorEnd = policySource.indexOf('// Filesystem decision', evaluatorStart);
 assert(evaluatorStart >= 0 && evaluatorEnd > evaluatorStart);

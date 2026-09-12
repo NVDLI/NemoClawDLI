@@ -30,6 +30,10 @@ test('locale execution discovery follows metadata and rejects missing or malform
     fs.mkdirSync(localized, {recursive:true});
     const resource = path.join(path.dirname(metadata), 'resources', 'web', 'novel-course', 'nested', 'new.html.json');
     write(resource, {locale:'xy-ZZ', values:{'text.new':{source:'Expected (answer).', value:'Respuesta [exacta] (1).'}}});
+    const published = path.join(localized,'nested/new.html');
+    const canonical = path.join(temporary,'web/novel-course/nested/new.html');
+    write(published,'<html lang="xy-ZZ">Respuesta [exacta] (1).</html>');
+    write(canonical,'<html lang="en">Expected (answer).</html>');
     assert.deepEqual(discoverCourses(temporary).roots, [path.join(temporary, 'web', 'novel-course'), localized]);
     const language = courseLanguage(temporary, localized, ['nested/new.html']);
     assert.equal(language.text('Expected (answer).'), 'Respuesta [exacta] (1).');
@@ -37,6 +41,14 @@ test('locale execution discovery follows metadata and rejects missing or malform
     assert.doesNotMatch('Respuesta e (1)x', language.match(/Expected/));
     assert.throws(()=>language.text('Unlisted error'), /Missing exact diagnostic source/);
     assert.throws(()=>language.match(/Unlisted error/), /No diagnostic resource/);
+    write(published,fs.readFileSync(canonical,'utf8'));
+    assert.equal(courseLanguage(temporary,localized,['nested/new.html']).text('Expected (answer).'),'Expected (answer).');
+    write(published,'<html lang="en">Changed fallback.</html>');
+    assert.throws(()=>courseLanguage(temporary,localized,['nested/new.html']),/fallback differs/);
+    write(published,'<html lang="unknown">Changed fallback.</html>');
+    assert.throws(()=>courseLanguage(temporary,localized,['nested/new.html']),/Unexpected page language/);
+    fs.unlinkSync(published);
+    assert.throws(()=>courseLanguage(temporary,localized,['nested/new.html']),/ENOENT/);
     fs.renameSync(path.dirname(metadata), path.join(temporary, 'i18n', 'renamed-owner'));
     assert.equal(discoverCourses(temporary).roots.length, 2);
     fs.rmSync(localized, {recursive:true});

@@ -55,11 +55,21 @@ function courseLanguage(root, course, pages) {
       .some(directory => path.resolve(directory) === path.resolve(course)));
   assert.equal(metadata.length, 1, `Locale ownership is ambiguous for ${course}`);
   const owner = metadata[0];
+  const fallbackPages = new Set(pages.filter(page => {
+    const html = fs.readFileSync(path.join(course,page),'utf8');
+    const language = html.match(/<html\b[^>]*\blang=["']([^"']+)["']/i)?.[1];
+    assert(language === 'en' || language === owner.metadata.locale, `Unexpected page language: ${course}/${page}`);
+    if(language !== 'en') return false;
+    assert.equal(html,fs.readFileSync(path.join(canonical,page),'utf8'),`English fallback differs from canonical source: ${course}/${page}`);
+    return true;
+  }));
+  if(fallbackPages.size === pages.length) return {label:'en',text:source=>source,match:pattern=>pattern};
   const entries = pages.flatMap(page => {
     const resource = path.join(path.dirname(owner.file), 'resources', 'web', path.basename(course), page + '.json');
     const data = JSON.parse(fs.readFileSync(resource, 'utf8'));
     assert.equal(data.locale, owner.metadata.locale, `Resource locale mismatch: ${resource}`);
-    return Object.entries(data.values).map(([key, entry]) => ({key, resource, ...entry}));
+    return Object.entries(data.values).map(([key, entry]) => ({key, resource, ...entry,
+      value:fallbackPages.has(page) ? entry.source : entry.value}));
   });
   const escape = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return {

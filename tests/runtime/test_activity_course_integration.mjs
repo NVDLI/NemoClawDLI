@@ -12,6 +12,20 @@ import path from 'node:path';
 import test from 'node:test';
 import { pathToFileURL } from 'node:url';
 
+const addedDiffText = diff => diff.split('\n').filter(line => line.startsWith('+') && !/^\+\+\+ (?:[ab]\/|\/dev\/null)/.test(line)).join('\n');
+
+test('candidate label scan distinguishes removed examples from introduced configuration', () => {
+  const label=['stag','ing'].join('');
+  const forbidden=new RegExp(`\\b${label}\\b`,'i');
+  for(const filename of ['new/config.json','nested/renamed.json']) {
+    const header=`diff --git a/${filename} b/${filename}\n--- a/${filename}\n+++ b/${filename}\n@@ -1 +1 @@\n`;
+    assert.doesNotMatch(addedDiffText(header+`-${label}\n+production`),forbidden);
+    assert.match(addedDiffText(header+`-production\n+${label}`),forbidden);
+    assert.match(addedDiffText(header+`+++${label}`),forbidden);
+    assert.doesNotMatch(addedDiffText(header+`-${label}`),forbidden);
+  }
+});
+
 const COURSE_ROOTS = fs.readdirSync('web', { withFileTypes: true })
   .filter(entry => entry.isDirectory() && (fs.existsSync(path.join('web', entry.name, 'activity-policy.json'))
     || fs.existsSync(path.join('web', entry.name, 'scripts', '_activity.js'))))
@@ -235,7 +249,9 @@ test('the complete candidate diff contains no private or non-production activity
   const credentialShape = new RegExp(`\\b(?:${['AK' + 'IA[0-9A-Z]{16}', 'gh' + 'p_[A-Za-z0-9]{36}', 'nv' + 'api-[A-Za-z0-9_-]{16,}'].join('|')})\\b`);
 
   assert.doesNotMatch(candidateDiff, unsafeEndpoint);
-  assert.doesNotMatch(candidateDiff, unsafeLabel);
+  // Removing a general course example is not introducing a deployment label.
+  // Endpoint, private-term and credential scans still inspect the complete diff.
+  assert.doesNotMatch(addedDiffText(candidateDiff), unsafeLabel);
   assert.doesNotMatch(candidateDiff, privateTerm);
   assert.doesNotMatch(candidateDiff, credentialShape);
 });
