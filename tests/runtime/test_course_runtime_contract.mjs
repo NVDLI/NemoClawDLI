@@ -331,6 +331,19 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
       await page.waitForFunction(() => document.documentElement.dataset.learningProfile === 'guided');
       assert((await page.locator('.hero .eyebrow').textContent()).startsWith(label),
         `${language}: the shared learning profile replaced the translated module label`);
+      const command = "agent printf '<heading>'";
+      await page.evaluate(async ({runtime,command}) => {
+        const {mountConsole} = await import(runtime);
+        const target = document.createElement('div'); target.id = 'command-fixture'; document.body.append(target);
+        mountConsole(target,{suggestions:[command],onSubmit:value=>{window.submittedCommand=value;}});
+      }, {runtime:'/'+path.relative(root,path.join(course,'scripts/_chat.js')),command});
+      const consoleUi = page.locator('#command-fixture');
+      assert.equal(await consoleUi.locator('.da-chip code').textContent(),command);
+      assert.equal(await consoleUi.locator('heading').count(),0,'command text must not become HTML');
+      await consoleUi.locator('.da-chips .da-chip').click();
+      await consoleUi.locator('input').press('Enter');
+      assert.equal(await page.evaluate(()=>window.submittedCommand),command,
+        `${language}: selecting a command must preserve its executable bytes`);
     }
     const load = async () => {
       await page.goto(origin+lessonRoute(4, 2));

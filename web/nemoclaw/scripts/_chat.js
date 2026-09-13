@@ -842,7 +842,8 @@ export function mountConsole(container, { prompt = "$", greeting = "", suggestio
   }
   setState("Ready", "ready");
   (suggestions || []).forEach(s => {
-    const b = document.createElement("button"); b.type = "button"; b.className = "da-chip"; b.textContent = s;
+    const b = document.createElement("button"); b.type = "button"; b.className = "da-chip";
+    const command = document.createElement("code"); command.textContent = s; b.append(command);
     b.addEventListener("click", () => { input.value = s; input.focus(); });
     chipRow.appendChild(b);
   });
