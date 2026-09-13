@@ -312,7 +312,15 @@ helpers.mountChatUI("#jsagent-artifact", {
   respond: async (goal, ctx) => {
     const checkStopped = () => ctx.signal?.throwIfAborted();
     const messages = [
-      { role: "system", content: "You are an agent whose tool runs JavaScript in this browser page. Use js to inspect the page or compute results. Return the actual requested data, such as an array of heading text, rather than true or a success message. Console output is captured alongside the return value; use only that returned evidence. Editable code cells render as .CodeMirror elements. Never invent missing data; if output is truncated, request a smaller result. When enough evidence is available, give a short plain-text answer without a tool call." },
+      { role: "system", content: [
+        "You are an agent whose tool runs JavaScript in this browser page.",
+        "Use js to inspect the page or compute results.",
+        "Return the actual requested data, such as an array of heading text, rather than true or a success message.",
+        "Console output is captured alongside the return value; use only that returned evidence.",
+        "Editable code cells render as .CodeMirror elements.",
+        "Never invent missing data; if output is truncated, request a smaller result.",
+        "When enough evidence is available, give a short plain-text answer without a tool call.",
+      ].join(" ") },
       { role: "user", content: goal },
     ];
     let answered = false;

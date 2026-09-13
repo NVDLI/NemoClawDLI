@@ -634,7 +634,7 @@ mountDiagram("#fig-calls", {
 mountRunCell("#cell-layers", {
   openCode: false,
   label: "ask the box anything, in code",
-  intro: "Run the prepared questions and compare each command result. Open the implementation to change a command or add a probe. Permission changes use a temporary exercise file with cleanup. SOUL.md is only listed, and the environment-access probe discards contents.",
+  intro: "Run the prepared questions and compare each command result, then open the implementation to change a command or add a probe. The probes clean up their temporary file, list SOUL.md without editing it, and discard environment contents.",
   code: `function commandOutcome(result) {
   const output = String(result.output || "");
   if (!Number.isInteger(result.exitCode)) return "incomplete";

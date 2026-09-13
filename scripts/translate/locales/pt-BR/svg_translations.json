@@ -176,7 +176,6 @@
   "grounded": "fundamentada",
   "indexed": "indexado",
   "query": "consulta",
-  "answer": "resposta",
   "corpus": "corpus",
   "indexed offline": "indexado offline",
   "The GraphRAG pipeline. Indexing, shown in blue, runs offline: source documents are split into text chunks, an LLM extracts entities and relationships into a knowledge graph, and community detection partitions it into communities. Query time, shown in green, runs per question: each community is summarized, the summaries produce partial community answers, and those answers are reduced into one global answer.": "O pipeline GraphRAG. A indexação, em azul, ocorre offline: documentos são divididos em trechos, um LLM extrai entidades e relações para um grafo de conhecimento e a detecção de comunidades particiona o grafo. A consulta, em verde, ocorre para cada pergunta: as comunidades são resumidas, produzem respostas parciais e essas respostas são reduzidas a uma resposta global.",
@@ -247,7 +246,6 @@
   "(a) Reasoning with Observation": "(a) Raciocínio com observação",
   "Task": "Tarefa",
   "Tool": "Ferramenta",
-  "User": "Usuário",
   "Planner": "Planejador",
   "Solver": "Solucionador",
   "Worker": "Executor",
@@ -430,37 +428,45 @@
   "A Way Out": "Um caminho de saída",
   "Permitted Egress Path": "Saída de rede permitida",
   "BREACH": "VIOLAÇÃO",
-  "Lethal Trifecta": "Tríade letal"
-  ,"decoupled tool & context integration": "integração desacoplada de ferramentas e contexto"
-  ,"MCP Server (Tools & Resources)": "Servidor MCP (ferramentas e recursos)"
-  ,"SOUL.md": "SOUL.md"
-  ,"AGENTS.md": "AGENTS.md"
-  ,"TOOLS.md": "TOOLS.md"
-  ,"USER.md": "USER.md"
-  ,"HEARTBEAT.md": "HEARTBEAT.md"
-  ,"skills/": "skills/"
-  ,"memory/": "memory/"
-  ,"NemoClaw configures the OpenClaw agent harness and OpenShell sandbox. OpenClaw maintains agent logic, skills, memory, and tools; the LLM supplies semantic responses; OpenShell applies policy before tools reach protected resources.": "NemoClaw configura o harness do agente OpenClaw e o sandbox do OpenShell. O OpenClaw mantém a lógica do agente, as skills, a memória e as ferramentas; o LLM fornece respostas semânticas; o OpenShell aplica a política antes que as ferramentas alcancem os recursos protegidos."
-  ,"NemoClaw blueprint": "Blueprint do NemoClaw"
-  ,"configures the harness and sandbox": "configura o harness e o sandbox"
-  ,"OpenClaw harness": "Harness do OpenClaw"
-  ,"session · workspace · tools": "sessão · workspace · ferramentas"
-  ,"agent identity and memory": "identidade e memória do agente"
-  ,"OpenShell sandbox": "Sandbox do OpenShell"
-  ,"policy · isolation · access": "política · isolamento · acesso"
-  ,"enforces the reach boundary": "aplica o limite de alcance"
-  ,"LLM endpoint": "Endpoint do LLM"
-  ,"semantic responses": "respostas semânticas"
-  ,"open or frontier model": "modelo aberto ou de fronteira"
-  ,"Agent logic &amp; tools": "Lógica do agente &amp; ferramentas"
-  ,"skills · memory · plugins · tool calls": "skills · memória · plugins · chamadas de ferramentas"
-  ,"policy gate": "aplicação de políticas"
-  ,"Workspace": "Workspace"
-  ,"files and data": "arquivos e dados"
-  ,"APIs &amp; services": "APIs &amp; serviços"
-  ,"network tools": "ferramentas de rede"
-  ,"Enterprise systems": "Sistemas empresariais"
-  ,"approved resources": "recursos aprovados"
-  ,"Cloud &amp; edge": "Nuvem &amp; edge"
-  ,"remote execution": "execução remota"
+  "Lethal Trifecta": "Tríade letal",
+  "decoupled tool & context integration": "integração desacoplada de ferramentas e contexto",
+  "MCP Server (Tools & Resources)": "Servidor MCP (ferramentas e recursos)",
+  "SOUL.md": "SOUL.md",
+  "AGENTS.md": "AGENTS.md",
+  "TOOLS.md": "TOOLS.md",
+  "USER.md": "USER.md",
+  "HEARTBEAT.md": "HEARTBEAT.md",
+  "skills/": "skills/",
+  "memory/": "memory/",
+  "NemoClaw configures the OpenClaw agent harness and OpenShell sandbox. OpenClaw maintains agent logic, skills, memory, and tools; the LLM supplies semantic responses; OpenShell applies policy before tools reach protected resources.": "NemoClaw configura o harness do agente OpenClaw e o sandbox do OpenShell. O OpenClaw mantém a lógica do agente, as skills, a memória e as ferramentas; o LLM fornece respostas semânticas; o OpenShell aplica a política antes que as ferramentas alcancem os recursos protegidos.",
+  "NemoClaw blueprint": "Blueprint do NemoClaw",
+  "configures the harness and sandbox": "configura o harness e o sandbox",
+  "OpenClaw harness": "Harness do OpenClaw",
+  "session · workspace · tools": "sessão · workspace · ferramentas",
+  "agent identity and memory": "identidade e memória do agente",
+  "OpenShell sandbox": "Sandbox do OpenShell",
+  "policy · isolation · access": "política · isolamento · acesso",
+  "enforces the reach boundary": "aplica o limite de alcance",
+  "LLM endpoint": "Endpoint do LLM",
+  "semantic responses": "respostas semânticas",
+  "open or frontier model": "modelo aberto ou de fronteira",
+  "Agent logic &amp; tools": "Lógica do agente &amp; ferramentas",
+  "skills · memory · plugins · tool calls": "skills · memória · plugins · chamadas de ferramentas",
+  "policy gate": "aplicação de políticas",
+  "Workspace": "Workspace",
+  "files and data": "arquivos e dados",
+  "APIs &amp; services": "APIs &amp; serviços",
+  "network tools": "ferramentas de rede",
+  "Enterprise systems": "Sistemas empresariais",
+  "approved resources": "recursos aprovados",
+  "Cloud &amp; edge": "Nuvem &amp; edge",
+  "remote execution": "execução remota",
+  "skills/&lt;name&gt;/": "skills/&lt;name&gt;/",
+  "reusable instruction bundles": "conjuntos de instruções reutilizáveis",
+  "SKILL.md": "SKILL.md",
+  "frontmatter + instructions": "metadados + instruções",
+  "workspace/skills/&lt;name&gt;/SKILL.md": "workspace/skills/&lt;name&gt;/SKILL.md",
+  "isolated job: fresh session": "tarefa isolada: sessão nova",
+  "message payload · schedule": "mensagem do payload · agenda",
+  "Session context, instructions, and triggers for skills, heartbeats, cron jobs, and sub-agents. A skill supplies instructions to a running agent.": "Contexto de sessão, instruções e gatilhos para skills, heartbeats, tarefas cron e subagentes. Uma skill fornece instruções a um agente em execução."
 }

@@ -814,10 +814,14 @@ for (let i = 0; i < tasks.length; i++) {
   const r = await sub.invoke({
     messages: [{
       role: "user",
-      content: "Draft from model knowledge without retrieval or external sources. "
-        + "Label unverified claims in the saved file. Keep each file to 100–150 words. "
-        + "Call write_file to save the draft to " + tasks[i].file + ". "
-        + "Then give a brief completion reply. " + tasks[i].instruction + "\\n\\nContext: " + ctx + ". Use write_file when saving deliverables.",
+      content: [
+        "Draft from model knowledge without retrieval or external sources.",
+        "Label unverified claims in the saved file.",
+        "Keep each file to 100–150 words.",
+        "Call write_file to save the draft to " + tasks[i].file + ".",
+        "Then give a brief completion reply. " + tasks[i].instruction + "\\n\\nContext: " + ctx + ".",
+        "Use write_file when saving deliverables.",
+      ].join(" "),
     }],
   }, { signal: helpers.signal });
   helpers.signal?.throwIfAborted();

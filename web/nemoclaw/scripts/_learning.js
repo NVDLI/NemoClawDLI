@@ -61,7 +61,8 @@ function profileWords() {
   const locale = localeKey();
   if (locale === "zh") {
     return {
-      lesson: "课时", of: "/",
+      module: document.documentElement.lang.toLowerCase() === "zh-tw" ? "模組" : "模块",
+      lesson: document.documentElement.lang.toLowerCase() === "zh-tw" ? "課時" : "课时", of: "/",
       transparencySummary: "AI 辅助内容 · 人工审核",
       transparencyBody: "本课程包含 AI 辅助编辑，并经过人工编辑审核。发布内容仍须遵守 NVIDIA 内容管控要求。技术图表和外部媒体的来源及许可记录见",
       imageProvenance: "图片来源",
@@ -70,7 +71,7 @@ function profileWords() {
   }
   if (locale === "pt") {
     return {
-      lesson: "Lição", of: "de",
+      module: "Módulo", lesson: "Lição", of: "de",
       transparencySummary: "Conteúdo com assistência de IA · revisão humana",
       transparencyBody: "Este curso inclui edições com assistência de IA e passa por revisão editorial humana. A publicação permanece sujeita aos controles de conteúdo da NVIDIA. Diagramas técnicos e mídias externas têm registros de procedência e licença em",
       imageProvenance: "Procedência das imagens",
@@ -79,7 +80,7 @@ function profileWords() {
   }
   if (locale === "es") {
     return {
-      lesson: "Lección", of: "de",
+      module: "Módulo", lesson: "Lección", of: "de",
       transparencySummary: "Contenido con asistencia de IA · revisión humana",
       transparencyBody: "Este curso incluye ediciones asistidas por IA y pasa por revisión editorial humana. La publicación sigue sujeta a los controles de contenido de NVIDIA. Los diagramas técnicos y los recursos externos tienen registros de procedencia y licencia en",
       imageProvenance: "Procedencia de las imágenes",
@@ -87,7 +88,7 @@ function profileWords() {
     };
   }
   return {
-    lesson: "Lesson", of: "of",
+    module: "Module", lesson: "Lesson", of: "of",
     transparencySummary: "AI-assisted content · human reviewed",
     transparencyBody: "This course includes AI-assisted edits and undergoes human editorial review. Publication remains subject to NVIDIA content controls. Technical diagrams and external media have source and licensing records in",
     imageProvenance: "Image provenance",
@@ -104,7 +105,7 @@ function mountLessonPosition(profile) {
   const moduleLessons = profile.lessons.filter(item => item.module === lesson.module);
   const position = moduleLessons.findIndex(item => item.id === lesson.id) + 1;
   if (eyebrow) {
-    eyebrow.textContent = `Module ${lesson.module} · ${words.lesson} ${position} ${words.of} ${moduleLessons.length}`;
+    eyebrow.textContent = `${words.module} ${lesson.module} · ${words.lesson} ${position} ${words.of} ${moduleLessons.length}`;
   }
   document.documentElement.dataset.learningProfile = "guided";
 }

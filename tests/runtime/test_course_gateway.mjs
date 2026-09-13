@@ -5,7 +5,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import path from 'node:path';
+import fs from 'node:fs';
+import os from 'node:os';
 import {createRequire} from 'node:module';
+import {discoverGatewayInventory, gatewayConsumerFindings, gatewayLifecycleFindings} from '../../scripts/validation/gateway_token_audit.mjs';
 const {discoverCourses} = createRequire(import.meta.url)('./course_exercise_fixture.cjs');
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const course = discoverCourses(root).roots[0];
@@ -85,4 +88,107 @@ test('missing final times out and an explicit canonical request rejects another 
   const pending=courseTurn(f.state,f.helpers,'agent:research:task','question',{idleMs:25,totalMs:100});
   await tick();frame(f.state,'owned','agent:main:task','foreign final');
   await assert.rejects(pending,/idle deadline/);
+});
+
+test('shared turn preserves every final block and filters only known tool diagnostic noise', async () => {
+  const noise = '/bin/bash: 1: cannot create /proc/self/oom_score_adj: Permission denied';
+  const f = fixture(async method => {
+    if (method !== 'chat.send') return {};
+    frame(f.state, 'owned', 'task', '', 'agent', {stream:'tool', data:{phase:'result', name:'exec',
+      result:{content:[{text:noise + '\nPermission denied: keep this'}]}}});
+    frame(f.state, 'owned', 'task', '', 'agent', {stream:'lifecycle', data:{phase:'end'}});
+    frame(f.state, 'owned', 'task', '', 'chat', {message:{content:[{text:noise + '\nfirst'}, {text:'second'}]}});
+    return {runId:'owned'};
+  });
+  assert.equal(await courseTurn(f.state, f.helpers, 'task', 'question'), 'first\nsecond');
+  const displayed = JSON.stringify(f.entries);
+  assert(!displayed.includes('oom_score_adj'));
+  assert(displayed.includes('Permission denied: keep this'));
+  assert(displayed.includes('first\\nsecond'));
+});
+
+test('gateway lifecycle detector rejects final, ownership and filtering regressions in each actual owner', () => {
+  const source = fs.readFileSync(path.join(course, 'scripts/_openclaw.js'), 'utf8');
+  assert.deepEqual(gatewayLifecycleFindings(source), []);
+  for (const [before, after, expected] of [
+    ['text = finalText; done(); return;', 'done(); return;', 'openclawChat: gateway-final'],
+    ['// Lifecycle end is not authoritative chat completion. Wait for chat.final.', 'if (stream === "lifecycle") done();', 'openclawChat: gateway-final'],
+    ['view.replaceAnswer(finalText)', 'view.token(finalText)', 'openclawChat: gateway-final'],
+    ['resText(data.partialResult)', 'data.partialResult', 'openclawChat: gateway-noise'],
+    ['resText(data.result)', 'data.result', 'openclawChat: gateway-noise'],
+    ['if (!myRun || pl.runId !== myRun) return;', '', 'openclawChat: gateway-owner'],
+    ['settle(null, helpers.openclawMessageText(p.message))', 'settle(null, p.message.content[0].text)', 'courseTurn: gateway-final'],
+    ['helpers.log.details(label, helpers.filterOpenClawRuntimeValue(event))', 'helpers.log.details(label, event)', 'courseTurn: gateway-noise'],
+    ['helpers.log.details("final event", helpers.filterOpenClawRuntimeValue(event))', 'helpers.log.details("final event", event)', 'courseTurn: gateway-noise'],
+    ['if (!runId || p.runId !== runId) return;', '', 'courseTurn: gateway-owner'],
+    ['bump(); events.push(event);', 'bump(); events.push(event); if (p.stream === "lifecycle") settle(null, "");', 'courseTurn: gateway-final'],
+  ]) {
+    assert(source.includes(before), 'mutation must have an existing target');
+    const mutated = source.replace(before, after);
+    assert.notEqual(mutated, source);
+    assert(gatewayLifecycleFindings(mutated).some(finding => finding.includes(expected)), expected);
+  }
+});
+
+test('gateway discovery follows actual metadata through new, nested, deleted and renamed consumers', () => {
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'gateway-discovery-'));
+  const directory = path.join(temporary, 'web', 'example');
+  fs.mkdirSync(path.join(directory, 'scripts'), {recursive:true});
+  fs.writeFileSync(path.join(directory, 'scripts/_openclaw.js'), '// owner');
+  const profile = {lessons:[
+    {id:'connection', module:3, lesson:1}, {id:'memory', module:3, lesson:2},
+    {id:'scheduled', module:3, lesson:3}, {id:'cli', module:4, lesson:2},
+  ]};
+  const profilePath = path.join(directory, 'learning-profile.json');
+  const save = () => fs.writeFileSync(profilePath, JSON.stringify(profile));
+  save();
+  for (const lesson of profile.lessons) fs.writeFileSync(path.join(directory, lesson.id + '.html'), '<h1>Lesson</h1>');
+  const owner = path.join(directory, 'scripts/_openclaw.js');
+  const good = '<script>await helpers.courseTurn(state, helpers, "session", "question");</script>';
+  try {
+    assert.deepEqual(discoverGatewayInventory(temporary).findings, []);
+    const added = path.join(directory, 'nested', 'new.html');
+    fs.mkdirSync(path.dirname(added)); fs.writeFileSync(added, good);
+    let inventory = discoverGatewayInventory(temporary);
+    assert(inventory.surfaces[added]);
+    assert(inventory.findings.some(item => item.includes('absent from lesson metadata')));
+    profile.lessons.push({id:'nested/new', module:5, lesson:1}); save();
+    assert.deepEqual(discoverGatewayInventory(temporary).findings, []);
+    assert.deepEqual(gatewayConsumerFindings(discoverGatewayInventory(temporary).surfaces, [owner]), []);
+    const renamed = path.join(directory, 'nested', 'renamed.html');
+    fs.renameSync(added, renamed);
+    inventory = discoverGatewayInventory(temporary);
+    assert(inventory.findings.some(item => item.includes('declared lesson is missing')));
+    profile.lessons.at(-1).id = 'nested/renamed'; save();
+    assert.deepEqual(discoverGatewayInventory(temporary).findings, []);
+    fs.writeFileSync(renamed, good.replace('helpers.courseTurn', 'helpers.courseTur'));
+    assert(gatewayConsumerFindings(discoverGatewayInventory(temporary).surfaces, [owner])
+      .some(item => item.includes('malformed shared turn helper')));
+    fs.unlinkSync(renamed);
+    assert(discoverGatewayInventory(temporary).findings.some(item => item.includes('declared lesson is missing')));
+    profile.lessons.pop(); save();
+    const script = path.join(directory, 'scripts/nested/new.js');
+    fs.mkdirSync(path.dirname(script)); fs.writeFileSync(script, 'await state.call("chat.send", {});');
+    assert(gatewayConsumerFindings(discoverGatewayInventory(temporary).surfaces, [owner])
+      .some(item => item.includes('inline gateway lifecycle')));
+    profile.lessons.pop(); save();
+    assert.throws(() => discoverGatewayInventory(temporary), /missing gateway curriculum role/);
+    fs.writeFileSync(profilePath, '{bad');
+    assert.throws(() => discoverGatewayInventory(temporary));
+    save(); fs.mkdirSync(path.join(temporary, 'i18n', 'unknown'), {recursive:true});
+    assert.throws(() => discoverGatewayInventory(temporary), /locale.json/);
+  } finally { fs.rmSync(temporary, {recursive:true, force:true}); }
+});
+
+test('gateway consumers cannot bypass the shared owner or use stale invocation helpers', () => {
+  const valid = 'const courseTurn = helpers.courseTurn; await courseTurn(state, helpers, "session", "question");';
+  assert.deepEqual(gatewayConsumerFindings({'nested/new.js':valid}, []), []);
+  for (const changed of [valid.replace('helpers.courseTurn', 'other.turn'),
+    valid.replace('state, helpers,', 'state, {},'),
+    'state._chatCb = frame => resolve(frame.payload.message);',
+    'await state.call("chat.send", {});']) {
+    assert.notEqual(changed, valid);
+    assert(gatewayConsumerFindings({'nested/renamed.js':changed}, []).some(item => item.includes('gateway-owner')));
+  }
+  assert.deepEqual(gatewayConsumerFindings({'notes.html':'<p>Call <code>chat.send</code> through the shared helper.</p>'}, []), []);
 });

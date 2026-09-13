@@ -332,8 +332,7 @@ state.memoryReference = "REF-" + crypto.randomUUID();
 const courseTurn = helpers.courseTurn;
 
 state.out = await courseTurn(state, helpers, "quick-3b-write-" + crypto.randomUUID(),
-  "Append this preference to MEMORY.md without replacing existing content: " + state.memoryLabel
-  + ": numbered review feedback, race conditions first; reference " + state.memoryReference);
+  "Append this preference to MEMORY.md without replacing existing content: " + state.memoryLabel + ": numbered review feedback, race conditions first; reference " + state.memoryReference);
 const {courseShell, courseRead} = helpers;
 
 const saved = await courseRead(helpers, "/sandbox/.openclaw/workspace/MEMORY.md");

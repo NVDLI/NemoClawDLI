@@ -275,6 +275,17 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
   let readmeMode = 'failed', readmeRequests = 0, pendingReadme;
   const server = http.createServer((request,response) => {
     const pathname = new URL(request.url,'http://localhost').pathname;
+    if (pathname.startsWith('/fixture-learning/')) {
+      const language = new URL(request.url,'http://localhost').searchParams.get('lang');
+      assert(['en','es-ES','pt-BR','zh-CN','zh-TW'].includes(language));
+      const runtime = '/' + path.relative(root,path.join(course,'scripts/_learning.js'));
+      response.writeHead(200,{'content-type':'text/html'}).end(`<!doctype html>
+        <html lang="${language}"><body data-learning-view><nav class="topbar"></nav>
+        <main><div class="hero"><span class="eyebrow">Original label</span></div></main>
+        <script type="module">import {mountLearningView} from '${runtime}'; mountLearningView();</script>
+        </body></html>`);
+      return;
+    }
     if (pathname === '/api/agent') {
       response.writeHead(200,{'content-type':'application/json'}).end(JSON.stringify({agent:{name:'fixture-sandbox',dashboardUrl:'/#token=fixture-token'}}));
       return;
@@ -314,6 +325,13 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
       localStorage.setItem('nemoclaw_model_id_v1','fixture-model');
     },origin);
     const page = await context.newPage();
+    for (const [language,label] of [['en','Module 4 · Lesson'],['es-ES','Módulo 4 · Lección'],
+      ['pt-BR','Módulo 4 · Lição'],['zh-CN','模块 4 · 课时'],['zh-TW','模組 4 · 課時']]) {
+      await page.goto(origin+'/fixture-learning/'+path.basename(lesson(4,2))+'?lang='+language);
+      await page.waitForFunction(() => document.documentElement.dataset.learningProfile === 'guided');
+      assert((await page.locator('.hero .eyebrow').textContent()).startsWith(label),
+        `${language}: the shared learning profile replaced the translated module label`);
+    }
     const load = async () => {
       await page.goto(origin+lessonRoute(4, 2));
     const scrolling = await page.evaluate(() => {
