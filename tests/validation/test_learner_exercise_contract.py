@@ -16,15 +16,21 @@ from scripts.validation import learner_flow_audit as audit
 class LearnerExerciseContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        course = audit.ROOT / 'web/nemoclaw'
-        cls.cron_html = (course / '03c-always-on.html').read_text(encoding='utf-8')
+        course = dict(audit.locale_course_roots(audit.ROOT))['en']
+        profile = json.loads((course / 'learning-profile.json').read_text(encoding='utf-8'))
+        def lesson(module, number):
+            matches = [entry for entry in profile['lessons']
+                       if entry['module'] == module and entry['lesson'] == number]
+            assert len(matches) == 1, 'one declared lesson for each exercised role'
+            return course / (matches[0]['id'] + '.html')
+        cls.cron_html = lesson(3, 3).read_text(encoding='utf-8')
         sources = [source for _, source in audit.displayed_code_sources('lesson.html', cls.cron_html)
                    if 'cron.add' in source]
         assert len(sources) == 1, 'one actual scheduling cell'
         cls.cron = sources[0]
         cls.openclaw = (course / 'scripts/_openclaw.js').read_text(encoding='utf-8')
         cls.canvas = (course / 'scripts/_canvas.js').read_text(encoding='utf-8')
-        cls.deep = (course / '02c-deep.html').read_text(encoding='utf-8')
+        cls.deep = lesson(2, 3).read_text(encoding='utf-8')
 
     def mutate(self, source: str, old: str, new: str) -> str:
         self.assertIn(old, source, 'mutation target must exist')
@@ -101,7 +107,7 @@ class LearnerExerciseContractTests(unittest.TestCase):
             self.assertTrue(any('deep-timing' in item for item in audit.audit_deep_research_artifact(changed)))
 
     def inventory_fixture(self, root: Path) -> Path:
-        course = root / 'web/nemoclaw'
+        course = dict(audit.locale_course_roots(root))['en']
         course.mkdir(parents=True)
         (course / 'scripts').mkdir()
         (course / 'scripts/_shared.js').write_text('// shared owner', encoding='utf-8')
@@ -184,7 +190,7 @@ class LearnerExerciseContractTests(unittest.TestCase):
     def test_integration_reads_cli_and_canvas_from_supplied_owner_root(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            scripts = root / 'web/nemoclaw/scripts'
+            scripts = dict(audit.locale_course_roots(root))['en'] / 'scripts'
             scripts.mkdir(parents=True)
             (scripts / '_openclaw_cli.js').write_text('// no error result', encoding='utf-8')
             (scripts / '_canvas.js').write_text('', encoding='utf-8')

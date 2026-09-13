@@ -428,7 +428,7 @@ def load_runtime_pages(root: Path) -> RuntimePages:
 
     localized = published_pages(root)
     pages = RuntimePages()
-    canonical = root / 'web/nemoclaw'
+    canonical = dict(locale_course_roots(root))['en']
     profile_path = canonical / 'learning-profile.json'
     try:
         profile = json.loads(profile_path.read_text(encoding='utf-8'))
@@ -469,7 +469,7 @@ def load_runtime_pages(root: Path) -> RuntimePages:
             children = json.loads(meta.group(1))['children'] if meta else []
             for child in children:
                 child_path = Path(child['path'])
-                relative = child_path.relative_to(Path('web/nemoclaw'))
+                relative = child_path.relative_to(canonical.relative_to(root))
                 if relative.suffix == '.html':
                     declared.add(relative.as_posix())
         except (ValueError, KeyError, TypeError) as error:
@@ -1135,7 +1135,8 @@ def audit_runtime_integrations(
 ) -> list[str]:
     """Guard browser/runtime handoffs whose partial success can mislead learners."""
     findings: list[str] = []
-    cli_runtime = (root / "web/nemoclaw/scripts/_openclaw_cli.js").read_text(encoding="utf-8")
+    canonical = dict(locale_course_roots(root))['en']
+    cli_runtime = (canonical / "scripts/_openclaw_cli.js").read_text(encoding="utf-8")
     _need(findings, 'class="claw-help-mark"' in openclaw and
           'class="claw-help-hint"' in openclaw,
           "OpenClaw probe field help needs a visible question-mark cue and instruction")
@@ -1196,7 +1197,7 @@ def audit_runtime_integrations(
               f"{locale} Modules 1b/1c must not restore remote LangChain imports")
     findings.extend(audit_exercise_consumers(
         surfaces if surfaces is not None else pages, openclaw,
-        (root / "web/nemoclaw/scripts/_canvas.js").read_text(encoding="utf-8"),
+        (canonical / "scripts/_canvas.js").read_text(encoding="utf-8"),
     ))
     return findings
 

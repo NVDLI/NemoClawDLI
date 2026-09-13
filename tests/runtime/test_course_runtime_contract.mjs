@@ -6,23 +6,32 @@ import test from 'node:test';
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath, pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
 import {execFileSync} from 'node:child_process';
 import vm from 'node:vm';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const {discoverCourses} = createRequire(import.meta.url)('./course_exercise_fixture.cjs');
+const course = discoverCourses(root).roots[0];
+const profile = JSON.parse(fs.readFileSync(path.join(course,'learning-profile.json'),'utf8'));
+const lesson = (module, number) => {
+  const matches = profile.lessons.filter(entry => entry.module === module && entry.lesson === number);
+  assert.equal(matches.length, 1, 'Expected one declared lesson for the exercised role');
+  return path.join(course, matches[0].id + '.html');
+};
+const lessonRoute = (module, number) => '/' + path.relative(root, lesson(module, number));
 const storage = () => {
   const values = new Map();
   return {getItem:key => values.get(key) ?? null, setItem:(key,value) => values.set(key,String(value)), removeItem:key => values.delete(key)};
 };
 globalThis.localStorage = storage();
 globalThis.sessionStorage = storage();
-globalThis.location = new URL('http://localhost/web/nemoclaw/04b-modern-clis.html');
-const shared = await import('../../web/nemoclaw/scripts/_shared.js');
-const gateway = await import('../../web/nemoclaw/scripts/_openclaw.js');
-const shell = await import('../../web/nemoclaw/scripts/_openshell.js');
-const {bindRunSignal} = await import('../../web/nemoclaw/scripts/_canvas.js');
+globalThis.location = new URL(lessonRoute(4, 2), 'http://localhost');
+const shared = await import(pathToFileURL(path.join(course,'scripts/_shared.js')));
+const gateway = await import(pathToFileURL(path.join(course,'scripts/_openclaw.js')));
+const shell = await import(pathToFileURL(path.join(course,'scripts/_openshell.js')));
+const {bindRunSignal} = await import(pathToFileURL(path.join(course,'scripts/_canvas.js')));
 const tick = () => new Promise(resolve => setImmediate(resolve));
 async function until(predicate) {
   const deadline = Date.now() + 1000;
@@ -239,7 +248,7 @@ test('native policy confirmation targets the sandbox whose policy was read, even
     socket.event({type:'data',data:'code=200'});
     socket.event({type:'exit',code:0});
   });
-  const source = fs.readFileSync(path.join(root,'web/nemoclaw/04a-safety.html'),'utf8');
+  const source = fs.readFileSync(lesson(4, 1),'utf8');
   const start = source.indexOf('code: `',source.indexOf('id: "confirm", icon:'))+'code: '.length;
   let end = start+1;
   for (;end<source.length;end++) {if(source[end]==='\\')end++;else if(source[end]==='`')break;}
@@ -306,7 +315,7 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
     },origin);
     const page = await context.newPage();
     const load = async () => {
-      await page.goto(origin+'/web/nemoclaw/04b-modern-clis.html');
+      await page.goto(origin+lessonRoute(4, 2));
     const scrolling = await page.evaluate(() => {
       const plain = document.createElement('button');
       document.body.append(plain);
@@ -366,7 +375,7 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
     await page.locator('#clis-artifact .chatui-state.ready').waitFor();
     assert.equal(readmeRequests,2,'transient fallback was cached permanently');
     assert.match(prompts[1].messages[0].content,/Claude Code · Full README/);
-    const actual = fs.readFileSync(path.join(root,'web/nemoclaw/assets/cli_readme_claude-code.txt'),'utf8');
+    const actual = fs.readFileSync(path.join(course,'assets/cli_readme_claude-code.txt'),'utf8');
     assert(prompts[1].messages[0].content.includes(actual),'full README did not come from the actual vendored asset');
 
     readmeMode='pending';

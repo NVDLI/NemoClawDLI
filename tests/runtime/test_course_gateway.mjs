@@ -3,8 +3,15 @@
 
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import '../../web/nemoclaw/scripts/_shared.js';
-import {courseTurn, openclawMessageText, filterOpenClawRuntimeValue} from '../../web/nemoclaw/scripts/_openclaw.js';
+import {fileURLToPath, pathToFileURL} from 'node:url';
+import path from 'node:path';
+import {createRequire} from 'node:module';
+const {discoverCourses} = createRequire(import.meta.url)('./course_exercise_fixture.cjs');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const course = discoverCourses(root).roots[0];
+await import(pathToFileURL(path.join(course,'scripts/_shared.js')));
+const {courseTurn, openclawMessageText, filterOpenClawRuntimeValue} =
+  await import(pathToFileURL(path.join(course,'scripts/_openclaw.js')));
 
 const frame = (state, runId, sessionKey, text, event = 'chat', extra = {}) => state._chatCb?.({
   event, payload:{runId, sessionKey, state:'final', message:{content:text}, ...extra},

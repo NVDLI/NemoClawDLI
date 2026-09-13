@@ -20,7 +20,7 @@ function readPage(name) {
   const flows = {}, cells = {};
   const source = html.match(/<script type="text\/plain" id="deep-src">([\s\S]*?)<\/script>/)?.[1];
   const document = {getElementById(id) {return {textContent:id === 'deep-src' ? source : '', innerHTML:''};}};
-  const sandbox = {console, document, location:{href:'http://course/web/nemoclaw/' + name},
+  const sandbox = {console, document, location:{href:new URL(path.relative(root, path.join(directory,name)), 'http://course/').href},
     buildNav:noop, updateKeyPill:noop, mountJourneyMap:noop, hljs:{highlightAll:noop},
     mountCanvasFlow:(id, value) => {flows[id]=value;}, mountRunCell:(id, value) => {cells[id]=value;}};
   sandbox.window = sandbox;
@@ -39,7 +39,7 @@ function readPage(name) {
 
 function run(code, state = {}, helpers = {}, window = {}) {
   const sandbox = {state, helpers:{log, getEmbeddingConfig:async()=>({url:'https://embedding.example/v1',model:'fixture-embedding'}), ...helpers}, window, console, performance, Date, Set,
-    location:{href:'http://course/web/nemoclaw/'}};
+    location:{href:new URL(path.relative(root,directory) + '/', 'http://course/').href}};
   return vm.runInNewContext('(async () => {\n' + code + '\n})()', sandbox);
 }
 const response = (content, finish_reason='stop', tool_calls=[]) => ({content, finish_reason, tool_calls});
