@@ -113,11 +113,6 @@
       "source": "\n    <strong>The overhead tax in concrete terms.</strong>\n    Every agent boundary adds model-call latency and routing logic. It also creates another\n    source of malformed messages and replaces a readable timeline with a trajectory that\n    fans across workers.\n  ",
       "value": "\n    <strong>开销具体体现在哪里。</strong>每个智能体边界都会增加模型调用延迟和路由逻辑，还会引入一个新的消息格式错误来源，并将清晰易读的时间线变成一条向多个工作单元分叉的执行轨迹。\n  "
     },
-    "rich.b78f1a0b8a39": {
-      "type": "rich",
-      "source": "\n    <strong>In practice, you can have both.</strong>\n    Many real systems borrow from each approach at once. The tools a ReAct loop calls\n    might internally run a planned, ReWOO-style pipeline, and a planner that lays its\n    work out in advance still needs sub-agents to execute each step, which are usually\n    ReAct loops in their own right. Compose these software components wherever their\n    strengths fit, reserving a Workflow Agent for tasks that split into independent workstreams.\n  ",
-      "value": "\n    <strong>在实践中，可以同时采用两者。</strong>许多实际系统会同时借鉴这两种方法。ReAct 循环所调用的工具可能会在内部运行预先规划的 ReWOO 式工作流；而通过 planner 预先安排工作的系统仍需要子智能体执行各个步骤，这些子智能体本身通常也是 ReAct 循环。请根据各自优势组合这些软件组件，并将工作流智能体用于可拆分为独立工作流的任务。\n  "
-    },
     "rich.c89d938f1d03": {
       "type": "rich",
       "source": "The <span>Workflow</span> Agent",
@@ -1381,6 +1376,11 @@
       "type": "text",
       "source": "You are a billing specialist. Answer only billing, payment, and refund questions, crisply.",
       "value": "您是一位账单专家。仅简洁回答账单、付款和退款问题。"
+    },
+    "text.c42f29390640": {
+      "type": "text",
+      "source": "\n    A tool in a ReAct loop can run a planned pipeline. A planned stage can also call\n    a ReAct loop when it needs to adapt to intermediate results. Stages with a fixed\n    procedure can run as ordinary functions, as the executor below does.\n  ",
+      "value": "ReAct 循环中的工具可以运行预先规划的流水线。如果规划中的某个阶段需要根据中间结果调整，也可以调用 ReAct 循环。采用固定流程的阶段则可作为普通函数运行，下方的执行器就是如此。"
     },
     "text.c4b2896a2081": {
       "type": "text",

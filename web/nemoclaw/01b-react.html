@@ -112,17 +112,17 @@
     and the <strong>actions</strong> that reach the world.
   </p>
   <p>
-    This course's minimal agent fills each slot with the simplest thing that works:
+    In the tool loop below, these responsibilities are divided as follows:
   </p>
   <ul>
     <li><strong>Memory</strong> is the <code>messages[]</code> array.</li>
-    <li><strong>Planning</strong> is the <code>finish_reason</code> router.</li>
+    <li><strong>Planning</strong> happens when the model uses the supplied context to choose its next response or tool request.</li>
     <li><strong>Tools</strong> are the functions your harness exposes.</li>
     <li><strong>Action</strong> is the tool call the harness executes.</li>
   </ul>
   <p>
-    None of that lives inside the model. It is the harness you build around a single
-    text-in, text-out call.
+    The harness maintains the messages and executes the tools. Its router reads
+    <code>finish_reason</code> to decide whether to process tool requests or return an answer.
   </p>
   <figure style="margin:1.4em 0">
     <div class="fig-embed" data-svg-src="assets/figures/01b-react-2.svg" style="aspect-ratio:940 / 320"></div>
@@ -134,9 +134,7 @@
     others expect of it, the rest of the loop keeps working.
   </div>
   <p>
-    That independence also matters for how you read agent code you didn't
-    write. Whatever framework wraps it, any LLM-based agent must contain these
-    four pieces, and when something breaks the cause is usually in one of them:
+    When this loop fails, inspect the values passed between its components. Check for:
   </p>
   <ul>
     <li>the model returning the wrong <code>finish_reason</code>,</li>

@@ -111,12 +111,9 @@
   </div>
 
   <div class="callout">
-    <strong>In practice, you can have both.</strong>
-    Many real systems borrow from each approach at once. The tools a ReAct loop calls
-    might internally run a planned, ReWOO-style pipeline, and a planner that lays its
-    work out in advance still needs sub-agents to execute each step, which are usually
-    ReAct loops in their own right. Compose these software components wherever their
-    strengths fit, reserving a Workflow Agent for tasks that split into independent workstreams.
+    A tool in a ReAct loop can run a planned pipeline. A planned stage can also call
+    a ReAct loop when it needs to adapt to intermediate results. Stages with a fixed
+    procedure can run as ordinary functions, as the executor below does.
   </div>
 
   <h2>When a single loop beats splitting into agents</h2>

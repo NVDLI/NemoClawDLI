@@ -55,7 +55,7 @@
 
   <figure style="margin:1.4em 0">
     <div class="fig-embed" data-svg-src="assets/figures/01c-tools-1.svg" style="aspect-ratio:860 / 414"></div>
-    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">The LLM asks, your code answers, and the LLM concludes, but it never runs your function itself.</figcaption>
+    <figcaption style="text-align:center;font-size:.95rem;color:var(--gfx-sub,#8a8a8a);margin-top:.6em">The model requests a tool. The harness executes it and returns the result for the model's next decision.</figcaption>
   </figure>
 
   <div class="callout">
@@ -186,8 +186,8 @@
     same <a href="https://www.jsonrpc.org/specification" target="_blank" rel="noopener">JSON-RPC</a> shape MCP defines (no transport). The agent fetches
     the tool list, hands the schemas to the model, then dispatches
     <code>tool_calls</code> back through the server's
-    <code>tools/call</code> handler. The agent loop is byte-for-byte
-    identical to a normal tool call while only the source of the tool list changes.
+    <code>tools/call</code> handler. The loop still requests a tool, executes it, and appends
+    its result. Tool discovery and dispatch now go through the server interface.
   </p>
 
   <div id="cell-m2b-p6"></div>

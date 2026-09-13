@@ -27,6 +27,11 @@
       "source": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/tool-use\" target=\"_blank\" rel=\"noopener\">Anthropic tool-use reference</a>. The parallel implementation for Claude, useful as a cross-vendor comparison.",
       "value": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/tool-use\" target=\"_blank\" rel=\"noopener\">Anthropic 工具使用参考</a>。这是 Claude 的对应实现，适合用于跨供应商比较。"
     },
+    "link.5ec0a65911c3": {
+      "type": "link",
+      "source": "\n    The cell below fakes a tiny MCP server in pure JavaScript with the\n    same <a href=\"https://www.jsonrpc.org/specification\" target=\"_blank\" rel=\"noopener\">JSON-RPC</a> shape MCP defines (no transport). The agent fetches\n    the tool list, hands the schemas to the model, then dispatches\n    <code>tool_calls</code> back through the server's\n    <code>tools/call</code> handler. The loop still requests a tool, executes it, and appends\n    its result. Tool discovery and dispatch now go through the server interface.\n  ",
+      "value": "下方的代码单元用纯 JavaScript 模拟一个小型 MCP 服务器，采用 MCP 定义的 <a href=\"https://www.jsonrpc.org/specification\" target=\"_blank\" rel=\"noopener\">JSON-RPC</a> 格式，但不包含传输层。智能体获取工具列表，将模式交给模型，再把 <code>tool_calls</code> 分派回服务器的 <code>tools/call</code> 处理函数。循环仍会请求工具、执行工具，再追加结果；工具发现和分派则改由服务器接口处理。"
+    },
     "link.7652579600f1": {
       "type": "link",
       "source": "\n    <strong>Discovery is a trust boundary.</strong>\n    Treat a <code>tools/list</code> response as untrusted input. Before connecting the server:\n    <ul>\n      <li>verify its identity,</li>\n      <li>show the requested capabilities to the user,</li>\n      <li>grant the smallest useful scope,</li>\n      <li>and bind each credential to that server's audience.</li>\n    </ul>\n    For remote connection and\n    OAuth discovery, reject private and link-local destinations and validate every redirect. The\n    <a href=\"https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices\" target=\"_blank\" rel=\"noopener\">MCP security guidance</a>\n    assigns consent, token handling, and server-side request forgery (SSRF) controls to the client.\n  ",
@@ -46,11 +51,6 @@
       "type": "link",
       "source": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer: Language Models Can Teach Themselves to Use Tools</em> (2023)</a>. The paper that established self-supervised tool use; what every subsequent function-calling spec is variations on.",
       "value": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer: Language Models Can Teach Themselves to Use Tools</em> (2023)</a>。这篇论文奠定了自监督工具使用的基础；此后所有函数调用规范都可视为它的变体。"
-    },
-    "link.d07dc829fc31": {
-      "type": "link",
-      "source": "\n    The cell below fakes a tiny MCP server in pure JavaScript with the\n    same <a href=\"https://www.jsonrpc.org/specification\" target=\"_blank\" rel=\"noopener\">JSON-RPC</a> shape MCP defines (no transport). The agent fetches\n    the tool list, hands the schemas to the model, then dispatches\n    <code>tool_calls</code> back through the server's\n    <code>tools/call</code> handler. The agent loop is byte-for-byte\n    identical to a normal tool call while only the source of the tool list changes.\n  ",
-      "value": "\n    下方单元格使用纯 JavaScript 模拟一个小型 MCP 服务器，采用 MCP 定义的\n    <a href=\"https://www.jsonrpc.org/specification\" target=\"_blank\" rel=\"noopener\">JSON-RPC</a> 格式（不含传输层）。智能体先获取工具列表，将模式交给模型，再将\n    <code>tool_calls</code> 请求交给服务器的\n    <code>tools/call</code> 处理程序。智能体循环与普通工具调用逐字节相同，改变的只有工具列表的来源。\n  "
     },
     "link.ef623421ba77": {
       "type": "link",
@@ -1283,11 +1283,6 @@
       "source": "discovered ",
       "value": "发现了 "
     },
-    "text.9267d76c423b": {
-      "type": "text",
-      "source": "The LLM asks, your code answers, and the LLM concludes, but it never runs your function itself.",
-      "value": "LLM 发出请求，代码给出响应，LLM 得出结论，但它绝不会自行运行函数。"
-    },
     "text.92fbeff1a8e7": {
       "type": "text",
       "source": " TODO: Choose an example or write a question that makes the tool choice interesting.",
@@ -1716,6 +1711,11 @@
       "type": "text",
       "source": "You are a customer-success agent. When the user asks about customer data, call query_customer_db rather than guessing.",
       "value": "您是一个客户成功智能体。当用户询问客户数据时，请调用 query_customer_db，不要猜测。"
+    },
+    "text.cbcdd3e0b6ad": {
+      "type": "text",
+      "source": "The model requests a tool. The harness executes it and returns the result for the model's next decision.",
+      "value": "模型请求使用工具，运行框架负责执行并返回结果，供模型做出下一次决策。"
     },
     "text.d29a0939bcb5": {
       "type": "text",
