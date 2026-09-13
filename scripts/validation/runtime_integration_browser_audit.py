@@ -17,6 +17,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from scripts.runtime.host_browser import BrowserRuntimeError, environment, run_node
+from scripts.runtime.html_document import script_body_by_id
+from scripts.build.project_artifact_manifests import mirror_roots
 
 LOCALE_PAGES = ("index.html", "02c-deep.html", "03a-kickstart.html", "03c-always-on.html", "04a-safety.html")
 
@@ -62,9 +64,57 @@ def discover_artifact_locales(site: Path) -> list[dict[str, str]]:
         routes.append({"code": code, "locale": locale, "url": url})
     if "en" not in codes:
         raise ValueError("languages.json is missing its English default route")
-    for metadata_path in site.glob("**/nemoclaw/assets/locale.json"):
-        route = metadata_path.parent.parent.relative_to(site).as_posix() + "/"
+    # Locale metadata is removable; discover the delivered course independently
+    # from its authored profile/interface contracts and executable lesson pages.
+    consumers = {path.parent for name in ("learning-profile.json", "interface-inventory.json")
+                 for path in site.rglob(name)}
+    consumers.update(path.parent.parent for path in site.glob("**/assets/locale.json"))
+    for page in site.rglob("*.html"):
+        if ((page.parent / "scripts/_shared.js").is_file()
+                and re.search(r"\bdata-learning-id\s*=", page.read_text(encoding="utf-8"))):
+            consumers.add(page.parent)
+    source_mirrors = mirror_roots(site)
+    for course in sorted(consumers):
+        route = course.relative_to(site).as_posix() + "/"
         if route not in urls:
+            # The existing manifest projector owns authoring mirrors separately
+            # from published locale routes. Prove both rebased manifests still
+            # resolve to this artifact's complete declared routes before using
+            # that role; a directory name alone cannot excuse an undeclared course.
+            if course.parent.name == "web" and course.parents[1] in source_mirrors:
+                skill = course / "SKILL.html"
+                body = script_body_by_id(skill.read_text(encoding="utf-8"), "skill-meta") if skill.is_file() else None
+                metadata = json.loads(body) if body else {}
+                if not isinstance(metadata, dict):
+                    raise ValueError(f"source mirror has malformed directory provenance: {route}")
+                source_dir, self_path = metadata.get("source_dir"), metadata.get("self_path")
+                directory_source = (metadata.get("schema") == "dir-skill/1.0"
+                                    and metadata.get("node_type") == "directory-explorer" and source_dir == route)
+                hub_source = (metadata.get("node_type") == "hub" and metadata.get("level") == "course"
+                              and metadata.get("surface") == "web" and metadata.get("course") == course.name
+                              and isinstance(self_path, str) and not Path(self_path).is_absolute()
+                              and Path(self_path).name == "SKILL.html"
+                              and ".." not in Path(self_path).parts
+                              and route.endswith(Path(self_path).parent.as_posix() + "/"))
+                if not directory_source and not hub_source:
+                    raise ValueError(f"source mirror is missing its directory provenance: {route}")
+                for destination in (course.parents[1], course.parent):
+                    manifest_path = destination / "languages.json"
+                    if not manifest_path.is_file():
+                        raise ValueError(f"source mirror is missing language provenance: {route}")
+                    projected = json.loads(manifest_path.read_text(encoding="utf-8"))
+                    if not isinstance(projected, dict) or not isinstance(projected.get("languages"), list):
+                        raise ValueError(f"source mirror has malformed language provenance: {route}")
+                    for row in projected["languages"]:
+                        if not isinstance(row, dict) or not isinstance(row.get("url"), str):
+                            raise ValueError(f"source mirror has malformed language provenance: {route}")
+                        target = (destination / row["url"]).resolve()
+                        if not target.is_relative_to(site):
+                            raise ValueError(f"source mirror language provenance escapes artifact: {route}")
+                        row["url"] = target.relative_to(site).as_posix() + "/"
+                    if projected != data:
+                        raise ValueError(f"source mirror language provenance differs from published routes: {route}")
+                continue
             raise ValueError(f"delivered locale route is missing from languages.json: {route}")
     return routes
 
@@ -105,6 +155,85 @@ const fail = message => { throw new Error(message); };
 
 function topLevelInitScript(init) {
   return `if (window === window.top) { (${init.toString()})(); }`;
+}
+
+function mazeTurn(request) {
+  const content = request.messages?.at(-1)?.content;
+  if (typeof content !== 'string') fail('maze turn is missing its text map');
+  const blocks = content.match(/(?:^|\n)#[^\n]*(?:\n#[^\n]*)+/g) || [];
+  if (blocks.length !== 1) fail('maze turn must contain exactly one map');
+  const rows = blocks[0].trim().split('\n');
+  const map = rows.join('\n');
+  if (rows.length < 3 || rows.some(row => row.length !== rows[0].length || !/^[#.@·G-]+$/.test(row)) ||
+      !/^#+$/.test(rows[0]) || !/^#+$/.test(rows.at(-1)) ||
+      rows.some(row => !row.startsWith('#') || !row.endsWith('#')) ||
+      (map.match(/@/g) || []).length !== 1 || (map.match(/G/g) || []).length !== 1) {
+    fail('maze turn has a missing or malformed rectangular map');
+  }
+  const trails = [...content.matchAll(/^Path travelled \(move into each cell\): (.+)$/gm)];
+  if (trails.length !== 1) fail('maze turn must contain exactly one travelled path');
+  const trail = trails[0][1];
+  const allowed = request.tools?.[0]?.function?.parameters?.properties?.direction?.enum;
+  if (!Array.isArray(allowed) || !allowed.length || new Set(allowed).size !== allowed.length ||
+      allowed.some(letter => !/^[NSEW]$/.test(letter))) fail('maze turn has malformed allowed directions');
+  // Count the delivered map, independently of the controller's cfg.max or error text.
+  const budget = 2 * [...map].filter(cell => cell !== '#' && cell !== '\n').length;
+  return { map, trail, allowed, budget };
+}
+
+function checkMazeBoundary(observation) {
+  const {requests, choices, initialGrid, finalGrid, raw, log, text} = observation;
+  if (!requests.length || choices.length !== requests.length) fail('maze boundary has no complete request evidence');
+  const turns = requests.map(mazeTurn), first = turns[0];
+  let result = null;
+  try { result = JSON.parse(raw); } catch (_) {}
+  const failure = text.match(/maze stopped after (\d+) decisions without reaching the goal/i);
+  const summary = {
+    result, expectedBudget: first.budget, requestCount: requests.length,
+    rejectedChoiceVisible: /No move was executed\. Choose exactly one of:/i.test(log),
+    failureVisible: !!failure && Number(failure[1]) === first.budget,
+    falseSuccessVisible: /goal reached|solved|shortest-path recovery/i.test(text),
+    unchangedState: !!initialGrid && initialGrid === finalGrid &&
+      turns.every(turn => turn.map === first.map && turn.trail === first.trail),
+    rejectedEveryChoice: turns.every((turn, index) => !turn.allowed.includes(choices[index])),
+  };
+  if (summary.result?.won || summary.requestCount !== summary.expectedBudget ||
+      !summary.rejectedEveryChoice || !summary.unchangedState ||
+      !summary.rejectedChoiceVisible || !summary.failureVisible || summary.falseSuccessVisible) {
+    fail('maze repeated-choice boundary failed: ' + JSON.stringify(summary));
+  }
+  return summary;
+}
+
+function researchPlan(request) {
+  const schema = request.response_format?.json_schema;
+  const branches = [
+    { source:'materials', target:'Retrieval-Augmented Generation (RAG)', goal:'Define RAG' },
+    { source:'section', target:'overview', goal:'Explain how this course builds RAG' },
+    { source:'materials', target:'AI Agents', goal:'Explain the agent loop' },
+  ];
+  const contract = schema?.schema?.properties?.branches;
+  const targets = contract?.items?.properties?.target?.enum;
+  if (schema?.name !== 'research_plan' || !Number.isInteger(contract?.minItems) ||
+      !Number.isInteger(contract?.maxItems) || branches.length < contract.minItems ||
+      branches.length > contract.maxItems || !Array.isArray(targets) ||
+      branches.some(branch => !targets.includes(branch.target))) {
+    fail('research fixture does not satisfy the delivered planner schema');
+  }
+  return branches;
+}
+
+function checkCronLifecycle(observation) {
+  const {calls,historyReads,reads,delays,ownedJob,foreign,stateId,retained,socketsClosed,clearedAfterRun} = observation;
+  const adds = calls.filter(call => call.method === 'cron.add');
+  const removes = calls.filter(call => call.method === 'cron.remove');
+  if (adds.length !== 1 || removes.length !== 1 || removes[0].params.id !== 'owned-cron-id' ||
+      historyReads !== 2 || reads.length !== 1 || JSON.stringify(delays) !== '[5000]' ||
+      ownedJob !== null || foreign?.id !== 'foreign-job' || stateId !== null || retained !== null ||
+      !socketsClosed || !clearedAfterRun || calls.some(call => call.method === 'chat.send')) {
+    fail('owned cron lifecycle failed: ' + JSON.stringify(observation));
+  }
+  return observation;
 }
 
 function courseExplorerPath() {
@@ -412,15 +541,22 @@ async function openLocale(browser, language, filename, init) {
       localStorage.removeItem('nemoclaw_model_id_v1');
       sessionStorage.setItem('nvapi', 'nvapi-maze-audit');
       window.__mazeRequests = [];
+      window.__mazeChoices = [];
       const originalFetch = window.fetch.bind(window);
       window.fetch = async (input, init = {}) => {
         if (!String(input).endsWith('/chat/completions')) return originalFetch(input, init);
         const body = JSON.parse(String(init.body || '{}'));
+        if (!window.__mazeRequests.length) {
+          window.__mazeInitialGrid = document.querySelector('#cell-llm-maze .mgrid')?.innerHTML;
+        }
         window.__mazeRequests.push(body);
+        const allowed = body.tools?.[0]?.function?.parameters?.properties?.direction?.enum || [];
+        const direction = [...'NSEW'].find(letter => !allowed.includes(letter)) || 'not-a-direction';
+        window.__mazeChoices.push(direction);
         const id = 'maze-' + window.__mazeRequests.length;
         const frame = JSON.stringify({ choices: [{
           delta: { tool_calls: [{ index: 0, id, type: 'function', function: {
-            name: 'choose_direction', arguments: '{"direction":"N"}',
+            name: 'choose_direction', arguments: JSON.stringify({direction}),
           } }] },
           finish_reason: 'tool_calls',
         }] });
@@ -439,28 +575,19 @@ async function openLocale(browser, language, filename, init) {
     await run.waitFor({ state: 'visible', timeout: timeoutMs });
     await run.click();
     await page.waitForFunction(() => /Run all/i.test(document.querySelector('#cell-llm-maze .cf-btn-run')?.textContent || ''), null, { timeout: timeoutMs });
-    results.mazeLoopBoundary = await page.evaluate(() => {
+    const mazeObservation = await page.evaluate(() => {
       const root = document.querySelector('#cell-llm-maze');
       const raw = root?.querySelector('.cf-panel[data-id="run"] .cf-panel-output')?.innerText || '';
       const log = root?.querySelector('.cf-panel[data-id="run"] .cf-panel-log')?.innerText || '';
       const text = root?.innerText || '';
-      let result = null;
-      try { result = JSON.parse(raw); } catch (_) {}
       return {
-        result,
-        rejectedChoiceVisible: /No move was executed\. Choose exactly one of:/i.test(log),
-        failureVisible: /maze stopped after 20 decisions without reaching the goal/i.test(text),
-        falseSuccessVisible: /goal reached by the loop guard|solved with loop guard|shortest-path recovery/i.test(text),
-        requestCount: window.__mazeRequests.length,
-        allowed: window.__mazeRequests.map(request => request.tools?.[0]?.function?.parameters?.properties?.direction?.enum || []),
+        raw, log, text,
+        requests: window.__mazeRequests, choices: window.__mazeChoices,
+        initialGrid: window.__mazeInitialGrid,
+        finalGrid: root?.querySelector('.mgrid')?.innerHTML,
       };
     });
-    if (results.mazeLoopBoundary.result?.won || results.mazeLoopBoundary.requestCount !== 20 ||
-        !results.mazeLoopBoundary.allowed.some(letters => letters.length && !letters.includes('N')) ||
-        !results.mazeLoopBoundary.rejectedChoiceVisible || !results.mazeLoopBoundary.failureVisible ||
-        results.mazeLoopBoundary.falseSuccessVisible) {
-      fail('maze repeated-choice boundary failed: ' + JSON.stringify(results.mazeLoopBoundary));
-    }
+    results.mazeLoopBoundary = checkMazeBoundary(mazeObservation);
     if (errors.length) fail('maze repeated-choice browser errors: ' + JSON.stringify(errors));
     await page.close();
   }
@@ -551,13 +678,14 @@ async function openLocale(browser, language, filename, init) {
     const repeated = 'Basedellsellsellsellsellsellsellsellsellsellsell';
     const evidence = 'RAG grounds a model response in retrieved evidence.';
     const sibling = 'The course moves from model calls through retrieval and agent coordination.';
+    const secondSibling = 'An agent loop observes its state, chooses an action, and checks the result.';
     const scenarios = [
       { name:'recovery', replies:[repeated, evidence], calls:2, failed:0 },
       { name:'novel-token-recovery', replies:['証拠'.repeat(8), evidence], calls:2, failed:0 },
       { name:'second-repetitive-failure', replies:[repeated, repeated], calls:2, failed:1 },
       { name:'empty-response', replies:[''], calls:1, failed:1 },
       { name:'empty-retry', replies:[repeated, ''], calls:2, failed:1 },
-      { name:'all-workers-failed', replies:[repeated, repeated], calls:2, failed:2, allFailed:true },
+      { name:'all-workers-failed', replies:[repeated, repeated], calls:2, failed:3, allFailed:true },
       { name:'partial-evidence', replies:[evidence + ' Coverage gap: evaluation details are missing.'], calls:1, failed:0, gap:1 },
       { name:'readable-repeated-labels', replies:['Repeated source labels remain readable: RAG, RAG, RAG, RAG, RAG, RAG.'], calls:1, failed:0 },
     ];
@@ -574,32 +702,29 @@ async function openLocale(browser, language, filename, init) {
           if (event.detail?.containerId === 'deep-artifact') window.activitySignals.push(event.detail);
         });
       });
-      const workerCalls = [[], []];
-      let requests = 0, synthesisInput = null;
+      const workerCalls = [[], [], []];
+      let requests = 0, synthesisInput = null, plannedBranches = [];
       try {
         if (scenario.allFailed) await page.setViewportSize({ width:390, height:844 });
         await page.route('**/chat/completions', async route => {
           requests++;
           const body = JSON.parse(route.request().postData() || '{}');
-          const system = body.messages?.[0]?.content || '';
           const user = body.messages?.[1]?.content || '';
           let content;
-          if (system.includes('research planner')) {
-            content = JSON.stringify({ branches: [
-              { source:'materials', target:'Retrieval-Augmented Generation (RAG)', goal:'Define RAG' },
-              { source:'section', target:'overview', goal:'Explain how this course builds RAG' },
-            ] });
-          } else if (system.includes('You are a sub-agent')) {
-            const worker = user.includes('GOAL: Define RAG') ? 0 : 1;
+          const worker = plannedBranches.findIndex(branch => user.startsWith('GOAL: ' + branch.goal + '\n'));
+          if (body.response_format) {
+            plannedBranches = researchPlan(body);
+            content = JSON.stringify({ branches: plannedBranches });
+          } else if (worker >= 0) {
             workerCalls[worker].push(body);
             content = worker === 0
               ? scenario.replies[Math.min(workerCalls[worker].length - 1, scenario.replies.length - 1)]
-              : scenario.allFailed ? repeated : sibling;
+              : scenario.allFailed ? repeated : worker === 1 ? sibling : secondSibling;
           } else {
             synthesisInput = user;
             content = scenario.failed
-              ? 'This course builds coordinated agents [2]. The other branch did not return usable evidence.'
-              : 'RAG uses retrieved evidence [1], and this course builds it into coordinated agents [2].';
+              ? 'This course builds coordinated agents [1]. Agent loops choose actions [3]. The other branch did not return usable evidence.'
+              : 'RAG uses retrieved evidence [2], and this course builds it into coordinated agents [1]. Agent loops choose actions [3].';
           }
           const frame = JSON.stringify({ choices:[{ delta:{ content }, finish_reason:null }] });
           const done = JSON.stringify({ choices:[{ delta:{}, finish_reason:'stop' }], usage:{ prompt_tokens:1, completion_tokens:1 } });
@@ -612,10 +737,11 @@ async function openLocale(browser, language, filename, init) {
         await page.locator('#deep-artifact .chatui-send').click();
         await page.waitForFunction(() => {
           const board = document.querySelector('.research-board');
-          return ['complete', 'failed'].includes(board?.dataset.state);
+          return ['complete', 'failed'].includes(board?.dataset.state) || window.activitySignals.length;
         }, null, { timeout:timeoutMs });
         await page.waitForFunction(() => window.activitySignals.length === 1, null, { timeout:timeoutMs });
         const activity = await page.evaluate(() => window.activitySignals[0]);
+        if (!await page.locator('.research-board').count()) fail('research stopped before admitting the plan: ' + await page.locator('#deep-artifact').innerText());
         if (activity.successCount !== (scenario.allFailed ? 0 : 1)) {
           fail('activity success did not match admitted research evidence: ' + JSON.stringify(activity));
         }
@@ -623,9 +749,10 @@ async function openLocale(browser, language, filename, init) {
         const failed = await page.locator('.research-thread.failed').count();
         const gaps = await page.locator('.research-thread.gap').count();
         const expectedSiblingCalls = scenario.allFailed ? 2 : 1;
-        const expectedRequests = 1 + scenario.calls + expectedSiblingCalls + (scenario.allFailed ? 0 : 1);
+        const expectedRequests = 1 + scenario.calls + 2 * expectedSiblingCalls + (scenario.allFailed ? 0 : 1);
         if (requests !== expectedRequests || workerCalls[0].length !== scenario.calls ||
-            workerCalls[1].length !== expectedSiblingCalls || failed !== scenario.failed || gaps !== (scenario.gap || 0)) {
+            workerCalls.slice(1).some(calls => calls.length !== expectedSiblingCalls) ||
+            failed !== scenario.failed || gaps !== (scenario.gap || 0)) {
           fail(JSON.stringify({ requests, expectedRequests, workerCalls:workerCalls.map(calls => calls.length), failed, gaps }));
         }
         for (const calls of workerCalls) {
@@ -643,12 +770,19 @@ async function openLocale(browser, language, filename, init) {
           if (synthesisInput !== null || await page.locator('.research-board').getAttribute('data-state') !== 'failed') {
             fail('all-failed run attempted synthesis or failed to report failure');
           }
-        } else if (!synthesisInput?.includes(sibling) || !synthesisInput.includes('[2]')) {
-          fail('surviving evidence lost its stable worker citation');
-        }
-        if (scenario.failed && !scenario.allFailed &&
-            (synthesisInput.includes('[1]') || !synthesisInput.includes('UNAVAILABLE BRANCHES'))) {
-          fail('failed branch remained citable or its coverage limitation disappeared');
+        } else {
+          const renderedGoals = await page.locator('.research-thread h3').allTextContents();
+          if (renderedGoals.length !== plannedBranches.length ||
+              new Set(renderedGoals).size !== plannedBranches.length ||
+              plannedBranches.some(branch => !renderedGoals.includes(branch.goal))) fail('research worker coverage differs from the plan');
+          const citations = plannedBranches.map(branch => '[' + (renderedGoals.indexOf(branch.goal) + 1) + ']');
+          if (!synthesisInput?.includes(sibling) || !synthesisInput.includes(secondSibling) ||
+              !synthesisInput.includes(citations[1]) || !synthesisInput.includes(citations[2])) {
+            fail('surviving evidence lost its stable worker citation');
+          }
+          if (scenario.failed && (synthesisInput.includes(citations[0]) || !synthesisInput.includes('UNAVAILABLE BRANCHES'))) {
+            fail('failed branch remained citable or its coverage limitation disappeared');
+          }
         }
         if (!scenario.failed && !synthesisInput.includes(scenario.replies.at(-1))) fail('usable or partial evidence was discarded');
         if (errors.length) fail('browser errors: ' + JSON.stringify(errors));
@@ -721,78 +855,97 @@ async function openLocale(browser, language, filename, init) {
     await page.close();
   }
 
-  // 3c: run add/watch/remove against a schema-checking fake Gateway. The watcher
-  // must poll run history and exit immediately when a completed run appears.
-  {
-    const { page, errors } = await open(browser, '03c-always-on.html');
+  // Execute each delivered one-shot controller with only Gateway and file transport faked.
+  // A completed history entry alone is insufficient: require readback and owned-job cleanup.
+  results.cron = {};
+  for (const language of locales) {
+    const { page, errors } = await openLocale(browser, language, '03c-always-on.html');
     await page.locator('#probe-cron .cf-panel-code').first().waitFor({ state: 'attached', timeout: timeoutMs });
-    results.cron = await page.evaluate(async () => {
-      const codes = Array.from(document.querySelectorAll('.cf-panel-code')).map(el => el.value || el.textContent || '');
-      const addCode = codes.find(code => code.includes('state.call("cron.add"'));
-      const watchCode = codes.find(code => code.includes('const POLL_MS = 5000'));
-      const removeCode = codes.find(code => code.includes('state.call("cron.remove"'));
-      if (!addCode || !watchCode || !removeCode) throw new Error('cron add/watch/remove code cells were not mounted');
+    const observation = await page.evaluate(async () => {
+      const code = id => document.querySelector('#probe-cron .cf-panel[data-id="' + id + '"] .cf-panel-code')?.value;
+      const runCode = code('cr-run'), removeCode = code('cr-rm');
+      if (!runCode || !removeCode) throw new Error('owned cron run/recovery cells were not mounted');
+      const shared = await import('./scripts/_shared.js');
       const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-      const calls = [];
-      let jobs = [];
-      let runHistoryReads = 0;
-      let terminalCalls = 0;
-      const state = {
-        call: async (method, params = {}) => {
-          calls.push({ method, params });
-          if (method === 'cron.list') return { jobs };
-          if (method === 'cron.runs') {
-            runHistoryReads++;
-            return runHistoryReads === 1
-              ? { entries: [] }
-              : { entries: [{ ts: Date.now() + 1, runAtMs: Date.now(), status: 'ok', jobId: 'job-runtime-audit' }] };
-          }
-          if (method === 'cron.add') {
-            const valid = params.name === 'quick-3c-demo' && !('id' in params) &&
-              params.schedule?.kind === 'cron' && params.schedule.expr === '* * * * *' &&
-              params.sessionTarget === 'isolated' && params.wakeMode === 'now' &&
-              params.payload?.kind === 'agentTurn' && typeof params.payload.message === 'string';
-            if (!valid) throw new Error('invalid authored cron.add payload: ' + JSON.stringify(params));
-            const job = { ...params, id: 'job-runtime-audit', state: { lastRunAtMs: 0 } };
-            jobs = [job];
-            return job;
-          }
-          if (method === 'cron.remove') {
-            if (params.id !== 'job-runtime-audit') throw new Error('remove did not use server id');
-            jobs = jobs.filter(job => job.id !== params.id);
-            return { removed: true };
-          }
-          throw new Error('unexpected method ' + method);
+      const calls = [], sockets = [], reads = [], delays = [];
+      const state = {}, owner = 'https://cron-audit.example.test';
+      const storageKey = 'module3-owned-cron:' + owner;
+      let ownedJob = null, historyReads = 0;
+      const foreign = {id:'foreign-job', name:'unrelated'};
+      const gateway = async (method, params = {}) => {
+        calls.push({method, params});
+        if (method === 'connect') return {server:{version:'fixture'},auth:{scopes:['operator.read','operator.write']}};
+        if (method === 'cron.add') {
+          if ('id' in params || !params.name || params.schedule?.kind !== 'at' ||
+              !Number.isFinite(Date.parse(params.schedule.at)) || Date.parse(params.schedule.at) <= Date.now() ||
+              params.deleteAfterRun !== true || params.sessionTarget !== 'isolated' || params.wakeMode !== 'now' ||
+              params.payload?.kind !== 'agentTurn' || !params.payload.message?.includes(state.cronFile) ||
+              !params.payload.message.includes(state.cronReference)) throw new Error('invalid one-shot cron payload');
+          ownedJob = {id:'owned-cron-id', name:params.name};
+          return ownedJob;
+        }
+        if (method === 'cron.runs') {
+          if (params.id !== ownedJob?.id) throw new Error('history did not use the owned server id');
+          return {entries:++historyReads === 1 ? [] : [{status:'ok',runId:'scheduled-run'}]};
+        }
+        if (method === 'cron.remove') {
+          if (params.id !== ownedJob?.id || sockets.at(-1).readyState !== 1) throw new Error('cleanup lost owned id or live transport');
+          ownedJob = null;
+          return {removed:true};
+        }
+        if (method === 'cron.list') return {jobs:ownedJob ? [ownedJob,foreign] : [foreign]};
+        throw new Error('unexpected cron fixture method: ' + method);
+      };
+      const RealWebSocket = window.WebSocket;
+      class GatewaySocket {
+        constructor() {
+          this.readyState = 1; sockets.push(this);
+          queueMicrotask(() => this.onmessage?.({data:JSON.stringify({type:'event',event:'connect.challenge',payload:{nonce:'fixture'}})}));
+        }
+        send(raw) {
+          const request = JSON.parse(raw);
+          gateway(request.method, request.params).then(payload => {
+            this.onmessage?.({data:JSON.stringify({type:'res',id:request.id,ok:true,payload})});
+          }, error => {
+            this.onmessage?.({data:JSON.stringify({type:'res',id:request.id,ok:false,error:{message:error.message}})});
+          });
+        }
+        close() { if (this.readyState === 3) return; this.readyState = 3; this.onclose?.({code:1000}); }
+      }
+      const controller = new AbortController();
+      const log = () => ({textContent:'',setAttribute(){}});
+      log.details = log;
+      const helpers = {...shared, log, signal:controller.signal,
+        getOpenClawConnection:() => ({rawUrl:owner}),
+        refreshOpenClawGatewayToken:async () => ({token:'fixture-only-token'}),
+        openclawGatewayWsUrl:() => ({url:'wss://cron-audit.example.test',displayUrl:'fixture gateway'}),
+        delay:async (ms, signal) => {
+          if (signal !== controller.signal) throw new Error('poll delay lost Stop signal');
+          delays.push(ms);
+        },
+        sandboxExec:async (command, {signal} = {}) => {
+          if (signal !== controller.signal || historyReads !== 2) throw new Error('file read lost signal or preceded completed run');
+          const file = command.match(/base64 < '([^']+)'/)?.[1];
+          if (file !== state.cronFile) throw new Error('readback did not inspect the scheduled file');
+          reads.push(file);
+          return {exitCode:0,output:'\x1e'+btoa(state.cronReference+'\n')+'\x1f'};
         },
       };
-      const log = () => ({ textContent: '', setAttribute() {} });
-      log.details = () => {};
-      const helpers = {
-        log,
-        signal: new AbortController().signal,
-        terminal: async () => {
-          terminalCalls++;
-          const output = terminalCalls === 1
-            ? '=== MEMORY.md (tail) ===\nbefore'
-            : '=== MEMORY.md (tail) ===\nbefore\nafter';
-          return { output, raw: output, frames: 1 };
-        },
-      };
-      await new AsyncFunction('helpers', 'state', 'ctx', addCode)(helpers, state, {});
-      const watch = await new AsyncFunction('helpers', 'state', 'ctx', watchCode)(helpers, state, {});
-      await new AsyncFunction('helpers', 'state', 'ctx', removeCode)(helpers, state, {});
-      return { calls, remaining: jobs.length, stateId: state.demoCronId, watch, terminalCalls, runHistoryReads };
+      window.WebSocket = GatewaySocket;
+      try {
+        await new AsyncFunction('helpers','state',runCode)(helpers,state);
+        const clearedAfterRun = state.demoCronId == null && sessionStorage.getItem(storageKey) === null && ownedJob === null;
+        await new AsyncFunction('helpers','state',removeCode)(helpers,state);
+        return {calls,historyReads,reads,delays,ownedJob,foreign,clearedAfterRun,stateId:state.demoCronId ?? null,
+          retained:sessionStorage.getItem(storageKey),socketsClosed:sockets.length > 0 && sockets.every(socket=>socket.readyState === 3)};
+      } finally {
+        window.WebSocket = RealWebSocket;
+        sockets.forEach(socket=>socket.close());
+        sessionStorage.removeItem(storageKey);
+      }
     });
-    const add = results.cron.calls.find(call => call.method === 'cron.add');
-    const remove = results.cron.calls.find(call => call.method === 'cron.remove');
-    const runs = results.cron.calls.filter(call => call.method === 'cron.runs');
-    if (!add || !remove || runs.length < 2 || results.cron.stateId !== 'job-runtime-audit' ||
-        results.cron.remaining !== 0 || results.cron.terminalCalls !== 1 ||
-        results.cron.runHistoryReads !== 2 || results.cron.watch?.polls !== 1 ||
-        results.cron.watch?.run_status !== 'ok' || results.cron.watch?.auto_watch !== false) {
-      fail('cron lifecycle failed: ' + JSON.stringify(results.cron));
-    }
-    if (errors.length) fail('3c browser errors: ' + JSON.stringify(errors));
+    results.cron[language.code] = checkCronLifecycle(observation);
+    if (errors.length) fail(language.code + ' cron browser errors: ' + JSON.stringify(errors));
     await page.close();
   }
 
@@ -803,6 +956,14 @@ async function openLocale(browser, language, filename, init) {
         if (window.top !== window) return;
         localStorage.setItem('nemoclaw_clawrawurl', 'https://launchable.example.test');
       } catch (_) { return; }
+      window.__policyCommands = [];
+      const originalFetch = window.fetch.bind(window);
+      window.fetch = async (input, options) => {
+        if (String(input).endsWith('/api/agent')) return new Response(JSON.stringify({agent:{name:'policy-audit-agent'}}), {
+          status:200, headers:{'content-type':'application/json'},
+        });
+        return originalFetch(input, options);
+      };
       const transcript = [
         'Version: 2',
         'Status: Effective',
@@ -830,7 +991,8 @@ async function openLocale(browser, language, filename, init) {
       ].join('\n');
       class FakeWebSocket {
         static OPEN = 1;
-        constructor() {
+        constructor(url) {
+          window.__policyCommands.push(new URL(url).searchParams.get('cmd'));
           this.readyState = 0;
           setTimeout(() => {
             this.readyState = 1;
@@ -856,10 +1018,13 @@ async function openLocale(browser, language, filename, init) {
     await page.waitForFunction(() => /predicted:/i.test(document.querySelector('#cell-predict-confirm .cf-panel[data-id="predict"]')?.textContent || ''), null, { timeout: timeoutMs });
     results.policy = await page.evaluate(() => ({
       networks: Object.keys(window.__SBX_POLICY?.network_policies || {}),
+      owner: window.__SBX_POLICY_OWNER, agent: window.__SBX_POLICY_AGENT, commands: window.__policyCommands,
       liveText: document.querySelector('#cell-live-policy .rc-out')?.textContent || '',
       predictText: document.querySelector('#cell-predict-confirm .cf-panel[data-id="predict"] .cf-panel-log')?.textContent || '',
     }));
     if (!results.policy.networks.includes('nvidia') || !/predicted:/i.test(results.policy.predictText) ||
+        results.policy.owner !== 'https://launchable.example.test' || results.policy.agent !== 'policy-audit-agent' ||
+        JSON.stringify(results.policy.commands) !== '["openshell policy get policy-audit-agent --full"]' ||
         /Run the .*live policy.*first/i.test(results.policy.predictText) ||
         /Could not parse the live policy/i.test(results.policy.liveText)) {
       fail('policy state handoff failed: ' + JSON.stringify(results.policy));
@@ -871,12 +1036,12 @@ async function openLocale(browser, language, filename, init) {
   // Every published locale must retain its declared language and shared runtime contracts.
   results.locales = {};
   const translatedGuidance = {
-    pt: [/URL base[\s\S]*Sessão de acesso[\s\S]*Testar conexão/i, /Adicione uma linha curta[\s\S]*aguardando uma execução cron concluída/i, /Não foi possível interpretar/],
-    es: [/URL base[\s\S]*Sesión de acceso[\s\S]*Probar conexión/i, /Añade una línea breve[\s\S]*esperando una ejecución cron terminada/i, /No se pudo interpretar/],
+    pt: [/URL base[\s\S]*Sessão de acesso[\s\S]*Testar conexão/i, /Não foi possível interpretar/],
+    es: [/URL base[\s\S]*Sesión de acceso[\s\S]*Probar conexión/i, /No se pudo interpretar/],
   };
   for (const language of locales) {
     const locale = language.code;
-    const [connectionPattern, cronPattern, policyPattern] = translatedGuidance[locale] || [];
+    const [connectionPattern, policyPattern] = translatedGuidance[locale] || [];
     const kickstart = await openLocale(browser, language, '03a-kickstart.html');
     await kickstart.page.locator('#probe-claw .claw-connection-audit').waitFor({ state: 'visible', timeout: timeoutMs });
     const connectionReady = await kickstart.page.evaluate(async () => {
@@ -891,18 +1056,6 @@ async function openLocale(browser, language, filename, init) {
     }
     if (kickstart.errors.length) fail(`${locale} 3a browser errors: ${JSON.stringify(kickstart.errors)}`);
     await kickstart.page.close();
-
-    const cron = await openLocale(browser, language, '03c-always-on.html');
-    await cron.page.locator('#probe-cron .cf-panel-code').first().waitFor({ state: 'attached', timeout: timeoutMs });
-    const cronCode = await cron.page.locator('#probe-cron .cf-panel-code').evaluateAll(items => items.map(item => item.value || '').join('\n'));
-    if ((cronPattern && !cronPattern.test(cronCode)) || !cronCode.includes('state.call("cron.add"') ||
-        !cronCode.includes('sessionTarget: "isolated"') ||
-        !cronCode.includes('state.call("cron.runs"') ||
-        !cronCode.includes('const POLL_MS = 5000') || cronCode.includes('const WAIT_S = 70')) {
-      fail(`${locale} cron code lost translation or protocol structure`);
-    }
-    if (cron.errors.length) fail(`${locale} 3c browser errors: ${JSON.stringify(cron.errors)}`);
-    await cron.page.close();
 
     const safety = await openLocale(browser, language, '04a-safety.html');
     await safety.page.locator('#cell-live-policy .rc-code').waitFor({ state: 'attached', timeout: timeoutMs });

@@ -110,6 +110,9 @@ jobs:
           # that only exists after projection cannot fail for the first time inside production.
           python3 scripts/validation/sensitive_content_audit.py --root "$RUNNER_TEMP/pull-request-public" --publication-source-root .
           python3 scripts/skills/skill_renderer_runtime_audit.py --site-root "$RUNNER_TEMP/pull-request-public" --timeout-seconds 600
+      - name: Exercise runtime integrations in the pull-request Pages artifact
+        if: github.event_name == 'pull_request'
+        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root "$RUNNER_TEMP/pull-request-public" --timeout-ms 180000
       - name: Prepare the pull-request Pages action canary
         if: github.event_name == 'pull_request'
         run: |

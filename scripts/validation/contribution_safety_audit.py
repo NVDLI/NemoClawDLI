@@ -1274,10 +1274,15 @@ def audit_repo(
             "cheap pull-request integrity checks can run after dependency or browser work",
             "run submission, DCO, local-path, sensitive-content, and release-reminder checks before setup-node",
         ))
+    pr_browser_command = (
+        'python3 scripts/skills/skill_renderer_runtime_audit.py '
+        '--site-root "$RUNNER_TEMP/pull-request-public" --timeout-seconds 600'
+    )
     pr_browser_steps = [
         step for step in workflow_steps(test_block)
-        if "skill_renderer_runtime_audit.py" in step
-        and '--site-root "$RUNNER_TEMP/pull-request-public"' in step
+        if pr_browser_command in {
+            line.strip() for line in step_sections(step).get("run", "").splitlines()
+        }
     ]
     if (
         len(pr_browser_steps) != 1
@@ -1290,6 +1295,28 @@ def audit_repo(
             "github-pr-browser-artifact", ".github/workflows/pages.yml",
             "pull requests do not render the complete generated Pages artifact in the GitHub browser runtime",
             "build the pull-request artifact after the ship gate and run the exhaustive renderer without deployment authority",
+        ))
+    pr_runtime_command = (
+        'python3 scripts/validation/runtime_integration_browser_audit.py '
+        '--site-root "$RUNNER_TEMP/pull-request-public" --timeout-ms 180000'
+    )
+    pr_runtime_steps = [
+        step for step in workflow_steps(test_block)
+        if step_sections(step).get("run", "").strip() == pr_runtime_command
+    ]
+    if (
+        len(pr_runtime_steps) != 1
+        or len(pr_browser_steps) != 1
+        or step_sections(pr_runtime_steps[0]).get("if", "").strip()
+        != "github.event_name == 'pull_request'"
+        or {"continue-on-error", "working-directory", "shell", "env"}
+        & step_sections(pr_runtime_steps[0]).keys()
+        or test_block.index(pr_runtime_steps[0]) < test_block.index(pr_browser_steps[0])
+    ):
+        out.append(finding(
+            "github-pr-runtime-artifact", ".github/workflows/pages.yml",
+            "pull requests do not require runtime integration on their generated Pages artifact",
+            "run the integration audit as a required PR step after artifact rendering",
         ))
     pr_artifact_audit = (
         'sensitive_content_audit.py --root "$RUNNER_TEMP/pull-request-public" '
@@ -2540,6 +2567,19 @@ def self_test() -> list[str]:
                 '          python3 scripts/validation/sensitive_content_audit.py --root "$RUNNER_TEMP/pull-request-public" --publication-source-root .\n',
                 "",
             ),
+            ("github-pr-runtime-artifact", ".github/workflows/pages.yml", "        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n", ""),
+            ("github-pr-runtime-artifact", ".github/workflows/pages.yml", "        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n", "        run: echo python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n"),
+            ("github-pr-runtime-artifact", ".github/workflows/pages.yml", "        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n", "        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root web --timeout-ms 180000\n"),
+            ("github-pr-runtime-artifact", ".github/workflows/pages.yml", "        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n", "        run: python3 scripts/validation/runtime_integration_browser_audit_extra.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n"),
+            ("github-pr-runtime-artifact", ".github/workflows/pages.yml", "        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n", "        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000 || true\n"),
+            ("github-pr-runtime-artifact", ".github/workflows/pages.yml", "        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n", "        run: |\n          # python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n"),
+            ("github-pr-runtime-artifact", ".github/workflows/pages.yml", "        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n", "        run: |\n          if false; then\n            python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n          fi\n"),
+            ("github-pr-runtime-artifact", ".github/workflows/pages.yml", "        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n", "        run: |\n          exit 0\n          python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n"),
+            ("github-pr-runtime-artifact", ".github/workflows/pages.yml", "        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n", "        run: |\n          cat <<'EOF'\n          python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n          EOF\n"),
+            ("github-pr-runtime-artifact", ".github/workflows/pages.yml", "        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n", "        working-directory: /tmp\n        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n"),
+            ("github-pr-runtime-artifact", ".github/workflows/pages.yml", "        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n", "        shell: cat {0}\n        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n"),
+            ("github-pr-runtime-artifact", ".github/workflows/pages.yml", "        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n", "        env:\n          BASH_ENV: no-op.sh\n        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n"),
+            ("github-pr-runtime-artifact", ".github/workflows/pages.yml", "        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n", "        continue-on-error: true\n        run: python3 scripts/validation/runtime_integration_browser_audit.py --site-root \"$RUNNER_TEMP/pull-request-public\" --timeout-ms 180000\n"),
             ("github-pages-browser-review", ".github/workflows/pages.yml", "runtime_integration_browser_audit.py --site-root public --timeout-ms 180000", "runtime_integration_browser_audit.py --site-root web --timeout-ms 180000"),
             ("github-pages-artifact-integrity", ".github/workflows/pages.yml", "--write-manifest public/pages-sha256.txt", "--write-manifest web/pages-sha256.txt"),
             (
