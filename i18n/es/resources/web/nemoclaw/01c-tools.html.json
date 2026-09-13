@@ -27,6 +27,11 @@
       "source": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/tool-use\" target=\"_blank\" rel=\"noopener\">Anthropic tool-use reference</a>. The parallel implementation for Claude, useful as a cross-vendor comparison.",
       "value": "<a href=\"https://docs.anthropic.com/en/docs/agents-and-tools/tool-use\" target=\"_blank\" rel=\"noopener\">Referencia de uso de herramientas de Anthropic</a>. La implementación paralela para Claude, útil como comparación entre proveedores."
     },
+    "link.5ec0a65911c3": {
+      "type": "link",
+      "source": "\n    The cell below fakes a tiny MCP server in pure JavaScript with the\n    same <a href=\"https://www.jsonrpc.org/specification\" target=\"_blank\" rel=\"noopener\">JSON-RPC</a> shape MCP defines (no transport). The agent fetches\n    the tool list, hands the schemas to the model, then dispatches\n    <code>tool_calls</code> back through the server's\n    <code>tools/call</code> handler. The loop still requests a tool, executes it, and appends\n    its result. Tool discovery and dispatch now go through the server interface.\n  ",
+      "value": "La celda siguiente simula un pequeño servidor MCP en JavaScript puro con el mismo formato <a href=\"https://www.jsonrpc.org/specification\" target=\"_blank\" rel=\"noopener\">JSON-RPC</a> que define MCP (sin transporte). El agente obtiene la lista de herramientas, entrega los esquemas al modelo y dirige <code>tool_calls</code> al controlador <code>tools/call</code> del servidor. El ciclo sigue solicitando una herramienta, ejecutándola y añadiendo su resultado. El descubrimiento de herramientas y el envío de las llamadas ahora pasan por la interfaz del servidor."
+    },
     "link.7652579600f1": {
       "type": "link",
       "source": "\n    <strong>Discovery is a trust boundary.</strong>\n    Treat a <code>tools/list</code> response as untrusted input. Before connecting the server:\n    <ul>\n      <li>verify its identity,</li>\n      <li>show the requested capabilities to the user,</li>\n      <li>grant the smallest useful scope,</li>\n      <li>and bind each credential to that server's audience.</li>\n    </ul>\n    For remote connection and\n    OAuth discovery, reject private and link-local destinations and validate every redirect. The\n    <a href=\"https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices\" target=\"_blank\" rel=\"noopener\">MCP security guidance</a>\n    assigns consent, token handling, and server-side request forgery (SSRF) controls to the client.\n  ",
@@ -46,11 +51,6 @@
       "type": "link",
       "source": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer: Language Models Can Teach Themselves to Use Tools</em> (2023)</a>. The paper that established self-supervised tool use; what every subsequent function-calling spec is variations on.",
       "value": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer: Language Models Can Teach Themselves to Use Tools</em> (2023)</a>. Presenta el aprendizaje autosupervisado del uso de herramientas, mecanismo sobre el que se apoyan muchas especificaciones posteriores de llamada a funciones."
-    },
-    "link.d07dc829fc31": {
-      "type": "link",
-      "source": "\n    The cell below fakes a tiny MCP server in pure JavaScript with the\n    same <a href=\"https://www.jsonrpc.org/specification\" target=\"_blank\" rel=\"noopener\">JSON-RPC</a> shape MCP defines (no transport). The agent fetches\n    the tool list, hands the schemas to the model, then dispatches\n    <code>tool_calls</code> back through the server's\n    <code>tools/call</code> handler. The agent loop is byte-for-byte\n    identical to a normal tool call while only the source of the tool list changes.\n  ",
-      "value": "La celda siguiente simula un servidor MCP pequeño en JavaScript puro con el\nmismo formato <a href=\"https://www.jsonrpc.org/specification\" target=\"_blank\" rel=\"noopener\">JSON-RPC</a> que MCP define (sin transporte). El agente recupera\nla lista de herramientas, entrega los esquemas al modelo y dirige cada elemento de\n<code>tool_calls</code> al controlador <code>tools/call</code> del servidor. El bucle del agente es\nidéntico al de una llamada a herramienta normal; solo cambia el origen de la lista."
     },
     "link.ef623421ba77": {
       "type": "link",
@@ -1304,11 +1304,6 @@
       "value": "discovered ",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
-    "text.9267d76c423b": {
-      "type": "text",
-      "source": "The LLM asks, your code answers, and the LLM concludes, but it never runs your function itself.",
-      "value": "El LLM solicita una llamada, el código responde y el LLM concluye. El modelo nunca ejecuta la función."
-    },
     "text.92fbeff1a8e7": {
       "type": "text",
       "source": " TODO: Choose an example or write a question that makes the tool choice interesting.",
@@ -1742,6 +1737,11 @@
       "source": "You are a customer-success agent. When the user asks about customer data, call query_customer_db rather than guessing.",
       "value": "You are a customer-success agent. When the user asks about customer data, call query_customer_db rather than guessing.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
+    "text.cbcdd3e0b6ad": {
+      "type": "text",
+      "source": "The model requests a tool. The harness executes it and returns the result for the model's next decision.",
+      "value": "El modelo solicita una herramienta. El entorno de ejecución la ejecuta y devuelve el resultado para la siguiente decisión del modelo."
     },
     "text.d29a0939bcb5": {
       "type": "text",

@@ -91,6 +91,11 @@
       "value": "(tool \"\\${name}\" not found)",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
     },
+    "rich.0156941a31e3": {
+      "type": "rich",
+      "source": "\n    The harness maintains the messages and executes the tools. Its router reads\n    <code>finish_reason</code> to decide whether to process tool requests or return an answer.\n  ",
+      "value": "El entorno de ejecución mantiene los mensajes y ejecuta las herramientas. Su router lee <code>finish_reason</code> para decidir si procesa las solicitudes de herramientas o devuelve una respuesta."
+    },
     "rich.04b481fa123f": {
       "type": "rich",
       "source": "\n    Every chat-completions response carries a <code>finish_reason</code>\n    field that tells you why the model stopped generating. Inside an agent\n    loop, read it alongside the response content and tool requests to decide what to do next:\n    run a tool, return the answer to the user, or handle an error. Before reading\n    what its values mean, make two calls and compare their replies.\n  ",
@@ -166,6 +171,11 @@
       "source": "<code>\"content_filter\"</code> means a safety classifier stopped the output.",
       "value": "<code>\"content_filter\"</code> significa que un mecanismo de control de seguridad detuvo la salida."
     },
+    "rich.ce74f39f4bc6": {
+      "type": "rich",
+      "source": "<strong>Planning</strong> happens when the model uses the supplied context to choose its next response or tool request.",
+      "value": "La <strong>planificación</strong> ocurre cuando el modelo usa el contexto recibido para elegir su siguiente respuesta o solicitud de herramienta."
+    },
     "rich.d43436ee347a": {
       "type": "rich",
       "source": "<strong>Action</strong> is the tool call the harness executes.",
@@ -180,11 +190,6 @@
       "type": "rich",
       "source": "\n    <strong>What just happened inside the messages array.</strong><br>\n    When the model requests the clock, the loop adds these turns to <code>state.messages</code>: <ul><li>the system\n    prompt (turn 0),</li><li>the user question (turn 1),</li><li>an assistant message with a\n    <code>tool_calls</code> field (turn 2, the request),</li><li>and a\n    <code>tool</code>-role message holding the function's return value (turn\n    3).</li></ul> The next model call receives those messages, including the clock result. Inspect its response to see whether it answers or requests another tool. The growing array is the only \"memory\" this\n    agent has. Saving and reloading that array preserves the supplied conversation history; external facts and model behavior may change.\n  ",
       "value": "<strong>Lo que acaba de suceder dentro del array de mensajes.</strong> <br>\nCuando el modelo solicita el reloj, el bucle añade estos turnos a <code>state.messages</code>: <ul> <li>el prompt del sistema (turno 0);</li> <li>la pregunta del usuario (turno 1);</li> <li>un mensaje del asistente con un\ncampo <code>tool_calls</code> (turno 2, la solicitud);</li> <li>y un\nmensaje con el rol <code>tool</code> que contiene el valor devuelto por la función (turno\n3).</li> </ul> La siguiente llamada al modelo recibe esos mensajes, incluido el resultado del reloj. Examina su respuesta para comprobar si responde o solicita otra herramienta. Este array creciente es la única «memoria» del agente. Guardar y volver a cargar ese array conserva el historial de conversación proporcionado; los hechos externos y el comportamiento del modelo pueden cambiar."
-    },
-    "rich.feee3c133cfe": {
-      "type": "rich",
-      "source": "<strong>Planning</strong> is the <code>finish_reason</code> router.",
-      "value": "La <strong>planificación</strong> reside en el router que interpreta <code>finish_reason</code>."
     },
     "text.0017dac66b84": {
       "type": "text",
@@ -290,16 +295,6 @@
       "value": "length",
       "untranslated": "OpenAI finish_reason enum; token-budget failure comparison must retain this exact value."
     },
-    "text.1397e960f2a1": {
-      "type": "text",
-      "source": "\n    That independence also matters for how you read agent code you didn't\n    write. Whatever framework wraps it, any LLM-based agent must contain these\n    four pieces, and when something breaks the cause is usually in one of them:\n  ",
-      "value": "Esta independencia también facilita la lectura de código escrito por otra persona. Con independencia\ndel framework utilizado, cualquier agente basado en un LLM debe contener estas cuatro piezas. Cuando\nalgo falla, la causa suele encontrarse en una de ellas:"
-    },
-    "text.140c64b7ccdf": {
-      "type": "text",
-      "source": "\n    None of that lives inside the model. It is the harness you build around a single\n    text-in, text-out call.\n  ",
-      "value": "Ninguno de estos componentes reside dentro del modelo. Todos pertenecen al motor de ejecución\nconstruido alrededor de un único proceso que consiste en transformar texto de entrada en texto de salida."
-    },
     "text.150461710ba8": {
       "type": "text",
       "source": "pages as the question needs, one reason/read step at a time, then answer. For a ",
@@ -348,11 +343,6 @@
       "source": "'overview' page first. Name the page id(s) you used.\\\\n\\\\nPages:\\\\n",
       "value": "'overview' page first. Name the page id(s) you used.\\\\n\\\\nPages:\\\\n",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
-    },
-    "text.1ce7ab6e32fb": {
-      "type": "text",
-      "source": "\n    This course's minimal agent fills each slot with the simplest thing that works:\n  ",
-      "value": "El agente mínimo presentado en este curso implementa dichos componentes con el mecanismo más sencillo que cumpla su función:"
     },
     "text.1f5087db919c": {
       "type": "text",
@@ -561,6 +551,11 @@
       "source": " Render each event as it streams; key tool chips by tool-call id.",
       "value": " Render each event as it streams; key tool chips by tool-call id.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.455f2ca0d2aa": {
+      "type": "text",
+      "source": "\n    In the tool loop below, these responsibilities are divided as follows:\n  ",
+      "value": "En el ciclo de herramientas que aparece a continuación, estas responsabilidades se reparten así:"
     },
     "text.4575d9a0bb39": {
       "type": "text",
@@ -1082,6 +1077,11 @@
       "source": " Running this cell renders a live chat panel into #react-artifact below.",
       "value": " Running this cell renders a live chat panel into #react-artifact below.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.cdca2a82f9b8": {
+      "type": "text",
+      "source": "\n    When this loop fails, inspect the values passed between its components. Check for:\n  ",
+      "value": "Si este ciclo falla, inspecciona los valores que se transfieren entre sus componentes. Comprueba si:"
     },
     "text.cebbe96b0c74": {
       "type": "text",
