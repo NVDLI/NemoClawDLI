@@ -222,16 +222,17 @@
     <li><strong>Generate</strong> an answer with an instruction to use those passages.</li>
   </ul>
   <p>
-    Index agents that manage other primitives largely take the same shape while varying the search/embed/verification logic, so don't feel intimidated to experiment with shapes that better fit your data.
+    Other retrievers can use keyword search or structured queries. Choose the retrieval
+    method for your data, then inspect which evidence it supplies to the generator.
   </p>
     </div>
   </details>
 
   <!-- ── Part 3: Embeddings ────────────────────────────────────────────────── -->
-  <h2>The embedding, the primitive everything else is built on</h2>
+  <h2>Embedding text for similarity search</h2>
   <p>
-    Each unstructured-prose Index Agent starts from the same
-    primitive. An embedding is a learned numerical address for a piece of text,
+    This vector retriever represents passages and queries as embeddings.
+    An embedding is a learned numerical representation of a piece of text,
     a fixed-length vector placed so that semantically similar
     texts land near each other in vector space. Two practical
     consequences follow:

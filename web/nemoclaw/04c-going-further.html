@@ -102,19 +102,15 @@
     <div class="section-eyebrow">Deploy what you built</div>
     <h2>Moving the exercises onto a real runtime</h2>
     <p>
-      The in-browser exercises were sized for learning, with proxied
-      endpoints and a mix of per-run state, browser persistence, and gateway sessions. Taking the same
-      work to a persistent deployment means choosing a runtime, an inference
-      provider, and an operating model for long-running sessions. Hosted endpoints require no
-      learner-managed GPU; local inference requirements
-      depend on the selected provider and model.
+      Continue with the <a href="https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990" target="_blank" rel="noopener">NemoClaw Brev launchable</a>
+      used in Module 3. If you cannot use Brev, a compatible local deployment is the fallback.
+      For either option, choose a model endpoint and decide how to retain sessions and workspace files.
     </p>
     <ul style="font-size:.9rem;color:var(--td);line-height:1.7">
       <li>
-        <a href="https://docs.nvidia.com/nemoclaw/latest/get-started/prerequisites" target="_blank" rel="noopener">NemoClaw's current prerequisites</a>
-        list general Linux, macOS, Windows through WSL2, and DGX Spark paths. The
-        baseline starts at 4 vCPU and 8 GB RAM; GPU is optional. Check the current
-        documentation as requirements and interfaces evolve.
+        <strong>Local fallback.</strong> Check <a href="https://docs.nvidia.com/nemoclaw/latest/get-started/prerequisites" target="_blank" rel="noopener">NemoClaw's current prerequisites</a>
+        before installing the stack on your own host. Using a hosted model endpoint avoids
+        running inference on that host; local inference has separate hardware requirements.
       </li>
       <li>
         <a href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener">build.nvidia.com</a>
@@ -129,9 +125,8 @@
         is the companion gallery for the launchable you ran. NVIDIA's
         DGX Spark playbooks walk complete NemoClaw agents end to end,
         including a daily news digest, a software-development agent, a
-        deck reviewer, and a calendar negotiator, each carrying the
-        same policy setup Module 4 covered. Read one as a worked
-        blueprint for the always-on agent you packaged in Module 3.
+        deck reviewer, and a calendar negotiator. Inspect each playbook's policy and
+        runtime requirements before adapting the agent you operated in Module 3.
       </li>
       <li>
         <a href="https://docs.nvidia.com/nim/" target="_blank" rel="noopener">Self-host with NIM</a>
@@ -197,13 +192,13 @@
     <ul style="font-size:.9rem;color:var(--td);line-height:1.7">
       <li>
         <a href="https://developer.nvidia.com/nemo-retriever" target="_blank" rel="noopener">NeMo Retriever</a>
-        is the production successor to the cosine similarity retrieval
-        from Module 2b. Sparse keyword search and dense vector search
+        provides retrieval components beyond Module 2b's in-memory cosine search.
+        Sparse keyword search and dense vector search
         run in parallel and their scores are merged, a reranker
         re-orders the candidates by relevance, and configurable
         chunking primitives let you control how documents are split
-        before indexing. Pair it with NIM-served embeddings for a fully
-        on-prem retrieval stack that keeps data inside your VPC.
+        before indexing. Pair it with NIM-served embeddings and choose where to host
+        the retrieval stack and its data.
       </li>
       <li>
         <a href="https://build.nvidia.com/blueprints?ncid=ref-dli-146986" target="_blank" rel="noopener">NVIDIA AI Blueprints</a> provide reference implementations for different workflows. Compare their requirements and architecture with the planner, tools, and memory from Module 2c before adapting one.
@@ -233,7 +228,7 @@
       Production projects usually deepen one of these areas:
     </p>
     <ul>
-      <li><strong>The knowledge layer.</strong> Production-grade retrieval: structural chunking, page-image retrieval, faithfulness eval on real heterogeneous corpora. NeMo Retriever and the RAG AI Blueprints are where this gets built for real.</li>
+      <li><strong>The knowledge layer.</strong> Evaluate structural chunking, page-image retrieval, and answer faithfulness on the different kinds of documents in your corpus.</li>
       <li><strong>The substrate.</strong> Wire-format protocols (MCP, the Responses API, OTel GenAI conventions, A2A) that keep tool capabilities portable across providers and frameworks.</li>
       <li><strong>Fleet dynamics and containment.</strong> What changes when N agents run in parallel: each agent redundantly re-discovers the same context (rediscovery cost), topologies with too many hops lose coherence, and an agent grading a peer's output can shift its verdicts based on social context rather than content. How to bound any single agent in the fleet with kernel-level containment (<a href="https://docs.kernel.org/userspace-api/landlock.html" target="_blank" rel="noopener">Landlock</a>, <a href="https://man7.org/linux/man-pages/man2/seccomp.2.html" target="_blank" rel="noopener">seccomp</a>, network namespaces) when prompt rules and guardrails are not enough to limit blast radius.</li>
     </ul>
