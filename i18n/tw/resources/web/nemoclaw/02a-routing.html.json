@@ -113,11 +113,6 @@
       "source": "\n    <strong>The overhead tax in concrete terms.</strong>\n    Every agent boundary adds model-call latency and routing logic. It also creates another\n    source of malformed messages and replaces a readable timeline with a trajectory that\n    fans across workers.\n  ",
       "value": "\n    <strong>開銷具體體現在哪裡。</strong>每個代理程式邊界都會增加模型呼叫延遲和路由邏輯，還會引入一個新的訊息格式錯誤來源，並將清晰易讀的時間線變成一條向多個工作單元分叉的執行軌跡。\n  "
     },
-    "rich.b78f1a0b8a39": {
-      "type": "rich",
-      "source": "\n    <strong>In practice, you can have both.</strong>\n    Many real systems borrow from each approach at once. The tools a ReAct loop calls\n    might internally run a planned, ReWOO-style pipeline, and a planner that lays its\n    work out in advance still needs sub-agents to execute each step, which are usually\n    ReAct loops in their own right. Compose these software components wherever their\n    strengths fit, reserving a Workflow Agent for tasks that split into independent workstreams.\n  ",
-      "value": "\n    <strong>在實踐中，可以同時採用兩者。</strong>許多實際系統會同時借鑑這兩種方法。ReAct 迴圈所呼叫的工具可能會在內部執行預先規劃的 ReWOO 式工作流程；而透過 planner 預先安排工作的系統仍需要子代理程式執行各個步驟，這些子代理程式本身通常也是 ReAct 迴圈。請根據各自優勢組合這些軟體元件，並將工作流程代理程式用於可拆分為獨立工作流程的任務。\n  "
-    },
     "rich.c89d938f1d03": {
       "type": "rich",
       "source": "The <span>Workflow</span> Agent",
@@ -1381,6 +1376,11 @@
       "type": "text",
       "source": "You are a billing specialist. Answer only billing, payment, and refund questions, crisply.",
       "value": "您是一位賬單專家。僅簡潔回答賬單、付款和退款問題。"
+    },
+    "text.c42f29390640": {
+      "type": "text",
+      "source": "\n    A tool in a ReAct loop can run a planned pipeline. A planned stage can also call\n    a ReAct loop when it needs to adapt to intermediate results. Stages with a fixed\n    procedure can run as ordinary functions, as the executor below does.\n  ",
+      "value": "ReAct 迴圈中的工具可以執行預先規劃的管線。如果規劃中的某個階段需要配合中間結果調整，也可以呼叫 ReAct 迴圈。採用固定程序的階段則可作為一般函式執行，下方的執行器就是如此。"
     },
     "text.c4b2896a2081": {
       "type": "text",

@@ -246,11 +246,6 @@
       "source": "<code>chat()</code> is a convenience wrapper around one ordinary HTTP\n     <code>POST</code> in the OpenAI-compatible wire format. That request carries three things:",
       "value": "<code>chat()</code> 是一个便捷封装函数，封装了采用 OpenAI 兼容传输格式的普通 HTTP\n     <code>POST</code>。该请求包含三项内容："
     },
-    "rich.023adf5b9eb6": {
-      "type": "rich",
-      "source": "\n    Look closely at the middle of that list. The <strong>perceive-to-act step is a single\n    stateless text-to-text mapping</strong> in which a full engineered context goes in and\n    an intent signal comes back. The model only transforms text, so perceiving the world\n    and turning an intent into a real change remain your code's job on both sides of that mapping.\n  ",
-      "value": "\n    请仔细观察该列表的中间部分。<strong>从感知到行动的步骤是一次无状态的文本到文本映射</strong>：输入完整的工程化上下文，返回一个意图信号。模型只负责转换文本，因此在这次映射的两端，感知环境以及将意图转化为实际变化仍然是代码需要完成的工作。\n  "
-    },
     "rich.03ec858ee52a": {
       "type": "rich",
       "source": "\" style=\"margin:0 0 10px\"><button style=\"padding:4px 12px;border:1px solid #555;border-radius:4px;background:#1a1a1a;color:#ccc;cursor:pointer\">stop</button></div>",
@@ -391,11 +386,6 @@
       "source": "\n    <strong>The decision step is the only part that varies.</strong>\n    DFS, BFS, and A* all read the current maze state and return a move. One line in the\n    last node chooses the decision function; the loop below runs the same way for each\n    choice. The next example gives the model a choice of branches while a controller\n    records explored cells and the return path.\n  ",
       "value": "\n    <strong>只有决策步骤会发生变化。</strong>\n    DFS、BFS 和 A* 都会读取当前迷宫状态并返回一个移动动作。最后一个节点中的一行代码用于选择决策函数；无论选择哪一个，下面的循环都会以相同方式运行。下一个示例由模型选择分支，控制器则记录已探索的单元格和返回路径。\n  "
     },
-    "rich.5179f45aa8dd": {
-      "type": "rich",
-      "source": "\n    You now have both halves of an agent, and the stateless <code>chat()</code> function above will pair nicely\n    with the previous reflex agent's perceive-reason-act loop. Before\n    wiring the model into that loop, it helps to watch the decision step use routines\n    that are <em>not</em> language models first.\n  ",
-      "value": "\n    您现在已经具备智能体的两个组成部分；上面的无状态 <code>chat()</code> 函数可以很好地与前一个反射式智能体的感知—推理—行动循环结合。在将模型接入这个循环之前，不妨先观察决策步骤如何使用并非语言模型的例程。\n  "
-    },
     "rich.528a14d71c17": {
       "type": "rich",
       "source": "<strong>Compare model profiles.</strong>\n        Start with <code>model:\"direct\"</code>, then compare <code>model:\"reasoning\"</code>\n        and <code>model:\"omni\"</code> on the same maze. Inspect each request's model,\n        token budget, temperature, and reasoning settings. These profiles change several\n        settings; compare branch order and latency without attributing every difference\n        to model identity alone.",
@@ -455,11 +445,6 @@
       "source": "The <span>Agent</span>",
       "value": "<span>智能体</span>"
     },
-    "rich.75e28bbb8f39": {
-      "type": "rich",
-      "source": "\n    Place the <code>chat()</code> call inside the loop that re-sends history, and a single\n    turn of any LLM agent in this course takes the same four-stage shape.\n  ",
-      "value": "\n    将 <code>chat()</code> 调用放入会重新发送历史记录的循环后，本课程中任意 LLM 智能体的单轮运行都会呈现相同的四阶段结构。\n  "
-    },
     "rich.7a23cade9bbf": {
       "type": "rich",
       "source": "<strong>Calls do not share state.</strong> Between requests the\n        server holds nothing for you. If you want the model to\n        remember the previous turn, you send that turn again.\n        The \"memory\" of a conversation is a list of messages your code\n        maintains and re-sends each time.",
@@ -508,6 +493,11 @@
       "source": "<details style=\"margin:2px 0\"><summary style=\"cursor:pointer;color:#555;font-size:11px\">reasoning (",
       "value": "<details style=\"margin:2px 0\"><summary style=\"cursor:pointer;color:#555;font-size:11px\">推理过程（"
     },
+    "rich.9483ca5a8b56": {
+      "type": "rich",
+      "source": "\n    In this example, <code>chat()</code> receives text describing the maze and returns\n    a requested move. The controller supplies the observations, validates the request,\n    and changes the maze state. The model call does not execute the move.\n  ",
+      "value": "在此示例中，<code>chat()</code> 接收描述迷宫的文本，并返回请求执行的移动指令。控制器提供观察结果、验证请求，并改变迷宫状态。模型调用本身不会执行移动。"
+    },
     "rich.94efa28023b8": {
       "type": "rich",
       "source": "<div style=\"margin-top:6px;font-size:10px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;color:",
@@ -524,11 +514,6 @@
       "source": " qwen puts reasoning in <think>...</think>",
       "value": " qwen puts reasoning in <think>...</think>",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
-    "rich.982e7c6eb75d": {
-      "type": "rich",
-      "source": "<strong>Locally-perceive.</strong> That slice is rendered into a full\n        engineered context: the system prompt, the running <code>messages[]</code>\n        history, prior tool results, and the slice you just sampled. All of it is plain\n        text. For an LLM agent, perception <em>is</em> context engineering.",
-      "value": "<strong>局部感知。</strong>该切片会被呈现为完整的工程化上下文：系统提示词、持续累积的 <code>messages[]</code>\n        历史记录、先前的工具结果，以及您刚刚采样的切片。所有内容都是纯文本。对于 LLM 智能体，感知<em>就是</em>上下文工程。"
     },
     "rich.9e4527fb137f": {
       "type": "rich",
@@ -558,6 +543,11 @@
       "source": "\\${hdr}<style>.mgrid{display:grid;gap:2px;background:#0a0a0f;padding:8px;border-radius:8px;width:fit-content;margin:4px 0}.mc{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:3px;font:13px/1 ui-monospace,monospace}</style><div class=\"mgrid\" style=\"grid-template-columns:repeat(\\${W},26px)\">\\${cells}</div>",
       "value": "\\${hdr}<style>.mgrid{display:grid;gap:2px;background:#0a0a0f;padding:8px;border-radius:8px;width:fit-content;margin:4px 0}.mc{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:3px;font:13px/1 ui-monospace,monospace}</style><div class=\"mgrid\" style=\"grid-template-columns:repeat(\\${W},26px)\">\\${cells}</div>",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "rich.b54029b1abe6": {
+      "type": "rich",
+      "source": "\n    In the maze example, the controller builds a request for <code>chat()</code> and\n    validates the returned move before applying it. The stages below trace that exchange.\n  ",
+      "value": "在迷宫示例中，控制器会构建 <code>chat()</code> 请求，并在执行返回的移动指令前进行验证。以下阶段逐步说明这次交互。"
     },
     "rich.b8c4d5c6124a": {
       "type": "rich",
@@ -645,11 +635,6 @@
       "source": "\n    The controller records visited cells and a return path, filters out visited branches,\n    and walks corridors. At junctions, the model reads the map and chooses the branch order\n    through <code>choose_direction</code>. The controller manages depth-first exploration;\n    it does not supply the model with a solved route.\n  ",
       "value": "控制器记录已访问的格子和返回路径、排除已访问的分支，并自动走过走廊。在岔路口，模型读取地图并通过 <code>choose_direction</code> 选择分支顺序。控制器管理深度优先探索，但不会向模型提供已求解的路径。"
     },
-    "rich.d106759c1b2d": {
-      "type": "rich",
-      "source": "<strong>Locally-sample.</strong> Your code reads a slice of the\n        environment, which might be the maze cell and its valid moves, or the latest user\n        message, or the contents of a file. It never reaches for the whole world at once,\n        because all the turn requires is the narrow piece of state the model needs to act on\n        this time around.",
-      "value": "<strong>局部采样。</strong>代码读取环境的一个局部切片，例如迷宫中的当前单元格及其有效移动方向、最新的用户消息，或某个文件的内容。它不会试图一次获取整个世界，因为当前这一轮只需要模型此次行动所需的那一小部分状态。"
-    },
     "rich.d45434b3ac87": {
       "type": "rich",
       "source": "<strong style=\"color:#76b900\">",
@@ -660,6 +645,11 @@
       "type": "rich",
       "source": "<span style=\"color:#76b900\">goal reached in the opening corridor (no LLM needed)</span>",
       "value": "<span style=\"color:#76b900\">已在起始通道中到达目标（无需 LLM）</span>"
+    },
+    "rich.d720f4303be7": {
+      "type": "rich",
+      "source": "\n    The next examples keep the perceive-reason-act loop and vary its decision function.\n    Compare fixed rules and search algorithms before using <code>chat()</code> to choose a move.\n  ",
+      "value": "接下来的示例保留感知、推理、行动的循环，只改变决策函数。先比较固定规则与搜索算法，再使用 <code>chat()</code> 选择移动方向。"
     },
     "rich.d7ebde9e18e3": {
       "type": "rich",
@@ -677,6 +667,16 @@
       "type": "rich",
       "source": "Start with the working defaults. Then switch <code>model</code> to compare capability-checked routes, remove history, or set <code>advanced</code> to grow the maze after the simple case works.",
       "value": "先使用可正常工作的默认设置。然后切换 <code>model</code> 以比较经过能力验证的路由，移除历史记录，或在简单情形运行成功后设置 <code>advanced</code> 以扩大迷宫。"
+    },
+    "rich.e0ff70868281": {
+      "type": "rich",
+      "source": "<strong>Locally-sample.</strong> Your code reads a slice of the\n        environment. Here it reads the current maze cell and its valid moves. The request\n        can also include the full map and prior turns, depending on the selected controls.",
+      "value": "<strong>局部采样。</strong>代码读取环境的一部分。在此示例中，读取的是迷宫中当前所在的格子及其有效移动方向。根据所选控件，请求还可以包含完整地图和此前的轮次。"
+    },
+    "rich.e125b82c90e2": {
+      "type": "rich",
+      "source": "<strong>Locally-perceive.</strong> That slice is rendered into a full\n        engineered context: the system prompt, the running <code>messages[]</code>\n        history, prior tool results, and the slice you just sampled. This example represents\n        the maze as text in the messages sent to the model.",
+      "value": "<strong>局部感知。</strong>将采样数据组织成完整、经过设计的上下文，其中包括系统提示词、持续累积的 <code>messages[]</code> 历史记录、先前的工具结果，以及刚刚采样的数据。此示例在发送给模型的消息中，用文本描述迷宫。"
     },
     "rich.e283eb73ab78": {
       "type": "rich",
