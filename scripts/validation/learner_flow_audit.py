@@ -32,6 +32,11 @@ _BROWSER_DEPENDENCIES = json.loads(
 POLICY_YAML_ASSET = f"../vendor/js-yaml-{_BROWSER_DEPENDENCIES['js-yaml']}.esm.min.js"
 CODE_RE = re.compile(r"code:\s*`((?:\\.|[^`\\])*)`", re.S)
 DOM_CODE_RE = re.compile(r'code:\s*document\.getElementById\(["\']([^"\']+)["\']\)\.textContent\.trim\(\)')
+SCRIPT_BLOCK_RE = re.compile(
+    r'(?P<opening><script(?=[\t\n\f\r />])(?:"[^"]*"|\'[^\']*\'|[^\'">])*>)'
+    r'(?P<body>.*?)(?:</script(?=[\t\n\f\r />])(?:"[^"]*"|\'[^\']*\'|[^\'">])*>|\Z)',
+    re.S | re.I,
+)
 MOUNT_RE = re.compile(r"mount(?:RunCell|CanvasFlow)\s*\(")
 LAUNCHABLE_HELPER_RE = re.compile(
     r"helpers\.(?:openclawChat|courseTurn|courseRead|courseShell|terminal|sandboxExec|policyGet|sandboxNetwork|evalSandboxNetwork|evalSandboxFs)\b"
@@ -1012,15 +1017,29 @@ def _literal(tokens: list[str] | None, value: str) -> bool:
     return bool(tokens and len(tokens) == 1 and tokens[0] in (f'"{value}"', f"'{value}'"))
 
 
+class ScriptOpeningParser(HTMLParser):
+    """Read actual attributes, including quoted '>' and the first duplicate id."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.element_id: str | None = None
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == 'script':
+            self.element_id = next((value for key, value in attrs if key == 'id'), None)
+
+
 def displayed_code_sources(name: str, text: str) -> list[tuple[str, str]]:
     """Discover literal and DOM-backed cells; shared JS is inspected at its owner."""
     sources = [(f'{name}:cell-{index}', match.group(1))
                for index, match in enumerate(CODE_RE.finditer(text), 1)]
     for match in DOM_CODE_RE.finditer(text):
-        script = re.search(r'<script\b[^>]*\bid=["\']' + re.escape(match.group(1))
-                           + r'["\'][^>]*>(.*?)</script>', text, re.S | re.I)
-        if script:
-            sources.append((f'{name}:source-{match.group(1)}', script.group(1)))
+        for script in SCRIPT_BLOCK_RE.finditer(text):
+            opening = ScriptOpeningParser()
+            opening.feed(script.group('opening'))
+            if opening.element_id == match.group(1):
+                sources.append((f'{name}:source-{match.group(1)}', script.group('body')))
+                break
     if name.endswith('.js') and not sources:
         sources.append((name, text))
     return sources
@@ -1110,7 +1129,7 @@ def audit_exercise_consumers(surfaces: dict[str, str], openclaw: str, canvas: st
                 findings.extend(audit_owned_cron(source, location))
         # A broken/renamed near-match cannot quietly remove the capability from discovery.
         executable = text if name.endswith('.js') else '\n'.join(
-            match.group(1) for match in re.finditer(r'<script\b[^>]*>(.*?)</script>', text, re.S | re.I))
+            match.group('body') for match in SCRIPT_BLOCK_RE.finditer(text))
         if 'cron.add' in executable and not any('cron.add' in source for _, source in sources):
             findings.append(f'{name}: cron-discovery: scheduling consumer has no inspectable displayed code')
         if MOUNT_RE.search(text) and re.search(r'\bcode\s*:', text) and not sources:
@@ -1806,6 +1825,41 @@ def self_test() -> list[str]:
     )
     if "return { ok: true };" not in extracted:
         misses.append("JavaScript function extraction stopped at a destructured parameter")
+    # Browser-tolerated script endings must not hide scheduling consumers.
+    cron_probe = 'await api.call("cron.add", {});'
+    for filename in ('web/new-course/lesson.html', 'i18n/new/nested/renamed.html'):
+        for ending in ('</script>', '</script >', '</SCRIPT\n>', '</script data-x="ok">', '</script/>', ''):
+            markup = '<script data-label="a > b">' + cron_probe + ending
+            found = audit_exercise_consumers({filename: markup}, '', '')
+            if not any('cron-discovery' in finding for finding in found):
+                misses.append(f"script extraction missed {filename} with {ending!r}")
+        if audit_exercise_consumers({filename: '<p>Removed executable block</p>'}, '', ''):
+            misses.append(f"script extraction retained a deleted consumer in {filename}")
+        if audit_exercise_consumers({filename: '<script-extra>' + cron_probe + '</script-extra>'}, '', ''):
+            misses.append(f"script extraction accepted a malformed script-like element in {filename}")
+        hidden_end = '<script>let marker = "</script-extra>";' + cron_probe + '</script >'
+        if not any('cron-discovery' in finding for finding in audit_exercise_consumers({filename: hidden_end}, '', '')):
+            misses.append(f"script extraction closed at a script-like name in {filename}")
+    for ending in ('</script >', '</SCRIPT data-x="ok">', ''):
+        markup = '<script id="example" type="text/plain">' + cron_probe + ending
+        markup += '\ncode: document.getElementById("example").textContent.trim()'
+        if not any(cron_probe in source for _, source in displayed_code_sources('novel.html', markup)):
+            misses.append(f"DOM-backed code extraction missed {ending!r}")
+    dom_reference = '\ncode: document.getElementById("example").textContent.trim()'
+    for filename in ('web/new-course/lesson.html', 'i18n/new/nested/renamed.html'):
+        for opening in ('<script data-label="a > b" id="example">',
+                        '<SCRIPT ID = \'example\' data-label="x">',
+                        '<script id=example>', '<script id="example" id="other">'):
+            markup = opening + cron_probe + '</script data-label="a > b">' + dom_reference
+            if not any(source == cron_probe for _, source in displayed_code_sources(filename, markup)):
+                misses.append(f"DOM-backed code extraction missed actual id in {filename}: {opening}")
+        for opening in ('<script-extra id="example">', '<script data-id="example">',
+                        '<script data-label=\'id="example"\'>', '<script id="other" id="example">'):
+            markup = opening + cron_probe + '</script>' + dom_reference
+            if displayed_code_sources(filename, markup):
+                misses.append(f"DOM-backed code extraction accepted a false id in {filename}: {opening}")
+        if displayed_code_sources(filename, '<p>Removed script element</p>' + dom_reference):
+            misses.append(f"DOM-backed code extraction retained a deleted source in {filename}")
     expected_course = ROOT / "web/nemoclaw"
     if expected_course not in course_dirs():
         misses.append("course discovery did not find the current web course beacon")

@@ -126,8 +126,16 @@ function functionSource(source, declaration) {
 
 function gatewayCode(source, name) {
   if (name.endsWith('.js')) return [source];
-  return [...source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
-    .filter(match => !/type=["']application\/(?:ld\+)?json["']/i.test(match[1]))
+  // Browsers accept whitespace, slash and even attributes on script end tags.
+  // Audit an unterminated block through EOF too, rather than silently losing it.
+  return [...source.matchAll(/<script(?=[\t\n\f\r />])((?:"[^"]*"|'[^']*'|[^'">])*)>([\s\S]*?)(?:<\/script(?=[\t\n\f\r />])[^>]*>|$)/gi)]
+    .filter(match => {
+      // Read whole attributes so data-type or text inside another quoted value
+      // cannot disguise executable code as an application/json data block.
+      const attributes = [...match[1].matchAll(/(?:^|[\t\n\f\r /])([^\t\n\f\r /=>]+)(?:[\t\n\f\r ]*=[\t\n\f\r ]*(?:"([^"]*)"|'([^']*)'|([^\t\n\f\r >]+)))?/g)];
+      const type = attributes.find(attribute => attribute[1].toLowerCase() === 'type');
+      return !type || !/^application\/(?:ld\+)?json$/i.test((type[2] ?? type[3] ?? type[4] ?? '').trim());
+    })
     .map(match => match[2]);
 }
 
@@ -484,6 +492,33 @@ function selfTest() {
     ['Kickstart exec prompt', { en: base.en.replace('Use your exec tool to run ls -la /sandbox/.openclaw/workspace, then explain each file', 'List the files in your workspace') }],
   ];
   const failures = audit().map(finding => `invalid mutation baseline: ${finding}`);
+  const unsafeConsumer = 'await state.call("chat.send", {});';
+  const scriptCases = [
+    ['ordinary script', `<script>${unsafeConsumer}</script>`],
+    ['end whitespace', `<script>${unsafeConsumer}</script \t\n>`],
+    ['end attributes', `<script>${unsafeConsumer}</script data-note="ignored">`],
+    ['mixed case', `<ScRiPt>${unsafeConsumer}</sCrIpT>`],
+    ['slash delimiters', `<script/>${unsafeConsumer}</script/>`],
+    ['quoted opening delimiter', `<script data-note=">">${unsafeConsumer}</script>`],
+    ['unterminated block', `<script>${unsafeConsumer}`],
+    ['misleading end name', `<script>const text = '</script-extra>'; ${unsafeConsumer}</script>`],
+    ['data-type is not type', `<script data-type="application/json">${unsafeConsumer}</script>`],
+    ['type text in another attribute', `<script data-note='type="application/json"'>${unsafeConsumer}</script>`],
+    ['first duplicate type owns block', `<script type="module" type="application/json">${unsafeConsumer}</script>`],
+  ];
+  for (const [label, source] of scriptCases) {
+    if (!gatewayConsumerFindings({'novel/nested/renamed.html':source}, [])
+      .some(finding => finding.includes('inline gateway lifecycle'))) failures.push(`missed script extraction mutation: ${label}`);
+  }
+  for (const [label, source] of [
+    ['near-match opening name', `<script-extra>${unsafeConsumer}</script-extra>`],
+    ['deleted executable block', '<p>Gateway exercise removed</p>'],
+    ['JSON data block', `<script type="application/json">${unsafeConsumer}</script>`],
+    ['JSON-LD data block', `<script TYPE = 'application/ld+json'>${unsafeConsumer}</script>`],
+    ['unquoted JSON type', `<script type=application/json>${unsafeConsumer}</script>`],
+  ]) {
+    if (gatewayConsumerFindings({'novel/nested/renamed.html':source}, []).length) failures.push(`unexpected script extraction finding: ${label}`);
+  }
   for (const [label, overrides] of mutations) {
     if (!Object.entries(overrides).some(([key, value]) => value !== base[key])) {
       failures.push(`unchanged ${label} mutation`);
