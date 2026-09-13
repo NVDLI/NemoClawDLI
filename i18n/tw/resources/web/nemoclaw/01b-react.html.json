@@ -89,6 +89,11 @@
       "source": "(tool \"\\${name}\" not found)",
       "value": "（未找到工具“\\${name}”）"
     },
+    "rich.0156941a31e3": {
+      "type": "rich",
+      "source": "\n    The harness maintains the messages and executes the tools. Its router reads\n    <code>finish_reason</code> to decide whether to process tool requests or return an answer.\n  ",
+      "value": "執行框架負責維護訊息並執行工具。其路由器會讀取 <code>finish_reason</code>，決定要處理工具請求，還是傳回答案。"
+    },
     "rich.04b481fa123f": {
       "type": "rich",
       "source": "\n    Every chat-completions response carries a <code>finish_reason</code>\n    field that tells you why the model stopped generating. Inside an agent\n    loop, read it alongside the response content and tool requests to decide what to do next:\n    run a tool, return the answer to the user, or handle an error. Before reading\n    what its values mean, make two calls and compare their replies.\n  ",
@@ -164,6 +169,11 @@
       "source": "<code>\"content_filter\"</code> means a safety classifier stopped the output.",
       "value": "<code>\"content_filter\"</code> 表示安全分類器停止了輸出。"
     },
+    "rich.ce74f39f4bc6": {
+      "type": "rich",
+      "source": "<strong>Planning</strong> happens when the model uses the supplied context to choose its next response or tool request.",
+      "value": "<strong>規劃</strong>發生在模型根據提供的上下文，選擇下一個回應或工具請求時。"
+    },
     "rich.d43436ee347a": {
       "type": "rich",
       "source": "<strong>Action</strong> is the tool call the harness executes.",
@@ -178,11 +188,6 @@
       "type": "rich",
       "source": "\n    <strong>What just happened inside the messages array.</strong><br>\n    When the model requests the clock, the loop adds these turns to <code>state.messages</code>: <ul><li>the system\n    prompt (turn 0),</li><li>the user question (turn 1),</li><li>an assistant message with a\n    <code>tool_calls</code> field (turn 2, the request),</li><li>and a\n    <code>tool</code>-role message holding the function's return value (turn\n    3).</li></ul> The next model call receives those messages, including the clock result. Inspect its response to see whether it answers or requests another tool. The growing array is the only \"memory\" this\n    agent has. Saving and reloading that array preserves the supplied conversation history; external facts and model behavior may change.\n  ",
       "value": "\n    <strong>剛才 messages 陣列內部發生了什麼。</strong><br>\n當模型請求時鐘時，迴圈會向 <code>state.messages</code> 中加入以下四項：<ul><li>系統提示詞（第 0 輪），</li><li>使用者的問題（第 1 輪），</li><li>一條帶有 <code>tool_calls</code> 欄位的 assistant 訊息（第 2 輪，即請求），</li><li>以及一條儲存函式傳回值的 <code>tool</code> 角色訊息（第 3 輪）。</li></ul>下一次模型呼叫會收到這些訊息，包括時鐘結果。檢查模型的回應，確認它是作答還是再次請求工具。這個不斷增長的陣列就是該代理程式擁有的全部“記憶”。儲存並重新載入該陣列可以保留所提供的對話紀錄；外部事實與模型行為仍可能改變。\n  "
-    },
-    "rich.feee3c133cfe": {
-      "type": "rich",
-      "source": "<strong>Planning</strong> is the <code>finish_reason</code> router.",
-      "value": "<strong>規劃</strong>是 <code>finish_reason</code> 路由邏輯。"
     },
     "text.0017dac66b84": {
       "type": "text",
@@ -287,16 +292,6 @@
       "value": "length",
       "untranslated": "OpenAI finish_reason enum; token-budget failure comparison must retain this exact value."
     },
-    "text.1397e960f2a1": {
-      "type": "text",
-      "source": "\n    That independence also matters for how you read agent code you didn't\n    write. Whatever framework wraps it, any LLM-based agent must contain these\n    four pieces, and when something breaks the cause is usually in one of them:\n  ",
-      "value": "\n    閱讀並非由您編寫的代理程式程式碼時，這種獨立性同樣重要。無論外層採用什麼框架，任何基於 LLM 的代理程式都必須包含以下四個部分；一旦出現故障，原因通常就在其中之一：\n  "
-    },
-    "text.140c64b7ccdf": {
-      "type": "text",
-      "source": "\n    None of that lives inside the model. It is the harness you build around a single\n    text-in, text-out call.\n  ",
-      "value": "\n    這些都不在模型內部，而是您圍繞一次文字輸入、文字輸出呼叫建置的執行框架。\n  "
-    },
     "text.150461710ba8": {
       "type": "text",
       "source": "pages as the question needs, one reason/read step at a time, then answer. For a ",
@@ -344,11 +339,6 @@
       "type": "text",
       "source": "'overview' page first. Name the page id(s) you used.\\\\n\\\\nPages:\\\\n",
       "value": "“overview”頁面。請列出您使用的頁面 id。\\\\n\\\\n 頁面：\\\\n"
-    },
-    "text.1ce7ab6e32fb": {
-      "type": "text",
-      "source": "\n    This course's minimal agent fills each slot with the simplest thing that works:\n  ",
-      "value": "\n    本課程的最小代理程式使用能滿足需求的最簡單方式實現每個部分：\n  "
     },
     "text.1f5087db919c": {
       "type": "text",
@@ -551,6 +541,11 @@
       "source": " Render each event as it streams; key tool chips by tool-call id.",
       "value": " Render each event as it streams; key tool chips by tool-call id.",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.455f2ca0d2aa": {
+      "type": "text",
+      "source": "\n    In the tool loop below, these responsibilities are divided as follows:\n  ",
+      "value": "在下方的工具迴圈中，這些職責分配如下："
     },
     "text.4575d9a0bb39": {
       "type": "text",
@@ -1069,6 +1064,11 @@
       "source": " Running this cell renders a live chat panel into #react-artifact below.",
       "value": " Running this cell renders a live chat panel into #react-artifact below.",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.cdca2a82f9b8": {
+      "type": "text",
+      "source": "\n    When this loop fails, inspect the values passed between its components. Check for:\n  ",
+      "value": "如果這個迴圈發生錯誤，請檢查元件之間傳遞的值，確認是否有以下情況："
     },
     "text.cebbe96b0c74": {
       "type": "text",
