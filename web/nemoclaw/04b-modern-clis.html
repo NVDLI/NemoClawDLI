@@ -458,7 +458,7 @@ async function run(cmd, con, ctx) {
 const connected = !!launchableUrl();
 helpers.mountConsole("#deepagents-artifact", {
   prompt: "$",
-  suggestions: SUGGESTIONS,
+  suggestions: SUGGESTIONS.map(command => ({ command })),
   disabled: !connected,
   disabledMsg: "No launchable connected. Open Module 3a (Kickstart), connect your launchable, then return here.",
   greeting: connected ? "Connected to your launchable host shell. It carries the openshell CLI; your agent runs in a sandbox. Type help, click a chip, or press Tab to autocomplete." : "",

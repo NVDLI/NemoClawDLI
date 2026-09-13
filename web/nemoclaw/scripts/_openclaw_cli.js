@@ -239,7 +239,7 @@ export function mountOpenClawCliRuntime(targetSel, runtime) {
 
   const consoleApi = runtime.mountConsole(target, {
     prompt: "you",
-    suggestions: SUGGESTIONS,
+    suggestions: SUGGESTIONS.map(text => text.startsWith("/") ? { command: text } : text),
     disabled: !connected(),
     disabledMsg: localizeCourseUiText("Connect your launchable on Module 3a first (its URL and token), then your agent is reachable here."),
     greeting: connected()

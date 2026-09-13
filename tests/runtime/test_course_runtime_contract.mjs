@@ -335,12 +335,19 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
       await page.evaluate(async ({runtime,command}) => {
         const {mountConsole} = await import(runtime);
         const target = document.createElement('div'); target.id = 'command-fixture'; document.body.append(target);
-        mountConsole(target,{suggestions:[command],onSubmit:value=>{window.submittedCommand=value;}});
+        mountConsole(target,{suggestions:[{command},'What can you do?'],onSubmit:value=>{window.submittedCommand=value;}});
       }, {runtime:'/'+path.relative(root,path.join(course,'scripts/_chat.js')),command});
       const consoleUi = page.locator('#command-fixture');
       assert.equal(await consoleUi.locator('.da-chip code').textContent(),command);
+      assert.equal(await consoleUi.locator('.da-chips .da-chip').nth(1).locator('code').count(),0,
+        'natural-language suggestions must remain prose, including in a mixed console');
       assert.equal(await consoleUi.locator('heading').count(),0,'command text must not become HTML');
-      await consoleUi.locator('.da-chips .da-chip').click();
+      await consoleUi.locator('input').fill('agent p');
+      await consoleUi.locator('input').press('Tab');
+      assert.equal(await consoleUi.locator('input').inputValue(),command);
+      await consoleUi.locator('.da-chips .da-chip').nth(1).click();
+      assert.equal(await consoleUi.locator('input').inputValue(),'What can you do?');
+      await consoleUi.locator('.da-chips .da-chip').first().click();
       await consoleUi.locator('input').press('Enter');
       assert.equal(await page.evaluate(()=>window.submittedCommand),command,
         `${language}: selecting a command must preserve its executable bytes`);

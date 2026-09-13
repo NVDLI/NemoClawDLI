@@ -794,7 +794,12 @@ export function mountConsole(container, { prompt = "$", greeting = "", suggestio
   markLiveArtifact(root);
   ensureChatStyles();
   const id = randomId("dl");
-  const opts = (suggestions || []).map(s => '<option value="' + String(s).replace(/"/g, "&quot;") + '"></option>').join("");
+  const entries = (suggestions || []).map(item => {
+    if (typeof item === "string") return { text: item, command: false };
+    if (typeof item?.command !== "string") throw new TypeError("Console suggestions must be text or {command: string}.");
+    return { text: item.command, command: true };
+  });
+  const opts = entries.map(({text}) => '<option value="' + String(text).replace(/"/g, "&quot;") + '"></option>').join("");
   root.innerHTML =
     '<div class="da-term">' +
       '<div class="da-out" role="log" aria-live="polite"></div>' +
@@ -841,9 +846,11 @@ export function mountConsole(container, { prompt = "$", greeting = "", suggestio
     return con;
   }
   setState("Ready", "ready");
-  (suggestions || []).forEach(s => {
+  entries.forEach(({text: s, command: isCommand}) => {
     const b = document.createElement("button"); b.type = "button"; b.className = "da-chip";
-    const command = document.createElement("code"); command.textContent = s; b.append(command);
+    if (isCommand) {
+      const command = document.createElement("code"); command.textContent = s; b.append(command);
+    } else b.textContent = s;
     b.addEventListener("click", () => { input.value = s; input.focus(); });
     chipRow.appendChild(b);
   });
@@ -884,7 +891,7 @@ export function mountConsole(container, { prompt = "$", greeting = "", suggestio
       }
     } else if (e.key === "Tab") {
       const v = input.value.toLowerCase();
-      const hit = (suggestions || []).find(s => s.toLowerCase().startsWith(v) && s.toLowerCase() !== v);
+      const hit = entries.map(({text}) => text).find(s => s.toLowerCase().startsWith(v) && s.toLowerCase() !== v);
       if (v && hit) { input.value = hit; e.preventDefault(); }
     } else if (e.key === "ArrowUp") { if (hi > 0) { hi--; input.value = hist[hi] || ""; } e.preventDefault(); }
     else if (e.key === "ArrowDown") { if (hi < hist.length) { hi++; input.value = hist[hi] || ""; } e.preventDefault(); }
