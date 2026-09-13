@@ -246,11 +246,6 @@
       "source": "<code>chat()</code> is a convenience wrapper around one ordinary HTTP\n     <code>POST</code> in the OpenAI-compatible wire format. That request carries three things:",
       "value": "<code>chat()</code> é um wrapper de conveniência em torno de um único\n     <code>POST</code> HTTP comum no formato de transmissão compatível com a OpenAI. Essa requisição carrega três coisas:"
     },
-    "rich.023adf5b9eb6": {
-      "type": "rich",
-      "source": "\n    Look closely at the middle of that list. The <strong>perceive-to-act step is a single\n    stateless text-to-text mapping</strong> in which a full engineered context goes in and\n    an intent signal comes back. The model only transforms text, so perceiving the world\n    and turning an intent into a real change remain your code's job on both sides of that mapping.\n  ",
-      "value": "\n    Olhe de perto o meio dessa lista. O <strong>passo de perceber-a-agir é um único mapeamento texto-para-texto sem estado</strong> , no qual um contexto completo e construído entra e um sinal de intenção volta. O modelo apenas transforma texto, então perceber o mundo e transformar uma intenção em uma mudança real continuam sendo trabalho do seu código nos dois lados desse mapeamento.\n  "
-    },
     "rich.03ec858ee52a": {
       "type": "rich",
       "source": "\" style=\"margin:0 0 10px\"><button style=\"padding:4px 12px;border:1px solid #555;border-radius:4px;background:#1a1a1a;color:#ccc;cursor:pointer\">stop</button></div>",
@@ -393,11 +388,6 @@
       "source": "\n    <strong>The decision step is the only part that varies.</strong>\n    DFS, BFS, and A* all read the current maze state and return a move. One line in the\n    last node chooses the decision function; the loop below runs the same way for each\n    choice. The next example gives the model a choice of branches while a controller\n    records explored cells and the return path.\n  ",
       "value": "\n    <strong>Somente a etapa de decisão varia.</strong> DFS, BFS e A* leem o estado atual do\n    labirinto e devolvem um movimento. Uma linha no último nó escolhe a função, enquanto\n    o ciclo abaixo permanece igual para cada escolha. No próximo exemplo, o modelo escolhe entre ramificações enquanto um controlador registra as células exploradas e o caminho de volta.\n  "
     },
-    "rich.5179f45aa8dd": {
-      "type": "rich",
-      "source": "\n    You now have both halves of an agent, and the stateless <code>chat()</code> function above will pair nicely\n    with the previous reflex agent's perceive-reason-act loop. Before\n    wiring the model into that loop, it helps to watch the decision step use routines\n    that are <em>not</em> language models first.\n  ",
-      "value": "\n    Você agora tem as duas metades de um agente. A função sem estado <code>chat()</code> combina\n    com o ciclo perceber, raciocinar e agir do agente reflexo anterior. Antes de conectar o\n    modelo ao ciclo, observe a etapa de decisão com rotinas que <em>não</em> são modelos de linguagem.\n  "
-    },
     "rich.528a14d71c17": {
       "type": "rich",
       "source": "<strong>Compare model profiles.</strong>\n        Start with <code>model:\"direct\"</code>, then compare <code>model:\"reasoning\"</code>\n        and <code>model:\"omni\"</code> on the same maze. Inspect each request's model,\n        token budget, temperature, and reasoning settings. These profiles change several\n        settings; compare branch order and latency without attributing every difference\n        to model identity alone.",
@@ -457,11 +447,6 @@
       "source": "The <span>Agent</span>",
       "value": "O <span>Agente</span>"
     },
-    "rich.75e28bbb8f39": {
-      "type": "rich",
-      "source": "\n    Place the <code>chat()</code> call inside the loop that re-sends history, and a single\n    turn of any LLM agent in this course takes the same four-stage shape.\n  ",
-      "value": "\n    Coloque a chamada <code>chat()</code> dentro do laço que reenvia o histórico, e um único turno de qualquer agente LLM neste curso assume o mesmo formato de quatro estágios. \n  "
-    },
     "rich.7a23cade9bbf": {
       "type": "rich",
       "source": "<strong>Calls do not share state.</strong> Between requests the\n        server holds nothing for you. If you want the model to\n        remember the previous turn, you send that turn again.\n        The \"memory\" of a conversation is a list of messages your code\n        maintains and re-sends each time.",
@@ -510,6 +495,11 @@
       "source": "<details style=\"margin:2px 0\"><summary style=\"cursor:pointer;color:#555;font-size:11px\">reasoning (",
       "value": "<details style=\"margin:2px 0\"><summary style=\"cursor:pointer;color:#555;font-size:11px\">raciocínio ("
     },
+    "rich.9483ca5a8b56": {
+      "type": "rich",
+      "source": "\n    In this example, <code>chat()</code> receives text describing the maze and returns\n    a requested move. The controller supplies the observations, validates the request,\n    and changes the maze state. The model call does not execute the move.\n  ",
+      "value": "Neste exemplo, <code>chat()</code> recebe texto que descreve o labirinto e retorna uma solicitação de movimento. O controlador fornece as observações, valida a solicitação e altera o estado do labirinto. A chamada ao modelo não executa o movimento."
+    },
     "rich.94efa28023b8": {
       "type": "rich",
       "source": "<div style=\"margin-top:6px;font-size:10px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;color:",
@@ -526,11 +516,6 @@
       "source": " qwen puts reasoning in <think>...</think>",
       "value": " qwen puts reasoning in <think>...</think>",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
-    },
-    "rich.982e7c6eb75d": {
-      "type": "rich",
-      "source": "<strong>Locally-perceive.</strong> That slice is rendered into a full\n        engineered context: the system prompt, the running <code>messages[]</code>\n        history, prior tool results, and the slice you just sampled. All of it is plain\n        text. For an LLM agent, perception <em>is</em> context engineering.",
-      "value": "<strong>Perceber localmente.</strong> Essa fatia é renderizada em um contexto completo e construído: o prompt de sistema, o histórico <code>messages[]</code>\n        em andamento, resultados de ferramentas anteriores e a fatia que você acabou de amostrar. Tudo isso é texto puro. Para um agente LLM, a percepção <em>é</em> engenharia de contexto."
     },
     "rich.9e4527fb137f": {
       "type": "rich",
@@ -560,6 +545,11 @@
       "source": "\\${hdr}<style>.mgrid{display:grid;gap:2px;background:#0a0a0f;padding:8px;border-radius:8px;width:fit-content;margin:4px 0}.mc{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:3px;font:13px/1 ui-monospace,monospace}</style><div class=\"mgrid\" style=\"grid-template-columns:repeat(\\${W},26px)\">\\${cells}</div>",
       "value": "\\${hdr}<style>.mgrid{display:grid;gap:2px;background:#0a0a0f;padding:8px;border-radius:8px;width:fit-content;margin:4px 0}.mc{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:3px;font:13px/1 ui-monospace,monospace}</style><div class=\"mgrid\" style=\"grid-template-columns:repeat(\\${W},26px)\">\\${cells}</div>",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "rich.b54029b1abe6": {
+      "type": "rich",
+      "source": "\n    In the maze example, the controller builds a request for <code>chat()</code> and\n    validates the returned move before applying it. The stages below trace that exchange.\n  ",
+      "value": "No exemplo do labirinto, o controlador monta uma solicitação para <code>chat()</code> e valida o movimento retornado antes de aplicá-lo. As etapas abaixo mostram essa troca."
     },
     "rich.b8c4d5c6124a": {
       "type": "rich",
@@ -649,11 +639,6 @@
       "source": "\n    The controller records visited cells and a return path, filters out visited branches,\n    and walks corridors. At junctions, the model reads the map and chooses the branch order\n    through <code>choose_direction</code>. The controller manages depth-first exploration;\n    it does not supply the model with a solved route.\n  ",
       "value": "O controlador registra as células visitadas e um caminho de volta, filtra os ramos visitados e percorre os corredores. Nas bifurcações, o modelo lê o mapa e escolhe a ordem dos ramos com <code>choose_direction</code>. O controlador gerencia a exploração em profundidade; ele não fornece ao modelo uma rota resolvida."
     },
-    "rich.d106759c1b2d": {
-      "type": "rich",
-      "source": "<strong>Locally-sample.</strong> Your code reads a slice of the\n        environment, which might be the maze cell and its valid moves, or the latest user\n        message, or the contents of a file. It never reaches for the whole world at once,\n        because all the turn requires is the narrow piece of state the model needs to act on\n        this time around.",
-      "value": "<strong>Amostrar localmente.</strong> Seu código lê uma fatia do ambiente, que pode ser a célula do labirinto e seus movimentos válidos, ou a última mensagem do usuário, ou o conteúdo de um arquivo. Ele nunca tenta abarcar o mundo inteiro de uma vez, porque tudo o que o turno exige é o pedaço estreito de estado que o modelo precisa para agir desta vez."
-    },
     "rich.d45434b3ac87": {
       "type": "rich",
       "source": "<strong style=\"color:#76b900\">",
@@ -664,6 +649,11 @@
       "type": "rich",
       "source": "<span style=\"color:#76b900\">goal reached in the opening corridor (no LLM needed)</span>",
       "value": "<span style=\"color:#76b900\">objetivo alcançado no corredor inicial (sem usar LLM)</span>"
+    },
+    "rich.d720f4303be7": {
+      "type": "rich",
+      "source": "\n    The next examples keep the perceive-reason-act loop and vary its decision function.\n    Compare fixed rules and search algorithms before using <code>chat()</code> to choose a move.\n  ",
+      "value": "Os próximos exemplos mantêm o ciclo de perceber, raciocinar e agir e variam sua função de decisão. Compare regras fixas e algoritmos de busca antes de usar <code>chat()</code> para escolher um movimento."
     },
     "rich.d7ebde9e18e3": {
       "type": "rich",
@@ -681,6 +671,16 @@
       "type": "rich",
       "source": "Start with the working defaults. Then switch <code>model</code> to compare capability-checked routes, remove history, or set <code>advanced</code> to grow the maze after the simple case works.",
       "value": "Comece com os padrões funcionais. Depois, altere <code>model</code> para comparar rotas com capacidades verificadas, remova o histórico ou defina <code>advanced</code> para ampliar o labirinto quando o caso simples funcionar."
+    },
+    "rich.e0ff70868281": {
+      "type": "rich",
+      "source": "<strong>Locally-sample.</strong> Your code reads a slice of the\n        environment. Here it reads the current maze cell and its valid moves. The request\n        can also include the full map and prior turns, depending on the selected controls.",
+      "value": "<strong>Amostrar localmente.</strong> Seu código lê uma parte do ambiente. Aqui ele lê a célula atual do labirinto e seus movimentos válidos. A solicitação também pode incluir o mapa completo e os turnos anteriores, dependendo dos controles selecionados."
+    },
+    "rich.e125b82c90e2": {
+      "type": "rich",
+      "source": "<strong>Locally-perceive.</strong> That slice is rendered into a full\n        engineered context: the system prompt, the running <code>messages[]</code>\n        history, prior tool results, and the slice you just sampled. This example represents\n        the maze as text in the messages sent to the model.",
+      "value": "<strong>Perceber localmente.</strong> Essa parte é incorporada a um contexto completo e preparado: o prompt de sistema, o histórico acumulado de <code>messages[]</code>, os resultados anteriores de ferramentas e a parte que você acabou de amostrar. Neste exemplo, o labirinto é representado como texto nas mensagens enviadas ao modelo."
     },
     "rich.e283eb73ab78": {
       "type": "rich",
