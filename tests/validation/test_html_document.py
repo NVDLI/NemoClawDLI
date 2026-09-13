@@ -20,6 +20,7 @@ from html_document import (  # noqa: E402
     raw_text_blocks,
     raw_text_blocks_strict,
     script_body_by_id,
+    script_body_by_id_strict,
     without_elements,
 )
 
@@ -82,6 +83,30 @@ class HtmlDocumentTests(unittest.TestCase):
         )
         self.assertEqual(script_body_by_id(raw, "skill-meta"), '{"right": true}')
         self.assertIsNone(script_body_by_id(raw, "missing"))
+        self.assertEqual(script_body_by_id_strict(raw, "skill-meta"), '{"right": true}')
+        self.assertIsNone(script_body_by_id_strict(raw, "missing"))
+
+    def test_strict_metadata_rejects_ambiguous_attributes_and_ids(self) -> None:
+        for raw in (
+            '<script id="other" ID="skill-meta">{}</script>',
+            '<script id="skill-meta" id="other">{}</script>',
+            '<script id="skill-meta">{}</script><script id="skill-meta">{}</script>',
+            '<script id="skill-meta" type="application/json" TYPE="module">{}</script>',
+        ):
+            with self.subTest(raw=raw), self.assertRaisesRegex(ValueError, "duplicate"):
+                script_body_by_id_strict(raw, "skill-meta")
+
+    def test_strict_metadata_preserves_browser_boundaries_and_literal_json(self) -> None:
+        body = '{"text":"a&amp;b", "value":"<scripture>"}'
+        for closing in ('</script>', '</script data-extra="recovered">', '</script\t\n extra>'):
+            raw = '<!-- <script id="skill-meta">wrong</script> -->' + (
+                '<SCRIPT type="application/json" ID="skill-meta">' + body + closing)
+            with self.subTest(closing=closing):
+                self.assertEqual(script_body_by_id_strict(raw, "skill-meta"), body)
+                self.assertEqual(script_body_by_id(raw, "skill-meta"), body)
+        for raw in ('<script id="skill-meta"/>', '<script id="skill-meta">{}'):
+            with self.subTest(raw=raw), self.assertRaises(ValueError):
+                script_body_by_id_strict(raw, "skill-meta")
 
     def test_removal_preserves_untouched_authored_entities(self) -> None:
         raw = "<p>left&mdash;right</p><script>hidden()</script>"

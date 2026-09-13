@@ -114,7 +114,13 @@ class _StrictRawTextParser(HTMLParser):
 
     @staticmethod
     def attributes(attrs: list[tuple[str, str | None]]) -> dict[str, str]:
-        return {str(key).casefold(): str(value or "") for key, value in attrs}
+        result = {}
+        for key, value in attrs:
+            name = str(key).casefold()
+            if name in result:
+                raise ValueError(f"duplicate raw-text attribute: {name}")
+            result[name] = str(value or "")
+        return result
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         if tag.casefold() != self.name:
@@ -210,6 +216,16 @@ def script_body_by_id(raw: str, element_id: str) -> str | None:
     if element is None:
         return None
     return str(element.string) if element.string is not None else element.decode_contents()
+
+
+def script_body_by_id_strict(raw: str, element_id: str) -> str | None:
+    """Select unambiguous metadata from already validated HTML without packages."""
+
+    matches = [block.body for block in raw_text_blocks_strict(raw, "script")
+               if block.attributes.get("id") == element_id]
+    if len(matches) > 1:
+        raise ValueError(f"duplicate script id: {element_id}")
+    return matches[0] if matches else None
 
 
 def without_elements(raw: str, names: Iterable[str]) -> str:

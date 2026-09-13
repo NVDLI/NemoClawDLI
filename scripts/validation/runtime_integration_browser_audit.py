@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from scripts.runtime.host_browser import BrowserRuntimeError, environment, run_node
-from scripts.runtime.html_document import script_body_by_id
+from scripts.runtime.html_document import script_body_by_id_strict
 from scripts.build.project_artifact_manifests import mirror_roots
 
 LOCALE_PAGES = ("index.html", "02c-deep.html", "03a-kickstart.html", "03c-always-on.html", "04a-safety.html")
@@ -83,7 +83,7 @@ def discover_artifact_locales(site: Path) -> list[dict[str, str]]:
             # that role; a directory name alone cannot excuse an undeclared course.
             if course.parent.name == "web" and course.parents[1] in source_mirrors:
                 skill = course / "SKILL.html"
-                body = script_body_by_id(skill.read_text(encoding="utf-8"), "skill-meta") if skill.is_file() else None
+                body = script_body_by_id_strict(skill.read_text(encoding="utf-8"), "skill-meta") if skill.is_file() else None
                 metadata = json.loads(body) if body else {}
                 if not isinstance(metadata, dict):
                     raise ValueError(f"source mirror has malformed directory provenance: {route}")

@@ -4,6 +4,7 @@
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -163,6 +164,19 @@ class RuntimeArtifactLocaleTests(unittest.TestCase):
         write_metadata(metadata)
         project_artifact_manifests(self.site, self.site)
         self.assertEqual(discover_artifact_locales(self.site), self.languages)
+        original_metadata = skill.read_text()
+        for malformed in (
+            original_metadata + original_metadata,
+            original_metadata.replace('id="skill-meta"', 'id="other" ID="skill-meta"'),
+            '<!-- ' + original_metadata + ' -->',
+            original_metadata.replace("<script ", "<scripture ").replace("</script>", "</scripture>"),
+            original_metadata.replace("</script>", ""),
+        ):
+            with self.subTest(metadata=malformed):
+                skill.write_text(malformed)
+                with self.assertRaises(ValueError):
+                    discover_artifact_locales(self.site)
+        skill.write_text(original_metadata)
         for mutate in (lambda value: value.update(source_dir="renamed/web/nemoclaw/"),
                        lambda value: value.update(node_type="directory-explorer-near-match"),
                        lambda value: value.update(schema="dir-skill/1.0-broken")):
@@ -229,6 +243,15 @@ class RuntimeArtifactLocaleTests(unittest.TestCase):
 
 
 class RuntimeBrowserFixtureTests(unittest.TestCase):
+    def test_artifact_discovery_needs_no_site_packages(self):
+        result = subprocess.run(
+            [sys.executable, "-S", "-m", "unittest",
+             "tests.validation.test_localization_runtime_audit.RuntimeArtifactLocaleTests"],
+            cwd=Path(__file__).resolve().parents[2], capture_output=True, text=True,
+            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}, timeout=60,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_owned_cron_evidence_rejects_partial_or_foreign_cleanup(self):
         prefix = RUNTIME_JS.split("(async () => {", 1)[0]
         checks = r"""
