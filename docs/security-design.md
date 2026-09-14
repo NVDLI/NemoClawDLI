@@ -54,9 +54,10 @@ contradiction before accepting its risk labels or requirement statuses.
   preparation lacks AWS authority; only an exact plan reaches the isolated
   publisher. Protected-environment review remains host evidence.
   These jobs hold no signing key, model API credential, runtime credential, or deployment key.
-- CI does not write Git refs or repository content. Logs and test results are job artifacts or
-  external records. Branch and merge-request validation is normal; protected annotated tags only
-  identify release candidates.
+- Release CI does not write Git refs or repository content. The devbox App may write unprotected
+  feature branches and bounded status, but cannot approve, merge, deploy, edit workflows, or bypass
+  protections. Logs and results are external records; protected annotated tags only identify
+  release candidates.
 - A protected-environment reviewer is a human actor, not a component. Release owners and legal,
   export, privacy, or security reviewers are evidence-workflow actors too. They are not deployed
   components or runtime data flows. A static host serves bytes; repository workflows, not the host,
@@ -139,7 +140,7 @@ contract.
 
 | Boundary | Transport and data | Authentication | Primary controls |
 |---|---|---|---|
-| Course source to external CI | Public source and commit metadata | Developer identity; live policy requires operator evidence | Repository validators and DCO; live identity and review settings unverified |
+| Course source to external CI | Public source, commit metadata, and bounded lifecycle status | Developer or dedicated repository bot identity; human DCO and live policy require operator evidence | Repository validators, bot event boundary, and DCO; live identity and review settings unverified |
 | External CI to static host | Static bundle and SHA-256 inventory | Workflow-requested deployment identity; live rules unverified | Bounded artifact, manifest recheck, and post-deploy byte comparison |
 | Static host to learner device | HTTPS pages and assets | Public or host-controlled access | Relative paths, locale integrity, preview isolation, URL checks |
 | Browser to model service | HTTPS credential, prompts, and responses | Learner-provided bearer credential | TLS, password input, direct route by default, optional iframe relay |
