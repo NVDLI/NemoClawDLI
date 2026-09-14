@@ -1,11 +1,13 @@
 // Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import { randomId as _uniqueId } from "./_ids.js";
+
 // OpenClaw gateway + claw widgets for 03a/03b/03c/04a.
 // Holds the live WebSocket gateway client and the connect/probe widgets.
 // Also openclawChat, GW_CONNECT, and the recover flow.
 
-import { updateClawPill, escHtml, _escAttr, mountCanvasFlow } from "./_shared.js";
+import { updateClawPill, escHtml, _escAttr, mountCanvasFlow, delay } from "./_shared.js";
 import { localizeCourseUiText } from "./_locale.js";
 import {
   DEFAULT_OPENCLAW_PROXY_BASE, accessProviderForOpenClawUrl, getOpenClawConnection, getOpenClawProxyConfig, getOpenClawWsRelayEnabled, migrateOpenClawConnectionStorage,
@@ -23,12 +25,7 @@ export {
 export { filterOpenClawRuntimeNoise, filterOpenClawRuntimeValue, openclawMessageText, openclawResultText };
 
 const accessCookieName = provider => provider === "pomerium" ? "_pomerium" : "CF_Authorization";
-function _uniqueId(prefix = "") {
-  if (typeof crypto.randomUUID === "function") return prefix + crypto.randomUUID();
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  return prefix + [...bytes].map(value => value.toString(16).padStart(2, "0")).join("");
-}
+
 
 export function detectOpenClawBrowserSession(rawUrl, accessProvider = "auto", timeoutMs = 4000) {
   const direct = openclawWebSocketUrl(
@@ -127,69 +124,111 @@ export function redactOpenClawDiagnostic(value, key = "", seen = new WeakSet()) 
 
 const OPENCLAW_BOOTSTRAP_PATHS = new Set(["/api/agent", "/healthz"]);
 
-export async function openclawBootstrapRequest(path = "/api/agent", { signal = null } = {}) {
+async function boundedOpenClawBootstrap(read, signal, requestTimeoutMs) {
+  const controller = new AbortController();
+  const stop = () => controller.abort(signal.reason);
+  signal?.addEventListener("abort", stop, {once:true});
+  if (signal?.aborted) stop();
+  const timer = setTimeout(() => controller.abort(new Error("OpenClaw metadata request timed out")), requestTimeoutMs);
+  let rejectAbort;
+  const aborted = new Promise((_, reject) => { rejectAbort = () => reject(controller.signal.reason); });
+  controller.signal.addEventListener("abort", rejectAbort, {once:true});
+  if (controller.signal.aborted) rejectAbort();
+  try {
+    return await Promise.race([read(controller.signal), aborted]);
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", stop);
+    controller.signal.removeEventListener("abort", rejectAbort);
+  }
+}
+
+export async function openclawBootstrapRequest(path = "/api/agent", {
+  signal = null, onRetry = null, requestTimeoutMs = 20000, waitForReadyMs = 30 * 60 * 1000,
+} = {}) {
   /* @doc <code>helpers.openclawBootstrapRequest(path)</code> ::
        Read <code>/api/agent</code> or <code>/healthz</code> through the provider selected
        from the normalized Module 3a connection. Pomerium reads these fixed endpoints from
        launchable loopback over the terminal WebSocket, which tries the signed-in browser
        first and then the approved provider-bound relay. Returns response metadata plus
        parsed JSON without exposing either access credential. */
-  const actionPath = String(path || "");
-  if (!OPENCLAW_BOOTSTRAP_PATHS.has(actionPath)) {
-    throw new Error("OpenClaw bootstrap requests are limited to /api/agent and /healthz");
-  }
-  signal?.throwIfAborted();
-  const connection = getOpenClawConnection();
-  const rawUrl = String(connection.rawUrl || "").replace(/\/+$/, "");
-  if (!rawUrl) throw new Error("Set the launchable URL in the Module 3a probe first.");
-  const provider = accessProviderForOpenClawUrl(rawUrl, connection.accessProvider);
-  if (provider === "pomerium") {
-    const result = await openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal });
+  async function read(signal) {
+    const actionPath = String(path || "");
+    if (!OPENCLAW_BOOTSTRAP_PATHS.has(actionPath)) {
+      throw new Error("OpenClaw bootstrap requests are limited to /api/agent and /healthz");
+    }
+    signal?.throwIfAborted();
+    const connection = getOpenClawConnection();
+    const rawUrl = String(connection.rawUrl || "").replace(/\/+$/, "");
+    if (!rawUrl) throw new Error("Set the launchable URL in the Module 3a probe first.");
+    const provider = accessProviderForOpenClawUrl(rawUrl, connection.accessProvider);
+    if (provider === "pomerium") {
+      const result = await openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal });
+      return {
+        ...result,
+        headers: {},
+        displayUrl: rawUrl + actionPath,
+      };
+    }
+
+    const route = openclawHttpUrl(
+      rawUrl,
+      actionPath,
+      getOpenClawProxyConfig(),
+      provider,
+      connection.accessSession,
+    );
+    const headers = { Accept: "application/json, text/plain, */*" };
+    if (route.viaProxy && connection.accessSession) {
+      if (provider === "cloudflare") headers["CF-Access-Jwt-Assertion"] = connection.accessSession;
+      else {
+        headers["X-OpenClaw-Access-Provider"] = provider;
+        headers["X-OpenClaw-Access-Session"] = connection.accessSession;
+      }
+    }
+    // /api/agent discovers the gateway token. A stale token from another
+    // launchable must not prevent that replacement.
+    if (actionPath !== "/api/agent" && connection.token) {
+      headers.Authorization = "Bearer " + connection.token;
+    }
+    const response = await fetch(route.url, {
+      headers,
+      credentials: route.viaProxy ? "same-origin" : "include",
+      signal,
+    });
+    const body = await response.text();
+    let json = null;
+    try { json = JSON.parse(body); } catch (_) {}
     return {
-      ...result,
-      headers: {},
-      displayUrl: rawUrl + actionPath,
+      ok: response.ok,
+      status: response.status,
+      statusText: response.statusText,
+      body,
+      json,
+      headers: Object.fromEntries(response.headers),
+      transport: route.viaProxy ? "approved-provider-relay" : "direct-browser",
+      displayUrl: route.displayUrl,
     };
   }
 
-  const route = openclawHttpUrl(
-    rawUrl,
-    actionPath,
-    getOpenClawProxyConfig(),
-    provider,
-    connection.accessSession,
-  );
-  const headers = { Accept: "application/json, text/plain, */*" };
-  if (route.viaProxy && connection.accessSession) {
-    if (provider === "cloudflare") headers["CF-Access-Jwt-Assertion"] = connection.accessSession;
-    else {
-      headers["X-OpenClaw-Access-Provider"] = provider;
-      headers["X-OpenClaw-Access-Session"] = connection.accessSession;
-    }
+  if (!Number.isFinite(requestTimeoutMs) || requestTimeoutMs < 1 || requestTimeoutMs > 300000
+      || !Number.isFinite(waitForReadyMs) || waitForReadyMs < 0 || waitForReadyMs > 30 * 60 * 1000)
+    throw new Error("Invalid OpenClaw metadata request or startup wait limit");
+  const started = Date.now(), deadline = started + waitForReadyMs;
+  while (true) {
+    signal?.throwIfAborted();
+    const attemptTimeoutMs = waitForReadyMs > 0 ? Math.min(requestTimeoutMs, Math.max(1, deadline - Date.now())) : requestTimeoutMs;
+    const response = await boundedOpenClawBootstrap(read, signal, attemptTimeoutMs);
+    const starting = path === "/api/agent" && response.status === 503 && response.json?.status === "starting";
+    const remaining = deadline - Date.now();
+    if (!starting || remaining <= 0) return response;
+    const retryHeader = response.headers?.["retry-after"];
+    const seconds = retryHeader == null ? NaN : Number(retryHeader);
+    const retryMs = Math.min(remaining, Number.isFinite(seconds) ? Math.max(250, seconds * 1000) : 15000);
+    try { onRetry?.({retryMs, elapsedMs:Date.now() - started, response}); } catch (_) {}
+    await delay(retryMs, signal);
+    if (Date.now() >= deadline) return response;
   }
-  // /api/agent discovers the gateway token. A stale token from another
-  // launchable must not prevent that replacement.
-  if (actionPath !== "/api/agent" && connection.token) {
-    headers.Authorization = "Bearer " + connection.token;
-  }
-  const response = await fetch(route.url, {
-    headers,
-    credentials: route.viaProxy ? "same-origin" : "include",
-    signal,
-  });
-  const body = await response.text();
-  let json = null;
-  try { json = JSON.parse(body); } catch (_) {}
-  return {
-    ok: response.ok,
-    status: response.status,
-    statusText: response.statusText,
-    body,
-    json,
-    headers: Object.fromEntries(response.headers),
-    transport: route.viaProxy ? "approved-provider-relay" : "direct-browser",
-    displayUrl: route.displayUrl,
-  };
 }
 
 let _verifiedGatewayAccess = { accessProvider: null, accessSession: null };
@@ -198,7 +237,7 @@ let _verifiedGatewayToken = { rawUrl: "", token: "", verifiedAt: 0, metadataMatc
 // The launchable access session and OpenClaw gateway token are separate credentials.
 // Fetch the token from GET /api/agent before the first gateway connection.
 // Keep it only in the tab-scoped store.
-export async function refreshOpenClawGatewayToken({ signal = null, maxAgeMs = 30000 } = {}) {
+export async function refreshOpenClawGatewayToken({ signal = null, maxAgeMs = 30000, onRetry = null, requestTimeoutMs = 20000, waitForReadyMs = 30 * 60 * 1000 } = {}) {
   /* @doc <code>helpers.refreshOpenClawGatewayToken(opts?)</code> :: Refreshes the gateway token from verified agent metadata and keeps it only in tab-scoped storage. */
   const connection = getOpenClawConnection();
   const rawUrl = String(connection.rawUrl || "").replace(/\/+$/, "");
@@ -212,12 +251,19 @@ export async function refreshOpenClawGatewayToken({ signal = null, maxAgeMs = 30
     return { ..._verifiedGatewayToken, source: "verified-cache", changed: connection.token !== _verifiedGatewayToken.token };
   }
 
-  let metadataToken = "";
+  let metadataToken = "", metadataError = null;
   try {
-    const probe = await openclawBootstrapRequest("/api/agent", { signal });
+    const probe = await openclawBootstrapRequest("/api/agent", {
+      signal, onRetry, requestTimeoutMs, waitForReadyMs:connection.token ? 0 : waitForReadyMs,
+    });
     if (probe.ok) metadataToken = gatewayTokenFromAgentMetadata(probe.json) || "";
+    else metadataError = new Error("OpenClaw metadata unavailable (HTTP " + probe.status + ")" +
+      (typeof probe.json?.message === "string" && probe.json.message.trim()
+        ? ": " + redactOpenClawText(probe.json.message).slice(0, 320)
+        : probe.json?.status === "starting" ? ": the runtime is still starting. Inspect its startup logs, then retry." : ""));
   } catch (error) {
     if (signal?.aborted || error?.name === 'AbortError') throw error;
+    metadataError = error;
   }
   signal?.throwIfAborted();
   const current = getOpenClawConnection();
@@ -226,7 +272,7 @@ export async function refreshOpenClawGatewayToken({ signal = null, maxAgeMs = 30
     throw new Error('The connected gateway changed; run Connect again before sending a turn.');
 
   const token = metadataToken || connection.token;
-  if (!token) throw new Error("GET /api/agent did not provide a gateway token. Reopen the launchable, then try again.");
+  if (!token) throw metadataError || new Error("GET /api/agent did not provide a gateway token. Reopen the launchable, then try again.");
   setOpenClawConnection({
     rawUrl,
     token,
@@ -237,7 +283,7 @@ export async function refreshOpenClawGatewayToken({ signal = null, maxAgeMs = 30
   _verifiedGatewayToken = {
     rawUrl,
     token,
-    verifiedAt: now,
+    verifiedAt: Date.now(),
     metadataMatches: metadataToken ? true : null,
   };
   return {
@@ -430,7 +476,7 @@ export async function runOpenClawConnectionAudit({
     notify(step);
     const started = performance.now();
     try {
-      const outcome = await task();
+      const outcome = await task(step);
       Object.assign(step, outcome);
       step.status = outcome.ok ? "passed" : "failed";
     } catch (error) {
@@ -439,6 +485,7 @@ export async function runOpenClawConnectionAudit({
       step.error = String(error?.message || error);
       step.response = redactOpenClawDiagnostic(error?.diagnostic || null);
     }
+    delete step.progress;
     step.elapsedMs = Math.round(performance.now() - started);
     results.push(step);
     notify(step);
@@ -453,8 +500,14 @@ export async function runOpenClawConnectionAudit({
     what: "Returns launchable agent metadata, including the dashboard URL used to discover the gateway token.",
     purpose: "Confirms launchable authentication and discovers the gateway token used by later WebSocket checks.",
     request: metadataDiagnostic.request,
-  }, async () => {
-    const response = await openclawBootstrapRequest("/api/agent", { signal });
+  }, async step => {
+    const response = await openclawBootstrapRequest("/api/agent", {signal,
+      onRetry: ({retryMs, response}) => {
+        step.progress = "OpenClaw is starting. Retrying in " + Math.round(retryMs / 1000) + " seconds. Use Stop to cancel.";
+        step.response = redactOpenClawDiagnostic({status:response.status, body:response.json ?? response.body});
+        notify(step);
+      },
+    });
     const token = response.ok ? (gatewayTokenFromAgentMetadata(response.json) || "") : "";
     if (token) {
       setOpenClawConnection({
@@ -810,7 +863,8 @@ export function mountClawGateway(targetSel, opts = {}) {
     connectBtn.disabled = true;
     outEl.hidden = true;
     try {
-      const refreshed = await refreshOpenClawGatewayToken();
+      _setStatus("connecting", "checking metadata");
+      const refreshed = await refreshOpenClawGatewayToken({waitForReadyMs:0});
       ({ rawUrl, accessProvider, accessSession } = _creds());
       token = refreshed.token;
       const gateway = openclawGatewayWsUrl(rawUrl, accessSession, null, null, accessProvider);
@@ -822,7 +876,7 @@ export function mountClawGateway(targetSel, opts = {}) {
       connectBtn.textContent = "Reconnect";
     } catch (e) {
       _setStatus("error", e.message.slice(0, 80));
-      _showOut(`<span class="gw-err-txt">${e.message}</span>`);
+      _showOut(`<span class="gw-err-txt">${escHtml(e.message)}</span>`);
     }
     connectBtn.disabled = false;
   });
@@ -892,7 +946,7 @@ export function mountClawGateway(targetSel, opts = {}) {
           }
         }
       } catch (e) {
-        _showOut(`<span class="gw-err-txt">✗ ${e.message}</span>`);
+        _showOut(`<span class="gw-err-txt">✗ ${escHtml(e.message)}</span>`);
       }
       btn.disabled = false;
     });
@@ -1678,6 +1732,7 @@ export function mountOpenClawConnectionAudit(targetSel, opts = {}) {
       [text("What"), step.what || ""],
       [text("Why"), step.purpose || ""],
       [text("Credential"), request.authSummary || ""],
+      [text("Status"), step.progress || ""],
     ];
     if (step.error) lines.push([text("Failure"), step.error]);
     for (const [label, value] of lines) {
@@ -1866,7 +1921,7 @@ export async function courseTurn(state, helpers, session, message, {idleMs = 900
       if (signal?.aborted) return stop();
       Promise.resolve().then(() => call("sessions.messages.subscribe", {key:session})).then(() => {
         if (finished) return;
-        return call("chat.send", {sessionKey:session, idempotencyKey:crypto.randomUUID(), message}).then(result => {
+        return call("chat.send", {sessionKey:session, idempotencyKey:_uniqueId(), message}).then(result => {
           if (finished) { abortRun(result?.runId); return; }
           runId = result?.runId; acknowledged = true;
           if (!runId) return settle(new Error("chat.send returned no runId"));
@@ -1902,7 +1957,10 @@ export async function openclawChat(message, { session = "main", onToken, onTool,
   checkSignal();
   _ocChatBusy = true;
   try {
-  const refreshed = await refreshOpenClawGatewayToken({ signal });
+  view?.note?.("Checking OpenClaw metadata…");
+  const refreshed = await refreshOpenClawGatewayToken({ signal,
+    onRetry: ({retryMs}) => view?.note?.("OpenClaw is starting. Retrying in " + Math.round(retryMs / 1000) + " seconds. Use Stop to cancel."),
+  });
   checkSignal();
   const connection = getOpenClawConnection();
   const rawUrl = connection.rawUrl.replace(/\/+$/, "");
@@ -2076,7 +2134,13 @@ export async function openclawChat(message, { session = "main", onToken, onTool,
 }
 
 export const GW_CONNECT = `
-const refreshedGateway = await helpers.refreshOpenClawGatewayToken({ signal: helpers.signal });
+helpers.log("Checking OpenClaw metadata…");
+const refreshedGateway = await helpers.refreshOpenClawGatewayToken({
+  signal: helpers.signal,
+  onRetry: ({retryMs, response}) => helpers.log("OpenClaw is starting", {
+    status:response.status, retrySeconds:Math.round(retryMs / 1000), stop:"Use Stop to cancel the wait",
+  }),
+});
 const connection = helpers.getOpenClawConnection();
 const rawUrl = connection.rawUrl;
 state.courseGatewayUrl = rawUrl;
@@ -2095,12 +2159,7 @@ helpers.log("→ " + gateway.displayUrl + (gateway.viaProxy ? "  (via hosted rel
 if (state._ws) { try { state._ws.close(); } catch (_) {} state._chatCb = null; }
 
 const _pend = {};
-const nextId = () => {
-  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  return [...bytes].map(value => value.toString(16).padStart(2, "0")).join("");
-};
+const nextId = helpers.randomId;
 const _ws = new WebSocket(wsUrl);
 state._ws = _ws;
 // Stop closes the socket and rejects in-flight calls.

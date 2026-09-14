@@ -729,8 +729,8 @@ message = "Use your exec tool to run \`whoami\` and \`pwd\` in your sandbox, the
     mountGwRecover("#gw-recover");
 
     // ── One session, carried memory: recall the earlier gw-chat turn ─────────────
-mountCanvasFlow("#session-call", {label:"Compare conversation history before and after reset", nodes:[{id: "sk-memory", title: "Plant a fresh fact", x: 0, y: 0, showCode: true, code: `${GW_CONNECT}state.memorySession = "quick-3a-" + crypto.randomUUID();
-state.memoryFact = "CODE-" + crypto.randomUUID();
+mountCanvasFlow("#session-call", {label:"Compare conversation history before and after reset", nodes:[{id: "sk-memory", title: "Plant a fresh fact", x: 0, y: 0, showCode: true, code: `${GW_CONNECT}state.memorySession = "quick-3a-" + helpers.randomId();
+state.memoryFact = "CODE-" + helpers.randomId();
 const courseTurn = helpers.courseTurn;
 
 state.out = await courseTurn(state, helpers, state.memorySession, "Remember this only in our conversation: " + state.memoryFact + ". Do not write it to a file.");
