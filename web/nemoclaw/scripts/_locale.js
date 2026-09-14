@@ -1265,6 +1265,7 @@ const TW_ATTRS = new Map(Object.entries({
 // Helper signatures stay in English because learners call them from code. Descriptions
 // are keyed by the discovered helper name, so code spans never enter text replacement.
 const PT_HELPER_DESCRIPTIONS = new Map(Object.entries({
+  randomId: "Cria um UUID v4 com aleatoriedade criptográfica e um prefixo opcional para uma sessão ou um artefato. Usa <code>getRandomValues</code>, disponível em ambientes de laboratório servidos por HTTP.",
   courseTurn: "Envia um turno pela conexão de gateway deste fluxo e aguarda o evento final da execução confirmada. Recebe os helpers da célula atual para usar seu botão Parar e registrar os eventos e as sessões criadas.",
   courseShell: "Executa um comando no sandbox conectado e exige código de saída zero. Recebe os helpers da célula atual para cancelamento. Retorna o texto do terminal; releia o arquivo para verificar seu conteúdo.",
   getEmbeddingConfig: "Retorna a configuração persistente de embeddings, com URL, modelo e necessidade de chave. Essa rota é independente do chat.",
@@ -1285,6 +1286,7 @@ const PT_HELPER_DESCRIPTIONS = new Map(Object.entries({
 }));
 
 const ES_HELPER_DESCRIPTIONS = new Map(Object.entries({
+  randomId: "Crea un UUID v4 con aleatoriedad criptográfica y un prefijo opcional para una sesión o un artefacto. Usa <code>getRandomValues</code>, disponible en entornos de laboratorio servidos por HTTP.",
   courseTurn: "Envía un turno por la conexión de gateway de este flujo y espera el evento final de la ejecución confirmada. Recibe los helpers de la celda actual para usar su botón Detener y registrar los eventos y las sesiones creadas.",
   courseShell: "Ejecuta un comando en el sandbox conectado y exige un código de salida cero. Recibe los helpers de la celda actual para cancelarlo. Devuelve el texto del terminal; vuelve a leer el archivo para verificar su contenido.",
   getEmbeddingConfig: "Devuelve la configuración persistente de embeddings: URL, modelo y necesidad de clave. Esta ruta es independiente del chat.",
@@ -1305,9 +1307,9 @@ const ES_HELPER_DESCRIPTIONS = new Map(Object.entries({
 }));
 
 const ZH_HELPER_DESCRIPTIONS = new Map(Object.entries({
+  randomId: "创建采用加密安全随机数的 UUID v4，可为会话或产物添加前缀。使用 <code>getRandomValues</code>，可在通过 HTTP 提供的实验环境中运行。",
   courseTurn: "通过此工作流已建立的网关连接发送一个轮次，等待已确认运行的最终聊天事件。传入当前单元格的辅助函数，以便使用本次运行的停止按钮，并记录事件和创建的会话。",
   courseShell: "在已连接的 sandbox 中执行命令，并要求退出状态为零。传入当前单元格的辅助函数以支持取消。返回终端文本；请重新读取文件以验证内容。",
-  getEmbeddingConfig: "返回持久化嵌入配置，包括 URL、模型和是否需要密钥。嵌入路由与聊天路由相互独立。",
   courseRead: "从已连接的 sandbox 读取课程工作区文件。要求返回完整的带边界标记的响应，并解码 UTF-8 字节。传入当前单元格的辅助函数以支持取消操作。",
   chat: "单次、非流式聊天补全。返回原始 OpenAI 格式响应。只需要最终消息时使用。",
   chatStream: "流式聊天补全；token 到达时会实时显示在此面板的结果视图中。返回的摘要包含 <code>.content</code>、<code>.reasoning</code>、<code>.tool_calls</code>、<code>.finish_reason</code> 和 <code>.usage</code>。",
@@ -1376,9 +1378,9 @@ const ZH_HELPER_DESCRIPTIONS = new Map(Object.entries({
 }));
 
 const TW_HELPER_DESCRIPTIONS = new Map(Object.entries({
+  randomId: "建立使用密碼學安全亂數的 UUID v4，可選擇為工作階段或產物加上前綴。使用 <code>getRandomValues</code>，可在透過 HTTP 提供的實驗環境中執行。",
   courseTurn: "透過此工作流程已建立的閘道連線傳送一個輪次，等待已確認執行的最終聊天事件。傳入目前儲存格的輔助函式，以使用本次執行的停止按鈕，並記錄事件與建立的工作階段。",
   courseShell: "在已連線的 sandbox 中執行命令，並要求結束狀態為零。傳入目前儲存格的輔助函式以支援取消。傳回終端機文字；請重新讀取檔案以驗證內容。",
-  getEmbeddingConfig: "傳回持久化嵌入設定，包括 URL、模型與是否需要金鑰。嵌入路由與聊天路由彼此獨立。",
   courseRead: "從已連線的 sandbox 讀取課程工作區檔案。要求傳回完整且含有邊界標記的回應，並解碼 UTF-8 位元組。傳入目前儲存格的輔助函式以支援取消操作。",
   chat: "單次、非流式聊天補全。傳回原始 OpenAI 格式回應。只需要最終訊息時使用。",
   chatStream: "流式聊天補全；token 到達時會即時顯示在此面板的結果檢視中。傳回的摘要包含 <code>.content</code>、<code>.reasoning</code>、<code>.tool_calls</code>、<code>.finish_reason</code> 和 <code>.usage</code>。",

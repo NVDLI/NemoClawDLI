@@ -1,6 +1,8 @@
 // Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import { randomId as uniqueId } from "./_ids.js";
+
 // OpenClaw CLI artifact runtime.
 // This module keeps gateway transport and session tabs out of the student editing surface.
 // The exported mount function remains an inspectable boundary for lessons and tests.
@@ -23,12 +25,7 @@ const SUGGESTIONS = [
   "Use exec to run ls -la /sandbox/.openclaw/workspace",
 ];
 
-function uniqueId(prefix = "") {
-  if (typeof crypto.randomUUID === "function") return prefix + crypto.randomUUID();
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  return prefix + [...bytes].map(value => value.toString(16).padStart(2, "0")).join("");
-}
+
 
 function readStringList(key) {
   try {

@@ -1,18 +1,14 @@
 // Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import { randomId } from "./_ids.js";
+
 // _chat.js holds the live chat-artifact widgets (ensureChatStyles, mountChatUI, mountAgentChat) that used to live in _shared.js.
 import { browserChatFetch, CONTEXT_WINDOWS, contextWindow, coursePage, coursePages, escHtml, estimateTokens, formatSearchResults, getConfig, getKey, isDefaultModelApiBaseUrl, webSearch } from "./_shared.js";
 
 const MARKED_VENDOR_URL = new URL("../vendor/marked-14.1.4.esm.js", import.meta.url).href;
 const LANGCHAIN_VENDOR_URL = new URL("../vendor/langchain-1.4.7.esm.js", import.meta.url).href;
 
-function randomId(prefix = "") {
-  if (typeof crypto.randomUUID === "function") return prefix + crypto.randomUUID();
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  return prefix + [...bytes].map(value => value.toString(16).padStart(2, "0")).join("");
-}
 
 export function resolveChatMarkdownUrl(raw, pageHref = globalThis.location?.href) {
   const value = String(raw || "").trim();

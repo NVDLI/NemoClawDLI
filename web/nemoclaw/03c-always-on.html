@@ -266,10 +266,10 @@ return "const courseTurn = helpers.courseTurn;\n" + message + "\nstate.out = awa
 mountGwRecover("#gw-recover");
 mountCanvasFlow("#cell-skill", {label:"Install a practice skill, then explicitly read it in a fresh session", nodes:[{id: "sk-install", title: "Install and verify the fixture", x: 0, y: 0, showCode: true, code: `${GW_CONNECT}const {courseShell, courseRead} = helpers;
 
-state.skillName = "course-triage-" + crypto.randomUUID();
+state.skillName = "course-triage-" + helpers.randomId();
 state.skillVerified = false;
 state.skillDirectory = "/sandbox/.openclaw/workspace/skills/" + state.skillName;
-state.runbookReference = "BOOK-" + crypto.randomUUID();
+state.runbookReference = "BOOK-" + helpers.randomId();
 const skill = "---\\nname: " + state.skillName + "\\ndescription: Review a checkout-service incident using the bundled practice runbook; propose changes without executing them.\\n---\\nRead runbook.md in this skill directory. Confirm service and time window. Quote the runbook reference. Propose its reversible check without running it. Ask permission before any change or external communication.\\n";
 const runbook = "Practice checkout-service runbook\\nReference: " + state.runbookReference + "\\nFor a 502 alert: inspect the last deployment and upstream health. Proposed reversible check: compare the canary with the prior deployment. Do not execute a rollback or contact anyone in this exercise.\\n";
 const encode = value => btoa(String.fromCharCode(...new TextEncoder().encode(value)));
@@ -286,7 +286,7 @@ helpers.log({skill:state.skillDirectory + "/SKILL.md", installed:true});
 {id: "sk-trigger", title: "Use the installed skill", x: 1, y: 0, showCode: true, code: `if (!state.skillVerified) throw new Error("Install and verify the skill first");
 const courseTurn = helpers.courseTurn;
 
-state.out = await courseTurn(state, helpers, "quick-3c-skill-" + crypto.randomUUID(),
+state.out = await courseTurn(state, helpers, "quick-3c-skill-" + helpers.randomId(),
   "Read " + state.skillDirectory + \`/SKILL.md and follow it for this practice incident: checkout-service has returned 502s for 12 minutes.
 Report the runbook reference and propose a next step. Do not execute changes or contact anyone.\`);
 if (!state.out.includes(state.runbookReference)) throw new Error("Answer did not retrieve the runbook reference");
@@ -316,9 +316,9 @@ if (state.demoCronId || sessionStorage.getItem(storageKey)) {
   state.courseCleanupSocket?.close();
   throw new Error("Inspect/remove the prior owned job before starting another");
 }
-const nonce = crypto.randomUUID();
+const nonce = helpers.randomId();
 state.cronFile = "/sandbox/.openclaw/workspace/course-cron-" + nonce + ".txt";
-state.cronReference = "CRON-" + crypto.randomUUID();
+state.cronReference = "CRON-" + helpers.randomId();
 const name = "quick-3c-" + nonce;
 let primaryError = null;
 try {

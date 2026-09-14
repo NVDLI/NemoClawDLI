@@ -43,7 +43,7 @@ CHROME_BIN=$(find_chrome) || {
   echo "install Chromium/Chrome for your OS, or set CHROME_BIN to its executable" >&2
   exit 2
 }
-export NODE_PATH CHROME_BIN COURSE_ROOT="$ROOT"
+export NODE_PATH CHROME_BIN COURSE_ROOT="${COURSE_ROOT:-$ROOT}"
 
 args=("$@")
 gateway_only=0
@@ -72,19 +72,37 @@ fi
 if (( all_course )); then
   base_url="${COURSE_BASE_URL:-http://127.0.0.1:4173/nemoclaw}"
   base_url="${base_url%/}"
+  course_slug="${base_url##*/}"
+  course_slug="${course_slug%%\?*}"
+  [[ "$course_slug" != . && "$course_slug" != .. && -n "$course_slug" ]] || { echo "Invalid course path" >&2; exit 2; }
+  course_dir="$COURSE_ROOT/web/$course_slug"
+  [[ -d "$course_dir" ]] || course_dir="$COURSE_ROOT/$course_slug"
+  [[ -d "$course_dir" ]] || { echo "Course directory not found: $course_slug" >&2; exit 2; }
+  runtime_modes=("${COURSE_BROWSER_ORIGIN_MODE:-loopback}")
+  if [[ -z "${COURSE_BROWSER_ORIGIN_MODE:-}" && "$base_url" =~ ^http://(127\.0\.0\.1|localhost):4173(/|$) ]]; then
+    runtime_modes=(lab-http loopback)
+  fi
+  pages=$("$NODE_BIN" "$ROOT/scripts/runtime/browser_environment.cjs" --pages "$course_dir") || exit 1
   failures=0
   tested=0
   while IFS= read -r page; do
-    if ! grep -Eq 'mount(CanvasFlow|RunCell)' "$page"; then continue; fi
-    tested=$((tested + 1))
-    echo "[all-course $tested] ${page##*/}"
-    if ! "$0" --serve-static "$base_url/${page##*/}"; then failures=$((failures + 1)); fi
-  done < <(find "$ROOT/web/nemoclaw" -maxdepth 1 -type f -name '[0-9][0-9][a-z]-*.html' | sort)
-  if (( tested == 0 )); then echo "all-course runtime: no interactive lessons discovered" >&2; exit 1; fi
-  if (( failures )); then echo "all-course runtime: FAIL ($failures/$tested lessons)" >&2; exit 1; fi
-  echo "all-course runtime: PASS ($tested lessons)"
+    [[ -n "$page" ]] || continue
+    relative="${page#"$course_dir"/}"
+    role=$("$NODE_BIN" "$ROOT/scripts/runtime/browser_environment.cjs" --role "$course_dir" "$page") || exit 1
+    page_flags=()
+    [[ "$role" == lesson ]] || page_flags+=(--course-document)
+    for mode in "${runtime_modes[@]}"; do
+      tested=$((tested + 1))
+      echo "[all-course $tested; origin=$mode] $relative"
+      if ! COURSE_BROWSER_ORIGIN_MODE="$mode" "$0" --serve-static "$base_url/$relative" "${page_flags[@]}"; then failures=$((failures + 1)); fi
+    done
+  done <<< "$pages"
+  if (( tested == 0 )); then echo "all-course runtime: no pages discovered" >&2; exit 1; fi
+  if (( failures )); then echo "all-course runtime: FAIL ($failures/$tested pages)" >&2; exit 1; fi
+  echo "all-course runtime: PASS ($tested pages)"
   exit 0
 fi
+
 if [[ " ${args[*]} " != *" --smoke "* && " ${args[*]} " != *" --serve-static "* ]]; then
   args+=(--serve-static)
 fi

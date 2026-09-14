@@ -1,6 +1,9 @@
 // Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import { randomId } from "./_ids.js";
+export { randomId };
+
 import { installNemoClawActivityTracking } from "./_activity_runtime.js";
 
 installNemoClawActivityTracking();
@@ -827,6 +830,7 @@ export const VIZ_BUILDERS = makeViz(() => {});
 // The menu enumerates these and reads each one's source via Function.toString(), so the source cannot drift from the definition.
 // `viz.*` source comes from the live viz object once a node has run; `state`, `fetch`, `trace`, and `log` are described by SPECIALS, since they are values and closures, not module functions.
 export const HELPER_FNS = {
+  randomId,
   courseShell, courseRead,
   chat, chatStream, webSearch, instantAnswer, formatSearchResults,
   embed, cosineSim, fetchRetry, delay, getConfig, getEmbeddingConfig, getKey, getModelApiBaseUrl, setModelApiBaseUrl, isDefaultModelApiBaseUrl, terminal, openclawLoopbackProbe,

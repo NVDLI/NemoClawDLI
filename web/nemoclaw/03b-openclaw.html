@@ -318,20 +318,20 @@ helpers.log.details("raw transcript (" + frames + " WebSocket frames)", raw);
 mountCanvasFlow("#cell-personas", {label:"Compare explicit instructions on the same review question", nodes:[{id: "ask-a", title: "General review", x: 0, y: 0, showCode: true, code: `${GW_CONNECT}state.question = "A proposed cron job deletes rows marked duplicate from production each minute. What should we check before enabling it?";
 const courseTurn = helpers.courseTurn;
 
-state.out = await courseTurn(state, helpers, "quick-3b-general-" + crypto.randomUUID(), "Give a concise code review. " + state.question);
+state.out = await courseTurn(state, helpers, "quick-3b-general-" + helpers.randomId(), "Give a concise code review. " + state.question);
 `},
 {id: "ask-b", title: "Risk-focused review", x: 1, y: 0, showCode: true, code: `if (!state.question) throw new Error("Run the general review first");
 const courseTurn = helpers.courseTurn;
 
-state.out = await courseTurn(state, helpers, "quick-3b-review-" + crypto.randomUUID(),
+state.out = await courseTurn(state, helpers, "quick-3b-review-" + helpers.randomId(),
   "Review as an auditor: identify missing evidence and ask questions before recommending execution. " + state.question);
 helpers.log("Compare the requests and replies. Only the message instructions were varied; SOUL.md was not changed.");`}]});
 mountCanvasFlow("#cell-memory", {label:"Verify file memory across separate sessions", nodes:[{id: "write", title: "Save and verify a preference", x: 0, y: 0, showCode: true, code: `${GW_CONNECT}state.memoryVerified = false;
-state.memoryLabel = "course-review-" + crypto.randomUUID();
-state.memoryReference = "REF-" + crypto.randomUUID();
+state.memoryLabel = "course-review-" + helpers.randomId();
+state.memoryReference = "REF-" + helpers.randomId();
 const courseTurn = helpers.courseTurn;
 
-state.out = await courseTurn(state, helpers, "quick-3b-write-" + crypto.randomUUID(),
+state.out = await courseTurn(state, helpers, "quick-3b-write-" + helpers.randomId(),
   "Append this preference to MEMORY.md without replacing existing content: " + state.memoryLabel + ": numbered review feedback, race conditions first; reference " + state.memoryReference);
 const {courseShell, courseRead} = helpers;
 
@@ -342,7 +342,7 @@ helpers.log("Verified the appended note on disk. It remains in MEMORY.md for ins
 {id: "recall", title: "Read from a fresh conversation", x: 1, y: 0, showCode: true, code: `if (!state.memoryVerified) throw new Error("Verify the file write first");
 const courseTurn = helpers.courseTurn;
 
-state.out = await courseTurn(state, helpers, "quick-3b-read-" + crypto.randomUUID(),
+state.out = await courseTurn(state, helpers, "quick-3b-read-" + helpers.randomId(),
   "Read MEMORY.md and report the review preference and reference for " + state.memoryLabel + ".");
 if (!state.out.includes(state.memoryReference)) throw new Error("Fresh-session answer did not retrieve the saved reference");
 helpers.log("Retrieved the disk-verified reference from a fresh conversation. Inspect the tool events.");`}]});

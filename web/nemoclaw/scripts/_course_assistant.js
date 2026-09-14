@@ -1,6 +1,8 @@
 // Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import { randomId } from "./_ids.js";
+
 // Page-aware ReAct assistant. Shared chrome mounts it lazily in the page language.
 import { mountAgentChat } from "./_chat.js";
 import {
@@ -18,12 +20,7 @@ const MAX_SESSION_HISTORY_CHARS = 100000;
 const MAX_SESSION_ACTIVITY_CHARS = 20000;
 const MAX_ARTIFACT_FIELD_CHARS = 40000;
 
-function randomId(prefix = "") {
-  if (typeof crypto.randomUUID === "function") return prefix + crypto.randomUUID();
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  return prefix + [...bytes].map(value => value.toString(16).padStart(2, "0")).join("");
-}
+
 
 function newSession(page = null) {
   const now = Date.now();

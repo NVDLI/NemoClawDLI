@@ -376,7 +376,7 @@ def gen_task():
     write(TASK1 / "SKILL.html",
           framer_page(meta, "Building Agents · NVIDIA DLI bundle",
                [("Execution surfaces", None, items),
-                ("Source & tooling", None, src_items),
+                ("Source and tooling", None, src_items),
                 ("Agent docs", None, docs)],
                actions=actions, readme="README.md", nav=_nav(""), framer_rel="web/_skill_explorer.js"))
 

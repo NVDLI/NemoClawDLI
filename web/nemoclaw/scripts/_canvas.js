@@ -1430,7 +1430,7 @@ function _deriveHelperAllow(code) {
 // Exporting the map lets the browser validator prove that a newly exposed helper cannot silently
 // fall into an unreviewed bucket.
 export const HELPER_CATEGORIES = Object.freeze([
-    ["Shared state",            ["state"]],
+    ["Shared state",            ["state", "randomId"]],
     ["Model calls",             ["chat", "chatStream", "browserChatFetch"]],
     ["Model configuration",     [
       "getConfig", "getEmbeddingConfig", "getKey", "getModelApiBaseUrl", "setModelApiBaseUrl",
