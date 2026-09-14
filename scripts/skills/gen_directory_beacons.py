@@ -47,7 +47,7 @@ SUMMARIES = {
     "web/nemoclaw/mats/glossary_raw/images": "Images retained with the versioned glossary source material.",
     "web/nemoclaw/vendor": "Pinned same-origin browser dependencies, generated metadata, and license evidence.",
     "web/nemoclaw/vendor/licenses": "Exact license texts shipped for pinned browser dependencies.",
-    "scripts/ci": "Fixed-vocabulary internal GitLab operations for exact artifact retrieval, secret-isolated live review, language-selective publication planning, and the root-installed devbox publisher.",
+    "scripts/ci": "Bounded CI and devbox operators for exact artifacts, secret-isolated review, publication planning, and repository-scoped GitHub agent status.",
     "scripts/cors-proxy/deployable": "History-free, parameterized source for the optional Lambda and CloudFront browser relays. The course does not deploy or operate this stack.",
     "scripts/cors-proxy/deployable/scripts": "Packaging and operator-run smoke checks for the optional relay stack.",
     "scripts/cors-proxy/deployable/src": "Dependency-free Lambda and CloudFront request-routing implementation.",
@@ -72,6 +72,8 @@ GUIDANCE = {
     </ol>
     <p><a href="../../docs/pages_deploy.md">Open the exact <code>glab</code> branch/language commands and runner provisioning steps.</a></p>
     <p>GitLab contains these operations. Public GitHub receives the source and ordinary validation. It receives none of the internal triggers, secrets, protected environments, devbox-runner access, or AWS authority.</p>
+    <p>The optional GitHub bot bridge publishes bounded lifecycle Checks and updates one issue or pull-request comment.</p>
+    <p><a href="../../docs/agent-github-bot.md">Review the bot account boundary, event schema, public-data rules, and devbox setup.</a></p>
   </section>''',
     "scripts/cors-proxy/deployable": '''
   <section aria-labelledby="projection-flow"><h2 id="projection-flow">Verify before use</h2>
