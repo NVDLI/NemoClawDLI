@@ -3,9 +3,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import fs from 'node:fs';
-import { randomId } from '../../web/nemoclaw/scripts/_ids.js';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { discoverGatewayInventory } from './gateway_token_audit.mjs';
 
-const src = fs.readFileSync('web/nemoclaw/scripts/_openclaw.js', 'utf8');
+const { canonical } = discoverGatewayInventory();
+const runtimePath = name => path.join(canonical, 'scripts', name);
+const { randomId } = await import(pathToFileURL(runtimePath('_ids.js')).href);
+const src = fs.readFileSync(runtimePath('_openclaw.js'), 'utf8');
 const m = src.match(/export const GW_CONNECT = `([\s\S]*?)`;\n/);
 if (!m) throw new Error('GW_CONNECT not found');
 const quoteTemplate = value => value.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
@@ -29,7 +34,7 @@ const storageApi = values => ({
 globalThis.localStorage = storageApi(storage);
 globalThis.sessionStorage = storageApi(tabStorage);
 globalThis.location = new URL('https://course.example.test/nemoclaw/03a-kickstart.html');
-const connectionSource = fs.readFileSync('web/nemoclaw/scripts/_connection.js', 'utf8');
+const connectionSource = fs.readFileSync(runtimePath('_connection.js'), 'utf8');
 const connection = await import('data:text/javascript;base64,' + Buffer.from(connectionSource).toString('base64'));
 const opened = [];
 let tokenRefreshes = 0;
