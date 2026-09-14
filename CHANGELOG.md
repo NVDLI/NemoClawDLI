@@ -5,6 +5,10 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Fix Part 3 identifiers on ordinary HTTP and show bounded agent startup progress and failures.
+  Validate discovered browser modules and executable cells across HTTP and secure contexts.
+  Vadim Kudlay contributed this repair with Codex-assisted implementation and independent review.
+
 - Validate model completions and tool batches before recording exercise results. Preserve current
   inputs, cancellation, connection identity, and owned file or scheduled-job evidence across reruns.
   Clarify the twelve lessons and their figures, and move reusable course behavior into shared helpers.

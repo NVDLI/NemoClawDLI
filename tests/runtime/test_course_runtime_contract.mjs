@@ -5,11 +5,17 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import fs from 'node:fs';
 import http from 'node:http';
+import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
-import {execFileSync} from 'node:child_process';
+import {execFileSync, spawn} from 'node:child_process';
 import vm from 'node:vm';
+import {courseServiceFixture} from './course_service_fixture.mjs';
+function staticContentType(file) {
+  return {'.html':'text/html','.htm':'text/html','.js':'text/javascript','.mjs':'text/javascript',
+    '.json':'application/json','.css':'text/css','.svg':'image/svg+xml','.txt':'text/plain'}[path.extname(file)] || 'application/octet-stream';
+}
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const {discoverCourses} = createRequire(import.meta.url)('./course_exercise_fixture.cjs');
@@ -309,7 +315,7 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
     if (!file.startsWith(root+path.sep)) {response.writeHead(403).end();return;}
     fs.readFile(file,(error,body) => {
       if (error) {response.writeHead(404).end();return;}
-      response.writeHead(200,{'content-type':{'.html':'text/html','.js':'text/javascript','.json':'application/json','.css':'text/css','.svg':'image/svg+xml','.txt':'text/plain'}[path.extname(file)]||'application/octet-stream'}).end(body);
+      response.writeHead(200,{'content-type':staticContentType(file)}).end(body);
     });
   });
   await new Promise(resolve => server.listen(0,'127.0.0.1',resolve));
@@ -490,4 +496,496 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
     server.closeAllConnections();
     await new Promise(resolve => server.close(resolve));
   }
+});
+
+test('shared identifiers retain UUID v4 bits and fail without cryptographic randomness', () => {
+  const source = fs.readFileSync(path.join(course, 'scripts/_ids.js'), 'utf8')
+    .replace('export function randomId', 'function randomId') + '\nrandomId;';
+  for (const byte of [0, 255]) {
+    const randomId = vm.runInNewContext(source, {
+      crypto: {getRandomValues: bytes => bytes.fill(byte)},
+      Math: {random() { throw new Error('insecure randomness must never be used'); }},
+    });
+    assert.equal(randomId(), byte === 0
+      ? '00000000-0000-4000-8000-000000000000' : 'ffffffff-ffff-4fff-bfff-ffffffffffff');
+    assert.match(randomId('session-'), /^session-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  }
+  assert.throws(vm.runInNewContext(source), /Cryptographic random values are unavailable/);
+});
+
+test('metadata startup reports retries, cancels promptly and bounds headers and body reads', async () => {
+  const previousFetch = globalThis.fetch;
+  const starting = () => new Response(JSON.stringify({status:'starting'}), {status:503,headers:{'Retry-After':'0'}});
+  try {
+    connect('metadata-startup');
+    let calls=0;
+    const updates=[];
+    globalThis.fetch = async () => ++calls === 1 ? starting() : metadata('ready');
+    const ready = await gateway.openclawBootstrapRequest('/api/agent', {
+      requestTimeoutMs:1000,waitForReadyMs:2000,onRetry:update=>updates.push(update),
+    });
+    assert.equal(ready.status,200);
+    assert.equal(calls,2);
+    assert.equal(updates[0].response.status,503);
+    assert.equal(updates[0].retryMs,250);
+
+    const stop = new AbortController(); calls=0;
+    globalThis.fetch = async () => { calls++; return starting(); };
+    await assert.rejects(gateway.openclawBootstrapRequest('/api/agent', {
+      signal:stop.signal,onRetry:()=>stop.abort(),
+    }), {name:'AbortError'});
+    assert.equal(calls,1);
+
+    for (const phase of ['headers','body']) {
+      let requestSignal;
+      globalThis.fetch = async (_, options) => {
+        requestSignal=options.signal;
+        if (phase === 'headers') return new Promise(()=>{});
+        return new Response(new ReadableStream({start(){}}));
+      };
+      await assert.rejects(gateway.openclawBootstrapRequest('/api/agent', {requestTimeoutMs:20}), /request timed out/);
+      assert.equal(requestSignal.aborted,true);
+    }
+
+    calls=0;
+    globalThis.fetch = async () => { calls++; return starting(); };
+    const saved = await gateway.refreshOpenClawGatewayToken({maxAgeMs:0});
+    assert.equal(saved.source,'saved');
+    assert.equal(saved.token,'fixture-saved-token');
+    assert.equal(calls,1,'saved gateway credentials must not wait for metadata readiness');
+
+    shared.setOpenClawConnection({...shared.getOpenClawConnection(),token:''});
+    calls=0;
+    globalThis.fetch = async () => {
+      calls++;
+      return new Response(JSON.stringify({status:'failed',message:'OpenClaw startup failed. Inspect the course runtime logs, then retry.'}), {status:503});
+    };
+    await assert.rejects(gateway.refreshOpenClawGatewayToken({maxAgeMs:0,
+      onRetry:()=>assert.fail('failed startup must not enter the starting retry loop'),
+    }), /OpenClaw startup failed\. Inspect the course runtime logs/);
+    assert.equal(calls,1);
+  } finally { globalThis.fetch=previousFetch; }
+});
+
+
+test('connection audit clears startup progress when metadata passes, fails or is stopped', async () => {
+  const previousFetch = globalThis.fetch;
+  const previousDocument = globalThis.document, previousWindow = globalThis.window;
+  globalThis.document = {documentElement:{lang:"en"},getElementById:()=>null};
+  globalThis.window = {dispatchEvent:()=>{}};
+  try {
+    for (const outcome of ['passed','failed','stopped']) {
+      const controller = new AbortController();
+      const updates = [];
+      let calls = 0;
+      globalThis.fetch = async () => {
+        calls++;
+        if (calls === 1) return new Response(JSON.stringify({status:'starting'}),
+          {status:503,headers:{'Retry-After':'0'}});
+        return outcome === 'passed' ? metadata('ready')
+          : new Response(JSON.stringify({status:'failed',message:'OpenClaw startup failed.'}), {status:503});
+      };
+      const result = await gateway.runOpenClawConnectionAudit({
+        baseUrl:connect('audit-settlement'),signal:controller.signal,
+        onStep:step=>{
+          updates.push(step);
+          if (step.id !== 'agent-metadata') return;
+          if ((outcome === 'stopped' && step.progress) || step.status !== 'running') controller.abort();
+        },
+      });
+      const metadataUpdates = updates.filter(step=>step.id === 'agent-metadata');
+      assert(metadataUpdates.some(step=>step.status === 'running' && /Retrying/.test(step.progress)),
+        'the audit must publish startup progress while it is waiting');
+      const final = metadataUpdates.at(-1);
+      assert.equal(final.status,outcome === 'passed' ? 'passed' : 'failed');
+      assert.equal(final.progress,undefined,'settled diagnostics must not retain retry instructions');
+      assert.equal(result.checks.find(step=>step.id === 'agent-metadata').progress,undefined);
+      assert.equal(calls,outcome === 'stopped' ? 1 : 2);
+    }
+  } finally {
+    globalThis.fetch=previousFetch; globalThis.document=previousDocument; globalThis.window=previousWindow;
+  }
+});
+
+test('discovered browser workflows load real modules and reject import, name and callable failures in both origins', {timeout:110000}, async () => {
+  const {chromium} = createRequire(path.join(root,'scripts/runtime/package.json'))('playwright-core');
+  const {localCourseOrigins, discoverCoursePages, runtimeFailureSnapshot, assertRuntimeSuccess, assertRuntimeCoverage} =
+    createRequire(import.meta.url)(path.join(root, 'scripts/runtime/browser_environment.cjs'));
+  const requests = [], fixtures = new Map(), moduleOverrides = new Map();
+  let pendingMetadata = null;
+  const server = http.createServer((request, response) => {
+    const pathname = new URL(request.url, 'http://fixture').pathname;
+    if (fixtures.has(pathname)) {
+      response.writeHead(200, {'content-type':'text/html'}).end(fixtures.get(pathname)); return;
+    }
+    if (moduleOverrides.has(pathname)) {
+      response.writeHead(200, {'content-type':'text/javascript'}).end(moduleOverrides.get(pathname)); return;
+    }
+    if (pathname === '/api/agent') {
+      if (pendingMetadata) {
+        const pending = {response,closed:false}; pendingMetadata.push(pending);
+        response.on('close',()=>{pending.closed=true;}); return;
+      }
+      response.writeHead(200, {'content-type':'application/json'}).end(JSON.stringify({
+        agent: {name:'browser-fixture', dashboardUrl:'/#token=fixture-token'},
+      })); return;
+    }
+    const file = path.resolve(root, '.' + pathname);
+    if (!file.startsWith(root + path.sep)) { response.writeHead(403).end(); return; }
+    fs.readFile(file, (error, body) => {
+      if (error) { response.writeHead(404).end(); return; }
+      response.writeHead(200, {'content-type':staticContentType(file)}).end(body);
+    });
+  });
+  await new Promise(resolve => server.listen(0, '0.0.0.0', resolve));
+  let browser;
+  try {
+    browser = await chromium.launch({headless:true, executablePath:execFileSync('python3',
+      ['scripts/runtime/host_browser.py'],{cwd:root,encoding:'utf8'}).trim()});
+    const discovered = discoverCoursePages(course);
+    const part3 = profile.lessons.filter(entry => entry.module === 3).map(entry => path.join(course, entry.id + '.html'));
+    assert(part3.every(file => discovered.includes(file)), 'all declared Part 3 lessons must enter browser discovery');
+    const runtimeUrl = '/' + path.relative(root, path.join(course, 'scripts/_shared.js'));
+    for (const environment of localCourseOrigins(server.address().port)) {
+      const {origin} = environment;
+      const context = await browser.newContext();
+      let service = courseServiceFixture();
+      const cronWorkflows = [];
+      const fixtureErrors = [];
+      await context.route('**/*', route => {
+        const request = route.request(), target = new URL(request.url());
+        if (target.pathname.endsWith('/v1/models')) return route.fulfill({json:{data:[{id:shared.DEFAULT_MODEL}]}});
+        if (target.pathname.endsWith('/chat/completions')) {
+          const payload = request.postDataJSON();
+          const completion = {model:payload.model,choices:[{message:{role:'assistant',content:'Fixture model response.'},finish_reason:'stop'}],usage:{prompt_tokens:1,completion_tokens:3}};
+          if (payload.stream) return route.fulfill({contentType:'text/event-stream',body:'data: '+JSON.stringify({model:payload.model,choices:[{delta:{content:'Fixture model response.'},finish_reason:'stop'}]})+'\n\ndata: [DONE]\n\n'});
+          return route.fulfill({json:completion});
+        }
+        return target.origin === origin ? route.continue() : route.abort();
+      });
+      await context.addInitScript(() => { if (window === window.top) sessionStorage.setItem('nvapi','fixture-model-key'); });
+      await context.routeWebSocket(origin.replace('http:', 'ws:') + '/**', socket => {
+        const target = new URL(socket.url());
+        if (target.pathname === '/ws/terminal') {
+          let reply;
+          try { reply = service.terminal(target.searchParams.get('cmd')); }
+          catch(error) { fixtureErrors.push(String(error)); reply={code:127,data:String(error)}; }
+          socket.send(JSON.stringify({type:'output',data:reply.data}));
+          if (reply.interactive) {
+            let commands = 0;
+            socket.onMessage(() => {
+              socket.send(JSON.stringify({type:'output',data:'Fixture workspace observation.\n'}));
+              if (++commands === 4) socket.send(JSON.stringify({type:'exit',code:0}));
+            });
+          } else socket.send(JSON.stringify({type:'exit',code:reply.code}));
+          return;
+        }
+        assert.equal(target.pathname,'/cli/gateway');
+        socket.onMessage(raw => {
+          const request = JSON.parse(raw); requests.push(request);
+          let payload;
+          try { payload = service.rpc(request.method,request.params); }
+          catch(error) {
+            fixtureErrors.push(String(error));
+            socket.send(JSON.stringify({type:'res',id:request.id,ok:false,error:{message:String(error)}}));
+            return;
+          }
+          socket.send(JSON.stringify({type:'res',id:request.id,ok:true,payload}));
+          if (request.method === 'chat.send') {
+            let answer;
+            try { answer = service.answer(request.params); }
+            catch(error) { fixtureErrors.push(String(error)); answer=String(error); }
+            const event = {sessionKey:request.params.sessionKey,runId:payload.runId};
+            if (request.params.message.includes('HEALTHCHECK_OK')) {
+              for (const data of [{phase:'start',name:'exec'}, {phase:'result',name:'exec',result:{exitCode:0,output:'HEALTHCHECK_OK'}}])
+                socket.send(JSON.stringify({type:'event',event:'agent',payload:{...event,stream:'tool',data}}));
+            }
+            socket.send(JSON.stringify({type:'event',event:'chat',payload:{...event,state:'final',
+              message:{role:'assistant',content:[{type:'text',text:answer}]},
+            }}));
+          }
+        });
+        socket.send(JSON.stringify({type:'event',event:'connect.challenge',payload:{nonce:'fixture'}}));
+      });
+      const page = await context.newPage();
+      const errors = [];
+      page.on('pageerror', error => errors.push(error.message));
+      page.on('response', response => {
+        if (response.request().resourceType() === 'script' && response.status() >= 400) {
+          errors.push(`Module response ${response.status()}: ${response.url()}`);
+        }
+      });
+      page.on('requestfailed', request => {
+        if (request.resourceType() === 'script' && new URL(request.url()).origin === origin) {
+          errors.push(`Module request failed: ${request.url()}: ${request.failure()?.errorText}`);
+        }
+      });
+
+      for (const file of part3) {
+        errors.length = 0;
+        await page.goto(origin + '/' + path.relative(root, file));
+        await page.waitForFunction(() => document.querySelector('.cf-wrap,.rc-card'));
+        assert.equal(await page.evaluate(() => isSecureContext), environment.secure);
+        assertRuntimeSuccess(errors, await page.evaluate(runtimeFailureSnapshot));
+        await page.evaluate(async ({runtimeUrl, origin}) => {
+          const runtime = await import(runtimeUrl);
+          runtime.setOpenClawConnection({rawUrl:origin,token:'fixture-token',accessProvider:'auto',accessSession:''});
+        }, {runtimeUrl,origin});
+        const coverage = await page.evaluate(() => ({
+          cells:[...document.querySelectorAll('.cf-wrap,.rc-card')].map(item => item.id || item.parentElement.id),
+          controls:[...document.querySelectorAll('button,input,textarea,select')]
+            .filter(item=>!item.closest('.cf-wrap,.rc-card'))
+            .map(item=>({tag:item.tagName,id:item.id,label:(item.getAttribute('aria-label')||item.textContent||item.placeholder||'').trim().slice(0,80)})),
+        }));
+        const executed = [], failed = [];
+        const buttons = page.locator('.cf-btn-run,.rc-run');
+        for (let index=0; index<await buttons.count(); index++) {
+          const button = buttons.nth(index);
+          const owner = button.locator('xpath=ancestor::*[contains(concat(" ",normalize-space(@class)," ")," cf-wrap ") or contains(concat(" ",normalize-space(@class)," ")," rc-card ")][1]');
+          const id = await owner.evaluate(item=>item.id||item.parentElement.id);
+          console.log('PART3_BROWSER_RUN', environment.mode, path.basename(file), id);
+          const scheduledBefore = service.scheduled.length;
+          try {
+            await button.evaluate(button => {
+              if (button.disabled) throw new Error('Discovered workflow is disabled');
+              const disclosures=[];
+              for(let parent=button.parentElement;parent;parent=parent.parentElement) {
+                if(parent.tagName==='DETAILS'&&!parent.open) disclosures.push(parent);
+              }
+              for(const disclosure of disclosures.reverse()) disclosure.querySelector(':scope > summary').click();
+            });
+            await button.click();
+            await owner.evaluate(item=>new Promise((resolve,reject)=>{
+              const timer=setTimeout(()=>{observer.disconnect();reject(new Error('Fixture workflow did not settle'));},20000);
+              const observer=new MutationObserver(()=>{
+                if (['succeeded','failed','stopped'].includes(item.dataset.state)) {clearTimeout(timer);observer.disconnect();resolve();}
+              });
+              observer.observe(item,{attributes:true,attributeFilter:['data-state']});
+              if (['succeeded','failed','stopped'].includes(item.dataset.state)) {clearTimeout(timer);observer.disconnect();resolve();}
+            }));
+            const state = await owner.getAttribute('data-state');
+            if (state !== 'succeeded') throw new Error(await owner.innerText());
+            executed.push(id);
+            if (service.scheduled.length > scheduledBefore) cronWorkflows.push({file,id});
+          } catch(error) { failed.push({id,error:String(error).slice(0,700)}); }
+        }
+        const executedHandlers = [];
+        const chatPanels = page.locator('.chatui').filter({has:page.locator('.chatui-text')});
+        for (let index=0; index<await chatPanels.count(); index++) {
+          const panel = chatPanels.nth(index);
+          if (!await panel.isVisible()) continue;
+          const input = panel.locator('.chatui-text');
+          await input.fill('Report which workspace tools are available.');
+          await panel.locator('.chatui-send').click();
+          await panel.locator('.chatui-bot').filter({hasText:'Gateway reply received.'}).waitFor();
+          assert.equal(await panel.locator('.chatui-error').count(),0);
+          executedHandlers.push({panel:await panel.getAttribute('id'),action:'chat input and Send'});
+        }
+        console.log('PART3_BROWSER_INVENTORY', JSON.stringify({environment:environment.mode,
+          page:path.relative(course,file),...coverage,executed,failed,executedHandlers,
+          unexecutedHandlers:coverage.controls.filter(control => control.label !== 'Send' && control.label !== 'Ask a question…')}));
+        assertRuntimeSuccess(errors, await page.evaluate(runtimeFailureSnapshot));
+        assert.deepEqual(failed,[]);
+        assertRuntimeCoverage(await page.evaluate(runtimeFailureSnapshot), executed);
+        assert.deepEqual(fixtureErrors,[]);
+      }
+
+      // Discover scheduling workflows by their observed RPCs, then rerun the same mounted UI.
+      assert(cronWorkflows.length > 0,'no mounted workflow reached the external scheduler');
+      for (const workflow of cronWorkflows) {
+        const route = '/' + path.relative(root,workflow.file);
+        const original = fs.readFileSync(workflow.file,'utf8');
+        const fixedWork = original.replace(/const nonce = [^;\n]+;/,'const nonce = "fixed-work";');
+        const fixedReference = original.replace(/state\.cronReference = [^;\n]+;/,'state.cronReference = "FIXED-REFERENCE";');
+        assert.notEqual(fixedWork,original,'work-identity mutation did not reach the scheduled workflow');
+        assert.notEqual(fixedReference,original,'reference mutation did not reach the scheduled workflow');
+        for (const [name,body,noSecondWrite] of [
+          ['fresh',original,false],['constant-work',fixedWork,false],['constant-reference',fixedReference,false],
+          ['stale-prior-file',original,true],['stale-reused-path',fixedWork,true],
+        ]) {
+          service = courseServiceFixture(); fixtures.set(route,body); errors.length=0;
+          await page.goto(origin+route);
+          await page.evaluate(async ({runtimeUrl,origin})=>{
+            const runtime=await import(runtimeUrl);
+            runtime.setOpenClawConnection({rawUrl:origin,token:'fixture-token',accessProvider:'auto',accessSession:''});
+          },{runtimeUrl,origin});
+          const owner=page.locator('[id="'+workflow.id+'"]');
+          const button=owner.locator('.cf-btn-run');
+          await button.evaluate(button=>{
+            for(let p=button.parentElement;p;p=p.parentElement) if(p.tagName==='DETAILS') p.open=true;
+          });
+          for (let iteration=0;iteration<2;iteration++) {
+            service.scheduler.write=!(noSecondWrite&&iteration===1);
+            await button.click();
+            await owner.evaluate(item=>new Promise((resolve,reject)=>{
+              const timer=setTimeout(()=>{observer.disconnect();reject(new Error('Scheduled workflow did not settle'));},10000);
+              const observer=new MutationObserver(()=>{
+                if(['succeeded','failed','stopped'].includes(item.dataset.state)){clearTimeout(timer);observer.disconnect();resolve();}
+              });
+              observer.observe(item,{attributes:true,attributeFilter:['data-state']});
+              if(['succeeded','failed','stopped'].includes(item.dataset.state)){clearTimeout(timer);observer.disconnect();resolve();}
+            }));
+            const expected=noSecondWrite&&iteration===1?'failed':'succeeded';
+            assert.equal(await owner.getAttribute('data-state'),expected,await owner.innerText());
+          }
+          const records=service.scheduled.map(job=>{
+            const match=job.payload.message.match(/Write exactly (\S+) to (\/sandbox\/[^ ]+)\./);
+            assert(match,'scheduler request lacks an independently observable file/reference');
+            return {id:job.id,name:job.name,reference:match[1],file:match[2]};
+          });
+          assert.equal(records.length,2,'both invocations must create their own scheduled work');
+          const [first,second]=records;
+          const freshWork=()=>{
+            assert.notEqual(first.name,second.name,'scheduled name was reused');
+            assert.notEqual(first.file,second.file,'scheduled file path was reused');
+          };
+          const freshReference=()=>assert.notEqual(first.reference,second.reference,'scheduled reference was reused');
+          if(name==='constant-work'||name==='stale-reused-path') assert.throws(freshWork,/was reused/);
+          else freshWork();
+          if(name==='constant-reference') assert.throws(freshReference,/was reused/);
+          else freshReference();
+          assert.deepEqual(service.rpc('cron.list',{}).jobs,[],'both runs must remove only their owned work');
+          assert.deepEqual(service.terminalReads.slice(-2),records.map(record=>record.file));
+          if(noSecondWrite) {
+            assert.equal(service.files.get(first.file),first.reference+'\n','prior evidence must remain present');
+            assert.deepEqual(service.scheduledRuns.map(run=>({status:run.status,wrote:run.wrote})),
+              [{status:'ok',wrote:true},{status:'ok',wrote:false}]);
+            if(name==='stale-reused-path') assert.match(await owner.innerText(),/did not produce the expected file reference/);
+          } else assertRuntimeSuccess(errors,await page.evaluate(runtimeFailureSnapshot));
+          assert.deepEqual(fixtureErrors,[]);
+          console.log('CRON_FRESHNESS',JSON.stringify({environment:environment.mode,scenario:name,records,
+            secondWrite:!noSecondWrite,secondState:await owner.getAttribute('data-state')}));
+        }
+        fixtures.delete(route);
+      }
+
+      const gatewayPath='/' + path.relative(root,path.join(course,'scripts/_openclaw.js'));
+      const gatewaySource=fs.readFileSync(path.join(course,'scripts/_openclaw.js'),'utf8');
+      for(const entry of ['chat','connect']) for(const mutated of [false,true]) {
+        const source=entry==='chat'
+          ? gatewaySource.replace('const refreshed = await refreshOpenClawGatewayToken({ signal,',
+              'const refreshed = await refreshOpenClawGatewayToken({')
+          : gatewaySource.replace('const refreshedGateway = await helpers.refreshOpenClawGatewayToken({\n  signal: helpers.signal,',
+              'const refreshedGateway = await helpers.refreshOpenClawGatewayToken({');
+        assert.notEqual(source,gatewaySource,'signal mutation did not reach its bootstrap entry point');
+        if(mutated) moduleOverrides.set(gatewayPath,source);
+        const stopRoute='/contract-pages/pending-metadata.html';
+        const code=entry==='chat'?'await helpers.openclawChat("Question", {signal:helpers.signal});':null;
+        fixtures.set(stopRoute,'<!doctype html><main><div id="stop-workflow"></div></main><script type="module">'
+          + `import {mountCanvasFlow,GW_CONNECT,setOpenClawConnection} from '${runtimeUrl}';`
+          + 'setOpenClawConnection({rawUrl:location.origin,token:"",accessProvider:"auto",accessSession:""});'
+          + `mountCanvasFlow('#stop-workflow',{nodes:[{id:'bootstrap',title:'Connect',code:${code?JSON.stringify(code):'GW_CONNECT'}}]});</script>`);
+        const stoppedContext=await browser.newContext(), sockets=[];
+        await stoppedContext.routeWebSocket(origin.replace('http:','ws:')+'/**',socket=>{sockets.push(socket.url());socket.close();});
+        const stoppedPage=await stoppedContext.newPage();
+        pendingMetadata=[];
+        try {
+          await stoppedPage.goto(origin+stopRoute);
+          const run=stoppedPage.locator('#stop-workflow .cf-btn-run');
+          await run.click();
+          await until(()=>pendingMetadata.length===1);
+          const pending=pendingMetadata[0];
+          assert.equal(pending.closed,false,'metadata must still be pending before Stop');
+          await run.click();
+          const promptlyClosed=()=>until(()=>pending.closed);
+          if(mutated) await assert.rejects(promptlyClosed,/fixture did not reach/);
+          else await promptlyClosed();
+          assert.deepEqual(sockets,[],'Stop during metadata must not open a gateway or start a turn');
+          if(!mutated) await stoppedPage.waitForFunction(()=>document.querySelector('#stop-workflow')?.dataset.state==='stopped');
+          console.log('METADATA_STOP',JSON.stringify({environment:environment.mode,entry,mutated,
+            transportClosed:pending.closed,sockets:sockets.length}));
+        } finally {
+          for(const pending of pendingMetadata) pending.response.destroy();
+          pendingMetadata=null; moduleOverrides.delete(gatewayPath);fixtures.delete(stopRoute);
+          await stoppedContext.close();
+        }
+      }
+
+      const modulePage = body => '<!doctype html><div id="exercise"></div><script type="module">' + body + '</script>';
+      const mutations = [
+        ['missing-export', `import { nonexistentExport } from '${runtimeUrl}';`],
+        ['missing-import', "import '/contract-pages/deleted-module.js';"],
+        ['node-only-import', "await import('node:fs');"],
+        ['missing-package', "await import('missing-browser-package');"],
+        ['undefined-reference', 'missingRuntimeBinding();'],
+        ['noncallable-operation', `import {mountRunCell} from '${runtimeUrl}'; mountRunCell('#exercise',{code:'const operation = {}; operation.run();'});`],
+        ['success', `import {mountRunCell} from '${runtimeUrl}'; mountRunCell('#exercise',{code:'return {observed:7};'});`],
+      ];
+      for (const [name, body] of mutations) {
+        const route = '/contract-pages/nested/' + name + '.html';
+        fixtures.set(route, modulePage(body)); errors.length = 0;
+        await page.goto(origin + route);
+        if (['noncallable-operation','success'].includes(name)) {
+          await page.locator('#exercise .rc-run').click();
+          await page.waitForFunction(() => ['succeeded','failed'].includes(document.querySelector('#exercise')?.dataset.state));
+        }
+        const snapshot = await page.evaluate(runtimeFailureSnapshot);
+        if (name === 'success') assertRuntimeSuccess(errors, snapshot);
+        else assert.throws(() => assertRuntimeSuccess(errors, snapshot), /pageErrors|failedCells/, name);
+      }
+      for (const removeButton of [false,true]) {
+        const route = '/contract-pages/coverage.html';
+        fixtures.set(route,modulePage(`import {mountRunCell} from '${runtimeUrl}'; mountRunCell('#exercise',{code:'return 1;'});`));
+        await page.goto(origin + route);
+        await page.locator('#exercise .rc-run').waitFor();
+        if (removeButton) await page.locator('#exercise .rc-run').evaluate(button=>button.remove());
+        const pageSnapshot = await page.evaluate(runtimeFailureSnapshot);
+        assert.throws(() => assertRuntimeCoverage(pageSnapshot,[]), /unexecuted/);
+      }
+      const delayedRoute = '/contract-pages/delayed-document.html';
+      fixtures.set(delayedRoute, '<!doctype html><main><h1>Delayed exercise</h1><div id="exercise"></div></main>'
+        + `<script type="module">import {mountRunCell} from '${runtimeUrl}'; setTimeout(()=>mountRunCell('#exercise',{code:'return 7;'}),100);</script>`);
+      const harness = await new Promise((resolve,reject) => {
+        const child = spawn(process.execPath,[path.join(root,'scripts/runtime/test_page_runtime.js'),
+          '--course-document',origin + delayedRoute],{cwd:root,env:process.env});
+        let output='';
+        child.stdout.on('data',chunk=>{output+=chunk;});
+        child.stderr.on('data',chunk=>{output+=chunk;});
+        const deadline=setTimeout(()=>{child.kill();reject(new Error('Delayed-document browser harness did not finish'));},15000);
+        child.on('error',error=>{clearTimeout(deadline);reject(error);});
+        child.on('close',code=>{clearTimeout(deadline);resolve({code,output});});
+      });
+      assert.equal(harness.code,0,harness.output);
+      assert.match(harness.output,/RUNTIME_COVERAGE:/,'late document mounts must execute rather than pass as static render');
+      assert.match(harness.output,/"id":"exercise","state":"succeeded"/);
+      await context.close();
+    }
+    const turns = requests.filter(request => request.method === 'chat.send');
+    assert(turns.length > 0,'actual displayed workflows must reach the gateway');
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+    requests.forEach(request => assert.equal(typeof request.id,'string'));
+    assert.equal(new Set(requests.map(request=>request.id)).size,requests.length);
+    turns.forEach(request => assert.match(request.params.idempotencyKey, uuid));
+    const reviewTurns=turns.filter(request=>request.params.sessionKey.startsWith('quick-3b-general-')||request.params.sessionKey.startsWith('quick-3b-review-'));
+    assert.equal(new Set(reviewTurns.map(request=>request.params.sessionKey)).size,4);
+  } finally {
+    await browser?.close(); server.closeAllConnections();
+    await new Promise(resolve => server.close(resolve));
+  }
+});
+
+test('browser page discovery follows new, renamed, deleted and malformed declarations', () => {
+  const {discoverCoursePages, localCourseOrigins} = createRequire(import.meta.url)(path.join(root, 'scripts/runtime/browser_environment.cjs'));
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'browser-discovery-'));
+  try {
+    const file = path.join(temporary, 'nested/novel.html'); fs.mkdirSync(path.dirname(file));
+    fs.writeFileSync(file, '<script>mountRunCell("#x", {code:"return 1"});</script>');
+    assert.deepEqual(discoverCoursePages(temporary), [file]);
+    fs.writeFileSync(file, '<script type="module">import {mountRunCell as mount} from "./runtime.js"; mount /* comment */ ("#x", {code:"return 1"});</script>');
+    assert.deepEqual(discoverCoursePages(temporary), [file]);
+    fs.writeFileSync(file, '<script type="module">const missing = {}; missing.operation();</script>');
+    assert.deepEqual(discoverCoursePages(temporary), [file]);
+    const renamed = path.join(path.dirname(file), 'renamed.htm'); fs.renameSync(file,renamed);
+    assert.deepEqual(discoverCoursePages(temporary), [renamed]);
+    fs.unlinkSync(renamed); assert.deepEqual(discoverCoursePages(temporary), []);
+    fs.writeFileSync(path.join(temporary,'learning-profile.json'), JSON.stringify({lessons:[{id:'nested/renamed'}]}));
+    assert.throws(() => discoverCoursePages(temporary), /missing/);
+    fs.writeFileSync(path.join(temporary,'learning-profile.json'), '{broken');
+    assert.throws(() => discoverCoursePages(temporary), SyntaxError);
+    fs.writeFileSync(path.join(temporary,'learning-profile.json'), JSON.stringify({lessons:null}));
+    assert.throws(() => discoverCoursePages(temporary), /lessons array/);
+    fs.writeFileSync(path.join(temporary,'learning-profile.json'), JSON.stringify({lessons:[{id:null}]}));
+    assert.throws(() => discoverCoursePages(temporary), /invalid lesson ID/);
+    assert.throws(() => localCourseOrigins(4173,{}), /non-loopback/);
+  } finally { fs.rmSync(temporary,{recursive:true,force:true}); }
 });

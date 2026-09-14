@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import fs from 'node:fs';
+import { randomId } from '../../web/nemoclaw/scripts/_ids.js';
 
 const src = fs.readFileSync('web/nemoclaw/scripts/_openclaw.js', 'utf8');
 const m = src.match(/export const GW_CONNECT = `([\s\S]*?)`;\n/);
@@ -53,6 +54,7 @@ class FakeWebSocket {
 globalThis.WebSocket = FakeWebSocket;
 
 const helpers = {
+  randomId,
   log: msg => logs.push(String(msg)),
   fetch: async () => { throw new Error('GW_CONNECT must not probe a retired metadata route'); },
   refreshOpenClawGatewayToken: async () => { tokenRefreshes++; return { token: 'test-token', source: 'metadata' }; },

@@ -1087,9 +1087,9 @@ def audit_owned_cron(source: str, name: str) -> list[str]:
               f'{name}: cron-owner: remove the retained ID, never a name-selected job')
         _need(findings, bool(re.search(r'\. id === state \. ' + re.escape(identifier) + r'\b', flat)),
               f'{name}: cron-cleanup: verify owned-job absence before clearing recovery state')
-    _need(findings, 'crypto . randomUUID (' in flat and 'sessionStorage . setItem (' in flat
+    _need(findings, 'sessionStorage . setItem (' in flat
           and 'sessionStorage . getItem (' in flat and bool(re.search(r'state \. \w+ !== owner', flat)),
-          f'{name}: cron-owner: unique work and gateway-bound recovery must prevent overlapping jobs')
+          f'{name}: cron-owner: gateway-bound recovery must prevent overlapping jobs')
     _need(findings, 'finally {' in flat and 'cron.list' in source and 'sessionStorage . removeItem (' in flat
           and 'courseCleanupSocket ?. close (' in flat,
           f'{name}: cron-cleanup: cleanup must verify removal and close its reserved transport on every exit')

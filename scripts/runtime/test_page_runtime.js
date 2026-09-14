@@ -9,6 +9,7 @@
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
+const {localCourseOrigins, runtimeFailureSnapshot, hasRuntimeFailures, runtimeCoverageFindings} = require('./browser_environment.cjs');
 
 function courseDefaultModel() {
   const source = fs.readFileSync(
@@ -23,7 +24,8 @@ const COURSE_DEFAULT_MODEL = courseDefaultModel();
 
 const args = process.argv.slice(2);
 const smoke = args.includes('--smoke');
-const renderOnly = args.includes('--render-only');
+let renderOnly = args.includes('--render-only');
+const courseDocument = args.includes('--course-document');
 const gatewayOnly = args.includes('--gateway-only');
 const cronContract = args.includes('--cron-contract');
 const terminalContract = args.includes('--terminal-contract');
@@ -31,9 +33,18 @@ const chatContract = args.includes('--chat-contract');
 const assistantArtifacts = args.includes('--assistant-artifacts');
 const serveStatic = args.includes('--serve-static');
 const DEFAULT_LAB_URL = 'http://127.0.0.1:4173/nemoclaw/01a-loop.html';
-const STATIC_SERVER_URL = 'http://127.0.0.1:4173';
+let staticServerHost = '127.0.0.1';
 const LOOPBACK_ORIGIN = 'http:' + '//127.0.0.1';
-const url = args.find(a => !['--smoke', '--render-only', '--gateway-only', '--cron-contract', '--terminal-contract', '--chat-contract', '--assistant-artifacts', '--serve-static', '--self-test-redaction', '--self-test-access-boundary', '--self-test-direct-fallback'].includes(a)) || DEFAULT_LAB_URL;
+let url = args.find(a => !['--smoke', '--render-only', '--course-document', '--gateway-only', '--cron-contract', '--terminal-contract', '--chat-contract', '--assistant-artifacts', '--serve-static', '--self-test-redaction', '--self-test-access-boundary', '--self-test-direct-fallback'].includes(a)) || DEFAULT_LAB_URL;
+const localOriginMode = process.env.COURSE_BROWSER_ORIGIN_MODE || 'loopback';
+if (!['lab-http', 'loopback'].includes(localOriginMode)) throw new Error('Unknown COURSE_BROWSER_ORIGIN_MODE');
+if (serveStatic && ['127.0.0.1', 'localhost'].includes(new URL(url).hostname)) {
+  const selectedOrigin = localCourseOrigins(4173).find(item => item.mode === localOriginMode);
+  const localUrl = new URL(url);
+  localUrl.host = new URL(selectedOrigin.origin).host;
+  staticServerHost = localUrl.hostname;
+  url = localUrl.href;
+}
 const CLAW_URL = process.env.CLAW_URL || '';
 let CLAW_TOKEN = process.env.CLAW_TOKEN || '';
 const CLAW_ACCESS_SESSION = process.env.CLAW_ACCESS_SESSION || process.env.CLAW_CF || '';
@@ -214,7 +225,7 @@ function startStaticServer() {
     }
   });
   return new Promise(resolve => {
-    server.listen(4173, '127.0.0.1', () => resolve(server));
+    server.listen(4173, staticServerHost, () => resolve(server));
   });
 }
 
@@ -360,7 +371,7 @@ function findChrome() {
   let staticServer = null;
   if (serveStatic) {
     staticServer = await startStaticServer();
-    console.log('STATIC_SERVER: ' + STATIC_SERVER_URL);
+    console.log('STATIC_SERVER: http://' + staticServerHost + ':4173');
   }
 
   const executablePath = findChrome();
@@ -395,7 +406,7 @@ function findChrome() {
     return route.continue();
   });
 
-  if (!smoke && !renderOnly) await preflightOpenClaw();
+  if (!smoke && !renderOnly && !courseDocument) await preflightOpenClaw();
 
   if (smoke) {
     await page.goto('data:text/html,<main id="ok">lab runtime smoke</main>');
@@ -522,16 +533,30 @@ function findChrome() {
   });
 
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
-  if (NVIDIA_API_KEY) {
-    await page.evaluate(async apiKey => {
-      const runtime = await import(new URL("./scripts/_shared.js", document.baseURI).href);
-      runtime.setKey(apiKey);
-    }, NVIDIA_API_KEY);
+  if (serveStatic && new URL(url).port === '4173') {
+    const expected = localCourseOrigins(4173).find(item=>item.origin === new URL(url).origin);
+    if (expected && await page.evaluate(()=>globalThis.isSecureContext) !== expected.secure)
+      throw new Error(`Browser origin contract failed for ${expected.mode}`);
   }
   await page.waitForTimeout(2000);
-  // Render checks include foyer manifest probes. Let those finite HEAD requests settle before
-  // closing Chromium; otherwise Playwright reports the close itself as net::ERR_ABORTED.
-  if (renderOnly) await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+  if (renderOnly || courseDocument) await page.waitForLoadState('networkidle', {timeout:5000}).catch(()=>{});
+  if (courseDocument && !renderOnly) {
+    const discovered = await page.evaluate(runtimeFailureSnapshot);
+    renderOnly = discovered.cells.length === 0;
+    if (!smoke && !renderOnly) await preflightOpenClaw();
+  }
+  const sharedRuntimeUrl = await page.evaluate(()=>{
+    const owners = [...new Set(performance.getEntriesByType('resource').map(entry=>entry.name)
+      .filter(name=>/\/scripts\/_shared\.js(?:$|\?)/.test(name)))];
+    if (owners.length > 1) throw new Error('Multiple shared course runtimes loaded on one page');
+    return owners[0] || new URL('./scripts/_shared.js',document.baseURI).href;
+  });
+  if (NVIDIA_API_KEY && !renderOnly) {
+    await page.evaluate(async ([apiKey,runtimeUrl])=>{
+      const runtime = await import(runtimeUrl);
+      runtime.setKey(apiKey);
+    },[NVIDIA_API_KEY,sharedRuntimeUrl]);
+  }
 
   if (assistantArtifacts) {
     if (!NVIDIA_API_KEY) throw new Error('--assistant-artifacts requires NVIDIA_API_KEY');
@@ -649,7 +674,9 @@ function findChrome() {
     console.log('PAGE_ERRORS:', JSON.stringify(errors));
     console.log('RESOURCE_ERRORS:', JSON.stringify(resourceErrors));
     const significantResourceErrors = resourceErrors.filter(x => !/favicon\.ico/.test(x) && !/integrate\.api\.nvidia\.com\/v1\/models/.test(x));
-    const fail = errors.length > 0 || significantResourceErrors.length > 0 || !pageInfo.hasMain
+    const documentCoverageChanged = courseDocument && !args.includes('--render-only')
+      && (await page.evaluate(runtimeFailureSnapshot)).cells.length > 0;
+    const fail = documentCoverageChanged || errors.length > 0 || significantResourceErrors.length > 0 || !pageInfo.hasMain
       || pageInfo.uglyCellButtons > 0 || pageInfo.plainCodeLabels > 0;
     console.log(fail ? 'RESULT: FAIL (render errors)' : 'RESULT: PASS (static render)');
     await browser.close();
@@ -888,11 +915,13 @@ function findChrome() {
       const button = document.querySelectorAll('.cf-btn-run,.rc-run')[i];
       const flow = button?.closest('.cf-wrap');
       const runCell = button?.closest('.rc-card');
+      const owner = flow || runCell;
       const source = flow
         ? [...flow.querySelectorAll('textarea.cf-panel-code')]
             .map(textarea => textarea.value || textarea.textContent || '').join('\n')
         : (runCell?.querySelector('textarea.rc-code')?.value || '');
       return {
+        id:owner?.id || owner?.parentElement?.id || `cell-${i + 1}`,
         kind: flow ? 'canvas-flow' : 'run-cell',
         label: (flow?.querySelector('.cf-label')?.textContent ||
           runCell?.querySelector('.rc-label')?.textContent || `cell ${i + 1}`).trim(),
@@ -1012,8 +1041,12 @@ function findChrome() {
   });
   console.log('EXPECTED_ACCESS_PROBE_ERRORS:', expectedProbeErrors.length);
   console.log('ACTIONABLE_PAGE_ERRORS:', JSON.stringify(actionableErrors));
-  const hardFail = actionableErrors.length > 0 || unrecoveredResourceErrors.length > 0 ||
-    nodeErr || cellErr || !settled || noRunnableCells;
+  const discoveredRuntime = await page.evaluate(runtimeFailureSnapshot);
+  console.log('RUNTIME_COVERAGE:', JSON.stringify(discoveredRuntime));
+  const coverageGaps = runtimeCoverageFindings(discoveredRuntime, cellRuns.map(cell => cell.id));
+  console.log('RUNTIME_COVERAGE_GAPS:', JSON.stringify(coverageGaps));
+  const hardFail = hasRuntimeFailures(actionableErrors, discoveredRuntime, unrecoveredResourceErrors) ||
+    Object.values(coverageGaps).some(entries => entries.length) || nodeErr || cellErr || !settled || noRunnableCells;
   // Supplying a launchable makes gateway evidence mandatory even when
   // /api/agent fails to discover a token. Otherwise an authentication or relay
   // regression can erase the token and silently disable the live assertion.

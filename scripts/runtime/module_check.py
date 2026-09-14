@@ -2,80 +2,25 @@
 # Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Verify ES-module import/export integrity across every discovered web course.
+"""Parse browser scripts and verify their complete static module linkage.
 
-The course pages and the _*.js modules import named bindings from ./_shared.js, and _shared.js
-re-exports the names it pulls from the extracted modules (_glossary.js, _openclaw.js, ...). When
-an extraction drops a name from that re-export, every page importing it breaks at load with
-"does not provide an export named X". That is exactly how glossary.html broke once. render_check catches
-that in a real browser; this catches the same class statically in milliseconds with no browser, so
-it is cheap enough to run on every commit.
+The pinned browser compiler resolves default, named, namespace, side-effect, dynamic-literal
+imports and re-export chains. HTML script bodies retain their actual page-relative resolution.
+Recursive discovery includes new courses and .mjs files. Every HTML script is checked without
+filename exemptions. External imports are reported for browser execution.
 
-Two checks per discovered directory:
-  1. Every `import { a, b } from "./mod.js"` resolves to a real export of mod.js (re-exports
-     count, since `export { a }` is itself an export).
-  2. Every name a module lists in `export { ... }` is defined in that module or imported into
-     it (no re-exporting a name you never brought in).
-
-Course roots are discovered from ``web/*/interface-inventory.json`` and the complete web tree is
-checked recursively. A newly added course therefore enters this gate without a registry edit or
-course-name allowlist. ``--dir`` remains available for focused diagnosis only.
-
-Usage:
-    python3 scripts/runtime/module_check.py                  # web plus every discovered course
-    python3 scripts/runtime/module_check.py --dir web/nemoclaw  # focused diagnosis
-Exit non-zero on any unresolved import or dangling re-export, so it works as a gate.
+This gate does not infer values produced by executing code or strings passed to cell runtimes.
+Known Node built-ins and owning-package declarations resolve runtime dependencies only; they
+do not prove browser applicability. Those require the actual browser execution gate, including
+its supported origin environments.
 """
-import argparse, re, sys
+import argparse, json, re, subprocess, sys
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
+from html_document import raw_text_blocks
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-_DECL = re.compile(r'\bexport\s+(?:async\s+)?(?:function|const|let|var|class)\s+([A-Za-z_$][\w$]*)')
-_EXPORT_BLOCK = re.compile(r'\bexport\s*\{([^}]*)\}')
 _IMPORT_BLOCK = re.compile(r'\bimport\s*\{([^}]*)\}\s*from\s*["\']([^"\']+)["\']')
-_LOCAL_DECL = re.compile(r'\b(?:function|const|let|var|class)\s+([A-Za-z_$][\w$]*)')
-_DECLARATOR = re.compile(r'(?:\b(?:const|let|var)\s+|,)\s*([A-Za-z_$][\w$]*)\s*=')
-
-
-def _names_in_clause(clause, want="exported"):
-    """Yield the binding names a `{ ... }` import/export clause introduces.
-    For `A as B`: the exported name is B; the imported name needed from the source is A."""
-    for part in clause.split(","):
-        part = part.strip()
-        if not part:
-            continue
-        m = re.match(r'([A-Za-z_$][\w$]*)\s+as\s+([A-Za-z_$][\w$]*)', part)
-        if m:
-            yield m.group(2) if want == "exported" else m.group(1)
-        else:
-            m2 = re.match(r'([A-Za-z_$][\w$]*)', part)
-            if m2:
-                yield m2.group(1)
-
-
-def parse_exports(src):
-    names = set(_DECL.findall(src))
-    for blk in _EXPORT_BLOCK.finditer(src):
-        # Count re-export-from names as real exports of this module.
-        names.update(_names_in_clause(blk.group(1), "exported"))
-    return names
-
-
-def parse_imports(src):
-    """-> list of (source_module, [names_needed_from_it])."""
-    out = []
-    for m in _IMPORT_BLOCK.finditer(src):
-        out.append((m.group(2), list(_names_in_clause(m.group(1), "imported"))))
-    return out
-
-
-def local_bindings(src):
-    """Names defined or imported in a module (for the honest-re-export check)."""
-    # _LOCAL_DECL catches function/class and the first variable declarator. _DECLARATOR also
-    # catches later names in ``const a = 1, b = 2`` as emitted by reviewed minified ESM bundles.
-    names = set(_LOCAL_DECL.findall(src)) | set(_DECLARATOR.findall(src))
-    for m in _IMPORT_BLOCK.finditer(src):
-        names.update(_names_in_clause(m.group(1), "exported"))  # local alias is the binding name
-    return names
 
 
 def unused_imports(src):
@@ -96,54 +41,40 @@ def unused_imports(src):
 
 
 def check_root(root: Path, *, dead: bool = False) -> tuple[list[str], int, list[str]]:
-    """Return integrity findings, module count, and advisory dead-import rows for one root."""
+    """Parse every script and link modules at their actual browser-relative locations."""
     if not root.is_dir():
         return ["module_check: no such dir: " + str(root)], 0, []
-    # Recursive discovery is deliberate: courses may keep modules in runtime/, scripts/, or a
-    # shared sibling. Relative imports are resolved to their actual file rather than flattened to
-    # a basename, so two courses may safely use the same module filename.
-    module_files = sorted(root.rglob("*.js"))
-    exports = {f.resolve(): parse_exports(f.read_text(encoding="utf-8")) for f in module_files}
-
+    files = sorted(path for path in root.rglob('*') if path.is_file()
+                   and path.suffix.lower() in {'.html', '.htm', '.js', '.mjs'})
+    entries = []
     problems = []
-
-    # Check 1: every relative-import name resolves.
-    files = sorted(root.rglob("*.html")) + module_files
     for f in files:
         src = f.read_text(encoding="utf-8")
-        for mod, names in parse_imports(src):
-            if not mod.startswith("."):
-                continue  # external (CDN) import
-            target_path = (f.parent / mod).resolve()
-            if target_path not in exports:
-                # A focused --dir may import a shared sibling. Resolve that concrete module too,
-                # while still rejecting missing paths and never scanning an unrelated allowlist.
-                if target_path.is_file() and target_path.suffix == ".js":
-                    exports[target_path] = parse_exports(target_path.read_text(encoding="utf-8"))
-                else:
-                    problems.append("%s imports from %s, which does not resolve to a JavaScript module" % (f, mod))
-                    continue
-            if target_path not in exports:
+        if f.suffix.lower() in {'.js', '.mjs'}:
+            entries.append({'file': str(f.resolve()), 'source': src, 'module': f.suffix == '.mjs'})
+            continue
+        for block in raw_text_blocks(src, 'script'):
+            kind = block.attributes.get('type', '').strip().lower()
+            if kind not in {'', 'module', 'text/javascript', 'application/javascript'}:
                 continue
-            for n in names:
-                if n not in exports[target_path]:
-                    problems.append("%s imports `%s` from %s, but %s does not export it"
-                                    % (f, n, mod, target_path))
-
-    # Check 2: re-exported names are actually present in the module.
-    for f in module_files:
-        name = f.name
-        src = f.read_text(encoding="utf-8")
-        local = local_bindings(src)
-        for blk in _EXPORT_BLOCK.finditer(src):
-            # `export { x } from "./y"` brings x straight through; not a dangling re-export.
-            tail = src[blk.end():blk.end() + 40]
-            if re.match(r'\s*from\s*["\']', tail):
+            external = block.attributes.get('src')
+            if external:
+                if not re.match(r'^(?:[a-z][a-z0-9+.-]*:|//)', external, re.I):
+                    pathname = unquote(urlsplit(external).path)
+                    target = (root / pathname.lstrip('/') if pathname.startswith('/') else f.parent / pathname).resolve()
+                    if not target.is_file():
+                        problems.append(f'{f}: script src does not resolve: {external}')
                 continue
-            for n in _names_in_clause(blk.group(1), "imported"):
-                if n not in local:
-                    problems.append("%s re-exports `%s` but never defines or imports it" % (name, n))
-
+            # Leading newlines retain source line numbers in compiler diagnostics.
+            entries.append({'file': str(f.resolve()),
+                            'source': '\n' * src[:block.body_start].count('\n') + block.body,
+                            'module': kind == 'module'})
+    result = subprocess.run(['node', str(Path(__file__).with_name('module_linkage.mjs'))],
+                            input=json.dumps(entries), capture_output=True, text=True)
+    if result.returncode:
+        return problems + ['module compiler failed: ' + result.stderr.strip()], 0, []
+    report = json.loads(result.stdout)
+    problems.extend(report['findings'])
     dead_rows = []
     if dead:
         for f in files:
@@ -151,7 +82,8 @@ def check_root(root: Path, *, dead: bool = False) -> tuple[list[str], int, list[
             if names:
                 dead_rows.append("%s: dead import(s): %s" % (f.name, ", ".join(names)))
 
-    return problems, len(exports), dead_rows
+    dead_rows.extend('external module requires browser execution: ' + row for row in report['external'])
+    return problems, report['modules'], dead_rows
 
 
 def discover_roots(web: Path) -> list[Path]:
@@ -185,7 +117,7 @@ def main():
         for p in all_problems:
             print("  ✗ " + p)
         sys.exit(1)
-    print("module_check: %d modules across %d discovered root(s); all imports resolve and all re-exports are honest" % (total_modules, len(roots)))
+    print("module_check: %d modules across %d discovered root(s); static module linkage passed; runtime values require browser execution" % (total_modules, len(roots)))
 
 
 if __name__ == "__main__":

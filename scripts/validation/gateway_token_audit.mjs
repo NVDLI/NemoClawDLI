@@ -311,8 +311,8 @@ export function audit(overrides = {}) {
   }
   findings.push(...gatewayLifecycleFindings(files.helper), ...INVENTORY.findings);
   if (!files.helper.includes('export async function refreshOpenClawGatewayToken(')
-      || !files.helper.includes('const refreshed = await refreshOpenClawGatewayToken({ signal });')
-      || !files.helper.includes('const refreshedGateway = await helpers.refreshOpenClawGatewayToken({ signal: helpers.signal });')
+      || !/const\s+refreshed\s*=\s*await\s+refreshOpenClawGatewayToken\(\{\s*signal\s*[,}]/.test(files.helper)
+      || !/const\s+refreshedGateway\s*=\s*await\s+helpers\.refreshOpenClawGatewayToken\(\{\s*signal\s*:\s*helpers\.signal\s*[,}]/.test(files.helper)
       || !bootstrap
       || !files.helper.includes('await openclawBootstrapRequest("/api/agent"')
       || !files.helper.includes('gatewayTokenFromAgentMetadata(response.json)')
