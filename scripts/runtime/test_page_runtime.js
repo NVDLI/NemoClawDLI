@@ -9,7 +9,7 @@
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
-const {localCourseOrigins, runtimeFailureSnapshot, hasRuntimeFailures, runtimeCoverageFindings} = require('./browser_environment.cjs');
+const { resolveChrome, localCourseOrigins, runtimeFailureSnapshot, hasRuntimeFailures, runtimeCoverageFindings} = require('./browser_environment.cjs');
 
 function courseDefaultModel() {
   const source = fs.readFileSync(
@@ -337,36 +337,6 @@ async function preflightOpenClaw() {
   throw new Error(`OpenClaw preflight failed. ${attempts.join(' | ')}. ${OPENCLAW_BACKUP_HINT}`);
 }
 
-function findChrome() {
-  if (process.env.CHROME_BIN && fs.existsSync(process.env.CHROME_BIN)) return process.env.CHROME_BIN;
-  const roots = [
-    process.env.PLAYWRIGHT_BROWSERS_PATH || '/tmp/pw-browsers',
-    '/sandbox/.cache/ms-playwright',
-    `${process.env.HOME || '/root'}/.cache/ms-playwright`,
-  ];
-  for (const root of roots) {
-    let dirs = [];
-    try { dirs = fs.readdirSync(root); } catch { continue; }
-    for (const d of dirs) {
-      const candidates = [
-        `${root}/${d}/chrome-headless-shell-linux64/chrome-headless-shell`,
-        `${root}/${d}/chrome-linux/chrome`,
-        `${root}/${d}/chrome-linux64/chrome`,
-      ];
-      for (const bin of candidates) if (fs.existsSync(bin)) return bin;
-    }
-  }
-  for (const bin of ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome']) {
-    if (fs.existsSync(bin)) return bin;
-  }
-  for (const bin of [
-    '/Applications/Chromium.app/Contents/MacOS/Chromium',
-    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
-  ]) if (fs.existsSync(bin)) return bin;
-  return null;
-}
-
 (async () => {
   let staticServer = null;
   if (serveStatic) {
@@ -374,11 +344,7 @@ function findChrome() {
     console.log('STATIC_SERVER: http://' + staticServerHost + ':4173');
   }
 
-  const executablePath = findChrome();
-  if (!executablePath) {
-    console.error('FATAL: Chromium/Chrome not found. Install it for your OS or set CHROME_BIN.');
-    process.exit(1);
-  }
+  const executablePath = resolveChrome({chromium: pw.chromium});
   console.log('CHROME:', executablePath || 'playwright default');
 
   const launchOptions = { headless: true, args: ['--no-sandbox'] };
