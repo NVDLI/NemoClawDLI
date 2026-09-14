@@ -51,7 +51,7 @@ CODEMIRROR_CDN_RE = re.compile(
 )
 REVIEWED_CODEMIRROR_MODES = {"css", "htmlmixed", "javascript", "python", "xml"}
 EXACT_VERSION_RE = re.compile(r"(\d+)\.(\d+)\.(\d+)(?:[-+][0-9A-Za-z.-]+)?")
-MINIMUM_BROWSER_PACKAGE_VERSIONS = {"codemirror": (5, 65, 21)}
+MINIMUM_BROWSER_PACKAGE_VERSIONS = {"codemirror": (5, 65, 21), "js-yaml": (5, 4, 1)}
 CODEMIRROR_CDN_SRI = {
     "lib/codemirror.min.css": "sha384-5051nNF3/zZWmqR8xLbnEemOtE5aiJ1EQkEq9vNXYOnGP/3BgYGknkOKuic0TtLg",
     "theme/monokai.min.css": "sha384-quTpEUSU3EctO0q/LujapVfLi1W2HzJSa8AYlphQqdUVu4xv3L0FpJM4qiGlFtSG",
@@ -412,6 +412,10 @@ def self_test() -> list[str]:
     codemirror_row = next(row for row in changed["packages"] if row["name"] == "codemirror")
     codemirror_row["version"] = "5.65.16"
     tests.append(("browser security floor", changed, {}, "below supported security floor"))
+    changed = copy.deepcopy(manifest)
+    yaml_row = next(row for row in changed["packages"] if row["name"] == "js-yaml")
+    yaml_row["version"] = "5.2.2"
+    tests.append(("YAML package floor", changed, {}, "below supported security floor"))
     changed = copy.deepcopy(manifest)
     changed["delivery"] = "public-cdn"
     tests.append(("delivery boundary", changed, {}, "same-origin-vendored"))
