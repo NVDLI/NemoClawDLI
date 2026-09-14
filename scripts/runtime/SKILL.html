@@ -24,6 +24,7 @@
     "scripts/runtime/test_page_runtime.js",
     "scripts/runtime/browser_runtime_test.sh",
     "scripts/runtime/host_browser.py",
+    "scripts/runtime/browser_environment.cjs",
     "scripts/runtime/browser-runtime.json",
     "scripts/runtime/package.json",
     "scripts/runtime/pnpm-lock.yaml"
@@ -91,6 +92,11 @@
       "path": "browser_runtime_test.sh",
       "role": "host browser runtime entrypoint",
       "desc": "Runs the pinned Playwright API against an installed Chromium or compatible Chrome without building a repository image."
+    },
+    {
+      "path": "browser_environment.cjs",
+      "role": "shared browser environment",
+      "desc": "Owns executable discovery for Python, Node and shell entry points, local browser origins, course-page discovery and runtime coverage."
     },
     {
       "path": "host_browser.py",
