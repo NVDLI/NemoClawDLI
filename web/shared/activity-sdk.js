@@ -266,6 +266,27 @@ export function createActivityClient({
     else storage.save(null);
   }
 
+  function retainRenewedExpiry(operation, session, result) {
+    if (!result || typeof result !== 'object' || !Object.hasOwn(result, 'expires_at')) return;
+    const current = storage.load();
+    if (!sameSession(current, session)) return;
+    const renewedExpiresAt = result.expires_at;
+    const renewedTimestamp = typeof renewedExpiresAt === 'string'
+      ? Date.parse(renewedExpiresAt)
+      : Number.NaN;
+    if (!Number.isFinite(renewedTimestamp)) {
+      diagnostic(operation, 'validation');
+      throw new ActivitySdkError('Activity response is invalid', {
+        code: 'invalid_response', operation, category: 'validation',
+      });
+    }
+    let validated;
+    try { validated = validateSession(current); }
+    catch (_) { return; }
+    if (renewedTimestamp <= Date.parse(validated.expires_at)) return;
+    storage.save({ ...validated, expires_at: renewedExpiresAt });
+  }
+
   async function refreshSession(rejectedSession) {
     const current = storage.load();
     if (current && !sameSession(current, rejectedSession)) {
@@ -320,11 +341,15 @@ export function createActivityClient({
 
   async function authenticatedWrite(operation, suffix, body, idempotencyKey) {
     const key = requireIdempotencyKey(idempotencyKey);
-    const write = async session => requestJson(
-      operation,
-      `/v1/activity-sessions/${encodeURIComponent(session.session_id)}/${suffix}`,
-      { body, session, idempotencyKey: key },
-    );
+    const write = async session => {
+      const response = await requestJson(
+        operation,
+        `/v1/activity-sessions/${encodeURIComponent(session.session_id)}/${suffix}`,
+        { body, session, idempotencyKey: key },
+      );
+      retainRenewedExpiry(operation, session, response.result);
+      return response;
+    };
     return withAuthenticationRefresh(write);
   }
 

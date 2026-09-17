@@ -561,6 +561,131 @@ test('an expired stored session is replaced', async () => {
   assert.deepEqual(storage.load(), replacement);
 });
 
+test('accepted writes retain renewed expiry and reuse one session', async () => {
+  let currentTime = '2026-08-19T20:00:00Z';
+  const calls = [];
+  const storage = createMemoryActivityStorage();
+  const client = createActivityClient({
+    baseUrl: 'https://activity.example.test', artifact, storage,
+    now: () => new Date(currentTime),
+    fetchImpl: async (url, init) => {
+      calls.push({ url, init });
+      if (url.endsWith('/activity-sessions')) {
+        return jsonResponse(201, sessionResponse());
+      }
+      if (url.endsWith('/referrals')) {
+        return jsonResponse(201, {
+          referral_id: 'referral-1', expires_at: '2026-08-19T21:50:00Z',
+        });
+      }
+      return jsonResponse(201, {
+        update_id: 'update-1', expires_at: '2026-08-19T22:01:00Z',
+        state: { progress_percent: 10 },
+      });
+    },
+  });
+
+  await client.ensureSession();
+  currentTime = '2026-08-19T20:50:00Z';
+  await client.recordReferral({
+    referenceId: 'brev:course-lab',
+    destinationUrl: 'https://brev.nvidia.com/',
+    idempotencyKey: 'referral-key',
+  });
+  currentTime = '2026-08-19T21:01:00Z';
+  await client.recordProgress({ progressPercent: 10, idempotencyKey: 'progress-key' });
+
+  assert.equal(calls.filter(call => call.url.endsWith('/activity-sessions')).length, 1);
+  assert.equal(calls.length, 3);
+  assert.equal(storage.load().expires_at, '2026-08-19T22:01:00Z');
+});
+
+test('out-of-order write responses cannot move stored expiry backwards', async () => {
+  const storage = createMemoryActivityStorage(sessionResponse());
+  const responses = [];
+  let markBothStarted;
+  const bothStarted = new Promise(resolve => { markBothStarted = resolve; });
+  const client = createActivityClient({
+    baseUrl: 'https://activity.example.test', artifact, storage,
+    now: () => new Date('2026-08-19T20:00:00Z'),
+    fetchImpl: async () => new Promise(resolve => {
+      responses.push(resolve);
+      if (responses.length === 2) markBothStarted();
+    }),
+  });
+
+  const earlier = client.recordProgress({ progressPercent: 10, idempotencyKey: 'earlier' });
+  const later = client.recordProgress({ progressPercent: 20, idempotencyKey: 'later' });
+  await bothStarted;
+  responses[1](jsonResponse(201, {
+    update_id: 'later', expires_at: '2026-08-19T22:00:00Z',
+    state: { progress_percent: 20 },
+  }));
+  await later;
+  responses[0](jsonResponse(201, {
+    update_id: 'earlier', expires_at: '2026-08-19T21:30:00Z',
+    state: { progress_percent: 10 },
+  }));
+  await earlier;
+
+  assert.equal(storage.load().expires_at, '2026-08-19T22:00:00Z');
+});
+
+test('a late write response cannot update a replacement session', async () => {
+  const original = sessionResponse();
+  const replacement = sessionResponse({
+    session_id: '019f38f1-e5ab-7688-af0d-0e8925299e94',
+    session_token: 'replacement-session-token-safe-length',
+  });
+  const storage = createMemoryActivityStorage(original);
+  let resolveWrite;
+  let markWriteStarted;
+  const writeStarted = new Promise(resolve => { markWriteStarted = resolve; });
+  const client = createActivityClient({
+    baseUrl: 'https://activity.example.test', artifact, storage,
+    now: () => new Date('2026-08-19T20:00:00Z'),
+    fetchImpl: async () => new Promise(resolve => {
+      resolveWrite = resolve;
+      markWriteStarted();
+    }),
+  });
+
+  const write = client.recordProgress({ progressPercent: 10, idempotencyKey: 'progress-key' });
+  await writeStarted;
+  storage.save(replacement);
+  resolveWrite(jsonResponse(201, {
+    update_id: 'update-1', expires_at: '2026-08-19T22:00:00Z',
+    state: { progress_percent: 10 },
+  }));
+  await write;
+
+  assert.deepEqual(storage.load(), replacement);
+});
+
+test('a malformed renewed expiry is rejected without changing storage', async () => {
+  const session = sessionResponse();
+  const storage = createMemoryActivityStorage(session);
+  const diagnostics = [];
+  const client = createActivityClient({
+    baseUrl: 'https://activity.example.test', artifact, storage,
+    now: () => new Date('2026-08-19T20:00:00Z'),
+    onDiagnostic: event => diagnostics.push(event),
+    fetchImpl: async () => jsonResponse(201, {
+      update_id: 'update-1', expires_at: 'not-a-timestamp',
+      state: { progress_percent: 10 },
+    }),
+  });
+
+  await assert.rejects(
+    client.recordProgress({ progressPercent: 10, idempotencyKey: 'progress-key' }),
+    error => error instanceof ActivitySdkError && error.code === 'invalid_response' &&
+      error.operation === 'progress' && error.category === 'validation',
+  );
+  assert.deepEqual(storage.load(), session);
+  assert.deepEqual(diagnostics, [{ operation: 'progress', category: 'validation' }]);
+  assert.equal(JSON.stringify(diagnostics).includes(session.session_token), false);
+});
+
 test('referral and progress writes use bearer and idempotency headers', async () => {
   const calls = [];
   const client = createActivityClient({
