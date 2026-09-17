@@ -129,6 +129,12 @@ provenance binds the deployed artifact to the exact reviewed commit.
 
 ## Validate Before Pushing
 
+The public validation entry point is `bash scripts/build/course_contribute.sh`. Its `doctor`,
+`fast-gate`, `ship-gate`, and `build-pages` modes use the existing repository checks. See
+[`docs/lab_runtime_testing.md`](docs/lab_runtime_testing.md) for setup and the executor contract.
+No personal agent skill, private service, or corporate account is needed for local validation.
+The following direct commands remain available in the prepared execution environment:
+
 ```bash
 python3 scripts/validation/release_gate.py --tier fast --no-write --changed-since origin/main --jobs 4
 ```
