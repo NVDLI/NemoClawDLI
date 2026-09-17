@@ -47,9 +47,9 @@ policy change, or handoff.
   is a failed preflight, even when the build otherwise passes.
 - `one-terminal-owner`: Send a handoff with exact SHAs, overlapping files, verified evidence,
   remaining failures, and the new owner. The sending thread stops duplicate monitoring.
-- `no-host-repository-python`: On macOS, use the installed Apple Container course-testing skill for
-  repository Python, validators, generators, inspections, and one-off probes. The host shell may
-  orchestrate the container.
+- `no-host-repository-python`: On macOS, run repository Python, validators, generators,
+  inspections, and one-off probes in an authorized Linux environment. The host shell may
+  orchestrate the selected executor; no personal skill installation is required.
 
 ## Keep the public path self-sufficient
 
@@ -64,37 +64,31 @@ and artifacts must remain outside the public candidate.
 
 ## Use the contribution facade
 
-Use the installed Apple Container course-testing facade as the default interface for GitHub
-contributions. It turns the contribution lifecycle into one status command and one guarded next
-action:
+The public validation entry point ships with this checkout:
 
 ```bash
-CONTRIBUTE="$HOME/.codex/skills/apple-container-course-testing/scripts/course_contribute.py"
-python3 "$CONTRIBUTE" --repo "$PWD" status
+bash scripts/build/course_contribute.sh doctor
+bash scripts/build/course_contribute.sh fast-gate
+bash scripts/build/course_contribute.sh ship-gate
+bash scripts/build/course_contribute.sh build-pages
 ```
 
-Run the command named by `NEXT`; do not reconstruct an equivalent sequence with `gh` or ad hoc API
-calls. The supported lifecycle is:
+Install its public dependencies using [runtime testing](../../../docs/lab_runtime_testing.md).
+On Linux, the shell entry point runs the repository-owned `course_contribute.py`. On macOS,
+select an authorized Linux executor as documented there. The wrapper never invokes `gh`,
+loads no credentials, and performs no signing, push, pull-request, merge, or deployment operation.
+Its source and tests are versioned with the course; installing a separate skill is unnecessary.
 
-- `status`: report the local tree, DCO, signature, exact-build evidence, remote head, pull request,
-  checks, merge state, and one next action;
-- `candidate`: turn staged bytes into one GitHub-signed candidate, round-trip its parent and tree,
-  run the exact Pages build, and push the verified branch;
-- `repair-signature`: replace a clean one-commit unsigned pull-request head with an identical
-  GitHub-signed tree after `--dry-run` proves the repair plan;
-- `submit`: validate and create the pull request for the exact candidate;
-- `watch`: follow every exact-head workflow and check to a terminal result;
-- `merge`: re-read protection, approval, signature, head, and check state before guarded merge;
-- `watch-main`: bind the merged commit to the main-branch workflows and Pages result.
+The direct commands in `CONTRIBUTING.md` remain the complete fallback contract. Run them in the
+same prepared environment and preserve every required gate when the wrapper is unavailable.
 
-The facade reads GitHub authentication through Git's credential helper, never prints the secret,
-never invokes `gh`, and fails closed if the branch, tree, signature, DCO, build, review, or check
-evidence changes. Its host-side Python orchestrates Git, GitHub, and Apple Container; it does not
-run repository Python on macOS.
-
-If the facade is not installed, this skill remains the complete fallback contract: follow the
-steps below with contributor-owned Git and GitHub tooling, preserve every invariant, and install
-the `apple-container-course-testing` skill before running repository validation on macOS.
+An optional operator facade may provide `status`, `candidate`, `repair-signature`, `submit`,
+`watch`, `merge`, and `watch-main`. These are lifecycle operations, not commands supplied by
+the public validation wrapper. Inspect their effects before use: candidate creation and signature
+repair can write remote state. Follow contributor-owned Git and public host procedures when no
+operator facade is installed. Obtain authorization for each class of mutation; a passing check
+never grants publication authority. Preserve the remote commit round trip, verified signatures,
+DCO, exact-head checks, and independently required review through either route.
 
 ## Work in the cheapest valid order
 
@@ -104,10 +98,11 @@ the `apple-container-course-testing` skill before running repository validation 
 4. Run the changed-surface preflight: execute each owning standalone audit and focused test before
    the aggregate gate. Generalize a repaired detector with deletion, rename, malformed near-match,
    and novel-path mutations.
-5. On macOS, run Apple Container `doctor`, then one `fast-gate` after focused checks are clear.
+5. Run the public `doctor`, then `fast-gate` after focused checks are clear. Run `ship-gate`
+   before publication. On macOS, execute these through the authorized Linux environment.
 6. Create the final candidate. If the host creates the commit, complete the remote round trip before
    updating the contribution ref.
-7. Regenerate tracked projections, then run Apple Container `build-pages` on the exact final commit.
+7. Regenerate tracked projections, then run `build-pages` on the exact final commit.
    Require the build snapshot and host source tree to remain clean.
 8. Push, inspect every required repository and host-owned check on that exact head, and read complete
    failing logs.
