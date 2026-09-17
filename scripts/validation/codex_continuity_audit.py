@@ -476,6 +476,26 @@ def audit(root: Path = ROOT, files: list[Path] | None = None) -> list[str]:
         if token not in skill_raw:
             findings.append(f"{normalized_skill}: missing contribution facade token {token!r}")
 
+    public_validation = contract.get("public_validation")
+    if not isinstance(public_validation, dict) or set(public_validation) != {"entrypoint", "implementation", "guide"}:
+        findings.append(f"{CONTRACT_PATH}: public_validation must declare entrypoint, implementation, and guide")
+    else:
+        for role, value in public_validation.items():
+            if not isinstance(value, str) or not value or Path(value).is_absolute() or ".." in Path(value).parts:
+                findings.append(f"{CONTRACT_PATH}: invalid public validation {role}")
+                continue
+            path = Path(value)
+            if path not in source_set or not _is_regular_repo_file(root, path):
+                findings.append(f"{CONTRACT_PATH}: public validation {role} is not a regular tracked repository file: {path}")
+            if role == "entrypoint" and value not in skill_raw:
+                findings.append(f"{normalized_skill}: missing public validation entrypoint route")
+    # Discover new and renamed skill manifests; private install paths cannot own public setup.
+    for path in sorted(source_set):
+        if path.name == SKILL_MANIFEST and _is_regular_repo_file(root, path):
+            raw = _read_utf8(root, path, findings) or ""
+            if re.search(r"(?:\$HOME|\$\{HOME\}|~)/+\.(?:codex|agents)/+skills/+", raw):
+                findings.append(f"{path}: personal skill installation cannot be a public prerequisite")
+
     agents_raw = _read_utf8(root, AGENTS_PATH, findings) or ""
     for token in (normalized_skill.as_posix(), CONTRACT_PATH.as_posix()):
         if token not in agents_raw:

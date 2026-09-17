@@ -75,6 +75,9 @@ class CodexContinuityAuditTests(unittest.TestCase):
             Path(".codex/hooks/continuity.sh"),
             Path(".agents/skills/nemoclaw-contribution/SKILL.md"),
             Path(".agents/skills/nemoclaw-contribution/agents/openai.yaml"),
+            Path("scripts/build/course_contribute.sh"),
+            Path("scripts/build/course_contribute.py"),
+            Path("docs/lab_runtime_testing.md"),
         ]
         for path in paths:
             (root / path).parent.mkdir(parents=True, exist_ok=True)
@@ -89,6 +92,9 @@ class CodexContinuityAuditTests(unittest.TestCase):
             Path(".agents/skills/nemoclaw-contribution/SKILL.md"),
             Path(".agents/skills/nemoclaw-contribution/agents/openai.yaml"),
             Path("SKILL.html"),
+            Path("scripts/build/course_contribute.sh"),
+            Path("scripts/build/course_contribute.py"),
+            Path("docs/lab_runtime_testing.md"),
         ):
             (root / path).write_text((ROOT / path).read_text(encoding="utf-8"), encoding="utf-8")
         (root / "AGENTS.md").write_text(
@@ -478,6 +484,57 @@ class CodexContinuityAuditTests(unittest.TestCase):
                 for item in audit.audit(root, paths)
             )
         )
+
+    def test_public_validation_files_must_exist(self) -> None:
+        for role in ("entrypoint", "implementation", "guide"):
+            with self.subTest(role=role):
+                temporary, root, paths = self.fixture()
+                self.addCleanup(temporary.cleanup)
+                contract = json.loads((root / ".codex/continuity-contract.json").read_text())
+                target = Path(contract["public_validation"][role])
+                (root / target).unlink()
+                paths.remove(target)
+                self.assertTrue(any("public validation" in item for item in audit.audit(root, paths)))
+
+    def test_renamed_public_entrypoint_is_discovered(self) -> None:
+        temporary, root, paths = self.fixture()
+        self.addCleanup(temporary.cleanup)
+        old = Path("scripts/build/course_contribute.sh")
+        new = Path("scripts/build/review_course.sh")
+        (root / old).rename(root / new)
+        paths.remove(old)
+        paths.append(new)
+        contract_path = root / ".codex/continuity-contract.json"
+        contract = json.loads(contract_path.read_text())
+        contract["public_validation"]["entrypoint"] = new.as_posix()
+        contract_path.write_text(json.dumps(contract))
+        skill = root / ".agents/skills/nemoclaw-contribution/SKILL.md"
+        skill.write_text(skill.read_text().replace(old.as_posix(), new.as_posix()))
+        self.assertEqual([], audit.audit(root, paths))
+
+    def test_malformed_public_route_is_rejected(self) -> None:
+        for value in (None, [], {"entry-point": "scripts/build/course_contribute.sh"},
+                      {"entrypoint": "../outside", "implementation": "missing.py", "guide": "missing.md"}):
+            with self.subTest(value=value):
+                temporary, root, paths = self.fixture()
+                self.addCleanup(temporary.cleanup)
+                file = root / ".codex/continuity-contract.json"
+                contract = json.loads(file.read_text())
+                contract["public_validation"] = value
+                file.write_text(json.dumps(contract))
+                self.assertTrue(any("public validation" in item or "public_validation" in item
+                                    for item in audit.audit(root, paths)))
+
+    def test_new_and_renamed_skills_cannot_require_personal_installation(self) -> None:
+        for package, prefix in (("new-check", "$HOME"), ("renamed-check", "\u007e"),
+                                ("nested/check", "\u0024{HOME}")):
+            with self.subTest(package=package):
+                temporary, root, paths = self.fixture()
+                self.addCleanup(temporary.cleanup)
+                skill, _ = self.write_skill(root, paths, Path(".agents/skills") / package)
+                with (root / skill).open("a") as handle:
+                    handle.write("\nRun " + prefix + "/.codex/skills/private/run before validation.\n")
+                self.assertTrue(any("personal skill installation" in item for item in audit.audit(root, paths)))
 
     def test_malformed_skill_metadata_is_rejected(self) -> None:
         temporary, root, paths = self.fixture()
