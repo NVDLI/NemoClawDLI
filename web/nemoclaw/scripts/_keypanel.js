@@ -49,13 +49,14 @@ export function mountKeyPanel(container, opts = {}) {
           <input type="checkbox" class="iframe-proxy-toggle" ${proxyChecked ? "checked" : ""} ${customEndpoint || filePreview ? "disabled" : ""}/>
           ${customEndpoint ? "Custom endpoint uses direct browser requests" : filePreview ? "Local file preview uses the NVIDIA DLI browser relay" : "Use the NVIDIA DLI browser relay"}
         </label>
+        <p class="relay-help">The NVIDIA DLI browser relay forwards your model requests and bearer key to the NVIDIA API so this static page can make requests across browser origins. It does not supply a key or model access. Keep it enabled for the default NVIDIA route; custom endpoints receive requests directly.</p>
         <details class="request-settings">
           <summary>Request handling: wait ${timeoutSeconds}s · ${requestPolicy.retries} automatic ${requestPolicy.retries === 1 ? "retry" : "retries"}</summary>
           <p>Failures stay visible. Retries apply only to network failures, HTTP 429, and transient 5xx responses.</p>
-          <label>Wait for response headers or the next stream chunk (seconds)</label>
-          <input type="number" class="request-timeout" min="5" max="300" step="5" value="${timeoutSeconds}"/>
-          <label>Automatic retries before streaming starts</label>
-          <input type="number" class="request-retries" min="0" max="5" step="1" value="${requestPolicy.retries}"/>
+          <label>Wait for response headers or the next stream chunk (seconds)
+          <input type="number" class="request-timeout" min="5" max="300" step="5" value="${timeoutSeconds}"/></label>
+          <label>Automatic retries before streaming starts
+          <input type="number" class="request-retries" min="0" max="5" step="1" value="${requestPolicy.retries}"/></label>
           <button class="btn request-save-btn" type="button">Save request handling</button>
           <span class="request-status" role="status"></span>
         </details>
@@ -87,37 +88,38 @@ export function mountKeyPanel(container, opts = {}) {
       };
     } else {
       el.innerHTML = `<div class="key-panel">
-        <label>Chat API base URL</label>
-        <input type="url" class="model-api-base-url" value="${_attr(modelApiBaseUrl)}"
-               placeholder="https://integrate.api.nvidia.com/v1" autocomplete="off" spellcheck="false"/>
-        <label>Chat model ID</label>
-        <input type="text" class="model-id" value="${_attr(modelId)}"
-               placeholder="model/provider-id" autocomplete="off" spellcheck="false"/>
-        <label>Chat API bearer key (NVIDIA keys start with <code>nvapi-</code>)</label>
-        <input type="password" class="model-api-key" placeholder="nvapi-&hellip;" autocomplete="off" spellcheck="false"/>
+        <label>Chat API base URL
+          <input type="url" class="model-api-base-url" value="${_attr(modelApiBaseUrl)}"
+               placeholder="https://integrate.api.nvidia.com/v1" autocomplete="off" spellcheck="false"/></label>
+        <label>Chat model ID
+          <input type="text" class="model-id" value="${_attr(modelId)}"
+               placeholder="model/provider-id" autocomplete="off" spellcheck="false"/></label>
+        <label>Chat API bearer key (NVIDIA keys start with <code>nvapi-</code>)
+          <input type="password" class="model-api-key" placeholder="nvapi-&hellip;" autocomplete="off" spellcheck="false"/></label>
         <label class="iframe-proxy-toggle-row">
           <input type="checkbox" class="iframe-proxy-toggle" ${proxyChecked ? "checked" : ""} ${filePreview ? "disabled" : ""}/>
           ${filePreview ? "Local file preview uses the NVIDIA DLI browser relay" : "Use the NVIDIA DLI browser relay"}
         </label>
+        <p class="relay-help">The NVIDIA DLI browser relay forwards your model requests and bearer key to the NVIDIA API so this static page can make requests across browser origins. It does not supply a key or model access. Keep it enabled for the default NVIDIA route; custom endpoints receive requests directly.</p>
         <details class="embedding-route">
           <summary>Embedding route (persistent and independent)</summary>
           <p>Embedding exercises keep this route when the chat route changes.</p>
-          <label>Embedding API base URL</label>
+          <label>Embedding API base URL
           <input type="url" class="embedding-api-base-url" value="${_attr(embeddingApiBaseUrl)}"
-                 placeholder="https://integrate.api.nvidia.com/v1" autocomplete="off" spellcheck="false"/>
-          <label>Embedding model ID</label>
+                 placeholder="https://integrate.api.nvidia.com/v1" autocomplete="off" spellcheck="false"/></label>
+          <label>Embedding model ID
           <input type="text" class="embedding-model-id" value="${_attr(embeddingModelId)}"
-                 placeholder="nvidia/nemotron-3-embed-1b" autocomplete="off" spellcheck="false"/>
-          <label>Embedding API bearer key</label>
-          <input type="password" class="embedding-api-key" placeholder="${getEmbeddingKey() ? "saved separately" : "nvapi-&hellip;"}" autocomplete="off" spellcheck="false"/>
+                 placeholder="nvidia/nemotron-3-embed-1b" autocomplete="off" spellcheck="false"/></label>
+          <label>Embedding API bearer key
+          <input type="password" class="embedding-api-key" placeholder="${getEmbeddingKey() ? "saved separately" : "nvapi-&hellip;"}" autocomplete="off" spellcheck="false"/></label>
         </details>
         <details class="request-settings">
           <summary>Request handling</summary>
           <p>Failures remain visible. Retries are off by default and apply only before a stream starts.</p>
-          <label>Wait for response headers or the next stream chunk (seconds)</label>
-          <input type="number" class="request-timeout" min="5" max="300" step="5" value="${timeoutSeconds}"/>
-          <label>Automatic retries for network, HTTP 429, or transient 5xx failures</label>
-          <input type="number" class="request-retries" min="0" max="5" step="1" value="${requestPolicy.retries}"/>
+          <label>Wait for response headers or the next stream chunk (seconds)
+          <input type="number" class="request-timeout" min="5" max="300" step="5" value="${timeoutSeconds}"/></label>
+          <label>Automatic retries for network, HTTP 429, or transient 5xx failures
+          <input type="number" class="request-retries" min="0" max="5" step="1" value="${requestPolicy.retries}"/></label>
         </details>
         <button class="btn">Save &amp; verify</button>
         <div class="status"></div>

@@ -80,9 +80,9 @@ export { diagramSVG, mountDiagram };
 // Re-export figure helpers so page imports and helper menus stay stable.
 import { ganttBarsSVG, mountFigures, openFigureLightbox, wireFigureZoom } from "./_figures.js";
 export { ganttBarsSVG, mountFigures, openFigureLightbox, wireFigureZoom };
-import { mountLanguageMenu } from "./_locale.js";
+import { mountLanguageMenu, localizeCourseUiText } from "./_locale.js";
 export { mountLanguageMenu };
-import { mountLearningView } from "./_learning.js";
+import { mountLearningView, revealHashTarget } from "./_learning.js";
 export { mountLearningView };
 import { mountCourseAssistant, mountCourseLicenseNote } from "./_course_assistant.js";
 export { mountCourseAssistant, mountCourseLicenseNote };
@@ -311,6 +311,9 @@ export function setKey(k) {
     else sessionStorage.removeItem("nvapi");
     sessionStorage.removeItem("nvapi_ok");
   } catch (_) {}
+  if (typeof window !== 'undefined' && typeof window.CustomEvent === 'function') {
+    window.dispatchEvent(new window.CustomEvent('nemoclaw:prerequisites'));
+  }
 }
 export function hasKey() { return !!getKey(); }
 
@@ -581,9 +584,14 @@ export async function readModelJson(resp, signal = null) {
     }
     return JSON.parse(content + decoder.decode());
   } finally {
-    try { await reader.cancel(); } catch (_) {}
+    cancelModelReader(reader);
     reader.releaseLock();
   }
+}
+
+function cancelModelReader(reader, reason) {
+  // Transport cleanup must not hold a timeout or learner Stop open indefinitely.
+  try { Promise.resolve(reader.cancel(reason)).catch(() => {}); } catch (_) {}
 }
 
 export async function readModelStreamChunk(reader, timeoutMs, signal = null) {
@@ -605,7 +613,7 @@ export async function readModelStreamChunk(reader, timeoutMs, signal = null) {
       }),
     ]);
   } catch (error) {
-    try { await reader.cancel(error); } catch (_) {}
+    cancelModelReader(reader, error);
     throw error;
   } finally {
     clearTimeout(timer);
@@ -700,7 +708,7 @@ export async function chatStream(opts, onChunk, extra = {}) {
     }
   }
   } finally {
-    try { await reader.cancel(); } catch (_) {}
+    cancelModelReader(reader);
     reader.releaseLock();
   }
 
@@ -1245,7 +1253,7 @@ export function mountThemeToggle() {
   btn.className = "theme-toggle";
   btn.type = "button";
   btn.setAttribute("aria-label", "Toggle dark or light theme");
-  btn.style.cssText = "flex:0 0 auto;margin-left:10px;width:30px;height:30px;display:inline-flex;" +
+  btn.style.cssText = "flex:0 0 auto;width:30px;height:30px;display:inline-flex;" +
     "align-items:center;justify-content:center;font-size:15px;line-height:1;cursor:pointer;" +
     "background:transparent;color:var(--td);border:1px solid var(--bd);border-radius:7px;";
   function paint() {
@@ -1485,21 +1493,19 @@ export function mountGoingFurtherLayout(root = document) {
   const lessonDisclosure = root.createElement("details");
   lessonDisclosure.className = "learning-block deployment-lessons";
   const lessonSummary = root.createElement("summary");
-  const lessonScope = root.createElement("span");
-  lessonScope.className = "learning-scope";
-  lessonScope.textContent = lessonEyebrow?.textContent.trim() || "Lessons";
   const lessonQuestion = root.createElement("span");
   lessonQuestion.className = "learning-question";
   lessonQuestion.textContent = lessonHeading?.textContent.trim() || "Review before deployment";
-  lessonSummary.append(lessonScope, lessonQuestion);
+  lessonSummary.append(lessonQuestion);
   lessonEyebrow?.remove();
   lessonHeading?.remove();
   lessonDisclosure.append(lessonSummary, deploymentLessons);
   whereSection.append(lessonDisclosure);
 
   const assistantButtonRow = assistantButton.closest("p");
-  const assistantCallout = assistantButtonRow?.previousElementSibling;
-  const assistantParagraph = assistantCallout?.previousElementSibling;
+  const previousAssistantNode = assistantButtonRow?.previousElementSibling;
+  const assistantCallout = previousAssistantNode?.classList.contains('callout') ? previousAssistantNode : null;
+  const assistantParagraph = assistantCallout ? assistantCallout.previousElementSibling : previousAssistantNode;
   const assistantHeading = assistantParagraph?.previousElementSibling;
   const builtParagraphs = [...built.querySelectorAll(":scope > p")];
   trimAfterFirstSentence(builtParagraphs.at(-1));
@@ -1509,13 +1515,14 @@ export function mountGoingFurtherLayout(root = document) {
   const interfaceHeading = carryInterface.querySelector(":scope > h2");
   if (knowledgeIntro) knowledgeIntro.textContent = pageText.knowledgeIntro;
   if (interfaceHeading) interfaceHeading.textContent = pageText.interfaceHeading;
-  if (assistantParagraph && assistantCallout && assistantButtonRow) {
+  if (assistantParagraph?.matches('p') && assistantButtonRow) {
     assistantParagraph.textContent = pageText.assistantPrompt;
     assistantButton.textContent = pageText.assistantButton;
     const handoff = root.createElement("div");
     handoff.className = "going-further-assistant";
     handoff.append(assistantParagraph, assistantButtonRow);
-    built.append(assistantCallout, handoff);
+    if (assistantCallout) built.append(assistantCallout);
+    built.append(handoff);
   }
   if (assistantHeading?.matches("h2")) assistantHeading.remove();
 
@@ -1526,7 +1533,6 @@ export function mountGoingFurtherLayout(root = document) {
   whereSection.dataset.goingFurtherSection = "next";
   learningPath.dataset.goingFurtherSection = "learning-path";
   readingList.dataset.goingFurtherSection = "sources";
-  readingList.removeAttribute("data-learning-always-open");
   readingList.open = false;
 
   whereNext.replaceWith(whereSection);
@@ -1574,6 +1580,7 @@ export function mountHeadingLinks() {
   if (!main) return;
   const occupied = new Set([...document.querySelectorAll("[id]")].map((node) => node.id));
   main.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach((heading) => {
+    if (heading.closest('[hidden]')) return;
     if (heading.classList.contains("heading-link-target")) return;
     // A heading inside any interactive surface already inherits that surface's
     // action. Adding a permalink would create competing nested controls: linked
@@ -1602,12 +1609,59 @@ export function mountHeadingLinks() {
       heading.append(title);
     }
   });
+  revealHashTarget();
+  mountLessonOutline(main);
+}
+
+function mountLessonOutline(main) {
+  if (main.querySelector('.lesson-outline') || !coursePages().some(page =>
+    page.id !== 'overview' && location.pathname.endsWith(`/${page.id}.html`))) return;
+  const headings = [...main.querySelectorAll('h2[id]')].filter(heading =>
+    !heading.closest('[hidden], .hero, .course-artifact, .chatui, .cf-wrap, .rc-wrap, footer'));
+  if (!headings.length) return;
+  const outline = document.createElement('details');
+  outline.className = 'lesson-outline';
+  outline.open = true;
+  const summary = document.createElement('summary');
+  summary.textContent = localizeCourseUiText('Sections');
+  const nav = document.createElement('nav');
+  nav.setAttribute('aria-label', summary.textContent);
+  const list = document.createElement('ol');
+  const select = heading => {
+    document.documentElement.dataset.courseSection = heading.id;
+  };
+  const navigate = (event, heading) => {
+    event.preventDefault();
+    location.hash = heading.id;
+    revealHashTarget();
+    // Land on the requested section before a learner opens the Assistant.
+    heading.scrollIntoView({ behavior:'instant', block:'start' });
+    select(heading);
+  };
+  for (const heading of headings) {
+    const item = document.createElement('li');
+    const link = document.createElement('a');
+    link.href = `#${heading.id}`;
+    link.textContent = heading.getAttribute('aria-label') || heading.textContent.trim();
+    link.addEventListener('click', event => navigate(event, heading));
+    item.append(link); list.append(item);
+  }
+  nav.append(list); outline.append(summary, nav);
+  main.querySelector('.hero')?.after(outline);
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(entries => {
+      if (document.querySelector('.course-assistant-panel[open]')) return;
+      const visible = entries.filter(entry => entry.isIntersecting).at(-1);
+      if (visible) select(visible.target);
+    }, { rootMargin:'-5% 0px -70% 0px' });
+    headings.forEach(heading => observer.observe(heading));
+  }
 }
 
 // Auto-mount on any page that ships a topbar (the lab and the full standalone).
 if (typeof document !== "undefined") {
   mountCourseFavicon();
-  const _boot = () => { mountLearningView(); mountThemeToggle(); mountLanguageMenu(); mountHoverNotes(); mountLearningPathCards(); mountResourceFigures(); mountGoingFurtherLayout(); mountHeadingLinks(); mountFigures(); markLiveArtifacts(); mountCourseLicenseNote(); mountCourseAssistant({ embed, defaultModel: DEFAULT_MODEL }); };
+  const _boot = () => { mountLearningView(); mountThemeToggle(); mountLanguageMenu(); mountHoverNotes(); mountLearningPathCards(); mountResourceFigures(); mountGoingFurtherLayout(); mountHeadingLinks(); mountFigures(); markLiveArtifacts(); mountCourseLicenseNote(); mountCourseAssistant({ embed, defaultModel: DEFAULT_MODEL, getConfig, getKey }); };
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", _boot);
   } else {

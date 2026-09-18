@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { randomId } from "./_ids.js";
+import { localizeCourseUiText } from "./_locale.js";
 
 // Page-aware ReAct assistant. Shared chrome mounts it lazily in the page language.
 import { mountAgentChat } from "./_chat.js";
@@ -339,7 +340,7 @@ export function mountCourseAssistant(runtime = {}) {
   const pt = language.startsWith("pt");
   const es = language.startsWith("es");
   const copy = zh ? {
-    open: "打开课程助理", assistant: "课程助理", dialog: "课程助理",
+    open: language === "zh-tw" || language.startsWith("zh-hant") ? "開啟助理" : "打开助理", assistant: "助理", dialog: "课程助理",
     resize: "调整课程助理大小", resizeTitle: "拖动以调整大小 · 双击以恢复默认大小",
     close: "关闭课程助理", session: "会话", newSession: "+ 新建", deleteSession: "删除",
     deleteLabel: "删除当前课程助理会话",
@@ -355,14 +356,16 @@ export function mountCourseAssistant(runtime = {}) {
     emptyTitle: "新会话", clear: "↺ 清除会话",
     intro: /zh-(tw|hant)/.test(language) ? "對話儲存在此瀏覽器中。傳送訊息時，所選 AI 服務會處理提示詞和相關課程內容。請使用虛構、非機密的輸入，並核對回答。" : "对话保存在此浏览器中。发送消息时，所选 AI 服务会处理提示词和相关课程上下文。请使用虚构、非机密的输入，并核查回答。",
     entryTitle: "课程助理",
-    entryText: "每个课时中的 ✦ 按钮都可以打开课程助理。每个会话都保存在此浏览器中，并持续关联到会话开始时的页面，直至您明确选择当前页面。",
+    entryText: /zh-(tw|hant)/.test(language)
+      ? "完成模型存取設定後，即可使用各課時的課程助理按鈕。每個工作階段都儲存在此瀏覽器中，並連結到開始時的頁面，直到您選擇目前頁面。"
+      : "完成模型访问配置后，可使用各课时中的课程助理按钮。每个会话都保存在此浏览器中，并持续关联到会话开始时的页面，直至您明确选择当前页面。",
     entryAction: "打开课程助理",
     greeting: (liveId, sessionId) => sessionId && sessionId !== liveId
       ? `您当前位于 ${liveId}。此会话始于 ${sessionId}；“此页面”始终指 ${liveId}。`
       : liveId ? `您当前位于 ${liveId}。可以使用此页面的正文、HTML 文档和代码索引。` : "未关联任何页面。您可以搜索或阅读课程的任意内容。",
     examples: ["总结此页面", "显示此页面的代码", "构建可运行的 HTML/JavaScript 交互内容", "_shared.js 如何支持此页面？"],
   } : pt ? {
-    open: "Abrir Assistente do Curso", assistant: "ASSISTENTE DO CURSO", dialog: "Assistente do Curso",
+    open: "Abrir Assistente", assistant: "Assistente", dialog: "Assistente do Curso",
     resize: "Redimensionar o Assistente do Curso", resizeTitle: "Arraste para redimensionar · clique duas vezes para restaurar",
     close: "Fechar Assistente do Curso", session: "Sessão", newSession: "+ Nova", deleteSession: "Excluir",
     deleteLabel: "Excluir a sessão atual do Assistente do Curso",
@@ -378,14 +381,14 @@ export function mountCourseAssistant(runtime = {}) {
     emptyTitle: "Nova sessão", clear: "↺ Limpar sessão",
     intro: "As conversas são salvas neste navegador. Ao enviar uma mensagem, o serviço de IA selecionado processa seu prompt e o contexto relevante do curso. Use dados fictícios e não confidenciais e confira as respostas.",
     entryTitle: "Assistente do Curso",
-    entryText: "O botão ✦ abre um assistente em todas as lições. Cada sessão fica neste navegador e permanece vinculada à página onde começou até você escolher a página atual.",
+    entryText: "Após configurar o acesso ao modelo, use o botão do assistente em qualquer lição. Cada sessão fica neste navegador e permanece vinculada à página onde começou até você escolher a página atual.",
     entryAction: "Abrir Assistente do Curso",
     greeting: (liveId, sessionId) => sessionId && sessionId !== liveId
       ? `Você está em ${liveId}. Esta sessão começou em ${sessionId}; “esta página” sempre significa ${liveId}.`
       : liveId ? `Você está em ${liveId}. A prosa, o documento HTML e o índice de código desta página estão disponíveis.` : "Nenhuma página está vinculada. Pesquise ou leia qualquer parte do curso.",
     examples: ["Resuma esta página", "Mostre o código desta página", "Crie um artefato HTML/JavaScript executável", "Como _shared.js apoia esta página?"],
   } : es ? {
-    open: "Abrir el Asistente del curso", assistant: "ASISTENTE DEL CURSO", dialog: "Asistente del curso",
+    open: "Abrir el Asistente", assistant: "Asistente", dialog: "Asistente del curso",
     resize: "Cambiar el tamaño del Asistente del curso", resizeTitle: "Arrastre para cambiar el tamaño · haga doble clic para restablecerlo",
     close: "Cerrar el Asistente del curso", session: "Sesión", newSession: "+ Nueva", deleteSession: "Eliminar",
     deleteLabel: "Eliminar la sesión actual del Asistente del curso",
@@ -401,14 +404,14 @@ export function mountCourseAssistant(runtime = {}) {
     emptyTitle: "Nueva sesión", clear: "↺ Borrar sesión",
     intro: "Las conversaciones se guardan en este navegador. Al enviar un mensaje, el servicio de IA seleccionado procesa tu prompt y el contexto pertinente del curso. Usa datos ficticios y no confidenciales y verifica las respuestas.",
     entryTitle: "Asistente del curso",
-    entryText: "El botón ✦ abre un asistente en cada lección. Cada sesión permanece en este navegador y sigue vinculada a la página donde comenzó hasta que usted elija la página actual.",
+    entryText: "Después de configurar el acceso al modelo, usa el botón del asistente en cualquier lección. Cada sesión permanece en este navegador y sigue vinculada a la página donde comenzó hasta que elijas la página actual.",
     entryAction: "Abrir el Asistente del curso",
     greeting: (liveId, sessionId) => sessionId && sessionId !== liveId
       ? `Está en ${liveId}. Esta sesión comenzó en ${sessionId}; «esta página» siempre significa ${liveId}.`
       : liveId ? `Está en ${liveId}. La prosa, el documento HTML y el índice de código de esta página están disponibles.` : "No hay ninguna página vinculada. Busque o lea cualquier parte del curso.",
     examples: ["Resuma esta página", "Muéstreme el código de esta página", "Cree un artefacto HTML/JavaScript ejecutable", "¿Cómo ayuda _shared.js a esta página?"],
   } : {
-    open: "Open Course Assistant", assistant: "COURSE ASSISTANT", dialog: "Course Assistant",
+    open: "Open Assistant", assistant: "Assistant", dialog: "Course Assistant",
     resize: "Resize Course Assistant", resizeTitle: "Drag to resize · double-click to reset",
     close: "Close Course Assistant", session: "Session", newSession: "+ New", deleteSession: "Delete",
     deleteLabel: "Delete current Course Assistant session",
@@ -424,7 +427,7 @@ export function mountCourseAssistant(runtime = {}) {
     emptyTitle: "New session", clear: "↺ Clear session",
     intro: "Conversations are saved in this browser. When you send a message, the selected AI service processes your prompt and relevant course context. Use synthetic, nonconfidential inputs and check the answers.",
     entryTitle: "Course Assistant",
-    entryText: "The ✦ button opens an assistant on every lesson. Each session stays in this browser and remains attached to the page where it began until you explicitly choose the current page.",
+    entryText: "The Course Assistant button is available on every lesson after you set up model access. Each session stays in this browser and remains attached to the page where it began until you explicitly choose the current page.",
     entryAction: "Open Course Assistant",
     greeting: (liveId, sessionId) => sessionId && sessionId !== liveId
       ? `You are on ${liveId}. This session began on ${sessionId}; “this page” always means ${liveId}.`
@@ -441,7 +444,7 @@ export function mountCourseAssistant(runtime = {}) {
   launcher.setAttribute("aria-controls", "course-assistant-panel");
   launcher.setAttribute("aria-expanded", "false");
   launcher.title = copy.open;
-  launcher.textContent = "✦";
+  launcher.textContent = copy.assistant;
 
   const shell = document.createElement("section");
   shell.className = "course-assistant-shell";
@@ -449,7 +452,7 @@ export function mountCourseAssistant(runtime = {}) {
     <dialog id="course-assistant-panel" class="course-assistant-panel" aria-label="${copy.dialog}" aria-hidden="true">
       <div class="course-assistant-resizer" role="separator" aria-label="${copy.resize}" aria-orientation="vertical" aria-valuemin="320" tabindex="0" title="${copy.resizeTitle}"></div>
       <header><div><span>${copy.assistant}</span><h2 data-course-assistant-title>${copy.emptyTitle}</h2></div><button type="button" data-course-assistant-close aria-label="${copy.close}">×</button></header>
-      <div class="course-assistant-sessions"><label for="course-assistant-session">${copy.session}</label><select id="course-assistant-session" aria-label="${copy.session}"></select><button type="button" data-course-assistant-new>${copy.newSession}</button><button type="button" data-course-assistant-delete aria-label="${copy.deleteLabel}">${copy.deleteSession}</button><input type="text" maxlength="72" aria-label="${copy.renameLabel}" placeholder="${copy.renamePlaceholder}"><span role="status" aria-live="polite"></span></div>
+      <details class="course-assistant-options"><summary>${localizeCourseUiText('Session options')}</summary><div class="course-assistant-sessions"><label for="course-assistant-session">${copy.session}</label><select id="course-assistant-session" aria-label="${copy.session}"></select><button type="button" data-course-assistant-new>${copy.newSession}</button><button type="button" data-course-assistant-delete aria-label="${copy.deleteLabel}">${copy.deleteSession}</button><input type="text" maxlength="72" aria-label="${copy.renameLabel}" placeholder="${copy.renamePlaceholder}"><span role="status" aria-live="polite"></span></div></details>
       <p class="course-assistant-context"><span></span><button type="button" data-course-assistant-use-page></button></p>
       <div class="course-assistant-tabs" role="tablist"><button type="button" role="tab" aria-selected="true" data-course-assistant-view="chat">${copy.chatView}</button><button type="button" role="tab" aria-selected="false" data-course-assistant-view="artifact">${copy.artifactView}</button><button type="button" role="tab" aria-selected="false" data-course-assistant-view="history">${copy.historyView}</button></div>
       <div class="course-assistant-body"></div>
@@ -478,7 +481,9 @@ export function mountCourseAssistant(runtime = {}) {
     action.addEventListener("click", () => launcher.click());
     entry.append(heading, explanation, action);
     const hero = document.querySelector("main .hero");
-    if (hero) hero.after(entry);
+    const setup = document.querySelector('#setup');
+    if (setup) setup.after(entry);
+    else if (hero) hero.after(entry);
     else document.querySelector("main")?.prepend(entry);
   }
   const panel = shell.querySelector(".course-assistant-panel");
@@ -508,6 +513,7 @@ export function mountCourseAssistant(runtime = {}) {
   }
   let chatApi = null;
   let mountedSessionId = null;
+  let sessionMountGeneration = 0;
   let artifactBlobUrl = "";
   const artifactBridgeId = randomId("artifact-");
   const artifactEditors = { html: null, javascript: null };
@@ -920,6 +926,8 @@ export function mountCourseAssistant(runtime = {}) {
   const mountSession = async (session = activeSession()) => {
     if (!session || mountedSessionId === session.id) return;
     if (chatApi?.stop) chatApi.stop();
+    const generation = ++sessionMountGeneration;
+    const isCurrentMount = () => generation === sessionMountGeneration && mountedSessionId === session.id;
     body.replaceChildren();
     mountedSessionId = session.id;
     const attachedPage = coursePages().find(item => item.id === session.pageId) || null;
@@ -939,30 +947,37 @@ export function mountCourseAssistant(runtime = {}) {
       `The browser is currently on ${page.id}, “${title}”. ${attachedPage && attachedPage.id !== page.id ? `The saved session began on ${attachedPage.id}, “${attachedTitle}”, but “this page” and “current page” always mean ${page.id}.` : "This session is attached to the current page."}`,
       `浏览器当前位于 ${page.id}“${title}”。${attachedPage && attachedPage.id !== page.id ? `已保存的会话始于 ${attachedPage.id}“${attachedTitle}”，但“此页面”和“当前页面”始终指 ${page.id}。` : "此会话已关联到当前页面。"}`,
     );
-    chatApi = await mountAgentChat(body, {
+    const mountedChat = await mountAgentChat(body, {
       models: modelOptions(runtime.defaultModel),
       memory: true,
+      currentContext: () => {
+        const section = document.getElementById(document.documentElement.dataset.courseSection || '');
+        return section ? `Current reading section on ${page.id}: ${section.getAttribute('aria-label') || section.textContent}. Section link: ${page.id}.html#${section.id}. Read the page before explaining this section.` : '';
+      },
       initialHistory: session.history,
       initialActivity: session.activity,
       resetLabel: copy.clear,
       compactAtTokens: 12000,
       compactKeepMessages: 6,
       onUserMessage: question => {
+        if (!isCurrentMount()) return;
         turnQuestion = String(question || "");
-        const current = store.sessions.find(item => item.id === mountedSessionId);
+        const current = store.sessions.find(item => item.id === session.id);
         if (!current) return;
         if (!current.manualTitle) current.title = question.replace(/\s+/g, " ").trim().slice(0, 48) || "New session";
         current.updatedAt = Date.now();
         persistStore(copy.saved);
       },
       onTurnSnapshot: (history, meta) => {
-        const current = store.sessions.find(item => item.id === mountedSessionId);
+        if (!isCurrentMount()) return;
+        const current = store.sessions.find(item => item.id === session.id);
         if (!current) return;
         current.history = cleanHistory(history); current.activity = cleanActivity(meta?.activity); current.updatedAt = Date.now();
         persistStore(meta?.state === "running" ? copy.saving : copy.saved);
       },
       onHistoryChange: history => {
-        const current = store.sessions.find(item => item.id === mountedSessionId);
+        if (!isCurrentMount()) return;
+        const current = store.sessions.find(item => item.id === session.id);
         if (!current) return;
         current.history = cleanHistory(history);
         const firstUser = current.history.find(item => item.role === "user");
@@ -971,13 +986,14 @@ export function mountCourseAssistant(runtime = {}) {
         persistStore(current.history.some(item => item.role === "system") ? copy.compacted : copy.saved);
       },
       onAssistantMessage: async answer => {
-        const sessionId = mountedSessionId;
+        if (!isCurrentMount()) return;
+        const sessionId = session.id;
         const current = store.sessions.find(item => item.id === sessionId);
         if (!current) return;
         const artifact = artifactFromMarkdown(answer, `${current.title || "Course Assistant"} artifact`);
         if (!artifact) return;
         const issue = artifactCodeIssue(artifact) || await validateArtifactRuntime(artifact);
-        if (mountedSessionId !== sessionId) return;
+        if (!isCurrentMount()) return;
         current.artifact = artifact; current.updatedAt = Date.now();
         persistStore(copy.saved); renderArtifact(!issue); activateView("artifact");
         artifactStatus.textContent = issue ? `${copy.artifactRejected}: ${issue}` : copy.generatedReady;
@@ -1000,11 +1016,13 @@ export function mountCourseAssistant(runtime = {}) {
         return intent ? resolveCourseSourceUri(intent.uri, targetPageId(attachedPage?.id || page.id)) : null;
       },
       recoverInlineArtifact: async answer => {
-        const current = store.sessions.find(item => item.id === mountedSessionId);
+        if (!isCurrentMount()) return null;
+        const current = store.sessions.find(item => item.id === session.id);
         if (!current) return null;
         const artifact = artifactFromMarkdown(answer, `${current.title || "Course Assistant"} artifact`);
         if (!artifact) return null;
         const issue = artifactCodeIssue(artifact) || await validateArtifactRuntime(artifact);
+        if (!isCurrentMount()) return null;
         if (issue) {
           current.artifact = artifact;
           current.updatedAt = Date.now();
@@ -1092,12 +1110,14 @@ export function mountCourseAssistant(runtime = {}) {
             schema: z.object({ file: z.enum(courseRuntimeFiles().map(item => item.file)).describe("runtime filename") }),
           }),
           tool(async ({ title: artifactName, html, javascript }) => {
-            const current = store.sessions.find(item => item.id === mountedSessionId);
+            if (!isCurrentMount()) return "The originating session is no longer active.";
+            const current = store.sessions.find(item => item.id === session.id);
             if (!current) return "No active Course Assistant session.";
             const candidate = cleanArtifact({ title: artifactName, html, javascript, updatedAt: Date.now() });
             const issue = artifactCodeIssue(candidate);
             if (issue) return `Artifact rejected before execution: ${issue} Correct the artifact, then call queue_course_artifact again.`;
             const runtimeIssue = await validateArtifactRuntime(candidate);
+            if (!isCurrentMount()) return "The originating session is no longer active.";
             if (runtimeIssue) return `Artifact rejected at runtime: ${runtimeIssue} Correct the artifact, then call queue_course_artifact again.`;
             current.artifact = candidate;
             current.updatedAt = Date.now(); persistStore(copy.saved); renderArtifact(true); activateView("artifact");
@@ -1115,6 +1135,8 @@ export function mountCourseAssistant(runtime = {}) {
       },
       recursionLimit: 24,
     });
+    if (isCurrentMount()) chatApi = mountedChat;
+    else mountedChat.stop?.();
   };
   sessionSelect.addEventListener("change", async () => {
     flushArtifactSave(); store.activeId = sessionSelect.value; mountedSessionId = null;
@@ -1168,6 +1190,20 @@ export function mountCourseAssistant(runtime = {}) {
     panel.setAttribute("aria-hidden", "false");
     launcher.setAttribute("aria-expanded", "true");
     panel.showModal();
+    const cfg = await runtime.getConfig?.();
+    const needsKey = cfg?.needsKey && !runtime.getKey?.();
+    let setupNotice = panel.querySelector('.course-assistant-setup');
+    if (needsKey && !setupNotice) {
+      setupNotice = document.createElement('p');
+      setupNotice.className = 'course-assistant-setup';
+      const setupLink = document.createElement('a');
+      setupLink.href = 'index.html#setup';
+      setupLink.textContent = localizeCourseUiText('Set up model access on the course home before sending a message.');
+      setupLink.addEventListener('click', close);
+      setupNotice.append(setupLink);
+      body.before(setupNotice);
+    }
+    if (setupNotice) setupNotice.hidden = !needsKey;
     await mountSession();
     if (panel.open) panel.querySelector("button[data-course-assistant-close]").focus();
   };

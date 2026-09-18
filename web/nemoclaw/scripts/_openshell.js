@@ -537,7 +537,7 @@ export function mountPolicyMap(sel, { policy = OPENSHELL_POLICY_HARDENED, binari
     `<div class="pmap-controls" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:.4em 0 .6em;font-size:.85rem;color:${TXT}">
        <label style="font-family:var(--mono)">Calling binary:
          <select class="pmap-bin" style="margin-left:6px;background:var(--e2,#1c1c1c);color:${HEAD};border:1px solid ${BD};border-radius:4px;padding:3px 8px;font-family:var(--mono);font-size:.85rem">
-           ${BINS.map((b, i) => `<option value="${esc(b.path)}"${i === 0 ? " selected" : ""}>${esc(b.label)} &mdash; ${esc(b.path)}</option>`).join("")}
+           ${BINS.map((b, i) => `<option value="${esc(b.path)}"${i === 0 ? " selected" : ""}>${esc(b.label)} (${esc(b.path)})</option>`).join("")}
          </select>
        </label>
        <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:22px;height:0;border-top:2px solid ${GREEN}"></span>allowed</span>

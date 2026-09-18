@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { randomId } from "./_ids.js";
+import { localizeCourseUiText } from "./_locale.js";
 
 // _chat.js holds the live chat-artifact widgets (ensureChatStyles, mountChatUI, mountAgentChat) that used to live in _shared.js.
 import { browserChatFetch, CONTEXT_WINDOWS, contextWindow, coursePage, coursePages, escHtml, estimateTokens, formatSearchResults, getConfig, getKey, isDefaultModelApiBaseUrl, webSearch } from "./_shared.js";
@@ -173,14 +174,14 @@ export function mountChatUI(container, opts = {}) {
     ? `<button class="chatui-mem on" type="button" aria-pressed="true" title="When on, the model sees the whole conversation. Turn it off to watch it answer each message as a stateless function with no recall.">🧠 memory: on</button>`
     : "";
   const modelSel = models.length
-    ? `<label>Model</label><select class="chatui-model">${models.map(m => `<option value="${escHtml(m.id)}">${escHtml(m.label || m.id)}</option>`).join("")}</select>` : "";
+    ? `<label>Model <select class="chatui-model">${models.map(m => `<option value="${escHtml(m.id)}">${escHtml(m.label || m.id)}</option>`).join("")}</select></label>` : "";
   const modChips = modules.length
-    ? `<div class="chatui-mods"><label>Pages</label>${modules.map(m => `<button type="button" class="chatui-modchip" data-id="${escHtml(m.id)}" title="${escHtml(m.title || m.id)}">${escHtml(m.id)}</button>`).join("")}<span class="chatui-ctx" data-pinhint>none pinned = auto-select</span></div>` : "";
+    ? `<div class="chatui-mods"><span>Pages</span>${modules.map(m => `<button type="button" class="chatui-modchip" data-id="${escHtml(m.id)}" aria-pressed="false" title="${escHtml(m.id)}">${escHtml(m.title || m.id)}</button>`).join("")}<span class="chatui-ctx" data-pinhint>none pinned = auto-select</span></div>` : "";
   el.innerHTML = `<div class="chatui${opts.growLog ? " chatui-grow" : ""}">
-      <div class="chatui-bar">${modelSel}<span class="chatui-ctx chatui-ctxwrap" data-ctx hidden><span data-ctxtext></span><span class="chatui-ctxbar"><span class="chatui-ctxfill"></span></span></span><span class="sp"></span>${memToggle}<button class="chatui-reset" type="button">${escHtml(opts.resetLabel || "↺ New chat")}</button>${modChips}</div>
+      <div class="chatui-bar"><button class="chatui-reset" type="button">${escHtml(opts.resetLabel || "↺ New chat")}</button>${memToggle}<details class="chatui-options"><summary>${escHtml(localizeCourseUiText("Model and context options"))}</summary><div class="chatui-bar">${modelSel}<span class="chatui-ctx chatui-ctxwrap" data-ctx hidden><span data-ctxtext></span><span class="chatui-ctxbar"><span class="chatui-ctxfill"></span></span></span>${modChips}</div></details></div>
       <div class="chatui-log"></div>
       <div class="chatui-state" role="status" aria-live="polite" aria-atomic="true"></div>
-      <div class="chatui-in"><textarea class="chatui-text" rows="1" placeholder="Ask a question…"></textarea><button class="chatui-send" type="button">Send</button></div>
+      <div class="chatui-in"><textarea class="chatui-text" rows="1" aria-label="${escHtml(localizeCourseUiText("Message"))}" placeholder="Ask a question…"></textarea><button class="chatui-send" type="button">Send</button></div>
     </div>`;
 
   const log = el.querySelector(".chatui-log");
@@ -191,13 +192,16 @@ export function mountChatUI(container, opts = {}) {
   const modelEl = el.querySelector(".chatui-model");
   const ctxEl = el.querySelector("[data-ctx]");
   const chips = [...el.querySelectorAll(".chatui-modchip")];
-  chips.forEach(c => c.addEventListener("click", () => c.classList.toggle("on")));
+  chips.forEach(c => c.addEventListener("click", () => {
+    c.setAttribute("aria-pressed", String(c.classList.toggle("on")));
+  }));
   const memBtn = el.querySelector(".chatui-mem");
   if (memBtn) memBtn.addEventListener("click", () => {
     memoryOn = !memoryOn;
     memBtn.classList.toggle("on", memoryOn);
     memBtn.setAttribute("aria-pressed", String(memoryOn));
     memBtn.textContent = "🧠 memory: " + (memoryOn ? "on" : "off");
+    ctx.rotateThread();
   });
   const selectedModules = () => chips.filter(c => c.classList.contains("on")).map(c => c.dataset.id);
   let ctx;
@@ -314,9 +318,11 @@ export function mountChatUI(container, opts = {}) {
   async function send() {
     const q = text.value.trim();
     if (!q || running || prerequisiteBlocked) return;
+    // Each stateless turn gets a fresh checkpoint, even after several such turns.
+    if (memoryEnabled && !memoryOn) ctx.rotateThread();
     if (opts.onUserMessage) try { opts.onUserMessage(q, ctx); } catch (_) {}
     const epoch = resetEpoch;
-    const histMark = history.length, turnMark = ctx.turn;   // where "edit · rewind here" rolls back to
+    const histMark = history.length;   // where "edit · rewind here" rolls back to
     text.value = ""; text.style.height = "auto";
     const userBub = bubble("chatui-user", q);
     // Memory edit drops later turns and restarts from this message.
@@ -324,7 +330,7 @@ export function mountChatUI(container, opts = {}) {
       removeFrom(userBub);
       history.length = Math.min(history.length, histMark);
       notifyHistory();
-      ctx.turn = turnMark;
+      ctx.rotateThread();
       setBudget(0);
       text.value = q;
     } : null;
@@ -418,7 +424,7 @@ export function mountChatUI(container, opts = {}) {
         snapshotTurn("running");
       },
       activitySuccess() { activitySuccessCount++; },
-      warn(msg) { endThink(); flush(); cur = null; roundThink = null; roundAnswer = null; const d = document.createElement("div"); d.className = "chatui-warn"; d.textContent = "⚠ " + msg; turn.appendChild(d); snapshotTurn("running"); scroll(); return d; },
+      warn(msg) { endThink(); flush(); cur = null; roundThink = null; roundAnswer = null; const d = document.createElement("div"); d.className = "chatui-warn"; d.textContent = "⚠ " + msg; const help = document.createElement("a"); help.href = "index.html#request-recovery"; help.textContent = "Request recovery"; d.append(document.createTextNode(" "), help); turn.appendChild(d); snapshotTurn("running"); scroll(); return d; },
       note(msg) { flush(); cur = null; roundThink = null; roundAnswer = null; const d = document.createElement("div"); d.className = "chatui-usage"; d.textContent = msg; turn.appendChild(d); snapshotTurn("running"); scroll(); return d; },
       usage(u) { u = u || {};
         const f = document.createElement("div"); f.className = "chatui-usage";
@@ -452,7 +458,7 @@ export function mountChatUI(container, opts = {}) {
       if (epoch !== resetEpoch) return;
       turn.classList.remove("chatui-cursor");
       if (curAC.signal.aborted) view.note("⏹ stopped");
-      else if (!answered && !errored) view.error(opts.emptyResponseMessage || "No displayable answer arrived. Retry once; if it repeats, inspect the tool trace and this page's recovery guidance.");
+      else if (!answered && !errored) view.error(opts.emptyResponseMessage || "No displayable answer arrived. Inspect the tool trace and the course home's request recovery guidance before retrying.");
       addMsgControls("bot", () => (roundAnswer && roundAnswer._t) || turn.innerText || "", false);   // copy the reply
       // Record the completed turn so ctx.history can carry it into the next call while memory is on.
       if (memoryEnabled && !curAC.signal.aborted && !errored) {
@@ -542,8 +548,15 @@ export async function mountAgentChat(container, opts = {}) {
     return LC;
   }
   const runtimes = {};
+  let runtimeRoute, runtimeKey;
   async function getRuntime(model) {
     const cfg = await getConfig();
+    const apiKey = cfg.needsKey ? getKey() : "no-key-needed";
+    if (runtimeRoute !== cfg.url || runtimeKey !== apiKey) {
+      for (const name of Object.keys(runtimes)) delete runtimes[name];
+      runtimeRoute = cfg.url;
+      runtimeKey = apiKey;
+    }
     const activeModel = isDefaultModelApiBaseUrl(cfg.url) ? model : cfg.model;
     if (!runtimes[activeModel]) {
       const d = await deps();
@@ -552,14 +565,17 @@ export async function mountAgentChat(container, opts = {}) {
       // Strip them with a custom fetch wrapper.
       const llm = new d.ChatOpenAI({ configuration: { baseURL, dangerouslyAllowBrowser: true,
         fetch: browserChatFetch() },
-        apiKey: cfg.needsKey ? getKey() : "no-key-needed", model: activeModel, temperature: 0, maxTokens: 16384 });
+        apiKey, model: activeModel, temperature: 0, maxTokens: 16384 });
       const tools = opts.buildTools
         ? opts.buildTools({ tool: d.tool, z: d.z, coursePage, coursePages, webSearch, formatSearchResults }) : [];
       runtimes[activeModel] = { llm, agent: d.createReactAgent({ llm, tools, checkpointer: new d.MemorySaver() }), threads: new Set() };
     }
     return runtimes[activeModel];
   }
+  const initialConfig = await getConfig();
   return mountChatUI(el, {
+    disabled: () => initialConfig.needsKey && !getKey(),
+    disabledMsg: "Set up model access on the course home before sending a message.",
     modules: opts.modules, models: opts.models, intro: opts.intro, greeting: opts.greeting,
     showGreetingWithHistory: opts.showGreetingWithHistory,
     examples: opts.examples, growLog: opts.growLog,
@@ -594,6 +610,8 @@ export async function mountAgentChat(container, opts = {}) {
       const seedThread = !runtime.threads.has(ctx.thread);
       const messages = [];
       if (seedThread && opts.system) messages.push({ role: "system", content: typeof opts.system === "function" ? opts.system(ctx) : opts.system });
+      const currentContext = opts.currentContext?.();
+      if (currentContext) messages.push({ role: "system", content: currentContext });
       // Seed inspectable page context without a second agent implementation.
       if (seedThread && opts.initialContext) {
         const context = await opts.initialContext(ctx);

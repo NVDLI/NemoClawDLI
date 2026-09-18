@@ -5,6 +5,14 @@
 // The manifest lists only built locales; each locale lists pages that passed localization review.
 
 const PT_TEXT = new Map(Object.entries({
+  "Sections": "Seções",
+  "Model and context options": "Opções de modelo e contexto",
+  "Session options": "Opções da sessão",
+  "Message": "Mensagem",
+  "Request recovery": "Recuperação de solicitações",
+  "Set up model access on the course home before sending a message.": "Configure o acesso ao modelo na página inicial antes de enviar uma mensagem.",
+  "No displayable answer arrived. Inspect the tool trace and the course home's request recovery guidance before retrying.": "Não chegou uma resposta que possa ser exibida. Antes de tentar novamente, examine o registro de ferramentas e as orientações de recuperação na página inicial.",
+  "The NVIDIA DLI browser relay forwards your model requests and bearer key to the NVIDIA API so this static page can make requests across browser origins. It does not supply a key or model access. Keep it enabled for the default NVIDIA route; custom endpoints receive requests directly.": "O relay do navegador da NVIDIA DLI encaminha as solicitações ao modelo e a chave bearer à API da NVIDIA, permitindo que esta página estática faça solicitações entre origens. Ele não fornece uma chave nem acesso ao modelo. Mantenha-o ativado na rota padrão da NVIDIA; endpoints personalizados recebem solicitações diretamente.",
   "Worker durations and wall time": "Duração dos workers e tempo total",
   "duration sum": "soma das durações",
   "wall time": "tempo total",
@@ -43,7 +51,8 @@ const PT_TEXT = new Map(Object.entries({
   "Course map": "Mapa do curso",
   "Choose language": "Escolher idioma",
   "Activity": "Atividade",
-  "Activity: local": "Atividade: local",
+  "Connected": "Conectado",
+  "Not connected": "Não conectado",
   "Course activity and privacy": "Atividade do curso e privacidade",
   "Course activity": "Atividade do curso",
   "Close activity panel": "Fechar painel de atividade",
@@ -325,6 +334,14 @@ const PT_ATTRS = new Map(Object.entries({
 }));
 
 const ES_TEXT = new Map(Object.entries({
+  "Sections": "Secciones",
+  "Model and context options": "Opciones de modelo y contexto",
+  "Session options": "Opciones de sesión",
+  "Message": "Mensaje",
+  "Request recovery": "Recuperación de solicitudes",
+  "Set up model access on the course home before sending a message.": "Configura el acceso al modelo en la página inicial antes de enviar un mensaje.",
+  "No displayable answer arrived. Inspect the tool trace and the course home's request recovery guidance before retrying.": "No llegó una respuesta que se pueda mostrar. Antes de reintentar, examina la traza de herramientas y la guía de recuperación en la página inicial.",
+  "The NVIDIA DLI browser relay forwards your model requests and bearer key to the NVIDIA API so this static page can make requests across browser origins. It does not supply a key or model access. Keep it enabled for the default NVIDIA route; custom endpoints receive requests directly.": "El relay del navegador de NVIDIA DLI reenvía las solicitudes al modelo y la clave bearer a la API de NVIDIA para que esta página estática pueda hacer solicitudes entre orígenes. No proporciona una clave ni acceso al modelo. Déjalo activado para la ruta predeterminada de NVIDIA; los endpoints personalizados reciben las solicitudes directamente.",
   "Worker durations and wall time": "Duración de los workers y tiempo total",
   "duration sum": "suma de duraciones",
   "wall time": "tiempo total",
@@ -343,7 +360,8 @@ const ES_TEXT = new Map(Object.entries({
   "Section 3": "Sección 3", "Section 4": "Sección 4", "Course map": "Mapa del curso",
   "Choose language": "Elegir idioma",
   "Activity": "Actividad",
-  "Activity: local": "Actividad: local",
+  "Connected": "Conectado",
+  "Not connected": "Sin conexión",
   "Course activity and privacy": "Actividad del curso y privacidad",
   "Course activity": "Actividad del curso",
   "Close activity panel": "Cerrar el panel de actividad",
@@ -569,6 +587,14 @@ const ES_ATTRS = new Map(Object.entries({
 }));
 
 const ZH_TEXT = new Map(Object.entries({
+  "Sections": "章节",
+  "Model and context options": "模型与上下文选项",
+  "Session options": "会话选项",
+  "Message": "消息",
+  "Request recovery": "请求故障处理",
+  "Set up model access on the course home before sending a message.": "发送消息前，请在课程首页配置模型访问。",
+  "No displayable answer arrived. Inspect the tool trace and the course home's request recovery guidance before retrying.": "未收到可显示的回答。重试前，请检查工具跟踪记录及课程首页的请求故障处理指南。",
+  "The NVIDIA DLI browser relay forwards your model requests and bearer key to the NVIDIA API so this static page can make requests across browser origins. It does not supply a key or model access. Keep it enabled for the default NVIDIA route; custom endpoints receive requests directly.": "NVIDIA DLI 浏览器中继将模型请求和 bearer 密钥转发至 NVIDIA API，使此静态页面能够跨源发送请求。它不提供密钥或模型访问权限。使用默认 NVIDIA 路由时请保持启用；自定义端点直接接收请求。",
   "Worker durations and wall time": "工作智能体耗时与总耗时",
   "duration sum": "耗时之和",
   "wall time": "总耗时",
@@ -688,7 +714,8 @@ const ZH_TEXT = new Map(Object.entries({
   "Course map": "课程地图",
   "Choose language": "选择语言",
   "Activity": "学习记录",
-  "Activity: local": "学习记录：仅本地",
+  "Connected": "已连接",
+  "Not connected": "未连接",
   "Course activity and privacy": "课程活动与隐私",
   "Course activity": "课程活动",
   "Close activity panel": "关闭学习记录面板",
@@ -917,6 +944,14 @@ const ZH_ATTRS = new Map(Object.entries({
 // Helper signatures stay in English because learners call them from code. Descriptions
 // are keyed by the discovered helper name, so code spans never enter text replacement.
 const TW_TEXT = new Map(Object.entries({
+  "Sections": "章節",
+  "Model and context options": "模型與上下文選項",
+  "Session options": "工作階段選項",
+  "Message": "訊息",
+  "Request recovery": "請求故障處理",
+  "Set up model access on the course home before sending a message.": "傳送訊息前，請在課程首頁設定模型存取。",
+  "No displayable answer arrived. Inspect the tool trace and the course home's request recovery guidance before retrying.": "未收到可顯示的回答。重試前，請查看工具追蹤記錄及課程首頁的請求故障處理說明。",
+  "The NVIDIA DLI browser relay forwards your model requests and bearer key to the NVIDIA API so this static page can make requests across browser origins. It does not supply a key or model access. Keep it enabled for the default NVIDIA route; custom endpoints receive requests directly.": "NVIDIA DLI 瀏覽器轉送服務會將模型請求與 bearer 金鑰轉送至 NVIDIA API，讓此靜態頁面能跨來源發送請求。它不提供金鑰或模型存取權限。使用預設 NVIDIA 路由時請保持啟用；自訂端點會直接接收請求。",
   "Worker durations and wall time": "工作代理程式耗時與總耗時",
   "duration sum": "耗時總和",
   "wall time": "總耗時",
@@ -1036,7 +1071,8 @@ const TW_TEXT = new Map(Object.entries({
   "Course map": "課程地圖",
   "Choose language": "選擇語言",
   "Activity": "學習記錄",
-  "Activity: local": "學習記錄：僅本機",
+  "Connected": "已連線",
+  "Not connected": "未連線",
   "Course activity and privacy": "課程活動與隱私",
   "Course activity": "課程活動",
   "Close activity panel": "關閉學習記錄面板",
