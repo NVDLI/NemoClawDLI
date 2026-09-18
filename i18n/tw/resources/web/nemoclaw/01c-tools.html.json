@@ -47,25 +47,30 @@
       "source": "<a href=\"https://platform.openai.com/docs/guides/function-calling\" target=\"_blank\" rel=\"noopener\">OpenAI function-calling guide</a>. The spec your <code>tools=[…]</code> payload conforms to; the hosted build endpoint proxies this shape through to any provider.",
       "value": "<a href=\"https://platform.openai.com/docs/guides/function-calling\" target=\"_blank\" rel=\"noopener\">OpenAI 函式呼叫指南</a>。 <code>tools=[…]</code> 載荷遵循此規範；託管版本的 API 端點會將這種格式代理到任意提供商。"
     },
+    "link.af148cf03e7c": {
+      "type": "link",
+      "source": "Use your displayed tool calls and results as evidence. For the delegation and MCP questions,\n    first open the optional sections <a href=\"#agents-as-tools\">Agents as tools</a> and\n    <a href=\"#mcp-context\">MCP</a>; you can return to those extensions after the basic tool loop.",
+      "value": "請以畫面上的工具呼叫與結果作為證據。回答委派及 MCP 問題前，先開啟選讀章節<a href=\"#agents-as-tools\">將代理程式當作工具</a>與 <a href=\"#mcp-context\">MCP</a>；也可以完成基本工具迴圈後，再回來閱讀這些延伸內容。"
+    },
     "link.c7849defa32f": {
       "type": "link",
       "source": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer: Language Models Can Teach Themselves to Use Tools</em> (2023)</a>. The paper that established self-supervised tool use; what every subsequent function-calling spec is variations on.",
       "value": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer: Language Models Can Teach Themselves to Use Tools</em> (2023)</a>。這篇論文奠定了自監督工具使用的基礎；此後所有函式呼叫規範都可視為它的變體。"
+    },
+    "link.e54bdb84f0a3": {
+      "type": "link",
+      "source": "\n    With several tools available, the model uses their names, descriptions, argument schemas,\n    the conversation, and any <code>tool_choice</code> constraint to propose a call.\n    The <a href=\"#tool-contract\"><code>description</code> in each tool definition</a> explains when\n    that tool is useful. Inspect the Tool spec node below for the complete definition, or consult the\n    <a href=\"https://platform.openai.com/docs/guides/function-calling\" target=\"_blank\" rel=\"noopener\">function-calling guide</a> for the request format.\n  ",
+      "value": "有多個工具可用時，模型會結合名稱、描述、引數模式、對話及任何 <code>tool_choice</code> 限制來提出呼叫。<a href=\"#tool-contract\">每個工具定義中的 <code>description</code></a> 說明工具適用的情境。查看下方的工具規範節點可了解完整定義，或參閱<a href=\"https://platform.openai.com/docs/guides/function-calling\" target=\"_blank\" rel=\"noopener\">函式呼叫指南</a>了解請求格式。"
     },
     "link.ef623421ba77": {
       "type": "link",
       "source": "<a href=\"https://modelcontextprotocol.io/specification\" target=\"_blank\" rel=\"noopener\">Model Context Protocol (MCP) specification</a>. The cross-vendor tool-discovery and tool-serving layer covered in this module's MCP section (originated by Anthropic, now an open project); complements function calling at the agent-runtime layer.",
       "value": "<a href=\"https://modelcontextprotocol.io/specification\" target=\"_blank\" rel=\"noopener\">Model Context Protocol (MCP) 規範</a>。本模組 MCP 部分介紹的跨供應商工具發現和工具服務層（由 Anthropic 發起，現已成為開放專案）；它在代理程式執行階段層面與函式呼叫形成互補。"
     },
-    "rich.05c8ad503b82": {
+    "rich.2b0d86a6a327": {
       "type": "rich",
-      "source": "\n    <strong>Validate the tool request before execution.</strong> The schema tells the model\n    which arguments the tool accepts. Check the returned name, parse the arguments, and validate\n    their values before dispatch. The examples below show the requested calls and stop on invalid input.\n  ",
-      "value": "<strong>執行前先驗證工具請求。</strong>結構描述會告訴模型工具接受哪些引數。執行呼叫前，請檢查回傳的名稱、解析引數並驗證其值。下方範例會顯示所請求的呼叫，並在輸入無效時停止。"
-    },
-    "rich.29756b43c66f": {
-      "type": "rich",
-      "source": "\n    The next section swaps the executor to an exact term lookup behind the <em>same</em>\n    tool contract, so you can watch the contract stay fixed while the backend changes\n    underneath it.\n  ",
-      "value": "\n    下一節會將執行器替換為位於<em>相同</em>工具約定背後的精確術語查詢，讓您直觀看到：底層後端雖已改變，工具約定仍保持不變。\n  "
+      "source": "\n    <strong>Validate the tool request before execution.</strong> The input schema describes\n    the argument names, types, and required fields offered to the model. It does not execute the tool\n    or guarantee that the model's proposed arguments are safe. Check the returned name, parse the arguments, and validate\n    their values before dispatch. The examples below show the requested calls and stop on invalid input.\n  ",
+      "value": "<strong>執行前先驗證工具請求。</strong>輸入模式描述提供給模型的引數名稱、型別與必要欄位。它不會執行工具，也不保證模型提出的引數安全。分派呼叫前，請檢查傳回的名稱、剖析引數並驗證其值。下列範例會顯示請求的呼叫，並在輸入無效時停止。"
     },
     "rich.339beeb82684": {
       "type": "rich",
@@ -98,11 +103,6 @@
       "source": "\n      The page follows that contract from local functions to a search backend and a sub-agent.\n      A <strong>sub-agent as a tool</strong> places one focused agent behind a single schema so the\n      outer workflow can route work without exposing every internal capability. Model Context\n      Protocol (MCP) gives a client a standard way to discover and call tools served by another\n      process. Use it at a capability boundary, after validating the server, identity, and scope.\n      Both patterns keep the main loop's tool list small and motivate Module 2's scoped workflows.\n    ",
       "value": "\n      本頁沿用這一約定，從本機函式逐步延伸到搜尋後端和子代理程式。<strong>將子代理程式用作工具</strong>，就是將一個專注於特定任務的代理程式封裝在單一模式之後，使外層工作流程可以分派任務，而不暴露其全部內部能力。Model Context\n      Protocol (MCP) 為用戶端提供了一套標準方法，用於發現並呼叫由其他處理程序提供的工具。請在能力邊界處使用它，並先驗證伺服器、身分和權限範圍。這兩種模式都能精簡主迴圈的工具列表，併為模組 2 中限定範圍的工作流程奠定基礎。\n    "
     },
-    "rich.6e4cb8b55f4e": {
-      "type": "rich",
-      "source": "\n    Agents rarely have a single tool. With more than one, the model decides\n    which to call based on the <code>description</code> field.\n  ",
-      "value": "\n    代理程式很少只有一個工具。當存在多個工具時，模型會根據\n    <code>description</code> 欄位決定呼叫哪一個。\n  "
-    },
     "rich.b765d42d1fb8": {
       "type": "rich",
       "source": "\n    <strong>A tool name should describe a capability.</strong>\n    A tool called <code>nvidia_glossary_api</code> is brittle: changing the backend\n    forces you to update every prompt that references the name. A tool called\n    <code>glossary_search</code> describes what the caller needs. Ranked search, exact lookup,\n    or a richer index can sit behind that contract without changing the agent prompt.\n  ",
@@ -117,6 +117,11 @@
       "type": "rich",
       "source": "\n    <strong>The model only sees the contract.</strong> It asks for <code>glossary_search</code> with a\n    natural query and reads whatever comes back, unaware which backend answered. You can start with a blurb\n    index and later swap in full articles or a live search without touching the loop. Accuracy may drift\n    when a backend resolves a match differently, but the contract holds.\n  ",
       "value": "\n    <strong>模型只能看到約定。</strong>它使用自然語言查詢請求 <code>glossary_search</code>，並讀取傳回的內容，卻不知道是哪個後端作出的回應。可以先使用簡短說明索引，之後再替換為完整文章或即時搜尋，無需修改迴圈。如果不同後端採用不同方式確定匹配項，準確性可能會發生變化，但約定仍然有效。\n  "
+    },
+    "rich.dd4a04870263": {
+      "type": "rich",
+      "source": "\n    The next section swaps the executor to full-article retrieval behind the <em>same</em>\n    tool contract, so you can watch the contract stay fixed while the backend changes\n    underneath it.\n  ",
+      "value": "下一節會將執行器改為擷取完整文章，同時保留<em>相同</em>的工具約定。您可以觀察後端改變時，約定如何維持不變。"
     },
     "text.038f3167fd60": {
       "type": "text",
@@ -448,11 +453,6 @@
       "source": "glossary_search via the in-page NVIDIA glossary MCP server",
       "value": "透過頁面內 NVIDIA 術語表 MCP 伺服器呼叫 glossary_search"
     },
-    "text.3031fa407a52": {
-      "type": "text",
-      "source": "the term, e.g. 'vector database'",
-      "value": "術語，例如 'vector database'"
-    },
     "text.326177898623": {
       "type": "text",
       "source": "Define agentic AI",
@@ -585,6 +585,11 @@
       "source": "Search NVIDIA's glossary of AI and accelerated-computing terms. Use for definitions and concepts.",
       "value": "搜尋 NVIDIA 的 AI 和加速計算術語表。用於查詢定義和概念。"
     },
+    "text.466ce7d17c99~1": {
+      "type": "text",
+      "source": "Search NVIDIA's glossary of AI and accelerated-computing terms. Use for definitions and concepts.",
+      "value": "搜尋 NVIDIA 的 AI 和加速計算術語表。用於查詢定義和概念。"
+    },
     "text.46f70a7ed608": {
       "type": "text",
       "source": " Define the tool schema the model can choose from next.",
@@ -701,6 +706,11 @@
       "source": "a few keywords, e.g. 'vector database'",
       "value": "幾個關鍵詞，例如 'vector database'"
     },
+    "text.4be0fd6da69f~1": {
+      "type": "text",
+      "source": "a few keywords, e.g. 'vector database'",
+      "value": "幾個關鍵詞，例如 'vector database'"
+    },
     "text.4d0282941aaf": {
       "type": "text",
       "source": "eu",
@@ -737,11 +747,6 @@
       "type": "text",
       "source": "Edit this to try a question like 'How many pro-plan customers do we have?' or 'Who has the most tickets in the last 30 days?'",
       "value": "編輯此內容，嘗試輸入“我們有多少位專業版套餐客戶？”或“過去 30 天內誰的工單最多？”等問題。"
-    },
-    "text.51b29f3fcea3": {
-      "type": "text",
-      "source": "Look up an NVIDIA glossary term and return its full article.",
-      "value": "查詢 NVIDIA 詞彙表術語並傳回其完整文章。"
     },
     "text.5502f2a766fc": {
       "type": "text",
