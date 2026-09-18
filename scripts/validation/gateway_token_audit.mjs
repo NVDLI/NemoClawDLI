@@ -51,7 +51,7 @@ export function discoverGatewayInventory(root = process.cwd(), localeRoot = path
     .filter(directory => fs.existsSync(path.join(directory, 'scripts/_openclaw.js')));
   if (owners.length !== 1) throw new Error(`${web}: expected one declared gateway runtime owner`);
   const canonical = owners[0];
-  const profilePath = path.join(canonical, 'learning-profile.json');
+  const profilePath = path.join(canonical, 'lesson-map.json');
   const profile = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
   if (!Array.isArray(profile.lessons)) throw new Error(`${profilePath}: lessons must be an array`);
   const roles = new Map(), declared = new Set();

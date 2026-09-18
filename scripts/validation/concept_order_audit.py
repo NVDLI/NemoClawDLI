@@ -24,7 +24,7 @@ from _bootstrap import find_repo_root
 
 ROOT = find_repo_root(Path(__file__).resolve())
 COURSE = ROOT / "web" / "nemoclaw"
-LEARNING_PROFILE = COURSE / "learning-profile.json"
+LESSON_MAP = COURSE / "lesson-map.json"
 COURSE_CONTRACT = COURSE / "course_contract.json"
 LESSON_RE = re.compile(r"^(?P<module>0[1-4])(?P<part>[a-c])-[a-z0-9-]+$")
 
@@ -287,32 +287,19 @@ def _profile_findings(
     findings: list[str] = []
     try:
         profile = profile_override if profile_override is not None else json.loads(
-            LEARNING_PROFILE.read_text(encoding="utf-8")
+            LESSON_MAP.read_text(encoding="utf-8")
         )
     except (OSError, json.JSONDecodeError) as exc:
-        return [f"learning-profile.json: cannot read valid JSON: {exc}"]
-    if not isinstance(profile, dict) or profile.get("schema") != "nemoclaw-learning-profile/1":
-        return ["learning-profile.json: schema must be nemoclaw-learning-profile/1"]
-    profiles = profile.get("profiles")
-    if not isinstance(profiles, dict):
-        findings.append("learning-profile.json: profiles must be an object")
-    else:
-        guided = profiles.get("guided")
-        if (
-            set(profiles) != {"guided"}
-            or not isinstance(guided, dict)
-            or guided.get("query") != ""
-            or guided.get("detail") != "guided"
-            or guided.get("default") is not True
-        ):
-            findings.append("learning-profile.json: Guided must be the only default profile and use canonical lesson URLs")
-        forbidden = {"source_root", "content_root", "copied_tree", "lesson_tree"}
-        if isinstance(guided, dict) and forbidden.intersection(guided):
-            findings.append("learning-profile.json: Guided must not define a copied lesson tree")
+        return [f"lesson-map.json: cannot read valid JSON: {exc}"]
+    if not isinstance(profile, dict) or profile.get("schema") != "nemoclaw-lesson-map/1":
+        return ["lesson-map.json: schema must be nemoclaw-lesson-map/1"]
+    forbidden = {"profiles", "source_root", "content_root", "copied_tree", "lesson_tree"}
+    if forbidden.intersection(profile):
+        findings.append("lesson-map.json: mode profiles and copied lesson trees are retired")
 
     lessons = profile.get("lessons")
     if not isinstance(lessons, list):
-        return findings + ["learning-profile.json: lessons must be a list"]
+        return findings + ["lesson-map.json: lessons must be a list"]
     try:
         objective_count = len(json.loads(COURSE_CONTRACT.read_text(encoding="utf-8"))["learning_objectives"])
     except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
@@ -324,7 +311,7 @@ def _profile_findings(
     roles: set[tuple[int, int]] = set()
     page_overrides = page_overrides or {}
     for index, lesson in enumerate(lessons):
-        prefix = f"learning-profile.json: lesson {index + 1}"
+        prefix = f"lesson-map.json: lesson {index + 1}"
         if not isinstance(lesson, dict):
             findings.append(f"{prefix} must be an object")
             continue
@@ -333,7 +320,7 @@ def _profile_findings(
             findings.append(f"{prefix} id must be a string")
             continue
         if lesson_id in seen:
-            findings.append(f"learning-profile.json: duplicate lesson id {lesson_id}")
+            findings.append(f"lesson-map.json: duplicate lesson id {lesson_id}")
         seen.add(lesson_id)
         mapped.add(lesson_id)
         if not re.fullmatch(r"[a-z0-9-]+(?:/[a-z0-9-]+)*", lesson_id):
@@ -363,9 +350,9 @@ def _profile_findings(
                 f"{prefix} contains retired synthetic-checkpoint fields: {', '.join(sorted(retired))}"
             )
     for page in sorted(expected_pages - mapped):
-        findings.append(f"learning-profile.json: discovered lesson {page}.html is not mapped")
+        findings.append(f"lesson-map.json: discovered lesson {page}.html is not mapped")
     for page in sorted(mapped - expected_pages):
-        findings.append(f"learning-profile.json: mapped lesson {page}.html does not exist")
+        findings.append(f"lesson-map.json: mapped lesson {page}.html does not exist")
     return findings
 
 
@@ -449,7 +436,7 @@ def audit(
     findings: list[str] = []
     cache: dict[str, str] = {}
     overrides = overrides or {}
-    profile = profile_override if profile_override is not None else json.loads(LEARNING_PROFILE.read_text(encoding="utf-8"))
+    profile = profile_override if profile_override is not None else json.loads(LESSON_MAP.read_text(encoding="utf-8"))
     roles = _role_pages(profile)
     def source(page):
         if page not in cache:

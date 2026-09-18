@@ -16,7 +16,7 @@ function localCourseOrigins(port, interfaces = os.networkInterfaces()) {
 
 function discoverCoursePages(directory) {
   const pages = new Set();
-  const manifest = path.join(directory, 'learning-profile.json');
+  const manifest = path.join(directory, 'lesson-map.json');
   if (fs.existsSync(manifest)) {
     const profile = JSON.parse(fs.readFileSync(manifest, 'utf8'));
     if (!Array.isArray(profile.lessons)) throw new Error(`Course profile requires a lessons array: ${manifest}`);
@@ -41,7 +41,7 @@ function discoverCoursePages(directory) {
 }
 
 function coursePageRole(directory, file) {
-  const manifest = path.join(directory, 'learning-profile.json');
+  const manifest = path.join(directory, 'lesson-map.json');
   if (!fs.existsSync(manifest)) return 'document';
   const profile = JSON.parse(fs.readFileSync(manifest,'utf8'));
   return profile.lessons.some(lesson => path.resolve(directory,lesson.id + '.html') === path.resolve(file)) ? 'lesson' : 'document';

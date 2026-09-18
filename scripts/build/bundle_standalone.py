@@ -883,19 +883,19 @@ def _self_test() -> int:
         source_course.mkdir(); linked_out.mkdir()
         (source_course / "SKILL.html").write_text(
             '<a href="interface-inventory.json">inventory</a>'
-            '<a href="learning-profile.json">profile</a>'
+            '<a href="lesson-map.json">profile</a>'
             '<a href="../outside.json">outside</a>',
             encoding="utf-8",
         )
         (source_course / "interface-inventory.json").write_text('{"schema":"fixture"}\n', encoding="utf-8")
-        (source_course / "learning-profile.json").write_text('{"schema":"fixture-profile"}\n', encoding="utf-8")
+        (source_course / "lesson-map.json").write_text('{"schema":"fixture-profile"}\n', encoding="utf-8")
         (root / "outside.json").write_text("not copied\n", encoding="utf-8")
         assert _copy_linked_course_files(source_course, linked_out) == [
             "interface-inventory.json",
-            "learning-profile.json",
+            "lesson-map.json",
         ]
         assert (linked_out / "interface-inventory.json").is_file()
-        assert (linked_out / "learning-profile.json").is_file()
+        assert (linked_out / "lesson-map.json").is_file()
         assert not (linked_out / "outside.json").exists()
 
         metadata = source_course / "novel-runtime-policy.json"

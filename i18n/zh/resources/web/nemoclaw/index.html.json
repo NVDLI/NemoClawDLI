@@ -43,6 +43,11 @@
       "source": "\n          <div class=\"num\">Module 2 · ~1 hour · 3 pages</div>\n          <h3>Advanced Patterns · Workflows · RAG · Deep Agents</h3>\n          <p>Route work across calls, retrieve course material as a tool, and use planners that spawn sub-agents.</p>\n        ",
       "value": "\n          <div class=\"num\">模块 2 · 约 1 小时 · 3 个页面</div>\n          <h3>高级模式 · 工作流 · RAG · 深度智能体</h3>\n          <p>跨调用路由任务，将课程资料作为工具进行检索，并使用可创建子智能体的规划器。</p>\n        "
     },
+    "rich.4e615198a8bb": {
+      "type": "rich",
+      "source": "Use <strong>Sections</strong> to find a section. Heading links can be bookmarked or shared. The Assistant can use the current section when you ask a question. Its model and session controls are optional; start by asking about the example you are reading.",
+      "value": "使用<strong>章节</strong>查找章节。标题链接可以收藏或分享。提问时，助理可以参考当前章节。模型和会话控件是可选项；先围绕正在阅读的示例提问即可。"
+    },
     "rich.54b8eccb9fca": {
       "type": "rich",
       "source": "\n        <div class=\"sys-label\">Models</div>\n        <div class=\"sys-name\">build.nvidia.com</div>\n        <div class=\"sys-desc\">Use NVIDIA-hosted Nemotron models through an OpenAI-compatible API.\n          Calls use your <code>nvapi-</code> key and the selected model route.</div>\n      ",
@@ -68,6 +73,11 @@
       "source": "Securing Agents with <span class=\"accent\">OpenShell</span> and <span class=\"accent\">NemoClaw</span>",
       "value": "使用 <span class=\"accent\">OpenShell</span> 和 <span class=\"accent\">NemoClaw</span> 构建安全智能体"
     },
+    "rich.99448ca45385": {
+      "type": "rich",
+      "source": "HTTP 401 or 403 calls for checking credentials or access. HTTP 429 means the service is limiting requests; wait before trying again. A 5xx response can indicate a provider or relay failure. <strong>Request handling</strong> in setup controls waiting and optional retries before streaming begins. Longer waits or more retries will not fix invalid credentials. Report persistent failures through the support link at the bottom of this page.",
+      "value": "遇到 HTTP 401 或 403，请检查凭据或访问权限。HTTP 429 表示服务正在限制请求，请等待后再试。5xx 响应可能表示提供方或中继服务出现故障。设置中的<strong>请求处理</strong>控制等待时间及流式传输开始前的可选重试。延长等待时间或增加重试次数无法修复无效凭据。请通过本页底部的支持链接报告持续发生的问题。"
+    },
     "rich.a3bba0e60412": {
       "type": "rich",
       "source": "\n        <div class=\"sys-label\">Search</div>\n        <div class=\"sys-name\">Materials catalog</div>\n        <div class=\"sys-desc\"><code>webSearch</code> ranks the course glossary, papers, and posts.\n          <code>instantAnswer</code> returns one matching glossary definition. Open the catalog to\n          inspect the sources and search request.</div>\n      ",
@@ -82,6 +92,11 @@
       "type": "rich",
       "source": "\n          <div class=\"num\">Module 4 · ~1 hour · 3 pages</div>\n          <h3>OpenShell Safety · Modern CLIs · Going Further</h3>\n          <p>Shift from OpenClaw behavior to the OpenShell policy boundary that NemoClaw assembles around it, then compare Hermes Agent, Deep Agents, and other modern CLI agents.</p>\n        ",
       "value": "\n          <div class=\"num\">模块 4 · 约 1 小时 · 3 个页面</div>\n          <h3>OpenShell 安全机制 · 现代 CLI · 深入探索</h3>\n          <p>将关注点从 OpenClaw 的行为转向 NemoClaw 在其外围构建的 OpenShell 策略边界，然后对比 Hermes Agent、Deep Agents 以及其它现代 CLI 智能体。</p>\n        "
+    },
+    "rich.c279e70c190e": {
+      "type": "rich",
+      "source": "<strong>Stop</strong> cancels the current request. An aborted-request message by itself does not establish whether the cause was cancellation, navigation, or an interrupted connection. Keep the visible error and any partial output. A timeout means no response headers or stream data arrived within the configured wait.",
+      "value": "<strong>停止</strong>会取消当前请求。仅凭请求中止消息，无法判断原因是取消操作、页面跳转还是连接中断。请保留可见错误和已有的部分输出。超时表示在设定的等待时间内没有收到响应头或流式数据。"
     },
     "text.04f63174b3da": {
       "type": "text",
@@ -124,15 +139,35 @@
       "source": "Implement reliable tool use and function calling within an agent system.",
       "value": "在智能体系统中实现可靠的工具使用和函数调用。"
     },
+    "text.5474a26e19c8": {
+      "type": "text",
+      "source": "Click a section heading or its arrow to expand or collapse that section. Color reinforces the written label: blue marks information, amber marks a caution, and red marks an error. Read the text rather than relying on color alone.",
+      "value": "点击章节标题或旁边的箭头，即可展开或折叠该章节。颜色用于辅助文字提示：蓝色表示信息，琥珀色表示注意事项，红色表示错误。请阅读文字，不要仅凭颜色判断。"
+    },
+    "text.5f8609b022c6": {
+      "type": "text",
+      "source": "\n      Use the modules as a guided order; each page also remains useful on its own.\n      Following the full path lets each module build on the previous work. The browser-hosted loop\n      becomes a scoped workflow, that workflow moves into a persistent agent runtime, and the\n      runtime's wider reach motivates the operating-system boundary that contains it.\n      Start with the task you need. Every page ends in a live artifact and keeps the\n      supporting code available. You can modify the examples in the browser, self-host them,\n      or give this repository to a coding agent as context for a local deployment or application.\n    ",
+      "value": "可以按照模块顺序逐步学习，每个页面也可以独立使用。沿完整路径学习时，每个模块都会在前一模块的成果上继续构建。浏览器托管的循环会演变为范围明确的工作流，再迁移到持久化智能体运行时中。随着运行时能够影响的范围扩大，需要通过操作系统边界对其进行约束。您也可以直接从所需任务开始。每个页面最后都会提供一个可直接运行的交互页面，相关代码也始终可供查看。可以在浏览器中修改示例、自行托管，或将此代码库作为上下文交给 coding agent，用于本地部署或应用开发。"
+    },
     "text.5fcf5e47f511": {
       "type": "text",
       "source": "\n      Your browser saves the chat and embedding routes across lessons and sends each key only to its\n      selected endpoint. Use a custom route only when you have a reachable HTTPS endpoint.\n    ",
       "value": "\n      浏览器会跨课程保存聊天和嵌入路由，并且只将每个密钥发送到其对应的入口。仅当您拥有可访问的 HTTPS 入口时，才使用自定义路由。\n    "
     },
+    "text.64d04892c957": {
+      "type": "text",
+      "source": "How to use these lessons",
+      "value": "如何使用这些课时"
+    },
     "text.67a5bdf2a82d": {
       "type": "text",
       "source": "NVIDIA · Securing Agents",
       "value": "NVIDIA · 安全智能体"
+    },
+    "text.6af41b952ecb": {
+      "type": "text",
+      "source": "Run the examples, inspect their output, then change an input and compare. JavaScript is available under each cell's code control; you can read and run the examples before editing it.",
+      "value": "运行示例，检查输出，再修改一个输入并比较结果。每个单元格的代码控件都可显示 JavaScript；您可以先阅读和运行示例，再编辑代码。"
     },
     "text.73916d1aff87": {
       "type": "text",
@@ -185,11 +220,6 @@
       "source": "Exploring the Material",
       "value": "探索课程内容"
     },
-    "text.a368c1cc4aa1": {
-      "type": "text",
-      "source": "\n      Use the modules as a guided order; each page also remains useful on its own.\n      Following the full path lets each module reuse its predecessor&mdash;the browser-hosted loop\n      becomes a scoped workflow, that workflow moves into a persistent agent runtime, and the\n      runtime's wider reach motivates the operating-system boundary that contains it.\n      Start with the task you need. Every page ends in a live artifact and keeps the\n      supporting code available. You can modify the examples in the browser, self-host them,\n      or give this repository to a coding agent as context for a local deployment or application.\n    ",
-      "value": "\n      可以按照模块顺序逐步学习；每个页面也可以独立使用。学习完整路径时，每个模块都能复用前一模块的成果&mdash;浏览器托管的循环会演变为范围明确的工作流，该工作流随后迁移到持久化智能体运行时中，而运行时不断扩大的权限范围则促使您采用操作系统边界对其进行约束。您也可以直接从所需任务开始。每个页面最后都会提供一个可直接运行的交互页面，相关代码也始终可供查看。可以在浏览器中修改示例、自行托管，或将此代码库作为上下文交给 coding agent，以便在本地部署或应用。\n    "
-    },
     "text.a7e3c6edd230": {
       "type": "text",
       "source": "Entering Your API Key",
@@ -200,11 +230,21 @@
       "source": "Design and coordinate multi-agent systems using structured routing patterns.",
       "value": "使用结构化路由模式设计和协调多智能体系统。"
     },
+    "text.b71f03cc5718": {
+      "type": "text",
+      "source": "If a model request fails",
+      "value": "模型请求失败时"
+    },
     "text.b91518844ede": {
       "type": "text",
       "source": "2b RAG",
       "value": "2b RAG",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.c69e125dc3dd": {
+      "type": "text",
+      "source": "For a read-only model example, check model access above, wait briefly, and rerun once. A repeated failure needs diagnosis: note the lesson and section link, cell label, selected model, error text, and time. Never include an API key. Before repeating a tool or command that changes files, schedules work, or creates a session, inspect whether the first attempt already performed that action.",
+      "value": "对于只读模型示例，请检查上方的模型访问配置，稍等后重新运行一次。如果再次失败，需要记录课时和章节链接、单元格标签、所选模型、错误文本及时间，以便诊断。切勿附上 API 密钥。再次运行会修改文件、安排任务或创建会话的工具或命令前，请确认第一次尝试是否已经完成了该操作。"
     },
     "text.cc3357e8b35b": {
       "type": "text",

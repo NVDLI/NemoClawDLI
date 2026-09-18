@@ -36,16 +36,17 @@ TASK1 = find_repo_root(HERE)
 SCRIPTS = TASK1 / "scripts"
 add_script_paths(SCRIPTS)
 import link_projection as lp  # noqa: E402
+from code_hygiene import normalize_prose_punctuation  # noqa: E402
 
 CACHE = SCRIPTS / "grounding_cache"
 # bump when the reference schema/logic changes (mat-association, vendored, cites, em-dash);
 # a logic change then auto-invalidates the cache instead of serving stale records.
-REF_VERSION = "r4"
+REF_VERSION = "r5"
 
 _TAG = re.compile(r"<[^>]+>")
 _SVG = re.compile(r"<svg\b.*?</svg>", re.I | re.S)   # diagram text is not prose
 _WS = re.compile(r"[ \t]*\n[ \t]*")
-_EMDASH = re.compile(r"\S\s*—\s*\S")
+_EMDASH = re.compile(chr(0x2014))
 _HEADING_MD = re.compile(r"^#{1,4}\s+(.+)$", re.M)
 _HEADING_HTML = re.compile(r"<h[1-4][^>]*>(.*?)</h[1-4]>", re.I | re.S)
 _TITLE = re.compile(r"<title[^>]*>(.*?)</title>|<h1[^>]*>(.*?)</h1>", re.I | re.S)
@@ -152,6 +153,7 @@ def _text_of(f: Path):
         heads = [h.strip() for h in _HEADING_MD.findall(body)]
         title = heads[0] if heads else ""
         prose = re.sub(r"^#{1,4}\s+", "", body, flags=re.M)
+    prose = normalize_prose_punctuation(prose)
     prose = re.sub(r"[ \t]{2,}", " ", _WS.sub("\n", prose)).strip()
     return title, heads, prose
 

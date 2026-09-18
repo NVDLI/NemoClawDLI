@@ -30,6 +30,7 @@ Usage:
 """
 from __future__ import annotations
 import argparse, ast, io, json, re, sys, tokenize
+from html import unescape
 from collections import Counter, defaultdict
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -100,10 +101,11 @@ def _iter_files(scope: str):
     """(path, rel, suffix) for every code file we own. ship scope is the released course plus
     its shared infra; all scope adds other authored source. Vendored and generated trees are
     always skipped."""
-    ship = ("web/nemoclaw/", "scripts/", "web/_shared",
-            "web/index", "web/courses")
+    ship = ("web/", "scripts/")
     for f in sorted(TASK1.rglob("*")):
-        if not f.is_file() or f.suffix not in (".py", ".js", ".mjs", ".html", ".htm"):
+        if not f.is_file() or f.suffix.lower() not in (
+                ".py", ".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx", ".mts", ".cts",
+                ".css", ".html", ".htm"):
             continue
         rel = f.relative_to(TASK1).as_posix()
         if not _is_ours(rel):
@@ -723,16 +725,39 @@ _PROSE_EXEMPT = {"scripts/validation/code_hygiene.py", "scripts/validation/prose
                  "scripts/validation/grounding.py", "scripts/validation/validate_bundle.py"}
 
 
+def normalize_prose_punctuation(text: str) -> str:
+    """Resolve rendered entities and Unicode escapes without re-encoding translated text."""
+    text = unescape(text)
+    return re.sub(r"(?<!\\)(?:\\\\)*\\u(?:2014|\{0*2014\})",
+                  lambda match: match.group(0).rsplit('\\u', 1)[0] + chr(0x2014), text,
+                  flags=re.I)
+
+
+def _translated_prose_units():
+    """Inspect owned translation values, excluding historical English source snapshots."""
+    from translate.locale_catalog import discover_locales
+    from translate.locale_resources import json_resources, load_resource
+    for spec in discover_locales(TASK1):
+        for path in json_resources(spec.locale_root):
+            resource = load_resource(path)
+            raw = path.read_text(encoding='utf-8')
+            for key, entry in resource.values.items():
+                value = entry.get('value', '')
+                start = raw.find(json.dumps(key, ensure_ascii=False))
+                yield path.relative_to(TASK1).as_posix(), raw[:start].count('\n') + 1, value
+
+
 def prose_findings(scope: str):
     """Prose tells the comment checks miss: an em-dash anywhere (comment, string, or UI copy),
     and self-congratulatory phrasing inside a string literal a user reads."""
     out = []
+    _UNIT_CACHE.pop(scope, None)
     for rel, lang, text, off in units(scope):
         if rel in _PROSE_EXEMPT:
             continue
         lines, _ = analyze(lang, text)
         for L in lines:
-            if "—" in L.raw:
+            if chr(0x2014) in normalize_prose_punctuation(L.raw):
                 _emit(out, rel, L.n + off, "em-dash", L.raw.strip(),
                       "An em-dash reads as an AI tell. Rewrite the whole phrase so no dash is needed; "
                       "do not swap it for a colon, comma, or hyphen in place.")
@@ -744,6 +769,16 @@ def prose_findings(scope: str):
                               f"editorializing ('{v.group(0)}') in copy: {m.group(0)}",
                               "Cut the self-congratulatory or over-elaborating phrasing from this user-facing "
                               "string; say plainly what it conveys.")
+    # Markup attributes and translated resources also contain learner-visible copy.
+    surfaces = [(rel, number, line) for path, rel, suffix in _iter_files(scope)
+                if suffix in {'.html', '.htm'}
+                for number, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1)]
+    surfaces.extend(_translated_prose_units())
+    existing = {(item['path'], item['line'], item['kind']) for item in out}
+    for rel, line, value in surfaces:
+        if chr(0x2014) in normalize_prose_punctuation(value) and (rel, line, 'em-dash') not in existing:
+            _emit(out, rel, line, 'em-dash', value.strip(),
+                  'Rewrite the authored phrase without an em-dash. Encoded forms obey the same rule.')
     return out
 
 
