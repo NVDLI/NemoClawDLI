@@ -5,6 +5,24 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Update the CycloneDX scanner and its hashed dependency lock to 7.4.0, and pin CodeQL actions
+  to 4.38.0. Update the material tools' Soup Sieve parser to 2.9.2. Document the paired-lock and
+  submission requirements for dependency proposals.
+
+- Complete Linux and WSL setup instructions with pinned Python and browser dependencies.
+  Place Assistant guidance after model setup, add expanded section navigation, and keep
+  session and model controls under optional disclosures. Clarify reflection prompts and tool
+  schemas. Preserve conversation memory settings and connection changes, and prevent stream
+  cleanup from hanging cancellation. Codex assisted implementation and independent review.
+  Thanks to the independent Codex language reviewers for reviewing the changed Spanish,
+  Brazilian Portuguese, Simplified Chinese and Taiwan Traditional Chinese text and rendered
+  controls under the maintainer's authorization for LLM-backed style review.
+
+- Remove global course modes, their saved preferences, and mode-driven code collapsing.
+  Preserve independent section disclosures, nested links, and print restoration. Reject retired
+  mode machinery in discovered source and locale resources. Enforce the em-dash rule on encoded
+  and translated authored copy, and make required report findings fail the validation command.
+
 - Fix Part 3 identifiers on ordinary HTTP and show bounded agent startup progress and failures.
   Validate discovered browser modules and executable cells across HTTP and secure contexts.
   Vadim Kudlay contributed this repair with Codex-assisted implementation and independent review.

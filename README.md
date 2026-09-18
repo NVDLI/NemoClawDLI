@@ -18,9 +18,7 @@
 
 ## About the course
 
-An agent connects a model to tools, memory, and a routing decision that repeats until its task is done. This course builds that loop, then connects it to current frameworks. You’ll go from a single API call to agent coordination, grounded retrieval, deep planning, and safe deployment using OpenClaw, NVIDIA NemoClaw™, and OpenShell.
-
-Every lesson is an editable browser exercise. Later modules use NemoClaw and OpenShell to run and inspect an agent.
+Build an agent loop from model calls, tools and memory, then connect it to OpenClaw, NVIDIA NemoClaw™ and OpenShell. Each lesson provides editable browser exercises.
 
 > [!NOTE]
 > This repository releases the course and validation tools. NemoClaw and its runtime remain external dependencies.
@@ -55,7 +53,7 @@ Connect the design to NemoClaw, keep an agent running, then use OpenShell to con
 
 ## Take the course
 
-1. Use the **[official NVIDIA DLI course page][dli-course]** for NVIDIA-managed enrollment, then open the **[GitHub Pages course][course]** and work through Module 1.
+1. Enroll through the **[official NVIDIA DLI course page][dli-course]**, then start Module 1 in the **[GitHub Pages course][course]**.
 2. Start the **[NemoClaw Brev launchable][brev-launchable]** before Module 3, where the exercises drive a live agent.
 3. Open **[NVIDIA Build][nvidia-build]** and create an API key when a lesson asks for one.
 4. Run the supplied examples, inspect their behavior, and change one input at a time.
@@ -64,20 +62,29 @@ The static browser site is available in **[English][course]**, **[Spanish](https
 
 ## Run the course locally
 
-Install Python 3.11+, Bash, Node.js 20+, pnpm through Corepack, and Chromium. Python 3.12 is the tested default.
+Use Linux or Ubuntu in WSL with Git, Bash, Python 3.11+, Node.js 24 and Corepack:
 
 ```bash
 git clone https://github.com/NVDLI/NemoClawDLI.git
 cd NemoClawDLI
-bash scripts/build/build_pages.sh public
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install --require-hashes --no-deps --only-binary=:all: -r scripts/materials/requirements.lock
+corepack enable
+(cd scripts/runtime && pnpm install --frozen-lockfile --ignore-scripts)
+npm ci --prefix scripts/browser-vendor --ignore-scripts
+(cd scripts/runtime && pnpm exec playwright-core install --with-deps chromium)
+export CHROME_BIN="$(cd scripts/runtime && node -p 'require("playwright-core").chromium.executablePath()')"
+bash scripts/build/course_contribute.sh doctor
+bash scripts/build/course_contribute.sh build-pages --output public
 python3 -m http.server -d public 8000
 ```
 
-Open `http://localhost:8000/nemoclaw/`. Before installing Python packages, run `python3 scripts/runtime/python_env_probe.py`, use a virtual environment, and install the applicable pinned lock.
+Open `http://localhost:8000/nemoclaw/`. See [setup troubleshooting](docs/lab_runtime_testing.md). Playwright may request sudo. Materials are vendored.
 
 ## Contribute
 
-Corrections, teaching ideas, runtime observations, and source leads are welcome through [Issues](https://github.com/NVDLI/NemoClawDLI/issues). Broader questions belong in [Discussions](https://github.com/NVDLI/NemoClawDLI/discussions).
+Send corrections through [Issues](https://github.com/NVDLI/NemoClawDLI/issues) and questions through [Discussions](https://github.com/NVDLI/NemoClawDLI/discussions).
 
 Start with [`CONTRIBUTING.md`](CONTRIBUTING.md). Each patch needs an Issue, declared blast radius, validation evidence, and DCO signoff. See the [`Code of Conduct`](CODE_OF_CONDUCT.md), [`support policy`](SUPPORT.md), and [`DCO`](DCO.md).
 

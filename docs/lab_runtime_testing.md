@@ -44,11 +44,28 @@ Install the pinned browser API without downloading another browser:
 ```sh
 corepack enable
 (cd scripts/runtime && corepack enable && pnpm install --frozen-lockfile --ignore-scripts)
+npm ci --prefix scripts/browser-vendor --ignore-scripts
 ```
+
+The first lock supplies `playwright-core`; the second supplies `esbuild` for module-linkage checks.
+For a fresh Linux or WSL environment without a working Chromium installation, use the pinned
+Playwright CLI to install its matching browser and system libraries:
+
+```sh
+(cd scripts/runtime && pnpm exec playwright-core install --with-deps chromium)
+export CHROME_BIN="$(cd scripts/runtime && node -p 'require("playwright-core").chromium.executablePath()')"
+```
+
+The OS dependency step may request sudo. Follow the [Playwright browser setup](https://playwright.dev/docs/browsers#install-system-dependencies)
+for your Linux distribution instead of guessing library names; Ubuntu releases use different
+audio-library package names. In WSL, install and run these tools inside the Linux distribution.
+The doctor below launches Chromium, so it also catches missing shared libraries.
 
 Use a Python 3.12 virtual environment for Python tooling. This avoids changing host-managed packages,
 keeps the validation dependency boundary reviewable, and prevents pip from hiding releases that no
 longer support older interpreters. Verify the interpreter before installing a lock:
+
+On Ubuntu, install `python3-venv` if creating the virtual environment reports that it is missing.
 
 ```sh
 python3.12 -m venv .venv

@@ -47,25 +47,30 @@
       "source": "<a href=\"https://platform.openai.com/docs/guides/function-calling\" target=\"_blank\" rel=\"noopener\">OpenAI function-calling guide</a>. The spec your <code>tools=[…]</code> payload conforms to; the hosted build endpoint proxies this shape through to any provider.",
       "value": "<a href=\"https://platform.openai.com/docs/guides/function-calling\" target=\"_blank\" rel=\"noopener\">Guía de llamada de función de OpenAI</a>. Describe el formato utilizado por <code>tools=[…]</code>; el endpoint alojado en build dirige ese formato al proveedor correspondiente."
     },
+    "link.af148cf03e7c": {
+      "type": "link",
+      "source": "Use your displayed tool calls and results as evidence. For the delegation and MCP questions,\n    first open the optional sections <a href=\"#agents-as-tools\">Agents as tools</a> and\n    <a href=\"#mcp-context\">MCP</a>; you can return to those extensions after the basic tool loop.",
+      "value": "Usa como evidencia las llamadas y los resultados mostrados. Para las preguntas sobre delegación y MCP, abre primero las secciones opcionales <a href=\"#agents-as-tools\">Agentes como herramientas</a> y <a href=\"#mcp-context\">MCP</a>; puedes volver a estas ampliaciones después del ciclo básico."
+    },
     "link.c7849defa32f": {
       "type": "link",
       "source": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer: Language Models Can Teach Themselves to Use Tools</em> (2023)</a>. The paper that established self-supervised tool use; what every subsequent function-calling spec is variations on.",
       "value": "<a href=\"https://arxiv.org/abs/2302.04761\" target=\"_blank\" rel=\"noopener\">Schick et al., <em>Toolformer: Language Models Can Teach Themselves to Use Tools</em> (2023)</a>. Presenta el aprendizaje autosupervisado del uso de herramientas, mecanismo sobre el que se apoyan muchas especificaciones posteriores de llamada a funciones."
+    },
+    "link.e54bdb84f0a3": {
+      "type": "link",
+      "source": "\n    With several tools available, the model uses their names, descriptions, argument schemas,\n    the conversation, and any <code>tool_choice</code> constraint to propose a call.\n    The <a href=\"#tool-contract\"><code>description</code> in each tool definition</a> explains when\n    that tool is useful. Inspect the Tool spec node below for the complete definition, or consult the\n    <a href=\"https://platform.openai.com/docs/guides/function-calling\" target=\"_blank\" rel=\"noopener\">function-calling guide</a> for the request format.\n  ",
+      "value": "Cuando hay varias herramientas disponibles, el modelo usa sus nombres, descripciones, esquemas de argumentos, la conversación y cualquier restricción <code>tool_choice</code> para proponer una llamada. La <a href=\"#tool-contract\"><code>description</code> de cada definición</a> explica cuándo resulta útil esa herramienta. Examina el nodo Especificación de la herramienta de abajo para ver la definición completa, o consulta la <a href=\"https://platform.openai.com/docs/guides/function-calling\" target=\"_blank\" rel=\"noopener\">guía de llamadas a funciones</a> para conocer el formato de la solicitud."
     },
     "link.ef623421ba77": {
       "type": "link",
       "source": "<a href=\"https://modelcontextprotocol.io/specification\" target=\"_blank\" rel=\"noopener\">Model Context Protocol (MCP) specification</a>. The cross-vendor tool-discovery and tool-serving layer covered in this module's MCP section (originated by Anthropic, now an open project); complements function calling at the agent-runtime layer.",
       "value": "<a href=\"https://modelcontextprotocol.io/specification\" target=\"_blank\" rel=\"noopener\">Especificación de Model Context Protocol (MCP)</a>. Define la capa interoperable de descubrimiento y servicio de herramientas que complementa la llamada a funciones en el runtime del agente."
     },
-    "rich.05c8ad503b82": {
+    "rich.2b0d86a6a327": {
       "type": "rich",
-      "source": "\n    <strong>Validate the tool request before execution.</strong> The schema tells the model\n    which arguments the tool accepts. Check the returned name, parse the arguments, and validate\n    their values before dispatch. The examples below show the requested calls and stop on invalid input.\n  ",
-      "value": "<strong>Valida la solicitud de herramienta antes de ejecutarla.</strong> El esquema indica al modelo qué argumentos acepta la herramienta. Comprueba el nombre devuelto, analiza los argumentos y valida sus valores antes de ejecutar la llamada. Los ejemplos siguientes muestran las llamadas solicitadas y se detienen ante entradas no válidas."
-    },
-    "rich.29756b43c66f": {
-      "type": "rich",
-      "source": "\n    The next section swaps the executor to an exact term lookup behind the <em>same</em>\n    tool contract, so you can watch the contract stay fixed while the backend changes\n    underneath it.\n  ",
-      "value": "En la siguiente sección se sustituye el motor de ejecución por una búsqueda exacta de términos, pero se mantiene el <em>mismo</em> contrato de herramienta. El backend cambia; el contrato que utiliza el modelo permanece fijo."
+      "source": "\n    <strong>Validate the tool request before execution.</strong> The input schema describes\n    the argument names, types, and required fields offered to the model. It does not execute the tool\n    or guarantee that the model's proposed arguments are safe. Check the returned name, parse the arguments, and validate\n    their values before dispatch. The examples below show the requested calls and stop on invalid input.\n  ",
+      "value": "<strong>Valida la solicitud de herramienta antes de ejecutarla.</strong> El esquema de entrada describe los nombres, los tipos y los campos obligatorios de los argumentos que se ofrecen al modelo. No ejecuta la herramienta ni garantiza que los argumentos propuestos por el modelo sean seguros. Comprueba el nombre recibido, analiza los argumentos y valida sus valores antes de despachar la llamada. Los ejemplos siguientes muestran las llamadas solicitadas y se detienen ante entradas inválidas."
     },
     "rich.339beeb82684": {
       "type": "rich",
@@ -98,11 +103,6 @@
       "source": "\n      The page follows that contract from local functions to a search backend and a sub-agent.\n      A <strong>sub-agent as a tool</strong> places one focused agent behind a single schema so the\n      outer workflow can route work without exposing every internal capability. Model Context\n      Protocol (MCP) gives a client a standard way to discover and call tools served by another\n      process. Use it at a capability boundary, after validating the server, identity, and scope.\n      Both patterns keep the main loop's tool list small and motivate Module 2's scoped workflows.\n    ",
       "value": "\n      La página sigue ese contrato desde las funciones locales hasta un backend de búsqueda y un subagente.\n      Un <strong>subagente como herramienta</strong> sitúa un agente especializado detrás de un único esquema para que el\n      workflow externo pueda enrutar el trabajo sin exponer cada capacidad interna. Model Context\n      Protocol (MCP) ofrece al cliente una forma estándar de descubrir e invocar herramientas servidas por otro\n      proceso. Úsalo en un límite de capacidades, después de validar el servidor, la identidad y el alcance.\n      Ambos patrones mantienen reducida la lista de herramientas del bucle principal y motivan los workflows acotados del Módulo 2.\n    "
     },
-    "rich.6e4cb8b55f4e": {
-      "type": "rich",
-      "source": "\n    Agents rarely have a single tool. With more than one, the model decides\n    which to call based on the <code>description</code> field.\n  ",
-      "value": "Los agentes rara vez disponen de una única herramienta. Cuando hay varias, el modelo decide a cuál llamar a partir del campo <code>description</code>."
-    },
     "rich.b765d42d1fb8": {
       "type": "rich",
       "source": "\n    <strong>A tool name should describe a capability.</strong>\n    A tool called <code>nvidia_glossary_api</code> is brittle: changing the backend\n    forces you to update every prompt that references the name. A tool called\n    <code>glossary_search</code> describes what the caller needs. Ranked search, exact lookup,\n    or a richer index can sit behind that contract without changing the agent prompt.\n  ",
@@ -117,6 +117,11 @@
       "type": "rich",
       "source": "\n    <strong>The model only sees the contract.</strong> It asks for <code>glossary_search</code> with a\n    natural query and reads whatever comes back, unaware which backend answered. You can start with a blurb\n    index and later swap in full articles or a live search without touching the loop. Accuracy may drift\n    when a backend resolves a match differently, but the contract holds.\n  ",
       "value": "<strong>El modelo solo ve el contrato.</strong> Invoca <code>glossary_search</code> con una\nconsulta en lenguaje natural y lee el valor devuelto, sin saber qué motor de ejecución respondió. Se puede comenzar con un índice de resúmenes y sustituirlo más adelante por artículos completos o una búsqueda en vivo sin modificar el bucle. La precisión puede variar si cada motor de ejecución resuelve las coincidencias de forma distinta, pero el contrato se mantiene."
+    },
+    "rich.dd4a04870263": {
+      "type": "rich",
+      "source": "\n    The next section swaps the executor to full-article retrieval behind the <em>same</em>\n    tool contract, so you can watch the contract stay fixed while the backend changes\n    underneath it.\n  ",
+      "value": "La siguiente sección sustituye el ejecutor por la recuperación de artículos completos manteniendo el <em>mismo</em> contrato de herramienta. Así puedes observar cómo se conserva el contrato mientras cambia el backend."
     },
     "text.038f3167fd60": {
       "type": "text",
@@ -451,12 +456,6 @@
       "source": "glossary_search via the in-page NVIDIA glossary MCP server",
       "value": "búsqueda en el glosario mediante el servidor incluido en la página"
     },
-    "text.3031fa407a52": {
-      "type": "text",
-      "source": "the term, e.g. 'vector database'",
-      "value": "the term, e.g. 'vector database'",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
-    },
     "text.326177898623": {
       "type": "text",
       "source": "Define agentic AI",
@@ -593,6 +592,12 @@
       "value": "Search NVIDIA's glossary of AI and accelerated-computing terms. Use for definitions and concepts.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
+    "text.466ce7d17c99~1": {
+      "type": "text",
+      "source": "Search NVIDIA's glossary of AI and accelerated-computing terms. Use for definitions and concepts.",
+      "value": "Search NVIDIA's glossary of AI and accelerated-computing terms. Use for definitions and concepts.",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
     "text.46f70a7ed608": {
       "type": "text",
       "source": " Define the tool schema the model can choose from next.",
@@ -709,6 +714,12 @@
       "value": "a few keywords, e.g. 'vector database'",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
+    "text.4be0fd6da69f~1": {
+      "type": "text",
+      "source": "a few keywords, e.g. 'vector database'",
+      "value": "a few keywords, e.g. 'vector database'",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
+    },
     "text.4d0282941aaf": {
       "type": "text",
       "source": "eu",
@@ -746,12 +757,6 @@
       "type": "text",
       "source": "Edit this to try a question like 'How many pro-plan customers do we have?' or 'Who has the most tickets in the last 30 days?'",
       "value": "Edita esta pregunta. Prueba, por ejemplo, cuántos clientes usan el plan profesional o quién abrió más tickets durante los últimos 30 días."
-    },
-    "text.51b29f3fcea3": {
-      "type": "text",
-      "source": "Look up an NVIDIA glossary term and return its full article.",
-      "value": "Look up an NVIDIA glossary term and return its full article.",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01c-tools.html carries the canonical source at this unit unchanged"
     },
     "text.5502f2a766fc": {
       "type": "text",

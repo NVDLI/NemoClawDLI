@@ -52,6 +52,12 @@ evidence manifest. The release workflow repeats that scan for the tagged source.
 External isolation runs the same pinned commands and remains outside this repository's distributed
 and supported dependency scope.
 
+Dependabot proposals follow the same contribution contract as other changes. If a proposal changes
+only a Python `.lock.in` file, regenerate and include its hashed `.lock` before merging: CI installs
+the lock, not the input. Supply the issue relationship, affected surfaces, validation results and
+maintainer ownership in the pull-request template before running the required checks. An early
+submission-metadata failure means the dependency and build checks have not run yet.
+
 Every CI installation uses `--require-hashes --no-deps --only-binary=:all:`. This makes the lock the
 complete resolution boundary and rejects an unrecorded archive, source distribution, or transitive
 package. Advisory details stay in the authorized private scanner record; public changes contain
