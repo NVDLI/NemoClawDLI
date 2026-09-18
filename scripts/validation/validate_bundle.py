@@ -66,6 +66,16 @@ def _concept_page(detail: str) -> str:
     match = re.match(r"([^:]+\.html):", detail)
     return f"web/nemoclaw/{match.group(1)}" if match else "web/nemoclaw"
 
+
+def _prose_severity(issue: str, advisory: str) -> str:
+    return "required" if re.match(r"^em-dash(?:\s|$)", issue) else advisory
+
+
+def finalize_report_status(summary: dict) -> int:
+    """Keep the saved verdict and command status tied to every required finding."""
+    summary["ok"] = bool(summary["ok"] and summary["gradient"]["required"] == 0)
+    return 0 if summary["ok"] else 1
+
 # prose_variety emits both buzz constructions and phrase-level redundancy in one example stream;
 # these kinds are the redundancy half, routed to the redundancy suite (the rest are buzz cadence).
 _REDUNDANT_KINDS = {"graphic-echoes-prose", "sentence-restated"}
@@ -418,10 +428,8 @@ def _build_suites(findings_detail: dict):
     return suites, gaps
 
 
-# English-prose style suites: rhythm, buzz cadence, branding, grammar, the em-dash tell. These
-# encode ENGLISH writing norms (an em-dash reads as an AI tell in English, but the dash is ordinary
-# punctuation in Spanish, German, French, ...). On a translation branch they would false-positive on
-# correct target-language text, so a non-English run marks them "n/a" instead of running them. The
+# English-prose style suites encode English writing norms. A non-English run marks these
+# suites "n/a". The separate em-dash rule applies to every locale and remains required. The
 # STRUCTURAL suites (links, layout, SKILL contract, modules, figures, cells, color, materials) are
 # language-agnostic and always gate, so a translation must still keep the course structurally whole.
 _EN_PROSE_SUITES = ("prose_variety", "prose_buzz", "redundancy", "grammar", "structure", "headings",
@@ -1157,7 +1165,7 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
         "code_const": [D(f"{r['path']}:{r['line']}", f"[{r['kind']}] {r['snippet']}", CONSIDER, r["detail"])
                        for r in ch_fam["constants"]],
         "code_prose": [D(f"{r['path']}:{r['line']}", f"[{r['kind']}] {r['snippet']}",
-                         RECOMMENDED if r["kind"] == "em-dash" else CONSIDER, r["detail"])
+                         _prose_severity(r["kind"], CONSIDER), r["detail"])
                        for r in ch_fam["prose"]],
         "hollow_intro": [D(h["page"], h["sentence"], CONSIDER,
                            "Opens on scaffolding, not content. Cut the frame ('This page', 'Below,', 'Notice that') and "
@@ -1183,8 +1191,9 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
         "structure": [D(s["page"], f"[{s['kind']}] {s['detail']}", RECOMMENDED, _STRUCTURE_FIX.get(s["kind"],
                         "Vary the block rhythm: break the run, lift the buried list, or space the stacked lists."))
                       for s in pv_structure],
-        "grounding": [D(fo.get("path"), "; ".join(fo.get("issues", [])), RECOMMENDED, _ground_fix(fo.get("issues", [])))
-                      for fo in gfind],
+        "grounding": [D(fo.get("path"), issue,
+                        _prose_severity(issue, RECOMMENDED), _ground_fix([issue]))
+                      for fo in gfind for issue in fo.get("issues", [])],
         "color_theme": ([D(f, f"{tok} on {prop}", REQUIRED,
                            f"Replace {tok} with a theme variable (var(--g), var(--e1), var(--tx), …). A literal in an "
                            f"inline style outranks the light-theme rules and stays dark in light mode.")
@@ -1385,6 +1394,8 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
         "suites": suites,
     }
 
+    exit_status = finalize_report_status(summary)
+    ok = summary["ok"]
     print(f"validate_bundle [{summary['git_sha']}] scope={scope}"
           + ("" if lang_en else f" lang={lang} (translation: English-prose suites n/a)"))
     print(f"  links: {s['pages']} pages / {s['links']} links")
@@ -1504,7 +1515,7 @@ def run(scope: str = "ship", write: bool = True, stamp: str | None = None, lang:
         verdict = "✅ clean. Nothing outstanding at any tier (required, recommended, or consider)."
     print(f"validate_bundle: {verdict}")
     print("  detail: docs/validation/latest.md  ·  review UI: validation.html  ·  one suite: python3 scripts/validation/prose_variety.py")
-    return 0 if ok else 1
+    return exit_status
 
 
 def _render_md(summary: dict) -> str:
@@ -1531,7 +1542,7 @@ def _render_md(summary: dict) -> str:
          f"| cross-course | {s['cross_course']} | {s['blocking_cross_course']} |",
          f"| grounding issues | {g.get('findings','?')} | advisory |",
          f"| · ungrounded pages | {g.get('ungrounded','?')} | advisory |",
-         f"| · em-dash pages | {g.get('em_dash_pages','?')} | advisory |",
+         f"| · em-dash pages | {g.get('em_dash_pages','?')} | required |",
          f"| prose variety (narrative pages flagged) | {summary.get('prose_variety',{}).get('flagged','?')} / {summary.get('prose_variety',{}).get('pages','?')} | advisory |",
          f"| · buzz cadence (antithesis/numeric) | {len(summary.get('prose_variety',{}).get('antithesis',[]))} | advisory |",
          f"| color theme (non-theme-dynamic colors) | {summary.get('color_theme',{}).get('inline',0) + summary.get('color_theme',{}).get('undefined_var',0) + summary.get('color_theme',{}).get('bake',0)} | blocking |",

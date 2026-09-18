@@ -472,3 +472,42 @@ test('stream stalls and mid-stream failures are visible and cancel the reader', 
     /mid-stream socket failure/,
   );
 });
+
+test('idle timeout survives transport cancellation that never settles', async () => {
+  const reader = new ReadableStream({ cancel:() => new Promise(() => {}) }).getReader();
+  const pending = readModelStreamChunk(reader, 5);
+  await assert.rejects(Promise.race([
+    pending,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('cancellation hung')), 100)),
+  ]), /stopped producing data/);
+  reader.releaseLock();
+});
+
+for (const operation of ['chat', 'chatStream']) {
+  test(`${operation} propagates Stop despite a hanging cancel implementation`, async () => {
+    const previous = { fetch:globalThis.fetch, localStorage:globalThis.localStorage };
+    globalThis.localStorage = memoryStorage();
+    setModelApiBaseUrl('https://models.example.test/v1');
+    const controller = new AbortController();
+    let canceled = false;
+    globalThis.fetch = async () => {
+      setTimeout(() => controller.abort(new Error('learner stopped')), 5);
+      return new Response(new ReadableStream({ cancel() {
+        canceled = true;
+        return new Promise(() => {});
+      } }));
+    };
+    try {
+      await assert.rejects(Promise.race([
+        sharedRuntime[operation]({ messages:[], signal:controller.signal }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('cleanup hung')), 100)),
+      ]), /learner stopped/);
+      assert.equal(canceled, true);
+    } finally {
+      for (const [name, value] of Object.entries(previous)) {
+        if (value === undefined) delete globalThis[name];
+        else globalThis[name] = value;
+      }
+    }
+  });
+}

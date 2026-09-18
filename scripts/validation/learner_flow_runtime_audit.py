@@ -33,9 +33,9 @@ const mime = { '.html':'text/html; charset=utf-8', '.js':'text/javascript; chars
 const fixture = `<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="/nemoclaw/styles/_style.css"></head><body data-learning-view>
 <div class="topbar"><a class="logo" href="#">Fixture</a><div class="spacer"></div><span class="key-pill">No API key</span></div><main>
   <div id="journey-map"></div>
-  <details id="learning-applied" class="learning-block" open data-learning-id="fixture-applied" data-learning-tier="applied"><summary><span class="learning-scope">Applied · Build</span><span class="learning-question">Inspect the implementation detail?</span></summary><div class="learning-block-body"><h2>Applied detail</h2><p>Applied implementation detail stays available in the source and can be revealed without changing the canonical page.</p></div></details>
-  <details id="learning-deep" class="learning-block" open data-learning-id="fixture-deep" data-learning-tier="deep"><summary><span class="learning-scope">Deep · Sources</span><span class="learning-question">Read the deeper reference?</span></summary><div class="learning-block-body"><h2>Deep detail</h2><p>Deep reference detail stays available in the source while guided and applied views keep the main path short.</p></div></details>
-  <details id="learning-reference" class="references learning-block" open data-learning-always-open data-learning-id="fixture-references" data-learning-tier="deep"><summary><span class="learning-scope">Deep · Sources</span><span class="learning-question">Read the primary paper sources?</span></summary><div class="learning-block-body"><h2>Primary sources</h2><p>Paper references stay visible on first load while the native disclosure still lets a learner collapse this list.</p></div></details>
+  <details id="learning-detail" class="learning-block" open data-learning-id="fixture-applied"><summary><span class="learning-question">Inspect the implementation detail?</span></summary><div class="learning-block-body"><h2>Implementation detail</h2><p>Implementation detail stays available in the source and can be revealed without changing the canonical page.</p></div></details>
+  <details id="learning-sources" class="learning-block" open data-learning-id="fixture-deep"><summary><span class="learning-question">Read the deeper reference?</span></summary><div class="learning-block-body"><h2>Deep detail</h2><p>Deep reference detail stays available in the source inside its own native disclosure.</p></div></details>
+  <details id="learning-reference" class="references learning-block" open data-learning-id="fixture-references"><summary><span class="learning-question">Read the primary paper sources?</span></summary><div class="learning-block-body"><h2>Primary sources</h2><p>Paper references stay visible on first load while the native disclosure still lets a learner collapse this list.</p></div></details>
   <div id="run-cell"></div><div id="canvas"></div><div id="chat"></div><div id="artifact-action"></div><div id="console"></div>
 </main><script type="module">
 import { mountRunCell, mountCanvasFlow, mountChatUI, mountConsole } from "/nemoclaw/scripts/_shared.js";
@@ -167,72 +167,47 @@ async function waitText(locator, pattern) {
   }
   if (!runtimeRegistryContract.localDefault || !runtimeRegistryContract.explicitRelay || runtimeRegistryContract.explicitDirect) throw new Error(`model relay override is not deterministic: ${JSON.stringify(runtimeRegistryContract)}`);
 
-  const depthSelect = page.locator('.learning-depth-select');
-  await depthSelect.waitFor({ state:'attached' });
-  if (await depthSelect.isVisible()) throw new Error('global depth selector should stay hidden during the Guided pilot');
-  const setDepth = async (value) => depthSelect.evaluate((el, next) => {
-    el.value = next;
-    el.dispatchEvent(new Event('change', { bubbles:true }));
-  }, value);
-  if (await depthSelect.inputValue() !== 'guided') throw new Error('first visit did not default to Guided');
-  if (await page.locator('#learning-applied .learning-block-body').isVisible() || await page.locator('#learning-deep .learning-block-body').isVisible()) throw new Error('first visit did not collapse optional Guided sections');
+  if (await page.locator('.learning-depth-select, .learning-depth-control').count()) throw new Error('retired course mode control returned');
+  const detail = page.locator('#learning-detail');
+  const sources = page.locator('#learning-sources');
   const referenceBody = page.locator('#learning-reference .learning-block-body');
-  if (!await referenceBody.isVisible()) throw new Error('Guided hid the primary paper references');
+  if (!await detail.evaluate(n => n.open) || !await sources.evaluate(n => n.open) || !await referenceBody.isVisible()) throw new Error('authored disclosure defaults changed');
   await page.locator('#learning-reference > summary').click();
-  if (await referenceBody.isVisible()) throw new Error('always-open reference disclosure could not be collapsed locally');
+  if (await referenceBody.isVisible()) throw new Error('reference disclosure could not be collapsed locally');
   await page.locator('#learning-reference > summary').click();
-  if (!/Inspect the implementation detail\?/.test(await page.locator('#learning-applied > summary').innerText())) throw new Error('applied section did not ask its local question inline');
   const runCode = page.locator('#run-cell .rc-code-det');
   const canvasCodes = page.locator('#canvas .cf-panel-code-det');
   const canvasCode = canvasCodes.first();
-  if (await runCode.getAttribute('open') !== null || await page.locator('#canvas .cf-panel-code-det[open]').count()) throw new Error('Guided did not collapse interactive code');
-  await canvasCode.locator('summary').click();
-  if (await canvasCode.getAttribute('open') === null || await runCode.getAttribute('open') !== null) throw new Error('local code reveal changed the wrong cell');
-
-  if (!await page.locator('#learning-applied > summary').isVisible() || !await page.locator('#learning-deep > summary').isVisible()) throw new Error('Guided view hid inline section questions');
+  if (!await runCode.evaluate(n => n.open)) throw new Error('authored RunCell default was overwritten');
+  await detail.locator('summary').click();
+  if (await detail.evaluate(n => n.open) || !await sources.evaluate(n => n.open)) throw new Error('local toggle changed another section');
+  await sources.locator('summary').click();
+  await runCode.evaluate(n => {n.open = false;});
+  await canvasCode.evaluate(n => {n.open = true;});
   await page.evaluate(() => window.dispatchEvent(new Event('beforeprint')));
-  await page.emulateMedia({ media:'print' });
-  if (!await page.locator('#learning-applied .learning-block-body').isVisible() || !await page.locator('#learning-deep .learning-block-body').isVisible()) {
-    const printState = await page.evaluate(() => [...document.querySelectorAll('.learning-block')].map(el => ({ open:el.open, display:getComputedStyle(el.querySelector('.learning-block-body')).display, height:el.querySelector('.learning-block-body').getBoundingClientRect().height })));
-    throw new Error(`print did not restore complete authored content: ${JSON.stringify(printState)}`);
-  }
-  if (!await runCode.isVisible() || !await canvasCode.isVisible()) throw new Error('print did not restore interactive code');
-  await page.emulateMedia({ media:'screen' });
+  await page.emulateMedia({media:'print'});
+  if (!await detail.locator('.learning-block-body').isVisible() || !await sources.locator('.learning-block-body').isVisible() || !await runCode.evaluate(n=>n.open) || !await canvasCode.evaluate(n=>n.open)) throw new Error('print lost authored content');
+  await page.emulateMedia({media:'screen'});
   await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
-  if (await page.locator('#learning-applied .learning-block-body').isVisible() || await page.locator('#learning-deep .learning-block-body').isVisible()) throw new Error('screen view did not restore Guided disclosure state after print');
-  if (await runCode.getAttribute('open') !== null || await canvasCode.getAttribute('open') === null) throw new Error('screen view did not restore per-cell code disclosure state after print');
-  await setDepth('applied');
-  if (await runCode.getAttribute('open') === null || await page.locator('#canvas .cf-panel-code-det[open]').count() !== await canvasCodes.count()) throw new Error('Applied did not restore authored code defaults');
-  await setDepth('guided');
-  if (await runCode.getAttribute('open') !== null || await page.locator('#canvas .cf-panel-code-det[open]').count()) throw new Error('returning to Guided did not collapse code');
-  await page.locator('#learning-applied > summary').click();
-  if (!await page.locator('#learning-applied .learning-block-body').isVisible() || await page.locator('#learning-deep .learning-block-body').isVisible()) throw new Error('local section override changed the wrong disclosure');
-  const stored = await page.evaluate(() => localStorage.getItem('nemoclaw_learning_depth_v1'));
-  if (stored !== 'guided') throw new Error(`learning depth stored unexpected data: ${stored}`);
-
-  await page.reload({ waitUntil:'networkidle' });
+  if (await detail.evaluate(n=>n.open) || await sources.evaluate(n=>n.open) || await runCode.evaluate(n=>n.open) || !await canvasCode.evaluate(n=>n.open)) throw new Error('print did not restore independent disclosure state');
+  await page.reload({waitUntil:'networkidle'});
   await page.waitForFunction(() => window.fixtureMounted === true);
-  if (await page.locator('#learning-applied .learning-block-body').isVisible() || await page.locator('#learning-deep .learning-block-body').isVisible()) throw new Error('reload did not restore Guided default');
-  if (!await page.locator('#learning-reference .learning-block-body').isVisible()) throw new Error('reload hid the primary paper references');
-  await page.evaluate(() => { location.hash = 'learning-deep'; });
-  if (!await page.locator('#learning-deep .learning-block-body').isVisible()) throw new Error('deep link did not reveal its collapsed disclosure');
-  await page.locator('#learning-deep > summary').click();
-  await page.locator('.learning-depth-select').evaluate(el => { el.value='applied'; el.dispatchEvent(new Event('change', { bubbles:true })); });
-  if (!await page.locator('#learning-applied .learning-block-body').isVisible() || await page.locator('#learning-deep .learning-block-body').isVisible()) throw new Error('Applied view did not show applied detail and collapse deep detail');
-  await page.locator('.learning-depth-select').evaluate(el => { el.value='complete'; el.dispatchEvent(new Event('change', { bubbles:true })); });
-  if (!await page.locator('#learning-applied .learning-block-body').isVisible() || !await page.locator('#learning-deep .learning-block-body').isVisible()) throw new Error('Complete did not restore all optional content');
+  if (!await detail.evaluate(n=>n.open) || !await sources.evaluate(n=>n.open) || !await referenceBody.isVisible()) throw new Error('reload lost authored defaults');
+  await sources.locator('summary').click();
+  await page.evaluate(() => { location.hash = 'learning-sources'; });
+  await page.waitForFunction(() => document.getElementById('learning-sources').open);
 
   await page.setViewportSize({ width:390, height:844 });
-  await page.locator('#learning-deep > summary').focus();
+  await page.locator('#learning-sources > summary').focus();
   await page.keyboard.press('Enter');
-  if (await page.locator('#learning-deep .learning-block-body').isVisible()) throw new Error('narrow keyboard activation did not close the local disclosure');
+  if (await page.locator('#learning-sources .learning-block-body').isVisible()) throw new Error('narrow keyboard activation did not close the local disclosure');
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   if (overflow > 1) throw new Error(`learning fixture overflowed narrow viewport by ${overflow}px`);
   await page.setViewportSize({ width:1100, height:900 });
 
   const intro = await page.locator('#run-cell .rc-intro').innerText();
   if (!/Read the outcome first/.test(intro)) throw new Error('RunCell intro did not render');
-  if (await page.locator('#run-cell .rc-code-det').getAttribute('open') === null) throw new Error('Complete did not restore the authored open RunCell');
+  if (await page.locator('#run-cell .rc-code-det').getAttribute('open') === null) throw new Error('authored open RunCell default changed');
 
   const chatState = page.locator('#chat .chatui-state');
   await waitText(chatState, /Prerequisite:/);
@@ -317,7 +292,7 @@ async function waitText(locator, pattern) {
   const noJsContext = await browser.newContext({ javaScriptEnabled:false, viewport:{ width:800, height:700 } });
   const noJsPage = await noJsContext.newPage();
   await noJsPage.goto(`http://127.0.0.1:${port}/fixture.html`, { waitUntil:'domcontentloaded' });
-  if (!await noJsPage.locator('#learning-applied .learning-block-body').isVisible() || !await noJsPage.locator('#learning-deep .learning-block-body').isVisible() || !await noJsPage.locator('#learning-reference .learning-block-body').isVisible()) throw new Error('no-JavaScript view hid authored content');
+  if (!await noJsPage.locator('#learning-detail .learning-block-body').isVisible() || !await noJsPage.locator('#learning-sources .learning-block-body').isVisible() || !await noJsPage.locator('#learning-reference .learning-block-body').isVisible()) throw new Error('no-JavaScript view hid authored content');
   await noJsContext.close();
   const supportPage = await browser.newPage({ viewport:{ width:800, height:700 } });
   await supportPage.goto(`http://127.0.0.1:${port}/support.html`, { waitUntil:'networkidle' });
@@ -327,11 +302,8 @@ async function waitText(locator, pattern) {
   const localizedPage = await browser.newPage({ viewport:{ width:390, height:700 } });
   await localizedPage.goto(`http://127.0.0.1:${port}/localized.html`, { waitUntil:'networkidle' });
   await localizedPage.waitForFunction(() => window.localizedMounted === true);
-  const localizedControl = localizedPage.locator('.learning-depth-control');
-  if (await localizedControl.count() !== 1 || !/^Detalhe/.test(await localizedControl.innerText())) throw new Error('localized course page lost its Portuguese depth control');
-  const localizedOptions = await localizedControl.locator('option').allInnerTexts();
-  if (localizedOptions.join('|') !== 'Guiado|Aplicado|Completo') throw new Error(`localized depth options are not Portuguese: ${JSON.stringify(localizedOptions)}`);
-  if (!await localizedPage.locator('#localized-detail p').isVisible()) throw new Error('localized depth control changed authored content visibility');
+  if (await localizedPage.locator('.learning-depth-control').count()) throw new Error('retired course mode returned on translated page');
+  if (!await localizedPage.locator('#localized-detail p').isVisible()) throw new Error('localized authored disclosure default changed');
   await localizedPage.close();
 
   const historyContext = await browser.newContext({ viewport:{ width:800, height:700 } });
@@ -358,7 +330,6 @@ async function waitText(locator, pattern) {
 
   const courseContext = await browser.newContext({ viewport:{ width:1100, height:900 } });
   await courseContext.addInitScript(() => {
-    localStorage.setItem('nemoclaw_learning_depth_v1', 'guided');
     const key = 'nemoclaw_course_assistant_sessions_v1';
     if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({ version:1, activeId:'saved-session', sessions:[{
       id:'saved-session', title:'Saved session', pageId:'01a-loop', pageTitle:'The agent loop', createdAt:1, updatedAt:1,
@@ -400,7 +371,7 @@ async function waitText(locator, pattern) {
   if (!tooltipBox || tooltipBox.x < 0 || tooltipBox.x + tooltipBox.width > 390) throw new Error(`Brev offer tooltip escapes the narrow viewport: ${JSON.stringify(tooltipBox)}`);
   const assistantEntry = overviewPage.locator('.course-assistant-entry');
   await assistantEntry.waitFor({ state:'visible' });
-  if (!/session stays in this browser/i.test(await assistantEntry.innerText()) || !/assistant on every lesson/i.test(await assistantEntry.innerText())) {
+  if (!/session stays in this browser/i.test(await assistantEntry.innerText()) || !/available on every lesson/i.test(await assistantEntry.innerText())) {
     throw new Error('course overview does not explain Course Assistant availability and browser-local sessions');
   }
   await assistantEntry.locator('button').click();
@@ -491,12 +462,19 @@ async function waitText(locator, pattern) {
   const assistantLauncher = coursePage.locator('.course-assistant-launcher');
   await assistantLauncher.waitFor({ state:'visible' });
   const launcherBox = await assistantLauncher.boundingBox();
-  if (!launcherBox || launcherBox.width > 34 || launcherBox.height > 34) throw new Error('page assistant launcher is not compact');
+  if (!launcherBox || launcherBox.width < 44 || launcherBox.height < 44 || launcherBox.x < 0 || launcherBox.x + launcherBox.width > 1100) throw new Error('page assistant launcher lacks a usable, in-viewport target');
   if (!/Course-authored prose, example code, and original diagrams/.test(await coursePage.locator('.course-license-note').innerText())) throw new Error('course license note lost its authored-material scope');
+  // Bound the failed-provider case locally; the shared UI now requires model setup first.
+  await coursePage.evaluate(async () => {
+    const helpers = await import('./scripts/_shared.js');
+    helpers.setModelApiBaseUrl(location.origin + '/unavailable-model/v1');
+    helpers.setKey('test-only-learner-flow');
+  });
   await assistantLauncher.click();
   let assistantPanel = coursePage.locator('.course-assistant-panel');
   await assistantPanel.waitFor({ state:'visible' });
-  if (!/COURSE ASSISTANT/.test(await assistantPanel.innerText())) throw new Error('shared assistant was not rebranded course-wide');
+  await assistantPanel.locator('.course-assistant-options summary').click();
+  if ((await assistantPanel.locator('header > div > span').innerText()) !== 'Assistant') throw new Error('shared assistant must use its concise name');
   let sessionSelect = assistantPanel.locator('#course-assistant-session');
   if (await sessionSelect.locator('option').count() !== 1 || !/Persisted learner question/.test(await assistantPanel.innerText())) throw new Error('Course Assistant did not restore its local session');
   const restoredContext = await assistantPanel.locator('.course-assistant-context').innerText();
@@ -531,6 +509,7 @@ async function waitText(locator, pattern) {
   await coursePage.locator('.course-assistant-launcher').click();
   assistantPanel = coursePage.locator('.course-assistant-panel');
   await assistantPanel.waitFor({ state:'visible' });
+  await assistantPanel.locator('.course-assistant-options summary').click();
   sessionSelect = assistantPanel.locator('#course-assistant-session');
   if (await sessionSelect.locator('option').count() !== 2 || await sessionSelect.inputValue() !== newSessionId || !/MCP study/.test(await sessionSelect.locator('option:checked').innerText())) throw new Error('Course Assistant session selection/name did not survive reload');
   if (!/Explain MCP trust boundaries/.test(await assistantPanel.locator('.chatui-log').innerText())) throw new Error('failed Course Assistant turn did not survive reload');
@@ -690,22 +669,16 @@ async function waitText(locator, pattern) {
   await assistantPanel.locator('[data-course-assistant-view="chat"]').click();
   await coursePage.keyboard.press('Escape');
   await coursePage.setViewportSize({ width:1100, height:900 });
-  await coursePage.locator('.learning-depth-select').waitFor({ state:'attached' });
-  if (await coursePage.locator('.learning-depth-select').isVisible()) throw new Error('02b exposed the hidden global depth selector');
-  await coursePage.locator('#cell-m3b-p1 .rc-card').waitFor({ state:'visible' });
-  const courseBlocks = coursePage.locator('details.learning-block[data-learning-tier]');
-  if (await courseBlocks.count() !== 8) throw new Error('02b learning depth lost one of its eight local disclosures');
-  const guidedBodies = coursePage.locator('details.learning-block .learning-block-body:visible');
-  const guidedReferences = coursePage.locator('details.learning-block[data-learning-always-open] .learning-block-body:visible');
-  if (await guidedBodies.count() !== await guidedReferences.count()) throw new Error('02b Guided left optional narrative visible outside the always-open references');
-  if (await coursePage.locator('#cell-m3b-p1 .cf-canvas').count() || !await coursePage.locator('#cell-m3b-p1 .rc-card').count()) throw new Error('02b single embedding regressed from RunCell to CanvasFlow');
-  if (await coursePage.locator('[data-learning-id="graphrag-global-questions"] .learning-block-body').isVisible()) throw new Error('02b Guided left GraphRAG visible');
-  const guidedHeight = await coursePage.evaluate(() => document.documentElement.scrollHeight);
-  await coursePage.locator('.learning-depth-select').evaluate(el => { el.value='complete'; el.dispatchEvent(new Event('change', { bubbles:true })); });
-  if (await coursePage.locator('details.learning-block .learning-block-body:visible').count() !== 8) throw new Error('02b Complete did not restore every local disclosure');
-  if (!await coursePage.locator('#cell-graphrag').isVisible()) throw new Error('02b Complete did not restore the optional GraphRAG artifact');
-  const completeHeight = await coursePage.evaluate(() => document.documentElement.scrollHeight);
-  if (guidedHeight >= completeHeight * 0.7) throw new Error(`02b Guided remains too tall: ${guidedHeight}px versus ${completeHeight}px complete`);
+  await coursePage.locator('#cell-m3b-p1 .rc-card').waitFor({state:'visible'});
+  const courseBlocks = coursePage.locator('details.learning-block');
+  if (await coursePage.locator('.learning-depth-select').count()) throw new Error('02b mode selector returned');
+  if (await courseBlocks.count() !== 8 || await courseBlocks.locator('.learning-block-body:visible').count() !== 8) throw new Error('02b lost authored disclosures');
+  if (await coursePage.locator('#cell-m3b-p1 .cf-canvas').count()) throw new Error('single embedding regressed from RunCell to CanvasFlow');
+  const graphBlock = coursePage.locator('[data-learning-id="graphrag-global-questions"]');
+  await graphBlock.locator(':scope > summary').click();
+  if (await graphBlock.locator('.learning-block-body').isVisible() || await courseBlocks.locator('.learning-block-body:visible').count() !== 7) throw new Error('02b local toggle changed neighboring content');
+  await graphBlock.locator(':scope > summary').click();
+  if (!await coursePage.locator('#cell-graphrag').isVisible()) throw new Error('GraphRAG artifact is not reachable');
 
   const deepPage = await courseContext.newPage();
   await deepPage.setViewportSize({ width:390, height:844 });
@@ -827,18 +800,13 @@ async function waitText(locator, pattern) {
 
   const loopPage = await courseContext.newPage();
   await loopPage.goto(`http://127.0.0.1:${port}/nemoclaw/01a-loop.html`, { waitUntil:'domcontentloaded' });
-  await loopPage.locator('.learning-depth-select').waitFor({ state:'attached' });
-  await loopPage.locator('#cell-reflex .cf-btn-run').waitFor({ state:'attached' });
-  const loopBlocks = loopPage.locator('details.learning-block[data-learning-tier]');
-  if (await loopBlocks.count() !== 5) throw new Error('01a learning depth lost one of its five local disclosures');
-  if (await loopPage.locator('details.learning-block .learning-block-body:visible').count()) throw new Error('01a Guided left optional narrative visible');
-  const loopGuidedHeight = await loopPage.evaluate(() => document.documentElement.scrollHeight);
-  await loopPage.locator('.learning-depth-select').evaluate(el => { el.value='complete'; el.dispatchEvent(new Event('change', { bubbles:true })); });
-  if (await loopPage.locator('details.learning-block .learning-block-body:visible').count() !== 5) throw new Error('01a Complete did not restore every local disclosure');
-  if (!await loopPage.locator('[data-learning-id="replaceable-reasoning-lab"] .learning-block-body').isVisible()) throw new Error('01a Complete did not restore the local loop lab');
-  const loopCompleteHeight = await loopPage.evaluate(() => document.documentElement.scrollHeight);
-  if (loopGuidedHeight >= loopCompleteHeight * 0.65) throw new Error(`01a Guided remains too tall: ${loopGuidedHeight}px versus ${loopCompleteHeight}px complete`);
+  await loopPage.locator('#cell-reflex .cf-btn-run').waitFor({state:'attached'});
+  const loopBlocks = loopPage.locator('details.learning-block');
+  if (await loopPage.locator('.learning-depth-select').count()) throw new Error('01a mode selector returned');
+  if (await loopBlocks.count() !== 5 || await loopBlocks.locator('.learning-block-body:visible').count() !== 5) throw new Error('01a lost authored disclosures');
 
+
+  const nativeDisclosures = {loop:await loopBlocks.count(), rag:await courseBlocks.count()};
   await courseContext.close();
 
   const result = await page.evaluate(() => ({
@@ -851,8 +819,8 @@ async function waitText(locator, pattern) {
   console.log(JSON.stringify({
     ok:true,
     states:result,
-    course01a:{ guidedHeight:loopGuidedHeight, completeHeight:loopCompleteHeight },
-    course02b:{ guidedHeight, completeHeight },
+    course01a:{ nativeDisclosures:nativeDisclosures.loop },
+    course02b:{ nativeDisclosures:nativeDisclosures.rag },
     course02c:{ deepBoard, deepProgress, materialsSearch:{ count:materialsSearch.count, source:materialsSearch.source } },
     assistant:{ courseSearch:courseSearch.map(result => result.id), sourceAccess, sessions:{ restored:true, completedAcrossNavigation:true, inFlightAcrossNavigation:true, renamed:true, duplicateEmptyBlocked:true, pageOwned:true, artifactAcrossPages:true, cap:sessionCap.live, storeChars:sessionCap.chars, reload:true, createDelete:true }, widths:{ initial:panelBeforeResize.width, dragged:panelAfterResize.width, keyboard:panelAfterKeyboard.width } },
   }, null, 2));

@@ -31,7 +31,7 @@ class LocalizationRuntimeDiscoveryTests(unittest.TestCase):
         self.temp.cleanup()
 
     def write_lessons(self, *ids):
-        (self.course / "learning-profile.json").write_text(
+        (self.course / "lesson-map.json").write_text(
             json.dumps({"lessons": [{"id": lesson_id} for lesson_id in ids]}),
             encoding="utf-8",
         )
@@ -123,7 +123,7 @@ class RuntimeArtifactLocaleTests(unittest.TestCase):
         (course / "assets/locale.json").unlink()
         self.languages.pop()
         self.write_manifest()
-        for name in ("learning-profile.json", "interface-inventory.json"):
+        for name in ("lesson-map.json", "interface-inventory.json"):
             with self.subTest(name=name):
                 marker = course / name
                 marker.write_text('{"schema":"novel or malformed consumer"}')
@@ -145,7 +145,7 @@ class RuntimeArtifactLocaleTests(unittest.TestCase):
     def test_novel_undeclared_profile_is_discovered_without_locale_metadata(self):
         course = self.site / "novel/nemoclaw"
         course.mkdir(parents=True)
-        (course / "learning-profile.json").write_text('{')
+        (course / "lesson-map.json").write_text('{')
         with self.assertRaisesRegex(ValueError, "novel/nemoclaw"):
             discover_artifact_locales(self.site)
 
@@ -155,7 +155,7 @@ class RuntimeArtifactLocaleTests(unittest.TestCase):
         (self.site / "LICENSE").write_text("fixture")
         course = self.site / "novel/authoring/web/nemoclaw"
         course.mkdir(parents=True)
-        (course / "learning-profile.json").write_text('{"schema":"nemoclaw-learning-profile/1"}')
+        (course / "lesson-map.json").write_text('{"schema":"nemoclaw-lesson-map/1"}')
         metadata = {"schema":"dir-skill/1.0", "node_type":"directory-explorer",
                     "source_dir":"novel/authoring/web/nemoclaw/"}
         skill = course / "SKILL.html"

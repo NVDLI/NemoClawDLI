@@ -419,6 +419,22 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     await context.addCookies([{ name: 'course_fixture', value: 'authorized', url: `http://127.0.0.1:${port}` }]);
     const page = await context.newPage();
     await page.goto(`http://127.0.0.1:${port}/${COURSE_ROOT}/index.html`);
+    const assertActivityButton = async (percentage, connected = false) => {
+      const button = page.locator('.activity-control-toggle');
+      assert.equal((await button.textContent()).trim(), `🏃 ${percentage}%`);
+      const connection = connected ? 'Connected' : 'Not connected';
+      assert.equal(await button.getAttribute('aria-label'), `Activity ${percentage}%. ${connection}`);
+      assert.equal(await button.getAttribute('title'), `Activity: ${connection}`);
+      assert.ok(await button.evaluate((node, isConnected) => {
+        const probe = document.createElement('span');
+        probe.style.color = isConnected ? 'var(--g)' : 'var(--tf)';
+        node.append(probe);
+        const expected = getComputedStyle(probe).color;
+        probe.remove();
+        return getComputedStyle(node).color === expected && !node.querySelector('.activity-control-dot');
+      }, connected));
+    };
+    await assertActivityButton(0);
     const artifact = await page.evaluate(async source => (await import(source)).resolveActivityArtifact(), `/${ACTIVITY_SOURCE}`);
     assert.equal(artifact.artifact_digest, `sha256:${createHash('sha256').update(manifest).digest('hex')}`);
     assert.ok(authenticatedManifests > 0);
@@ -459,6 +475,7 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     await page.locator('[data-activity-refresh]').click();
     await page.waitForFunction(() => document.querySelector('#activity-progress')?.value === 45);
     assert.equal(await page.locator('#activity-progress-label').textContent(), 'Saved progress: 45%');
+    await assertActivityButton(45, true);
     await page.waitForLoadState('networkidle');
     const beforeReload = apiRequests;
     await page.reload();
@@ -471,6 +488,7 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     apiMode = 'unavailable';
     await page.evaluate(() => window.__nemoclawActivity.recordMilestone('01a:model-call-verified'));
     assert.equal(await page.locator('.activity-control').getAttribute('data-state'), 'unavailable');
+    await assertActivityButton(45);
     assert.equal(await page.locator('#activity-progress-label').textContent(), 'Last confirmed progress: 45%');
     assert.equal(await page.locator('#activity-progress').getAttribute('value'), '45');
     apiMode = 'healthy';
@@ -479,10 +497,12 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     await page.waitForFunction(() => document.querySelector('#activity-progress')?.value === 60);
     assert.equal(await page.locator('[data-activity-sync]').textContent(), 'Confirmed by the Activity API.');
     assert.equal(await page.locator('#activity-progress').getAttribute('aria-valuetext'), 'Saved progress: 60%');
+    await assertActivityButton(60, true);
     await page.evaluate(() => sessionStorage.setItem('learner-work', 'retained'));
     const beforeDisconnect = apiRequests;
     await page.locator('[data-activity-disable]').click();
     assert.equal(await page.locator('.activity-control').getAttribute('data-state'), 'off');
+    await assertActivityButton(10);
     assert.equal(await page.locator('[data-activity-enable]').isVisible(), true);
     assert.equal(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key.startsWith('dli_activity:') && !key.includes(':evidence:')).length), 0);
     assert.equal(await page.locator('#activity-progress-label').textContent(), 'Local verified progress: 10%');

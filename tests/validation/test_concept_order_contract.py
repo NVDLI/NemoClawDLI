@@ -12,10 +12,10 @@ from scripts.validation import concept_order_audit
 class ConceptOrderContractTests(unittest.TestCase):
     def test_runtime_profile_is_linked_for_standalone_projection(self) -> None:
         skill = (concept_order_audit.COURSE / "SKILL.html").read_text(encoding="utf-8")
-        self.assertIn('href="learning-profile.json"', skill)
+        self.assertIn('href="lesson-map.json"', skill)
 
     def profile(self) -> dict[str, object]:
-        return json.loads(concept_order_audit.LEARNING_PROFILE.read_text(encoding="utf-8"))
+        return json.loads(concept_order_audit.LESSON_MAP.read_text(encoding="utf-8"))
 
     def test_research_artifact_order_does_not_depend_on_heading_punctuation(self) -> None:
         source = concept_order_audit.read("02c-deep.html")
@@ -42,7 +42,7 @@ class ConceptOrderContractTests(unittest.TestCase):
         pages = concept_order_audit._lesson_pages()
         findings = concept_order_audit.audit(discovered_pages=pages | {"04d-novel"})
         self.assertIn(
-            "learning-profile.json: discovered lesson 04d-novel.html is not mapped",
+            "lesson-map.json: discovered lesson 04d-novel.html is not mapped",
             findings,
         )
 
@@ -50,7 +50,7 @@ class ConceptOrderContractTests(unittest.TestCase):
         pages = concept_order_audit._lesson_pages() - {"02b-rag"}
         findings = concept_order_audit.audit(discovered_pages=pages)
         self.assertIn(
-            "learning-profile.json: mapped lesson 02b-rag.html does not exist",
+            "lesson-map.json: mapped lesson 02b-rag.html does not exist",
             findings,
         )
 
@@ -80,17 +80,13 @@ class ConceptOrderContractTests(unittest.TestCase):
             in item
                             for item in findings))
 
-    def test_guided_cannot_define_a_copied_tree(self) -> None:
-        profile = self.profile()
-        profile["profiles"]["guided"]["copied_tree"] = "web/guided"
-        findings = concept_order_audit.audit(profile_override=profile)
-        self.assertTrue(any("must not define a copied lesson tree" in item for item in findings))
-
-    def test_query_only_duplicate_profile_is_rejected(self) -> None:
-        profile = self.profile()
-        profile["profiles"]["compact"] = {"query": "profile=compact", "detail": "guided"}
-        findings = concept_order_audit.audit(profile_override=profile)
-        self.assertTrue(any("Guided must be the only default profile" in item for item in findings))
+    def test_modes_and_copied_trees_are_rejected(self) -> None:
+        for field in ("profiles", "source_root", "content_root", "copied_tree", "lesson_tree"):
+            with self.subTest(field=field):
+                profile = self.profile()
+                profile[field] = {"alternate": {"query": "mode=alternate"}}
+                findings = concept_order_audit.audit(profile_override=profile)
+                self.assertTrue(any("mode profiles and copied lesson trees are retired" in item for item in findings))
 
     def test_required_concept_spine_cannot_move_into_optional_copy(self) -> None:
         cases = {
@@ -135,13 +131,13 @@ class VisibleConceptBridgeTests(unittest.TestCase):
             course = Path(folder)
             for item in original.glob('*.html'):
                 shutil.copy(item, course / item.name)
-            for name in ['learning-profile.json', 'course_contract.json']:
+            for name in ['lesson-map.json', 'course_contract.json']:
                 shutil.copy(original / name, course / name)
             with patch.object(concept_order_audit, 'COURSE', course), \
-                 patch.object(concept_order_audit, 'LEARNING_PROFILE', course / 'learning-profile.json'), \
+                 patch.object(concept_order_audit, 'LESSON_MAP', course / 'lesson-map.json'), \
                  patch.object(concept_order_audit, 'COURSE_CONTRACT', course / 'course_contract.json'):
                 self.assertEqual(concept_order_audit.audit(), [])
-                profile = json.loads((course / 'learning-profile.json').read_text())
+                profile = json.loads((course / 'lesson-map.json').read_text())
                 source = course / '02c-deep.html'
                 novel = course / 'nested' / 'research.html'
                 novel.parent.mkdir()
@@ -155,7 +151,7 @@ class VisibleConceptBridgeTests(unittest.TestCase):
                 for lesson in profile['lessons']:
                     if lesson['id'] == '02c-deep':
                         lesson['id'] = 'nested/research'
-                (course / 'learning-profile.json').write_text(json.dumps(profile))
+                (course / 'lesson-map.json').write_text(json.dumps(profile))
                 self.assertEqual(concept_order_audit.audit(), [])
                 source_text = novel.read_text()
                 changed = source_text.replace('owns scope and data flow', 'contains a flowchart')

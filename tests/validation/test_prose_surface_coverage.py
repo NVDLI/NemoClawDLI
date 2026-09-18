@@ -4,14 +4,38 @@
 from __future__ import annotations
 
 import tempfile
+import json
 import unittest
 from pathlib import Path
 from unittest import mock
 
-from scripts.validation import prose_variety, validate_bundle
+from scripts.validation import prose_variety, validate_bundle, code_hygiene
 
 
 class ProseSurfaceCoverageTests(unittest.TestCase):
+    def test_required_punctuation_controls_report_and_exit_status(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            page = self.write(root, 'web/novel/nested/page.html', '<p>Read &mdash; inspect.</p>')
+            with mock.patch.object(code_hygiene, 'TASK1', root):
+                findings = code_hygiene.prose_findings('ship')
+            self.assertEqual([item['kind'] for item in findings], ['em-dash'])
+            required = sum(validate_bundle._prose_severity(item['kind'], 'consider') == 'required'
+                           for item in findings)
+            self.assertEqual(required, 1)
+            for prior_ok, count, expected in [(True, required, 1), (True, 0, 0), (False, 0, 1)]:
+                summary = {'ok': prior_ok, 'gradient': {'required': count}}
+                status = validate_bundle.finalize_report_status(summary)
+                report = root / 'report.json'
+                report.write_text(json.dumps(summary), encoding='utf-8')
+                self.assertEqual(status, expected)
+                self.assertEqual(json.loads(report.read_text())['ok'], expected == 0)
+            self.assertEqual(validate_bundle._prose_severity('ungrounded explanation', 'recommended'), 'recommended')
+            self.assertEqual(validate_bundle._prose_severity('string-vanity', 'consider'), 'consider')
+            self.assertEqual(validate_bundle._prose_severity('em-dash x1 in authored prose', 'recommended'), 'required')
+            self.assertNotIn('code_prose', validate_bundle._EN_PROSE_SUITES)
+            self.assertNotIn('grounding', validate_bundle._EN_PROSE_SUITES)
+
     def write(self, root: Path, relative: str, body: str) -> Path:
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)

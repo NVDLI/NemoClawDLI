@@ -20,7 +20,7 @@ function staticContentType(file) {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const {discoverCourses} = createRequire(import.meta.url)('./course_exercise_fixture.cjs');
 const course = discoverCourses(root).roots[0];
-const profile = JSON.parse(fs.readFileSync(path.join(course,'learning-profile.json'),'utf8'));
+const profile = JSON.parse(fs.readFileSync(path.join(course,'lesson-map.json'),'utf8'));
 const lesson = (module, number) => {
   const matches = profile.lessons.filter(entry => entry.module === module && entry.lesson === number);
   assert.equal(matches.length, 1, 'Expected one declared lesson for the exercised role');
@@ -334,9 +334,9 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
     for (const [language,label] of [['en','Module 4 · Lesson'],['es-ES','Módulo 4 · Lección'],
       ['pt-BR','Módulo 4 · Lição'],['zh-CN','模块 4 · 课时'],['zh-TW','模組 4 · 課時']]) {
       await page.goto(origin+'/fixture-learning/'+path.basename(lesson(4,2))+'?lang='+language);
-      await page.waitForFunction(() => document.documentElement.dataset.learningProfile === 'guided');
+      await page.waitForFunction(expected => document.querySelector('.hero .eyebrow')?.textContent.startsWith(expected), label);
       assert((await page.locator('.hero .eyebrow').textContent()).startsWith(label),
-        `${language}: the shared learning profile replaced the translated module label`);
+        `${language}: the shared lesson map replaced the translated module label`);
       const command = "agent printf '<heading>'";
       await page.evaluate(async ({runtime,command}) => {
         const {mountConsole} = await import(runtime);
@@ -435,7 +435,7 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
       const shared = await import('./scripts/_shared.js');
       const element = document.createElement('div');
       element.id='correction-artifact';
-      document.body.appendChild(element);
+      document.querySelector('main').appendChild(element);
       shared.mountChatUI(element,{memory:true,respond:async (_text,{view}) => {
         view.token('Earlier incorrect response.');
         view.replaceAnswer('Authoritative corrected response.');
@@ -978,13 +978,13 @@ test('browser page discovery follows new, renamed, deleted and malformed declara
     const renamed = path.join(path.dirname(file), 'renamed.htm'); fs.renameSync(file,renamed);
     assert.deepEqual(discoverCoursePages(temporary), [renamed]);
     fs.unlinkSync(renamed); assert.deepEqual(discoverCoursePages(temporary), []);
-    fs.writeFileSync(path.join(temporary,'learning-profile.json'), JSON.stringify({lessons:[{id:'nested/renamed'}]}));
+    fs.writeFileSync(path.join(temporary,'lesson-map.json'), JSON.stringify({lessons:[{id:'nested/renamed'}]}));
     assert.throws(() => discoverCoursePages(temporary), /missing/);
-    fs.writeFileSync(path.join(temporary,'learning-profile.json'), '{broken');
+    fs.writeFileSync(path.join(temporary,'lesson-map.json'), '{broken');
     assert.throws(() => discoverCoursePages(temporary), SyntaxError);
-    fs.writeFileSync(path.join(temporary,'learning-profile.json'), JSON.stringify({lessons:null}));
+    fs.writeFileSync(path.join(temporary,'lesson-map.json'), JSON.stringify({lessons:null}));
     assert.throws(() => discoverCoursePages(temporary), /lessons array/);
-    fs.writeFileSync(path.join(temporary,'learning-profile.json'), JSON.stringify({lessons:[{id:null}]}));
+    fs.writeFileSync(path.join(temporary,'lesson-map.json'), JSON.stringify({lessons:[{id:null}]}));
     assert.throws(() => discoverCoursePages(temporary), /invalid lesson ID/);
     assert.throws(() => localCourseOrigins(4173,{}), /non-loopback/);
   } finally { fs.rmSync(temporary,{recursive:true,force:true}); }

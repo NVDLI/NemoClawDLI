@@ -276,8 +276,10 @@ test('reinstalling the tracker returns the existing page activity client', () =>
   assert.equal(getInstalledCourseActivity(windowTarget), activity);
 });
 
-test('Going Further exposes an explicit gated Finish Course action', () => {
+test('Going Further keeps the unfinished completion action hidden and inactive', () => {
   const page = read(source('04c-going-further.html'));
+  assert.match(page, /id="course-finish" hidden/);
+  assert.match(page, /if \(finishButton\.closest\('\[hidden\]'\)\) return/);
   assert.match(page, /id="finish-course"/);
   assert.match(page, /getInstalled\w+Activity/);
   assert.doesNotMatch(page, /create\w+Activity/);

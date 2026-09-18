@@ -66,7 +66,7 @@ def discover_artifact_locales(site: Path) -> list[dict[str, str]]:
         raise ValueError("languages.json is missing its English default route")
     # Locale metadata is removable; discover the delivered course independently
     # from its authored profile/interface contracts and executable lesson pages.
-    consumers = {path.parent for name in ("learning-profile.json", "interface-inventory.json")
+    consumers = {path.parent for name in ("lesson-map.json", "interface-inventory.json")
                  for path in site.rglob(name)}
     consumers.update(path.parent.parent for path in site.glob("**/assets/locale.json"))
     for page in site.rglob("*.html"):

@@ -875,7 +875,7 @@
       '<div id="rp-verdict" class="rp-verdict">loading...</div>' +
       '<div class="rp-legend"><span><span class="rp-dot req"></span>Required &middot; ship-blocking</span><span><span class="rp-dot rec"></span>Recommended &middot; a real defect</span><span><span class="rp-dot con"></span>Consider &middot; non-critical improvement</span><span><span class="rp-dot warn"></span>Did not run &middot; not trustworthy</span><span><span class="rp-dot pass"></span>Ran, clean</span></div></div>' +
       '<div class="rp-wrap"><nav class="rp-rail" id="rp-rail"></nav><main class="rp-main" id="rp-main"></main></div>' +
-      '<div class="rp-bar"><span id="rp-counts">&mdash;</span><span class="sp"></span><span class="nt" id="rp-note"></span>' +
+      '<div class="rp-bar"><span id="rp-counts">Loading</span><span class="sp"></span><span class="nt" id="rp-note"></span>' +
       '<button id="rp-copy">Copy for agent</button><button class="prim" id="rp-export">Export critique</button><button id="rp-clear">Clear</button></div>';
     this.mountTopbar();
     function saveCrit() { try { localStorage.setItem(LS, JSON.stringify(CRIT)); } catch (e) {} paintCounts(); }
@@ -914,7 +914,7 @@
     function isFilePage(p) { return !!p && p.indexOf("/") >= 0 && /\.(html?|md|ipynb|css|js|mjs|py|sh|svg|json)$/i.test(p); }
     function deriveNeedle(sid, detail) {
       if (!detail) return null;
-      if (sid === "grounding" && detail.indexOf("em-dash") >= 0) return "—";       // the glyph itself
+    if (sid === "grounding" && detail.indexOf("em-dash") >= 0) return String.fromCodePoint(0x2014);
       if (sid === "color_theme") { var m = detail.match(/^(\S+) on /); if (m) return m[1]; }   // the color literal
       if (sid === "prose_buzz") { var b = detail.match(/^\[[^\]]+\]\s*(.+)$/); if (b) return b[1].slice(0, 80); }  // the sentence
       if (sid === "redundancy") {                                  // detail is “figure/A” ⟂ “prose/B”; locate the prose half (a real sentence in the file)
@@ -1001,7 +1001,7 @@
         var why = s.status === "skipped"
           ? "This check examined nothing, so a clean result proves nothing. Confirm there were inputs to check (pages, figures, materials) and that the suite is wired to find them."
           : "This check could not run, so it tells you nothing about what it covers. Do not read the absence of findings here as a pass.";
-        m.innerHTML = h + '<div class="rp-degraded"><b>Did not run &mdash; not a clean result.</b> ' + esc(why) +
+    m.innerHTML = h + '<div class="rp-degraded"><b>Did not run. Validation is incomplete.</b> ' + esc(why) +
           (s.note ? '<div class="rp-degnote">' + esc(s.note) + '</div>' : '') + '</div>';
         wireImpl(m, s); return;
       }

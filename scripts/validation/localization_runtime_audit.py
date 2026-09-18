@@ -296,7 +296,7 @@ def discover_learner_pages(site: Path, manifest: dict) -> list[str]:
     course = (site / primary["url"]).resolve()
     if site != course and site not in course.parents:
         raise ValueError("default-language route escapes the site root")
-    profile_path = course / "learning-profile.json"
+    profile_path = course / "lesson-map.json"
     try:
         profile = json.loads(profile_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:

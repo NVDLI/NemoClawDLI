@@ -139,7 +139,7 @@ test('gateway discovery follows actual metadata through new, nested, deleted and
     {id:'connection', module:3, lesson:1}, {id:'memory', module:3, lesson:2},
     {id:'scheduled', module:3, lesson:3}, {id:'cli', module:4, lesson:2},
   ]};
-  const profilePath = path.join(directory, 'learning-profile.json');
+  const profilePath = path.join(directory, 'lesson-map.json');
   const save = () => fs.writeFileSync(profilePath, JSON.stringify(profile));
   save();
   for (const lesson of profile.lessons) fs.writeFileSync(path.join(directory, lesson.id + '.html'), '<h1>Lesson</h1>');

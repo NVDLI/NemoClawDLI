@@ -14,10 +14,51 @@ from scripts.validation import learner_flow_audit as audit
 
 
 class LearnerExerciseContractTests(unittest.TestCase):
+    def test_retired_modes_follow_new_nested_renamed_and_deleted_surfaces(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            course = self.inventory_fixture(root)
+            nested = course / 'nested/new.html'
+            nested.parent.mkdir()
+            for suffix, content in [
+                ('.html', '<select class="learning-depth-select"><option>Guided</option></select>'),
+                ('.htm', '<select class="learning-depth-select"><option>Guided</option></select>'),
+                ('.js', 'localStorage.setItem("nemoclaw_learning_depth_v1", "applied");'),
+                ('.mjs', 'export const storageKey = "nemoclaw_learning_depth_v1";'),
+                ('.ts', 'export const storageKey: string = "nemoclaw_learning_depth_v1";'),
+                ('.css', '.learning-depth-control { display: none; }'),
+            ]:
+                path = nested.with_suffix(suffix)
+                path.write_text(content, encoding='utf-8')
+                for candidate in (path, path.with_name('renamed' + suffix)):
+                    if candidate != path:
+                        path.rename(candidate)
+                    surfaces = {p.relative_to(root).as_posix(): p.read_text()
+                                for p in audit.learner_surface_files(root)}
+                    findings = audit.audit_retired_course_modes(surfaces)
+                    self.assertEqual(len(findings), 1)
+                    self.assertIn(candidate.relative_to(root).as_posix(), findings[0])
+                candidate.unlink()
+                surfaces = {p.relative_to(root).as_posix(): p.read_text()
+                            for p in audit.learner_surface_files(root)}
+                self.assertEqual(audit.audit_retired_course_modes(surfaces), [])
+
+    def test_retired_mode_near_matches_cannot_hide_in_translated_markup(self) -> None:
+        for markup in ['<select class="learning&#45;depth-select">',
+                       '<details DATA-LEARNING-TIER="deep">',
+                       '<div class="learning-depth-contrl">',
+                       'applyLearningDepth("complete");']:
+            with self.subTest(markup=markup):
+                self.assertTrue(audit.audit_retired_course_modes({'i18n/novel/nested/page.json': markup}))
+        self.assertEqual(audit.audit_retired_course_modes({
+            'new.html': '<p>Complete the guided exercise and inspect the applied policy.</p>',
+            'new.js': 'const status = "complete";',
+        }), [])
+
     @classmethod
     def setUpClass(cls) -> None:
         course = dict(audit.locale_course_roots(audit.ROOT))['en']
-        profile = json.loads((course / 'learning-profile.json').read_text(encoding='utf-8'))
+        profile = json.loads((course / 'lesson-map.json').read_text(encoding='utf-8'))
         def lesson(module, number):
             matches = [entry for entry in profile['lessons']
                        if entry['module'] == module and entry['lesson'] == number]
@@ -113,7 +154,7 @@ class LearnerExerciseContractTests(unittest.TestCase):
         (course / 'scripts/_shared.js').write_text('// shared owner', encoding='utf-8')
         lessons = [{'id':f'lesson-{module}-{lesson}', 'module':module, 'lesson':lesson}
                    for module, lesson in [(1,1),(1,2),(1,3),(2,3),(3,1),(3,2),(3,3),(4,1),(4,2)]]
-        (course / 'learning-profile.json').write_text(json.dumps({'lessons':lessons}), encoding='utf-8')
+        (course / 'lesson-map.json').write_text(json.dumps({'lessons':lessons}), encoding='utf-8')
         for item in lessons:
             (course / (item['id'] + '.html')).write_text('<h1>Lesson</h1>', encoding='utf-8')
         return course
@@ -148,7 +189,7 @@ class LearnerExerciseContractTests(unittest.TestCase):
             with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 course = self.inventory_fixture(root)
-                profile = course / 'learning-profile.json'
+                profile = course / 'lesson-map.json'
                 data = json.loads(profile.read_text(encoding='utf-8'))
                 target = course / 'lesson-3-3.html'
                 if mode == 'delete': target.unlink()
@@ -170,7 +211,7 @@ class LearnerExerciseContractTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             course = self.inventory_fixture(root)
-            (course / 'learning-profile.json').write_text('{broken', encoding='utf-8')
+            (course / 'lesson-map.json').write_text('{broken', encoding='utf-8')
             self.assertTrue(any('invalid lesson metadata' in item for item in self.inventory(root).findings))
             (root / 'i18n/unrecognized').mkdir(parents=True)
             with self.assertRaisesRegex(ValueError, 'missing locale metadata'):

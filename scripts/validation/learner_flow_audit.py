@@ -15,6 +15,7 @@ import json
 import re
 import sys
 from html.parser import HTMLParser
+from html import unescape
 from pathlib import Path
 
 for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
@@ -23,6 +24,7 @@ for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
         break
 from _bootstrap import find_repo_root
 from translate.locale_catalog import discover_locales
+from translate.locale_resources import json_resources, load_resource
 
 ROOT = find_repo_root(Path(__file__).resolve())
 WEB = ROOT / "web"
@@ -60,7 +62,6 @@ LEARNING_VIEW_MIN_BLOCKS = {
     "04b-modern-clis.html": 2,
     "04c-going-further.html": 2,
 }
-LEARNING_TIERS = {"applied", "deep"}
 LEARNING_ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 REFERENCE_DISCLOSURE_ID_RE = re.compile(r"(?:references|reading-list)$")
 
@@ -137,8 +138,10 @@ def learner_surface_files(root: Path) -> list[Path]:
     for _locale, course in locale_course_roots(root):
         if not course.is_dir():
             continue
-        files.extend(sorted(course.rglob("*.html")))
-        files.extend(sorted(course.rglob("*.js")))
+        files.extend(sorted(path for path in course.rglob("*")
+                            if path.is_file() and path.suffix.lower() in
+                            {".html", ".htm", ".js", ".mjs", ".cjs", ".jsx",
+                             ".ts", ".tsx", ".mts", ".cts", ".css"}))
     return files
 
 
@@ -166,20 +169,28 @@ def locale_resource_surfaces(root: Path) -> dict[str, str]:
     """Return learner-visible values from every discovered key-based locale resource."""
     surfaces: dict[str, str] = {}
     for spec in discover_locales(root):
-        resource_root = spec.locale_root / "resources"
-        for path in sorted(resource_root.rglob("*.json")):
-            data = json.loads(path.read_text(encoding="utf-8"))
-            if data.get("schema") != "nemoclaw-locale-resource/1":
-                continue
-            values = data.get("values")
-            if not isinstance(values, dict):
-                continue
+        for path in json_resources(spec.locale_root):
+            values = load_resource(path).values
             surfaces[path.relative_to(root).as_posix()] = "\n".join(
                 str(unit.get("value", ""))
                 for unit in values.values()
-                if isinstance(unit, dict)
             )
     return surfaces
+
+
+def audit_retired_course_modes(surfaces: dict[str, str]) -> list[str]:
+    """Reject obsolete mode machinery across discovered authored and translated surfaces."""
+    pattern = re.compile(
+        r"learning[-_](?:depth|scope)|data-learning-(?:tier|always-open)"
+        r"|\b(?:LEARNING_DEPTH_KEY|DEPTH_RANK|applyLearningDepth|readLearningDepth|makeDepthControl)\b",
+        re.I,
+    )
+    findings = []
+    for name, text in sorted(surfaces.items()):
+        match = pattern.search(unescape(text))
+        if match:
+            findings.append(f"{name}: retired global course modes must not return ({match.group(0)})")
+    return findings
 
 
 def audit_unsupported_endpoint_guidance(surfaces: dict[str, str]) -> list[str]:
@@ -434,7 +445,7 @@ def load_runtime_pages(root: Path) -> RuntimePages:
     localized = published_pages(root)
     pages = RuntimePages()
     canonical = dict(locale_course_roots(root))['en']
-    profile_path = canonical / 'learning-profile.json'
+    profile_path = canonical / 'lesson-map.json'
     try:
         profile = json.loads(profile_path.read_text(encoding='utf-8'))
         lessons = profile['lessons']
@@ -526,7 +537,7 @@ class LearningBlockParser(HTMLParser):
         learning_id = values.get("data-learning-id", "")
         if tag == "details" and ("references" in classes or REFERENCE_DISCLOSURE_ID_RE.search(learning_id)):
             self.reference_disclosures.append({"line": self.getpos()[0], "attrs": values})
-        if "data-learning-tier" in values:
+        if "learning-block" in classes or "data-learning-id" in values or "data-learning-tier" in values:
             if self.active:
                 self.nested_lines.append(self.getpos()[0])
             block = {
@@ -541,7 +552,6 @@ class LearningBlockParser(HTMLParser):
                 "summary_count": 0,
                 "scoped_summary_count": 0,
                 "question_text": [],
-                "scope_text": [],
             }
             self.blocks.append(block)
             self.active.append(block)
@@ -567,57 +577,42 @@ class LearningBlockParser(HTMLParser):
             block["text"].append(data)
             if any("learning-question" in classes for _, classes in self.stack):
                 block["question_text"].append(data)
-            if any("learning-scope" in classes for _, classes in self.stack):
-                block["scope_text"].append(data)
 
 
 def audit_learning_runtime(learning: str, shared: str, css: str) -> list[str]:
     findings: list[str] = []
     contract = {
-        'LEARNING_DEPTH_KEY = "nemoclaw_learning_depth_v1"': "learning depth needs one versioned localStorage key",
-        'return DEPTHS.has(depth) ? depth : "guided"': "first-time learners must start in Guided",
-        'querySelectorAll?.("details.learning-block[data-learning-tier]")': "learning runtime must discover native optional disclosures",
-        'if (block.hasAttribute("data-learning-always-open"))': "reference disclosures must remain open in every learning view",
-        'block.open = DEPTH_RANK[depth] >= required': "saved depth must set each optional disclosure's initial state",
-        'CODE_DETAILS_SELECTOR = "details.rc-code-det, details.cf-panel-code-det"': "Guided must cover RunCell and CanvasFlow code disclosures",
-        'detail.dataset.learningDefaultOpen = String(detail.open)': "non-Guided views must retain each code cell's authored default",
-        'detail.open = depth === "guided" ? false': "Guided must collapse interactive code by default",
-        'codeObserver.observe(document.body, { childList: true, subtree: true })': "Guided must initialize code cells mounted after shared chrome",
-        'mountCodeObserver();': "Guided must initialize code cells mounted after shared chrome",
-        'if (onlyNew && initialized) return;': "lazy editor mutations must not overwrite a learner's local code reveal",
-        'select.addEventListener("change"': "learners need a direct global depth override",
-        'window.addEventListener("beforeprint"': "printing must temporarily open native optional disclosures",
-        'window.addEventListener("afterprint"': "printing must restore the learner's disclosure state",
-        'window.addEventListener("hashchange", revealHashTarget)': "deep links must reveal a target inside a collapsed disclosure",
-        'target?.closest("details.learning-block[data-learning-tier]")': "deep links must reveal a target inside a collapsed disclosure",
-        'mountLearningView()': "learning profile needs a shared mount entry point",
-        'if (!supportsLearningView()) return;': "learning controls must stay on course home and numbered lessons",
-        'const locale = document.documentElement.lang.toLowerCase();': "learning depth labels must derive from the document language",
-        'locale.startsWith("es")': "Guided mode must support Spanish course pages",
-        'storage()?.setItem(LEARNING_DEPTH_KEY, "guided")': "hidden-selector pilot must reset every page to Guided",
-        'applyLearningDepth("guided")': "hidden-selector pilot must render every page in Guided",
-        "mountLessonPosition(profile)": "lesson numbering must derive from the shared learning profile",
-        "const moduleLessons = profile.lessons.filter": "lesson position must derive from discovered profile metadata",
-        "moduleLessons.length": "lesson position must not use a fixed module denominator",
+        'CODE_DETAILS_SELECTOR = "details.rc-code-det, details.cf-panel-code-det"': 'printing must cover RunCell and CanvasFlow code disclosures',
+        'window.addEventListener("beforeprint"': 'printing must temporarily open native optional disclosures',
+        'window.addEventListener("afterprint"': 'printing must restore the learner disclosure state',
+        'block.open = open': 'printing must restore each prior open state',
+        'window.addEventListener("hashchange", revealHashTarget)': 'deep links must reveal a target inside a collapsed disclosure',
+        'target?.closest("details")': 'deep links must reveal a target inside a collapsed disclosure',
+        'disclosure.parentElement?.closest("details")': 'deep links must reveal nested ancestor disclosures',
+        'mountLearningView()': 'lesson view needs a shared mount entry point',
+        'if (!supportsLearningView()) return;': 'learning controls must stay on course home and numbered lessons',
+        'document.documentElement.lang.toLowerCase()': 'lesson labels must derive from the document language',
+        'lang.startsWith("es")': 'lesson labels must support Spanish course pages',
+        'mountLessonPosition(lessonMap)': 'lesson numbering must derive from the shared lesson map',
+        'const moduleLessons = lessonMap.lessons.filter': 'lesson position must derive from discovered lesson metadata',
+        'moduleLessons.length': 'lesson position must not use a fixed module denominator'
     }
     for token, message in contract.items():
         _need(findings, token in learning, message)
-    _need(findings, 'import { mountLearningView } from "./_learning.js";' in shared and
+    _need(findings, re.search(r'import\s*\{[^}]*\bmountLearningView\b[^}]*\}\s*from\s*"\./_learning\.js"', shared) is not None and
           "mountLearningView(); mountThemeToggle()" in shared,
           "_shared.js must mount the learning view on every topbar page")
     _need(findings, "markLiveArtifacts();" in shared,
           "shared page boot must mark every artifact placeholder")
     _need(findings, ".learning-block-body { display: block !important; }" in css,
           "print must restore every optional learning block body")
-    _need(findings, '.learning-block[data-learning-tier="deep"]' in css and ".learning-scope" in css,
-          "applied and deep sections need text-backed visual scope cues")
+    _need(findings, not re.search(r"learning-depth|LEARNING_DEPTH_KEY|DEPTH_RANK|data-learning-tier|learning-scope", learning + css),
+          "retired global course modes must not return")
     _need(findings, ".course-artifact::before" in css and
           "content: attr(data-artifact-label)" in css and "--artifact:" in css,
           "live artifacts need a restrained text-backed color cue")
     _need(findings, ".course-artifact:empty { display: none; }" in css,
           "unmounted artifact placeholders must not add blank page height")
-    _need(findings, ".learning-depth-control { display: none; }" in css,
-          "Guided pilot must retain but hide the global depth selector")
     _need(findings,
           "lesson-recap" not in learning and "lesson-recap" not in css
           and "Prove what you learned" not in learning and "Now do this" not in learning,
@@ -629,10 +624,10 @@ def audit_learning_runtime(learning: str, shared: str, css: str) -> list[str]:
     _need(findings, ".course-artifact .chatui-log" in css and "overscroll-behavior: contain" in css,
           "live artifacts need a bounded transcript instead of unbounded page growth")
     _need(findings,
-          'const PROFILE_URL = new URL("../learning-profile.json", import.meta.url);' in learning and
-          "fetch(PROFILE_URL)" in learning and learning.count("fetch(") == 1 and
+          'const LESSON_MAP_URL = new URL("../lesson-map.json", import.meta.url);' in learning and
+          "fetch(LESSON_MAP_URL)" in learning and learning.count("fetch(") == 1 and
           "XMLHttpRequest" not in learning and "sendBeacon" not in learning,
-          "learning profile runtime must remain local and telemetry-free")
+          "lesson runtime must remain local and telemetry-free")
     return findings
 
 
@@ -646,8 +641,6 @@ def audit_reference_disclosures(path: Path, text: str) -> list[str]:
         attrs = disclosure["attrs"]
         _need(findings, "open" in attrs,
               f"{rel}:{line}: reference disclosure must default open without JavaScript")
-        _need(findings, "data-learning-always-open" in attrs,
-              f"{rel}:{line}: reference disclosure must remain open in every learning view")
     return findings
 
 
@@ -659,8 +652,8 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
         'const modelOptions = defaultModel => [': "Course Assistant must accept its default model from the shared runtime",
         'const language = document.documentElement.lang.toLowerCase()': "page assistant must localize itself from the document language",
         'const es = language.startsWith("es")': "page assistant must recognize Spanish",
-        'assistant: "ASSISTENTE DO CURSO"': "page assistant needs Brazilian Portuguese chrome",
-        'assistant: "ASISTENTE DEL CURSO"': "page assistant needs Spanish chrome",
+        'assistant: "Assistente"': "page assistant needs Brazilian Portuguese chrome",
+        'assistant: "Asistente"': "page assistant needs Spanish chrome",
         'if (!location.pathname.includes("/nemoclaw/")) return;': "page assistant must stay scoped to course pages",
         'pageId: String(item.pageId || "")': "Course Assistant page grounding must persist with its session",
         'export function questionTargetsCurrentPage': "Course Assistant must distinguish the live page from a restored session page",
@@ -687,7 +680,7 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
         'resizer.setPointerCapture(event.pointerId)': "page assistant resize must retain pointer capture during drag",
         'Math.floor(window.innerWidth * 0.9)': "page assistant resize must stop at 90 percent of the viewport",
         'event.key === "ArrowLeft"': "page assistant resize must support keyboard adjustment",
-        'COURSE ASSISTANT': "shared assistant must use its course-wide name",
+        'assistant: "Assistant"': "shared assistant must use its concise name",
         'nemoclaw_course_assistant_sessions_v1': "Course Assistant sessions need a stable local cache key",
         'export function loadCourseAssistantStore': "Course Assistant local sessions must remain independently testable",
         '<button type="button" data-course-assistant-new>': "Course Assistant needs an explicit new-session control",
@@ -729,7 +722,7 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
         'name: "queue_course_artifact"': "Course Assistant must queue generated browser code into a real artifact view",
         '{ id: defaultModel,': "Course Assistant artifact requests must use the shared default model",
         'models: modelOptions(runtime.defaultModel)': "Course Assistant must bind its model menu to the injected default",
-        'mountCourseAssistant({ embed, defaultModel: DEFAULT_MODEL });': "shared runtime must inject its default into Course Assistant",
+        'mountCourseAssistant({ embed, defaultModel: DEFAULT_MODEL, getConfig, getKey });': "shared runtime must inject its default and connection into Course Assistant",
         'export function parseInlineCourseSourceIntent': "Course Assistant must detect source arguments emitted as plain JSON",
         'recoverInlineToolIntent: async answer =>': "Course Assistant must recover a model that prints source arguments instead of invoking its tool",
         'export function artifactFromMarkdown': "Course Assistant must detect generated HTML/JavaScript without model tool compliance",
@@ -799,12 +792,12 @@ def audit_page_assistant(assistant: str, shared: str, chat: str, css: str) -> li
     ) is not None, "shared agent chat must replace empty tool-only output before synthesis")
     _need(findings, COURSE_SOURCE_URI_RE.search(assistant) is not None,
           "lesson code index must expose stable page-qualified source URIs")
-    _need(findings, "mountCourseAssistant({ embed, defaultModel: DEFAULT_MODEL });" in shared,
+    _need(findings, "mountCourseAssistant({ embed, defaultModel: DEFAULT_MODEL, getConfig, getKey });" in shared,
           "shared chrome must mount the page assistant on every course page")
     _need(findings, "initialContext" in chat and "ctx.view.tool(label" in chat,
           "shared ReAct artifact must expose initial page context as a source chip")
-    _need(findings, ".course-assistant-launcher" in css and "width: 32px; height: 32px" in css,
-          "page assistant launcher must remain compact")
+    _need(findings, ".course-assistant-launcher" in css and "min-width: 44px; min-height: 44px" in css,
+          "page assistant launcher must retain its accessible minimum target")
     _need(findings, ".course-assistant-panel { width: 100vw;" in css,
           "page assistant must fit a narrow viewport")
     _need(findings, "max-width: 90vw" in css and ".course-assistant-resizer" in css and
@@ -1322,17 +1315,15 @@ def audit_learning_lesson(path: Path, text: str) -> list[str]:
     minimum = LEARNING_VIEW_MIN_BLOCKS.get(path.name, 0)
     if minimum:
         _need(findings, len(parser.blocks) >= minimum,
-              f"{rel}: Guided reading path needs at least {minimum} intentional disclosures; found {len(parser.blocks)}")
+              f"{rel}: reading path needs at least {minimum} intentional disclosures; found {len(parser.blocks)}")
     for line in parser.nested_lines:
         findings.append(f"{rel}:{line}: learning blocks must not nest")
     seen: set[str] = set()
     for block in parser.blocks:
         line = block["line"]
         attrs = block["attrs"]
-        tier = attrs.get("data-learning-tier", "")
         block_id = attrs.get("data-learning-id", "")
         question = " ".join(" ".join(block["question_text"]).split())
-        scope = " ".join(" ".join(block["scope_text"]).split())
         content = " ".join(" ".join(block["text"]).split())
         _need(findings, block["tag"] == "details" and "learning-block" in block["classes"],
               f"{rel}:{line}: optional narrative must use details.learning-block")
@@ -1344,8 +1335,8 @@ def audit_learning_lesson(path: Path, text: str) -> list[str]:
               f"{rel}:{line}: optional disclosure needs one summary and one learning-block-body")
         _need(findings, block["scoped_summary_count"] == 1,
               f"{rel}:{line}: inline English question must be excluded from locale prose comparison")
-        _need(findings, tier in LEARNING_TIERS,
-              f"{rel}:{line}: data-learning-tier must be applied or deep")
+        _need(findings, "data-learning-tier" not in attrs and "learning-scope" not in block["classes"],
+              f"{rel}:{line}: retired global course modes must not return")
         _need(findings, bool(block_id) and bool(LEARNING_ID_RE.fullmatch(block_id)),
               f"{rel}:{line}: data-learning-id needs a stable kebab-case value")
         _need(findings, block_id not in seen, f"{rel}:{line}: duplicate data-learning-id {block_id!r}")
@@ -1353,17 +1344,15 @@ def audit_learning_lesson(path: Path, text: str) -> list[str]:
         question_words = re.findall(r"[A-Za-z0-9'-]+", question)
         _need(findings, 4 <= len(question_words) <= 10 and question.endswith("?"),
               f"{rel}:{line}: inline question needs 4-10 words and a question mark; got {len(question_words)}")
-        _need(findings, bool(re.fullmatch(r"(?:Applied|Deep) · [A-Za-z]+", scope)),
-              f"{rel}:{line}: scope cue must name its tier and local purpose")
         _need(findings, len(content.split()) >= 20,
-              f"{rel}:{line}: optional block is too small to justify a learning tier")
+              f"{rel}:{line}: optional block is too small to justify a separate disclosure")
         artifact_mode = attrs.get("data-learning-artifact", "")
         exercise_mode = attrs.get("data-learning-exercise", "")
         cell_ids = {value for value in block["ids"] if value.startswith("cell-") or value.endswith("-artifact")}
         _need(findings, artifact_mode in {"", "optional"},
               f"{rel}:{line}: data-learning-artifact must be optional when present")
-        _need(findings, not artifact_mode or (tier in LEARNING_TIERS and bool(cell_ids)),
-              f"{rel}:{line}: an optional artifact needs an Applied or Deep block and a cell")
+        _need(findings, not artifact_mode or bool(cell_ids),
+              f"{rel}:{line}: an optional artifact needs a native disclosure and a cell")
         _need(findings, exercise_mode in {"", "optional"},
               f"{rel}:{line}: data-learning-exercise must be optional when present")
         _need(findings, not exercise_mode or artifact_mode == "optional",
@@ -1777,6 +1766,7 @@ def audit_tree(root: Path = ROOT) -> list[str]:
         for path in learner_surface_files(root)
     }
     guidance_surfaces = {**authored_surfaces, **locale_resource_surfaces(root)}
+    findings.extend(audit_retired_course_modes(guidance_surfaces))
     findings.extend(audit_unsupported_endpoint_guidance(guidance_surfaces))
     findings.extend(audit_launchable_transport(
         authored_surfaces,
@@ -1886,14 +1876,14 @@ def self_test() -> list[str]:
     shared = (ROOT / "web/nemoclaw/scripts/_shared.js").read_text(encoding="utf-8")
     css = (ROOT / "web/nemoclaw/styles/_style.css").read_text(encoding="utf-8")
     learning_cases = [
-        ("remote learning-depth telemetry", learning + "\nfetch('/profile');", shared, css, "telemetry-free"),
-        ("Complete first-visit default", learning.replace('return DEPTHS.has(depth) ? depth : "guided";', 'return DEPTHS.has(depth) ? depth : "complete";', 1), shared, css, "start in Guided"),
-        ("reference disclosure follows depth", learning.replace('if (block.hasAttribute("data-learning-always-open"))', 'if (false)', 1), shared, css, "reference disclosures must remain open"),
-        ("Guided leaves code open", learning.replace('detail.open = depth === "guided" ? false', 'detail.open = depth === "guided" ? true', 1), shared, css, "collapse interactive code"),
-        ("late code cells ignored", learning.replace("mountCodeObserver();", "", 1), shared, css, "mounted after shared chrome"),
+        ("global selector reintroduced", learning + "\nconst selector = 'learning-depth-select';", shared, css, "retired global course modes"),
+        ("global preference reintroduced", learning + "\nconst LEARNING_DEPTH_KEY = 'legacy';", shared, css, "retired global course modes"),
+        ("mode tier style reintroduced", learning, shared, css + "\n[data-learning-tier] {color:red}", "retired global course modes"),
+        ("print state restore removed", learning.replace("block.open = open", "block.open = true", 1), shared, css, "restore each prior open state"),
+        ("remote lesson telemetry", learning + "\nfetch('/profile');", shared, css, "telemetry-free"),
         ("learning controls on support tools", learning.replace("if (!supportsLearningView()) return;", "", 1), shared, css, "course home and numbered lessons"),
-        ("Spanish Guided support removed", learning.replace('locale.startsWith("es")', 'false', 1), shared, css, "support Spanish course pages"),
-        ("hidden selector restores saved depth", learning.replace('applyLearningDepth("guided");', 'applyLearningDepth();', 1), shared, css, "render every page in Guided"),
+        ("Spanish lesson-label support removed", learning.replace('lang.startsWith("es")', 'false', 1), shared, css, "support Spanish course pages"),
+        ("nested deep links stay hidden", learning.replace('disclosure.parentElement?.closest("details")', 'null', 1), shared, css, "nested ancestor disclosures"),
         ("missing learning-view mount", learning, shared.replace("mountLearningView();", "", 1), css, "every topbar page"),
         ("artifact placeholders wait for mount", learning, shared.replace("markLiveArtifacts();", "", 1), css, "artifact placeholder"),
         ("collapsed deep links stay hidden", learning.replace('window.addEventListener("hashchange", revealHashTarget);', "", 1), shared, css, "deep links must reveal"),
@@ -1903,8 +1893,6 @@ def self_test() -> list[str]:
          css.replace(".course-artifact::before", ".removed-artifact-cue::before", 1), "text-backed color cue"),
         ("empty artifact placeholder visible", learning, shared,
          css.replace(".course-artifact:empty { display: none; }", "", 1), "blank page height"),
-        ("depth selector exposed", learning, shared,
-         css.replace(".learning-depth-control { display: none; }", ".learning-depth-control { display: flex; }", 1), "hide the global depth selector"),
         ("fake lesson recap reintroduced", learning + '\nconst retiredRecap = "lesson-recap Prove what you learned Now do this";', shared, css, "fake lesson recap"),
         ("synthetic compact checkpoint reintroduced", learning + '\nconst retiredCheckpoint = "compact-practice";', shared, css, "self-attested completion gate"),
         ("synthetic compact completion storage reintroduced", learning + '\nconst retiredStorage = "nemoclaw_compact_practice_v2";', shared, css, "synthetic learner-completion record"),
@@ -1923,8 +1911,8 @@ def self_test() -> list[str]:
         ("assistant ignores current-page intent", assistant.replace('const targetPageId = requested => questionTargetsCurrentPage(turnQuestion) ? page.id : requested', 'const targetPageId = requested => requested', 1), shared, chat, css, "resolve to the live browser page"),
         ("assistant loses page context", assistant.replace('initialContext: async () => ({ label: localized(', 'initialContext: null && async () => ({ label: localized(', 1), shared, chat, css, "live page prose and code index"),
         ("assistant hides live page on restore", assistant.replace('showGreetingWithHistory: true', 'showGreetingWithHistory: false', 1), shared, chat, css, "visible transcript"),
-        ("assistant loses Portuguese chrome", assistant.replace('assistant: "ASSISTENTE DO CURSO"', 'assistant: "COURSE ASSISTANT"', 1), shared, chat, css, "Brazilian Portuguese chrome"),
-        ("assistant loses Spanish chrome", assistant.replace('assistant: "ASISTENTE DEL CURSO"', 'assistant: "COURSE ASSISTANT"', 1), shared, chat, css, "Spanish chrome"),
+        ("assistant loses Portuguese chrome", assistant.replace('assistant: "Assistente"', 'assistant: "Assistant"', 1), shared, chat, css, "Brazilian Portuguese chrome"),
+        ("assistant loses Spanish chrome", assistant.replace('assistant: "Asistente"', 'assistant: "Assistant"', 1), shared, chat, css, "Spanish chrome"),
         ("assistant loses course map", assistant.replace('name: "list_course_pages"', 'name: "missing_course_map"', 1), shared, chat, css, "course map"),
         ("assistant loses course search", assistant.replace('name: "search_course_pages"', 'name: "missing_course_search"', 1), shared, chat, css, "search the course"),
         ("assistant returns structured tool payload", assistant.replace('return JSON.stringify(await searchCoursePages(query, readPage, catalog), null, 2);', 'return searchCoursePages(query, readPage, catalog);', 1), shared, chat, css, "endpoint-safe text"),
@@ -1937,7 +1925,7 @@ def self_test() -> list[str]:
         ("assistant hides source discovery", assistant.replace('"Show me this page\'s code"', '"What should I try next?"', 1), shared, chat, css, "source access discoverable"),
         ("assistant search grows unbounded", assistant.replace('.slice(0, 4)', '', 1), shared, chat, css, "bound tool output"),
         ("assistant leaks into support pages", assistant.replace('if (!location.pathname.includes("/nemoclaw/")) return;', "", 1), shared, chat, css, "scoped to course pages"),
-        ("assistant launcher grows", assistant, shared, chat, css.replace("width: 32px; height: 32px", "width: 56px; height: 56px", 1), "remain compact"),
+        ("assistant launcher shrinks", assistant, shared, chat, css.replace("min-width: 44px; min-height: 44px", "min-width: 32px; min-height: 32px", 1), "accessible minimum target"),
         ("assistant loses resize handle", assistant.replace('class="course-assistant-resizer" role="separator"', 'class="removed-resizer"', 1), shared, chat, css, "drag handle"),
         ("assistant resize loses cap", assistant.replace('Math.floor(window.innerWidth * 0.9)', 'window.innerWidth', 1), shared, chat, css, "90 percent"),
         ("assistant resize loses keyboard", assistant.replace('event.key === "ArrowLeft"', 'event.key === "Never"', 1), shared, chat, css, "keyboard adjustment"),
@@ -1968,7 +1956,7 @@ def self_test() -> list[str]:
         ("shared chat races artifact capture", assistant, shared, chat.replace('await opts.onAssistantMessage(answer, ctx)', 'opts.onAssistantMessage(answer, ctx)', 1), css, "await deterministic answer capture"),
         ("assistant loses artifact queue", assistant.replace('name: "queue_course_artifact"', 'name: "missing_artifact_queue"', 1), shared, chat, css, "queue generated browser code"),
         ("assistant bypasses shared default model", assistant.replace('{ id: defaultModel,', '{ id: "retired/model",', 1), shared, chat, css, "shared default model"),
-        ("shared boot drops assistant default", assistant, shared.replace('mountCourseAssistant({ embed, defaultModel: DEFAULT_MODEL });', 'mountCourseAssistant({ embed });', 1), chat, css, "inject its default"),
+        ("shared boot drops assistant default", assistant, shared.replace('mountCourseAssistant({ embed, defaultModel: DEFAULT_MODEL, getConfig, getKey });', 'mountCourseAssistant({ embed, getConfig, getKey });', 1), chat, css, "inject its default"),
         ("assistant loses 120B source recovery", assistant.replace('recoverInlineToolIntent: async answer =>', 'recoverLostIntent: async answer =>', 1), shared, chat, css, "prints source arguments"),
         ("shared chat preserves raw generated code", assistant, shared, chat.replace('if (opts.recoverInlineArtifact) {', 'if (false) {', 1), css, "replace raw generated code"),
         ("assistant disables bounded artifact correction", assistant.replace('artifactCorrectionLimit: 2', 'artifactCorrectionLimit: 0', 1), shared, chat, css, "bound generated-artifact correction attempts"),
@@ -2167,15 +2155,14 @@ def self_test() -> list[str]:
             misses.append(f"detector missed {label}")
 
     fixture_path = ROOT / "web/nemoclaw/01a-loop.html"
-    fixture = '''<details class="learning-block" open data-learning-id="wire-detail" data-learning-tier="deep" data-localization-scope="en-shell">
-      <summary data-localization-scope="en"><span class="learning-scope">Deep · Build</span><span class="learning-question">Inspect the request transport details?</span></summary>
+    fixture = '''<details class="learning-block" open data-learning-id="wire-detail" data-localization-scope="en-shell">
+      <summary data-localization-scope="en"><span class="learning-question">Inspect the request transport details?</span></summary>
       <div class="learning-block-body"><h2>Wire detail</h2><p>This optional explanation contains enough concrete implementation detail to justify its own disclosure in the complete course.</p></div>
     </details>'''
     learning_block_cases = [
         ("missing inline question", fixture.replace('<span class="learning-question">Inspect the request transport details?</span>', ""), "inline question"),
-        ("missing scope cue", fixture.replace('<span class="learning-scope">Deep · Build</span>', ""), "scope cue"),
         ("localized pilot shell", fixture.replace(' data-localization-scope="en-shell"', "", 1), "localization-neutral"),
-        ("unknown learning tier", fixture.replace('data-learning-tier="deep"', 'data-learning-tier="expert"'), "applied or deep"),
+        ("retired tier reintroduced", fixture.replace('class="learning-block"', 'class="learning-block" data-learning-tier="deep"'), "retired global course modes"),
         ("duplicate learning id", fixture + fixture, "duplicate data-learning-id"),
         ("hidden learner exercise", fixture.replace("<h2>Wire detail</h2>", '<h2>Try it</h2><div id="cell-hidden"></div>'), "core, prerequisite, warning, or exercise UI"),
         ("optional artifact lacks cell", fixture.replace('data-localization-scope="en-shell"', 'data-learning-artifact="optional" data-localization-scope="en-shell"'), "optional artifact needs"),
@@ -2186,11 +2173,11 @@ def self_test() -> list[str]:
             misses.append(f"detector missed {label}")
     reference_fixture = fixture.replace(
         'class="learning-block" open',
-        'class="references learning-block" open data-learning-always-open',
+        'class="references learning-block" open',
         1,
     )
-    hidden_reference = reference_fixture.replace(" data-learning-always-open", "", 1)
-    if not any("reference disclosure must remain open" in finding
+    hidden_reference = reference_fixture.replace(" open", "", 1)
+    if not any("reference disclosure must default open" in finding
                for finding in audit_reference_disclosures(fixture_path, hidden_reference)):
         misses.append("detector missed hidden reference disclosure")
 

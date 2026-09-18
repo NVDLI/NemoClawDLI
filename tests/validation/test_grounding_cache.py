@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from scripts.validation import grounding
@@ -55,6 +56,17 @@ class GroundingCacheTests(unittest.TestCase):
         self.assertFalse(grounding._is_citation("https://bucket-name.s3." + suffix))
         self.assertFalse(grounding._is_citation("https://bucket-name.s3.us-west-2." + suffix))
         self.assertTrue(grounding._is_citation("https://docs.example.org/topic"))
+
+    def test_rendered_punctuation_and_rule_version_invalidate_cache(self) -> None:
+        rel = 'web/nemoclaw/page.html'
+        page = self.root / rel
+        page.write_text('<h1>Page</h1><p>Read &mdash; inspect.</p>', encoding='utf-8')
+        with patch.object(grounding, 'REF_VERSION', 'prior-rule'):
+            first = grounding.ground_page(rel)
+        second = grounding.ground_page(rel)
+        self.assertFalse(second['cached'])
+        self.assertIn(chr(0x2014), grounding._text_of(page)[2])
+        self.assertTrue(grounding.ground_page(rel)['cached'])
 
 
 if __name__ == "__main__":
