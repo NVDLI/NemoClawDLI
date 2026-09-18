@@ -101,8 +101,8 @@
     before deciding what to do next.
   </p>
 
-  <details class="learning-block" open data-learning-id="agent-harness-parts" data-learning-tier="applied" data-localization-scope="en-shell">
-  <summary data-localization-scope="en"><span class="learning-scope">Applied · Anatomy</span><span class="learning-question">Map the model, memory, tools, and router?</span></summary>
+  <details class="learning-block" open data-learning-id="agent-harness-parts" data-localization-scope="en-shell">
+  <summary data-localization-scope="en"><span class="learning-question">Map the model, memory, tools, and router?</span></summary>
   <div class="learning-block-body">
   <h2>The pieces an LLM agent is built from</h2>
   <p>
@@ -171,8 +171,8 @@
     agent has. Saving and reloading that array preserves the supplied conversation history; external facts and model behavior may change.
   </div>
 
-  <details class="learning-block" open data-learning-id="context-rot" data-learning-tier="applied" data-localization-scope="en-shell">
-  <summary data-localization-scope="en"><span class="learning-scope">Applied · Operate</span><span class="learning-question">Need context-rot evidence and mitigations?</span></summary>
+  <details class="learning-block" open data-learning-id="context-rot" data-localization-scope="en-shell">
+  <summary data-localization-scope="en"><span class="learning-question">Need context-rot evidence and mitigations?</span></summary>
   <div class="learning-block-body">
   <h2>Context rot: why a longer loop reads worse</h2>
   <p>
@@ -208,7 +208,7 @@
 
 
   <p>
-    Run the cell to build the panel. Before your first message, select <b>Pages</b> to include in the initial context, or leave them unselected and let the agent choose what to read. If you change the pinned pages later, click <b>New chat</b> before sending another message. Expand each source chip to inspect what the agent read. The panel shows the answer, token usage, and any reasoning trace the model returns. It keeps the conversation within each chat. Edit the cell and rerun to rebuild the panel.
+    Run the cell to open a chat panel, then ask <em>“How does the clock loop decide when to stop?”</em> You can leave the page selection empty; the agent will choose which course pages to read. To choose the context yourself, open <b>Model and context options</b> and select the page title under <b>Pages</b> before your first message. The title's tooltip shows its source ID, such as <code>01b-react</code>. If you change the selected pages later, start a <b>New chat</b>. Expand a source chip to compare the answer with what the agent actually read.
   </p>
   <div id="cell-react-lab"></div>
   <div id="react-artifact" style="margin:1em 0"></div>
@@ -233,8 +233,14 @@
         and how would you discourage that in the system prompt?</li>
   </ol>
 
-  <details class="references learning-block" open data-learning-always-open data-learning-id="react-references" data-learning-tier="deep" data-localization-scope="en-shell">
-    <summary data-localization-scope="en"><span class="learning-scope">Deep · Sources</span><span class="learning-question">Trace these mechanisms to primary sources?</span></summary>
+  <details class="course-disclosure">
+    <summary>What should I learn from these comparisons?</summary>
+    <p>The first comparison separates prompt instructions from enforced control flow. Compare the requested tool and <code>finish_reason</code> before deciding whether the instruction was followed. A request alone is not proof that the clock ran.</p>
+    <p>The second comparison asks whether each extra tool call supplies useful evidence. Inspect the clock results and their order in <code>messages</code>. If the sequence is unclear, return to the clock-loop canvas and expand its trace before changing the prompt. Your result may differ from another run; explain it from your own trace.</p>
+  </details>
+
+  <details class="references learning-block" open data-learning-id="react-references" data-localization-scope="en-shell">
+    <summary data-localization-scope="en"><span class="learning-question">Trace these mechanisms to primary sources?</span></summary>
     <div class="learning-block-body">
     <h3>References</h3>
     <ul>

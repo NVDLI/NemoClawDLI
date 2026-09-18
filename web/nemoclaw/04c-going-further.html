@@ -43,6 +43,12 @@
     background: var(--g); color: #000; margin: .4em 0 1em;
   }
   .action-btn:hover { background: var(--gs); text-decoration: none; }
+  .resource-cta { display: flex; align-items: center; gap: 24px; margin: 1em 0; }
+  .resource-cta p { flex: 1; margin: 0; }
+  .resource-cta .action-btn { flex: none; margin: 0; }
+  @media (max-width: 720px) {
+    .resource-cta { flex-direction: column; align-items: flex-start; gap: 12px; }
+  }
   button.action-btn { border: 0; cursor: pointer; }
   button.action-btn:disabled { cursor: not-allowed; opacity: .55; }
   :root[data-theme="light"] .action-btn { color: #fff; }
@@ -220,8 +226,8 @@
   </div>
 
   <!-- ── Where to push next ──────────────────────────────────────────── -->
-  <details class="learning-block" open data-learning-id="production-divergence" data-learning-tier="applied" data-localization-scope="en-shell">
-  <summary data-localization-scope="en"><span class="learning-scope">Applied · Next</span><span class="learning-question">Choose the next production axis to deepen?</span></summary>
+  <details class="learning-block" open data-learning-id="production-divergence" data-localization-scope="en-shell">
+  <summary data-localization-scope="en"><span class="learning-question">Choose the next production axis to deepen?</span></summary>
   <div class="learning-block-body">
   <div class="section">
     <div class="section-eyebrow">Where to push next</div>
@@ -234,19 +240,21 @@
       <li><strong>The substrate.</strong> Wire-format protocols (MCP, the Responses API, OTel GenAI conventions, A2A) that keep tool capabilities portable across providers and frameworks.</li>
       <li><strong>Fleet dynamics and containment.</strong> What changes when N agents run in parallel: each agent redundantly re-discovers the same context (rediscovery cost), topologies with too many hops lose coherence, and an agent grading a peer's output can shift its verdicts based on social context rather than content. How to bound any single agent in the fleet with kernel-level containment (<a href="https://docs.kernel.org/userspace-api/landlock.html" target="_blank" rel="noopener">Landlock</a>, <a href="https://man7.org/linux/man-pages/man2/seccomp.2.html" target="_blank" rel="noopener">seccomp</a>, network namespaces) when prompt rules and guardrails are not enough to limit blast radius.</li>
     </ul>
+    <div class="resource-cta">
     <p>
       Pick the axis that matches the problem your current project keeps
       running into. The NVIDIA Developer Blog tracks the latest
       reference work across them.
     </p>
     <a class="action-btn" href="https://developer.nvidia.com/blog/category/generative-ai/" target="_blank" rel="noopener">NVIDIA Developer Blog →</a>
+    </div>
   </div>
   </div>
   </details>
 
   <!-- ── Resources by topic ────────────────────────────────────────── -->
-  <details class="learning-block" open data-learning-always-open data-learning-id="course-reading-list" data-learning-tier="deep" data-localization-scope="en-shell">
-  <summary data-localization-scope="en"><span class="learning-scope">Deep · Sources</span><span class="learning-question">Open the full module-by-module reading list?</span></summary>
+  <details class="learning-block" open data-learning-id="course-reading-list" data-localization-scope="en-shell">
+  <summary data-localization-scope="en"><span class="learning-question">Open the full module-by-module reading list?</span></summary>
   <div class="learning-block-body">
   <div class="section" id="refs">
     <div class="section-eyebrow">References hub</div>
@@ -487,7 +495,7 @@
 
   <p><button type="button" class="course-assistant-open" id="open-course-assistant">Open Course Assistant</button></p>
 
-  <div class="section" id="course-finish">
+  <div class="section" id="course-finish" hidden>
     <div class="section-eyebrow">Course completion</div>
     <h2>Finish the course</h2>
     <p id="finish-course-status" role="status" aria-live="polite">Checking your verified course progress.</p>
@@ -514,6 +522,7 @@ const finishStatus = document.getElementById("finish-course-status");
 const courseActivity = getInstalledNemoClawActivity();
 const text = value => localizeCourseUiText(value);
 async function refreshCompletion() {
+  if (finishButton.closest('[hidden]')) return;
   if (courseActivity?.snapshot().phase !== "connected") {
     finishButton.disabled = true;
     finishStatus.textContent = text("Remote progress is off. Open Activity in the toolbar to enable it.");

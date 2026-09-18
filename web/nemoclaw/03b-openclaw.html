@@ -121,8 +121,8 @@
 
   <div id="cell-introspect"></div>
 
-  <details class="learning-block" open data-learning-id="operator-workspace-inspection" data-learning-tier="applied" data-learning-artifact="optional" data-localization-scope="en-shell">
-  <summary data-localization-scope="en"><span class="learning-scope">Applied · Operator</span><span class="learning-question">Verify the workspace from the operator plane?</span></summary>
+  <details class="learning-block" open data-learning-id="operator-workspace-inspection" data-learning-artifact="optional" data-localization-scope="en-shell">
+  <summary data-localization-scope="en"><span class="learning-question">Verify the workspace from the operator plane?</span></summary>
   <div class="learning-block-body">
   <h2>Step 1b · Read the workspace yourself</h2>
   <p>Step 1 asked the agent to <em>describe</em> its files, and you do not have
@@ -332,7 +332,8 @@ state.memoryReference = "REF-" + helpers.randomId();
 const courseTurn = helpers.courseTurn;
 
 state.out = await courseTurn(state, helpers, "quick-3b-write-" + helpers.randomId(),
-  "Append this preference to MEMORY.md without replacing existing content: " + state.memoryLabel + ": numbered review feedback, race conditions first; reference " + state.memoryReference);
+  "Append this preference to MEMORY.md without replacing existing content: " + state.memoryLabel +
+  ": numbered review feedback, race conditions first; reference " + state.memoryReference);
 const {courseShell, courseRead} = helpers;
 
 const saved = await courseRead(helpers, "/sandbox/.openclaw/workspace/MEMORY.md");

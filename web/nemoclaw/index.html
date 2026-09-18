@@ -151,7 +151,7 @@
     <h2>Learning Objectives</h2>
     <div class="objectives-layout">
       <div>
-        <p class="help" id="learning-objectives-intro">Upon completion of this course, students will be able to:</p>
+        <p id="learning-objectives-intro">Upon completion of this course, students will be able to:</p>
         <ul>
           <li id="learning-objective-1">Build a basic agent loop and identify its core components.</li>
           <li id="learning-objective-2">Implement reliable tool use and function calling within an agent system.</li>
@@ -182,12 +182,26 @@
     <div id="key-panel"></div>
   </div>
 
+  <details class="course-disclosure" id="using-the-course">
+    <summary>How to use these lessons</summary>
+    <p>Run the examples, inspect their output, then change an input and compare. JavaScript is available under each cell's code control; you can read and run the examples before editing it.</p>
+    <p>Click a section heading or its arrow to expand or collapse that section. Color reinforces the written label: blue marks information, amber marks a caution, and red marks an error. Read the text rather than relying on color alone.</p>
+    <p>Use <strong>Sections</strong> to find a section. Heading links can be bookmarked or shared. The Assistant can use the current section when you ask a question. Its model and session controls are optional; start by asking about the example you are reading.</p>
+  </details>
+
+  <details class="course-disclosure" id="request-recovery">
+    <summary>If a model request fails</summary>
+    <p><strong>Stop</strong> cancels the current request. An aborted-request message by itself does not establish whether the cause was cancellation, navigation, or an interrupted connection. Keep the visible error and any partial output. A timeout means no response headers or stream data arrived within the configured wait.</p>
+    <p>For a read-only model example, check model access above, wait briefly, and rerun once. A repeated failure needs diagnosis: note the lesson and section link, cell label, selected model, error text, and time. Never include an API key. Before repeating a tool or command that changes files, schedules work, or creates a session, inspect whether the first attempt already performed that action.</p>
+    <p>HTTP 401 or 403 calls for checking credentials or access. HTTP 429 means the service is limiting requests; wait before trying again. A 5xx response can indicate a provider or relay failure. <strong>Request handling</strong> in setup controls waiting and optional retries before streaming begins. Longer waits or more retries will not fix invalid credentials. Report persistent failures through the support link at the bottom of this page.</p>
+  </details>
+
   <!-- ── Module map ────────────────────────────────────────────────────── -->
   <div class="section">
     <h2>Exploring the Material</h2>
     <p class="help">
       Use the modules as a guided order; each page also remains useful on its own.
-      Following the full path lets each module reuse its predecessor&mdash;the browser-hosted loop
+      Following the full path lets each module build on the previous work. The browser-hosted loop
       becomes a scoped workflow, that workflow moves into a persistent agent runtime, and the
       runtime's wider reach motivates the operating-system boundary that contains it.
       Start with the task you need. Every page ends in a live artifact and keeps the

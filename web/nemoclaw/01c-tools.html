@@ -47,7 +47,7 @@
     </p>
   </div>
 
-  <h2>The tool-call contract stays fixed</h2>
+  <h2 id="tool-contract">The tool-call contract stays fixed</h2>
   <p>
     The figure traces the cycle from 1b. Later sections change where the schema comes from and
     what the executor does, while the model still requests a named tool and reads its result.
@@ -59,15 +59,19 @@
   </figure>
 
   <div class="callout">
-    <strong>Validate the tool request before execution.</strong> The schema tells the model
-    which arguments the tool accepts. Check the returned name, parse the arguments, and validate
+    <strong>Validate the tool request before execution.</strong> The input schema describes
+    the argument names, types, and required fields offered to the model. It does not execute the tool
+    or guarantee that the model's proposed arguments are safe. Check the returned name, parse the arguments, and validate
     their values before dispatch. The examples below show the requested calls and stop on invalid input.
   </div>
 
   <h2>How the model picks between several tools</h2>
   <p>
-    Agents rarely have a single tool. With more than one, the model decides
-    which to call based on the <code>description</code> field.
+    With several tools available, the model uses their names, descriptions, argument schemas,
+    the conversation, and any <code>tool_choice</code> constraint to propose a call.
+    The <a href="#tool-contract"><code>description</code> in each tool definition</a> explains when
+    that tool is useful. Inspect the Tool spec node below for the complete definition, or consult the
+    <a href="https://platform.openai.com/docs/guides/function-calling" target="_blank" rel="noopener">function-calling guide</a> for the request format.
   </p>
   <p>
     The cell below gives the model two tools and a question that requires picking,
@@ -88,7 +92,7 @@
     <code>webSearch</code> and <code>instantAnswer</code> source, or run the query yourself.
   </p>
   <p>
-    The next section swaps the executor to an exact term lookup behind the <em>same</em>
+    The next section swaps the executor to full-article retrieval behind the <em>same</em>
     tool contract, so you can watch the contract stay fixed while the backend changes
     underneath it.
   </p>
@@ -103,8 +107,8 @@
 
   <div id="cell-m2b-p4"></div>
 
-  <details class="learning-block" open data-learning-id="tool-backend-swap" data-learning-tier="applied" data-learning-artifact="optional" data-localization-scope="en-shell">
-  <summary data-localization-scope="en"><span class="learning-scope">Applied · Backend</span><span class="learning-question">Swap the executor without changing the tool?</span></summary>
+  <details class="learning-block" open data-learning-id="tool-backend-swap" data-learning-artifact="optional" data-localization-scope="en-shell">
+  <summary data-localization-scope="en"><span class="learning-question">Swap the executor without changing the tool?</span></summary>
   <div class="learning-block-body">
   <h2>Swapping the backend while the tool contract holds</h2>
   <p>
@@ -125,10 +129,10 @@
   </div>
   </details>
 
-  <details class="learning-block" open data-learning-id="subagent-as-tool" data-learning-tier="deep" data-learning-artifact="optional" data-localization-scope="en-shell">
-  <summary data-localization-scope="en"><span class="learning-scope">Deep · Delegation</span><span class="learning-question">Hide a focused agent behind one tool?</span></summary>
+  <details class="learning-block" open data-learning-id="subagent-as-tool" data-learning-artifact="optional" data-localization-scope="en-shell">
+  <summary data-localization-scope="en"><span class="learning-question">Hide a focused agent behind one tool?</span></summary>
   <div class="learning-block-body">
-  <h2>Hiding a whole agent behind a single tool</h2>
+  <h2 id="agents-as-tools">Hiding a whole agent behind a single tool</h2>
   <p>
     A tool need not be a small function. An entire sub-agent can sit behind a single
     tool call. To the calling model, the sub-agent remains one contract. Behind that contract, it may query a
@@ -150,10 +154,10 @@
   </div>
   </details>
 
-  <h2>Fetching tools from a separate server with MCP</h2>
-  <details class="learning-block" open data-learning-id="mcp-protocol-detail" data-learning-tier="applied" data-learning-artifact="optional" data-localization-scope="en-shell">
-  <summary data-localization-scope="en"><span class="learning-scope">Applied · Build</span><span class="learning-question">Need the MCP discovery and invocation flow?</span></summary>
+  <details class="learning-block" open data-learning-id="mcp-protocol-detail" data-learning-artifact="optional" data-localization-scope="en-shell">
+  <summary data-localization-scope="en"><span class="learning-question">Need the MCP discovery and invocation flow?</span></summary>
   <div class="learning-block-body">
+  <h2 id="mcp-context">Fetching tools from a separate server with MCP</h2>
   <p>
     Model Context Protocol (MCP) gives tool serving a standard shape. The agent retrieves a server's
     catalog with <code>tools/list</code> and invokes a selected entry with
@@ -201,6 +205,9 @@
   </details>
 
   <h2>Before you continue</h2>
+  <p>Use your displayed tool calls and results as evidence. For the delegation and MCP questions,
+    first open the optional sections <a href="#agents-as-tools">Agents as tools</a> and
+    <a href="#mcp-context">MCP</a>; you can return to those extensions after the basic tool loop.</p>
   <ol>
     <li>What happens when the model calls a tool with arguments that fail your validation? The current loop crashes; how would you make it graceful without giving the model false confidence that the call succeeded?</li>
     <li>The agents-as-tools sub-agent is opaque to the main agent. What information would you want it to surface back (in addition to the answer) so the main agent can decide whether to trust it on the next turn?</li>
@@ -208,8 +215,8 @@
     <li>Before you add a remote MCP server to this agent, what identity, capability scope, token audience, and network destinations would you verify? Which one becomes an SSRF path if you accept it without validation?</li>
   </ol>
 
-  <details class="references learning-block" open data-learning-always-open data-learning-id="tool-use-references" data-learning-tier="deep" data-localization-scope="en-shell">
-    <summary data-localization-scope="en"><span class="learning-scope">Deep · Sources</span><span class="learning-question">Review the tool-use and MCP sources?</span></summary>
+  <details class="references learning-block" open data-learning-id="tool-use-references" data-localization-scope="en-shell">
+    <summary data-localization-scope="en"><span class="learning-question">Review the tool-use and MCP sources?</span></summary>
     <div class="learning-block-body">
     <h3>References</h3>
     <ul>
@@ -328,7 +335,8 @@ const GLOSSARY = [
   ["humanoid-robot","Humanoid Robot","Humanoids are general-purpose, bipedal robots modeled after the human form factor and designed to work alongside humans to augment productivity.","Humanoid Robot;Robot learning;Reinforcement Learning"],
   ["imitation-learning","Imitation Learning","Imitation learning is a machine learning approach in which an agent learns to perform tasks or acquire new skills by observing and mimicking demonstrations provided by an expert.","Imitation learning"],
   ["industrial-ai","Industrial AI","Industrial AI is a critical enabler of industrial automation, enhancing the ability of machines, systems, and processes to operate with minimal human intervention.","Industrial AI;physical AI;Generative AI"],
-  ["k-means","K-Means Clustering Algorithm","K-means is a clustering algorithm\u2014one of the simplest and most popular unsupervised machine learning (ML) algorithms for data scientists.","Data Science Glossary"],
+  // Course summary adapted from the linked NVIDIA glossary entry.
+  ["k-means","K-Means Clustering Algorithm","K-means is an unsupervised machine-learning algorithm that groups data into clusters.","Data Science Glossary"],
   ["kubernetes","Kubernetes","Kubernetes is an open-source orchestration platform for managing workloads and services encapsulated in software containers.","Data Science Glossary"],
   ["large-language-models","Large Language Models","Large language models (LLMs) are deep learning algorithms that can recognize, summarize, translate, predict, and generate content using very large datasets.","Large Language Models;NVIDIA NeMo LLM Service;NVIDIA NeMo Megatron"],
   ["machine-learning","Machine Learning","Machine learning is a subset of artificial intelligence (AI) that uses algorithms or statistical models to automatically learn experiences without explicit programming or human intervention.","Data Science Glossary"],
@@ -667,8 +675,8 @@ const SEARCH_SCHEMA = [{
   type: "function",
   function: {
     name: "glossary_search",
-    description: "Look up an NVIDIA glossary term and return its full article.",
-    parameters: { type: "object", properties: { query: { type: "string", description: "the term, e.g. 'vector database'" } }, required: ["query"] },
+    description: "Search NVIDIA's glossary of AI and accelerated-computing terms. Use for definitions and concepts.",
+    parameters: { type: "object", properties: { query: { type: "string", description: "a few keywords, e.g. 'vector database'" } }, required: ["query"] },
   },
 }];
 

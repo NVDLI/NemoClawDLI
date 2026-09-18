@@ -78,8 +78,8 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
   const root = documentTarget.createElement('div');
   root.className = 'activity-control';
   root.innerHTML = `
-    <button type="button" class="activity-control-toggle" aria-expanded="false" aria-controls="activity-control-panel">
-      <span class="activity-control-dot" aria-hidden="true"></span><span data-activity-label></span>
+    <button type="button" class="activity-control-toggle" aria-expanded="false" aria-controls="activity-control-panel" aria-label="${text('Activity')}" title="${text('Activity')}">
+      <span aria-hidden="true">🏃</span> <span data-activity-label></span>
     </button>
     <section id="activity-control-panel" class="activity-control-panel" hidden role="dialog" aria-label="${text('Course activity and privacy')}">
       <header><strong>${text('Course activity')}</strong><button type="button" data-activity-close aria-label="${text('Close activity panel')}">×</button></header>
@@ -115,8 +115,8 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
   topbar.insertBefore(root, keyPill || null);
 
   const toggle = root.querySelector('.activity-control-toggle');
-  const panel = root.querySelector('.activity-control-panel');
   const label = root.querySelector('[data-activity-label]');
+  const panel = root.querySelector('.activity-control-panel');
   const notice = root.querySelector('[data-activity-notice]');
   const status = root.querySelector('[data-activity-status]');
   const progressBar = root.querySelector('#activity-progress');
@@ -153,9 +153,11 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
       ? (state.phase === 'connected' ? 'Saved progress:' : 'Last confirmed progress:')
       : 'Local verified progress:';
     root.dataset.state = state.phase;
-    label.textContent = `${text(saved ? 'Activity' : 'Activity: local')} ${shownProgress}%`;
+    label.textContent = `${shownProgress}%`;
+    const connection = text(state.phase === 'connected' ? 'Connected' : 'Not connected');
+    toggle.setAttribute('aria-label', `${text('Activity')} ${shownProgress}%. ${connection}`);
+    toggle.title = `${text('Activity')}: ${connection}`;
     progressLabel.textContent = `${text(progressKind)} ${shownProgress}%`;
-    toggle.title = progressLabel.textContent;
     progressBar.value = shownProgress;
     progressBar.setAttribute('aria-valuetext', progressLabel.textContent);
     syncStatus.replaceChildren();

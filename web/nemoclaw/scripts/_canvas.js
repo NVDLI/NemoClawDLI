@@ -958,7 +958,7 @@ helpers.viz.sideBySide(
   }
   function stopRun() {
     if (!running || !runAC) return;
-    try { runAC.abort(); } catch (_) {}
+    try { runAC.abort(new DOMException("Stopped by learner", "AbortError")); } catch (_) {}
     try { if (shared._ws) shared._ws.close(); } catch (_) {}
     const b = _runBtn(); if (b) b.textContent = "⏹ stopping…";
   }
@@ -1740,7 +1740,7 @@ export function mountRunCell(targetSel, opts) {
   function resetCell() {
     runEpoch++;
     const live = _runCellAborts.get(cellId);
-    if (live) live.abort();
+    if (live) live.abort(new DOMException("Stopped because the cell was reset", "AbortError"));
     jsBuffer = code;
     if (cm) { cm.setValue(code); _clearCMErrs(cm); }
     else ta.value = code;
@@ -1761,13 +1761,13 @@ export function mountRunCell(targetSel, opts) {
   if (resetBtn) resetBtn.addEventListener("click", resetCell);
 
   async function run() {
-    if (_runCellAborts.get(cellId)) { _runCellAborts.get(cellId).abort(); }
+    if (_runCellAborts.get(cellId)) { _runCellAborts.get(cellId).abort(new DOMException("Stopped because the cell was rerun", "AbortError")); }
     const ac = new AbortController();
     const epoch = ++runEpoch;
     _runCellAborts.set(cellId, ac);
     setCellState("running");
     btn.textContent = "⏹ Stop";
-    btn.onclick = () => ac.abort();
+    btn.onclick = () => ac.abort(new DOMException("Stopped by learner", "AbortError"));
     out.innerHTML = "";
     if (autoCollapseCode && codeDet && codeDet.open) codeDet.open = false;
 
