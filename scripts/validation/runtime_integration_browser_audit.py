@@ -992,13 +992,21 @@ async function openLocale(browser, language, filename, init) {
       class FakeWebSocket {
         static OPEN = 1;
         constructor(url) {
-          window.__policyCommands.push(new URL(url).searchParams.get('cmd'));
+          const wrapped = new URL(url).searchParams.get('cmd') || '';
+          const command = wrapped.match(/openshell policy get policy-audit-agent --full/)?.[0];
+          const stdoutMarker = wrapped.match(/__DLI_OPENSHELL_POLICY_STDOUT_END_[A-Za-z0-9_-]+__/)?.[0];
+          const stderrMarker = wrapped.match(/__DLI_OPENSHELL_POLICY_STDERR_END_[A-Za-z0-9_-]+__/)?.[0];
+          if (!command || !stdoutMarker || !stderrMarker) throw new Error('policy fixture received unframed transport command');
+          window.__policyCommands.push(command);
           this.readyState = 0;
           setTimeout(() => {
             this.readyState = 1;
             this.onopen?.();
             setTimeout(() => {
-              this.onmessage?.({ data: JSON.stringify({ data: transcript }) });
+              // Model stdout and stderr separately in the legacy one-stream
+              // transport. The policy parser must see both generated boundaries.
+              this.onmessage?.({ data: JSON.stringify({ data: transcript + '\n' + stdoutMarker
+                + '\nConnection to 172.18.0.1 closed.\n' + stderrMarker + '\n' }) });
               this.onmessage?.({ data: JSON.stringify({ type: 'exit', code: 0 }) });
               this.readyState = 3;
               this.onclose?.();

@@ -89,8 +89,11 @@ async function fixture(options = {}) {
       assert(Date.parse(params.schedule.at) > time, 'one-shot scheduled in the future');
       assert.equal(params.deleteAfterRun, true);
       assert.equal(params.sessionTarget, 'isolated');
+      assert.equal(params.delivery?.mode, 'none', 'file-only exercise requires no messaging channel');
       assert.equal(params.wakeMode, 'now');
       assert.equal(params.payload.kind, 'agentTurn');
+      assert(params.payload.timeoutSeconds > 0 && params.payload.timeoutSeconds <= 120,
+        'agent execution is bounded inside the three-minute observer budget');
       assert.equal(typeof params.payload.message, 'string');
       assert(!Object.hasOwn(params, 'id'), 'server owns the job ID');
       assert(!Object.hasOwn(params, 'prompt'), 'agent prompt belongs inside payload');
@@ -106,18 +109,28 @@ async function fixture(options = {}) {
       assert.equal(params.id, ownedId, 'poll the server-returned ID');
       histories++;
       if (options.runFailure) return {entries:[{status:'error',error:'fixture run failure'}]};
+      if (options.runSkipped) return {entries:[{status:'skipped',error:'fixture provider unreachable'}]};
       if (options.neverComplete || histories === 1) return {entries:[]};
       files.set(state.cronFile, options.mismatch ? 'wrong file reference' : state.cronReference + '\n');
+      if (options.autoDeleted) job = null;
       return {entries:[{status:'ok',runId:'scheduled-run'}]};
     }
     if (method === 'cron.remove') {
       assert.equal(params.id, ownedId, 'remove only the server-returned owned ID');
       assert.equal(sockets.at(-1).readyState, 1, 'cleanup transport remains open');
       if (options.removeFailure) throw new Error('fixture removal unavailable');
+      if (options.autoDeleted && !job) throw new Error('job not found');
       if (!options.stillPresent) job = null;
       return {removed:true};
     }
-    if (method === 'cron.list') return {jobs:job ? [job, {id:'foreign-id',name:'unrelated'}] : [{id:'foreign-id',name:'unrelated'}]};
+    if (method === 'cron.list') {
+      if (params.query) {
+        assert.equal(params.query, ownedId, 'cleanup searches the owned ID across the scheduler');
+        assert.equal(params.includeDisabled, true, 'failed disabled jobs remain visible to cleanup');
+      }
+      if (options.listFailure) throw new Error('fixture listing unavailable');
+      return {jobs:job ? [job, {id:'foreign-id',name:'unrelated'}] : [{id:'foreign-id',name:'unrelated'}], hasMore:!!options.moreJobs};
+    }
     throw new Error('Unexpected gateway method: ' + method);
   };
   class GatewaySocket {
@@ -271,9 +284,19 @@ for (const directory of roots) {
     } finally { f.close(); }
   });
 
+  test(`${label}: automatic deletion is successful cleanup after confirmed absence`, async () => {
+    const d = await cells, f = await fixture({autoDeleted:true});
+    try {
+      await f.execute(d.cron);
+      assert.equal(f.state.demoCronId,null);
+      assert(!f.storage.has(f.key));
+      assert(f.calls.some(call => call.method === 'cron.list'));
+    } finally { f.close(); }
+  });
+
   test(`${label}: Stop, deadline, run failure and wrong file all fail and still clean up`, async () => {
     const d = await cells;
-    for (const mode of ['stop','neverComplete','runFailure','mismatch']) {
+    for (const mode of ['stop','neverComplete','runFailure','runSkipped','mismatch']) {
       const f = await fixture({[mode]:true});
       try {
         await assert.rejects(f.execute(d.cron), error => mode === 'stop' ? error.name === 'AbortError' : Boolean(error.message));
@@ -286,7 +309,7 @@ for (const directory of roots) {
 
   test(`${label}: incomplete cleanup retains ownership and retry clears it only after absence`, async () => {
     const d = await cells;
-    for (const mode of ['removeFailure','stillPresent']) {
+    for (const mode of ['removeFailure','stillPresent','listFailure','moreJobs']) {
       const options = {[mode]:true};
       const f = await fixture(options);
       try {

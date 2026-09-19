@@ -17,10 +17,14 @@ const POMERIUM_LOOPBACK_PROBES = Object.freeze({
   "/api/agent": "http://127.0.0.1/api/agent",
 });
 
+function shellQuote(value) {
+  return "'" + String(value).replace(/'/g, "'\"'\"'") + "'";
+}
+
 // PTY helper: `bash` opens the host; `openshell sandbox connect <agent>` enters the agent.
 // A browser-bound session stays direct. A pasted session tries direct first,
 // then the approved provider-bound relay.
-export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000, openMs = 12000, onChunk = null, baseUrl = null, signal = null, relayWebSocket = null } = {}) {
+export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000, openMs = 12000, onChunk = null, baseUrl = null, signal = null, relayWebSocket = null, stdio = "pty" } = {}) {
   /* @doc <code>helpers.terminal(cmd, {send, idleMs, totalMs, openMs, onChunk})</code> ::
        Open a PTY over your launchable's <code>/ws/terminal</code> WebSocket and run
        <code>cmd</code>. Use <code>"bash"</code> for the VM shell, or <code>"openshell sandbox
@@ -28,9 +32,13 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
        <code>send</code> is an array of shell lines typed into the PTY in order (each gets
        Enter). A browser-bound session stays direct. A pasted access session tries
        direct first and then its approved provider-bound relay.
-       <code>relayWebSocket: true</code> explicitly selects that recovery route.
-       Returns <code>{ output, raw, frames, exitCode, completion, transport }</code> (<code>output</code>
-       is ANSI-stripped; <code>exitCode</code> is the command's PTY exit status, or null if none
+       <code>relayWebSocket: true</code> explicitly selects that recovery route. Pass
+       <code>stdio: "pipe"</code> for a one-shot command whose launchable supports labelled
+       stdout and stderr frames; the default PTY mode remains for interactive terminal use.
+       Returns <code>{ output, stdout, stderr, raw, frames, exitCode, completion, transport }</code>.
+       <code>output</code> keeps the complete ANSI-stripped terminal transcript for interactive
+       consumers; <code>stdout</code> and <code>stderr</code> preserve explicitly labelled
+       transport streams when the launchable provides them. <code>exitCode</code> is the command's PTY exit status, or null if none
        arrived; <code>completion</code> distinguishes an exit frame from idle, deadline, or socket
        closure; <code>transport</code> identifies the route that opened). A stopped call rejects.
        An idle terminal or missing exit status does not establish command success.
@@ -42,10 +50,12 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
   const accessProvider = connection.accessProvider;
   const accessSession = connection.accessSession;
   const resolvedProvider = accessProviderForOpenClawUrl(rawUrl, accessProvider);
+  if (!["pty", "pipe"].includes(stdio)) throw new Error("terminal stdio must be 'pty' or 'pipe'.");
   const terminalPath = "/ws/terminal?cmd=" + encodeURIComponent(cmd);
+  const terminalRequestPath = stdio === "pipe" ? terminalPath + "&stdio=pipe" : terminalPath;
   const direct = openclawWebSocketUrl(
     rawUrl,
-    terminalPath,
+    terminalRequestPath,
     "",
     { enabled: false, base: "" },
     resolvedProvider,
@@ -54,7 +64,7 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
   const routed = relayEligible
     ? openclawWebSocketUrl(
         rawUrl,
-        terminalPath,
+        terminalRequestPath,
         accessSession,
         getOpenClawProxyConfig(),
         resolvedProvider,
@@ -87,7 +97,7 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
     return error;
   };
   return await new Promise((resolve, reject) => {
-    let raw = "", frames = 0, opened = false, idleT = null, exitCode = null;
+    let raw = "", stdout = "", stderr = "", frames = 0, opened = false, idleT = null, exitCode = null;
     let ws = null, candidate = 0, openT = null, openedRoute = null;
     let finished = false, abortHandler = null;
     const totalT = setTimeout(() => opened ? finish("deadline") : fail(terminalOpenError()), totalMs);
@@ -103,6 +113,8 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
       if (!settle()) return;
       resolve({
         output: clean(raw),
+        stdout: clean(stdout),
+        stderr: clean(stderr),
         raw: filterOpenClawRuntimeNoise(raw),
         frames,
         exitCode,
@@ -149,7 +161,10 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
           const j = JSON.parse(ev.data);
           if (j.type === "exit" && typeof j.code === "number") exitCode = j.code;
           t = (j.data != null ? j.data : "");
-        } catch (_) { t = String(ev.data || ""); }
+          const stream = j.stream || j.channel || (j.type === "stderr" ? "stderr" : "stdout");
+          if (stream === "stderr") stderr += t;
+          else stdout += t;
+        } catch (_) { t = String(ev.data || ""); stdout += t; }
         raw += t; if (onChunk) { const chunk = clean(t); if (chunk) try { onChunk(chunk); } catch (_) {} }
         if (exitCode !== null) return finish("exit");
         bump();
@@ -382,28 +397,49 @@ export async function sandboxExec(command, { agent = null, idleMs = 8000, totalM
 }
 
 // Read and parse the launchable's live OpenShell policy, so a cell predicts from the SAME policy the kernel enforces rather than a baked copy.
-// Returns the exact command run and the raw response alongside the parsed object.
+// Pipe-capable launchables label stdout and stderr. For legacy PTYs, a shell wrapper redirects
+// stdin and stderr, then uses unique markers to retain the command's separate streams without
+// discarding a diagnostic trailer from the complete terminal transcript.
 export async function policyGet(agent = null, { idleMs = 8000, totalMs = 30000, signal = null } = {}) {
   /* @doc <code>helpers.policyGet(agent?)</code> ::
        Read your launchable's live OpenShell policy. Runs <code>openshell policy get &lt;agent&gt;
        --full</code> over the operator terminal and parses the YAML body. Returns
-       <code>{ agent, command, raw, status, policy, parseError }</code>: the exact command run, the raw
-       text it returned, the status header, the parsed policy object, and an explicit parser error
+       <code>{ agent, command, raw, stderr, transcript, status, policy, parseError }</code>: the OpenShell
+       command, its stdout body, separately labelled stderr when available, the complete terminal
+       transcript, the status header, the parsed policy object, and an explicit parser error
        when no policy is available (the shape
        <code>evalSandboxNetwork</code> / <code>evalSandboxFs</code> read). Launchable only.
   */
   const {name, baseUrl} = await connectedSandbox(agent, signal);
   const command = "openshell policy get " + name + " --full";
-  const res = await terminal(command, {baseUrl, idleMs, totalMs, signal});
+  const markerSeed = Math.random().toString(36).slice(2);
+  const stdoutMarker = "__DLI_OPENSHELL_POLICY_STDOUT_END_" + markerSeed + "__";
+  const stderrMarker = "__DLI_OPENSHELL_POLICY_STDERR_END_" + markerSeed + "__";
+  const script = "tmp=$(mktemp) || exit 125; trap 'rm -f \"$tmp\"' EXIT; "
+    + command + " </dev/null 2>\"$tmp\"; status=$?; printf '\\n" + stdoutMarker
+    + "\\n'; cat \"$tmp\"; printf '\\n" + stderrMarker + "\\n'; exit \"$status\"";
+  const transportCommand = "sh -c " + shellQuote(script);
+  const res = await terminal(transportCommand, {baseUrl, idleMs, totalMs, signal, stdio: "pipe"});
   if (getOpenClawConnection().rawUrl !== baseUrl) throw new Error("The connected runtime changed while reading policy.");
   if (res.exitCode !== 0) throw new Error("Policy command did not complete successfully: " + res.completion);
-  const raw = (res.output || "").trim();
+  const stdout = String(res.stdout || "");
+  const stdoutAt = stdout.lastIndexOf(stdoutMarker);
+  const afterStdout = stdoutAt >= 0 ? stdout.slice(stdoutAt + stdoutMarker.length).replace(/^\r?\n/, "") : "";
+  const stderrAt = stdoutAt >= 0 ? afterStdout.lastIndexOf(stderrMarker) : -1;
+  const framingError = stdoutAt < 0
+    ? "openshell policy transport ended without the stdout boundary"
+    : stderrAt < 0
+      ? "openshell policy transport ended without the stderr boundary"
+      : "";
+  const raw = (framingError ? stdout : stdout.slice(0, stdoutAt)).trim();
+  const capturedStderr = framingError ? "" : afterStdout.slice(0, stderrAt).replace(/\r?\n$/, "");
   const sep = raw.indexOf("---");
   const status = sep >= 0 ? raw.slice(0, sep).trim() : raw;
   const body = sep >= 0 ? raw.slice(sep + 3) : "";
   let policy = null;
   let parseError = "";
-  if (body.trim()) {
+  if (framingError) parseError = framingError;
+  else if (body.trim()) {
     try {
       const yaml = await import(POLICY_YAML_MODULE_URL);
       if (typeof yaml.load !== "function") throw new Error("vendored YAML parser does not export load()");
@@ -417,7 +453,7 @@ export async function policyGet(agent = null, { idleMs = 8000, totalMs = 30000, 
     }
   }
   else parseError = "openshell policy get returned no YAML body after the status header";
-  return { agent: name, command, raw, status, policy, parseError };
+  return { agent: name, command, raw, stderr: capturedStderr + (res.stderr || ""), transcript: res.raw, status, policy, parseError };
 }
 
 // Render a policy object back to the OpenShell YAML it mirrors, so the map can show the exact source every edge is computed from.
