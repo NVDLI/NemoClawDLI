@@ -124,7 +124,8 @@ try {
     assert.equal(await page.locator('.lesson-resume, .lesson-outline a[aria-current]').count(), 0);
     assert.equal(await outline.locator('summary').evaluate(node => getComputedStyle(node).fontWeight), '700');
     assert.equal(await outline.locator('a').first().evaluate(node => getComputedStyle(node).fontWeight), '400');
-    assert.equal(await page.locator('[data-learning-id="mcp-protocol-detail"]').getAttribute('open'), '');
+    assert.equal(await page.locator('[data-learning-id="mcp-protocol-detail"]').getAttribute('open'), null);
+    assert.equal(await page.locator('[data-learning-id="subagent-as-tool"]').getAttribute('open'), '');
 
     // Only the external model service is replaced; exercise the shipped LangGraph/checkpointer.
     const requests = [];
