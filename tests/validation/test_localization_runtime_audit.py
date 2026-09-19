@@ -243,6 +243,40 @@ class RuntimeArtifactLocaleTests(unittest.TestCase):
 
 
 class RuntimeBrowserFixtureTests(unittest.TestCase):
+    def test_policy_transport_fixture_preserves_generated_stream_boundaries(self):
+        fixture = "class FakeWebSocket {" + RUNTIME_JS.split("class FakeWebSocket {", 1)[1].split(
+            "window.WebSocket = FakeWebSocket;", 1)[0]
+        checks = r"""
+const assert = require('assert/strict');
+const queue = [], frames = [], window = {__policyCommands:[]};
+const transcript = '---\nversion: 1\n';
+const Socket = new Function('window', 'setTimeout', 'transcript',
+  FIXTURE + '\nreturn FakeWebSocket;')(window, callback => queue.push(callback), transcript);
+const command = 'openshell policy get policy-audit-agent --full';
+for (const seed of ['novel9', 'renamed17']) {
+  const stdout = '__DLI_OPENSHELL_POLICY_STDOUT_END_' + seed + '__';
+  const stderr = '__DLI_OPENSHELL_POLICY_STDERR_END_' + seed + '__';
+  const wrapped = 'sh -c ' + command + '; printf ' + stdout + '; printf ' + stderr;
+  const url = value => 'wss://fixture.invalid/ws/terminal?cmd=' + encodeURIComponent(value);
+  const socket = new Socket(url(wrapped));
+  frames.length = 0;
+  socket.onmessage = frame => frames.push(JSON.parse(frame.data));
+  while (queue.length) queue.shift()();
+  assert.equal(frames[0].data, transcript + '\n' + stdout +
+    '\nConnection to 172.18.0.1 closed.\n' + stderr + '\n');
+  assert.deepEqual(frames[1], {type:'exit', code:0});
+  for (const invalid of [command, wrapped.replace(stdout, ''), wrapped.replace(stderr, ''),
+    wrapped.replace('STDOUT_END', 'RENAMED_END'), wrapped.replace(seed + '__', '?__'),
+    wrapped.replace('policy-audit-agent', 'unrelated-agent')]) {
+    assert.throws(() => new Socket(url(invalid)), /unframed transport command/);
+  }
+}
+assert.deepEqual(window.__policyCommands, [command, command]);
+"""
+        result = subprocess.run(["node", "-e", "const FIXTURE = " + json.dumps(fixture) + ";\n" + checks],
+                                capture_output=True, text=True, check=False)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_artifact_discovery_needs_no_site_packages(self):
         result = subprocess.run(
             [sys.executable, "-S", "-m", "unittest",

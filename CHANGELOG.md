@@ -23,6 +23,9 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
   mode machinery in discovered source and locale resources. Enforce the em-dash rule on encoded
   and translated authored copy, and make required report findings fail the validation command.
 
+- Thanks to Vadim Kudlay for reporting the policy parsing and scheduled-write failures.
+  Separate command diagnostics from policy output and verify completion and cleanup across locales.
+
 - Fix Part 3 identifiers on ordinary HTTP and show bounded agent startup progress and failures.
   Validate discovered browser modules and executable cells across HTTP and secure contexts.
   Vadim Kudlay contributed this repair with Codex-assisted implementation and independent review.

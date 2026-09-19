@@ -2,7 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import assert from 'node:assert/strict';
+import { execFile } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
+import { promisify } from 'node:util';
+
+const execFileAsync = promisify(execFile);
 
 const persistent = new Map();
 const tab = new Map();
@@ -17,9 +24,11 @@ globalThis.sessionStorage = storage(tab);
 globalThis.location = new URL('https://cdn.dli.learn.nvidia.com/course-static/test/web/nemoclaw/03a-kickstart.html');
 
 const terminalUrls = [];
+const terminalCommands = [];
 let failDirectTerminal = false;
 let terminalResult = 'exit';
 let terminalExitCode = 0;
+let terminalFrames = null;
 class FakeWebSocket {
   static OPEN = 1;
   constructor(url) {
@@ -36,10 +45,13 @@ class FakeWebSocket {
       this.readyState = FakeWebSocket.OPEN;
       this.onopen?.();
       const command = new URL(url).searchParams.get('cmd') || '';
-      const body = command.endsWith('http://127.0.0.1/api/agent')
-        ? JSON.stringify({ agent: { dashboardUrl: '/#token=test-gateway-token' } })
-        : JSON.stringify({ status: 'ok' });
-      this.onmessage?.({ data: JSON.stringify({ type: 'data', data: body }) });
+      terminalCommands.push(command);
+      const frames = terminalFrames
+        ? terminalFrames(command)
+        : [{ type: 'data', data: command.endsWith('http://127.0.0.1/api/agent')
+          ? JSON.stringify({ agent: { dashboardUrl: '/#token=test-gateway-token' } })
+          : JSON.stringify({ status: 'ok' }) }];
+      for (const frame of frames) this.onmessage?.({ data: JSON.stringify(frame) });
       if (terminalResult === 'exit') {
         this.onmessage?.({ data: JSON.stringify({ type: 'exit', code: terminalExitCode }) });
       }
@@ -194,6 +206,130 @@ test('terminal distinguishes command exit, disconnected output, and idle output'
   } finally {
     terminalResult = 'exit';
     terminalExitCode = 0;
+  }
+});
+
+test('policyGet parses bounded stdout while preserving SSH diagnostics and malformed YAML', async () => {
+  connection.setOpenClawConnection({ rawUrl:launchable, accessProvider:'pomerium', accessSession:'' });
+  terminalFrames = command => {
+    assert.equal(new URL(terminalUrls.at(-1)).searchParams.get('stdio'), 'pipe');
+    const stdoutMarker = command.match(/__DLI_OPENSHELL_POLICY_STDOUT_END_[a-z0-9]+__/)?.[0];
+    const stderrMarker = command.match(/__DLI_OPENSHELL_POLICY_STDERR_END_[a-z0-9]+__/)?.[0];
+    assert(stdoutMarker && stderrMarker, 'policy transport command has stream markers');
+    return [
+      { type: 'data', stream: 'stdout', data: 'active policy\n---\nversion: 1\nnetwork_policies: {}\n' + stdoutMarker + '\n' + stderrMarker + '\n' },
+      { type: 'data', stream: 'stderr', data: 'Connection to 172.18.0.1 closed.\n' },
+    ];
+  };
+  try {
+    const policy = await openshell.policyGet('learner-agent', { idleMs:20 });
+    assert.equal(policy.command, 'openshell policy get learner-agent --full');
+    assert.equal(policy.raw, 'active policy\n---\nversion: 1\nnetwork_policies: {}');
+    assert.equal(policy.stderr, 'Connection to 172.18.0.1 closed.');
+    assert.match(policy.transcript, /Connection to 172\.18\.0\.1 closed\./);
+    assert.deepEqual(policy.policy, { version: 1, network_policies: {} });
+
+    terminalFrames = command => {
+      const stdoutMarker = command.match(/__DLI_OPENSHELL_POLICY_STDOUT_END_[a-z0-9]+__/)?.[0];
+      const stderrMarker = command.match(/__DLI_OPENSHELL_POLICY_STDERR_END_[a-z0-9]+__/)?.[0];
+      return [{ type: 'data', data: 'active policy\n---\nversion: [\n' + stdoutMarker + '\n' + stderrMarker + '\n' }];
+    };
+    const malformed = await openshell.policyGet('learner-agent', { idleMs:20 });
+    assert.equal(malformed.policy, null);
+    assert.notEqual(malformed.parseError, '');
+
+    terminalFrames = command => {
+      const stderrMarker = command.match(/__DLI_OPENSHELL_POLICY_STDERR_END_[a-z0-9]+__/)?.[0];
+      return [{ type: 'data', data: 'active policy\n---\nversion: 1\n' + stderrMarker + '\n' }];
+    };
+    const missingStdoutBoundary = await openshell.policyGet('learner-agent', { idleMs:20 });
+    assert.equal(missingStdoutBoundary.policy, null);
+    assert.match(missingStdoutBoundary.parseError, /stdout boundary/);
+
+    terminalFrames = command => {
+      const stdoutMarker = command.match(/__DLI_OPENSHELL_POLICY_STDOUT_END_[a-z0-9]+__/)?.[0];
+      return [{ type: 'data', data: 'active policy\n---\nversion: 1\n' + stdoutMarker + '\n' }];
+    };
+    const missingStderrBoundary = await openshell.policyGet('learner-agent', { idleMs:20 });
+    assert.equal(missingStderrBoundary.policy, null);
+    assert.match(missingStderrBoundary.parseError, /stderr boundary/);
+
+    terminalExitCode = 23;
+    await assert.rejects(
+      openshell.policyGet('learner-agent', { idleMs:20 }),
+      /Policy command did not complete successfully/,
+    );
+  } finally {
+    terminalFrames = null;
+    terminalExitCode = 0;
+  }
+});
+
+test('policyGet keeps legacy PTY diagnostics outside YAML without stripping similar output', async () => {
+  connection.setOpenClawConnection({ rawUrl:launchable, accessProvider:'pomerium', accessSession:'' });
+  terminalFrames = command => {
+    const stdoutMarker = command.match(/__DLI_OPENSHELL_POLICY_STDOUT_END_[a-z0-9]+__/)?.[0];
+    const stderrMarker = command.match(/__DLI_OPENSHELL_POLICY_STDERR_END_[a-z0-9]+__/)?.[0];
+    return [{ type: 'data', data: 'active policy\n---\nmessage: "Connection to 172.18.0.1 closed."\n'
+      + stdoutMarker + '\noperator warning\n' + stderrMarker + '\nConnection to 172.18.0.1 closed.\n' }];
+  };
+  try {
+    const policy = await openshell.policyGet('learner-agent', { idleMs:20 });
+    assert.equal(policy.policy.message, 'Connection to 172.18.0.1 closed.');
+    assert.equal(policy.stderr, 'operator warning');
+    assert.match(policy.transcript, /Connection to 172\.18\.0\.1 closed\.$/);
+  } finally {
+    terminalFrames = null;
+  }
+});
+
+test('policyGet shell wrapper preserves streams and exit status through a real outer shell', async () => {
+  connection.setOpenClawConnection({ rawUrl:launchable, accessProvider:'pomerium', accessSession:'' });
+  terminalCommands.length = 0;
+  terminalFrames = command => {
+    const stdoutMarker = command.match(/__DLI_OPENSHELL_POLICY_STDOUT_END_[a-z0-9]+__/)?.[0];
+    const stderrMarker = command.match(/__DLI_OPENSHELL_POLICY_STDERR_END_[a-z0-9]+__/)?.[0];
+    return [{ type: 'data', data: 'active policy\n---\nversion: 1\n' + stdoutMarker + '\n' + stderrMarker + '\n' }];
+  };
+  const fakeBin = fs.mkdtempSync(path.join(os.tmpdir(), 'openshell-policy-'));
+  const fakeOpenShell = path.join(fakeBin, 'openshell');
+  fs.writeFileSync(fakeOpenShell, [
+    '#!/bin/sh',
+    "printf '%s\\n' 'active policy'",
+    "printf '%s\\n' '---'",
+    "printf '%s\\n' 'message: \"$HOME $(whoami) `uname`\"'",
+    "printf '%s\\n' 'operator warning: $tmp $(id) `date`' >&2",
+    'exit 23',
+  ].join('\n') + '\n', { mode: 0o755 });
+  try {
+    await openshell.policyGet('learner-agent', { idleMs:20 });
+    const transportCommand = terminalCommands.at(-1);
+    assert.match(transportCommand, /^sh -c '/);
+    const result = await execFileAsync('sh', ['-c', transportCommand], {
+      env: { ...process.env, PATH: fakeBin + path.delimiter + process.env.PATH },
+    });
+    assert.fail('expected policy command failure, got ' + result.stdout);
+  } catch (error) {
+    if (error?.code !== 23) throw error;
+    assert.match(error.stdout, /message: "\$HOME \$\(whoami\) `uname`"/);
+    assert.match(error.stdout, /operator warning: \$tmp \$\(id\) `date`/);
+    assert.equal(error.stderr, '');
+  } finally {
+    terminalFrames = null;
+    fs.rmSync(fakeBin, { recursive: true, force: true });
+  }
+});
+
+test('terminal retains genuine output that resembles an SSH close diagnostic', async () => {
+  connection.setOpenClawConnection({ rawUrl:launchable, accessProvider:'pomerium', accessSession:'' });
+  terminalFrames = () => [{ type: 'data', data: 'Connection to 172.18.0.1 closed.\n' }];
+  try {
+    const result = await openshell.terminal('printf diagnostic', { baseUrl:launchable, idleMs:20 });
+    assert.equal(result.output, 'Connection to 172.18.0.1 closed.');
+    assert.equal(result.stdout, 'Connection to 172.18.0.1 closed.');
+    assert.equal(result.stderr, '');
+  } finally {
+    terminalFrames = null;
   }
 });
 
