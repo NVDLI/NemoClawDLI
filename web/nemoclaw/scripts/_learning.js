@@ -1,7 +1,7 @@
 // Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-// Native disclosures preserve each section's authored state.
+// Optional sections start collapsed; links and printing can reveal their contents.
 const CODE_DETAILS_SELECTOR = "details.rc-code-det, details.cf-panel-code-det";
 const LESSON_PAGE_RE = /^(0[1-4][a-c]-[^/]+)\.html$/;
 const LESSON_MAP_URL = new URL("../lesson-map.json", import.meta.url);
@@ -165,6 +165,12 @@ function mountPrintFallback() {
   });
 }
 
+function mountOptionalDisclosures() {
+  if (document.documentElement.dataset.learningDisclosuresReady) return;
+  document.documentElement.dataset.learningDisclosuresReady = "true";
+  document.querySelectorAll("details.learning-block").forEach(block => { block.open = false; });
+}
+
 export function revealHashTarget() {
   if (!location.hash) return;
   let id = "";
@@ -188,6 +194,7 @@ export function mountLearningView() {
   if (!supportsLearningView()) return;
   const bar = document.querySelector(".topbar");
   if (!bar) return;
+  mountOptionalDisclosures();
   mountPrintFallback();
   mountHashReveal();
   mountContentTransparency();

@@ -171,17 +171,19 @@ async function waitText(locator, pattern) {
   const detail = page.locator('#learning-detail');
   const sources = page.locator('#learning-sources');
   const referenceBody = page.locator('#learning-reference .learning-block-body');
-  if (!await detail.evaluate(n => n.open) || !await sources.evaluate(n => n.open) || !await referenceBody.isVisible()) throw new Error('authored disclosure defaults changed');
+  if (await detail.evaluate(n => n.open) || await sources.evaluate(n => n.open) || await referenceBody.isVisible()) throw new Error('optional disclosures must start collapsed');
   await page.locator('#learning-reference > summary').click();
-  if (await referenceBody.isVisible()) throw new Error('reference disclosure could not be collapsed locally');
+  if (!await referenceBody.isVisible()) throw new Error('reference disclosure could not be expanded locally');
   await page.locator('#learning-reference > summary').click();
   const runCode = page.locator('#run-cell .rc-code-det');
   const canvasCodes = page.locator('#canvas .cf-panel-code-det');
   const canvasCode = canvasCodes.first();
   if (!await runCode.evaluate(n => n.open)) throw new Error('authored RunCell default was overwritten');
   await detail.locator('summary').click();
-  if (await detail.evaluate(n => n.open) || !await sources.evaluate(n => n.open)) throw new Error('local toggle changed another section');
-  await sources.locator('summary').click();
+  if (!await detail.evaluate(n => n.open) || await sources.evaluate(n => n.open)) throw new Error('local toggle changed another section');
+  await page.evaluate(async () => { (await import('/nemoclaw/scripts/_learning.js')).mountLearningView(); });
+  if (!await detail.evaluate(n => n.open)) throw new Error('remount overwrote the learner disclosure choice');
+  await detail.locator('summary').click();
   await runCode.evaluate(n => {n.open = false;});
   await canvasCode.evaluate(n => {n.open = true;});
   await page.evaluate(() => window.dispatchEvent(new Event('beforeprint')));
@@ -192,8 +194,7 @@ async function waitText(locator, pattern) {
   if (await detail.evaluate(n=>n.open) || await sources.evaluate(n=>n.open) || await runCode.evaluate(n=>n.open) || !await canvasCode.evaluate(n=>n.open)) throw new Error('print did not restore independent disclosure state');
   await page.reload({waitUntil:'networkidle'});
   await page.waitForFunction(() => window.fixtureMounted === true);
-  if (!await detail.evaluate(n=>n.open) || !await sources.evaluate(n=>n.open) || !await referenceBody.isVisible()) throw new Error('reload lost authored defaults');
-  await sources.locator('summary').click();
+  if (await detail.evaluate(n=>n.open) || await sources.evaluate(n=>n.open) || await referenceBody.isVisible()) throw new Error('reload lost collapsed defaults');
   await page.evaluate(() => { location.hash = 'learning-sources'; });
   await page.waitForFunction(() => document.getElementById('learning-sources').open);
 
@@ -672,12 +673,11 @@ async function waitText(locator, pattern) {
   await coursePage.locator('#cell-m3b-p1 .rc-card').waitFor({state:'visible'});
   const courseBlocks = coursePage.locator('details.learning-block');
   if (await coursePage.locator('.learning-depth-select').count()) throw new Error('02b mode selector returned');
-  if (await courseBlocks.count() !== 8 || await courseBlocks.locator('.learning-block-body:visible').count() !== 8) throw new Error('02b lost authored disclosures');
+  if (await courseBlocks.count() !== 8 || await courseBlocks.locator('.learning-block-body:visible').count() !== 0) throw new Error('02b optional disclosures must start collapsed');
   if (await coursePage.locator('#cell-m3b-p1 .cf-canvas').count()) throw new Error('single embedding regressed from RunCell to CanvasFlow');
   const graphBlock = coursePage.locator('[data-learning-id="graphrag-global-questions"]');
   await graphBlock.locator(':scope > summary').click();
-  if (await graphBlock.locator('.learning-block-body').isVisible() || await courseBlocks.locator('.learning-block-body:visible').count() !== 7) throw new Error('02b local toggle changed neighboring content');
-  await graphBlock.locator(':scope > summary').click();
+  if (!await graphBlock.locator('.learning-block-body').isVisible() || await courseBlocks.locator('.learning-block-body:visible').count() !== 1) throw new Error('02b local toggle changed neighboring content');
   if (!await coursePage.locator('#cell-graphrag').isVisible()) throw new Error('GraphRAG artifact is not reachable');
 
   const deepPage = await courseContext.newPage();
@@ -803,7 +803,7 @@ async function waitText(locator, pattern) {
   await loopPage.locator('#cell-reflex .cf-btn-run').waitFor({state:'attached'});
   const loopBlocks = loopPage.locator('details.learning-block');
   if (await loopPage.locator('.learning-depth-select').count()) throw new Error('01a mode selector returned');
-  if (await loopBlocks.count() !== 5 || await loopBlocks.locator('.learning-block-body:visible').count() !== 5) throw new Error('01a lost authored disclosures');
+  if (await loopBlocks.count() !== 5 || await loopBlocks.locator('.learning-block-body:visible').count() !== 0) throw new Error('01a optional disclosures must start collapsed');
 
 
   const nativeDisclosures = {loop:await loopBlocks.count(), rag:await courseBlocks.count()};
