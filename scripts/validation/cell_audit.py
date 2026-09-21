@@ -235,12 +235,20 @@ def audit_runtime_contract():
     rc_code = src.find('class="rc-code-det"')
     need(rc_out >= 0 and rc_code >= 0 and rc_code < rc_out,
          "run-cell code controls must stay above output, with the code editor collapsed by default")
-    need('const codeOpenAttr = opts.openCode === true ? " open" : "";' in src,
-         "run-cell code visibility must be an explicit openCode opt-in, not a default-open editor")
+    shared_open = 'const codeOpenAttr = _cellCodeOpen(opts, code) ? " open" : "";'
+    need(shared_open in src,
+         "run-cell code visibility must use the shared bounded visibility helper")
+    long_guard = src.find("if (lines > CELL_CANVAS_VISIBLE_LINES) return false;")
+    visibility_flags = src.find("if (opts.openCode === true || opts.showCode === true) return true;")
+    need(long_guard >= 0 and visibility_flags >= 0 and long_guard < visibility_flags,
+         "shared code visibility must close source over the line cap before explicit visibility flags")
+    need('const codeOpenAttr = opts.openCode === true ? " open" : "";' not in src,
+         "run-cells must not bypass the shared line cap with the former unbounded openCode expression")
     need('const autoCollapseCode = opts.autoCollapseCode !== false && opts.openCode !== true;' in src,
          "run-cell code should collapse after Run unless the cell explicitly starts open for student editing")
-    need('class="rc-code-det"${codeOpenAttr}' in src,
-         "run-cell code details must use the openCode opt-in so most cells hide code while selected cells can show it")
+    need('class="rc-code-det"${codeOpenAttr}' in src and
+         'const _showCode = _cellCodeOpen(node, node.code, "canvas");' in src,
+         "RunCell and CanvasFlow code details must use the same bounded visibility rule")
     need(not re.search(r'<details class="rc-code-det"\s+open\b', src),
          "run-cell code must not be hard-coded open by default")
     need(not re.search(r'<details class="rc-schemas-det"[^>]*\sopen\b', src),
@@ -340,6 +348,8 @@ def _is_visible_cell(block: str, code_start: int, lines: int, canvas: bool) -> b
     pre = block[max(0, code_start - 700):code_start]
     if "showCode: false" in pre[-350:]:
         return False
+    if lines > CANVAS_DEFAULT_VISIBLE_MAX_LINES:
+        return False
     if "showCode: true" in pre[-350:] or "openCode: true" in pre[-350:]:
         return True
     return canvas and lines <= CANVAS_DEFAULT_VISIBLE_MAX_LINES
@@ -372,11 +382,9 @@ def _visible_hygiene(rel: str, cell_line: int, code: str):
 
 
 def audit_code_surface():
-    """Find canvas-flow nodes whose code starts open despite being long enough to dominate the page.
-    mountCanvasFlow opens short node code automatically; that is useful for small teaching
-    steps but rough for plumbing-heavy visualization or orchestration blocks. Anything at or above
-    CANVAS_LONG_DEFAULT_OPEN_LINES must choose deliberately: add showCode:false for plumbing, or
-    shrink/split the code if students really need to read it inline."""
+    """Find canvas-flow nodes whose rendered default visibility contradicts the shared cap.
+    Long source is always revealable but never occupies the first view; this audit only reports a
+    remaining visible long node if the authored visibility inference and runtime rule drift apart."""
     findings = []
     pages = sorted((WEB / "nemoclaw").glob("0*.html"))
     for path in pages:
@@ -395,9 +403,7 @@ def audit_code_surface():
                 code = m.group(1)
                 lines = code.count("\n") + 1
                 pre = block[max(0, m.start() - 700):m.start()]
-                show_false = "showCode: false" in pre[-350:]
-                show_true = "showCode: true" in pre[-350:]
-                default_open = show_true or (lines <= CANVAS_DEFAULT_VISIBLE_MAX_LINES and not show_false)
+                default_open = _is_visible_cell(block, m.start(), lines, True)
                 if not default_open or lines < CANVAS_LONG_DEFAULT_OPEN_LINES:
                     continue
                 title_m = re.search(r'title:\s*"([^"]+)"', pre)

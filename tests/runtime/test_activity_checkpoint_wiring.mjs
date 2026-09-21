@@ -233,7 +233,7 @@ test('paired checkpoints reject partial evidence in either order', async t => {
       [event('run-succeeded'), { cellId: 'cell-workspace-term' }],
       '03b:workspace-inspected', 7],
     ['03c-always-on.html',
-      [event('canvas-node-succeeded'), { canvasId: 'probe-cron', nodeId: 'cr-watch', runObserved: true }],
+      [event('canvas-node-succeeded'), { canvasId: 'probe-cron', nodeId: 'cr-run', runObserved: true }],
       [event('canvas-node-succeeded'), { canvasId: 'probe-cron', nodeId: 'cr-rm', cleanupSucceeded: true }],
       '03c:scheduled-run-complete', 8],
     ['04a-safety.html',
@@ -261,6 +261,40 @@ test('paired checkpoints reject partial evidence in either order', async t => {
       });
     }
   }
+});
+
+test('Module 3c records the combined authored cron result only after run and cleanup evidence', () => {
+  const order = [
+    '01a:model-call-verified', '01b:react-loop-complete', '01c:tool-roundtrip-complete',
+    '02a:routed-workflow-complete', '02b:grounded-answer-complete', '02c:deep-research-complete',
+    connectedMilestone, '03b:workspace-inspected',
+  ];
+  const prerequisiteEvidence = Object.fromEntries(order.map(item => [`milestone:${item}`, true]));
+  const cases = [
+    [{ runObserved: true, cleanupSucceeded: false }, []],
+    [{ runObserved: false, cleanupSucceeded: true }, []],
+    [{ runObserved: true, cleanupSucceeded: true }, ['03c:scheduled-run-complete']],
+  ];
+  for (const [detail, expected] of cases) {
+    const fixture = trackingFixture('03c-always-on.html');
+    try {
+      fixture.storageTarget.setItem(evidenceKey(1), JSON.stringify(prerequisiteEvidence));
+      dispatch(fixture.windowTarget, event('canvas-node-succeeded'), {
+        canvasId: 'probe-cron', nodeId: 'cr-run', ...detail,
+      });
+      assert.deepEqual(fixture.milestones, expected);
+    } finally { fixture.restore(); }
+  }
+});
+
+test('Module 3c authored cron nodes publish the verified result contract', () => {
+  const cronSource = read(source('03c-always-on.html'));
+  assert.match(cronSource, /state\.demoCronVerified = false/);
+  assert.match(cronSource, /state\.demoCronVerified = true/);
+  assert.match(cronSource, /return \{run_status: state\.demoCronVerified \? "ok" : null, removed: !state\.demoCronId\};/);
+  assert.equal((cronSource.match(/return \{run_status: state\.demoCronVerified \? "ok" : null, removed: !state\.demoCronId\};/g) || []).length, 2);
+  assert.match(read(source('scripts', '_activity_runtime.js')), /\['cr-run', 'cr-rm'\]\.includes\(nodeId\)/);
+  assert.doesNotMatch(read(source('scripts', '_activity_runtime.js')), /nodeId === 'cr-watch'/);
 });
 
 test('reinstalling the tracker returns the existing page activity client', () => {

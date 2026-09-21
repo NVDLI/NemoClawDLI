@@ -330,10 +330,59 @@ ok(openclawCli.includes('runtime.openclawGatewayWsUrl(connection.rawUrl, connect
   'OpenClaw CLI runtime bypasses shared gateway routing');
 ok(!openclawCli.includes('return u + "/cli/gateway"'),
   'OpenClaw CLI runtime rebuilt a direct gateway URL');
-for (const pagePath of courseRoots.map(root => path.join(root, '04b-modern-clis.html'))) {
-  const page = fs.readFileSync(pagePath, 'utf8');
-  ok(page.includes('helpers.mountOpenClawCli("#agent-chat")'), `${pagePath} bypasses the shared CLI runtime`);
-  ok(!page.includes('return u + "/cli/gateway"'), `${pagePath} rebuilt a direct gateway URL`);
+
+function recursiveHtmlSources(directory, relative = '') {
+  return fs.readdirSync(directory, {withFileTypes:true}).flatMap(entry => {
+    const next = path.join(directory, entry.name);
+    const name = path.join(relative, entry.name);
+    if (entry.isDirectory()) return recursiveHtmlSources(next, name);
+    return entry.isFile() && entry.name.endsWith('.html') ? [[name, fs.readFileSync(next, 'utf8')]] : [];
+  });
+}
+
+function cliConsumerFindings(expectedPage, sources) {
+  const findings = [];
+  const call = /await\s+helpers\s*\.\s*mountOpenClawCli\s*\(\s*(["'])#agent-chat\1\s*,\s*\{\s*signal\s*:\s*helpers\s*\.\s*signal\s*\}\s*\)/g;
+  const helperName = /\bhelpers\s*\.\s*mountOpenClawCli\b/g;
+  const expected = sources.get(expectedPage);
+  if (expected == null) return [`${expectedPage}: declared CLI lesson is missing`];
+  if (!call.test(expected)) findings.push(`${expectedPage}: CLI lesson bypasses the shared signal-aware runtime`);
+  for (const [relative, source] of sources) {
+    if (source.includes('return u + "/cli/gateway"')) findings.push(`${relative}: rebuilt a direct gateway URL`);
+    helperName.lastIndex = 0;
+    const names = [...source.matchAll(helperName)];
+    call.lastIndex = 0;
+    const valid = [...source.matchAll(call)];
+    if (names.length !== valid.length) findings.push(`${relative}: malformed or bypassed shared CLI consumer`);
+  }
+  return findings;
+}
+
+const lessonMap = JSON.parse(fs.readFileSync('web/nemoclaw/lesson-map.json', 'utf8'));
+const cliLesson = lessonMap.lessons?.filter(entry => entry.module === 4 && entry.lesson === 2) || [];
+ok(cliLesson.length === 1 && typeof cliLesson[0].id === 'string' && /^[A-Za-z0-9_/-]+$/.test(cliLesson[0].id)
+   && !cliLesson[0].id.startsWith('/') && !cliLesson[0].id.split('/').includes('..'),
+  'lesson map must declare one safe Module 4 CLI lesson');
+const cliLessonPage = cliLesson[0].id + '.html';
+for (const courseRoot of courseRoots) {
+  const sources = new Map(recursiveHtmlSources(courseRoot));
+  const findings = cliConsumerFindings(cliLessonPage, sources);
+  ok(!findings.length, `${courseRoot}: ${findings.join('; ')}`);
+}
+
+// Mutation coverage keeps this rule discovery-based: the lesson path can move, but the consumer
+// must still await the shared, signal-aware mount. It also rejects deleted and near-match calls.
+const validCliConsumer = 'const cli = await helpers.mountOpenClawCli("#agent-chat", { signal: helpers.signal });';
+for (const [label, expectedPage, entries, needle] of [
+  ['nested renamed consumer', 'nested/renamed-cli.html', [['nested/renamed-cli.html', validCliConsumer]], ''],
+  ['deleted consumer', 'nested/renamed-cli.html', [], 'declared CLI lesson is missing'],
+  ['malformed near-match', 'nested/renamed-cli.html', [['nested/renamed-cli.html', validCliConsumer.replace('mountOpenClawCli', 'mountOpenClawCliX')]], 'bypasses the shared signal-aware runtime'],
+  ['bypassed consumer', 'nested/renamed-cli.html', [['nested/renamed-cli.html', 'const cli = mountDirectCli("#agent-chat");']], 'bypasses the shared signal-aware runtime'],
+  ['missing abort signal', 'nested/renamed-cli.html', [['nested/renamed-cli.html', 'const cli = await helpers.mountOpenClawCli("#agent-chat");']], 'bypasses the shared signal-aware runtime'],
+]) {
+  const findings = cliConsumerFindings(expectedPage, new Map(entries));
+  if (!needle) ok(!findings.length, `CLI consumer mutation rejected: ${label}`);
+  else ok(findings.some(finding => finding.includes(needle)), `CLI consumer mutation missed: ${label}`);
 }
 
 // Presenter query prefills are retired. A crafted course link must not select a launchable,
