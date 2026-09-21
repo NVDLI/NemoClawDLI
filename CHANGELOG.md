@@ -5,6 +5,13 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Fix policy confirmation when SSH diagnostics follow command output, preserve terminal failure
+  states, and initialize the live CLI through shared connection metadata. Keep long source
+  collapsed but editable, repair scheduled-run progress, and fit model controls on narrow screens.
+  Bound the persona comparison to a hypothetical review. Thanks to the independent Codex Terra
+  reviewer for coordinating Spanish, Brazilian Portuguese, Simplified Chinese and Taiwan
+  Traditional Chinese updates; this is automated language review.
+
 - Update the CycloneDX scanner and its hashed dependency lock to 7.4.0, and pin CodeQL actions
   to 4.38.0. Update the material tools' Soup Sieve parser to 2.9.2. Document the paired-lock and
   submission requirements for dependency proposals.

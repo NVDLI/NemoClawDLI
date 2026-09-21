@@ -776,7 +776,7 @@ import { ensureChatStyles, markLiveArtifacts, mountChatUI, mountAgentChat, mount
 export { ensureChatStyles, markLiveArtifacts, mountChatUI, mountAgentChat, mountConsole };
 import { mountOpenClawCliRuntime } from "./_openclaw_cli.js";
 
-export function mountOpenClawCli(target) {
+export function mountOpenClawCli(target, options = {}) {
   /* @doc <code>helpers.mountOpenClawCli(target)</code> ::
        Mount the live OpenClaw command/chat artifact without copying gateway RPC,
        session-tab, autocomplete, and rendering plumbing into a learner cell. */
@@ -785,7 +785,8 @@ export function mountOpenClawCli(target) {
     getOpenClawConnection,
     openclawGatewayWsUrl,
     openclawChat,
-  });
+    refreshOpenClawGatewayToken,
+  }, options);
 }
 
 // Render search results into one text blob (numbered snippets with title + body + url) that the LLM can read as a tool result.

@@ -308,11 +308,11 @@ export function installNemoClawActivityTracking({
 
   windowTarget.addEventListener('nemoclaw:canvas-node-succeeded', event => {
     const { canvasId, nodeId, runObserved, cleanupSucceeded, policyAgreed } = event.detail || {};
-    if (page === '03c-always-on.html' && canvasId === 'probe-cron' && nodeId === 'cr-watch'
+    if (page === '03c-always-on.html' && canvasId === 'probe-cron' && ['cr-run', 'cr-rm'].includes(nodeId)
         && runObserved) {
       markPair('03c:run', '03c:removed', '03c:scheduled-run-complete');
     }
-    if (page === '03c-always-on.html' && canvasId === 'probe-cron' && nodeId === 'cr-rm'
+    if (page === '03c-always-on.html' && canvasId === 'probe-cron' && ['cr-run', 'cr-rm'].includes(nodeId)
         && cleanupSucceeded) {
       markPair('03c:removed', '03c:run', '03c:scheduled-run-complete');
     }

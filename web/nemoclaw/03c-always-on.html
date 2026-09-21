@@ -320,6 +320,7 @@ const nonce = helpers.randomId();
 state.cronFile = "/sandbox/.openclaw/workspace/course-cron-" + nonce + ".txt";
 state.cronReference = "CRON-" + helpers.randomId();
 const name = "quick-3c-" + nonce;
+state.demoCronVerified = false;
 let primaryError = null;
 try {
   sessionStorage.setItem(storageKey, JSON.stringify({name}));
@@ -354,6 +355,7 @@ try {
   const observed = await courseRead(helpers, state.cronFile);
   if (observed.trim() !== state.cronReference) throw new Error("Scheduled run did not produce the expected file reference");
   helpers.log("Verified a successful scheduled run and its new file. No new chat message was sent when it fired.");
+  state.demoCronVerified = true;
 } catch (error) { primaryError = error; throw error; }
 finally {
   try {
@@ -374,6 +376,7 @@ finally {
   }
   } finally { state.courseCleanupSocket?.close(); }
 }
+return {run_status: state.demoCronVerified ? "ok" : null, removed: !state.demoCronId};
 `},
 {id: "cr-rm", title: "Retry removal of the owned job", x: 1, y: 0, showCode: true, code: `const connectController = new AbortController();
 const cancelConnect = () => connectController.abort();
@@ -409,6 +412,7 @@ if (remaining.hasMore || remaining.jobs.some(job => job.id === state.demoCronId)
 helpers.log({removed:state.demoCronId}); state.demoCronId = null;
 sessionStorage.removeItem(storageKey);
 } finally { state.courseCleanupSocket?.close(); }
+return {run_status: state.demoCronVerified ? "ok" : null, removed: !state.demoCronId};
 `}]});
 
 </script>

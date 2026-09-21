@@ -40,6 +40,8 @@ export function ensureChatStyles() {
       .chatui{border:1px solid var(--bd,#2a2a2a);border-radius:10px;background:var(--e1,#161616);overflow:hidden;margin:1em 0}
       .chatui-bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 12px;border-bottom:1px solid var(--bd,#2a2a2a);background:var(--e2,#1e1e1e)}
       .chatui-bar label{font-family:var(--mono,monospace);font-size:.7rem;color:var(--tf,#8a8a8a);text-transform:uppercase;letter-spacing:.05em}
+      .chatui-bar label:has(.chatui-model){display:flex;align-items:center;gap:6px;max-width:100%;min-width:0}
+      .chatui-model{flex:1;min-width:0;max-width:100%}
       .chatui-bar select{background:var(--e1,#161616);color:var(--tx,#f2f2f2);border:1px solid var(--bd,#2a2a2a);border-radius:6px;padding:5px 8px;font-family:var(--mono,monospace);font-size:.78rem}
       .chatui-bar .sp{flex:1}
       .chatui-ctx{font-family:var(--mono,monospace);font-size:.7rem;color:var(--tf,#8a8a8a)}
