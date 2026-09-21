@@ -281,6 +281,15 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
   let readmeMode = 'failed', readmeRequests = 0, pendingReadme;
   const server = http.createServer((request,response) => {
     const pathname = new URL(request.url,'http://localhost').pathname;
+    if (pathname === '/fixture-scroll/nested/region.html') {
+      const runtime = '/' + path.relative(root,path.join(course,'scripts/_shared.js'));
+      const stylesheet = '/' + path.relative(root,path.join(course,'styles/_style.css'));
+      response.writeHead(200,{'content-type':'text/html'}).end(`<!doctype html>
+        <html lang="en"><head><link rel="stylesheet" href="${stylesheet}"></head>
+        <body><main style="height:5000px">Scroll boundary fixture</main>
+        <script type="module">import '${runtime}';</script></body></html>`);
+      return;
+    }
     if (pathname.startsWith('/fixture-learning/')) {
       const language = new URL(request.url,'http://localhost').searchParams.get('lang');
       assert(['en','es-ES','pt-BR','zh-CN','zh-TW'].includes(language));
@@ -358,8 +367,9 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
       assert.equal(await page.evaluate(()=>window.submittedCommand),command,
         `${language}: selecting a command must preserve its executable bytes`);
     }
-    const load = async () => {
-      await page.goto(origin+lessonRoute(4, 2));
+    // Measure wheel chaining without unrelated lesson initialization changing scroll anchors.
+    // This new consumer loads the production listener and stylesheet unchanged.
+    await page.goto(origin+'/fixture-scroll/nested/region.html');
     const scrolling = await page.evaluate(() => {
       const plain = document.createElement('button');
       document.body.append(plain);
@@ -382,10 +392,17 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
       const panel=document.createElement('div');panel.id='wheel-contract';
       panel.style.cssText='position:fixed;top:160px;left:160px;width:180px;height:40px;overflow:auto;z-index:99999';
       panel.innerHTML='<div style="height:200px">wheel boundary</div>';
-      document.body.append(panel);panel.scrollTop=panel.scrollHeight;window.scrollTo({top:500,behavior:'instant'});
+      document.body.append(panel);panel.scrollTop=panel.scrollHeight;
     });
+    await page.mouse.move(0,0);
     await page.locator('#wheel-contract').hover();
-    await page.waitForTimeout(100);
+    await page.waitForFunction(() => {
+      const panel=document.querySelector('#wheel-contract');
+      return panel.classList.contains('course-scroll-containment')
+        && getComputedStyle(panel).overscrollBehavior==='contain';
+    });
+    await page.evaluate(() => window.scrollTo({top:500,behavior:'instant'}));
+    await page.waitForFunction(()=>scrollY===500);
     const scrollBefore=await page.evaluate(() => scrollY);
     await page.mouse.wheel(0,200);await page.waitForTimeout(150);
     assert.equal(await page.evaluate(() => scrollY),scrollBefore,'overflowing region contains actual wheel input');
@@ -397,8 +414,13 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
     const emptyBefore=await page.evaluate(() => scrollY);
     await page.mouse.wheel(0,200);await page.waitForTimeout(150);
     assert.ok(await page.evaluate(() => scrollY)>emptyBefore+2,'non-overflowing region permits page scrolling');
+    assert.equal(await page.locator('#wheel-contract').evaluate(node=>
+      node.classList.contains('course-scroll-containment')),false,
+      'wheel input clears stale containment after content shrinks under a stationary pointer');
     await page.locator('#wheel-contract').evaluate(node=>node.remove());
 
+    const load = async () => {
+      await page.goto(origin+lessonRoute(4, 2));
       await page.locator('#clis-artifact .chatui-send').waitFor();
     };
     const select = async () => page.locator('#clis-readme-bar button').filter({hasText:'Claude Code'}).click();
