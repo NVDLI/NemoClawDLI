@@ -925,6 +925,44 @@ test('discovered browser workflows load real modules and reject import, name and
       await page.locator('#exercise .cf-panel-reset').click();
       assert.equal(await page.locator('.cf-panel-code').inputValue(), longCode);
       fixtures.delete(disclosureRoute);
+      const chatLayoutRoute = '/contract-pages/nested/translated-chat-layout.html';
+      fixtures.set(chatLayoutRoute, modulePage(`import {mountChatUI} from '${runtimeUrl}';
+        window.layoutChat=mountChatUI('#exercise',{memory:true,resetLabel:'Nueva conversación',models:[
+          {id:'first',label:'Modelo para comparar respuestas y revisar el contexto disponible'},
+          {id:'second',label:'Modelo alternativo para outra comparação de respostas'}],
+          respond:async(text,ctx)=>{ctx.view.token('Response');ctx.view.usage({context:120000,window:128000});}});
+        document.querySelector('.chatui-mem').textContent='Memoria: activada';
+        document.querySelector('.chatui-options>summary').textContent='Opciones del modelo y del contexto disponible';`).replace('<div id="exercise">',
+          `<link rel="stylesheet" href="${courseStyles}"><div id="exercise">`));
+      const originalViewport = page.viewportSize();
+      for (const width of [320,390]) {
+        await page.setViewportSize({width,height:900});
+        await page.goto(origin + chatLayoutRoute);
+        await page.locator('.chatui-options>summary').waitFor();
+        const contextMeter = page.locator('[data-ctx]');
+        assert.equal(await contextMeter.isVisible(),false,'unused context must respect hidden');
+        await page.locator('.chatui-options>summary').focus();
+        await page.keyboard.press('Enter');
+        await page.locator('.chatui-model').focus();
+        await page.keyboard.press('Home');
+        await page.keyboard.press('ArrowDown');
+        await page.keyboard.press('Tab');
+        assert.equal(await page.locator('.chatui-model').inputValue(),'second');
+        await page.locator('.chatui-text').fill('Inspect usage');
+        await page.locator('.chatui-send').click();
+        await contextMeter.waitFor({state:'visible'});
+        assert.equal(await page.locator('.chatui-ctxbar').isVisible(),true);
+        assert.deepEqual(await page.evaluate(()=>{
+          const box=document.querySelector('.chatui').getBoundingClientRect();
+          return Array.from(document.querySelectorAll('.chatui-options,.chatui-model,[data-ctx],.chatui-ctxbar'))
+            .filter(element=>{const r=element.getBoundingClientRect();return r.left<box.left-1||r.right>box.right+1;})
+            .map(element=>element.className);
+        }),[],'translated controls and populated context stay inside the widget');
+        await page.evaluate(()=>window.layoutChat.reset());
+        assert.equal(await contextMeter.isVisible(),false,'reset hides the context meter again');
+      }
+      await page.setViewportSize(originalViewport);
+      fixtures.delete(chatLayoutRoute);
       const mutations = [
         ['missing-export', `import { nonexistentExport } from '${runtimeUrl}';`],
         ['missing-import', "import '/contract-pages/deleted-module.js';"],
