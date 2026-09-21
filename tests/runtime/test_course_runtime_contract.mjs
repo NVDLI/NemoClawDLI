@@ -927,6 +927,53 @@ test('discovered browser workflows load real modules and reject import, name and
       const disclosureRoute = '/contract-pages/nested/source-disclosure.html';
       const longCode = 'state.operation = function inspect() { return 7; };\n' + '// supporting code\n'.repeat(45);
       const courseStyles = '/' + path.relative(root, path.join(course, 'styles/_style.css'));
+      const streamRoute = '/contract-pages/nested/streamed-answer.html';
+      const streamCode = `state.call = async method => method === 'chat.send' ? {runId:'owned'} : {};
+        window.streamFrame = event => state._chatCb?.(event);
+        state.answer = await helpers.courseTurn(state, helpers, 'stream-task', 'List workspace files');`;
+      fixtures.set(streamRoute, modulePage(`import {mountCanvasFlow,mountRunCell} from '${runtimeUrl}';
+        mountCanvasFlow('#exercise',{nodes:[{id:'stream',title:'Workspace',code:${JSON.stringify(streamCode)}}]});
+        const run=document.createElement('div');run.id='stream-run';document.body.append(run);
+        mountRunCell('#stream-run',{code:${JSON.stringify(streamCode)}});`).replace('<div id="exercise">',
+          `<link rel="stylesheet" href="${courseStyles}"><div id="exercise">`));
+      for (const [button, output, rowSelector] of [
+        ['#exercise .cf-btn-run', '#exercise .cf-panel-log', '.cf-panel-log-line'],
+        ['#stream-run .rc-run', '#stream-run .rc-out', '.cell-log-line'],
+      ]) {
+        await page.goto(origin + streamRoute);
+        await page.locator(button).click();
+        await page.waitForFunction(() => typeof window.streamFrame === 'function');
+        const snapshots = ['Read c', 'Read config', 'Read config.md', 'Read config.md\n\n- 中文'];
+        const sendFrame = payload => page.evaluate(payload => window.streamFrame({
+          event:payload.state ? 'chat' : 'agent',
+          payload:{runId:'owned',sessionKey:'stream-task',...payload},
+        }), payload);
+        for (const text of snapshots) {
+          await sendFrame({stream:'assistant',data:{text}});
+          const matches = page.locator(output + ' ' + rowSelector).filter({hasText:'Read c'});
+          assert.equal(await matches.count(), 1, 'stream fragments share one block');
+          assert.equal(await matches.textContent(), text);
+          assert.equal(await matches.evaluate(element => getComputedStyle(element).whiteSpace), 'pre-wrap');
+          assert(await matches.evaluate(element => element === element.parentElement.lastElementChild),
+            'updated answer follows intervening tool records');
+          if (text === 'Read config') {
+            await sendFrame({stream:'tool',data:{phase:'start',name:'read'}});
+            await sendFrame({stream:'tool',data:{phase:'result',name:'read',isError:true,result:'Permission denied'}});
+          }
+        }
+        const final = 'Read config.md\n\n- 中文\n- <img src=x onerror=alert(1)> literal';
+        await sendFrame({state:'final',message:{content:final}});
+        const answer = page.locator(output + ' ' + rowSelector).filter({hasText:'Read config.md'});
+        assert.equal(await answer.count(), 1, 'completed answer is shown once');
+        assert.equal(await answer.textContent(), final);
+        assert.equal(await answer.getAttribute('data-log-text'), final);
+        assert.equal(await answer.locator('img').count(), 0, 'model output remains literal text');
+        assert(await answer.evaluate(element => element === element.parentElement.lastElementChild),
+          'authoritative answer follows diagnostic events');
+        assert.match(await page.locator(output).textContent(), /Permission denied/,
+          'tool failures remain available alongside the answer');
+      }
+      fixtures.delete(streamRoute);
       fixtures.set(disclosureRoute, modulePage(`import {mountCanvasFlow,mountRunCell} from '${runtimeUrl}';
         mountCanvasFlow('#exercise',{nodes:[{id:'long',showCode:true,code:${JSON.stringify(longCode)}}]});
         const run=document.createElement('div');run.id='long-run';document.body.append(run);

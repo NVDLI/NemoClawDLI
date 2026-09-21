@@ -107,6 +107,62 @@ test('shared turn preserves every final block and filters only known tool diagno
   assert(displayed.includes('first\\nsecond'));
 });
 
+test('streamed snapshots update one text row and final content replaces the draft', async t => {
+  const f = fixture(async method => method === 'chat.send' ? {runId:'owned'} : {});
+  const rows = [], details = [];
+  f.helpers.log = (...args) => {
+    const row = {nodeType:1, textContent:args.join(' '), dataset:{}};
+    rows.push(row);
+    return row;
+  };
+  f.helpers.log.details = (...args) => details.push(args);
+  const pending = courseTurn(f.state, f.helpers, 'task', 'question');
+  t.after(() => f.controller.abort());
+  pending.catch(() => {});
+  await tick();
+  const before = rows.length;
+  for (const text of ['Read c', 'Read config', 'Read config.md', 'Read config.md\n\n- 中文']) {
+    frame(f.state, 'owned', 'task', '', 'agent', {stream:'assistant', data:{text}});
+    assert.equal(rows.length, before + 1, 'chunks must not become separate block rows');
+    assert.equal(rows.at(-1).textContent, text);
+  }
+  const row = rows.at(-1);
+  frame(f.state, 'owned', 'task', '', 'agent', {stream:'tool', data:{phase:'result', name:'read', isError:true}});
+  const final = 'Read config.md\n\n- 中文\n- <script>literal text</script>';
+  frame(f.state, 'owned', 'task', final);
+  assert.equal(await pending, final);
+  assert.equal(rows.length, before + 1, 'final answer must replace the draft, not repeat it');
+  assert.equal(row.textContent, final);
+  assert.equal(row.dataset.logText, final);
+  assert(details.some(([label]) => label.startsWith('✗ read')));
+  assert(details.some(([label]) => label === 'final event'));
+  const next = courseTurn(f.state, f.helpers, 'another-task', 'question');
+  await tick();
+  frame(f.state, 'owned', 'another-task', '');
+  assert.equal(await next, '', 'empty final is authoritative even without streamed text');
+  assert.equal(rows.at(-1).textContent, '');
+  assert.notEqual(rows.at(-1), row, 'each turn owns its response row');
+  assert.equal(row.textContent, final, 'later turns cannot overwrite earlier output');
+});
+
+test('stopped streams retain partial text and ignore late frames', async () => {
+  const f = fixture(async method => method === 'chat.send' ? {runId:'owned'} : {});
+  const rows = [];
+  f.helpers.log = (...args) => {
+    const row = {nodeType:1, textContent:args.join(' '), dataset:{}};
+    rows.push(row); return row;
+  };
+  f.helpers.log.details = () => {};
+  const pending = courseTurn(f.state, f.helpers, 'task', 'question');
+  await tick();
+  frame(f.state, 'owned', 'task', '', 'agent', {stream:'assistant', data:{text:'Partial\nanswer'}});
+  const receive = f.state._chatCb, row = rows.at(-1);
+  f.controller.abort();
+  await assert.rejects(pending, {name:'AbortError'});
+  receive({event:'chat', payload:{runId:'owned', sessionKey:'task', state:'final', message:{content:'late'}}});
+  assert.equal(row.textContent, 'Partial\nanswer');
+});
+
 test('gateway lifecycle detector rejects final, ownership and filtering regressions in each actual owner', () => {
   const source = fs.readFileSync(path.join(course, 'scripts/_openclaw.js'), 'utf8');
   assert.deepEqual(gatewayLifecycleFindings(source), []);
