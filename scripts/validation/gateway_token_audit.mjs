@@ -352,7 +352,7 @@ export function audit(overrides = {}) {
   }
   for (const { code } of LOCALE_COURSES) {
     const key = `${code}4b`;
-    if (!files[key].includes('helpers.mountOpenClawCli("#agent-chat")')) {
+    if (!/await\s+helpers\s*\.\s*mountOpenClawCli\s*\(\s*(["'])#agent-chat\1\s*,\s*\{\s*signal\s*:\s*helpers\s*\.\s*signal\s*\}\s*\)/.test(files[key])) {
       findings.push(`${key}: Module 4b bypasses the shared OpenClaw CLI runtime`);
     }
   }
@@ -452,7 +452,7 @@ function selfTest() {
     ['gateway Pomerium manual fallback', { helper: base.helper.replace('provider === "pomerium" && Boolean(String(accessSession || "").trim())', 'provider === "pomerium" && false') }],
     ['gateway relay opt-in', { helper: base.helper.replace('proxyEnabled === true', 'proxyEnabled !== false') }],
     ['downstream gateway', { cliRuntime: base.cliRuntime.replace('runtime.openclawGatewayWsUrl(connection.rawUrl, connection.accessSession, null, null, connection.accessProvider).url', 'connection.rawUrl + "/cli/gateway"') }],
-    ['downstream page boundary', { en4b: base.en4b.replace('helpers.mountOpenClawCli("#agent-chat")', 'mountDirectCli("#agent-chat")') }],
+    ['downstream page boundary', { en4b: base.en4b.replace('helpers.mountOpenClawCli("#agent-chat", { signal: helpers.signal })', 'mountDirectCli("#agent-chat")') }],
     ['shared export', { shared: base.shared.replaceAll('gatewayTokenFromAgentMetadata', 'removedGatewayTokenParser') }],
     ['automatic token bootstrap', { helper: base.helper.replaceAll('refreshOpenClawGatewayToken({ signal', 'removedGatewayTokenRefresh({ signal') }],
     ['metadata token discovery', { helper: base.helper.replace('gatewayTokenFromAgentMetadata(response.json)', 'null') }],

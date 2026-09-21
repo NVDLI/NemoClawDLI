@@ -43,6 +43,7 @@ const displayed = {
   survey: cell(safety, 'id: "tok-survey", icon:'),
   browser: cell(clis, 'mountRunCell("#cell-jsagent",'),
   terminal: cell(clis, 'mountRunCell("#cell-deepagents",'),
+  agentChat: cell(clis, 'mountRunCell("#cell-agentchat",'),
 };
 function recorder() {
   const entries = [];
@@ -107,6 +108,51 @@ test(language.label + ': terminal preserves the agent command boundary and handl
   assert.deepEqual(commands,[['sandbox','pwd']]);
   await spec.onSubmit('openshell status',con,ctx);
   assert.deepEqual(commands,[['sandbox','pwd'],['host','openshell status']]);
+});
+
+test(language.label + ': terminal console reports Ready only after sandbox and host exit zero', async () => {
+  for (const target of ['sandbox', 'host']) {
+    for (const scenario of [
+      { name: 'success', result: { exitCode: 0, completion: 'exit', output: target + ' output' }, error: false },
+      { name: 'nonzero', result: { exitCode: 1, completion: 'exit', output: target + ' diagnostic' }, error: true },
+      { name: 'disconnect', result: { exitCode: null, completion: 'disconnect', output: target + ' partial output' }, error: true },
+    ]) {
+      const entries = [], calls = [];
+      let spec;
+      await execute(displayed.terminal, {
+        log: () => {}, mountConsole: (_id, value) => { spec = value; },
+        sandboxExec: async command => { calls.push(['sandbox', command]); return scenario.result; },
+        terminal: async (command, options) => { calls.push(['host', command, options]); if (scenario.result.output) options.onChunk?.(scenario.result.output); return scenario.result; },
+      });
+      const con = { write: (value, kind) => entries.push([value, kind]), clear: () => {}, raw: value => entries.push([value, 'raw']) };
+      const ctx = { signal: new AbortController().signal };
+      const reply = await spec.onSubmit(target === 'sandbox' ? 'agent false' : 'false', con, ctx);
+      assert.deepEqual(calls.map(call => call[0]), [target], target + ' ' + scenario.name);
+      if (target === 'host') assert.equal(calls[0][2].stdio, 'pipe', 'host one-shot uses labelled streams');
+      assert(entries.some(([value]) => value === scenario.result.output), target + ' output remains visible for ' + scenario.name);
+      if (scenario.error) {
+        assert(entries.some(([value]) => value === 'completion=' + scenario.result.completion + ' exitCode=' + (scenario.result.exitCode ?? 'unknown')),
+          target + ' completion remains inspectable for ' + scenario.name);
+        assert.deepEqual(reply, { status: 'error', message: t('Command failed. Read the message, then retry.') });
+      } else assert.equal(reply, undefined);
+    }
+  }
+});
+
+test(language.label + ': agent chat cell awaits the gateway bootstrap result', async () => {
+  const logs = [];
+  await execute(displayed.agentChat, {
+    log: value => logs.push(value),
+    mountOpenClawCli: async () => ({ mounted: true, connected: true, session: 'main', reason: '' }),
+  });
+  assert.deepEqual(logs, [t('agent chat mounted below')]);
+
+  logs.length = 0;
+  await assert.rejects(execute(displayed.agentChat, {
+    log: value => logs.push(value),
+    mountOpenClawCli: async () => ({ mounted: true, connected: false, reason: 'metadata unavailable' }),
+  }), /metadata unavailable/);
+  assert.deepEqual(logs, []);
 });
 
 test(language.label + ': commands distinguish denial evidence, ordinary failure and unknown completion', async () => {
@@ -247,6 +293,18 @@ test(language.label + ': Confirm executes selected method and custom port; Predi
   assert.equal(state.observed, null);
   assert.equal(await execute(displayed.compare, helpers, state), undefined);
 });
+test(language.label + ': Confirm reads labelled stdout without swallowing transport diagnostics', async () => {
+  const state = {}, window = policyWindow(), {log} = recorder();
+  const helpers = {log, evalSandboxNetwork, sandboxExec:async command => {
+    assert(command.includes("-w '\\ncode=%{http_code}\\n'"), 'status is bounded by newlines on legacy PTYs');
+    return {exitCode:0, completion:'exit', stdout:'code=200', stderr:'Connection to sandbox closed.', output:'code=200Connection to sandbox closed.'};
+  }};
+  await execute(displayed.predict, helpers, state, window);
+  await execute(displayed.confirm, helpers, state, window);
+  assert.equal(state.observed, 'allow');
+  assert.equal((await execute(displayed.compare, helpers, state, window)).agree, true);
+});
+
 test(language.label + ': Confirm preserves IPv6 URL brackets', async () => {
   const state = {}, window = policyWindow({host:'2001:db8::1'}), {log} = recorder();
   let command;

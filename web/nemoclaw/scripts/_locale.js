@@ -300,6 +300,9 @@ const PT_TEXT = new Map(Object.entries({
   "clone tooling from GitHub": "clonar ferramentas do GitHub", "reach the inference API as a stray curl, not the runtime": "acessar a API de inferência com um curl avulso, fora do runtime",
   "pull an npm package directly with curl": "baixar um pacote npm diretamente com curl", "Run the live-policy cell above to draw your launchable's policy as an interactive map.": "Execute a célula de política ativa acima para desenhar a política do launchable como mapa interativo.",
   "tips for building a RAG pipeline": "dicas para criar um pipeline de RAG",
+  "What can you do?": "O que você pode fazer?",
+  "Summarize your workspace and your SOUL.md": "Resuma seu espaço de trabalho e seu SOUL.md",
+  "Use exec to run ls -la /sandbox/.openclaw/workspace": "Use exec para executar ls -la /sandbox/.openclaw/workspace",
 }));
 
 const PT_PREFIXES = new Map(Object.entries({
@@ -556,6 +559,9 @@ const ES_TEXT = new Map(Object.entries({
   "loop · LLM as function": "ciclo · LLM como función", "tools · finish_reason": "herramientas · finish_reason", "JSON · MCP · routing": "JSON · MCP · enrutamiento",
   "router · planner · ReWOO": "router · planner · ReWOO", "embed · retrieve · bundle": "embed · retrieve · bundle", "planner · sub-agents · VFS": "planner · subagentes · VFS",
   "launchable · first call": "launchable · primera llamada", "file-as-context · paste URL": "archivo como contexto · pegar URL", "sandbox · policy · CI gate": "sandbox · política · control de CI",
+  "What can you do?": "¿Qué puedes hacer?",
+  "Summarize your workspace and your SOUL.md": "Resume tu espacio de trabajo y tu SOUL.md",
+  "Use exec to run ls -la /sandbox/.openclaw/workspace": "Usa exec para ejecutar ls -la /sandbox/.openclaw/workspace",
 }));
 
 const ES_PREFIXES = new Map(Object.entries({
@@ -907,7 +913,10 @@ const ZH_TEXT = new Map(Object.entries({
   "The default embedding route needs an nvapi- key": "默认嵌入路由需要 nvapi- 密钥",
   "Enter the key for the embedding route": "请输入嵌入路由的密钥",
   "model discovery returned no model IDs": "模型发现未返回任何模型 ID",
-  "embedding model discovery returned no model IDs": "嵌入模型发现未返回任何模型 ID"
+  "embedding model discovery returned no model IDs": "嵌入模型发现未返回任何模型 ID",
+  "What can you do?": "你能做什么？",
+  "Summarize your workspace and your SOUL.md": "概述你的工作区和 SOUL.md",
+  "Use exec to run ls -la /sandbox/.openclaw/workspace": "使用 exec 运行 ls -la /sandbox/.openclaw/workspace"
 }));
 
 const ZH_PREFIXES = new Map(Object.entries({
@@ -1264,7 +1273,10 @@ const TW_TEXT = new Map(Object.entries({
   "The default embedding route needs an nvapi- key": "預設嵌入路由需要 nvapi- 金鑰",
   "Enter the key for the embedding route": "請輸入嵌入路由的金鑰",
   "model discovery returned no model IDs": "模型發現未傳回任何模型 ID",
-  "embedding model discovery returned no model IDs": "嵌入模型發現未傳回任何模型 ID"
+  "embedding model discovery returned no model IDs": "嵌入模型發現未傳回任何模型 ID",
+  "What can you do?": "你能做什麼？",
+  "Summarize your workspace and your SOUL.md": "摘要說明你的工作區和 SOUL.md",
+  "Use exec to run ls -la /sandbox/.openclaw/workspace": "使用 exec 執行 ls -la /sandbox/.openclaw/workspace"
 }));
 
 const TW_PREFIXES = new Map(Object.entries({

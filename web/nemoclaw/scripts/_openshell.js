@@ -391,7 +391,7 @@ export async function sandboxExec(command, { agent = null, idleMs = 8000, totalM
        the running sandbox. Launchable only.
   */
   const {name, baseUrl} = await connectedSandbox(agent, signal);
-  const res = await terminal("openshell sandbox exec -n " + name + " -- " + command, {baseUrl, idleMs, totalMs, signal});
+  const res = await terminal("openshell sandbox exec -n " + name + " -- " + command, {baseUrl, idleMs, totalMs, signal, stdio: "pipe"});
   if (getOpenClawConnection().rawUrl !== baseUrl) throw new Error("The connected runtime changed during the command.");
   return {...res, sandbox:name, command};
 }

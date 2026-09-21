@@ -209,6 +209,27 @@ test('terminal distinguishes command exit, disconnected output, and idle output'
   }
 });
 
+test('sandboxExec requests pipe transport and retains separate command streams and completion', async () => {
+  connection.setOpenClawConnection({rawUrl:launchable, accessProvider:'pomerium', accessSession:''});
+  terminalFrames = () => {
+    assert.equal(new URL(terminalUrls.at(-1)).searchParams.get('stdio'), 'pipe');
+    return [
+      {type:'data', stream:'stdout', data:'code=200'},
+      {type:'data', stream:'stderr', data:'Connection to sandbox closed.\n'},
+    ];
+  };
+  try {
+    for (const mode of ['exit', 'disconnect', 'pending']) {
+      terminalResult = mode;
+      const result = await openshell.sandboxExec('printf code=200', {agent:'test-sandbox', idleMs:20});
+      assert.equal(result.stdout, 'code=200');
+      assert.equal(result.stderr, 'Connection to sandbox closed.');
+      assert.equal(result.exitCode, mode === 'exit' ? 0 : null);
+      assert.equal(result.completion, mode === 'pending' ? 'idle' : mode);
+    }
+  } finally { terminalFrames = null; terminalResult = 'exit'; }
+});
+
 test('policyGet parses bounded stdout while preserving SSH diagnostics and malformed YAML', async () => {
   connection.setOpenClawConnection({ rawUrl:launchable, accessProvider:'pomerium', accessSession:'' });
   terminalFrames = command => {

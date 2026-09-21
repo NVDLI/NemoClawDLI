@@ -72,6 +72,7 @@ class LearnerExerciseContractTests(unittest.TestCase):
         cls.openclaw = (course / 'scripts/_openclaw.js').read_text(encoding='utf-8')
         cls.canvas = (course / 'scripts/_canvas.js').read_text(encoding='utf-8')
         cls.deep = lesson(2, 3).read_text(encoding='utf-8')
+        cls.cli_html = lesson(4, 2).read_text(encoding='utf-8')
 
     def mutate(self, source: str, old: str, new: str) -> str:
         self.assertIn(old, source, 'mutation target must exist')
@@ -206,6 +207,40 @@ class LearnerExerciseContractTests(unittest.TestCase):
                 else:
                     self.assertTrue(any('missing' in item for item in pages.findings))
                     self.assertIn('en-03c',pages, 'missing role stays visible to downstream contracts')
+
+    def test_module4b_terminal_contract_uses_discovered_metadata_path(self) -> None:
+        for mode in ['novel-nested', 'renamed', 'deleted', 'malformed', 'stale-ready']:
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                course = self.inventory_fixture(root)
+                profile = course / 'lesson-map.json'
+                data = json.loads(profile.read_text(encoding='utf-8'))
+                original = course / 'lesson-4-2.html'
+                original.write_text(self.cli_html, encoding='utf-8')
+                target = original
+                if mode in ['novel-nested', 'renamed']:
+                    target = course / ('novel/nested/operator.html' if mode == 'novel-nested' else 'renamed/operator.html')
+                    target.parent.mkdir(parents=True)
+                    original.rename(target)
+                    for item in data['lessons']:
+                        if item['id'] == 'lesson-4-2': item['id'] = target.relative_to(course).with_suffix('').as_posix()
+                elif mode == 'deleted':
+                    original.unlink()
+                elif mode == 'malformed':
+                    original.write_text(self.mutate(self.cli_html, 'result?.completion === "exit"', 'result?.completion === "done"'), encoding='utf-8')
+                else:
+                    original.write_text(self.mutate(self.cli_html, 'return { status: "error", message:', 'return con.write('), encoding='utf-8')
+                profile.write_text(json.dumps(data), encoding='utf-8')
+                pages = self.inventory(root)
+                if mode in ['novel-nested', 'renamed']:
+                    self.assertEqual(pages.findings, [])
+                    self.assertEqual(audit.audit_module4b_terminal(pages['en-04b'], mode), [])
+                elif mode == 'deleted':
+                    self.assertTrue(any('declared consumer is missing' in item for item in pages.findings))
+                    self.assertTrue(audit.audit_module4b_terminal(pages['en-04b'], mode))
+                else:
+                    expected = 'explicit zero exit completion' if mode == 'malformed' else 'preserve an error state'
+                    self.assertTrue(any(expected in item for item in audit.audit_module4b_terminal(pages['en-04b'], mode)))
 
     def test_malformed_profile_and_unknown_locale_fail_explicitly(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

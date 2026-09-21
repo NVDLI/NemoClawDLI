@@ -40,6 +40,10 @@ export function ensureChatStyles() {
       .chatui{border:1px solid var(--bd,#2a2a2a);border-radius:10px;background:var(--e1,#161616);overflow:hidden;margin:1em 0}
       .chatui-bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 12px;border-bottom:1px solid var(--bd,#2a2a2a);background:var(--e2,#1e1e1e)}
       .chatui-bar label{font-family:var(--mono,monospace);font-size:.7rem;color:var(--tf,#8a8a8a);text-transform:uppercase;letter-spacing:.05em}
+      .chatui-bar>.chatui-options{flex:1 1 15rem;min-width:0;max-width:100%}
+      .chatui-options>summary{overflow-wrap:anywhere}
+      .chatui-bar label:has(.chatui-model){display:flex;align-items:center;gap:6px;max-width:100%;min-width:0}
+      .chatui-model{flex:1;min-width:0;max-width:100%}
       .chatui-bar select{background:var(--e1,#161616);color:var(--tx,#f2f2f2);border:1px solid var(--bd,#2a2a2a);border-radius:6px;padding:5px 8px;font-family:var(--mono,monospace);font-size:.78rem}
       .chatui-bar .sp{flex:1}
       .chatui-ctx{font-family:var(--mono,monospace);font-size:.7rem;color:var(--tf,#8a8a8a)}
@@ -88,7 +92,8 @@ export function ensureChatStyles() {
       .chatui-usage{align-self:flex-start;font-family:var(--mono,monospace);font-size:.68rem;color:var(--tf,#8a8a8a)}
       .chatui-turn{display:flex;flex-direction:column;gap:9px;align-self:stretch}
       .chatui-turn.chatui-cursor::after{content:"▍";color:var(--g,#76b900);animation:chatui-blink 1s steps(2) infinite;align-self:flex-start;font-family:var(--mono,monospace)}
-      .chatui-ctxwrap{display:inline-flex;align-items:center;gap:6px}
+      .chatui-ctxwrap{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px;max-width:100%;overflow-wrap:anywhere}
+      .chatui-ctxwrap[hidden]{display:none}
       .chatui-ctxbar{width:70px;height:6px;border-radius:3px;background:var(--e1,#161616);border:1px solid var(--bd,#2a2a2a);overflow:hidden}
       .chatui-ctxfill{height:100%;width:0;background:var(--g,#76b900);transition:width .2s}
       .chatui-ctx.warn{color:var(--err)}.chatui-ctx.warn .chatui-ctxfill{background:var(--err)}

@@ -426,6 +426,15 @@ function hintFor(output) {
   return "";
 }
 
+function completed(result) {
+  return result?.completion === "exit" && Number.isInteger(result.exitCode) && result.exitCode === 0;
+}
+
+function completionEvidence(result) {
+  return "completion=" + (result?.completion || "unknown") + " exitCode="
+    + (Number.isInteger(result?.exitCode) ? result.exitCode : "unknown");
+}
+
 async function run(cmd, con, ctx) {
   const t = cmd.trim();
   if (t === "/help" || t === "help" || t === "?") return con.write(HELP, "da-dim");
@@ -441,18 +450,27 @@ async function run(cmd, con, ctx) {
     }
     con.write((r.output || "").trimEnd() || "(no output)");
     const h = hintFor(r.output); if (h) con.write(h, "da-dim");
+    if (!completed(r)) {
+      con.write(completionEvidence(r), "da-dim");
+      return { status: "error", message: "Command failed. Read the message, then retry." };
+    }
     return;
   }
   if (INTERACTIVE.some(function (x) { return t.indexOf(x) === 0; })) return con.write('That starts an interactive session this one-shot terminal cannot hold open. To chat with your agent, use the panel below. For a one-shot command inside the agent, use: agent <command>.', "da-dim");
   let got = false, captured = "";
+  let r;
   try {
-    await helpers.terminal(t, { totalMs: 120000, idleMs: 8000, signal: ctx.signal, onChunk: function (c) { if (c) { got = true; captured += c; con.raw(c); } } });
+    r = await helpers.terminal(t, { totalMs: 120000, idleMs: 8000, signal: ctx.signal, stdio: "pipe", onChunk: function (c) { if (c) { got = true; captured += c; con.raw(c); } } });
   } catch (e) {
     con.write(String((e && e.message) || e), "da-err");
     return { status: "error", message: "Terminal connection failed. Re-authenticate, then retry." };
   }
   if (!got) con.write("(no output)", "da-dim");
   const h = hintFor(captured); if (h) con.write(h, "da-dim");
+  if (!completed(r)) {
+    con.write(completionEvidence(r), "da-dim");
+    return { status: "error", message: "Command failed. Read the message, then retry." };
+  }
 }
 
 const connected = !!launchableUrl();
@@ -488,10 +506,9 @@ helpers.log("launchable terminal mounted below. If it says no launchable, connec
       label: "chat with your live agent over the OpenClaw gateway",
       autorun: true,
       code: `// Mount the live CLI artifact; gateway transport and session plumbing live in one shared helper.
-const cli = helpers.mountOpenClawCli("#agent-chat");
+const cli = await helpers.mountOpenClawCli("#agent-chat", { signal: helpers.signal });
 if (!cli.connected) {
-  helpers.log("Connect your launchable on Module 3a, then rerun this cell.");
-  return { mounted: cli.mounted, connected: false };
+  throw new Error(cli.reason || "Connect your launchable on Module 3a, then rerun this cell.");
 }
 
 // Optional visibility: uncomment to inspect the artifact's current session.

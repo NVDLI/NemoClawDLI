@@ -157,10 +157,11 @@ function _cellLangSummaryHTML({ chip = "JS", sig = "", meta = "", metaAttr = "" 
 }
 
 function _cellCodeOpen(opts = {}, code = "", kind = "run") {
+  const lines = Math.max(1, String(code || "").split("\n").length);
+  if (lines > CELL_CANVAS_VISIBLE_LINES) return false;
   if (opts.openCode === true || opts.showCode === true) return true;
   if (opts.openCode === false || opts.showCode === false) return false;
   if (kind !== "canvas") return false;
-  const lines = Math.max(1, String(code || "").split("\n").length);
   return lines <= CELL_CANVAS_VISIBLE_LINES;
 }
 
@@ -663,7 +664,7 @@ helpers.viz.sideBySide(
     panel.className = "cf-panel";
     panel.dataset.id = node.id;
     // Short teaching snippets open by default; longer/plumbing snippets stay one click away.
-    // node.showCode forces it: true = always open, false = always collapsed.
+    // Explicit visibility applies to short snippets; long source stays revealable.
     const _showCode = _cellCodeOpen(node, node.code, "canvas");
     panel.innerHTML = `
       <div class="cf-panel-head cell-head">
@@ -1173,6 +1174,7 @@ helpers.viz.sideBySide(
             const v = shared[k];
             let preview;
             if (typeof v === "string") preview = v.slice(0, 120) + (v.length > 120 ? "…" : "");
+            else if (typeof v === "function") preview = "[Function" + (v.name ? ": " + v.name : "") + "]";
             else if (typeof v === "number" || typeof v === "boolean") preview = String(v);
             else if (Array.isArray(v))  preview = "[" + v.length + " items]";
             else if (v && typeof v === "object") {
@@ -1537,7 +1539,7 @@ export function mountRunCell(targetSel, opts) {
   const label = opts.label || "editable cell";
   const showSchemas = Object.keys(schemas).length > 0;
   const codeLines = Math.max(1, String(code).split("\n").length);
-  const codeOpenAttr = opts.openCode === true ? " open" : "";
+  const codeOpenAttr = _cellCodeOpen(opts, code) ? " open" : "";
   const autoCollapseCode = opts.autoCollapseCode !== false && opts.openCode !== true;
 
   // Helpers tab, shown whenever a cell has helpers. Scoped to the helpers this cell's code uses, with a "show all" toggle and click-to-read-source.

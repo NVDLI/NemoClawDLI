@@ -207,12 +207,25 @@ function createArtifactView(target) {
   return view;
 }
 
-export function mountOpenClawCliRuntime(targetSel, runtime) {
+export async function mountOpenClawCliRuntime(targetSel, runtime, { signal = null } = {}) {
   const target = typeof targetSel === "string" ? document.querySelector(targetSel) : targetSel;
   if (!target) return { mounted: false, reason: "target not found" };
 
-  const connection = runtime.getOpenClawConnection();
-  const connected = () => !!(connection.token && connection.rawUrl);
+  const initialConnection = runtime.getOpenClawConnection();
+  let bootstrapError = null;
+  if (initialConnection.rawUrl) {
+    try {
+      await runtime.refreshOpenClawGatewayToken({ signal });
+    } catch (error) {
+      if (signal?.aborted || error?.name === "AbortError") throw error;
+      bootstrapError = error;
+    }
+  }
+  signal?.throwIfAborted();
+  const connected = () => {
+    const connection = runtime.getOpenClawConnection();
+    return !!(connection.token && connection.rawUrl);
+  };
   const gateway = createGatewayRpc(runtime);
   const warmedSessions = new Set(readStringList(WARMED_STORAGE_KEY));
   const warming = new Map();
@@ -236,9 +249,9 @@ export function mountOpenClawCliRuntime(targetSel, runtime) {
 
   const consoleApi = runtime.mountConsole(target, {
     prompt: "you",
-    suggestions: SUGGESTIONS.map(text => text.startsWith("/") ? { command: text } : text),
+    suggestions: SUGGESTIONS.map(text => text.startsWith("/") ? { command: text } : localizeCourseUiText(text)),
     disabled: !connected(),
-    disabledMsg: localizeCourseUiText("Connect your launchable on Module 3a first (its URL and token), then your agent is reachable here."),
+    disabledMsg: bootstrapError?.message || localizeCourseUiText("Connect your launchable on Module 3a first (its URL and token), then your agent is reachable here."),
     greeting: connected()
       ? localizeCourseUiText("Connected to your agent over the gateway. Ask anything, type /help, click a prompt, or press Tab to autocomplete.")
       : "",
@@ -419,6 +432,7 @@ export function mountOpenClawCliRuntime(targetSel, runtime) {
   return {
     mounted: true,
     connected: connected(),
+    reason: bootstrapError?.message || "",
     get session() { return activeSession; },
     dispose: () => gateway.close(),
   };

@@ -315,7 +315,12 @@ helpers.log(output);
 helpers.log.details("raw transcript (" + frames + " WebSocket frames)", raw);
 `,
 });
-mountCanvasFlow("#cell-personas", {label:"Compare explicit instructions on the same review question", nodes:[{id: "ask-a", title: "General review", x: 0, y: 0, showCode: true, code: `${GW_CONNECT}state.question = "A proposed cron job deletes rows marked duplicate from production each minute. What should we check before enabling it?";
+mountCanvasFlow("#cell-personas", {
+  label: "Compare explicit instructions on the same review question",
+  nodes: [{
+    id: "ask-a", title: "General review", x: 0, y: 0, showCode: true,
+    code: `${GW_CONNECT}
+state.question = "Paper review only, without tools or files: a job would delete duplicate production rows each minute. Name two checks required before scheduling approval.";
 const courseTurn = helpers.courseTurn;
 
 state.out = await courseTurn(state, helpers, "quick-3b-general-" + helpers.randomId(), "Give a concise code review. " + state.question);

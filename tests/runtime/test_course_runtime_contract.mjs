@@ -482,7 +482,7 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
       const element=document.createElement('div');
       element.id='cli-correction-artifact';
       document.body.appendChild(element);
-      shared.mountOpenClawCli(element);
+      await shared.mountOpenClawCli(element);
     });
     const cli = page.locator('#cli-correction-artifact');
     await cli.locator('input').fill('Inspect the fixture.');
@@ -902,6 +902,67 @@ test('discovered browser workflows load real modules and reject import, name and
       }
 
       const modulePage = body => '<!doctype html><div id="exercise"></div><script type="module">' + body + '</script>';
+      const disclosureRoute = '/contract-pages/nested/source-disclosure.html';
+      const longCode = 'state.operation = function inspect() { return 7; };\n' + '// supporting code\n'.repeat(45);
+      const courseStyles = '/' + path.relative(root, path.join(course, 'styles/_style.css'));
+      fixtures.set(disclosureRoute, modulePage(`import {mountCanvasFlow,mountRunCell} from '${runtimeUrl}';
+        mountCanvasFlow('#exercise',{nodes:[{id:'long',showCode:true,code:${JSON.stringify(longCode)}}]});
+        const run=document.createElement('div');run.id='long-run';document.body.append(run);
+        mountRunCell('#long-run',{openCode:true,code:${JSON.stringify(longCode)}});`).replace('<div id="exercise">',
+          `<link rel="stylesheet" href="${courseStyles}"><div id="exercise">`));
+      await page.goto(origin + disclosureRoute);
+      await page.locator('#long-run .rc-run').waitFor();
+      assert.equal(await page.locator('.cf-panel-code-det[open],.rc-code-det[open]').count(), 0,
+        'long source stays closed even when older lesson options request expansion');
+      await page.locator('#exercise .cf-btn-run').click();
+      await page.waitForFunction(() => document.querySelector('#exercise .cf-node')?.classList.contains('complete'));
+      assert.match(await page.locator('.cf-panel-overview').textContent(), /\[Function: inspect\]/);
+      assert.doesNotMatch(await page.locator('.cf-panel-overview').textContent(), /return 7/,
+        'state summaries must not re-expose the function body');
+      await page.locator('.cf-panel-code-det > summary').click();
+      assert.equal(await page.locator('.cf-panel-code-det').evaluate(e=>e.open), true);
+      assert.equal(await page.locator('.cf-panel-code').inputValue(), longCode);
+      await page.locator('#exercise .cf-panel-reset').click();
+      assert.equal(await page.locator('.cf-panel-code').inputValue(), longCode);
+      fixtures.delete(disclosureRoute);
+      const chatLayoutRoute = '/contract-pages/nested/translated-chat-layout.html';
+      fixtures.set(chatLayoutRoute, modulePage(`import {mountChatUI} from '${runtimeUrl}';
+        window.layoutChat=mountChatUI('#exercise',{memory:true,resetLabel:'Nueva conversación',models:[
+          {id:'first',label:'Modelo para comparar respuestas y revisar el contexto disponible'},
+          {id:'second',label:'Modelo alternativo para outra comparação de respostas'}],
+          respond:async(text,ctx)=>{ctx.view.token('Response');ctx.view.usage({context:120000,window:128000});}});
+        document.querySelector('.chatui-mem').textContent='Memoria: activada';
+        document.querySelector('.chatui-options>summary').textContent='Opciones del modelo y del contexto disponible';`).replace('<div id="exercise">',
+          `<link rel="stylesheet" href="${courseStyles}"><div id="exercise">`));
+      const originalViewport = page.viewportSize();
+      for (const width of [320,390]) {
+        await page.setViewportSize({width,height:900});
+        await page.goto(origin + chatLayoutRoute);
+        await page.locator('.chatui-options>summary').waitFor();
+        const contextMeter = page.locator('[data-ctx]');
+        assert.equal(await contextMeter.isVisible(),false,'unused context must respect hidden');
+        await page.locator('.chatui-options>summary').focus();
+        await page.keyboard.press('Enter');
+        await page.locator('.chatui-model').focus();
+        await page.keyboard.press('Home');
+        await page.keyboard.press('ArrowDown');
+        await page.keyboard.press('Tab');
+        assert.equal(await page.locator('.chatui-model').inputValue(),'second');
+        await page.locator('.chatui-text').fill('Inspect usage');
+        await page.locator('.chatui-send').click();
+        await contextMeter.waitFor({state:'visible'});
+        assert.equal(await page.locator('.chatui-ctxbar').isVisible(),true);
+        assert.deepEqual(await page.evaluate(()=>{
+          const box=document.querySelector('.chatui').getBoundingClientRect();
+          return Array.from(document.querySelectorAll('.chatui-options,.chatui-model,[data-ctx],.chatui-ctxbar'))
+            .filter(element=>{const r=element.getBoundingClientRect();return r.left<box.left-1||r.right>box.right+1;})
+            .map(element=>element.className);
+        }),[],'translated controls and populated context stay inside the widget');
+        await page.evaluate(()=>window.layoutChat.reset());
+        assert.equal(await contextMeter.isVisible(),false,'reset hides the context meter again');
+      }
+      await page.setViewportSize(originalViewport);
+      fixtures.delete(chatLayoutRoute);
       const mutations = [
         ['missing-export', `import { nonexistentExport } from '${runtimeUrl}';`],
         ['missing-import', "import '/contract-pages/deleted-module.js';"],
@@ -988,4 +1049,105 @@ test('browser page discovery follows new, renamed, deleted and malformed declara
     assert.throws(() => discoverCoursePages(temporary), /invalid lesson ID/);
     assert.throws(() => localCourseOrigins(4173,{}), /non-loopback/);
   } finally { fs.rmSync(temporary,{recursive:true,force:true}); }
+});
+
+const previousDocument = globalThis.document;
+
+function element() {
+  return { style: {}, addEventListener() {}, appendChild() {} };
+}
+
+async function mount(runtime, options = {}, language = 'en') {
+  globalThis.document = { createElement: element, documentElement: {lang: language} };
+  const { mountOpenClawCliRuntime } = await import(pathToFileURL(path.join(course, 'scripts/_openclaw_cli.js')));
+  return mountOpenClawCliRuntime({ querySelector: () => null }, runtime, options);
+}
+
+test('OpenClaw CLI refreshes gateway metadata before deciding it is disabled', async () => {
+  const connection = { rawUrl: 'https://runtime.example.test', token: '' };
+  let refreshes = 0, options;
+  try {
+    const cli = await mount({
+      getOpenClawConnection: () => connection,
+      refreshOpenClawGatewayToken: async ({ signal }) => { refreshes += 1; assert.equal(signal, null); connection.token = 'fixture-token'; },
+      mountConsole: (_target, value) => { options = value; return { write() {} }; },
+      openclawGatewayWsUrl: () => { throw new Error('No external RPC in the metadata fixture'); },
+      openclawChat: async () => '',
+    });
+    assert.equal(refreshes, 1);
+    assert.equal(options.disabled, false);
+    assert.equal(cli.connected, true);
+    assert.equal(cli.reason, '');
+  } finally {
+    globalThis.document = previousDocument;
+  }
+});
+
+test('OpenClaw CLI exposes failed metadata bootstrap without declaring a connection', async () => {
+  const connection = { rawUrl: 'https://runtime.example.test', token: '' };
+  let options;
+  try {
+    const cli = await mount({
+      getOpenClawConnection: () => connection,
+      refreshOpenClawGatewayToken: async () => { throw new Error('metadata unavailable'); },
+      mountConsole: (_target, value) => { options = value; return { write() {} }; },
+      openclawGatewayWsUrl: () => { throw new Error('No external RPC in the metadata fixture'); },
+      openclawChat: async () => '',
+    });
+    assert.equal(options.disabled, true);
+    assert.equal(options.disabledMsg, 'metadata unavailable');
+    assert.equal(cli.connected, false);
+    assert.equal(cli.reason, 'metadata unavailable');
+  } finally {
+    globalThis.document = previousDocument;
+  }
+});
+
+test('OpenClaw CLI does not mount after its owning cell stops during metadata bootstrap', async () => {
+  const connection = { rawUrl: 'https://runtime.example.test', token: '' };
+  const controller = new AbortController();
+  let mounted = false;
+  try {
+    await assert.rejects(mount({
+      getOpenClawConnection: () => connection,
+      refreshOpenClawGatewayToken: async ({ signal }) => { controller.abort(); signal.throwIfAborted(); },
+      mountConsole: () => { mounted = true; },
+      openclawGatewayWsUrl: () => { throw new Error('No external RPC in the metadata fixture'); },
+      openclawChat: async () => '',
+    }, { signal: controller.signal }), /stopped|aborted|AbortError/);
+    assert.equal(mounted, false);
+  } finally {
+    globalThis.document = previousDocument;
+  }
+});
+
+test('OpenClaw CLI localizes submitted suggestions for every declared locale and preserves commands', async () => {
+  const locales = fs.readdirSync(path.join(root, 'i18n'), {withFileTypes:true})
+    .filter(entry => entry.isDirectory())
+    .map(entry => JSON.parse(fs.readFileSync(path.join(root, 'i18n', entry.name, 'locale.json'), 'utf8')).locale);
+  const suggestions = async language => {
+    let options;
+    await mount({
+      getOpenClawConnection: () => ({rawUrl:'https://runtime.example.test', token:'fixture-token'}),
+      refreshOpenClawGatewayToken: async () => {},
+      mountConsole: (_target, value) => { options = value; return {write() {}}; },
+      openclawGatewayWsUrl: () => { throw new Error('No external RPC in the locale fixture'); },
+      openclawChat: async () => '',
+    }, {}, language);
+    return options.suggestions;
+  };
+  try {
+    const english = await suggestions('en');
+    for (const locale of locales) {
+      assert.equal(typeof locale, 'string');
+      const localized = await suggestions(locale);
+      assert.equal(localized.length, english.length);
+      english.forEach((value, index) => {
+        if (typeof value === 'object') assert.deepEqual(localized[index], value);
+        else assert.notEqual(localized[index], value, `${locale}: untranslated CLI suggestion`);
+      });
+      assert(localized.some(value => typeof value === 'string' && value.includes('SOUL.md')));
+      assert(localized.some(value => typeof value === 'string' && value.includes('ls -la /sandbox/.openclaw/workspace')));
+    }
+  } finally { globalThis.document = previousDocument; }
 });

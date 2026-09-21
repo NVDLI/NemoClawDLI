@@ -649,14 +649,14 @@ async function probe(command) {
   AbortSignal.throwIfAborted();
   const outcome = commandOutcome(result);
   helpers.log(command + " · " + outcome + " · exit " + (result.exitCode ?? "unknown"));
-  helpers.log.details("Command evidence", { command, outcome, exitCode: result.exitCode ?? null, output: result.output || "" });
+  helpers.log.details("Command evidence", { command, outcome, exitCode: result.exitCode ?? null, completion: result.completion, transport: result.transport, stdout: result.stdout, stderr: result.stderr, output: result.output || "" });
   return { command, outcome, exitCode: result.exitCode ?? null, output: result.output || "" };
 }
 const questions = [
   ["Which network requests complete?", [
-    "curl -sS -m 8 -o /dev/null -w 'code=%{http_code}' https://example.com",
-    "curl -sS -m 8 -o /dev/null -w 'code=%{http_code}' https://en.wikipedia.org",
-    "curl -sS -m 6 -o /dev/null -w 'code=%{http_code}' http://169.254.169.254/latest/meta-data/",
+    "curl -sS -m 8 -o /dev/null -w '\\\\ncode=%{http_code}\\\\n' https://example.com",
+    "curl -sS -m 8 -o /dev/null -w '\\\\ncode=%{http_code}\\\\n' https://en.wikipedia.org",
+    "curl -sS -m 6 -o /dev/null -w '\\\\ncode=%{http_code}\\\\n' http://169.254.169.254/latest/meta-data/",
   ]],
   ["Can this user install the requested software?", [
     "apt-get install -y cowsay",
@@ -830,14 +830,14 @@ if (!path.startsWith("/") || /[\\r\\n]/.test(path)) throw new Error("The request
 const host = action.host.includes(":") && !action.host.startsWith("[") ? "[" + action.host + "]" : action.host;
 const url = scheme + "//" + host + ":" + action.port + path;
 const quote = value => "'" + String(value).replace(/'/g, "'\\\\''") + "'";
-const command = "/usr/bin/curl -sS --max-time 8 -o /dev/null -w 'code=%{http_code}' -X " + quote(method) + " " + quote(url);
+const command = "/usr/bin/curl -sS --max-time 8 -o /dev/null -w '\\\\ncode=%{http_code}\\\\n' -X " + quote(method) + " " + quote(url);
 helpers.log("Request: " + method + " " + url);
 helpers.log("Command: " + command);
 helpers.signal?.throwIfAborted();
 const result = await helpers.sandboxExec(command, { signal: helpers.signal, agent: policyAgent });
 helpers.signal?.throwIfAborted();
 const outcome = commandOutcome(result);
-const status = Number(String(result.output || "").match(/code=(\\d{3})\\b/)?.[1]) || null;
+const status = Number(String(result.stdout ?? result.output ?? "").match(/code=(\\d{3})\\b/)?.[1]) || null;
 // A plain HTTP 403/407 may come from a proxy or the application. Keep it unresolved.
 const observed = outcome === "access-denial evidence" ? "deny"
   : outcome === "completed" && status && ![403, 407].includes(status) ? "allow" : "unknown";

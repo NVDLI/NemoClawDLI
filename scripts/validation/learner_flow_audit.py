@@ -1141,6 +1141,29 @@ def audit_exercise_consumers(surfaces: dict[str, str], openclaw: str, canvas: st
     return findings
 
 
+def audit_module4b_terminal(source: str, label: str) -> list[str]:
+    """Require explicit command completion on both authored operator-terminal paths."""
+    findings: list[str] = []
+    completed = re.search(
+        r'function\s+completed\s*\(\s*result\s*\)\s*\{(?P<body>.*?)\n\}', source, re.S
+    )
+    completed_body = completed.group('body') if completed else ''
+    _need(findings,
+          'result?.completion === "exit"' in completed_body and
+          'Number.isInteger(result.exitCode)' in completed_body and
+          'result.exitCode === 0' in completed_body,
+          f'{label}: terminal success must require an explicit zero exit completion')
+    run = re.search(r'async\s+function\s+run\s*\([^)]*\)\s*\{(?P<body>.*?)\n\}\n\nconst\s+connected', source, re.S)
+    body = run.group('body') if run else ''
+    _need(findings, body.count('if (!completed(r))') >= 2 and
+          body.count('completionEvidence(r)') >= 2 and
+          body.count('return { status: "error", message:') >= 4,
+          f'{label}: terminal failures must preserve an error state')
+    _need(findings, 'stdio: "pipe"' in body,
+          f'{label}: host one-shot terminal must retain labelled stream transport')
+    return findings
+
+
 def audit_runtime_integrations(
     openclaw: str, openshell: str, chat: str, pages: dict[str, str],
     *, root: Path = ROOT, surfaces: dict[str, str] | None = None,
@@ -1196,8 +1219,7 @@ def audit_runtime_integrations(
               f"{locale}: turn-prerequisite: file-memory lesson needs shared turns and independent readback")
         _need(findings, "p.parseError" in safety,
               f"{locale} Module 4a must explain live-policy parser failure")
-        _need(findings, cli.count('return { status: "error", message:') >= 2,
-              f"{locale} Module 4b terminal failures must preserve an error state")
+        findings.extend(audit_module4b_terminal(cli, f"{locale} Module 4b"))
         page_relative_vendor = 'import(new URL("./vendor/langchain-1.4.7.esm.js", location.href).href)'
         _need(findings, page_relative_vendor in react and deep.count(page_relative_vendor) == 3,
               f"{locale} Modules 1b/2c must resolve the same-origin LangChain bundle from the lesson URL")
