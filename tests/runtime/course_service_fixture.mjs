@@ -1,6 +1,15 @@
 // Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+export function scheduledFile(message) {
+  const task = JSON.parse(message.slice(message.lastIndexOf('\n') + 1));
+  if (!task || typeof task.path !== 'string' || !task.path.startsWith('/sandbox/.openclaw/workspace/')
+      || typeof task.content !== 'string' || !task.content.trim()) {
+    throw new Error('Unknown scheduled fixture payload');
+  }
+  return task;
+}
+
 // External gateway and sandbox responses only. Course modules, cells, clocks,
 // cancellation, protocol handling and UI event handlers remain production code.
 export function courseServiceFixture() {
@@ -28,9 +37,8 @@ export function courseServiceFixture() {
       if (method === 'cron.runs') {
         const job = jobs.get(params.id);
         if (!job) throw new Error('Unknown scheduled fixture job');
-        const write = job.payload.message.match(/Write exactly (\S+) to (\/sandbox\/[^ ]+)\./);
-        if (!write) throw new Error('Unknown scheduled fixture payload');
-        if (scheduler.write) files.set(write[2],write[1] + '\n');
+        const {path, content} = scheduledFile(job.payload.message);
+        if (scheduler.write) files.set(path,content + '\n');
         scheduledRuns.push({id:params.id,status:'ok',wrote:scheduler.write});
         return {entries:[{status:'ok',runId:'fixture-scheduled-run'}]};
       }

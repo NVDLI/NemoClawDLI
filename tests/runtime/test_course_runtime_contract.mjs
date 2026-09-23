@@ -11,7 +11,17 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
 import {execFileSync, spawn} from 'node:child_process';
 import vm from 'node:vm';
-import {courseServiceFixture} from './course_service_fixture.mjs';
+import {courseServiceFixture, scheduledFile} from './course_service_fixture.mjs';
+
+test('scheduled fixture reads file arguments independently of instruction language', () => {
+  const task = {path:'/sandbox/.openclaw/workspace/course-cron-fixture.txt', content:'CRON-fixture'};
+  for (const instruction of ['Write the file.', 'Escribe el archivo.', 'Grave o arquivo.', '写入文件。', '寫入檔案。']) {
+    assert.deepEqual(scheduledFile(instruction + '\n' + JSON.stringify(task)), task);
+  }
+  for (const malformed of ['Write exactly CRON-fixture to ' + task.path + '.', '{}', 'null',
+    JSON.stringify({...task, path:'/tmp/elsewhere'}), JSON.stringify({...task, content:42}),
+    JSON.stringify({...task, content:''})]) assert.throws(() => scheduledFile(malformed));
+});
 function staticContentType(file) {
   return {'.html':'text/html','.htm':'text/html','.js':'text/javascript','.mjs':'text/javascript',
     '.json':'application/json','.css':'text/css','.svg':'image/svg+xml','.txt':'text/plain'}[path.extname(file)] || 'application/octet-stream';
@@ -851,9 +861,8 @@ test('discovered browser workflows load real modules and reject import, name and
             assert.equal(await owner.getAttribute('data-state'),expected,await owner.innerText());
           }
           const records=service.scheduled.map(job=>{
-            const match=job.payload.message.match(/Write exactly (\S+) to (\/sandbox\/[^ ]+)\./);
-            assert(match,'scheduler request lacks an independently observable file/reference');
-            return {id:job.id,name:job.name,reference:match[1],file:match[2]};
+            const {path, content}=scheduledFile(job.payload.message);
+            return {id:job.id,name:job.name,reference:content,file:path};
           });
           assert.equal(records.length,2,'both invocations must create their own scheduled work');
           const [first,second]=records;
