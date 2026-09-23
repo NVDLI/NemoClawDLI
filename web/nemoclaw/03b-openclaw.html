@@ -283,11 +283,10 @@ mountRunCell("#cell-introspect", {
   label: "Ask OpenClaw to describe its workspace",
   intro: "Run one turn, then compare the answer with the live workspace in Step 1b.",
   code: `${setupTurn}
-const report = await state.turn({
+await state.turn({
   content: "Briefly list the files in your workspace and explain each in one bullet without dumping file contents.",
   session: "quick-3b-introspect",
 }, helpers);
-helpers.log(report);
 `,
 });
 

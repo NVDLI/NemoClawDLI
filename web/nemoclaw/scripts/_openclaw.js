@@ -1873,6 +1873,17 @@ export async function courseTurn(state, helpers, session, message, {idleMs = 900
   if (!state.courseOwnedSessions.includes(session)) state.courseOwnedSessions.push(session);
   helpers.log("request", {session, message});
   const events = [];
+  let responseLine;
+  const showAnswer = text => {
+    // Cell log calls create block rows. Update the existing row for cumulative snapshots.
+    if (responseLine?.nodeType === 1) {
+      responseLine.textContent = text;
+      // A post-tool answer belongs after the intervening tool records.
+      if (responseLine.nextSibling) responseLine.parentNode.appendChild(responseLine);
+    }
+    else responseLine = helpers.log(text);
+    if (responseLine?.dataset) responseLine.dataset.logText = text;
+  };
   try {
     const answer = await new Promise((resolve, reject) => {
       let runId = null, acknowledged = false, finished = false, idle, total, lastText = "";
@@ -1899,7 +1910,7 @@ export async function courseTurn(state, helpers, session, message, {idleMs = 900
         bump(); events.push(event);
         const data = p.data || {};
         if (event.event === "agent" && p.stream === "assistant" && data.text && data.text !== lastText) {
-          helpers.log(data.text.startsWith(lastText) ? data.text.slice(lastText.length) : data.text);
+          showAnswer(data.text);
           lastText = data.text;
         }
         if (event.event === "agent" && p.stream === "tool") {
@@ -1930,7 +1941,7 @@ export async function courseTurn(state, helpers, session, message, {idleMs = 900
       }).catch(error => settle(error));
     });
     state.courseEvents = events;
-    helpers.log("Final answer", answer);
+    showAnswer(answer);
     return answer;
   } finally {
     if (state._courseTurn === owner) state._courseTurn = null;

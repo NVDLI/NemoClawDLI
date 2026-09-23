@@ -97,12 +97,13 @@ async function fixture(options = {}) {
       assert.equal(typeof params.payload.message, 'string');
       assert(!Object.hasOwn(params, 'id'), 'server owns the job ID');
       assert(!Object.hasOwn(params, 'prompt'), 'agent prompt belongs inside payload');
-      assert(params.payload.message.includes(state.cronFile));
-      assert(params.payload.message.includes(state.cronReference));
+      const fileTask = JSON.parse(params.payload.message.slice(params.payload.message.lastIndexOf('\n') + 1));
+      assert.deepEqual(fileTask, {path:state.cronFile, content:state.cronReference},
+        'file arguments remain separate from localized instructions');
       assert.notEqual(params.name, ownedId);
       assert(!state._ws, 'Canvas Stop cannot close the connection reserved for cleanup');
       if (options.noId) return {};
-      job = {id:ownedId, name:params.name};
+      job = {id:ownedId, name:params.name, message:params.payload.message};
       return {id:ownedId};
     }
     if (method === 'cron.runs') {
@@ -111,7 +112,8 @@ async function fixture(options = {}) {
       if (options.runFailure) return {entries:[{status:'error',error:'fixture run failure'}]};
       if (options.runSkipped) return {entries:[{status:'skipped',error:'fixture provider unreachable'}]};
       if (options.neverComplete || histories === 1) return {entries:[]};
-      files.set(state.cronFile, options.mismatch ? 'wrong file reference' : state.cronReference + '\n');
+      if (!options.missingFile) files.set(state.cronFile,
+        options.copiedDirective ? job.message : options.mismatch ? 'wrong file reference' : state.cronReference + '\n');
       if (options.autoDeleted) job = null;
       return {entries:[{status:'ok',runId:'scheduled-run'}]};
     }
@@ -294,14 +296,15 @@ for (const directory of roots) {
     } finally { f.close(); }
   });
 
-  test(`${label}: Stop, deadline, run failure and wrong file all fail and still clean up`, async () => {
+  test(`${label}: Stop, deadline, failed run, absent file and copied instructions all fail and still clean up`, async () => {
     const d = await cells;
-    for (const mode of ['stop','neverComplete','runFailure','runSkipped','mismatch']) {
+    for (const mode of ['stop','neverComplete','runFailure','runSkipped','mismatch','missingFile','copiedDirective']) {
       const f = await fixture({[mode]:true});
       try {
         await assert.rejects(f.execute(d.cron), error => mode === 'stop' ? error.name === 'AbortError' : Boolean(error.message));
         assert.equal(f.calls.filter(call => call.method === 'cron.remove').length,1,mode);
         assert.equal(f.state.demoCronId,null,mode); assert(!f.storage.has(f.key),mode);
+        assert.equal(f.state.demoCronVerified,false,mode);
         assert.equal(f.sockets.at(-1).readyState,3,mode);
       } finally { f.close(); }
     }

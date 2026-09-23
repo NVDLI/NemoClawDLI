@@ -5,6 +5,10 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Separate scheduled file contents from instructions in Module 3c and retain independent
+  file verification. Thanks to Vadim Kudlay for reporting the failure and to the independent
+  Codex Astra reviewer for automated review of the four translated prompts.
+
 - Fix policy confirmation when SSH diagnostics follow command output, preserve terminal failure
   states, and initialize the live CLI through shared connection metadata. Keep long source
   collapsed but editable, repair scheduled-run progress, and fit model controls on narrow screens.
