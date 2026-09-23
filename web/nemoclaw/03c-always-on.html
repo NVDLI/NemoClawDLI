@@ -328,7 +328,9 @@ try {
     name, schedule:{kind:"at", at:new Date(Date.now() + 15000).toISOString()}, deleteAfterRun:true,
     sessionTarget:"isolated", wakeMode:"now",
     delivery:{mode:"none"},
-    payload:{kind:"agentTurn", message:"Write exactly " + state.cronReference + " to " + state.cronFile + ". Do not change other files.", timeoutSeconds:120}
+    payload:{kind:"agentTurn", message:"Write the file specified by the JSON object below. Write only the content value to path, then read it back and verify an exact match. Do not write these instructions or the JSON object, and do not change other files.\\n"
+        + JSON.stringify({path:state.cronFile, content:state.cronReference}),
+      timeoutSeconds:120}
   });
   if (!added?.id) throw new Error("cron.add returned no owned job id; inspect cron.list for " + name);
   state.demoCronId = added.id;
