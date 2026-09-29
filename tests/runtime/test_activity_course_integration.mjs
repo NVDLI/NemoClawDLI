@@ -309,7 +309,8 @@ test('course activity is local-only until the learner enables remote progress', 
 });
 
 test('a deployment with collection disabled blocks artifact and API access', async () => {
-  const policy = { ...JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8')), collection_enabled: false };
+  const policy = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8'));
+  assert.equal(policy.collection_enabled, false);
   const activity = createCourseActivity({
     policyLoader: async () => policy,
     artifactResolver: async () => assert.fail('artifact discovery must not run'),
@@ -588,6 +589,7 @@ test('tab choices resume only for the same delivered artifact and notice, and di
   first.setReferralTracking(true);
   assert.equal(await create({ ...APPROVED_ARTIFACT, artifact_digest: `sha256:${'c'.repeat(64)}` }).resume(), false);
   assert.equal(await create(APPROVED_ARTIFACT, { ...APPROVED_POLICY, notice_version: 'changed' }).resume(), false);
+  assert.equal(await create(APPROVED_ARTIFACT, { ...APPROVED_POLICY, collection_enabled: false }).resume(), false);
   assert.equal(sessions, 1);
   const nextPage = create();
   assert.equal(await nextPage.resume(), true);
@@ -934,7 +936,8 @@ test('Module 1a explicitly wires session, referral, and verified progress events
 
 test('the published opt-in notice requires complete disclosure and keeps both defaults off', () => {
   const policy = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8'));
-  assert.equal(isActivityPolicyApproved(policy), true);
+  assert.equal(isActivityPolicyApproved(policy), false);
+  assert.equal(isActivityPolicyApproved({ ...policy, collection_enabled: true }), true);
   for (const key of Object.keys(policy)) {
     const missing = { ...policy }; delete missing[key];
     assert.throws(() => validateActivityPolicy(missing), key);
@@ -949,6 +952,7 @@ test('the published opt-in notice requires complete disclosure and keeps both de
 
 test('HTTP lab transport requires deployment permission and preserves authenticated HTTPS SDK semantics', async () => {
   const policy = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8'));
+  policy.collection_enabled = true;
   policy.lab_transport = { base_path: '/lab/api/course/activity', allow_http: true };
   const identity = { ...APPROVED_ARTIFACT, artifact_version: `git-${'a'.repeat(40)}-adapter-${'b'.repeat(64)}` };
   const requests = [];
