@@ -11,7 +11,7 @@ import { updateClawPill, escHtml, _escAttr, mountCanvasFlow, delay } from "./_sh
 import { localizeCourseUiText } from "./_locale.js";
 import {
   DEFAULT_OPENCLAW_PROXY_BASE, accessProviderForOpenClawUrl, getOpenClawConnection, getOpenClawProxyConfig, getOpenClawWsRelayEnabled, migrateOpenClawConnectionStorage,
-  normalizeOpenClawLaunchableUrl, normalizeOpenClawProxyBase, openclawHttpUrl,
+  normalizeOpenClawLaunchableUrl, normalizeOpenClawProxyBase, openclawAccessCookieName, openclawHttpUrl,
   openclawWebSocketUrl, setOpenClawConnection, setOpenClawProxyConfig, setOpenClawWsRelayEnabled,
 } from "./_connection.js";
 import { openclawLoopbackProbe, terminal } from "./_openshell.js";
@@ -24,7 +24,7 @@ export {
 };
 export { filterOpenClawRuntimeNoise, filterOpenClawRuntimeValue, openclawMessageText, openclawResultText };
 
-const accessCookieName = provider => provider === "pomerium" ? "_pomerium" : "CF_Authorization";
+const accessCookieName = (provider, rawUrl = getOpenClawConnection().rawUrl) => openclawAccessCookieName(rawUrl, provider);
 
 
 export function detectOpenClawBrowserSession(rawUrl, accessProvider = "auto", timeoutMs = 4000) {
@@ -98,17 +98,17 @@ function redactOpenClawText(value) {
   return String(value || "")
     .replace(/([?&#](?:token|access_session|cf_access_jwt|session|password|secret)=)[^&#\s"']+/gi, "$1<redacted>")
     .replace(/((?:Bearer|Basic)\s+)[A-Za-z0-9._~+/=-]+/gi, "$1<redacted>")
-    .replace(/((?:_pomerium|CF_Authorization)=)[^;\s"']+/gi, "$1<redacted>");
+    .replace(/((?:_pomerium|CF_Authorization|__Host-skybridge-brev-prd|cf_clearance)=)[^;\s"']+/gi, "$1<redacted>");
 }
 
 export function redactOpenClawDiagnostic(value, key = "", seen = new WeakSet()) {
   /* @doc <code>helpers.redactOpenClawDiagnostic(value)</code> :: Recursively redacts credentials and credential-bearing URLs from OpenClaw diagnostic data. */
   const name = String(key || "").toLowerCase();
   if (value == null || typeof value === "number" || typeof value === "boolean") return value;
+  if (/authorization|cookie|password|secret|session|token|__host-skybridge-brev-prd|cf_clearance/.test(name) && name !== "status") {
+    return "<redacted>";
+  }
   if (typeof value === "string") {
-    if (/authorization|cookie|password|secret|session|token/.test(name) && name !== "status") {
-      return "<redacted>";
-    }
     return redactOpenClawText(value);
   }
   if (typeof value !== "object") return redactOpenClawText(value);
@@ -456,6 +456,7 @@ export async function runOpenClawConnectionAudit({
   onStep = null,
 } = {}) {
   /* @doc <code>helpers.runOpenClawConnectionAudit(opts)</code> :: Tests launchable metadata, gateway, terminal, and health routes in order and returns redacted evidence. */
+  if (signal?.aborted) throw new Error("Connection test stopped.");
   const rawUrl = normalizeOpenClawLaunchableUrl(baseUrl);
   if (!rawUrl) throw new Error("Enter the NemoClaw launchable Base URL.");
   const provider = accessProviderForOpenClawUrl(rawUrl);
@@ -467,28 +468,41 @@ export async function runOpenClawConnectionAudit({
   });
   setOpenClawWsRelayEnabled(false);
 
+  const assertCurrent = () => {
+    const current = getOpenClawConnection();
+    if (signal?.aborted || current.rawUrl !== rawUrl ||
+        current.resolvedAccessProvider !== provider ||
+        current.accessSession !== String(accessSession || "").trim()) {
+      throw new Error("Connection test stopped.");
+    }
+  };
   const results = [];
   const notify = step => {
     try { onStep?.(redactOpenClawDiagnostic(step)); } catch (_) {}
   };
   const execute = async ({ id, title, what, purpose, request }, task) => {
+    assertCurrent();
     const step = { id, title, what, purpose, request: redactOpenClawDiagnostic(request), status: "running" };
     notify(step);
     const started = performance.now();
+    let interruption = null;
     try {
       const outcome = await task(step);
+      assertCurrent();
       Object.assign(step, outcome);
       step.status = outcome.ok ? "passed" : "failed";
     } catch (error) {
+      try { assertCurrent(); } catch (stopped) { interruption = stopped; }
       step.status = "failed";
       step.ok = false;
-      step.error = String(error?.message || error);
-      step.response = redactOpenClawDiagnostic(error?.diagnostic || null);
+      step.error = String((interruption || error)?.message || interruption || error);
+      step.response = interruption ? null : redactOpenClawDiagnostic(error?.diagnostic || null);
     }
     delete step.progress;
     step.elapsedMs = Math.round(performance.now() - started);
     results.push(step);
     notify(step);
+    if (interruption) throw interruption;
     return step;
   };
 
@@ -508,6 +522,7 @@ export async function runOpenClawConnectionAudit({
         notify(step);
       },
     });
+    assertCurrent();
     const token = response.ok ? (gatewayTokenFromAgentMetadata(response.json) || "") : "";
     if (token) {
       setOpenClawConnection({
@@ -572,10 +587,12 @@ export async function runOpenClawConnectionAudit({
     const attempts = [];
     let relaySelected = false;
     let outcome = await probeOpenClawGatewayConnection({ signal, relayWebSocket: false });
+    assertCurrent();
     attempts.push(outcome);
     if (!outcome.ok && relayGatewayRoute) {
       relaySelected = true;
       outcome = await probeOpenClawGatewayConnection({ signal, relayWebSocket: true });
+      assertCurrent();
       attempts.push(outcome);
     }
     if (outcome.ok) setOpenClawWsRelayEnabled(relaySelected);
@@ -641,6 +658,7 @@ export async function runOpenClawConnectionAudit({
       signal,
       relayWebSocket: null,
     });
+    assertCurrent();
     const ok = String(response.output || "").includes(terminalMarker);
     if (ok && response.transport === "approved-provider-relay-terminal") {
       setOpenClawWsRelayEnabled(true);
@@ -1188,7 +1206,7 @@ export function mountEndpointProbe(targetSel, opts = {}) {
         ? "signed-in browser session detected; nothing to paste"
         : state === "checking"
           ? "checking for a signed-in browser session…"
-          : "paste the _pomerium cookie value"
+          : "paste the _pomerium cookie value".replace("_pomerium", accessCookieName(provider, _normalizeBaseUrl(urlInp.value)))
       : provider === "cloudflare"
         ? "paste the CF_Authorization cookie value"
         : "choose a provider or enter a launchable URL";
@@ -1466,9 +1484,9 @@ export function mountEndpointProbe(targetSel, opts = {}) {
         // Access sign-in HTML looks like a successful API response. Detect both
         // supported providers and point back to the selected session cookie.
         if (/cloudflareaccess\.com|Sign in ・ Cloudflare Access|Cloudflare Access|auth\.apps\.run\.brev\.nvidia\.com|pomerium/i.test(html)) {
-          const cookieName = accessCookieName(accessProvider);
+          const cookieName = accessCookieName(accessProvider, base);
           const recovery = accessProvider === "pomerium"
-            ? "Open the launchable in this browser and sign in, then probe again. If this separately hosted course cannot detect that browser session, paste the complete _pomerium value into Access session."
+            ? "Open the launchable in this browser and sign in, then probe again. If this separately hosted course cannot detect that browser session, paste the complete _pomerium value into Access session.".replace("_pomerium", cookieName)
             : "Open the launchable, sign in, then use DevTools → Application → Storage → Cookies. " +
               "Copy the full " + cookieName + " value into Access session above and probe again.";
           setOutput(head + "\n\nThe launchable needs a fresh " + cookieName + " browser session.\n\n" + recovery, "err");
@@ -1523,7 +1541,7 @@ export function mountEndpointProbe(targetSel, opts = {}) {
           printed = await r.text();
         }
         if (!r.ok && r.status === 401 && accessProvider === "pomerium") {
-          printed += "\n\nPomerium did not accept the access session. Reopen the current launchable and sign in. If automatic detection remains unavailable here, paste a fresh _pomerium value into Access session.";
+          printed += "\n\nPomerium did not accept the access session. Reopen the current launchable and sign in. If automatic detection remains unavailable here, paste a fresh _pomerium value into Access session.".replace("_pomerium", accessCookieName(accessProvider, base));
         }
         setOutput(head + "\n\n" + printed, r.ok ? "ok" : "err");
       }
@@ -1607,6 +1625,7 @@ export function mountOpenClawConnectionAudit(targetSel, opts = {}) {
       <div class="claw-audit-derived" aria-live="polite"></div>
       <div class="claw-actions">
         <button type="button" class="claw-btn claw-audit-run">${escHtml(text("Test connection"))}</button>
+        <button type="button" class="claw-btn alt claw-audit-stop" hidden>${escHtml(text("■ stop"))}</button>
       </div>
       <div class="claw-audit-summary" aria-live="polite">${escHtml(text("Waiting to test."))}</div>
       <ol class="claw-audit-list">
@@ -1661,10 +1680,12 @@ export function mountOpenClawConnectionAudit(targetSel, opts = {}) {
   const sessionInput = target.querySelector(".claw-access-session");
   const eye = target.querySelector(".claw-eye-session");
   const runButton = target.querySelector(".claw-audit-run");
+  const stopButton = target.querySelector(".claw-audit-stop");
   const derived = target.querySelector(".claw-audit-derived");
   const summary = target.querySelector(".claw-audit-summary");
   let controller = null;
   let detectionVersion = 0;
+  let sessionUrl = normalizeOpenClawLaunchableUrl(urlInput.value);
 
   function setDerived() {
     const rawUrl = normalizeOpenClawLaunchableUrl(urlInput.value);
@@ -1675,11 +1696,11 @@ export function mountOpenClawConnectionAudit(targetSel, opts = {}) {
     }
     try {
       const provider = accessProviderForOpenClawUrl(rawUrl);
-      const cookie = accessCookieName(provider);
+      const cookie = accessCookieName(provider, rawUrl);
       derived.textContent = `${text("Detected automatically from Base URL:")} ${provider}. ` +
         `${text("Access session:")} ${cookie}. ${text("Sensitive values stay in this tab.")}`;
       sessionInput.placeholder = provider === "pomerium"
-        ? text("Paste _pomerium when this page is hosted separately")
+        ? text("Paste _pomerium when this page is hosted separately").replace("_pomerium", cookie)
         : text("Paste CF_Authorization when this page is hosted separately");
       urlInput.setCustomValidity("");
     } catch (error) {
@@ -1690,7 +1711,10 @@ export function mountOpenClawConnectionAudit(targetSel, opts = {}) {
 
   function saveInputs({ clearToken = false } = {}) {
     const rawUrl = normalizeOpenClawLaunchableUrl(urlInput.value);
-    if (!rawUrl) return null;
+    if (!rawUrl) {
+      setOpenClawConnection({rawUrl: "", token: "", accessProvider: "auto", accessSession: ""});
+      return null;
+    }
     const previous = getOpenClawConnection();
     const provider = accessProviderForOpenClawUrl(rawUrl);
     return setOpenClawConnection({
@@ -1710,6 +1734,17 @@ export function mountOpenClawConnectionAudit(targetSel, opts = {}) {
       raw.hidden = true;
       raw.querySelector("code").textContent = "";
     });
+  }
+
+  function invalidateAudit() {
+    controller?.abort();
+    controller = null;
+    resetSteps();
+    root.dataset.state = "ready";
+    summary.dataset.status = "pending";
+    summary.textContent = text("Waiting to test.");
+    runButton.disabled = false;
+    stopButton.hidden = true;
   }
 
   function renderStep(step) {
@@ -1762,11 +1797,16 @@ export function mountOpenClawConnectionAudit(targetSel, opts = {}) {
     eye.title = text(showing ? "Show session" : "Hide session");
   });
   urlInput.addEventListener("input", () => {
+    invalidateAudit();
     detectionVersion += 1;
+    const rawUrl = normalizeOpenClawLaunchableUrl(urlInput.value);
+    if (sessionInput && rawUrl !== sessionUrl) sessionInput.value = "";
+    sessionUrl = rawUrl;
     setDerived();
     try { saveInputs(); } catch (_) {}
   });
   sessionInput.addEventListener("input", () => {
+    invalidateAudit();
     detectionVersion += 1;
     try { saveInputs(); } catch (_) {}
   });
@@ -1784,23 +1824,29 @@ export function mountOpenClawConnectionAudit(targetSel, opts = {}) {
     if (detected) derived.textContent += " " + text("Signed-in browser session detected.");
   });
 
+  stopButton.addEventListener("click", invalidateAudit);
   runButton.addEventListener("click", async () => {
     controller?.abort();
-    controller = new AbortController();
+    const runController = new AbortController();
+    controller = runController;
     resetSteps();
     root.dataset.state = "running";
     summary.dataset.status = "running";
     summary.textContent = text("Testing required routes in order.");
     runButton.disabled = true;
+    stopButton.hidden = false;
     try {
       const connection = saveInputs({ clearToken: true });
       if (!connection) throw new Error(text("Enter the NemoClaw launchable Base URL."));
       const result = await runOpenClawConnectionAudit({
         baseUrl: connection.rawUrl,
         accessSession: connection.accessSession,
-        signal: controller.signal,
-        onStep: renderStep,
+        signal: runController.signal,
+        onStep: step => {
+          if (controller === runController && !runController.signal.aborted) renderStep(step);
+        },
       });
+      if (controller !== runController) return;
       root.dataset.state = result.ok ? "succeeded" : "failed";
       summary.dataset.status = result.ok ? "passed" : "failed";
       summary.textContent = result.ok
@@ -1811,11 +1857,15 @@ export function mountOpenClawConnectionAudit(targetSel, opts = {}) {
       }
       runButton.textContent = text("Test again");
     } catch (error) {
+      if (controller !== runController) return;
       root.dataset.state = "failed";
       summary.dataset.status = "failed";
       summary.textContent = String(error?.message || error);
     } finally {
-      runButton.disabled = false;
+      if (controller === runController) {
+        runButton.disabled = false;
+        stopButton.hidden = true;
+      }
     }
   });
 
@@ -1823,7 +1873,7 @@ export function mountOpenClawConnectionAudit(targetSel, opts = {}) {
   return {
     run: () => runButton.click(),
     getUrl: () => normalizeOpenClawLaunchableUrl(urlInput.value),
-    stop: () => controller?.abort(),
+    stop: () => invalidateAudit(),
   };
 }
 

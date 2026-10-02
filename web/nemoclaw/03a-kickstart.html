@@ -127,12 +127,14 @@
     <ul>
       <li>The gateway token authorizes JSON-RPC calls on <code>/cli/gateway</code>.</li>
       <li>The access session, an <code>_pomerium</code> or <code>CF_Authorization</code> browser cookie,
-        authorizes reaching the launchable at all.</li>
+        authorizes reaching the launchable at all. Skybridge launchables use
+        <code>__Host-skybridge-brev-prd</code> for this browser cookie.</li>
     </ul>
     <p>When this course is not served by the launchable, copy that browser cookie into the Access
       session field below:</p>
     <ol>
-      <li>Keep the signed-in launchable tab open. Use <code>_pomerium</code> for an
+      <li>Keep the signed-in launchable tab open. Use <code>__Host-skybridge-brev-prd</code> for a
+        <code>gobrev.dev</code> host, <code>_pomerium</code> for an
         <code>apps.run.brev.nvidia.com</code> host or <code>CF_Authorization</code> for a
         <code>brevlab.com</code> host.</li>
       <li><strong>Chrome, Edge, or Brave:</strong> open Developer Tools, select
