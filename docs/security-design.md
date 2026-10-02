@@ -128,7 +128,7 @@ new threat, mitigation, or evidence claim.
 
 NemoClaw launchables on `gobrev.dev` retain the direct-first Pomerium transport.
 Their manual relay fallback uses `__Host-skybridge-brev-prd`, selected from the
-validated target host. Older Pomerium launchables keep `_pomerium`. Neither route
+validated target host, and older Pomerium launchables keep `_pomerium`. Neither route
 forwards unrelated browser cookies or treats `cf_clearance` as an identity session.
 The course and relay source changes require separate operator deployment and live
 authentication evidence; local fixtures do not establish upstream acceptance.

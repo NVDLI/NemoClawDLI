@@ -7,8 +7,9 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 - Support Brev Skybridge launchable links and their host-specific access cookie. Keep access
   credentials bound to the selected launchable and discard obsolete connection audits.
-  Thanks to the independent Codex Astra reviewer for automated review of the added cookie
-  instructions in Spanish, Brazilian Portuguese, Simplified Chinese and Taiwan Traditional Chinese.
+  Thanks to Vadim Kudlay for the connected setup wording and to the independent Codex Astra
+  reviewer for automated review of the revised cookie instructions in Spanish, Brazilian
+  Portuguese, Simplified Chinese and Taiwan Traditional Chinese.
 
 - Separate scheduled file contents from instructions in Module 3c and retain independent
   file verification. Thanks to Vadim Kudlay for reporting the failure and to the independent

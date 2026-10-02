@@ -34,7 +34,7 @@ operator account, state bucket, hosted zone, DNS name, resource prefix, or deplo
 committed.
 
 NemoClaw hosts on `gobrev.dev` use the Pomerium transport with the host-bound
-`__Host-skybridge-brev-prd` cookie. The older Pomerium family keeps `_pomerium`.
+`__Host-skybridge-brev-prd` cookie, and the older Pomerium family keeps `_pomerium`.
 The relay selects the cookie from the target host and never forwards the browser's
 `cf_clearance` or arbitrary cookies. The `gobrev.dev` suffix entry accepts only
 single-label `nemoclaw-<id>` hosts. Operators must deploy both relay transports and
