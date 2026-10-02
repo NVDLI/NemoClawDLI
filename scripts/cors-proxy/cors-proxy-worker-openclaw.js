@@ -54,13 +54,14 @@ export default {
     const cloudflareHost = /^[a-z0-9.-]+$/.test(host) && (host === "brevlab.com" || host.endsWith(".brevlab.com"));
     const pomeriumHost = /^[a-z0-9.-]+$/.test(host) &&
       (host === "apps.run.brev.nvidia.com" || host.endsWith(".apps.run.brev.nvidia.com"));
-    const hostOk = cloudflareHost || pomeriumHost;
+    const skybridgeHost = /^nemoclaw-[a-z0-9](?:[a-z0-9-]{0,52}[a-z0-9])?\.gobrev\.dev$/.test(host);
+    const hostOk = cloudflareHost || pomeriumHost || skybridgeHost;
     if (!hostOk) {
       return new Response('Upstream host not allowed (NemoClaw launchables only).', { status: 403, headers: { "Content-Type": "text/plain", ...cors } });
     }
     const targetSearch = new URLSearchParams(url.search);
     const fwdHeaders = new Headers(request.headers);
-    const expectedProvider = pomeriumHost ? "pomerium" : "cloudflare";
+    const expectedProvider = pomeriumHost || skybridgeHost ? "pomerium" : "cloudflare";
     const headerProvider = (fwdHeaders.get("X-OpenClaw-Access-Provider") || "").toLowerCase();
     const queryProvider = (targetSearch.get("access_provider") || "").toLowerCase();
     if (headerProvider && queryProvider && headerProvider !== queryProvider) {
@@ -110,7 +111,8 @@ export default {
     if (accessSession && expectedProvider === "cloudflare") {
       fwdHeaders.set("Cookie", "CF_Authorization=" + accessSession);
     } else if (accessSession && expectedProvider === "pomerium") {
-      fwdHeaders.set("Cookie", "_pomerium=" + accessSession);
+      if (skybridgeHost) fwdHeaders.set("Cookie", "__Host-skybridge-brev-prd=" + accessSession);
+      else fwdHeaders.set("Cookie", "_pomerium=" + accessSession);
     }
 
     const isWebSocket = (request.headers.get("Upgrade") || "").toLowerCase() === "websocket";

@@ -617,21 +617,22 @@ test('connection audit clears startup progress when metadata passes, fails or is
         return outcome === 'passed' ? metadata('ready')
           : new Response(JSON.stringify({status:'failed',message:'OpenClaw startup failed.'}), {status:503});
       };
-      const result = await gateway.runOpenClawConnectionAudit({
+      await assert.rejects(gateway.runOpenClawConnectionAudit({
         baseUrl:connect('audit-settlement'),signal:controller.signal,
         onStep:step=>{
           updates.push(step);
           if (step.id !== 'agent-metadata') return;
           if ((outcome === 'stopped' && step.progress) || step.status !== 'running') controller.abort();
         },
-      });
+      }), /Connection test stopped/);
       const metadataUpdates = updates.filter(step=>step.id === 'agent-metadata');
       assert(metadataUpdates.some(step=>step.status === 'running' && /Retrying/.test(step.progress)),
         'the audit must publish startup progress while it is waiting');
       const final = metadataUpdates.at(-1);
       assert.equal(final.status,outcome === 'passed' ? 'passed' : 'failed');
       assert.equal(final.progress,undefined,'settled diagnostics must not retain retry instructions');
-      assert.equal(result.checks.find(step=>step.id === 'agent-metadata').progress,undefined);
+      assert(updates.every(step=>step.id === 'agent-metadata'),
+        'stopping the audit must not start another route');
       assert.equal(calls,outcome === 'stopped' ? 1 : 2);
     }
   } finally {

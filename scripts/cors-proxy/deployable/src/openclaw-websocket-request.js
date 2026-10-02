@@ -54,7 +54,9 @@ function handler(event) {
     /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*brevlab\.com$/.test(host);
   var pomeriumHost = host.length <= 253 &&
     /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*apps\.run\.brev\.nvidia\.com$/.test(host);
-  if (!cloudflareHost && !pomeriumHost) return failure(403, 'Upstream host is not on the allowlist.', origin);
+  var skybridgeHost = /^nemoclaw-[a-z0-9](?:[a-z0-9-]{0,52}[a-z0-9])?\.gobrev\.dev$/.test(host);
+  if (!cloudflareHost && !pomeriumHost && !skybridgeHost) return failure(403, 'Upstream host is not on the allowlist.', origin);
+  pomeriumHost = pomeriumHost || skybridgeHost;
   var expectedProvider = pomeriumHost ? 'pomerium' : 'cloudflare';
 
   var query = request.querystring || {};
@@ -113,7 +115,7 @@ function handler(event) {
   request.cookies = {};
   if (accessSession && expectedProvider === 'cloudflare') request.cookies.CF_Authorization = { value: accessSession };
   if (accessSession && expectedProvider === 'pomerium') {
-    request.cookies._pomerium = { value: accessSession };
+    request.cookies[skybridgeHost ? '__Host-skybridge-brev-prd' : '_pomerium'] = { value: accessSession };
   }
 
   request.uri = upstreamPath;
@@ -122,7 +124,7 @@ function handler(event) {
     domainName: host,
     hostHeader: host,
     sni: host,
-    allowedCertificateNames: pomeriumHost
+    allowedCertificateNames: skybridgeHost ? ['gobrev.dev', '*.gobrev.dev'] : pomeriumHost
       ? ['apps.run.brev.nvidia.com', '*.apps.run.brev.nvidia.com']
       : ['brevlab.com', '*.brevlab.com'],
     customOriginConfig: {
