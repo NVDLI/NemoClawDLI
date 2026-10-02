@@ -146,6 +146,29 @@ test('filteredRequestHeaders requires an explicit provider for neutral sessions'
   }, 'nemoclaw-demo.apps.run.brev.nvidia.com'), /require an explicit access provider/);
 });
 
+test('Skybridge maps only the host-bound session and strips browser cookies', () => {
+  const headers = filteredRequestHeaders({
+    Cookie: '__Host-skybridge-brev-prd=untrusted; cf_clearance=browser-only',
+    'X-OpenClaw-Access-Provider': 'pomerium',
+    'X-OpenClaw-Access-Session': 'tab-session',
+  }, 'nemoclaw-new-session.gobrev.dev');
+  assert.equal(headers.get('Cookie'), '__Host-skybridge-brev-prd=tab-session');
+  assert.equal(headers.get('X-OpenClaw-Access-Session'), null);
+  for (const host of ['gobrev.dev', 'other-session.gobrev.dev', 'nemoclaw-demo.gobrev.dev.evil',
+    'nested.nemoclaw-demo.gobrev.dev', 'nemoclaw-.gobrev.dev', 'nemoclaw-' + 'a'.repeat(55) + '.gobrev.dev']) {
+    assert.equal(isHostAllowed(host, ['.gobrev.dev']), false, host);
+    assert.throws(() => filteredRequestHeaders({
+      'X-OpenClaw-Access-Provider': 'pomerium',
+      'X-OpenClaw-Access-Session': 'must-not-forward',
+    }, host), /does not match/, host);
+  }
+  assert.equal(isHostAllowed('nemoclaw-new-session.gobrev.dev', ['.gobrev.dev']), true);
+  assert.equal(isHostAllowed('nemoclaw-' + 'a'.repeat(54) + '.gobrev.dev', ['.gobrev.dev']), true);
+  assert.throws(() => filteredRequestHeaders({
+    'CF-Access-Jwt-Assertion': 'must-not-forward',
+  }, 'nemoclaw-new-session.gobrev.dev'), /Cloudflare access assertions/);
+});
+
 test('filteredRequestHeaders rejects provider and host mismatches', () => {
   assert.throws(() => filteredRequestHeaders({
     'X-OpenClaw-Access-Provider': 'cloudflare',

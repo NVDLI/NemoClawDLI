@@ -158,6 +158,29 @@ test('Pomerium remains direct when no manual access session is supplied', () => 
   assert.equal(gateway.viaProxy, false);
 });
 
+test('Skybridge bootstrap tries browser terminal first and then its bound relay session', async () => {
+  const baseUrl = 'https://nemoclaw-new-session.gobrev.dev/onboard';
+  connection.setOpenClawConnection({rawUrl:baseUrl, accessSession:'skybridge-session'});
+  terminalUrls.length = 0;
+  failDirectTerminal = true;
+  try {
+    const response = await openshell.openclawLoopbackProbe('/api/agent', {
+      baseUrl, openMs:20, idleMs:20, totalMs:2000,
+    });
+    assert.equal(response.ok, true);
+    assert.equal(response.json.agent.dashboardUrl, '/#token=test-gateway-token');
+  } finally {
+    failDirectTerminal = false;
+  }
+  assert.equal(terminalUrls.length, 2);
+  assert.equal(new URL(terminalUrls[0]).origin, 'wss://nemoclaw-new-session.gobrev.dev');
+  const fallback = new URL(terminalUrls[1]);
+  assert.equal(fallback.origin, 'wss://openclaw-cors-proxy.experiments.courses.nvidia.com');
+  assert.equal(fallback.searchParams.get('access_provider'), 'pomerium');
+  assert.equal(fallback.searchParams.get('access_session'), 'skybridge-session');
+  assert.equal(fallback.pathname, '/https/nemoclaw-new-session.gobrev.dev/ws/terminal');
+});
+
 test('Cloudflare terminal retries through relay only after direct failure', async () => {
   const launchable = 'https://nemoclaw-test.brevlab.com';
   connection.setOpenClawConnection({

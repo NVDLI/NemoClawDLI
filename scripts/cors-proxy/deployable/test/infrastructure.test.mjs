@@ -33,13 +33,13 @@ test('both Lambda URLs stream and require distinct origin-only secrets', () => {
   assert.deepEqual(runtimeHeader.HeaderValue, { Ref: 'RuntimeRelaySharedSecret' });
 });
 
-test('runtime HTTP forwarding remains constrained to both approved host families', () => {
+test('runtime HTTP forwarding remains constrained to approved host families', () => {
   const variable = template.Resources.RuntimeFunction.Properties.Environment
     .Variables.UPSTREAM_HOST_ALLOWLIST;
   assert.deepEqual(variable, { Ref: 'RuntimeHostAllowlist' });
   assert.deepEqual(
     template.Parameters.RuntimeHostAllowlist.AllowedValues,
-    ['.brevlab.com,.apps.run.brev.nvidia.com'],
+    ['.brevlab.com,.apps.run.brev.nvidia.com,.gobrev.dev'],
   );
 });
 
