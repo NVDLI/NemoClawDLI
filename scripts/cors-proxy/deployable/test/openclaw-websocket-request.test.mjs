@@ -68,6 +68,35 @@ test('allows CloudFront to omit viewer handshake headers and lets the upstream c
   assert.deepEqual(Object.keys(request.cookies), ['CF_Authorization']);
 });
 
+test('Skybridge gateway and terminal bind session, certificate and origin to the approved host', () => {
+  for (const endpoint of ['/cli/gateway', '/ws/terminal']) {
+    const { handler, updates } = loadHandler();
+    const request = handler(event({
+      uri: '/https/nemoclaw-new-session.gobrev.dev' + endpoint,
+      querystring: {
+        access_provider: { value: 'pomerium' },
+        access_session: { value: 'tab-session' },
+        keep: { value: '1' },
+      },
+      cookies: { cf_clearance: { value: 'browser-only' }, _pomerium: { value: 'wrong-family' } },
+    }));
+    assert.equal(request.uri, endpoint);
+    assert.deepEqual(Object.keys(request.cookies), ['__Host-skybridge-brev-prd']);
+    assert.equal(request.cookies['__Host-skybridge-brev-prd'].value, 'tab-session');
+    assert.deepEqual(Object.keys(request.querystring), ['keep']);
+    assert.equal(updates[0].sni, 'nemoclaw-new-session.gobrev.dev');
+    assert.deepEqual([...updates[0].allowedCertificateNames], ['gobrev.dev', '*.gobrev.dev']);
+  }
+  for (const host of ['other-session.gobrev.dev', 'gobrev.dev', 'nemoclaw-demo.gobrev.dev.evil',
+    'nested.nemoclaw-demo.gobrev.dev', 'nemoclaw-.gobrev.dev', 'nemoclaw-' + 'a'.repeat(55) + '.gobrev.dev']) {
+    const { handler, updates } = loadHandler();
+    assert.equal(handler(event({uri:'/https/' + host + '/cli/gateway'})).statusCode, 403, host);
+    assert.equal(updates.length, 0);
+  }
+  const { handler } = loadHandler();
+  assert.equal(handler(event({uri:'/https/nemoclaw-demo.gobrev.dev/cli/gateway'})).statusCode, 400);
+});
+
 test('routes a Pomerium-authenticated gateway without exposing its session upstream', () => {
   const { handler, updates } = loadHandler();
   const request = handler(event({

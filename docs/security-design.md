@@ -126,6 +126,13 @@ new threat, mitigation, or evidence claim.
 
 ## Browser routing by host
 
+NemoClaw launchables on `gobrev.dev` retain the direct-first Pomerium transport.
+Their manual relay fallback uses `__Host-skybridge-brev-prd`, selected from the
+validated target host, and older Pomerium launchables keep `_pomerium`. Neither route
+forwards unrelated browser cookies or treats `cf_clearance` as an identity session.
+The course and relay source changes require separate operator deployment and live
+authentication evidence; local fixtures do not establish upstream acceptance.
+
 | Course host | Model service | NemoClaw runtime |
 |---|---|---|
 | Public static host | Direct HTTPS to the selected model endpoint. The default is NVIDIA-hosted; a presenter may supply a compatible capacity fallback. | Header-authenticated launchables use the configured cross-origin relay. Browser-session launchables keep their HttpOnly session browser-to-launchable: direct WebSockets plus fixed read-only loopback bootstrap through the authenticated terminal. Live external controls require operator evidence. |
@@ -147,6 +154,8 @@ contract.
 | Static host to browser | Same-origin vendored JavaScript and CSS | Host access policy | Exact lock, license inventory, artifact SHA-256, source-reference validation |
 
 Credentials are entered through password fields and retained only for the current browser tab.
+NemoClaw gateway and launchable credentials are bound to their origin. A URL change in another
+tab clears mismatched credentials before routing; older unbound credentials must be entered again.
 Non-secret route preferences may persist in `localStorage`. Credentials are not built into the
 static artifact or sent to repository CI. The model destination is visible and requires an explicit
 save; a query parameter can only prefill it. Prompts, responses, agent commands, and events cross

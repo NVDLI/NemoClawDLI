@@ -90,9 +90,17 @@ try {
                 : command.endsWith('http://127.0.0.1/healthz')
                 ? JSON.stringify({ status: 'ok' })
                 : JSON.stringify({ agent: { dashboardUrl: '/#token=pomerium-probe-token_456' } });
-              this.emit({ type: 'data', data: body }, 1);
-              this.emit({ type: 'exit', code: 0 }, 2);
-              setTimeout(() => this.close(), 3);
+              const deliver = () => {
+                this.emit({ type: 'data', data: body }, 1);
+                this.emit({ type: 'exit', code: 0 }, 2);
+                setTimeout(() => this.close(), 3);
+              };
+              const gate = window.__connectionMetadataGate;
+              if (gate && command.endsWith('http://127.0.0.1/api/agent')) {
+                gate.socket = this;
+                gate.started();
+                gate.pending.then(deliver);
+              } else deliver();
               return;
             }
             window.__gatewayUrls.push(url);
@@ -120,7 +128,11 @@ try {
           }
           if (request.params.message === 'final-only') {
             this.emit({ type: 'event', event: 'chat', payload: {
-              runId, state: 'final', message: { content: [{ text: 'final-only answer' }] },
+              runId, sessionKey: 'unrelated-session', state: 'final',
+              message: { content: [{ text: 'unrelated final must be ignored' }] },
+            } }, 1);
+            this.emit({ type: 'event', event: 'chat', payload: {
+              runId, sessionKey, state: 'final', message: { content: [{ text: 'final-only answer' }] },
             } }, 5); return;
           }
           const noise = '/usr/bin/sh: 1: cannot create /proc/self/oom_score_adj: Permission denied';
@@ -130,7 +142,7 @@ try {
           this.emit(frame('assistant', { text: 'final answer' }), 12);
           this.emit(frame('lifecycle', { phase: 'end' }), 15);
           this.emit({ type: 'event', event: 'chat', payload: {
-            runId, state: 'final', message: { content: [{ text: 'final answer after tools' }] },
+            runId, sessionKey, state: 'final', message: { content: [{ text: 'final answer after tools' }] },
           } }, 25);
         }
         close() { this.readyState = 3; this.onclose?.(); }
@@ -553,8 +565,14 @@ try {
         },
         usage: () => {},
       };
-      const text = await mod.openclawChat(message, { session, view, finalGraceMs: 50, idleMs: 1000, totalMs: 2000 });
-      return { text, tokens: tokens.join(''), tools: tools.map(node => ({
+      let text = '', failure = '';
+      try {
+        text = await mod.openclawChat(message, { session, view, idleMs: 1000, totalMs: 2000 });
+      } catch (error) {
+        if (message !== 'empty-turn') throw new Error(`${message}: ${error.message}`);
+        failure = error.message;
+      }
+      return { text, failure, tokens: tokens.join(''), tools: tools.map(node => ({
         label: node.querySelector('summary')?.textContent || '',
         body: node.querySelector('.chatui-tool-body')?.textContent || '',
         error: node.classList.contains('err'),
@@ -595,14 +613,101 @@ try {
     `shell-noise boundary changed: ${JSON.stringify(result.noiseBoundary)}`);
   ok(result.chatContract.finalOnly.text === 'final-only answer' && result.chatContract.finalOnly.tokens === 'final-only answer',
     `final-only gateway text did not reach the UI: ${JSON.stringify(result.chatContract.finalOnly)}`);
-  ok(/without a displayable reply/.test(result.chatContract.empty.text) &&
-     !/\(no answer\)/.test(result.chatContract.empty.tokens),
-    `empty gateway turn retained the no-answer dead end: ${JSON.stringify(result.chatContract.empty)}`);
+  // Lifecycle end without chat.final must fail instead of completing an empty reply.
+  ok(/No matching agent activity before the idle deadline/.test(result.chatContract.empty.failure) &&
+     result.chatContract.empty.text === '' && result.chatContract.empty.tokens === '',
+    `incomplete gateway turn was treated as a completed reply: ${JSON.stringify(result.chatContract.empty)}`);
   ok(result.chatContract.gatewayUrls.length > 0 &&
      result.chatContract.gatewayUrls.every(url =>
        /^wss:\/\/nemoclaw-test123\.brevlab\.com\/cli\/gateway$/.test(url)) &&
      result.chatContract.gatewayUrls.every(url => !/access_session|cf_access_jwt|_pomerium/.test(url)),
     `Cloudflare chat sockets did not keep authentication sender-bound: ${JSON.stringify(result.chatContract.gatewayUrls)}`);
+  result.skybridgeAuditIsolation = await page.evaluate(async () => {
+    const connection = await import('./scripts/_connection.js');
+    const { mountOpenClawConnectionAudit } = await import('./scripts/_openclaw.js');
+    connection.setOpenClawConnection({
+      rawUrl: 'https://nemoclaw-old.apps.run.brev.nvidia.com',
+      accessSession: 'old-audit-session', token: 'old-audit-token',
+    });
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    mountOpenClawConnectionAudit(host);
+    const input = host.querySelector('.claw-url');
+    const session = host.querySelector('.claw-access-session');
+    input.value = 'https://nemoclaw-new.gobrev.dev/onboard';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    const rotated = connection.getOpenClawConnection();
+    const cleared = !session.value && !rotated.accessSession && !rotated.token;
+    const nativeCookieHint = session.placeholder.includes('__Host-skybridge-brev-prd');
+    session.value = 'new-audit-session';
+    session.dispatchEvent(new Event('input', { bubbles: true }));
+    input.value = 'https://nemoclaw-new.gobrev.dev/dashboard';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    const sameHostRetained = connection.getOpenClawConnection().accessSession === 'new-audit-session';
+    input.value = '';
+    input.dispatchEvent(new Event('input', {bubbles:true}));
+    const empty = connection.getOpenClawConnection();
+    const blankCleared = !empty.rawUrl && !empty.accessSession && !empty.token;
+    host.remove();
+    return { cleared, nativeCookieHint, sameHostRetained, blankCleared };
+  });
+  ok(Object.values(result.skybridgeAuditIsolation).every(Boolean),
+    `audit input events lost host-bound credentials: ${JSON.stringify(result.skybridgeAuditIsolation)}`);
+  result.skybridgeAuditPendingEdit = await page.evaluate(async () => {
+    const connection = await import('./scripts/_connection.js');
+    const {mountOpenClawConnectionAudit} = await import('./scripts/_openclaw.js');
+    const findings = {};
+    for (const action of ['edit', 'stop']) {
+      connection.setOpenClawConnection({rawUrl:'https://nemoclaw-old.gobrev.dev',accessSession:'old-session'});
+      const host = document.createElement('div');
+      document.body.appendChild(host);
+      const widget = mountOpenClawConnectionAudit(host);
+      let release, started;
+      const pending = new Promise(resolve => {release = resolve;});
+      const entered = new Promise(resolve => {started = resolve;});
+      const gate = {pending, started};
+      window.__connectionMetadataGate = gate;
+      try {
+        widget.run();
+        await entered;
+        if (action === 'edit') {
+          const input = host.querySelector('.claw-url');
+          input.value = 'https://nemoclaw-next.gobrev.dev/onboard';
+          input.dispatchEvent(new Event('input', {bubbles:true}));
+          const session = host.querySelector('.claw-access-session');
+          session.value = 'replacement-session';
+          session.dispatchEvent(new Event('input', {bubbles:true}));
+        } else {
+          const stop = host.querySelector('.claw-audit-stop');
+          findings.stopVisible = !stop.hidden && !stop.disabled;
+          stop.click();
+        }
+        release();
+        await new Promise(resolve => setTimeout(resolve, 10));
+        const current = connection.getOpenClawConnection();
+        findings[action + 'Aborted'] = gate.socket.readyState === 3;
+        findings[action + 'Credentials'] = !current.token && (action === 'edit'
+          ? current.rawUrl === 'https://nemoclaw-next.gobrev.dev' && current.accessSession === 'replacement-session'
+          : current.rawUrl === 'https://nemoclaw-old.gobrev.dev' && current.accessSession === 'old-session');
+        findings[action + 'Reset'] = host.querySelector('.claw-connection-audit').dataset.state === 'ready' &&
+          host.querySelector('.claw-audit-summary').dataset.status === 'pending' &&
+          [...host.querySelectorAll('.claw-audit-explain')].every(item => !item.textContent);
+        findings[action + 'Reusable'] = !host.querySelector('.claw-audit-run').disabled;
+        findings[action + 'StopHidden'] = host.querySelector('.claw-audit-stop').hidden;
+        delete window.__connectionMetadataGate;
+        host.querySelector('.claw-audit-run').click();
+        const deadline = performance.now() + 5000;
+        while (host.querySelector('.claw-connection-audit').dataset.state === 'running' && performance.now() < deadline) {
+          await new Promise(resolve => setTimeout(resolve, 10));
+        }
+        findings[action + 'Retry'] = host.querySelector('.claw-connection-audit').dataset.state === 'succeeded' &&
+          [...host.querySelectorAll('.claw-audit-step')].every(item => item.dataset.status === 'passed');
+      } finally {delete window.__connectionMetadataGate; host.remove();}
+    }
+    return findings;
+  });
+  ok(Object.values(result.skybridgeAuditPendingEdit).every(Boolean),
+    `pending audit restored obsolete credentials: ${JSON.stringify(result.skybridgeAuditPendingEdit)}`);
   ok(!errors.length, `page errors: ${JSON.stringify(errors)}`);
   if (screenshot) {
     await page.locator('#model-route-settings').scrollIntoViewIfNeeded();

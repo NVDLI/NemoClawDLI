@@ -13,6 +13,7 @@ export const OPENCLAW_TOKEN_KEY = "nemoclaw_clawtoken";
 export const OPENCLAW_ACCESS_JWT_KEY = "nemoclaw_clawcfjwt";
 export const OPENCLAW_ACCESS_PROVIDER_KEY = "nemoclaw_openclaw_access_provider_v1";
 export const OPENCLAW_ACCESS_SESSION_KEY = "nemoclaw_openclaw_access_session_v1";
+const OPENCLAW_CREDENTIAL_ORIGIN_KEY = "nemoclaw_openclaw_credential_origin_v1";
 
 function storage() {
   try { return globalThis.localStorage || null; }
@@ -22,8 +23,24 @@ function storage() {
 // Gateway and access credentials are tab-scoped. The launchable URL and routing may persist,
 // but another course page on the shared CDN must not inherit credentials from a prior session.
 function secretStorage() {
-  try { return globalThis.sessionStorage || storage(); }
-  catch (_) { return storage(); }
+  try { return globalThis.sessionStorage || null; }
+  catch (_) { return null; }
+}
+
+function credentialOrigin(rawUrl) {
+  try { return rawUrl ? new URL(rawUrl, pageBase()).origin : ""; }
+  catch (_) { return ""; }
+}
+
+function boundSecretStorage(rawUrl) {
+  const secrets = secretStorage();
+  // Routing persists across tabs; credentials never follow another tab's host change.
+  // Older credentials have no provable origin and must be entered again.
+  if (secrets?.getItem(OPENCLAW_CREDENTIAL_ORIGIN_KEY) !== credentialOrigin(rawUrl)) {
+    for (const key of [OPENCLAW_TOKEN_KEY, OPENCLAW_ACCESS_SESSION_KEY,
+      OPENCLAW_ACCESS_JWT_KEY, OPENCLAW_CREDENTIAL_ORIGIN_KEY]) secrets?.removeItem(key);
+  }
+  return secrets;
 }
 
 function browserLocation() {
@@ -37,17 +54,18 @@ function isPersonalWorkerHost(hostname) {
 
 function isBrevLaunchableFamily(hostname) {
   const host = String(hostname || "").toLowerCase();
-  return host.endsWith(".brevlab.com") || host.endsWith(".apps.run.brev.nvidia.com");
+  return host.endsWith(".brevlab.com") || host.endsWith(".apps.run.brev.nvidia.com") || host.endsWith(".gobrev.dev");
 }
 
-// The two supported account-specific launchable hostname families:
-// https://nemoclaw-<id>.apps.run.brev.nvidia.com and https://nemoclaw-<id>.brevlab.com.
+// Supported account-specific launchables share the NemoClaw prefix. Authentication
+// stays bound to the host family, including Brev's Skybridge cookie on gobrev.dev.
 // Every consumer that must recognize a launchable reads this one predicate instead of
 // repeating the host list.
 export function isOpenClawLaunchableHost(hostname) {
   const host = String(hostname || "");
   return /^nemoclaw-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.brevlab\.com$/i.test(host) ||
-    /^nemoclaw-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.apps\.run\.brev\.nvidia\.com$/i.test(host);
+    /^nemoclaw-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.apps\.run\.brev\.nvidia\.com$/i.test(host) ||
+    /^nemoclaw-[a-z0-9](?:[a-z0-9-]{0,52}[a-z0-9])?\.gobrev\.dev$/i.test(host);
 }
 
 export function accessProviderForOpenClawUrl(rawUrl, selected = "auto") {
@@ -62,12 +80,20 @@ export function accessProviderForOpenClawUrl(rawUrl, selected = "auto") {
     throw new Error("Use the NemoClaw App URL: https://nemoclaw-<id>.brevlab.com or https://nemoclaw-<id>.apps.run.brev.nvidia.com");
   }
   const inferred = isOpenClawLaunchableHost(host)
-    ? (host.toLowerCase().endsWith(".apps.run.brev.nvidia.com") ? "pomerium" : "cloudflare")
+    ? (host.toLowerCase().endsWith(".brevlab.com") ? "cloudflare" : "pomerium")
     : "auto";
   if (choice !== "auto" && inferred !== "auto" && choice !== inferred) {
     throw new Error("Selected access provider does not match the launchable URL");
   }
   return choice === "auto" ? inferred : choice;
+}
+
+export function openclawAccessCookieName(rawUrl, accessProvider = "auto") {
+  const provider = accessProviderForOpenClawUrl(rawUrl, accessProvider);
+  if (provider === "cloudflare") return "CF_Authorization";
+  if (provider !== "pomerium") return "";
+  const host = new URL(normalizeOpenClawLaunchableUrl(rawUrl), pageBase()).hostname;
+  return host.toLowerCase().endsWith(".gobrev.dev") ? "__Host-skybridge-brev-prd" : "_pomerium";
 }
 
 function pageBase() {
@@ -254,7 +280,7 @@ export function migrateOpenClawConnectionStorage() {
     accessProvider = "auto";
     target.setItem(OPENCLAW_ACCESS_PROVIDER_KEY, accessProvider);
   }
-  const secrets = secretStorage();
+  const secrets = boundSecretStorage(clean);
   const accessSession = secrets?.getItem(OPENCLAW_ACCESS_SESSION_KEY) ||
     secrets?.getItem(OPENCLAW_ACCESS_JWT_KEY) || "";
   const effective = openclawHttpUrl(
@@ -324,6 +350,8 @@ export function setOpenClawConnection({ rawUrl, token, accessProvider, accessSes
   target.removeItem(OPENCLAW_TOKEN_KEY);
   if (nextAccessSession) secrets?.setItem(OPENCLAW_ACCESS_SESSION_KEY, nextAccessSession);
   else secrets?.removeItem(OPENCLAW_ACCESS_SESSION_KEY);
+  if (clean && (nextToken || nextAccessSession)) secrets?.setItem(OPENCLAW_CREDENTIAL_ORIGIN_KEY, credentialOrigin(clean));
+  else secrets?.removeItem(OPENCLAW_CREDENTIAL_ORIGIN_KEY);
   target.removeItem(OPENCLAW_ACCESS_SESSION_KEY);
   secrets?.removeItem(OPENCLAW_ACCESS_JWT_KEY);
   target.removeItem(OPENCLAW_ACCESS_JWT_KEY);
@@ -345,13 +373,7 @@ export function getOpenClawConnection() {
   const migrated = migrateOpenClawConnectionStorage();
   const accessProvider = target?.getItem(OPENCLAW_ACCESS_PROVIDER_KEY) || "auto";
   const resolvedAccessProvider = accessProviderForOpenClawUrl(migrated.rawUrl, accessProvider);
-  // One-time migration from older builds that persisted credentials in localStorage.
-  const legacyToken = target?.getItem(OPENCLAW_TOKEN_KEY) || "";
-  const legacySession = target?.getItem(OPENCLAW_ACCESS_SESSION_KEY) || target?.getItem(OPENCLAW_ACCESS_JWT_KEY) || "";
-  if (legacyToken && !secrets?.getItem(OPENCLAW_TOKEN_KEY)) secrets?.setItem(OPENCLAW_TOKEN_KEY, legacyToken);
-  if (legacySession && !secrets?.getItem(OPENCLAW_ACCESS_SESSION_KEY)) {
-    secrets?.setItem(OPENCLAW_ACCESS_SESSION_KEY, legacySession);
-  }
+  // Legacy persistent credentials lack an origin binding; discard instead of replaying.
   target?.removeItem(OPENCLAW_TOKEN_KEY);
   target?.removeItem(OPENCLAW_ACCESS_SESSION_KEY);
   target?.removeItem(OPENCLAW_ACCESS_JWT_KEY);

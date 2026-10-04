@@ -98,6 +98,10 @@ export function getHostAllowlist() {
 export function isHostAllowed(host, allowlist = getHostAllowlist()) {
   const h = String(host || '').toLowerCase();
   if (!h || !/^[a-z0-9.-]+$/.test(h)) return false;        // reject ports, userinfo, junk
+  // The new public suffix hosts unrelated apps too. Even an operator suffix entry
+  // must not expand credential-bearing Skybridge routing beyond NemoClaw apps.
+  if ((h === 'gobrev.dev' || h.endsWith('.gobrev.dev')) &&
+      !/^nemoclaw-[a-z0-9](?:[a-z0-9-]{0,52}[a-z0-9])?\.gobrev\.dev$/.test(h)) return false;
   return allowlist.some((entry) => entry.startsWith('.')
     ? (h === entry.slice(1) || h.endsWith(entry))
     : h === entry);
@@ -139,6 +143,7 @@ export function accessProviderForHost(hostname) {
   const host = String(hostname || '').toLowerCase();
   if (host === 'brevlab.com' || host.endsWith('.brevlab.com')) return 'cloudflare';
   if (host === 'apps.run.brev.nvidia.com' || host.endsWith('.apps.run.brev.nvidia.com')) return 'pomerium';
+  if (/^nemoclaw-[a-z0-9](?:[a-z0-9-]{0,52}[a-z0-9])?\.gobrev\.dev$/.test(host)) return 'pomerium';
   return '';
 }
 
@@ -243,7 +248,8 @@ export function filteredRequestHeaders(inputHeaders = {}, upstreamHost = '') {
   if (accessSession && expectedProvider === 'cloudflare') {
     headers.set('Cookie', `CF_Authorization=${accessSession}`);
   } else if (accessSession && expectedProvider === 'pomerium') {
-    headers.set('Cookie', `_pomerium=${accessSession}`);
+    const cookieName = upstreamHost.toLowerCase().endsWith('.gobrev.dev') ? '__Host-skybridge-brev-prd' : '_pomerium';
+    headers.set('Cookie', `${cookieName}=${accessSession}`);
   }
 
   return headers;

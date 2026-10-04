@@ -102,10 +102,10 @@
       "source": "Supported NemoClaw launchables normally report <code>tools.toolSearch=false</code>. A custom configuration can still enable it, so the health check reads the live value before Recover changes anything:",
       "value": "受支持的 NemoClaw launchable 通常会报告 <code>tools.toolSearch=false</code>。自定义配置仍可将其启用，因此运行状况检查会先读取实时值，之后 Recover 才会进行任何更改："
     },
-    "rich.44904fdf3de4": {
+    "rich.476ad58d04d0": {
       "type": "rich",
-      "source": "Keep the signed-in launchable tab open. Use <code>_pomerium</code> for an\n        <code>apps.run.brev.nvidia.com</code> host or <code>CF_Authorization</code> for a\n        <code>brevlab.com</code> host.",
-      "value": "保持已登录的 launchable 标签页处于打开状态。对于 <code>apps.run.brev.nvidia.com</code> 主机，请使用 <code>_pomerium</code>；对于 <code>brevlab.com</code> 主机，请使用 <code>CF_Authorization</code>。"
+      "source": "Keep the signed-in launchable tab open and use <code>__Host-skybridge-brev-prd</code> for a\n        <code>gobrev.dev</code> host, <code>_pomerium</code> for an\n        <code>apps.run.brev.nvidia.com</code> host or <code>CF_Authorization</code> for a\n        <code>brevlab.com</code> host.",
+      "value": "保持已登录的 launchable 标签页处于打开状态，并按主机选择浏览器 Cookie：<code>gobrev.dev</code> 使用 <code>__Host-skybridge-brev-prd</code>，<code>apps.run.brev.nvidia.com</code> 使用 <code>_pomerium</code>，<code>brevlab.com</code> 使用 <code>CF_Authorization</code>。"
     },
     "rich.4efe9c20b838": {
       "type": "rich",
@@ -141,6 +141,11 @@
       "type": "rich",
       "source": "<strong>Chrome, Edge, or Brave:</strong> open Developer Tools, select\n        <strong>Application</strong> → <strong>Storage</strong> → <strong>Cookies</strong>, then select\n        the launchable origin.",
       "value": "<strong>Chrome、Edge 或 Brave：</strong>打开开发者工具，依次选择<strong>Application</strong> → <strong>Storage</strong> → <strong>Cookies</strong>，然后选择 launchable 的源。"
+    },
+    "rich.92e699923c7f": {
+      "type": "rich",
+      "source": "The access session, an <code>_pomerium</code> or <code>CF_Authorization</code> browser cookie,\n        authorizes access to older launchables, and Skybridge launchables use\n        <code>__Host-skybridge-brev-prd</code> for the same purpose.",
+      "value": "访问会话通过 <code>_pomerium</code> 或 <code>CF_Authorization</code> 浏览器 Cookie 授权访问旧版 launchable，而 Skybridge launchable 则使用 <code>__Host-skybridge-brev-prd</code> 进行同样的授权。"
     },
     "rich.97e76bf6cfe3": {
       "type": "rich",
@@ -206,11 +211,6 @@
       "type": "rich",
       "source": "<strong>Cause:</strong> toolSearch lets the model reach its tools by writing\n        code for a bridge (<code>tool_search_code</code> &middot; &ldquo;run bridge\n        code&rdquo;), and the model loops on that bridge instead of calling\n        <code>exec</code>.\n      ",
       "value": "<strong>原因：</strong>toolSearch 允许模型通过为桥接器编写代码（<code>tool_search_code</code> &middot; &ldquo;运行桥接代码&rdquo;）来访问工具，导致模型在该桥接器上反复循环，而不调用 <code>exec</code>。\n      "
-    },
-    "rich.eed8805240f3": {
-      "type": "rich",
-      "source": "The access session, an <code>_pomerium</code> or <code>CF_Authorization</code> browser cookie,\n        authorizes reaching the launchable at all.",
-      "value": "访问会话是名为 <code>_pomerium</code> 或 <code>CF_Authorization</code> 的浏览器 Cookie，用于授权访问 launchable 本身。"
     },
     "rich.eef3154c49c6": {
       "type": "rich",
