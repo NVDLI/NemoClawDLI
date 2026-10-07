@@ -143,6 +143,12 @@ async function boundedOpenClawBootstrap(read, signal, requestTimeoutMs) {
   }
 }
 
+function isFrontendHealth(path, rawUrl) {
+  // Skybridge serves health at the frontend, outside the launchable's loopback server.
+  return path === "/healthz" &&
+    openclawAccessCookieName(rawUrl) === "__Host-skybridge-brev-prd";
+}
+
 export async function openclawBootstrapRequest(path = "/api/agent", {
   signal = null, onRetry = null, requestTimeoutMs = 20000, waitForReadyMs = 30 * 60 * 1000,
 } = {}) {
@@ -151,7 +157,8 @@ export async function openclawBootstrapRequest(path = "/api/agent", {
        from the normalized Module 3a connection. Pomerium reads these fixed endpoints from
        launchable loopback over the terminal WebSocket, which tries the signed-in browser
        first and then the approved provider-bound relay. Returns response metadata plus
-       parsed JSON without exposing either access credential. */
+       parsed JSON without exposing either access credential. Skybridge health uses the
+       frontend HTTP route because its launchable loopback does not serve it. */
   async function read(signal) {
     const actionPath = String(path || "");
     if (!OPENCLAW_BOOTSTRAP_PATHS.has(actionPath)) {
@@ -163,12 +170,14 @@ export async function openclawBootstrapRequest(path = "/api/agent", {
     if (!rawUrl) throw new Error("Set the launchable URL in the Module 3a probe first.");
     const provider = accessProviderForOpenClawUrl(rawUrl, connection.accessProvider);
     if (provider === "pomerium") {
-      const result = await openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal });
-      return {
-        ...result,
-        headers: {},
-        displayUrl: rawUrl + actionPath,
-      };
+      if (!isFrontendHealth(actionPath, rawUrl)) {
+        const result = await openclawLoopbackProbe(actionPath, { baseUrl: rawUrl, signal });
+        return {
+          ...result,
+          headers: {},
+          displayUrl: rawUrl + actionPath,
+        };
+      }
     }
 
     const route = openclawHttpUrl(
@@ -188,7 +197,7 @@ export async function openclawBootstrapRequest(path = "/api/agent", {
     }
     // /api/agent discovers the gateway token. A stale token from another
     // launchable must not prevent that replacement.
-    if (actionPath !== "/api/agent" && connection.token) {
+    if (actionPath !== "/api/agent" && provider !== "pomerium" && connection.token) {
       headers.Authorization = "Bearer " + connection.token;
     }
     const response = await fetch(route.url, {
@@ -308,7 +317,7 @@ function accessCredentialDelivery(provider, viaProxy, accessSession) {
 
 function openClawHttpDiagnostic(path, connection) {
   const provider = accessProviderForOpenClawUrl(connection.rawUrl, connection.accessProvider);
-  const viaLoopback = provider === "pomerium";
+  const viaLoopback = provider === "pomerium" && !isFrontendHealth(path, connection.rawUrl);
   const route = openclawHttpUrl(
     connection.rawUrl,
     path,
@@ -324,7 +333,7 @@ function openClawHttpDiagnostic(path, connection) {
       headers["X-OpenClaw-Access-Session"] = "<redacted>";
     }
   }
-  if (path !== "/api/agent" && connection.token) headers.Authorization = "Bearer <redacted>";
+  if (path !== "/api/agent" && provider !== "pomerium" && connection.token) headers.Authorization = "Bearer <redacted>";
   return {
     provider,
     route,
@@ -1427,7 +1436,8 @@ export function mountEndpointProbe(targetSel, opts = {}) {
     // /api/agent discovers this token. Do not let a token retained from a
     // different launchable prevent discovery of its replacement.
     const discoversToken = !!opts.autofillToken && actionPath === "/api/agent";
-    if (token && !discoversToken) headers["Authorization"] = "Bearer " + token;
+    if (token && !discoversToken && !(isOpenClaw && actionPath === "/healthz" &&
+        accessProvider === "pomerium")) headers["Authorization"] = "Bearer " + token;
     if (route.viaProxy && accessSession) {
       if (accessProvider === "auto") {
         setOutput("Choose Cloudflare Access or Pomerium for this launchable.", "err", "blocked");
@@ -1450,6 +1460,7 @@ export function mountEndpointProbe(targetSel, opts = {}) {
     const t0 = performance.now();
     try {
       const useLoopback = isOpenClaw && accessProvider === "pomerium" &&
+        !isFrontendHealth(actionPath, base) &&
         method === "GET" &&
         !body && (actionPath === "/healthz" || actionPath === "/api/agent");
       const loopback = useLoopback

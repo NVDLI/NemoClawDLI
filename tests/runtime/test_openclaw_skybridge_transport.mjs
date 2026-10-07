@@ -132,3 +132,55 @@ test('late metadata cannot restore credentials after cancellation or connection 
     assert.deepEqual(connection.getOpenClawConnection(),expected);
   } finally {globalThis.fetch = originalFetch;}
 });
+
+test('Skybridge health uses the frontend HTTP route without forwarding the gateway token', async () => {
+  const originalFetch = globalThis.fetch, originalSocket = globalThis.WebSocket;
+  try {
+    globalThis.WebSocket = class {constructor() {throw new Error('Native loopback /healthz is not available');}};
+    for (const sameOrigin of [true, false]) {
+      globalThis.location = new URL(sameOrigin ? launchable + '/course.html' : 'https://course.example/course.html');
+      connection.setOpenClawConnection({rawUrl:launchable, token:'gateway-sentinel', accessSession:sameOrigin ? '' : 'tab-session'});
+      for (const status of [200, 503]) {
+        let called = false;
+        globalThis.fetch = async (url, options) => {
+          called = true;
+          assert.equal(url, sameOrigin ? launchable + '/healthz' : connection.DEFAULT_OPENCLAW_PROXY_BASE + '/https/' + new URL(launchable).host + '/healthz');
+          assert.equal(options.credentials, sameOrigin ? 'include' : 'same-origin');
+          assert.equal(options.headers.Authorization, undefined);
+          assert.equal(options.headers.Cookie, undefined);
+          assert.equal(options.headers['X-OpenClaw-Access-Session'], sameOrigin ? undefined : 'tab-session');
+          return new Response('health', {status});
+        };
+        const response = await openclaw.openclawBootstrapRequest('/healthz');
+        assert.equal(called, true);
+        assert.equal(response.status, status);
+        assert.equal(response.ok, status === 200);
+      }
+    }
+  } finally {globalThis.fetch = originalFetch; globalThis.WebSocket = originalSocket;}
+});
+
+test('native metadata and legacy health preserve terminal loopback discovery', async () => {
+  const originalFetch = globalThis.fetch, originalSocket = globalThis.WebSocket;
+  try {
+    globalThis.fetch = async () => {throw new Error('Loopback reads must not use cross-origin HTTP');};
+    globalThis.WebSocket = class {
+      constructor(url) {
+        assert.equal(new URL(url).pathname, '/ws/terminal');
+        assert.match(new URL(url).searchParams.get('cmd'), /^curl -fsS --max-time 10 http:\/\/127\.0\.0\.1\/(api\/agent|healthz)$/);
+        setTimeout(() => {
+          this.onopen?.();
+          this.onmessage?.({data:JSON.stringify({type:'data',data:JSON.stringify({agent:{dashboardUrl:'/#token=discovered-sentinel'}})})});
+          this.onmessage?.({data:JSON.stringify({type:'exit',code:0})});
+        },0);
+      }
+      close() {}
+    };
+    for (const [url, path] of [[launchable, '/api/agent'], ['https://nemoclaw-old.apps.run.brev.nvidia.com', '/healthz']]) {
+      connection.setOpenClawConnection({rawUrl:url,accessSession:'',token:''});
+      const response = await openclaw.openclawBootstrapRequest(path);
+      assert.equal(response.transport,'direct-terminal-loopback');
+      assert.equal(response.ok,true);
+    }
+  } finally {globalThis.fetch = originalFetch; globalThis.WebSocket = originalSocket;}
+});
