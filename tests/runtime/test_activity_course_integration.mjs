@@ -658,8 +658,81 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     assert.equal(courseCompleted, true);
     assert.equal(eventWrites.filter(event => event.type === 'completed').length, 1);
 
+    // Follow every rendered exercise link, then deliver the external exercise's
+    // success evidence. The course runtime, adapter, SDK, requests and UI are real;
+    // the API and exercise-success signals are controlled fixtures in this test.
+    await page.evaluate(() => { window.OneTrust.RejectAll(); sessionStorage.clear(); });
+    confirmedIds.clear();
+    courseCompleted = false;
+    const journeyStart = apiRequests.length;
+    const journeyWrites = eventWrites.length;
+    await page.goto(`http://127.0.0.1:${port}/${COURSE_ROOT}/index.html`);
+    await page.locator('.activity-control-toggle').click();
+    await page.waitForTimeout(50);
+    assert.equal(apiRequests.length, journeyStart, 'cookie rejection makes no Activity API calls');
+    assert.equal(await page.locator('[data-activity-enable]').isVisible(), true);
+    assert.equal(await page.locator('[data-activity-milestones]').evaluate(node => node.inert), true);
+    await page.locator('[data-activity-enable]').click();
+    await page.waitForFunction(() => window.__nemoclawActivity?.snapshot().phase === 'connected');
+    assert.equal(await page.locator('.course-milestones li').count(), IDS.length);
+    assert.equal(apiRequests.slice(journeyStart).filter(request => request.method === 'POST'
+      && request.pathname.endsWith('/activity-sessions')).length, 1);
 
-
+    const successfulExercises = {
+      '01a:model-call-verified': [['api-key-verified', {}], ['run-succeeded', { cellId: 'cell-onecall', hasContent: true }]],
+      '01b:react-loop-complete': [['chat-completed', { containerId: 'react-artifact', successCount: 1, hasAnswer: true }]],
+      '01c:tool-roundtrip-complete': [['chat-completed', { containerId: 'tools-artifact', successCount: 1, hasAnswer: true }]],
+      '02a:routed-workflow-complete': [['chat-completed', { containerId: 'router-artifact', successCount: 1, hasAnswer: true }]],
+      '02b:grounded-answer-complete': [['chat-completed', { containerId: 'rag-artifact', successCount: 1, hasAnswer: true }]],
+      '02c:deep-research-complete': [['chat-completed', { containerId: 'deep-artifact', successCount: 1, hasAnswer: true }]],
+      '03a:nemoclaw-connected': [['connection-audit-passed', {}]],
+      '03b:workspace-inspected': [['run-succeeded', { cellId: 'cell-introspect' }], ['run-succeeded', { cellId: 'cell-workspace-term' }]],
+      '03c:scheduled-run-complete': [['canvas-node-succeeded', { canvasId: 'probe-cron', nodeId: 'cr-run', runObserved: true }], ['canvas-node-succeeded', { canvasId: 'probe-cron', nodeId: 'cr-rm', cleanupSucceeded: true }]],
+      '04a:policy-boundary-verified': [['run-succeeded', { cellId: 'cell-live-policy', hasAgent: true }], ['canvas-node-succeeded', { canvasId: 'cell-predict-confirm', nodeId: 'compare', policyAgreed: true }]],
+      '04b:live-agent-operated': [['live-agent-operated', {}]],
+    };
+    assert.deepEqual(Object.keys(successfulExercises), IDS, 'every course milestone has browser evidence coverage');
+    for (const [index, id] of IDS.entries()) {
+      if (!await page.locator('.activity-control-panel').isVisible()) {
+        await page.locator('.activity-control-toggle').click();
+      }
+      await page.locator('.course-milestones li').nth(index).locator('a').click();
+      await page.waitForFunction(() => window.__nemoclawActivity?.snapshot().phase === 'connected');
+      const milestone = ACTIVITY_MILESTONES[id];
+      assert.equal(new URL(page.url()).pathname.split('/').pop(), milestone.href.split('#')[0]);
+      assert.equal(new URL(page.url()).hash, '#' + milestone.href.split('#')[1]);
+      await page.locator('.activity-control-toggle').click();
+      await page.waitForFunction(count => document.querySelectorAll('.course-milestones li[data-completed="true"]').length === count, index);
+      assert.equal(confirmedIds.size, index, 'navigation alone cannot complete ' + id);
+      const events = successfulExercises[id];
+      for (const [eventIndex, [type, detail]] of events.entries()) {
+        await page.evaluate(({ type, detail }) => window.dispatchEvent(new CustomEvent('nemoclaw:' + type, { detail })), { type, detail });
+        if (eventIndex < events.length - 1) {
+          await page.waitForTimeout(25);
+          assert.equal(confirmedIds.size, index, 'partial evidence cannot complete ' + id);
+        }
+      }
+      await page.waitForFunction(count => document.querySelectorAll('.course-milestones li[data-completed="true"]').length === count, index + 1);
+      assert.equal(await page.locator('.course-milestones li').nth(index).locator('.milestone-state').textContent(), 'Saved');
+      assert.equal(confirmedIds.size, index + 1);
+    }
+    assert.deepEqual(eventWrites.slice(journeyWrites).map(event => event.payload.milestone_id), IDS);
+    assert.equal(apiRequests.slice(journeyStart).filter(request => request.method === 'POST'
+      && request.pathname.endsWith('/activity-sessions')).length, 1, 'navigation reuses the same authorized session');
+    await page.goto(`http://127.0.0.1:${port}/${COURSE_ROOT}/04c-going-further.html`);
+    await page.waitForFunction(() => !document.querySelector('#finish-course').disabled);
+    await page.locator('#finish-course').click();
+    await page.waitForFunction(() => document.querySelector('#finish-course').textContent === 'Course completed');
+    assert.equal(eventWrites.slice(journeyWrites).filter(event => event.type === 'completed').length, 1);
+    await page.reload();
+    await page.locator('.activity-control-toggle').click();
+    await page.waitForFunction(() => document.querySelectorAll('.course-milestones li[data-completed="true"]').length === 11);
+    const beforeWithdrawal = apiRequests.length;
+    await page.evaluate(() => window.OneTrust.RejectAll());
+    await page.waitForTimeout(50);
+    assert.equal(apiRequests.length, beforeWithdrawal);
+    assert.equal(await page.locator('[data-activity-enable]').isVisible(), true);
+    assert.equal(await page.locator('[data-activity-milestones]').evaluate(node => node.inert), true);
   } finally {
     await browser?.close();
     await new Promise(resolve => server.close(resolve));

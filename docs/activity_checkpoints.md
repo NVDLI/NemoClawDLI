@@ -1,4 +1,4 @@
-# Activity Checkpoints
+# Activity Milestones
 
 NemoClaw records course progress only after a learner successfully completes a defined activity. Opening a page or selecting a button does not award progress by itself.
 
@@ -14,21 +14,21 @@ An authenticated lab may provide a same-origin transport through `lab_transport.
 
 The Progress panel shows a read-only milestone checklist, with an instruction and an exercise link for each item. The summary counts milestones reached. A checkmark means the authorized API session has a timestamp for that exact milestone. **Waiting to save** distinguishes live local evidence from **Saved** API confirmation. During an outage, previously confirmed milestones remain visible. When performance-cookie consent is absent, the Progress panel shows a muted, non-interactive milestone preview behind an **Enable Milestone Tracking** overlay button that directly grants the `C0002` Performance Cookies category through OneTrust. The preview is excluded from keyboard navigation and assistive technology. The panel does not include privacy, retention, service-status or referral controls. Checkmarks record successful course activities, not a grade or a measure of mastery.
 
-## Progress checkpoints
+## Course milestones
 
-| Section | Checkpoint | Learner action | Acceptance criteria |
+| Section | Milestone ID | Milestone and exercise | Acceptance criteria |
 | --- | --- | --- | --- |
-| 1a | Model call verified | Configure an NVIDIA API key and run the one-call model exercise. | The API key passes verification, the `cell-onecall` exercise finishes successfully, and the model returns non-empty content. |
-| 1b | ReAct loop complete | Complete the ReAct loop activity. | The `react-artifact` activity finishes with at least one successful step and produces an answer. |
-| 1c | Tool round trip complete | Complete the tool-calling activity. | The `tools-artifact` activity finishes with at least one successful step and produces an answer. |
-| 2a | Routed workflow complete | Complete the routing activity. | The `router-artifact` activity finishes with at least one successful step and produces an answer. |
-| 2b | Grounded answer complete | Complete the retrieval-augmented generation activity. | The `rag-artifact` activity finishes with at least one successful step and produces an answer. |
-| 2c | Deep research complete | Complete the deep-research activity. | The `deep-artifact` activity finishes with at least one successful step and produces an answer. |
-| 3a | NemoClaw connected | Configure and test a NemoClaw connection. | The connection audit successfully validates the required metadata, gateway, terminal, and health routes. |
-| 3b | Workspace inspected | Inspect the connected workspace and terminal. | Both the introspection exercise and the workspace terminal exercise finish successfully. |
-| 3c | Scheduled run complete | Create, observe, and clean up a scheduled run. | The scheduled job reports a successful run and the cleanup exercise confirms that it was removed. |
-| 4a | Policy boundary verified | Inspect the live policy and complete the policy comparison. | The live-policy exercise returns an agent, and the comparison exercise confirms agreement with the expected policy boundary. |
-| 4b | Live agent operated | Send a message to the live agent. | A non-command message completes successfully and produces either a streamed response or a non-empty response. |
+| 1a | `01a:model-call-verified` | [Make your first model call](../web/nemoclaw/01a-loop.html#cell-onecall) | Verify your API key, then run the one-call exercise and receive a response. |
+| 1b | `01b:react-loop-complete` | [Complete a ReAct loop](../web/nemoclaw/01b-react.html#react-artifact) | Run the ReAct activity with at least one successful step and a final answer. |
+| 1c | `01c:tool-roundtrip-complete` | [Complete a tool round trip](../web/nemoclaw/01c-tools.html#tools-artifact) | Run the tool-calling activity with a successful step and a final answer. |
+| 2a | `02a:routed-workflow-complete` | [Run a routed workflow](../web/nemoclaw/02a-routing.html#router-artifact) | Complete the routing activity with a successful step and a final answer. |
+| 2b | `02b:grounded-answer-complete` | [Complete the retrieval activity](../web/nemoclaw/02b-rag.html#rag-artifact) | Run the RAG activity with a successful step and a final answer. |
+| 2c | `02c:deep-research-complete` | [Complete a research run](../web/nemoclaw/02c-deep.html#deep-artifact) | Finish the deep-research activity with a successful step and a final answer. |
+| 3a | `03a:nemoclaw-connected` | [Connect to NemoClaw](../web/nemoclaw/03a-kickstart.html#probe-claw) | Pass the connection checks for metadata, gateway, terminal, and health. |
+| 3b | `03b:workspace-inspected` | [Inspect your workspace](../web/nemoclaw/03b-openclaw.html#cell-introspect) | Successfully run both the introspection and workspace terminal exercises. |
+| 3c | `03c:scheduled-run-complete` | [Run and clean up a scheduled job](../web/nemoclaw/03c-always-on.html#probe-cron) | Observe a successful scheduled run, then confirm the job was removed. |
+| 4a | `04a:policy-boundary-verified` | [Check the policy boundary](../web/nemoclaw/04a-safety.html#cell-live-policy) | Read the live agent policy, then confirm the policy comparison agrees. |
+| 4b | `04b:live-agent-operated` | [Operate a live agent](../web/nemoclaw/04b-modern-clis.html#agent-chat) | Send a non-command message to the live agent and receive a successful response. |
 
 ## Cookie consent notice
 
@@ -36,11 +36,11 @@ Generated full, iframe and localized course pages include the supplied OneTrust 
 
 The course runtime maps the supplied configuration's `C0002` Performance Cookies category to progress syncing. It requires a valid saved OneTrust choice as well as an active `C0002` category; an active default category alone does not enable collection. It reads saved consent on page load and listens for consent updates. Accepting performance cookies connects progress; rejecting or withdrawing them disconnects and cancels pending Activity operations. Missing or unavailable consent never grants permission. The milestone tracking button records an explicit consent choice and enables only Performance Cookies. If the consent SDK is still loading, the click is applied when the SDK becomes ready. Referral tracking remains a separate choice.
 
-The consent bridge does not register milestone definitions, approve a data policy, or override `collection_enabled`. The source policy permits collection only after valid performance-cookie consent. Production deployment still requires the production consent configuration and the applicable Privacy and Legal review.
+The consent bridge does not register milestone definitions, approve a data policy, or override `collection_enabled`. The source policy permits collection only after valid performance-cookie consent. The production consent configuration is published. Deployment still requires verification on the deployed course origin and the applicable Privacy and Legal review.
 
 ## Referrals
 
-The course also records a referral when a learner selects an approved link to an NVIDIA learning, product, documentation, or source-code resource. Each destination is mapped to a stable reference ID. Selecting a referral does not change course progress, and links outside the approved destination list are not recorded.
+Referral tracking remains off in the milestone-only UI. If separately enabled with explicit referral consent, the adapter records a referral when a learner selects an approved link to an NVIDIA learning, product, documentation, or source-code resource. Each destination is mapped to a stable reference ID. Selecting a referral does not change course progress, and links outside the approved destination list are not recorded.
 
 ## Course completion
 
@@ -48,7 +48,7 @@ The learner selects **Finish Course** on the Going Further page after all 11 con
 
 ## Data boundaries
 
-Checkpoint events contain fixed activity identifiers and success evidence only. They do not include API keys, learner prompts, model responses, terminal output, or other learner-generated content.
+Milestone events contain fixed activity identifiers and success evidence only. They do not include API keys, learner prompts, model responses, terminal output, or other learner-generated content.
 
 ## Bootstrap milestones in a web course
 

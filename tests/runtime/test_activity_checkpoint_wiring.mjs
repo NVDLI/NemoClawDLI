@@ -11,6 +11,22 @@ const { installCourseActivityTracking, getInstalledCourseActivity, ACTIVITY_MILE
 globalThis.fetch = nativeFetch;
 
 const read = file => fs.readFileSync(`web/nemoclaw/${file}`, 'utf8');
+
+test('Activity Milestones documentation matches every course definition and exercise', async () => {
+  const { ACTIVITY_MILESTONES } = await import('../../web/nemoclaw/scripts/_activity.js');
+  const doc = fs.readFileSync('docs/activity_checkpoints.md', 'utf8');
+  assert.match(doc, /^# Activity Milestones\n/);
+  const rows = [...doc.matchAll(/^\| [^|]+ \| `([^`]+)` \| \[([^\]]+)\]\(\.\.\/web\/nemoclaw\/([^)]*)\) \| ([^|]+) \|$/gm)];
+  assert.deepEqual(rows.map(row => row[1]), Object.keys(ACTIVITY_MILESTONES));
+  for (const [, id, label, href, criteria] of rows) {
+    const milestone = ACTIVITY_MILESTONES[id];
+    assert.equal(label, milestone.label, id);
+    assert.equal(href, milestone.href, id);
+    assert.equal(criteria.trim(), milestone.description, id);
+    const [file, fragment] = href.split('#');
+    assert.ok(read(file).includes('id="' + fragment + '"'), id + ' exercise anchor');
+  }
+});
 const flush = () => new Promise(resolve => setImmediate(resolve));
 function dispatch(target, type, detail = {}) {
   const event = new Event(`nemoclaw:${type}`); event.detail = detail; target.dispatchEvent(event);
