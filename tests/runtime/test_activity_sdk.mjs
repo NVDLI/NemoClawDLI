@@ -158,3 +158,18 @@ test('a session definition conflict is a rejected request while write conflicts 
  await assert.rejects(client.recordReferral({referenceId:'fixture',destinationUrl:'https://example.test',idempotencyKey:'fixture'}),error=>error.code==='idempotency_conflict' && error.status===409);
  await assert.rejects(client.recordMilestoneCompleted({milestoneId:'early',idempotencyKey:'fixture'}),error=>error.code==='idempotency_conflict' && error.status===409);
 });
+
+test('definition projection budget accepts exactly 64 KiB and rejects one extra UTF-8 byte',()=>{
+ const markers=Array.from({length:16},(_,index)=>({id:`marker-${index}`,label:'L',description:'x'.repeat(4000)}));
+ const size=value=>new TextEncoder().encode(JSON.stringify(value)).byteLength;
+ let remaining=64*1024-size(markers);
+ for(const marker of markers){const extra=Math.min(remaining,4096-marker.description.length);marker.description+='x'.repeat(extra);remaining-=extra;}
+ assert.equal(size(markers),64*1024);assert.doesNotThrow(()=>createActivityClient({...fixture().options,milestones:markers}));
+ const spare=markers.find(marker=>marker.description.length<4096);spare.description+='x';
+ assert.throws(()=>createActivityClient({...fixture().options,milestones:markers}),error=>error.code==='invalid_configuration');
+});
+test('definition projection uses UTF-8 bytes for multibyte descriptions before requesting',async()=>{
+ const markers=Array.from({length:16},(_,index)=>({id:`marker-${index}`,label:'L',description:'😀'.repeat(1024)}));
+ assert.ok(JSON.stringify(markers).length<64*1024);assert.ok(new TextEncoder().encode(JSON.stringify(markers)).byteLength>64*1024);
+ await assert.rejects(DLIActivity.initialize({...fixture().options,milestones:markers,fetchImpl:()=>assert.fail('oversized definitions must not request')}),error=>error.code==='invalid_configuration');
+});

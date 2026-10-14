@@ -199,7 +199,7 @@ function validateMilestones(milestones) {
       code: 'invalid_configuration', category: 'configuration',
     });
   }
-  return Object.freeze(Array.from(milestones, marker => {
+  const snapshot = Object.freeze(Array.from(milestones, marker => {
     if (!marker || typeof marker !== 'object' || Array.isArray(marker)
         || Object.keys(marker).some(key => !['id', 'label', 'description'].includes(key))
         || typeof marker.id !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/.test(marker.id)
@@ -214,6 +214,12 @@ function validateMilestones(milestones) {
     ids.add(marker.id);
     return Object.freeze({ id: marker.id, label: marker.label, description: marker.description });
   }));
+  if (new TextEncoder().encode(JSON.stringify(snapshot)).byteLength > 64 * 1024) {
+    throw new ActivitySdkError('Activity milestone definitions exceed the payload budget', {
+      code: 'invalid_configuration', category: 'configuration',
+    });
+  }
+  return snapshot;
 }
 
 const milestoneConfigLoads = new Map();

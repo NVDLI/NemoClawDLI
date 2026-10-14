@@ -71,3 +71,21 @@ test('config snapshots reject sparse matcher arrays and never bind missing DOM t
  const event=new Event('fixture:success');event.detail={success:true,count:1};eventTarget.dispatchEvent(event);assert.deepEqual(reached,[]);binding.dispose();
  const source=contract();const copied=sdkModule.validateActivityMilestoneConfig(source);source.milestones[0].evidence[0].matches.success=false;assert.equal(copied.milestones[0].evidence[0].matches.success,true);
 });
+
+test('held optional config does not hold shared helper exports or trigger Activity requests',async()=>{
+ const {execFileSync}=await import('node:child_process');
+ execFileSync(process.execPath,['--input-type=module','-e',`Object.defineProperty(globalThis,'localStorage',{value:{getItem:()=>null,setItem:()=>{},removeItem:()=>{}},configurable:true});let release;let startedResolve;const started=new Promise(resolve=>startedResolve=resolve);let apiRequests=0;globalThis.fetch=async url=>{if(String(url).endsWith('activity_milestones.json')){startedResolve();return new Promise(resolve=>release=resolve);}if(String(url).includes('/v1/activity-sessions'))apiRequests++;return new Response('{}',{status:503});};let ready=false;const shared=import('./web/nemoclaw/scripts/_shared.js').then(module=>{if(typeof module.buildNav!=='function' || typeof module.getModelId!=='function')throw Error('missing unrelated helpers');ready=true;});await started;await new Promise(resolve=>setTimeout(resolve,50));if(!ready || apiRequests)throw Error('optional config held unrelated course bootstrap');release(new Response('{}',{status:503}));await shared;`],{cwd:process.cwd()});
+});
+
+test('real course navigation renders with JSON held and makes no Activity API requests', {timeout:60000}, async()=>{
+ const {createRequire}=await import('node:module');const path=await import('node:path');const http=await import('node:http');const {execFileSync}=await import('node:child_process');
+ const require=createRequire(path.resolve('scripts/runtime/package.json'));const {chromium}=require('playwright-core');
+ const server=http.createServer((request,response)=>{const pathname=new URL(request.url,'http://localhost').pathname;const file=path.resolve('.'+pathname);if(!file.startsWith(process.cwd()+path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile())return response.writeHead(404).end();response.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.html')?'text/html':file.endsWith('.css')?'text/css':'application/octet-stream');response.end(fs.readFileSync(file));});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ const executablePath=process.platform==='darwin'?'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome':execFileSync('python3',['scripts/runtime/host_browser.py'],{encoding:'utf8'}).trim();
+ const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox']});let apiRequests=0;const held=[];
+ try {const context=await browser.newContext();await context.route('**/*',route=>{const url=new URL(route.request().url());if(url.hostname==='activity-api.learn.nvidia.com'){apiRequests++;return route.abort();}if(url.pathname.endsWith('/activity_milestones.json')){held.push(route);return;}if(url.hostname!=='127.0.0.1')return route.abort();return route.continue();});
+ const port=server.address().port;
+ for(const lesson of ['01a-loop.html','04c-going-further.html']){const page=await context.newPage();const configRequested=page.waitForRequest(request=>request.url().endsWith('/activity_milestones.json'));await page.goto(`http://127.0.0.1:${port}/web/nemoclaw/${lesson}`,{waitUntil:'commit'});await configRequested;await page.waitForFunction(()=>document.querySelector('#nav')?.children.length>0);assert.equal(await page.evaluate(async()=>typeof(await import('./scripts/_shared.js')).getModelId),'function');assert.equal(apiRequests,0);assert.ok(held.length>0);await page.close();}
+ }finally{await Promise.all(held.map(route=>route.abort().catch(()=>{})));await browser.close();await new Promise(resolve=>server.close(resolve));}
+});

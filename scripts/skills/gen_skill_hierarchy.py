@@ -530,6 +530,10 @@ def gen_web_course_hubs():
                 interface_items,
             )
         runtime_profiles = sorted(d.glob("*-profile.json"))
+        lesson_map = d / "lesson-map.json"
+        if lesson_map.is_file() and lesson_map not in runtime_profiles:
+            runtime_profiles.append(lesson_map)
+            runtime_profiles.sort()
         profile_items = []
         if runtime_profiles:
             meta["runtime_profiles"] = []
