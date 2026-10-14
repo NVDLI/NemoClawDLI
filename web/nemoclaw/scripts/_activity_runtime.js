@@ -2,12 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+  ACTIVITY_CONFIG,
   ACTIVITY_MILESTONES,
   ACTIVITY_MILESTONE_ORDER as MILESTONE_ORDER,
   ACTIVITY_REFERRALS,
   createNemoClawActivity,
 } from './_activity.js';
 import { localizeCourseUiText } from './_locale.js';
+import { bindActivityMilestones } from '../../shared/activity-sdk.js';
 
 const EVIDENCE_KEY_PREFIX = 'dli_activity:nemoclaw:evidence:v1';
 const CHECKPOINT_CONTRACT_VERSION = '1';
@@ -257,6 +259,11 @@ export function installNemoClawActivityTracking({
   activity,
 } = {}) {
   if (!windowTarget || !documentTarget) return null;
+  if (!ACTIVITY_CONFIG) {
+    // An unavailable config disables tracking while unrelated exercises still load.
+    windowTarget.__nemoclawActivityConfigUnavailable = true;
+    return null;
+  }
   if (windowTarget.__nemoclawActivityTracking) return getInstalledNemoClawActivity(windowTarget);
   if (storageTarget === undefined) {
     try { storageTarget = globalThis.sessionStorage; } catch (_) { storageTarget = null; }
@@ -270,15 +277,10 @@ export function installNemoClawActivityTracking({
   let activityInterface;
   // Stored exercise flags are hints; only new success events are eligible to send.
   const pending = new Map();
-  const partial = new Set();
-  let partialSessionId = activity.snapshot().sessionId;
+  let instrumentation;
   const bindSession = state => {
     const sessionId = state.sessionId;
-    if (sessionId !== partialSessionId) {
-      // Live work before enabling may bind once; replacement discards old partners.
-      if (partialSessionId !== null) partial.clear();
-      partialSessionId = sessionId;
-    }
+    instrumentation?.bindSession(state);
     if (state.enabled && sessionId) {
       for (const [id, boundSessionId] of pending) {
         if (boundSessionId === null) pending.set(id, sessionId);
@@ -310,12 +312,10 @@ export function installNemoClawActivityTracking({
   activityInterface = mountActivityInterface({
     windowTarget, documentTarget, activity, evidence, consent,
   });
-  const markPair = (key, partner, milestone) => {
-    bindSession(activity.snapshot());
-    evidence.add(key);
-    partial.add(key);
-    if (partial.has(partner)) record(milestone);
-  };
+  instrumentation = bindActivityMilestones({
+    config: ACTIVITY_CONFIG, eventTarget: windowTarget, documentTarget, page,
+    sessionId: activity.snapshot().sessionId, onMilestone: record,
+  });
 
   documentTarget.addEventListener('click', event => {
     const anchor = event.target?.closest?.('a[href]');
@@ -324,63 +324,6 @@ export function installNemoClawActivityTracking({
     if (ACTIVITY_REFERRALS[destination]) void activity.trackReferral(destination);
   }, true);
 
-  windowTarget.addEventListener('nemoclaw:run-succeeded', event => {
-    bindSession(activity.snapshot());
-    const { cellId, hasContent, hasAgent } = event.detail || {};
-    if (page === '01a-loop.html' && cellId === 'cell-onecall' && partial.has('01a:key')
-        && hasContent) {
-      record('01a:model-call-verified');
-    } else if (page === '03b-openclaw.html' && cellId === 'cell-introspect') {
-      markPair('03b:introspect', '03b:workspace', '03b:workspace-inspected');
-    } else if (page === '03b-openclaw.html' && cellId === 'cell-workspace-term') {
-      markPair('03b:workspace', '03b:introspect', '03b:workspace-inspected');
-    } else if (page === '04a-safety.html' && cellId === 'cell-live-policy' && hasAgent) {
-      markPair('04a:policy', '04a:agreement', '04a:policy-boundary-verified');
-    }
-  });
-
-  windowTarget.addEventListener('nemoclaw:api-key-verified', () => {
-    bindSession(activity.snapshot());
-    evidence.add('01a:key');
-    partial.add('01a:key');
-  });
-
-  windowTarget.addEventListener('nemoclaw:chat-completed', event => {
-    const { containerId, successCount, hasAnswer } = event.detail || {};
-    if (!hasAnswer || successCount < 1) return;
-    const milestones = {
-      'react-artifact': '01b:react-loop-complete',
-      'tools-artifact': '01c:tool-roundtrip-complete',
-      'router-artifact': '02a:routed-workflow-complete',
-      'rag-artifact': '02b:grounded-answer-complete',
-      'deep-artifact': '02c:deep-research-complete',
-    };
-    if (milestones[containerId]) record(milestones[containerId]);
-  });
-
-  windowTarget.addEventListener('nemoclaw:connection-audit-passed', () => {
-    record('03a:nemoclaw-connected');
-  });
-
-  windowTarget.addEventListener('nemoclaw:canvas-node-succeeded', event => {
-    const { canvasId, nodeId, runObserved, cleanupSucceeded, policyAgreed } = event.detail || {};
-    if (page === '03c-always-on.html' && canvasId === 'probe-cron' && ['cr-run', 'cr-rm'].includes(nodeId)
-        && runObserved) {
-      markPair('03c:run', '03c:removed', '03c:scheduled-run-complete');
-    }
-    if (page === '03c-always-on.html' && canvasId === 'probe-cron' && ['cr-run', 'cr-rm'].includes(nodeId)
-        && cleanupSucceeded) {
-      markPair('03c:removed', '03c:run', '03c:scheduled-run-complete');
-    }
-    if (page === '04a-safety.html' && canvasId === 'cell-predict-confirm' && nodeId === 'compare'
-        && policyAgreed) {
-      markPair('04a:agreement', '04a:policy', '04a:policy-boundary-verified');
-    }
-  });
-
-  windowTarget.addEventListener('nemoclaw:live-agent-operated', () => {
-    record('04b:live-agent-operated');
-  });
   return activity;
 }
 

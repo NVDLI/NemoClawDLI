@@ -204,8 +204,8 @@ function validateMilestones(milestones) {
         || Object.keys(marker).some(key => !['id', 'label', 'description'].includes(key))
         || typeof marker.id !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/.test(marker.id)
         || ids.has(marker.id) || typeof marker.label !== 'string'
-        || !marker.label.trim() || Array.from(marker.label).length < 1 || Array.from(marker.label).length > 256
-        || typeof marker.description !== 'string' || !marker.description.trim()
+        || marker.label.includes("\u0000") || !marker.label.trim() || Array.from(marker.label).length < 1 || Array.from(marker.label).length > 256
+        || typeof marker.description !== 'string' || marker.description.includes("\u0000") || !marker.description.trim()
         || Array.from(marker.description).length > 4096) {
       throw new ActivitySdkError('Activity milestones are invalid', {
         code: 'invalid_configuration', category: 'configuration',
@@ -214,6 +214,149 @@ function validateMilestones(milestones) {
     ids.add(marker.id);
     return Object.freeze({ id: marker.id, label: marker.label, description: marker.description });
   }));
+}
+
+const milestoneConfigLoads = new Map();
+const CONFIG_PAGE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}\.html$/;
+const CONFIG_TARGET = /^[A-Za-z][A-Za-z0-9_.:-]{0,127}$/;
+const CONFIG_EVENT = /^[A-Za-z][A-Za-z0-9_.-]{0,63}:[A-Za-z][A-Za-z0-9_.:-]{0,127}$/;
+
+function invalidMilestoneConfig() {
+  return new ActivitySdkError('Course milestone configuration is invalid', {
+    code: 'invalid_configuration', category: 'configuration',
+  });
+}
+
+function configObject(value, keys) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)
+      || Object.keys(value).some(key => !keys.includes(key))) throw invalidMilestoneConfig();
+}
+
+export function validateActivityMilestoneConfig(value) {
+  configObject(value, ['schemaVersion', 'milestones']);
+  if (value.schemaVersion !== 1) throw invalidMilestoneConfig();
+  // Only this projection belongs in the Activity API request.
+  validateMilestones(Array.isArray(value.milestones) ? Array.from(value.milestones, marker => ({
+    id: marker?.id, label: marker?.label, description: marker?.description,
+  })) : value.milestones);
+  const milestones = Array.from(value.milestones, marker => {
+    configObject(marker, ['id', 'label', 'description', 'href', 'evidence']);
+    if (typeof marker.href !== 'string') throw invalidMilestoneConfig();
+    const [page, target, extra] = marker.href.split('#');
+    if (!CONFIG_PAGE.test(page) || !CONFIG_TARGET.test(target || '') || extra !== undefined
+        || !Array.isArray(marker.evidence) || !marker.evidence.length || marker.evidence.length > 16) {
+      throw invalidMilestoneConfig();
+    }
+    const evidence = Array.from(marker.evidence, (rule, index) => {
+      configObject(rule, ['event', 'page', 'target', 'matches', 'minimum', 'requires']);
+      if (typeof rule.event !== 'string' || !CONFIG_EVENT.test(rule.event)
+          || typeof rule.page !== 'string' || !CONFIG_PAGE.test(rule.page)
+          || typeof rule.target !== 'string' || !CONFIG_TARGET.test(rule.target)) throw invalidMilestoneConfig();
+      const fields = (entries, minimum) => {
+        if (entries === undefined) return Object.freeze({});
+        if (!entries || typeof entries !== 'object' || Array.isArray(entries)) throw invalidMilestoneConfig();
+        configObject(entries, Object.keys(entries));
+        if (Object.keys(entries).length > 16) throw invalidMilestoneConfig();
+        const scalar = item => typeof item === 'boolean' || (typeof item === 'string' && CONFIG_TARGET.test(item))
+          || (typeof item === 'number' && Number.isFinite(item) && Math.abs(item) <= 1000000);
+        return Object.freeze(Object.fromEntries(Object.entries(entries).map(([key, item]) => {
+          if (!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(key) || ['constructor', 'prototype', '__proto__'].includes(key)
+              || (minimum ? !Number.isInteger(item) || item < 1 || item > 1000000
+                : Array.isArray(item) ? !item.length || item.length > 16 || Array.from(item).some(entry => !scalar(entry)) : !scalar(item))) {
+            throw invalidMilestoneConfig();
+          }
+          return [key, Array.isArray(item) ? Object.freeze([...item]) : item];
+        })));
+      };
+      const requires = rule.requires === undefined ? [] : rule.requires;
+      if (!Array.isArray(requires) || requires.length > 16 || new Set(requires).size !== requires.length
+          || Array.from(requires).some(prior => !Number.isInteger(prior) || prior < 0 || prior >= index)) {
+        throw invalidMilestoneConfig();
+      }
+      return Object.freeze({ event: rule.event, page: rule.page, target: rule.target,
+        matches: fields(rule.matches, false), minimum: fields(rule.minimum, true), requires: Object.freeze([...requires]) });
+    });
+    return Object.freeze({ id: marker.id, label: marker.label, description: marker.description,
+      href: marker.href, evidence: Object.freeze(evidence) });
+  });
+  return Object.freeze({ schemaVersion: 1, milestones: Object.freeze(milestones) });
+}
+
+export function loadActivityMilestoneConfig(configUrl, { fetchImpl = globalThis.fetch?.bind(globalThis) } = {}) {
+  let url;
+  try { url = new URL(configUrl, globalThis.location?.href); } catch (_) { throw invalidMilestoneConfig(); }
+  const localFile = url.protocol === 'file:' && typeof globalThis.window === 'undefined';
+  if ((!localFile && !['https:', 'http:'].includes(url.protocol)) || url.username || url.password || url.search || url.hash
+      || (!localFile && globalThis.location?.origin && url.origin !== globalThis.location.origin)
+      || typeof fetchImpl !== 'function') throw invalidMilestoneConfig();
+  if (milestoneConfigLoads.has(url.href)) return milestoneConfigLoads.get(url.href);
+  const attempt = Promise.resolve().then(async () => {
+    const controller = new AbortController();
+    let timer;
+    const deadline = new Promise((_, reject) => {
+      timer = setTimeout(() => { controller.abort(); reject(invalidMilestoneConfig()); }, 10000);
+    });
+    const read = async () => {
+      const response = await fetchImpl(url, { credentials: 'same-origin', redirect: 'error',
+        referrerPolicy: 'no-referrer', cache: 'no-store', signal: controller.signal });
+      if (!response.ok) throw invalidMilestoneConfig();
+      const text = await response.text();
+      if (text.length > 8 * 1024 * 1024) throw invalidMilestoneConfig();
+      return validateActivityMilestoneConfig(JSON.parse(text));
+    };
+    try { return await Promise.race([read(), deadline]); }
+    finally { clearTimeout(timer); }
+  }).catch(() => { milestoneConfigLoads.delete(url.href); throw invalidMilestoneConfig(); });
+  milestoneConfigLoads.set(url.href, attempt);
+  return attempt;
+}
+
+export function bindActivityMilestones({ config, eventTarget, documentTarget, page,
+  sessionId = null, onMilestone } = {}) {
+  config = validateActivityMilestoneConfig(config);
+  if (!eventTarget?.addEventListener || !documentTarget?.getElementById || typeof onMilestone !== 'function') {
+    throw invalidMilestoneConfig();
+  }
+  const partial = new Map();
+  let boundSession = sessionId;
+  const bindings = new Map();
+  for (const marker of config.milestones) marker.evidence.forEach((rule, index) => {
+    if (rule.page !== page || !documentTarget.getElementById(rule.target)) return;
+    if (!bindings.has(rule.event)) bindings.set(rule.event, []);
+    bindings.get(rule.event).push({ marker, rule, index });
+  });
+  const listeners = [];
+  for (const [event, rules] of bindings) {
+    const listener = signal => {
+      const detail = signal.detail || {};
+      for (const { marker, rule, index } of rules) {
+        if (!Object.entries(rule.matches).every(([key, expected]) => Array.isArray(expected)
+          ? expected.includes(detail[key]) : detail[key] === expected)
+            || !Object.entries(rule.minimum).every(([key, minimum]) => typeof detail[key] === 'number'
+              && Number.isFinite(detail[key]) && detail[key] >= minimum)) continue;
+        const reached = partial.get(marker.id) || new Set();
+        if (!rule.requires.every(prior => reached.has(prior))) continue;
+        reached.add(index);
+        partial.set(marker.id, reached);
+        if (marker.evidence.every((_, position) => reached.has(position))) {
+          void Promise.resolve(onMilestone(marker.id)).catch(() => {});
+        }
+      }
+    };
+    eventTarget.addEventListener(event, listener);
+    listeners.push([event, listener]);
+  }
+  return {
+    bindSession(state) {
+      const next = state.sessionId;
+      if (next !== boundSession) {
+        // Fresh evidence collected before enablement binds once, never across replacement.
+        if (boundSession !== null) partial.clear();
+        boundSession = next;
+      }
+    },
+    dispose() { for (const [event, listener] of listeners) eventTarget.removeEventListener(event, listener); partial.clear(); },
+  };
 }
 
 function validateSession(value) {
@@ -472,6 +615,14 @@ export class DLIActivity {
   }
 
   static async initialize(options) {
+    if (options?.milestoneConfigUrl !== undefined) {
+      try {
+        if (options.milestones !== undefined) throw invalidMilestoneConfig();
+        const { milestoneConfigUrl, ...adapters } = options;
+        const config = await loadActivityMilestoneConfig(milestoneConfigUrl, { fetchImpl: options.fetchImpl });
+        options = { ...adapters, milestones: config.milestones.map(({ id, label, description }) => ({ id, label, description })) };
+      } catch (error) { throw translatePublicError(error); }
+    }
     let instance;
     let key;
     try {

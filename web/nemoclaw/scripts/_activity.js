@@ -1,9 +1,11 @@
 // Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { DLIActivity, createBrowserActivityStorage } from '../../shared/activity-sdk.js';
-import { ACTIVITY_MILESTONES, ACTIVITY_MILESTONE_ORDER, ACTIVITY_SESSION_MILESTONES } from './_activity_config.js';
-export { ACTIVITY_MILESTONES, ACTIVITY_MILESTONE_ORDER } from './_activity_config.js';
+import { DLIActivity, createBrowserActivityStorage, loadActivityMilestoneConfig } from '../../shared/activity-sdk.js';
+export const ACTIVITY_CONFIG_URL = new URL('../activity_milestones.json', import.meta.url);
+export const ACTIVITY_CONFIG = await loadActivityMilestoneConfig(ACTIVITY_CONFIG_URL).catch(() => null);
+export const ACTIVITY_MILESTONES = Object.freeze(Object.fromEntries((ACTIVITY_CONFIG?.milestones || []).map(marker => [marker.id, marker])));
+export const ACTIVITY_MILESTONE_ORDER = Object.freeze((ACTIVITY_CONFIG?.milestones || []).map(marker => marker.id));
 
 export const BUILD_SIGNUP_URL = 'https://build.nvidia.com/?ncid=ref-dli-146986';
 const ACTIVITY_BASE_URL = 'https://activity-api.learn.nvidia.com';
@@ -302,7 +304,7 @@ export function createNemoClawActivity({
       }
     };
     const attempt = Promise.resolve().then(() => initialize({
-      baseUrl: resolveActivityBaseUrl(), artifact, milestones: ACTIVITY_SESSION_MILESTONES, storage: attemptStorage,
+      baseUrl: resolveActivityBaseUrl(), artifact, milestoneConfigUrl: ACTIVITY_CONFIG_URL, storage: attemptStorage,
       fetchImpl: connectionFetch, now, onDiagnostic,
     }));
     initializedActivity = attempt;

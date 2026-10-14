@@ -115,7 +115,7 @@ test('session initialization carries copied course definitions beside exactly th
 });
 test('malformed milestone configuration fails before any network operation',async()=>{
  const f=fixture();let requests=0;const options={...f.options,fetchImpl:async()=>{requests++;assert.fail('invalid configuration must not request');}};
- for(const milestones of [null,{},[],new Array(1),[{id:'early',label:' ',description:'Valid'}],[{id:'early',label:'Valid',description:''}],[{id:'early',label:'Valid',description:' '}],new Array(1001).fill(definitions()[0]),[...definitions(),...definitions()],
+ for(const milestones of [[{id:'early',label:'Valid',description:'bad\u0000text'}],[{id:'early',label:'bad\u0000text',description:'Valid'}],null,{},[],new Array(1),[{id:'early',label:' ',description:'Valid'}],[{id:'early',label:'Valid',description:''}],[{id:'early',label:'Valid',description:' '}],new Array(1001).fill(definitions()[0]),[...definitions(),...definitions()],
   [{id:'bad id',label:'Valid',description:'Valid'}],[{id:'a'.repeat(129),label:'Valid',description:'Valid'}],
   [{id:'early',label:'',description:'Valid'}],[{id:'early',label:'a'.repeat(257),description:'Valid'}],
   [{id:'early',label:3,description:'Valid'}],[{id:'early',label:'Valid'}],

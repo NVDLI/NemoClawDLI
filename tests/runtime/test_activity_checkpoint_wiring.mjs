@@ -14,9 +14,9 @@ const read = file => fs.readFileSync(`web/nemoclaw/${file}`, 'utf8');
 
 test('Activity Milestones documentation matches every course definition and exercise', async () => {
   const { ACTIVITY_MILESTONES } = await import('../../web/nemoclaw/scripts/_activity.js');
-  const doc = fs.readFileSync('docs/activity_checkpoints.md', 'utf8');
+  const doc = fs.readFileSync('web/nemoclaw/ACTIVITY_MILESTONES.md', 'utf8');
   assert.match(doc, /^# Activity Milestones\n/);
-  const rows = [...doc.matchAll(/^\| [^|]+ \| `([^`]+)` \| \[([^\]]+)\]\(https:\/\/nvdli\.github\.io\/NemoClawDLI\/nemoclaw\/([^)]*)\) \| ([^|]+) \|$/gm)];
+  const rows = [...doc.matchAll(/^\| `([^`]+)` \| \[([^\]]+)\]\(([^)]*)\) \| ([^|]+) \|$/gm)];
   assert.deepEqual(rows.map(row => row[1]), Object.keys(ACTIVITY_MILESTONES));
   for (const [, id, label, href, criteria] of rows) {
     const milestone = ACTIVITY_MILESTONES[id];
@@ -35,6 +35,7 @@ function fixture(page = '01a-loop.html', { sessionId = 'session-a', storageTarge
   const previous = Object.getOwnPropertyDescriptor(globalThis, 'location');
   Object.defineProperty(globalThis, 'location', { configurable: true, value: { pathname: `/nemoclaw/${page}` } });
   const windowTarget = new EventTarget(); const documentTarget = new EventTarget();
+  documentTarget.getElementById = id => read(page).includes('id="' + id + '"') ? {} : null;
   windowTarget.OneTrust = { IsAlertBoxClosed: () => true, OnConsentChanged: () => {} };
   windowTarget.OnetrustActiveGroups = ',C0001,C0002,';
   const values = new Map();
@@ -115,8 +116,8 @@ test('failed milestone evidence cannot transfer to a replacement session', async
     dispatch(f.windowTarget, 'chat-completed', { containerId: 'react-artifact', successCount: 1, hasAnswer: true }); await flush();
     assert.equal(f.milestones.length, 1);
     f.session('session-b');
-    dispatch(f.windowTarget, 'chat-completed', { containerId: 'tools-artifact', successCount: 1, hasAnswer: true }); await flush();
-    assert.deepEqual(f.milestones, ['01b:react-loop-complete', '01c:tool-roundtrip-complete']);
+    dispatch(f.windowTarget, 'chat-completed', { containerId: 'react-artifact', successCount: 1, hasAnswer: true }); await flush();
+    assert.deepEqual(f.milestones, ['01b:react-loop-complete', '01b:react-loop-complete']);
   } finally { f.restore(); }
 });
 
@@ -140,11 +141,14 @@ test('success predicates survive denied sessionStorage', async () => {
 
 test('every configured milestone retains success-only runtime evidence and the shared entrypoint installs tracking', () => {
   const runtime = read('scripts/_activity_runtime.js');
-  for (const id of ACTIVITY_MILESTONE_ORDER) assert.ok(runtime.includes(id));
+  const config = JSON.parse(read('activity_milestones.json'));
+  assert.deepEqual(config.milestones.map(({id}) => id), ACTIVITY_MILESTONE_ORDER);
+  assert.match(runtime, /bindActivityMilestones/);
+  for (const id of ACTIVITY_MILESTONE_ORDER) assert.equal(runtime.includes(id), false);
   assert.match(read('scripts/_shared.js'), /install\w+ActivityTracking/);
   for (const [file, signal] of [['scripts/_canvas.js', 'run-succeeded'], ['scripts/_chat.js', 'chat-completed'], ['scripts/_openclaw.js', 'connection-audit-passed'], ['scripts/_openclaw_cli.js', 'live-agent-operated']]) assert.ok(read(file).includes(`nemoclaw:${signal}`));
-  assert.match(runtime, /successCount < 1/);
-  assert.match(runtime, /&& runObserved/); assert.match(runtime, /&& cleanupSucceeded/); assert.match(runtime, /&& policyAgreed/);
+  assert.equal(config.milestones.find(({id}) => id === '01b:react-loop-complete').evidence[0].minimum.successCount, 1);
+  for (const key of ['runObserved', 'cleanupSucceeded', 'policyAgreed']) assert.ok(config.milestones.some(marker => marker.evidence.some(rule => rule.matches?.[key] === true)));
   assert.match(read('03c-always-on.html'), /state\.demoCronVerified = true/);
 });
 
@@ -162,7 +166,8 @@ test('each independent checkpoint requires its full success predicate', async ()
     ['router-artifact', '02a:routed-workflow-complete'], ['rag-artifact', '02b:grounded-answer-complete'], ['deep-artifact', '02c:deep-research-complete'],
   ];
   for (const [containerId, id] of cases) {
-    const f = fixture(); try {
+    const milestone = JSON.parse(read('activity_milestones.json')).milestones.find(marker => marker.id === id);
+    const f = fixture(milestone.href.split('#')[0]); try {
       for (const detail of [{ containerId, successCount: 0, hasAnswer: true }, { containerId, successCount: 1, hasAnswer: false }]) {
         dispatch(f.windowTarget, 'chat-completed', detail); await flush(); assert.deepEqual(f.milestones, []);
       }
@@ -170,7 +175,8 @@ test('each independent checkpoint requires its full success predicate', async ()
     } finally { f.restore(); }
   }
   for (const [signal, id] of [['connection-audit-passed', '03a:nemoclaw-connected'], ['live-agent-operated', '04b:live-agent-operated']]) {
-    const f = fixture(); try { dispatch(f.windowTarget, signal); await flush(); assert.deepEqual(f.milestones, [id]); } finally { f.restore(); }
+    const milestone = JSON.parse(read('activity_milestones.json')).milestones.find(marker => marker.id === id);
+    const f = fixture(milestone.href.split('#')[0]); try { dispatch(f.windowTarget, signal); await flush(); assert.deepEqual(f.milestones, [id]); } finally { f.restore(); }
   }
 });
 

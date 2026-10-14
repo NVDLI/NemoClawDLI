@@ -494,6 +494,14 @@ def gen_web_course_hubs():
                 "self_path": f"web/{d.name}/SKILL.html",
                 "children": [{"name": _label(p), "path": p.relative_to(TASK1).as_posix()} for p in pages]
                             + [{"name": p.parent.name, "path": p.relative_to(TASK1).as_posix()} for p in support_files]}
+        if (d / "activity-policy.json").exists() or (d / "scripts/_activity.js").exists():
+            meta["activity_milestones"] = {
+                "definitions": "activity_milestones.json", "documentation": "ACTIVITY_MILESTONES.md",
+            }
+            sections.append(("Activity milestones", "Course-owned definitions, producer evidence and exercise targets.", [
+                ("Activity Milestones", "ACTIVITY_MILESTONES.md", "Canonical checklist and acceptance criteria."),
+                ("Milestone configuration", "activity_milestones.json", "Native SDK initialization and success-event bindings."),
+            ]))
         interface_inventory = d / "interface-inventory.json"
         interface_section = None
         if interface_inventory.is_file():

@@ -49,6 +49,7 @@ from _bootstrap import add_script_paths, find_repo_root
 TASK1 = find_repo_root(Path(__file__).resolve())
 add_script_paths(TASK1 / "scripts")
 import artifact_link_audit
+from validation.activity_milestone_contract import audit_course
 
 WEB_DIR = TASK1 / "web"
 DEFAULT_OUT = TASK1 / "web_standalone"
@@ -1153,6 +1154,12 @@ def main() -> int:
     if not web.is_dir():
         print(f"web/ not found at {web}", file=sys.stderr)
         return 1
+
+    if (web / "activity-policy.json").exists() or (web / "scripts/_activity.js").exists():
+        contract_findings = audit_course(web)
+        if contract_findings:
+            print("\n".join(contract_findings), file=sys.stderr)
+            return 1
 
     if args.clean and out.exists():
         # Walk and unlink only generated files; skip paths the current user cannot remove.

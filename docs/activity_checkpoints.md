@@ -16,19 +16,7 @@ The Progress panel shows a read-only milestone checklist, with an instruction an
 
 ## Course milestones
 
-| Section | Milestone ID | Milestone and exercise | Acceptance criteria |
-| --- | --- | --- | --- |
-| 1a | `01a:model-call-verified` | [Make your first model call](https://nvdli.github.io/NemoClawDLI/nemoclaw/01a-loop.html#cell-onecall) | Verify your API key, then run the one-call exercise and receive a response. |
-| 1b | `01b:react-loop-complete` | [Complete a ReAct loop](https://nvdli.github.io/NemoClawDLI/nemoclaw/01b-react.html#react-artifact) | Run the ReAct activity with at least one successful step and a final answer. |
-| 1c | `01c:tool-roundtrip-complete` | [Complete a tool round trip](https://nvdli.github.io/NemoClawDLI/nemoclaw/01c-tools.html#tools-artifact) | Run the tool-calling activity with a successful step and a final answer. |
-| 2a | `02a:routed-workflow-complete` | [Run a routed workflow](https://nvdli.github.io/NemoClawDLI/nemoclaw/02a-routing.html#router-artifact) | Complete the routing activity with a successful step and a final answer. |
-| 2b | `02b:grounded-answer-complete` | [Complete the retrieval activity](https://nvdli.github.io/NemoClawDLI/nemoclaw/02b-rag.html#rag-artifact) | Run the RAG activity with a successful step and a final answer. |
-| 2c | `02c:deep-research-complete` | [Complete a research run](https://nvdli.github.io/NemoClawDLI/nemoclaw/02c-deep.html#deep-artifact) | Finish the deep-research activity with a successful step and a final answer. |
-| 3a | `03a:nemoclaw-connected` | [Connect to NemoClaw](https://nvdli.github.io/NemoClawDLI/nemoclaw/03a-kickstart.html#probe-claw) | Pass the connection checks for metadata, gateway, terminal, and health. |
-| 3b | `03b:workspace-inspected` | [Inspect your workspace](https://nvdli.github.io/NemoClawDLI/nemoclaw/03b-openclaw.html#cell-introspect) | Successfully run both the introspection and workspace terminal exercises. |
-| 3c | `03c:scheduled-run-complete` | [Run and clean up a scheduled job](https://nvdli.github.io/NemoClawDLI/nemoclaw/03c-always-on.html#probe-cron) | Observe a successful scheduled run, then confirm the job was removed. |
-| 4a | `04a:policy-boundary-verified` | [Check the policy boundary](https://nvdli.github.io/NemoClawDLI/nemoclaw/04a-safety.html#cell-live-policy) | Read the live agent policy, then confirm the policy comparison agrees. |
-| 4b | `04b:live-agent-operated` | [Operate a live agent](https://nvdli.github.io/NemoClawDLI/nemoclaw/04b-modern-clis.html#agent-chat) | Send a non-command message to the live agent and receive a successful response. |
+The [course-home Activity Milestones](../web/nemoclaw/ACTIVITY_MILESTONES.md) document lists the checklist and acceptance criteria. Its [JSON configuration](../web/nemoclaw/activity_milestones.json) is the single definition source for IDs, labels, descriptions, exercise targets and typed success-event evidence. The build checks documentation parity and every actual HTML target before assembly.
 
 ## Cookie consent notice
 
@@ -52,15 +40,17 @@ Session initialization sends course-authored milestone labels and descriptions. 
 
 ## Bootstrap milestones in a web course
 
-Define objectives in `ACTIVITY_MILESTONES` in `web/nemoclaw/scripts/_activity_config.js`. Keep IDs stable across wording changes. Each course-owned milestone contains a label, description and exercise link. The same definitions populate the checklist and the instructions beside each exercise.
+Keep `ACTIVITY_MILESTONES.md` and `activity_milestones.json` in the course home. Define each objective in the JSON `milestones` array with `id`, `label`, `description`, `href` and `evidence`. Keep IDs stable across wording changes. The course adapter reads this file through the native SDK loader; the same validated definitions populate the checklist and exercise instructions. The Markdown table must match the JSON IDs, wording and links.
 
 The adapter uses the fixed public API URL and resolves artifact identity from the validated delivered manifest before SDK initialization. Course policy, consent and authenticated lab transport still control collection.
 
-After valid saved Performance Cookie consent, the adapter passes `ACTIVITY_SESSION_MILESTONES` to `DLIActivity.initialize({ baseUrl, artifact, milestones })`. Session creation sends the definitions as `{id,label,description}` beside the three artifact identity fields. The API saves an immutable snapshot for that session; no operator registration step is needed for a new course build. An exact operator registration remains authoritative, and conflicting definitions are rejected. The adapter requires the server to return exactly the configured IDs.
+After valid saved Performance Cookie consent, the adapter calls `DLIActivity.initialize({ baseUrl, artifact, milestoneConfigUrl })`. The SDK reads the course JSON through a shared cached loader and projects its API definitions. Session creation sends the definitions as `{id,label,description}` beside the three artifact identity fields. The API saves an immutable snapshot for that session; no operator registration step is needed for a new course build. An exact operator registration remains authoritative, and conflicting definitions are rejected. The adapter requires the server to return exactly the configured IDs.
 
 The SDK validates and copies the optional list before making a request. Lists contain 1 to 1,000 unique ASCII milestone IDs, nonblank labels up to 256 characters, and nonblank descriptions up to 4,096 characters. Definitions participate in session storage and concurrent initialization scope, so a changed list creates a new session without reusing the old bearer. Omitting the list retains the service's legacy session behavior. Browser session creation does not modify a global course policy.
 
-Wire each ID to a verified success event in `_activity_runtime.js`. Keep acceptance predicates in the course, not in the SDK. Live multipart exercises must finish within the same authorized session; saved local flags do not create milestone records.
+Configure each ID's `evidence` rules with a typed producer `event`, a course `page`, and an existing DOM `target`. Optional `matches` checks fixed scalar values or an allowed value list; `minimum` checks positive numeric counts. Optional `requires` indexes require an earlier live rule before the current rule can succeed. All rules for a milestone must succeed. The generic SDK binder reads these course-owned rules, and `_activity_runtime.js` connects its notifications to the consented adapter. Page views and clicks do not award milestones. Live multipart exercises must finish within the same authorized session; saved local flags do not create milestone records.
+
+A missing, invalid or unavailable course JSON disables tracking and leaves Finish Course unavailable. The adapter remains importable so unrelated course exercises still render. Static config reads have a ten-second deadline and carry no Activity bearer. They are permitted before consent; Activity API operations still require valid saved Performance Cookie consent.
 
 The course adapter calls `activity.completeMilestone(id)`. The SDK submits:
 

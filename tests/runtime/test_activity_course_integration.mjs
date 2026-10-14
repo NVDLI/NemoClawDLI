@@ -86,16 +86,15 @@ const APPROVED_ARTIFACT = Object.freeze({
 const SESSION_ID = '019f38f1-e5ab-7688-af0d-0e8925299e93';
 const STAMP = '2026-09-09T19:00:00Z';
 const IDS = Object.keys(ACTIVITY_MILESTONES);
-test('course config is the single immutable source of milestone UI and registration definitions', async () => {
-  const config = await import(pathToFileURL(path.resolve(COURSE_ROOT, 'scripts', '_activity_config.js')));
-  assert.equal(config.ACTIVITY_MILESTONES, ACTIVITY_MILESTONES);
-  assert.equal(IDS.length, 11);
-  assert.ok(Object.isFrozen(config.ACTIVITY_MILESTONES));
-  for (const value of Object.values(config.ACTIVITY_MILESTONES)) assert.ok(Object.isFrozen(value));
-  assert.deepEqual(config.ACTIVITY_SESSION_MILESTONES, IDS.map(id => ({ id, label: ACTIVITY_MILESTONES[id].label, description: ACTIVITY_MILESTONES[id].description })));
-  const source = fs.readFileSync(ACTIVITY_SOURCE, 'utf8');
-  assert.doesNotMatch(source, /"description":/);
+test('course JSON is the single immutable source of UI and session registration definitions', () => {
+  const config = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity_milestones.json'), 'utf8'));
+  assert.equal(config.milestones.length, 11);
+  assert.ok(Object.isFrozen(ACTIVITY_MILESTONES));
+  assert.deepEqual(config.milestones.map(({id}) => id), IDS);
+  for (const marker of config.milestones) assert.deepEqual(ACTIVITY_MILESTONES[marker.id], activityModule.ACTIVITY_CONFIG.milestones.find(item => item.id === marker.id));
+  assert.equal(fs.existsSync(path.join(COURSE_ROOT, 'scripts', '_activity_config.js')), false);
 });
+
 const confirmedState = (count = 0) => ({ sessionId: SESSION_ID, completedAt: null,
   milestones: IDS.map((milestoneId, index) => ({ milestoneId, completedAt: index < count ? STAMP : null })) });
 const rawState = (count = 0) => ({ session_id: SESSION_ID, completed_at: null,
@@ -313,7 +312,7 @@ test('course activity is local-only until the learner enables remote progress', 
   assert.equal(calls[0][0], 'initialize');
   assert.equal(calls[0][1].baseUrl, 'https://activity-api.learn.nvidia.com');
   assert.deepEqual(calls[0][1].artifact, APPROVED_ARTIFACT);
-  assert.deepEqual(calls[0][1].milestones, IDS.map(id => ({ id, label: ACTIVITY_MILESTONES[id].label, description: ACTIVITY_MILESTONES[id].description })));
+  assert.equal(calls[0][1].milestoneConfigUrl.href, activityModule.ACTIVITY_CONFIG_URL.href);
   assert.deepEqual(Object.keys(calls[0][1].artifact), ['artifact_id', 'artifact_version', 'artifact_digest']);
   assert.equal('activity' in calls[0][1], false);
   assert.equal(typeof calls[0][1].storage.load, 'function');
@@ -1318,6 +1317,7 @@ test('concurrent authentication renewal cannot move live exercise evidence into 
   const previous = Object.getOwnPropertyDescriptor(globalThis, 'location');
   Object.defineProperty(globalThis, 'location', { configurable: true, value: { pathname: '/nemoclaw/03b-openclaw.html' } });
   const windowTarget = new EventTarget(); const documentTarget = new EventTarget();
+  documentTarget.getElementById = id => ['cell-introspect', 'cell-workspace-term'].includes(id) ? {} : null;
   windowTarget.OneTrust = { IsAlertBoxClosed: () => true, OnConsentChanged: () => {} };
   windowTarget.OnetrustActiveGroups = ",C0001,C0002,";
   installCourseActivityTracking({ windowTarget, documentTarget, activity, storageTarget: null });
