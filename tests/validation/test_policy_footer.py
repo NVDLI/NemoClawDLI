@@ -14,13 +14,15 @@ from scripts.build.bundle_standalone import bundle_one
 class PolicyFooterTests(unittest.TestCase):
     def test_every_course_export_has_static_policy_links(self):
         root = Path(__file__).resolve().parents[2]
-        sources = [root / "web/nemoclaw"]
+        courses = sorted(path.parent for path in (root / "web").glob("*/interface-inventory.json"))
+        self.assertTrue(courses, "expected discovered course interface inventories")
+        sources = list(courses)
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         for locale in sorted(root.glob("i18n/*/locale.json")):
             output = Path(temporary.name) / locale.parent.name
             assemble(locale.parent, output)
-            sources.append(output / "web/nemoclaw")
+            sources.extend(output / course.relative_to(root) for course in courses)
         expected = [
             ("https://www.nvidia.com/en-us/about-nvidia/privacy-policy/", "Privacy Policy"),
             ("https://www.nvidia.com/en-us/about-nvidia/privacy-center/", "Your Privacy Choices"),
@@ -31,7 +33,10 @@ class PolicyFooterTests(unittest.TestCase):
             ("https://www.nvidia.com/en-us/contact/", "Contact"),
         ]
         for directory in sources:
-            for page in sorted(directory.glob("*.html")):
+            self.assertTrue(directory.is_dir(), str(directory))
+            pages = sorted(directory.glob("*.html"))
+            self.assertTrue(pages, f"no course pages in {directory}")
+            for page in pages:
                 for full in (False, True):
                     with self.subTest(page=str(page), full=full):
                         result = bundle_one(page, "", "", "", full=full)

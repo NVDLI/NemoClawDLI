@@ -20,11 +20,22 @@ class ActivityMilestoneContractTests(unittest.TestCase):
         self.addCleanup(self.directory.cleanup)
         self.course = Path(self.directory.name) / "novel-course"
         self.course.mkdir()
-        for path in (ROOT / "web/nemoclaw").glob("*.html"):
-            shutil.copyfile(path, self.course / path.name)
-        for filename in ("ACTIVITY_MILESTONES.md", "activity_milestones.json"):
-            shutil.copyfile(ROOT / "web/nemoclaw" / filename, self.course / filename)
-        self.config = json.loads((self.course / "activity_milestones.json").read_text())
+        self.config = {"schemaVersion": 1, "milestones": [
+            {"id": "fixture:first", "label": "First exercise", "description": "Complete the first exercise.",
+             "href": "lesson.html#exercise", "evidence": [
+                 {"event": "fixture:succeeded", "page": "lesson.html", "target": "exercise"}]},
+            {"id": "fixture:second", "label": "Follow-up exercise", "description": "Complete the follow-up and cleanup.",
+             "href": "followup.html#result", "evidence": [
+                 {"event": "fixture:result", "page": "followup.html", "target": "result"},
+                 {"event": "fixture:cleanup", "page": "followup.html", "target": "cleanup"}]},
+        ]}
+        self.write(self.config)
+        (self.course / "lesson.html").write_text('<html><body><div id="exercise"></div></body></html>')
+        (self.course / "followup.html").write_text('<html><body><div id="result"></div><div id="cleanup"></div></body></html>')
+        rows = [f"| `{marker['id']}` | [{marker['label']}]({marker['href']}) | {marker['description']} |"
+                for marker in self.config["milestones"]]
+        (self.course / "ACTIVITY_MILESTONES.md").write_text(
+            "# Activity Milestones\n\n| ID | Exercise | Criteria |\n| --- | --- | --- |\n" + "\n".join(rows) + "\n")
 
     def write(self, config):
         (self.course / "activity_milestones.json").write_text(json.dumps(config))
@@ -56,15 +67,15 @@ class ActivityMilestoneContractTests(unittest.TestCase):
         for key in ("href", "target", "page"):
             mutated = copy.deepcopy(self.config)
             if key == "href":
-                mutated["milestones"][0][key] = "01a-loop.html#missing-exercise"
+                mutated["milestones"][0][key] = "lesson.html#missing-exercise"
             else:
                 mutated["milestones"][0]["evidence"][0][key] = "missing.html" if key == "page" else "missing-exercise"
             self.write(mutated)
             self.assertTrue(audit_course(self.course), key)
 
     def test_removing_real_html_target_fails(self):
-        page = self.course / "01a-loop.html"
-        page.write_text(page.read_text().replace('id="cell-onecall"', 'id="removed-exercise"'))
+        page = self.course / "lesson.html"
+        page.write_text(page.read_text().replace('id="exercise"', 'id="removed-exercise"'))
         self.assertTrue(audit_course(self.course))
 
     def test_parallel_javascript_definition_source_fails(self):
@@ -89,7 +100,8 @@ class ActivityMilestoneContractTests(unittest.TestCase):
 
     def test_novel_inline_javascript_definitions_fail(self):
         (self.course / "scripts").mkdir()
-        (self.course / "scripts/renamed_config.js").write_text('export const copied = [{id:"01a:model-call-verified",label:"Make your first model call"}];')
+        (self.course / "scripts/renamed_config.js").write_text(
+            "export const copied = " + json.dumps([self.config["milestones"][0]]) + ";\n")
         self.assertTrue(audit_course(self.course))
 
     def test_regenerating_course_hub_retains_lesson_map_metadata_and_links(self):

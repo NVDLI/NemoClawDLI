@@ -4,17 +4,25 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
+const COURSE_ROOTS = fs.readdirSync('web', {withFileTypes:true})
+  .filter(entry => entry.isDirectory() && (fs.existsSync(path.join('web', entry.name, 'activity-policy.json'))
+    || fs.existsSync(path.join('web', entry.name, 'scripts/_activity.js'))))
+  .map(entry => path.join('web', entry.name));
+assert.ok(COURSE_ROOTS.length, 'expected courses with milestone contracts');
+for (const COURSE_ROOT of COURSE_ROOTS) {
 const nativeFetch = globalThis.fetch;
 globalThis.fetch = async url => url instanceof URL && url.protocol === 'file:'
   ? new Response(fs.readFileSync(url, 'utf8')) : nativeFetch(url);
-const { installCourseActivityTracking, getInstalledCourseActivity, ACTIVITY_MILESTONE_ORDER } = await import('../../web/nemoclaw/scripts/_activity_runtime.js');
+const { installCourseActivityTracking, getInstalledCourseActivity, ACTIVITY_MILESTONE_ORDER } = await import(pathToFileURL(path.resolve(COURSE_ROOT, 'scripts/_activity_runtime.js')));
 globalThis.fetch = nativeFetch;
 
-const read = file => fs.readFileSync(`web/nemoclaw/${file}`, 'utf8');
+const read = file => fs.readFileSync(path.join(COURSE_ROOT, file), 'utf8');
 
 test('Activity Milestones documentation matches every course definition and exercise', async () => {
-  const { ACTIVITY_MILESTONES } = await import('../../web/nemoclaw/scripts/_activity.js');
-  const doc = fs.readFileSync('web/nemoclaw/ACTIVITY_MILESTONES.md', 'utf8');
+  const { ACTIVITY_MILESTONES } = await import(pathToFileURL(path.resolve(COURSE_ROOT, 'scripts/_activity.js')));
+  const doc = read('ACTIVITY_MILESTONES.md');
   assert.match(doc, /^# Activity Milestones\n/);
   const rows = [...doc.matchAll(/^\| `([^`]+)` \| \[([^\]]+)\]\(([^)]*)\) \| ([^|]+) \|$/gm)];
   assert.deepEqual(rows.map(row => row[1]), Object.keys(ACTIVITY_MILESTONES));
@@ -33,7 +41,7 @@ function dispatch(target, type, detail = {}) {
 }
 function fixture(page = '01a-loop.html', { sessionId = 'session-a', storageTarget, write = async () => true } = {}) {
   const previous = Object.getOwnPropertyDescriptor(globalThis, 'location');
-  Object.defineProperty(globalThis, 'location', { configurable: true, value: { pathname: `/nemoclaw/${page}` } });
+  Object.defineProperty(globalThis, 'location', { configurable: true, value: { pathname: `/${COURSE_ROOT}/${page}` } });
   const windowTarget = new EventTarget(); const documentTarget = new EventTarget();
   documentTarget.getElementById = id => read(page).includes('id="' + id + '"') ? {} : null;
   windowTarget.OneTrust = { IsAlertBoxClosed: () => true, OnConsentChanged: () => {} };
@@ -188,3 +196,5 @@ test('combined cron result requires both run and cleanup evidence', async () => 
     } finally { f.restore(); }
   }
 });
+
+}

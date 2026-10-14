@@ -1231,7 +1231,7 @@ test('HTTP lab transport requires deployment permission and preserves authentica
   let sdkOptions;
   const make = p => createCourseActivity({
     policyLoader: async () => p,
-    locationHref: 'http://lab.example.test/lab/static/web/nemoclaw/index.html',
+    locationHref: `http://lab.example.test/lab/static/${COURSE_ROOT}/index.html`,
     cryptoImpl: {},
     fetchImpl: async (url, options) => {
       requests.push({ url, options });
@@ -1265,18 +1265,22 @@ test('HTTP lab transport requires deployment permission and preserves authentica
 });
 }
 
+for (const COURSE_ROOT of COURSE_ROOTS) {
+const adapterUrl = pathToFileURL(path.resolve(COURSE_ROOT, 'scripts/_activity.js'));
+const runtimeUrl = pathToFileURL(path.resolve(COURSE_ROOT, 'scripts/_activity_runtime.js'));
+const {ACTIVITY_ARTIFACT_ID} = await import(adapterUrl);
 test('course adapter writes independent milestones with the shared JavaScript facade', () => {
-  const source = fs.readFileSync('web/nemoclaw/scripts/_activity.js', 'utf8');
+  const source = fs.readFileSync(path.join(COURSE_ROOT, 'scripts/_activity.js'), 'utf8');
   assert.match(source, /activity\.completeMilestone\(milestoneRef/);
   assert.doesNotMatch(source, /progressPercent|activity\.progress\(/);
 });
 
 test('concurrent authentication renewal cannot move live exercise evidence into a replacement session', async () => {
-  const { createCourseActivity } = await import('../../web/nemoclaw/scripts/_activity.js');
-  const { installCourseActivityTracking } = await import('../../web/nemoclaw/scripts/_activity_runtime.js');
+  const { createCourseActivity } = await import(adapterUrl);
+  const { installCourseActivityTracking } = await import(runtimeUrl);
   const sessionA = '019f38f1-e5ab-7688-af0d-0e8925299e93';
   const sessionB = '019f38f1-e5ab-7688-af0d-0e8925299e94';
-  const config = { milestones: Object.keys((await import('../../web/nemoclaw/scripts/_activity.js')).ACTIVITY_MILESTONES).map(id => ({ id })) };
+  const config = { milestones: Object.keys((await import(adapterUrl)).ACTIVITY_MILESTONES).map(id => ({ id })) };
   const writes = [];
   const marked = new Set();
   let sessions = 0; let readsA = 0; let readsB = 0;
@@ -1288,11 +1292,11 @@ test('concurrent authentication renewal cannot move live exercise evidence into 
   const remote = session_id => ({ session_id, completed_at: null, milestones: config.milestones.map(({ id: milestone_id }) => ({
     milestone_id, completed_at: marked.has(`${session_id}:${milestone_id}`) ? '2026-10-12T12:00:00Z' : null,
   })) });
-  const policy = JSON.parse(fs.readFileSync('web/nemoclaw/activity-policy.json', 'utf8'));
+  const policy = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8'));
   policy.collection_enabled = true;
   const activity = createCourseActivity({ storageTarget: null,
     policyLoader: async () => policy,
-    artifactResolver: async () => ({ artifact_id: 'artifact_nemoclaw_web', artifact_version: `git-${'a'.repeat(40)}`, artifact_digest: `sha256:${'b'.repeat(64)}` }),
+    artifactResolver: async () => ({ artifact_id: ACTIVITY_ARTIFACT_ID, artifact_version: `git-${'a'.repeat(40)}`, artifact_digest: `sha256:${'b'.repeat(64)}` }),
     fetchImpl: async (url, options) => {
       if (url.endsWith('/activity-sessions')) return response({ session_id: ++sessions === 1 ? sessionA : sessionB,
         session_token: 'fixture-session-token-long-enough', expires_at: '2099-01-01T00:00:00Z' }, 201);
@@ -1315,7 +1319,7 @@ test('concurrent authentication renewal cannot move live exercise evidence into 
   });
   assert.equal(await activity.enable(), true);
   const previous = Object.getOwnPropertyDescriptor(globalThis, 'location');
-  Object.defineProperty(globalThis, 'location', { configurable: true, value: { pathname: '/nemoclaw/03b-openclaw.html' } });
+  Object.defineProperty(globalThis, 'location', { configurable: true, value: { pathname: `/${COURSE_ROOT}/03b-openclaw.html` } });
   const windowTarget = new EventTarget(); const documentTarget = new EventTarget();
   documentTarget.getElementById = id => ['cell-introspect', 'cell-workspace-term'].includes(id) ? {} : null;
   windowTarget.OneTrust = { IsAlertBoxClosed: () => true, OnConsentChanged: () => {} };
@@ -1343,9 +1347,9 @@ test('concurrent authentication renewal cannot move live exercise evidence into 
 });
 
 test('a failed SDK write that renews authentication cannot transfer the next pending milestone', async () => {
-  const { createCourseActivity } = await import('../../web/nemoclaw/scripts/_activity.js');
-  const config = { milestones: Object.keys((await import('../../web/nemoclaw/scripts/_activity.js')).ACTIVITY_MILESTONES).map(id => ({ id })) };
-  const policy = JSON.parse(fs.readFileSync('web/nemoclaw/activity-policy.json', 'utf8')); policy.collection_enabled = true;
+  const { createCourseActivity } = await import(adapterUrl);
+  const config = { milestones: Object.keys((await import(adapterUrl)).ACTIVITY_MILESTONES).map(id => ({ id })) };
+  const policy = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8')); policy.collection_enabled = true;
   const sessionA = '019f38f1-e5ab-7688-af0d-0e8925299e93';
   const sessionB = '019f38f1-e5ab-7688-af0d-0e8925299e94';
   let sessions = 0;
@@ -1353,7 +1357,7 @@ test('a failed SDK write that renews authentication cannot transfer the next pen
   const response = (body, status = 200) => new Response(JSON.stringify(body), { status });
   const activity = createCourseActivity({ storageTarget: null,
     policyLoader: async () => policy,
-    artifactResolver: async () => ({ artifact_id: 'artifact_nemoclaw_web', artifact_version: `git-${'a'.repeat(40)}`, artifact_digest: `sha256:${'b'.repeat(64)}` }),
+    artifactResolver: async () => ({ artifact_id: ACTIVITY_ARTIFACT_ID, artifact_version: `git-${'a'.repeat(40)}`, artifact_digest: `sha256:${'b'.repeat(64)}` }),
     fetchImpl: async (url, options) => {
       if (url.endsWith('/activity-sessions')) return response({ session_id: ++sessions === 1 ? sessionA : sessionB,
         session_token: 'fixture-session-token-long-enough', expires_at: '2099-01-01T00:00:00Z' }, 201);
@@ -1402,7 +1406,7 @@ function consentFixture({ groups = ',C0001,', chosen = false, loaded = true } = 
 const flushConsent = async () => { await new Promise(resolve => setImmediate(resolve)); };
 
 async function bindConsent(fixture) {
-  const runtime = await import('../../web/nemoclaw/scripts/_activity_runtime.js');
+  const runtime = await import(runtimeUrl);
   assert.equal(typeof runtime.bindNemoClawProgressConsent, 'function', 'course runtime needs a consent bridge');
   return runtime.bindNemoClawProgressConsent(fixture);
 }
@@ -1488,3 +1492,5 @@ test('loss of the CMP cancels a pending consent connection before its phase beco
   finish(true); await flushConsent();
   assert.equal(fixture.calls.includes('sync'), false);
 });
+
+}

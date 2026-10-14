@@ -3,6 +3,13 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
+const COURSE_ROOTS = fs.readdirSync('web', {withFileTypes:true})
+  .filter(entry => entry.isDirectory() && (fs.existsSync(path.join('web', entry.name, 'activity-policy.json'))
+    || fs.existsSync(path.join('web', entry.name, 'scripts/_activity.js'))))
+  .map(entry => path.join('web', entry.name));
+assert.ok(COURSE_ROOTS.length, 'expected courses with milestone contracts');
 import * as sdkModule from '../../web/shared/activity-sdk.js';
 const contract = () => ({schemaVersion:1,milestones:[{id:'fixture:done',label:'Complete exercise',description:'Run the exercise successfully.',href:'lesson.html#exercise',evidence:[{event:'fixture:success',page:'lesson.html',target:'exercise',matches:{success:true},minimum:{count:1}}]}]});
 const session={session_id:'019f38f1-e5ab-7688-af0d-0e8925299e93',session_token:'fixture-token-long-enough',expires_at:'2099-01-01T00:00:00Z'};
@@ -38,12 +45,12 @@ test('declarative ordered evidence and session replacement preserve live-only pa
  binding.bindSession({sessionId:'b'});emit('fixture:success');assert.equal(reached.length,1);emit('fixture:key');emit('fixture:success');assert.equal(reached.length,2);binding.dispose();
 });
 test('course home owns exactly one JSON definition source and its canonical Markdown',()=>{
- const config=JSON.parse(fs.readFileSync('web/nemoclaw/activity_milestones.json','utf8'));assert.equal(config.milestones.length,11);assert.match(fs.readFileSync('web/nemoclaw/ACTIVITY_MILESTONES.md','utf8'),/^# Activity Milestones\n/);assert.equal(fs.existsSync('web/nemoclaw/scripts/_activity_config.js'),false);
+ for(const root of COURSE_ROOTS){const config=JSON.parse(fs.readFileSync(path.join(root,'activity_milestones.json'),'utf8'));assert.ok(config.milestones.length>0);const doc=fs.readFileSync(path.join(root,'ACTIVITY_MILESTONES.md'),'utf8');assert.match(doc,/^# Activity Milestones\n/);const documented=[...doc.matchAll(/^\| `([^`]+)` \|/gm)].map(match=>match[1]);assert.deepEqual(config.milestones.map(marker=>marker.id),documented);assert.equal(fs.existsSync(path.join(root,'scripts/_activity_config.js')),false);}
 });
 
 test('course module remains importable when its JSON config is unavailable',async()=>{
  const {execFileSync}=await import('node:child_process');
- execFileSync(process.execPath,['--input-type=module','-e',"globalThis.fetch=async()=>new Response('{}',{status:503}); const m=await import('./web/nemoclaw/scripts/_activity.js'); if(m.ACTIVITY_CONFIG!==null || Object.keys(m.ACTIVITY_MILESTONES).length) process.exit(1);"],{cwd:process.cwd()});
+ for(const root of COURSE_ROOTS) execFileSync(process.execPath,['--input-type=module','-e',"globalThis.fetch=async()=>new Response('{}',{status:503}); const m=await import(process.argv[1]); if(m.ACTIVITY_CONFIG!==null || Object.keys(m.ACTIVITY_MILESTONES).length) process.exit(1);",pathToFileURL(path.resolve(root,'scripts/_activity.js')).href],{cwd:process.cwd()});
 });
 
 test('invalid fetched JSON stops initialization before any Activity request and can be retried',async()=>{
@@ -74,7 +81,7 @@ test('config snapshots reject sparse matcher arrays and never bind missing DOM t
 
 test('held optional config does not hold shared helper exports or trigger Activity requests',async()=>{
  const {execFileSync}=await import('node:child_process');
- execFileSync(process.execPath,['--input-type=module','-e',`Object.defineProperty(globalThis,'localStorage',{value:{getItem:()=>null,setItem:()=>{},removeItem:()=>{}},configurable:true});let release;let startedResolve;const started=new Promise(resolve=>startedResolve=resolve);let apiRequests=0;globalThis.fetch=async url=>{if(String(url).endsWith('activity_milestones.json')){startedResolve();return new Promise(resolve=>release=resolve);}if(String(url).includes('/v1/activity-sessions'))apiRequests++;return new Response('{}',{status:503});};let ready=false;const shared=import('./web/nemoclaw/scripts/_shared.js').then(module=>{if(typeof module.buildNav!=='function' || typeof module.getModelId!=='function')throw Error('missing unrelated helpers');ready=true;});await started;await new Promise(resolve=>setTimeout(resolve,50));if(!ready || apiRequests)throw Error('optional config held unrelated course bootstrap');release(new Response('{}',{status:503}));await shared;`],{cwd:process.cwd()});
+ for(const root of COURSE_ROOTS) execFileSync(process.execPath,['--input-type=module','-e',`Object.defineProperty(globalThis,'localStorage',{value:{getItem:()=>null,setItem:()=>{},removeItem:()=>{}},configurable:true});let release;let startedResolve;const started=new Promise(resolve=>startedResolve=resolve);let apiRequests=0;globalThis.fetch=async url=>{if(String(url).endsWith('activity_milestones.json')){startedResolve();return new Promise(resolve=>release=resolve);}if(String(url).includes('/v1/activity-sessions'))apiRequests++;return new Response('{}',{status:503});};let ready=false;const shared=import(process.argv[1]).then(module=>{if(typeof module.buildNav!=='function' || typeof module.getModelId!=='function')throw Error('missing unrelated helpers');ready=true;});await started;await new Promise(resolve=>setTimeout(resolve,50));if(!ready || apiRequests)throw Error('optional config held unrelated course bootstrap');release(new Response('{}',{status:503}));await shared;`,pathToFileURL(path.resolve(root,'scripts/_shared.js')).href],{cwd:process.cwd()});
 });
 
 test('real course navigation renders with JSON held and makes no Activity API requests', {timeout:60000}, async()=>{
@@ -86,6 +93,6 @@ test('real course navigation renders with JSON held and makes no Activity API re
  const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox']});let apiRequests=0;const held=[];
  try {const context=await browser.newContext();await context.route('**/*',route=>{const url=new URL(route.request().url());if(url.hostname==='activity-api.learn.nvidia.com'){apiRequests++;return route.abort();}if(url.pathname.endsWith('/activity_milestones.json')){held.push(route);return;}if(url.hostname!=='127.0.0.1')return route.abort();return route.continue();});
  const port=server.address().port;
- for(const lesson of ['01a-loop.html','04c-going-further.html']){const page=await context.newPage();const configRequested=page.waitForRequest(request=>request.url().endsWith('/activity_milestones.json'));await page.goto(`http://127.0.0.1:${port}/web/nemoclaw/${lesson}`,{waitUntil:'commit'});await configRequested;await page.waitForFunction(()=>document.querySelector('#nav')?.children.length>0);assert.equal(await page.evaluate(async()=>typeof(await import('./scripts/_shared.js')).getModelId),'function');assert.equal(apiRequests,0);assert.ok(held.length>0);await page.close();}
+ for(const root of COURSE_ROOTS){const config=JSON.parse(fs.readFileSync(path.join(root,'activity_milestones.json'),'utf8'));const firstLesson=config.milestones[0].href.split('#')[0];const completionPages=fs.readdirSync(root).filter(file=>file.endsWith('.html') && fs.readFileSync(path.join(root,file),'utf8').includes('id="finish-course"'));for(const lesson of new Set([firstLesson,...completionPages])){const page=await context.newPage();const configRequested=page.waitForRequest(request=>request.url().endsWith('/activity_milestones.json'));await page.goto(`http://127.0.0.1:${port}/${root}/${lesson}`,{waitUntil:'commit'});await configRequested;await page.waitForFunction(()=>document.querySelector('#nav')?.children.length>0);assert.equal(await page.evaluate(async()=>typeof(await import('./scripts/_shared.js')).getModelId),'function');assert.equal(apiRequests,0);assert.ok(held.length>0);await page.close();}}
  }finally{await Promise.all(held.map(route=>route.abort().catch(()=>{})));await browser.close();await new Promise(resolve=>server.close(resolve));}
 });
