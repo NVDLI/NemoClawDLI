@@ -16,7 +16,7 @@ The Progress panel shows a read-only milestone checklist, with an instruction an
 
 ## Course milestones
 
-The [course-home Activity Milestones](../web/nemoclaw/ACTIVITY_MILESTONES.md) document lists the checklist and acceptance criteria. Its [JSON configuration](../web/nemoclaw/activity_milestones.json) is the single definition source for IDs, labels, descriptions, exercise targets and typed success-event evidence. The build checks documentation parity and every actual HTML target before assembly.
+The course-home `web/nemoclaw/ACTIVITY_MILESTONES.md` document lists the checklist and acceptance criteria. Its `activity_milestones.json` configuration is the single definition source for IDs, labels, descriptions, exercise targets and typed success-event evidence. The build checks documentation parity and every actual HTML target before assembly.
 
 ## Cookie consent notice
 
