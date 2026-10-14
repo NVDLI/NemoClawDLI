@@ -86,7 +86,7 @@ const APPROVED_ARTIFACT = Object.freeze({
 const SESSION_ID = '019f38f1-e5ab-7688-af0d-0e8925299e93';
 const STAMP = '2026-09-09T19:00:00Z';
 const IDS = Object.keys(ACTIVITY_MILESTONES);
-test('course JSON is the single immutable source of UI and session registration definitions', () => {
+test('course JSON is the single immutable source of local UI and exercise evidence definitions', () => {
   const config = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity_milestones.json'), 'utf8'));
   assert.equal(config.milestones.length, 11);
   assert.ok(Object.isFrozen(ACTIVITY_MILESTONES));
@@ -440,6 +440,10 @@ test('browser artifact discovery preserves same-origin authentication and blocks
         const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS' };
         if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
         if (apiMode === 'unavailable') return route.fulfill({ status: 503, headers, json: {} });
+        if (url.pathname.endsWith('/activity-sessions') && route.request().method() === 'POST'
+          && JSON.stringify(Object.keys(route.request().postDataJSON()).sort()) !== JSON.stringify(['artifact_digest', 'artifact_id', 'artifact_version'])) {
+          return route.fulfill({ status: 422, headers, json: { detail: 'Session accepts only published artifact fields' } });
+        }
         if (confirmWrites && url.pathname.endsWith('/updates') && route.request().method() === 'POST') {
           const event = route.request().postDataJSON(); eventWrites.push(event);
           if (event.type === 'milestone_completed') confirmedIds.add(event.payload.milestone_id);
@@ -689,10 +693,8 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     assert.equal(await page.locator('.course-milestones li').count(), IDS.length);
     assert.equal(apiRequests.slice(journeyStart).filter(request => request.method === 'POST'
       && request.pathname.endsWith('/activity-sessions')).length, 1);
-    assert.deepEqual(apiRequests.slice(journeyStart).find(request => request.method === 'POST'
-      && request.pathname.endsWith('/activity-sessions')).body.milestones, IDS.map(id => ({
-      id, label: ACTIVITY_MILESTONES[id].label, description: ACTIVITY_MILESTONES[id].description,
-    })));
+    assert.deepEqual(Object.keys(apiRequests.slice(journeyStart).find(request => request.method === 'POST'
+      && request.pathname.endsWith('/activity-sessions')).body).sort(), ['artifact_digest', 'artifact_id', 'artifact_version']);
 
     const successfulExercises = {
       '01a:model-call-verified': [['api-key-verified', {}], ['run-succeeded', { cellId: 'cell-onecall', hasContent: true }]],

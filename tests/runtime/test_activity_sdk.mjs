@@ -11,7 +11,11 @@ function fixture({markers=['early','later'],completed=[],legacy=false}={}) {
  const writes=[];let finished=false;const reached=new Set(completed);
  const remote=()=>({session_id:sessionId,completed_at:finished?stamp:null,...(legacy?{progress_percent:100}:{milestones:markers.map(milestone_id=>({milestone_id,completed_at:reached.has(milestone_id)?stamp:null}))})});
  const fetchImpl=async(url,options)=>{
-  if(url.endsWith('/activity-sessions'))return new Response(JSON.stringify({session_id:sessionId,session_token:'fixture-token-long-enough',expires_at:'2099-01-01T00:00:00Z'}),{status:201});
+  if(url.endsWith('/activity-sessions')){
+   const body=JSON.parse(options.body);
+   if(JSON.stringify(Object.keys(body).sort())!==JSON.stringify(Object.keys(artifact).sort()))return new Response('{"detail":"Session accepts only published artifact fields"}',{status:422});
+   return new Response(JSON.stringify({session_id:sessionId,session_token:'fixture-token-long-enough',expires_at:'2099-01-01T00:00:00Z'}),{status:201});
+  }
   if(url.endsWith('/state'))return new Response(JSON.stringify(remote()));
   const body=JSON.parse(options.body);writes.push({body,options});
   if(body.type==='milestone_completed')reached.add(body.payload.milestone_id);
@@ -107,11 +111,11 @@ test('authentication recovery never forwards a different client scope token',asy
 });
 
 const definitions = () => [{id:'early',label:'Early exercise',description:'Finish the early exercise.'}];
-test('session initialization carries copied course definitions beside exactly three artifact fields',async()=>{
- const f=fixture();const bodies=[];const milestones=definitions();const expected=definitions();
+test('session initialization sends exactly three artifact fields while retaining local definitions',async()=>{
+ const f=fixture();const bodies=[];const milestones=definitions();
  const client=createActivityClient({...f.options,milestones,fetchImpl:async(url,options)=>{bodies.push(JSON.parse(options.body));return f.options.fetchImpl(url,options);}});
  milestones[0].label='Changed after construction';milestones.push({id:'later',label:'Later',description:'Later'});
- await client.ensureSession();assert.deepEqual(bodies,[{...artifact,milestones:expected}]);assert.deepEqual(Object.keys(artifact),['artifact_id','artifact_version','artifact_digest']);
+ await client.ensureSession();assert.deepEqual(bodies,[artifact]);assert.deepEqual(Object.keys(artifact),['artifact_id','artifact_version','artifact_digest']);
 });
 test('malformed milestone configuration fails before any network operation',async()=>{
  const f=fixture();let requests=0;const options={...f.options,fetchImpl:async()=>{requests++;assert.fail('invalid configuration must not request');}};
@@ -125,7 +129,7 @@ test('malformed milestone configuration fails before any network operation',asyn
  }
  assert.equal(requests,0);
 });
-test('a changed registration renews sessions without forwarding the old bearer',async()=>{
+test('a changed local configuration renews sessions without forwarding the old bearer',async()=>{
  const f=fixture();const requests=[];let sessions=0;const storage=createMemoryActivityStorage();
  const fetchImpl=async(url,options)=>{
   requests.push({url,options});
@@ -148,10 +152,10 @@ test('concurrent initialize isolates different course definitions and coalesces 
  const b=DLIActivity.initialize({...options,milestones:original});
  await Promise.resolve();assert.equal(pending.length,2);pending.forEach(resolve=>resolve());
  const [first,same,different]=await Promise.all([a,equivalent,b]);assert.equal(first,same);assert.notEqual(first,different);
- assert.deepEqual(bodies.map(body=>body.milestones[0].label),['Early exercise','Changed']);
+ assert.deepEqual(bodies,[artifact,artifact]);
 });
 
-test('a session definition conflict is a rejected request while write conflicts remain idempotency conflicts',async()=>{
+test('a session conflict is a rejected request while write conflicts remain idempotency conflicts',async()=>{
  const f=fixture();
  await assert.rejects(DLIActivity.initialize({...f.options,milestones:definitions(),fetchImpl:async()=>new Response('{}',{status:409})}),error=>error.code==='request_rejected' && error.status===409 && error.operation==='session');
  const client=createActivityClient({...f.options,fetchImpl:async(url,options)=>url.endsWith('/activity-sessions')?f.options.fetchImpl(url,options):new Response('{}',{status:409})});
@@ -159,7 +163,7 @@ test('a session definition conflict is a rejected request while write conflicts 
  await assert.rejects(client.recordMilestoneCompleted({milestoneId:'early',idempotencyKey:'fixture'}),error=>error.code==='idempotency_conflict' && error.status===409);
 });
 
-test('definition projection budget accepts exactly 64 KiB and rejects one extra UTF-8 byte',()=>{
+test('local configuration budget accepts exactly 64 KiB and rejects one extra UTF-8 byte',()=>{
  const markers=Array.from({length:16},(_,index)=>({id:`marker-${index}`,label:'L',description:'x'.repeat(4000)}));
  const size=value=>new TextEncoder().encode(JSON.stringify(value)).byteLength;
  let remaining=64*1024-size(markers);
@@ -168,7 +172,7 @@ test('definition projection budget accepts exactly 64 KiB and rejects one extra 
  const spare=markers.find(marker=>marker.description.length<4096);spare.description+='x';
  assert.throws(()=>createActivityClient({...fixture().options,milestones:markers}),error=>error.code==='invalid_configuration');
 });
-test('definition projection uses UTF-8 bytes for multibyte descriptions before requesting',async()=>{
+test('local configuration uses UTF-8 bytes for multibyte descriptions before requesting',async()=>{
  const markers=Array.from({length:16},(_,index)=>({id:`marker-${index}`,label:'L',description:'😀'.repeat(1024)}));
  assert.ok(JSON.stringify(markers).length<64*1024);assert.ok(new TextEncoder().encode(JSON.stringify(markers)).byteLength>64*1024);
  await assert.rejects(DLIActivity.initialize({...fixture().options,milestones:markers,fetchImpl:()=>assert.fail('oversized definitions must not request')}),error=>error.code==='invalid_configuration');

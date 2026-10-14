@@ -215,7 +215,7 @@ function validateMilestones(milestones) {
     return Object.freeze({ id: marker.id, label: marker.label, description: marker.description });
   }));
   if (new TextEncoder().encode(JSON.stringify(snapshot)).byteLength > 64 * 1024) {
-    throw new ActivitySdkError('Activity milestone definitions exceed the payload budget', {
+    throw new ActivitySdkError('Activity local milestone configuration exceeds the size budget', {
       code: 'invalid_configuration', category: 'configuration',
     });
   }
@@ -399,6 +399,7 @@ export function createActivityClient({
 } = {}) {
   const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
   const normalizedArtifact = validateArtifact(artifact);
+  // Course definitions validate and scope local state; the session API accepts only artifact identity.
   const normalizedMilestones = validateMilestones(milestones);
   const scope = JSON.stringify([normalizedBaseUrl, normalizedArtifact, normalizedMilestones]);
   if (typeof fetchImpl !== 'function') throw new ActivitySdkError('Fetch API is unavailable', {
@@ -467,7 +468,7 @@ export function createActivityClient({
 
   async function createSession() {
     const { result } = await requestJson('session', '/v1/activity-sessions', {
-      body: { ...normalizedArtifact, ...(normalizedMilestones === undefined ? {} : { milestones: normalizedMilestones }) },
+      body: { ...normalizedArtifact },
     });
     const session = validateSession(result);
     storage.save({ ...session, scope });

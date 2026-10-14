@@ -14,14 +14,18 @@ import * as sdkModule from '../../web/shared/activity-sdk.js';
 const contract = () => ({schemaVersion:1,milestones:[{id:'fixture:done',label:'Complete exercise',description:'Run the exercise successfully.',href:'lesson.html#exercise',evidence:[{event:'fixture:success',page:'lesson.html',target:'exercise',matches:{success:true},minimum:{count:1}}]}]});
 const session={session_id:'019f38f1-e5ab-7688-af0d-0e8925299e93',session_token:'fixture-token-long-enough',expires_at:'2099-01-01T00:00:00Z'};
 const artifact={artifact_id:'fixture-course',artifact_version:'v1',artifact_digest:'sha256:'+'a'.repeat(64)};
-test('initialize loads the course JSON once and submits only public milestone definitions',async()=>{
- const requests=[];const fetchImpl=async(url,options)=>{requests.push({url,options});return new Response(JSON.stringify(String(url).endsWith('.json')?contract():session),{status:201});};
+test('initialize loads the course JSON once and sends only published artifact fields',async()=>{
+ const requests=[];const fetchImpl=async(url,options)=>{
+  requests.push({url,options});
+  if(!String(url).endsWith('.json') && JSON.stringify(Object.keys(JSON.parse(options.body)).sort())!==JSON.stringify(Object.keys(artifact).sort()))return new Response('{}',{status:422});
+  return new Response(JSON.stringify(String(url).endsWith('.json')?contract():session),{status:201});
+ };
  const milestoneConfigUrl='https://course.example.test/initialize/activity_milestones.json';
  const config=await sdkModule.loadActivityMilestoneConfig(milestoneConfigUrl,{fetchImpl});
  assert.ok(Object.isFrozen(config.milestones[0].evidence[0].matches));
  await sdkModule.DLIActivity.initialize({baseUrl:'https://activity.example.test',artifact,milestoneConfigUrl,fetchImpl});
  assert.equal(requests.filter(r=>String(r.url).endsWith('.json')).length,1);
- assert.deepEqual(JSON.parse(requests.at(-1).options.body),{...artifact,milestones:[{id:'fixture:done',label:'Complete exercise',description:'Run the exercise successfully.'}]});
+ assert.deepEqual(JSON.parse(requests.at(-1).options.body),artifact);
 });
 test('generic config rejects unsafe shape, URLs, event targets and incomplete success evidence',()=>{
  for(const mutate of [c=>c.milestones[0].label='bad\u0000text',c=>c.milestones[0].description='bad\u0000text',c=>c.milestones[0].evidence[0].matches=null,c=>c.milestones[0].evidence[0].minimum=null,c=>c.milestones[0].evidence[0].requires=null,c=>c.schemaVersion=2,c=>c.extra=true,c=>c.milestones=[],c=>c.milestones.push(c.milestones[0]),c=>c.milestones[0].href='https://private.example.test/key',c=>c.milestones[0].href='../lesson.html#exercise',c=>c.milestones[0].evidence=[],c=>c.milestones[0].evidence[0].event='click',c=>c.milestones[0].evidence[0].target='#exercise',c=>c.milestones[0].evidence[0].page='../lesson.html',c=>c.milestones[0].evidence[0].minimum.count=-1,c=>c.milestones[0].evidence[0].requires=[0],c=>c.milestones[0].evidence[0].unknown=true]) {
