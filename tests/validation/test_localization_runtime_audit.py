@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.runtime.host_browser import resolve_node_path
+from scripts.runtime.host_browser import environment, resolve_node_path
 from scripts.validation.localization_runtime_audit import discover_learner_pages
 from scripts.validation.runtime_integration_browser_audit import (
     LOCALE_PAGES, RUNTIME_JS, discover_artifact_locales,
@@ -243,6 +243,38 @@ class RuntimeArtifactLocaleTests(unittest.TestCase):
 
 
 class RuntimeBrowserFixtureTests(unittest.TestCase):
+    def test_runtime_audit_rejects_delayed_cookie_notice_before_exercises(self):
+        prefix = RUNTIME_JS.split("(async () => {", 1)[0]
+        checks = r"""
+(async () => {
+  const assert = require('assert/strict');
+  const browser = await chromium.launch({executablePath: process.env.CHROME_BIN, headless:true, args:['--no-sandbox']});
+  try {
+    const page = await browser.newPage();
+    await page.setContent(`<script data-domain-script="fixture"></script>
+      <button id="exercise" onclick="window.exerciseClicked=true">Run</button>
+      <script>window.OneTrust = {RejectAll() {
+        window.cookieRejected = true;
+        document.querySelector('.onetrust-pc-dark-filter').style.display = 'none';
+      }};
+      setTimeout(() => {
+        const notice = document.createElement('div');
+        notice.id = 'onetrust-consent-sdk';
+        notice.innerHTML = '<div class="onetrust-pc-dark-filter" style="position:fixed;inset:0;z-index:100"></div>';
+        document.body.appendChild(notice);
+      }, 100);</script>`);
+    await dismissCookieNotice(page);
+    await page.locator('#exercise').click({timeout:1000});
+    assert.equal(await page.evaluate(() => window.cookieRejected), true);
+    assert.equal(await page.evaluate(() => window.exerciseClicked), true);
+  } finally { await browser.close(); }
+})().catch(error => {console.error(error);process.exitCode=1;});
+"""
+        result = subprocess.run(["node", "-e", prefix + checks], capture_output=True,
+                                text=True, env={**environment(), "ARTIFACT_LOCALES":
+                                '[{"code":"en","url":"nemoclaw/"}]'}, check=False)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_policy_transport_fixture_preserves_generated_stream_boundaries(self):
         fixture = "class FakeWebSocket {" + RUNTIME_JS.split("class FakeWebSocket {", 1)[1].split(
             "window.WebSocket = FakeWebSocket;", 1)[0]

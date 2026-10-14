@@ -246,6 +246,17 @@ function courseExplorerPath() {
   return found;
 }
 
+async function dismissCookieNotice(page) {
+  if (!await page.locator('script[data-domain-script]').count()) return;
+  await page.waitForFunction(() => typeof window.OneTrust?.RejectAll === 'function'
+      && document.querySelector('#onetrust-consent-sdk'),
+    null, { timeout: Math.min(timeoutMs, 45000) });
+  // This audit exercises course controls with telemetry declined. The dedicated
+  // Activity browser journey verifies consent grant and withdrawal separately.
+  await page.evaluate(() => window.OneTrust.RejectAll());
+  await page.locator('.onetrust-pc-dark-filter').last().waitFor({ state: 'hidden' });
+}
+
 async function open(browser, pageName, init) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const errors = [];
@@ -256,6 +267,7 @@ async function open(browser, pageName, init) {
   if (init) await page.addInitScript({ content: topLevelInitScript(init) });
   const response = await page.goto(url(pageName), { waitUntil: 'domcontentloaded', timeout: timeoutMs });
   if (!response?.ok()) fail(`course route failed: ${pageName} (${response?.status()})`);
+  await dismissCookieNotice(page);
   return { page, errors };
 }
 
