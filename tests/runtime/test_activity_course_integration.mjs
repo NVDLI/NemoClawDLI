@@ -35,7 +35,11 @@ for (const COURSE_ROOT of COURSE_ROOTS) {
 const COURSE_ID = path.basename(COURSE_ROOT);
 const ACTIVITY_SOURCE = path.join(COURSE_ROOT, 'scripts', '_activity.js');
 const ACTIVITY_RUNTIME_SOURCE = path.join(COURSE_ROOT, 'scripts', '_activity_runtime.js');
+const originalFetch = globalThis.fetch;
+globalThis.fetch = async url => url instanceof URL && url.protocol === 'file:'
+  ? new Response(fs.readFileSync(url, 'utf8'), { status: 200 }) : originalFetch(url);
 const activityModule = await import(pathToFileURL(path.resolve(ACTIVITY_SOURCE)));
+globalThis.fetch = originalFetch;
 
 const {
   ACTIVITY_MILESTONES,
@@ -79,29 +83,31 @@ const APPROVED_ARTIFACT = Object.freeze({
   artifact_digest: `sha256:${'b'.repeat(64)}`,
 });
 
-function createFixture({ progressPercent = 10 } = {}) {
+const SESSION_ID = '019f38f1-e5ab-7688-af0d-0e8925299e93';
+const STAMP = '2026-09-09T19:00:00Z';
+const IDS = Object.keys(ACTIVITY_MILESTONES);
+const confirmedState = (count = 0) => ({ sessionId: SESSION_ID, completedAt: null,
+  milestones: IDS.map((milestoneId, index) => ({ milestoneId, completedAt: index < count ? STAMP : null })) });
+const rawState = (count = 0) => ({ session_id: SESSION_ID, completed_at: null,
+  milestones: IDS.map((milestone_id, index) => ({ milestone_id, completed_at: index < count ? STAMP : null })) });
+function createFixture({ count = 0 } = {}) {
   const calls = [];
+  let remote = confirmedState(count);
   const facade = {
-    progress: async (...args) => { calls.push(['progress', ...args]); },
+    completeMilestone: async (...args) => {
+      calls.push(['completeMilestone', ...args]);
+      remote.milestones.find(marker => marker.milestoneId === args[0]).completedAt = STAMP;
+    },
     referral: async (...args) => { calls.push(['referral', ...args]); },
-    getState: async () => {
-      calls.push(['getState']);
-      return { progressPercent, completedAt: null };
-    },
-    complete: async (...args) => {
-      calls.push(['complete', ...args]);
-      return progressPercent === 100 ? { written: true } : { written: false };
-    },
+    getState: async () => { calls.push(['getState']); return remote; },
+    complete: async (...args) => { calls.push(['complete', ...args]); remote.completedAt = STAMP; return { written: true }; },
   };
   const activity = createCourseActivity({
     policyLoader: async () => APPROVED_POLICY,
     artifactResolver: async () => APPROVED_ARTIFACT,
-    initialize: async options => {
-      calls.push(['initialize', options]);
-      return facade;
-    },
+    initialize: async options => { calls.push(['initialize', options]); return facade; },
   });
-  return { activity, calls, setProgress: value => { progressPercent = value; } };
+  return { activity, calls, setState: value => { remote = value; } };
 }
 
 async function enableFixture(activity) {
@@ -113,7 +119,7 @@ test('the course imports only the public activity facade and contains no alterna
   const publicSource = fs.readFileSync(ACTIVITY_RUNTIME_SOURCE, 'utf8')
     + fs.readFileSync(path.join(COURSE_ROOT, '04c-going-further.html'), 'utf8') + source;
 
-  assert.match(source, /import \{ DLIActivity \}/);
+  assert.match(source, /import \{ DLIActivity,/);
   assert.doesNotMatch(source, /createActivityClient/);
   assert.doesNotMatch(publicSource, /activity-api\.(?:dev|stage)\.learn\.nvidia\.com/);
 });
@@ -182,7 +188,7 @@ test('sessions follow delivered content while identical locale artifacts share s
       initialize: async ({ storage }) => {
         restored.push(storage.load());
         storage.save({ digest });
-        return { getState: async () => ({ progressPercent: 0, completedAt: null }) };
+        return { getState: async () => (confirmedState()) };
       },
     });
     await enableFixture(activity);
@@ -219,10 +225,13 @@ test('the default Pages layout ships the public activity SDK at its imported pat
     path.join(output, 'i18n', 'novel', 'web', COURSE_ID),
   ]) {
     execFileSync('bash', ['scripts/build/build_pages.sh', '--stage-activity-sdk', courseRoot]);
-    assert.equal(
-      fs.readFileSync(path.resolve(courseRoot, 'scripts', '../../shared/activity-sdk.js'), 'utf8'),
-      fs.readFileSync('web/shared/activity-sdk.js', 'utf8'),
-    );
+    for (const file of ['activity-sdk.js']) {
+      assert.deepEqual(
+        fs.readFileSync(path.resolve(courseRoot, 'scripts', '../../shared', file)),
+        fs.readFileSync(path.join('web/shared', file)),
+        `${courseRoot}: ${file} must preserve the shared JavaScript client`,
+      );
+    }
   }
 });
 
@@ -256,27 +265,17 @@ test('the complete candidate diff contains no private or non-production activity
   assert.doesNotMatch(candidateDiff, credentialShape);
 });
 
-test('the milestone registry defines one increasing cumulative progress model', () => {
-  const progress = Object.values(ACTIVITY_MILESTONES).map(value => value.progressPercent);
-  assert.equal(progress.length, 11);
-  assert.deepEqual(progress, [...progress].sort((left, right) => left - right));
-  assert.equal(progress.at(-1), 100);
-  assert.deepEqual(
-    Object.fromEntries(Object.entries(ACTIVITY_MILESTONES).map(([key, value]) => [key, value.progressPercent])),
-    {
-      '01a:model-call-verified': 10,
-      '01b:react-loop-complete': 15,
-      '01c:tool-roundtrip-complete': 25,
-      '02a:routed-workflow-complete': 35,
-      '02b:grounded-answer-complete': 45,
-      '02c:deep-research-complete': 50,
-      [`03a:${COURSE_ID}-connected`]: 60,
-      '03b:workspace-inspected': 70,
-      '03c:scheduled-run-complete': 80,
-      '04a:policy-boundary-verified': 90,
-      '04b:live-agent-operated': 100,
-    },
-  );
+test('the milestone registry defines eleven independent named milestones', () => {
+  for (const milestone of Object.values(ACTIVITY_MILESTONES)) {
+    assert.ok(milestone.label?.trim(), 'every milestone needs a learner-facing label');
+    assert.ok(milestone.description?.trim(), 'every milestone explains its success check');
+    assert.match(milestone.href, /^[\w-]+\.html#[\w-]+$/);
+    const [lesson, anchor] = milestone.href.split('#');
+    const source = fs.readFileSync(path.join(COURSE_ROOT, lesson), 'utf8');
+    assert.match(source, new RegExp(`id=["']${anchor}["']`), `${milestone.href} targets an existing exercise`);
+  }
+  assert.equal(IDS.length, 11);
+  assert.equal(new Set(IDS).size, IDS.length);
 });
 
 test('the referral registry uses unique references and HTTPS destinations', () => {
@@ -294,7 +293,7 @@ test('course activity is local-only until the learner enables remote progress', 
   const { activity, calls } = createFixture();
 
   assert.deepEqual(activity.snapshot(), {
-    phase: 'off', enabled: false, referralTracking: false, progressPercent: 0,
+    phase: 'off', enabled: false, referralTracking: false, sessionId: null, milestones: [],
   });
   assert.equal(await activity.recordMilestone('01a:model-call-verified'), false);
   assert.equal(await activity.trackBuildReferral(BUILD_SIGNUP_URL), false);
@@ -310,7 +309,7 @@ test('course activity is local-only until the learner enables remote progress', 
 
 test('a deployment with collection disabled blocks artifact and API access', async () => {
   const policy = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8'));
-  assert.equal(policy.collection_enabled, false);
+  policy.collection_enabled = false;
   const activity = createCourseActivity({
     policyLoader: async () => policy,
     artifactResolver: async () => assert.fail('artifact discovery must not run'),
@@ -393,25 +392,57 @@ test('browser artifact discovery preserves same-origin authentication and blocks
       args: ['--host-resolver-rules=MAP course.test 127.0.0.1', '--no-proxy-server'],
     });
     const context = await browser.newContext();
+    await context.addInitScript(() => {
+      const callbacks = [];
+      const chosen = () => sessionStorage.getItem('fixture-performance-consent') === 'true';
+      window.OnetrustActiveGroups = chosen() ? ',C0001,C0002,' : ',C0001,';
+      window.OneTrust = {
+        IsAlertBoxClosed: chosen,
+        OnConsentChanged: callback => callbacks.push(callback),
+        RejectAll: () => {
+          sessionStorage.removeItem('fixture-performance-consent');
+          window.OnetrustActiveGroups = ',C0001,';
+          callbacks.forEach(callback => callback());
+        },
+        SetAlertBoxClosed: () => sessionStorage.setItem('fixture-performance-consent', 'true'),
+        UpdateConsent: (kind, value) => {
+          if (kind !== 'Category' || value !== 'C0002:1') throw new Error('Only performance-cookie consent may be enabled');
+          window.OnetrustActiveGroups = ',C0001,C0002,';
+          callbacks.forEach(callback => callback());
+        },
+      };
+    });
     const port = server.address().port;
-    let apiRequests = 0;
+    const apiRequests = [];
     let apiMode = 'blocked';
-    let confirmedProgress = 0;
+    let confirmedCount = 0;
+    let confirmWrites = false;
+    const confirmedIds = new Set();
+    let courseCompleted = false;
+    const eventWrites = [];
     await context.route('**/*', route => {
       const url = new URL(route.request().url());
       if (url.hostname === 'activity-api.learn.nvidia.com') {
-        apiRequests++;
+        apiRequests.push({ method: route.request().method(), pathname: url.pathname });
         if (apiMode === 'blocked') return route.abort();
         const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS' };
         if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
         if (apiMode === 'unavailable') return route.fulfill({ status: 503, headers, json: {} });
+        if (confirmWrites && url.pathname.endsWith('/updates') && route.request().method() === 'POST') {
+          const event = route.request().postDataJSON(); eventWrites.push(event);
+          if (event.type === 'milestone_completed') confirmedIds.add(event.payload.milestone_id);
+          if (event.type === 'completed') courseCompleted = true;
+        }
+        const remote = confirmWrites ? { ...rawState(), completed_at: courseCompleted ? STAMP : null,
+          milestones: IDS.map(milestone_id => ({ milestone_id, completed_at: confirmedIds.has(milestone_id) ? STAMP : null })),
+        } : rawState(confirmedCount);
         return route.fulfill({
           status: url.pathname.endsWith('/activity-sessions') ? 201 : 200, headers,
           json: url.pathname.endsWith('/activity-sessions') ? {
             session_id: '019f38f1-e5ab-7688-af0d-0e8925299e93',
             session_token: 'fixture-browser-session-token',
             expires_at: new Date(Date.now() + 3600000).toISOString(),
-          } : { progress_percent: confirmedProgress, completed_at: null },
+          } : remote,
         });
       }
       return ['127.0.0.1', 'localhost', 'course.test'].includes(url.hostname) && url.port === String(port)
@@ -420,12 +451,12 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     await context.addCookies([{ name: 'course_fixture', value: 'authorized', url: `http://127.0.0.1:${port}` }]);
     const page = await context.newPage();
     await page.goto(`http://127.0.0.1:${port}/${COURSE_ROOT}/index.html`);
-    const assertActivityButton = async (percentage, connected = false) => {
+    const assertActivityButton = async (count, connected = false) => {
       const button = page.locator('.activity-control-toggle');
-      assert.equal((await button.textContent()).trim(), `🏃 ${percentage}%`);
-      const connection = connected ? 'Connected' : 'Not connected';
-      assert.equal(await button.getAttribute('aria-label'), `Activity ${percentage}%. ${connection}`);
-      assert.equal(await button.getAttribute('title'), `Activity: ${connection}`);
+      const optedIn = await page.evaluate(() => window.OneTrust.IsAlertBoxClosed() && window.OnetrustActiveGroups.split(',').includes('C0002'));
+      assert.equal((await button.textContent()).trim(), optedIn ? `Progress ${count}/11` : 'Progress');
+      assert.equal(await button.getAttribute('aria-label'), optedIn ? `Progress: ${count} / 11` : 'Progress');
+      assert.equal(await button.getAttribute('title'), 'Progress');
       assert.ok(await button.evaluate((node, isConnected) => {
         const probe = document.createElement('span');
         probe.style.color = isConnected ? 'var(--g)' : 'var(--tf)';
@@ -435,7 +466,34 @@ test('browser artifact discovery preserves same-origin authentication and blocks
         return getComputedStyle(node).color === expected && !node.querySelector('.activity-control-dot');
       }, connected));
     };
+    const assertMilestones = async (count, savedCount = 0) => {
+      assert.equal(await page.locator('[data-milestone-summary]').textContent(), `${count} / 11 milestones reached`);
+      assert.equal(await page.locator('.course-milestones li').count(), 11);
+      assert.equal(await page.locator('.course-milestones li[data-completed="true"]').count(), count);
+      const states = await page.locator('.course-milestones .milestone-state').allTextContents();
+      assert.equal(states.filter(value => value === 'Saved').length, savedCount);
+      assert.equal(states.filter(value => value === 'Not yet reached').length + states.filter(value => value === 'Waiting to save').length, 11 - count);
+    };
     await assertActivityButton(0);
+    await page.locator('.activity-control-toggle').click();
+    assert.equal(await page.locator('[data-activity-enable]').isEnabled(), true);
+    assert.equal(await page.locator('[data-activity-milestones]').isVisible(), true);
+    assert.equal(await page.locator('[data-activity-milestones]').evaluate(node => node.inert), true);
+    assert.equal(await page.locator('[data-activity-enable]').textContent(), 'Enable Milestone Tracking');
+    assert.equal(await page.locator('[data-activity-enable]').isVisible(), true);
+    assert.equal(await page.locator('#activity-control-panel details, #activity-control-panel input, #activity-control-panel [data-activity-policy], #activity-control-panel [data-activity-rights]').count(), 0);
+    const initialViewport = page.viewportSize();
+    await page.setViewportSize({ width: 375, height: 280 });
+    await page.locator('[data-activity-enable]').focus();
+    const promptFits = await page.locator('[data-activity-enable]').evaluate(button => {
+      const bounds = button.getBoundingClientRect();
+      const stage = button.closest('.activity-progress-stage').getBoundingClientRect();
+      return bounds.top >= stage.top + 4 && bounds.bottom <= stage.bottom - 4
+        && bounds.top >= 0 && bounds.bottom <= innerHeight;
+    });
+    assert.equal(promptFits, true, 'short viewports must not clip the opt-in button or focus outline');
+    await page.setViewportSize(initialViewport);
+    await page.locator('[data-activity-close]').click();
     const artifact = await page.evaluate(async source => (await import(source)).resolveActivityArtifact(), `/${ACTIVITY_SOURCE}`);
     assert.equal(artifact.artifact_digest, `sha256:${createHash('sha256').update(manifest).digest('hex')}`);
     assert.ok(authenticatedManifests > 0);
@@ -450,66 +508,158 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     assert.equal(await page.evaluate(() => globalThis.isSecureContext), false);
     await page.locator('.activity-control-toggle').click();
     await page.locator('[data-activity-enable]').click();
-    await page.waitForFunction(() => document.querySelector('[data-activity-status]')?.textContent === 'Open this course over HTTPS to enable remote progress.');
+    await page.waitForFunction(() => window.__nemoclawActivity.snapshot().reason === 'secure-context');
     assert.equal(manifests, before, 'insecure pages must fail before manifest access');
-    assert.equal(apiRequests, 0, 'no Activity API request is permitted in these cases');
+    assert.equal(apiRequests.length, 0, 'no Activity API request is permitted in these cases');
     redirect = false;
     apiMode = 'healthy';
     const firstLesson = fs.readdirSync(COURSE_ROOT).find(name => name.startsWith('01a-') && name.endsWith('.html'));
     assert.ok(firstLesson);
     await page.goto(`http://127.0.0.1:${port}/${COURSE_ROOT}/${firstLesson}`);
     await page.locator('.activity-control-toggle').click();
+    await assertMilestones(0);
+    assert.equal(await page.locator('[data-activity-milestones]').isVisible(), true);
+    assert.equal(await page.locator('[data-activity-milestones]').evaluate(node => node.inert), true);
+    assert.equal(await page.locator('[data-activity-enable]').textContent(), 'Enable Milestone Tracking');
+    assert.equal(apiRequests.length, 0, 'viewing milestones must not enable collection');
+    for (const [index, milestone] of Object.values(ACTIVITY_MILESTONES).entries()) {
+      const row = page.locator('.course-milestones li').nth(index);
+      assert.equal(await row.locator('a').textContent(), milestone.label);
+      assert.equal(await row.locator('a').getAttribute('href'), milestone.href);
+      assert.ok((await row.textContent()).includes(milestone.description));
+    }
+    const firstMilestone = Object.values(ACTIVITY_MILESTONES)[0];
+    const callout = page.locator('.course-milestone-callout');
+    assert.equal(await callout.count(), 1);
+    assert.ok((await callout.textContent()).includes(firstMilestone.label));
+    assert.ok((await callout.textContent()).includes(firstMilestone.description));
+    assert.equal(await callout.getAttribute('data-completed'), 'false');
+    assert.equal(await page.locator('progress, [role="progressbar"]').count(), 0);
+    assert.equal(await page.locator('.course-milestones input[type="checkbox"], .course-milestones [role="checkbox"]').count(), 0);
+    await page.evaluate(() => {
+      window.fixtureConsentMethods = {
+        UpdateConsent: window.OneTrust.UpdateConsent,
+        SetAlertBoxClosed: window.OneTrust.SetAlertBoxClosed,
+      };
+      delete window.OneTrust.UpdateConsent;
+      delete window.OneTrust.SetAlertBoxClosed;
+    });
+    assert.equal(await page.locator('[data-activity-enable]').isEnabled(), true);
     await page.locator('[data-activity-enable]').click();
-    await page.waitForFunction(() => document.querySelector('[data-activity-notice]')?.textContent === 'Remote progress is enabled.');
-    assert.equal(await page.locator('#activity-progress').getAttribute('value'), '0');
-    assert.equal(await page.locator('#activity-progress-label').textContent(), 'Saved progress: 0%');
-    assert.equal(await page.locator('[data-activity-status]').isHidden(), true);
+    assert.equal(await page.evaluate(() => window.__nemoclawActivity.snapshot().enabled), false);
+    await page.evaluate(() => {
+      Object.assign(window.OneTrust, window.fixtureConsentMethods);
+      window.dispatchEvent(new Event('bannerLoaded'));
+    });
+    await page.waitForFunction(() => window.__nemoclawActivity.snapshot().enabled);
+    // A later explicit rejection must supersede a click queued during SDK loading.
+    await page.evaluate(() => {
+      window.OneTrust.RejectAll();
+      delete window.OneTrust.UpdateConsent;
+      delete window.OneTrust.SetAlertBoxClosed;
+    });
+    await page.locator('[data-activity-enable]').click();
+    await page.evaluate(() => {
+      window.OneTrust.RejectAll();
+      Object.assign(window.OneTrust, window.fixtureConsentMethods);
+      window.dispatchEvent(new Event('bannerLoaded'));
+    });
+    await page.waitForTimeout(50);
+    assert.equal(await page.evaluate(() => window.__nemoclawActivity.snapshot().enabled), false,
+      'queued opt-in must not override a newer cookie rejection');
+    await page.locator('[data-activity-enable]').click();
+    await page.waitForFunction(() => window.__nemoclawActivity.snapshot().enabled);
+    assert.equal(await page.locator('[data-activity-milestones]').isVisible(), true);
+    assert.equal(await page.locator('[data-activity-milestones]').evaluate(node => node.inert), false);
+    await assertMilestones(0);
     assert.equal(await page.locator('input[type="range"]').count(), 0, 'completion cannot be moved manually');
     await page.evaluate(() => {
       window.dispatchEvent(new CustomEvent('nemoclaw:api-key-verified'));
       window.dispatchEvent(new CustomEvent('nemoclaw:run-succeeded', { detail: { cellId: 'cell-onecall', hasContent: true } }));
     });
-    await page.waitForFunction(() => document.querySelector('[data-activity-sync]')?.textContent.includes('Waiting for API confirmation.'));
-    assert.equal(await page.locator('#activity-progress').getAttribute('value'), '0');
-    assert.match(await page.locator('[data-activity-sync]').textContent(), /Local verified progress: 10%/);
-    confirmedProgress = 45;
-    await page.locator('[data-activity-refresh]').click();
-    await page.waitForFunction(() => document.querySelector('#activity-progress')?.value === 45);
-    assert.equal(await page.locator('#activity-progress-label').textContent(), 'Saved progress: 45%');
-    await assertActivityButton(45, true);
+    await page.waitForFunction(() => document.querySelector('.course-milestones .milestone-state')?.textContent === 'Waiting to save');
+    await assertMilestones(0);
+    assert.equal(await callout.getAttribute('data-completed'), 'false');
+    assert.equal(await page.locator('.course-milestones li').first().locator('.milestone-state').textContent(), 'Waiting to save');
+    confirmedCount = 5;
+    await page.evaluate(() => window.__nemoclawActivity.getCourseActivityState());
+    await page.waitForFunction(() => document.querySelectorAll('.course-milestones li[data-completed="true"]').length === 5);
+    await assertMilestones(5, 5);
+    assert.equal(await callout.locator('.milestone-state').textContent(), '✓ Saved');
+    await assertActivityButton(5, true);
     await page.waitForLoadState('networkidle');
-    const beforeReload = apiRequests;
+    const beforeReload = apiRequests.length;
     await page.reload();
     await page.locator('.activity-control-toggle').click();
     await page.waitForFunction(() => window.__nemoclawActivity.snapshot().enabled);
     await page.waitForLoadState('networkidle');
-    assert.equal(apiRequests, beforeReload + 2, 'resume reads state, then confirms the synchronized local evidence without creating another session');
+    const resumedRequests = apiRequests.slice(beforeReload);
+    assert.ok(resumedRequests.length > 0);
+    assert.ok(resumedRequests.every(request => request.method === 'GET'
+      && request.pathname === '/v1/activity-sessions/019f38f1-e5ab-7688-af0d-0e8925299e93/state'),
+    'resume reads the saved session without creating a session or replaying stored exercise flags');
     assert.equal(await page.locator('[data-activity-enable]').isHidden(), true);
-    await page.waitForFunction(() => document.querySelector('[data-activity-notice]')?.textContent === 'Remote progress is enabled.');
+    await page.waitForFunction(() => window.__nemoclawActivity.snapshot().enabled);
     apiMode = 'unavailable';
     await page.evaluate(() => window.__nemoclawActivity.recordMilestone('01a:model-call-verified'));
     assert.equal(await page.locator('.activity-control').getAttribute('data-state'), 'unavailable');
-    await assertActivityButton(45);
-    assert.equal(await page.locator('#activity-progress-label').textContent(), 'Last confirmed progress: 45%');
-    assert.equal(await page.locator('#activity-progress').getAttribute('value'), '45');
+    await assertActivityButton(5);
+    await assertMilestones(5, 5);
     apiMode = 'healthy';
-    confirmedProgress = 60;
-    await page.locator('[data-activity-refresh]').click();
-    await page.waitForFunction(() => document.querySelector('#activity-progress')?.value === 60);
-    assert.equal(await page.locator('[data-activity-sync]').textContent(), 'Confirmed by the Activity API.');
-    assert.equal(await page.locator('#activity-progress').getAttribute('aria-valuetext'), 'Saved progress: 60%');
-    await assertActivityButton(60, true);
+    confirmedCount = 7;
+    await page.evaluate(() => window.__nemoclawActivity.getCourseActivityState());
+    await page.waitForFunction(() => document.querySelectorAll('.course-milestones li[data-completed="true"]').length === 7);
+    await assertMilestones(7, 7);
+    await assertActivityButton(7, true);
     await page.evaluate(() => sessionStorage.setItem('learner-work', 'retained'));
-    const beforeDisconnect = apiRequests;
-    await page.locator('[data-activity-disable]').click();
+    const beforeDisconnect = apiRequests.length;
+    await page.evaluate(() => window.OneTrust.RejectAll());
     assert.equal(await page.locator('.activity-control').getAttribute('data-state'), 'off');
-    await assertActivityButton(10);
+    await assertActivityButton(0);
     assert.equal(await page.locator('[data-activity-enable]').isVisible(), true);
+    assert.equal(await page.locator('[data-activity-milestones]').isVisible(), true);
+    assert.equal(await page.locator('[data-activity-milestones]').evaluate(node => node.inert), true);
+    assert.equal(await page.locator('[data-activity-enable]').textContent(), 'Enable Milestone Tracking');
     assert.equal(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key.startsWith('dli_activity:') && !key.includes(':evidence:')).length), 0);
-    assert.equal(await page.locator('#activity-progress-label').textContent(), 'Local verified progress: 10%');
-    assert.equal(await page.locator('[data-activity-status]').isHidden(), true);
+    await assertMilestones(0);
     assert.equal(await page.evaluate(() => sessionStorage.getItem('learner-work')), 'retained');
-    assert.equal(apiRequests, beforeDisconnect, 'disconnect must work without the service');
+    assert.equal(apiRequests.length, beforeDisconnect, 'disconnect must work without the service');
+
+    // The shared client writes a later ID independently and Finish remains explicit.
+    confirmWrites = true;
+    await page.evaluate(() => sessionStorage.clear());
+    await page.goto(`http://127.0.0.1:${port}/${COURSE_ROOT}/04c-going-further.html`);
+    await page.locator('#nav a').first().waitFor({ timeout: 3000 });
+    await page.locator('.activity-control-toggle').click();
+    await page.locator('[data-activity-enable]').click();
+    await page.waitForFunction(() => window.__nemoclawActivity?.snapshot().enabled);
+    const finish = page.locator('#finish-course');
+    await page.waitForFunction(() => !document.querySelector('#course-finish').hidden);
+    await page.waitForTimeout(200);
+    const idleReads = apiRequests.filter(request => request.method === 'GET' && request.pathname.endsWith('/state')).length;
+    await page.waitForTimeout(200);
+    assert.equal(apiRequests.filter(request => request.method === 'GET' && request.pathname.endsWith('/state')).length, idleReads,
+      'rendering Finish readiness must settle without polling the service while idle');
+    assert.equal(await finish.isDisabled(), true);
+    await page.evaluate(id => window.__nemoclawActivity.recordMilestone(id), IDS.at(-1));
+    assert.deepEqual([...confirmedIds], [IDS.at(-1)]);
+    assert.equal(await finish.isDisabled(), true);
+    for (const id of IDS.slice(0, -2)) {
+      assert.equal(await page.evaluate(id => window.__nemoclawActivity.recordMilestone(id), id), true);
+    }
+    assert.equal(confirmedIds.size, 10);
+    assert.equal(await finish.isDisabled(), true);
+    assert.equal(eventWrites.some(event => event.type === 'completed'), false);
+    assert.equal(await page.evaluate(id => window.__nemoclawActivity.recordMilestone(id), IDS.at(-2)), true);
+    await page.waitForFunction(() => !document.querySelector('#finish-course').disabled);
+    assert.equal(courseCompleted, false);
+    await finish.click();
+    await page.waitForFunction(() => document.querySelector('#finish-course').textContent === 'Course completed');
+    assert.equal(courseCompleted, true);
+    assert.equal(eventWrites.filter(event => event.type === 'completed').length, 1);
+
+
+
   } finally {
     await browser?.close();
     await new Promise(resolve => server.close(resolve));
@@ -540,6 +690,7 @@ test('unavailable session storage keeps one activity session in memory', async (
     setItem() { throw new DOMException('denied', 'SecurityError'); },
     removeItem() { throw new DOMException('denied', 'SecurityError'); },
   };
+  let recorded = false;
   const fetchImpl = async (url, init) => {
     requests.push([url, init]);
     if (url.endsWith('/v1/activity-sessions')) {
@@ -550,9 +701,10 @@ test('unavailable session storage keeps one activity session in memory', async (
       }), { status: 201 });
     }
     if (url.endsWith('/state')) {
-      return new Response(JSON.stringify({ progress_percent: 0, completed_at: null }), { status: 200 });
+      return new Response(JSON.stringify(rawState(recorded ? 1 : 0)), { status: 200 });
     }
-    return new Response(JSON.stringify({ state: { progress_percent: 10 } }), { status: 201 });
+    recorded = true;
+    return new Response(JSON.stringify({ state: rawState(1) }), { status: 201 });
   };
   const activity = createCourseActivity({
     fetchImpl,
@@ -579,7 +731,7 @@ test('tab choices resume only for the same delivered artifact and notice, and di
     storageTarget, artifactResolver: async () => artifact, policyLoader: async () => policy,
     initialize: async () => {
       sessions += 1;
-      return { getState: async () => ({ progressPercent: 10 }) };
+      return { getState: async () => (confirmedState(1)) };
     },
   });
   const first = create();
@@ -600,6 +752,59 @@ test('tab choices resume only for the same delivered artifact and notice, and di
   assert.equal(sessions, 2);
 });
 
+test('reaccepting consent can establish a new connection before the withdrawn attempt settles', async () => {
+  let releaseOld;
+  let enteredOld;
+  const oldPending = new Promise(resolve => { releaseOld = resolve; });
+  const entered = new Promise(resolve => { enteredOld = resolve; });
+  let initializations = 0;
+  const activity = createCourseActivity({ storageTarget: null,
+    policyLoader: async () => APPROVED_POLICY,
+    artifactResolver: async () => APPROVED_ARTIFACT,
+    initialize: async () => {
+      initializations++;
+      if (initializations === 1) { enteredOld(); await oldPending; }
+      return { getState: async () => confirmedState() };
+    },
+  });
+  const oldAttempt = activity.enable(); await entered;
+  activity.disconnect();
+  const newAttempt = activity.enable();
+  await new Promise(resolve => setImmediate(resolve));
+  const startedFresh = initializations === 2;
+  releaseOld();
+  assert.equal(await oldAttempt, false);
+  assert.equal(await newAttempt, true);
+  assert.equal(startedFresh, true);
+  assert.equal(activity.snapshot().enabled, true);
+  activity.disconnect();
+});
+
+test('a withdrawn state read cannot discard the replacement Activity facade', async () => {
+  let releaseOld; let enteredOld;
+  const oldState = new Promise(resolve => { releaseOld = resolve; });
+  const entered = new Promise(resolve => { enteredOld = resolve; });
+  let initializations = 0;
+  const activity = createCourseActivity({ storageTarget: null,
+    policyLoader: async () => APPROVED_POLICY,
+    artifactResolver: async () => APPROVED_ARTIFACT,
+    initialize: async () => {
+      const first = ++initializations === 1;
+      return { getState: async () => {
+        if (first) { enteredOld(); return oldState; }
+        return confirmedState();
+      } };
+    },
+  });
+  const oldAttempt = activity.enable(); await entered;
+  activity.disconnect();
+  assert.equal(await activity.enable(), true);
+  releaseOld(confirmedState()); assert.equal(await oldAttempt, false);
+  assert.ok(await activity.getCourseActivityState());
+  assert.equal(initializations, 2, 'refresh must reuse the replacement facade');
+  activity.disconnect();
+});
+
 test('concurrent enable requests share one remote session initialization', async () => {
   let release;
   let initializationCount = 0;
@@ -610,7 +815,7 @@ test('concurrent enable requests share one remote session initialization', async
     initialize: async () => {
       initializationCount += 1;
       await waiting;
-      return { getState: async () => ({ progressPercent: 0, completedAt: null }) };
+      return { getState: async () => (confirmedState()) };
     },
   });
 
@@ -644,7 +849,7 @@ test('disconnect invalidates an in-flight enable and clears its session state', 
         session_token: 'late-session-token-with-safe-length',
         expires_at: '2026-09-09T20:00:00Z',
       });
-      return { getState: async () => ({ progressPercent: 0, completedAt: null }) };
+      return { getState: async () => (confirmedState()) };
     },
   });
 
@@ -683,7 +888,7 @@ for (const stage of ['policyLoader', 'artifactResolver']) {
 }
 
 test('disconnect prevents queued progress and completion from starting', async () => {
-  const { activity, calls } = createFixture({ progressPercent: 100 });
+  const { activity, calls } = createFixture({ count: 11 });
   await enableFixture(activity);
   calls.length = 0;
   const progress = activity.recordMilestone('01a:model-call-verified');
@@ -717,7 +922,7 @@ test('disconnect cancels an in-flight request and blocks queued SDK writes and r
         session_token: 'fixture-session-token-safe-length',
         expires_at: '2099-01-01T00:00:00Z',
       }, 201);
-      if (url.endsWith('/state')) return response({ progress_percent: 0 });
+      if (url.endsWith('/state')) return response(rawState());
       heldSignal = options.signal;
       enter();
       await waiting;
@@ -752,7 +957,7 @@ test('the approved NVIDIA Build destination records one referral', async () => {
   activity.setReferralTracking(true);
   await activity.trackBuildReferral(BUILD_SIGNUP_URL);
 
-  assert.deepEqual(calls.at(-1), ['referral', {
+  assert.deepEqual(calls.findLast(call => call[0] === 'referral'), ['referral', {
     referenceId: 'build:nvidia-api-key',
     destinationUrl: BUILD_SIGNUP_URL,
     idempotencyKey: `${COURSE_ID}:referral:build:nvidia-api-key`,
@@ -767,13 +972,23 @@ test('referrals remain off after progress sync is enabled', async () => {
   assert.equal(calls.some(call => call[0] === 'referral'), false);
 });
 
+test('withdrawn referral consent cancels a queued selection before it writes', async () => {
+  const { activity, calls } = createFixture();
+  await enableFixture(activity);
+  activity.setReferralTracking(true);
+  const selected = activity.trackBuildReferral(BUILD_SIGNUP_URL);
+  activity.setReferralTracking(false);
+  assert.equal(await selected, false);
+  assert.equal(calls.some(call => call[0] === 'referral'), false);
+});
+
 test('Global Privacy Control blocks referrals at the activity facade', async () => {
   const activity = createCourseActivity({
     globalPrivacyControl: true,
     policyLoader: async () => APPROVED_POLICY,
     artifactResolver: async () => APPROVED_ARTIFACT,
     initialize: async () => ({
-      getState: async () => ({ progressPercent: 0 }),
+      getState: async () => (confirmedState()),
       referral: () => assert.fail('GPC must block referral calls outside the toolbar too'),
     }),
   });
@@ -792,135 +1007,103 @@ test('an unapproved destination is not recorded as a referral', async () => {
   assert.equal(calls.filter(call => call[0] === 'referral').length, 0);
 });
 
-test('a named milestone sends its cumulative progress with a stable idempotency key', async () => {
+test('a later milestone writes its own ID without awarding earlier milestones', async () => {
   const { activity, calls } = createFixture();
-
   await enableFixture(activity);
   assert.equal(await activity.recordMilestone('02b:grounded-answer-complete'), true);
-
-  assert.deepEqual(calls.findLast(call => call[0] === 'progress'), ['progress', 45, {
+  assert.deepEqual(calls.find(call => call[0] === 'completeMilestone'), ['completeMilestone', '02b:grounded-answer-complete', {
     idempotencyKey: `${COURSE_ID}:milestone:02b:grounded-answer-complete`,
   }]);
+  assert.deepEqual(activity.snapshot().milestones.filter(marker => marker.completedAt !== null).map(marker => marker.milestoneId), ['02b:grounded-answer-complete']);
 });
 
-test('course completion is blocked below 100 percent', async () => {
-  const { activity, calls } = createFixture({ progressPercent: 90 });
-
+test('explicit completion requires all configured IDs confirmed by the server', async () => {
+  const { activity, calls, setState } = createFixture({ count: 10 });
   await enableFixture(activity);
   assert.equal(await activity.recordCompletion(), false);
-  assert.deepEqual(calls.slice(-2), [['getState'], ['getState']]);
   assert.equal(calls.some(call => call[0] === 'complete'), false);
-});
-
-test('course completion is sent once state reaches 100 percent', async () => {
-  const { activity, calls } = createFixture({ progressPercent: 100 });
-
-  await enableFixture(activity);
+  setState(confirmedState(11));
   assert.equal(await activity.recordCompletion(), true);
-
-  assert.deepEqual(calls.slice(-3), [
-    ['getState'],
-    ['complete', { idempotencyKey: `${COURSE_ID}:course:completed` }],
-    ['getState'],
-  ]);
+  assert.equal(activity.snapshot().completedAt, STAMP);
 });
 
-test('displayed progress follows API confirmation rather than the submitted percentage', async () => {
-  const { activity, setProgress } = createFixture({ progressPercent: 10 });
-  await enableFixture(activity);
-  assert.equal(await activity.recordMilestone('02b:grounded-answer-complete'), true);
-  assert.equal(activity.snapshot().progressPercent, 10);
-  assert.ok(activity.snapshot().progressCheckedAt);
-  setProgress(45);
-  await activity.getCourseActivityState();
-  assert.equal(activity.snapshot().progressPercent, 45);
-});
-
-test('invalid API percentages are unavailable instead of fabricated zero progress', async () => {
-  for (const progressPercent of [-1, 101, 0.5, '45', null, NaN]) {
-    const { activity } = createFixture({ progressPercent });
+test('invalid or duplicated milestone policies cannot fabricate completion', async () => {
+  const missing = confirmedState(11); missing.milestones.pop();
+  const duplicate = confirmedState(11); duplicate.milestones[0] = { ...duplicate.milestones[1] };
+  const unknown = confirmedState(11); unknown.milestones[0].milestoneId = 'unknown-id';
+  const invalid = confirmedState(11); invalid.milestones[0].completedAt = 'not-a-timestamp';
+  for (const remote of [missing, duplicate, unknown, invalid]) {
+    const { activity, setState } = createFixture();
+    setState(remote);
     assert.equal(await activity.enable(), false);
     assert.equal(activity.snapshot().phase, 'unavailable');
-    assert.equal(activity.snapshot().progressCheckedAt, undefined);
+    assert.equal(activity.snapshot().milestonesCheckedAt, undefined);
   }
-  const { activity } = createFixture({ progressPercent: 0 });
-  assert.equal(await activity.enable(), true);
-  assert.equal(activity.snapshot().progressPercent, 0);
 });
 
-test('refresh preserves the last confirmed value on failure and publishes recovery', async () => {
-  let unavailable = false;
-  let progressPercent = 25;
-  const activity = createCourseActivity({
-    policyLoader: async () => APPROVED_POLICY,
+test('a submitted milestone receives no checkmark until state confirms its timestamp', async () => {
+  let submitted = false;
+  let remote = confirmedState();
+  const activity = createCourseActivity({ policyLoader: async () => APPROVED_POLICY,
     artifactResolver: async () => APPROVED_ARTIFACT,
-    initialize: async () => ({ getState: async () => {
-      if (unavailable) throw new Error('service unavailable');
-      return { progressPercent, completedAt: null };
-    } }),
+    initialize: async () => ({ getState: async () => remote, completeMilestone: async () => { submitted = true; } }),
   });
   await enableFixture(activity);
-  const checked = activity.snapshot().progressCheckedAt;
+  assert.equal(await activity.recordMilestone(IDS[0]), false);
+  assert.equal(submitted, true);
+  assert.equal(activity.snapshot().milestones.filter(marker => marker.completedAt !== null).length, 0);
+  remote = confirmedState(1);
+  await activity.getCourseActivityState();
+  assert.equal(activity.snapshot().milestones[0].completedAt, STAMP);
+});
+
+test('refresh preserves confirmed milestones on failure and publishes recovery', async () => {
+  let unavailable = false;
+  let remote = confirmedState(3);
+  const activity = createCourseActivity({ policyLoader: async () => APPROVED_POLICY,
+    artifactResolver: async () => APPROVED_ARTIFACT,
+    initialize: async () => ({ getState: async () => { if (unavailable) throw new Error('unavailable'); return remote; } }),
+  });
+  await enableFixture(activity);
+  const checked = activity.snapshot().milestonesCheckedAt;
   unavailable = true;
   assert.equal(await activity.getCourseActivityState(), null);
   assert.equal(activity.snapshot().phase, 'unavailable');
-  assert.equal(activity.snapshot().progressPercent, 25);
-  assert.equal(activity.snapshot().progressCheckedAt, checked);
-  unavailable = false;
-  progressPercent = 45;
-  await activity.getCourseActivityState();
+  assert.deepEqual(activity.snapshot().milestones, confirmedState(3).milestones);
+  assert.equal(activity.snapshot().milestonesCheckedAt, checked);
+  unavailable = false; remote = confirmedState(5);
+  assert.deepEqual(await activity.getCourseActivityState(), remote);
   assert.equal(activity.snapshot().phase, 'connected');
-  assert.equal(activity.snapshot().reason, null);
-  assert.equal(activity.snapshot().progressPercent, 45);
 });
 
-test('course state is read through the facade', async () => {
-  const { activity, calls } = createFixture({ progressPercent: 70 });
-
-  await enableFixture(activity);
-  assert.deepEqual(await activity.getCourseActivityState(), { progressPercent: 70, completedAt: null });
-  assert.deepEqual(calls.at(-1), ['getState']);
-});
-
-test('an older concurrent refresh cannot replace newer confirmed progress or connection state', async () => {
+test('queued refreshes publish in order and recover after a failed read', async () => {
   let pending = null;
-  const activity = createCourseActivity({
-    policyLoader: async () => APPROVED_POLICY,
+  const activity = createCourseActivity({ policyLoader: async () => APPROVED_POLICY,
     artifactResolver: async () => APPROVED_ARTIFACT,
-    initialize: async () => ({ getState: () => pending
-      ? new Promise((resolve, reject) => pending.push({ resolve, reject }))
-      : Promise.resolve({ progressPercent: 10 }) }),
+    initialize: async () => ({ getState: () => pending ? new Promise((resolve, reject) => pending.push({ resolve, reject })) : Promise.resolve(confirmedState(1)) }),
   });
   await enableFixture(activity);
   for (const failOlder of [false, true]) {
     pending = [];
-    const older = activity.getCourseActivityState();
-    const newer = activity.getCourseActivityState();
+    const older = activity.getCourseActivityState(); const newer = activity.getCourseActivityState();
     await new Promise(resolve => setImmediate(resolve));
-    pending[1].resolve({ progressPercent: 60 });
-    await newer;
-    if (failOlder) pending[0].reject(new Error('late failure'));
-    else pending[0].resolve({ progressPercent: 25 });
+    assert.equal(pending.length, 1, 'the second SDK read waits for the first');
+    if (failOlder) pending[0].reject(new Error('temporary read failure')); else pending[0].resolve(confirmedState(3));
     await older;
-    assert.equal(activity.snapshot().progressPercent, 60);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(pending.length, 2);
+    pending[1].resolve(confirmedState(7)); await newer;
+    assert.deepEqual(activity.snapshot().milestones, confirmedState(7).milestones);
     assert.equal(activity.snapshot().phase, 'connected');
   }
 });
 
 test('facade failures remain contained and retryable at the lesson boundary', async () => {
   let attempts = 0;
-  const activity = createCourseActivity({
-    policyLoader: async () => APPROVED_POLICY,
+  const activity = createCourseActivity({ policyLoader: async () => APPROVED_POLICY,
     artifactResolver: async () => APPROVED_ARTIFACT,
-    initialize: async () => ({
-      getState: async () => ({ progressPercent: 100, completedAt: null }),
-      complete: async () => {
-        attempts += 1;
-        throw new Error('temporarily unavailable');
-      },
-    }),
+    initialize: async () => ({ getState: async () => confirmedState(11), complete: async () => { attempts++; throw new Error('unavailable'); } }),
   });
-
   await enableFixture(activity);
   assert.equal(await activity.recordCompletion(), false);
   assert.equal(await activity.recordCompletion(), false);
@@ -934,10 +1117,10 @@ test('Module 1a explicitly wires session, referral, and verified progress events
   assert.doesNotMatch(page, /recordApiKeyVerified/);
 });
 
-test('the published opt-in notice requires complete disclosure and keeps both defaults off', () => {
+test('the published notice permits consented collection and keeps both opt-in defaults off', () => {
   const policy = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8'));
-  assert.equal(isActivityPolicyApproved(policy), false);
-  assert.equal(isActivityPolicyApproved({ ...policy, collection_enabled: true }), true);
+  assert.equal(isActivityPolicyApproved(policy), true);
+  assert.equal(isActivityPolicyApproved({ ...policy, collection_enabled: false }), false);
   for (const key of Object.keys(policy)) {
     const missing = { ...policy }; delete missing[key];
     assert.throws(() => validateActivityPolicy(missing), key);
@@ -967,7 +1150,7 @@ test('HTTP lab transport requires deployment permission and preserves authentica
     },
     initialize: async options => {
       sdkOptions = options;
-      return { getState: async () => ({ progressPercent: 0, completedAt: null }) };
+      return { getState: async () => (confirmedState()) };
     },
   });
   const blocked = make({ ...policy, lab_transport: { ...policy.lab_transport, allow_http: false } });
@@ -992,3 +1175,226 @@ test('HTTP lab transport requires deployment permission and preserves authentica
   activity.disconnect();
 });
 }
+
+test('course adapter writes independent milestones with the shared JavaScript facade', () => {
+  const source = fs.readFileSync('web/nemoclaw/scripts/_activity.js', 'utf8');
+  assert.match(source, /activity\.completeMilestone\(milestoneRef/);
+  assert.doesNotMatch(source, /progressPercent|activity\.progress\(/);
+});
+
+test('concurrent authentication renewal cannot move live exercise evidence into a replacement session', async () => {
+  const { createCourseActivity } = await import('../../web/nemoclaw/scripts/_activity.js');
+  const { installCourseActivityTracking } = await import('../../web/nemoclaw/scripts/_activity_runtime.js');
+  const sessionA = '019f38f1-e5ab-7688-af0d-0e8925299e93';
+  const sessionB = '019f38f1-e5ab-7688-af0d-0e8925299e94';
+  const config = { milestones: Object.keys((await import('../../web/nemoclaw/scripts/_activity.js')).ACTIVITY_MILESTONES).map(id => ({ id })) };
+  const writes = [];
+  const marked = new Set();
+  let sessions = 0; let readsA = 0; let readsB = 0;
+  let releaseOld; let releaseNew; let enterReplacement;
+  const heldOld = new Promise(resolve => { releaseOld = resolve; });
+  const heldNew = new Promise(resolve => { releaseNew = resolve; });
+  const replacementEntered = new Promise(resolve => { enterReplacement = resolve; });
+  const response = (body, status = 200) => new Response(JSON.stringify(body), { status });
+  const remote = session_id => ({ session_id, completed_at: null, milestones: config.milestones.map(({ id: milestone_id }) => ({
+    milestone_id, completed_at: marked.has(`${session_id}:${milestone_id}`) ? '2026-10-12T12:00:00Z' : null,
+  })) });
+  const policy = JSON.parse(fs.readFileSync('web/nemoclaw/activity-policy.json', 'utf8'));
+  policy.collection_enabled = true;
+  const activity = createCourseActivity({ storageTarget: null,
+    policyLoader: async () => policy,
+    artifactResolver: async () => ({ artifact_id: 'artifact_nemoclaw_web', artifact_version: `git-${'a'.repeat(40)}`, artifact_digest: `sha256:${'b'.repeat(64)}` }),
+    fetchImpl: async (url, options) => {
+      if (url.endsWith('/activity-sessions')) return response({ session_id: ++sessions === 1 ? sessionA : sessionB,
+        session_token: 'fixture-session-token-long-enough', expires_at: '2099-01-01T00:00:00Z' }, 201);
+      if (url.endsWith('/updates')) {
+        const id = JSON.parse(options.body).payload.milestone_id;
+        writes.push({ url, id }); marked.add(`${url.includes(sessionA) ? sessionA : sessionB}:${id}`);
+        return response({});
+      }
+      if (url.includes(sessionA) && url.endsWith('/state')) {
+        if (++readsA === 2) return heldOld;
+        if (readsA === 3) return response({}, 401);
+        return response(remote(sessionA));
+      }
+      if (url.includes(sessionB) && url.endsWith('/state')) {
+        if (++readsB === 1) { enterReplacement(); return heldNew; }
+        return response(remote(sessionB));
+      }
+      throw new Error(`unexpected fixture request: ${url}`);
+    },
+  });
+  assert.equal(await activity.enable(), true);
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'location');
+  Object.defineProperty(globalThis, 'location', { configurable: true, value: { pathname: '/nemoclaw/03b-openclaw.html' } });
+  const windowTarget = new EventTarget(); const documentTarget = new EventTarget();
+  windowTarget.OneTrust = { IsAlertBoxClosed: () => true, OnConsentChanged: () => {} };
+  windowTarget.OnetrustActiveGroups = ",C0001,C0002,";
+  installCourseActivityTracking({ windowTarget, documentTarget, activity, storageTarget: null });
+  const emit = cellId => { const event = new Event('nemoclaw:run-succeeded'); event.detail = { cellId }; windowTarget.dispatchEvent(event); };
+  const flush = () => new Promise(resolve => setImmediate(resolve));
+  try {
+    emit('cell-introspect'); emit('cell-workspace-term'); await flush();
+    const concurrent = activity.getCourseActivityState(); await flush();
+    releaseOld(response(remote(sessionA)));
+    await replacementEntered; await flush(); await flush();
+    const crossedBeforePublish = writes.some(write => write.url.includes(sessionB));
+    releaseNew(response(remote(sessionB))); await concurrent; await flush(); await flush();
+    assert.equal(crossedBeforePublish, false, 'old evidence must not write while the replacement state is pending');
+    assert.equal(writes.some(write => write.url.includes(sessionB)), false, 'old evidence must be dropped after replacement');
+    assert.equal(activity.snapshot().sessionId, sessionB);
+    emit('cell-introspect'); emit('cell-workspace-term');
+    await flush(); await flush(); await flush();
+    assert.equal(writes.filter(write => write.url.includes(sessionB)).length, 1, 'fresh work may save in the replacement session');
+  } finally {
+    releaseOld(response(remote(sessionA))); releaseNew(response(remote(sessionB))); activity.disconnect();
+    if (previous) Object.defineProperty(globalThis, 'location', previous); else delete globalThis.location;
+  }
+});
+
+test('a failed SDK write that renews authentication cannot transfer the next pending milestone', async () => {
+  const { createCourseActivity } = await import('../../web/nemoclaw/scripts/_activity.js');
+  const config = { milestones: Object.keys((await import('../../web/nemoclaw/scripts/_activity.js')).ACTIVITY_MILESTONES).map(id => ({ id })) };
+  const policy = JSON.parse(fs.readFileSync('web/nemoclaw/activity-policy.json', 'utf8')); policy.collection_enabled = true;
+  const sessionA = '019f38f1-e5ab-7688-af0d-0e8925299e93';
+  const sessionB = '019f38f1-e5ab-7688-af0d-0e8925299e94';
+  let sessions = 0;
+  const marked = new Set(); const writes = [];
+  const response = (body, status = 200) => new Response(JSON.stringify(body), { status });
+  const activity = createCourseActivity({ storageTarget: null,
+    policyLoader: async () => policy,
+    artifactResolver: async () => ({ artifact_id: 'artifact_nemoclaw_web', artifact_version: `git-${'a'.repeat(40)}`, artifact_digest: `sha256:${'b'.repeat(64)}` }),
+    fetchImpl: async (url, options) => {
+      if (url.endsWith('/activity-sessions')) return response({ session_id: ++sessions === 1 ? sessionA : sessionB,
+        session_token: 'fixture-session-token-long-enough', expires_at: '2099-01-01T00:00:00Z' }, 201);
+      if (url.endsWith('/state')) return response({ session_id: url.includes(sessionA) ? sessionA : sessionB, completed_at: null,
+        milestones: config.milestones.map(({ id: milestone_id }) => ({ milestone_id, completed_at: marked.has(milestone_id) ? '2026-10-12T12:00:00Z' : null })),
+      });
+      if (url.includes(sessionA)) return response({}, 401);
+      const id = JSON.parse(options.body).payload.milestone_id; writes.push(id); marked.add(id); return response({});
+    },
+  });
+  try {
+    assert.equal(await activity.enable(), true);
+    assert.equal(await activity.recordMilestone(config.milestones[0].id), false);
+    assert.equal(sessions, 2, 'the failed SDK write already replaced its private session');
+    assert.equal(await activity.recordMilestone(config.milestones[1].id), false);
+    assert.deepEqual(writes, [], 'pending evidence from the old published session cannot use the hidden replacement');
+    assert.equal(activity.snapshot().sessionId, sessionB);
+    assert.equal(await activity.recordMilestone(config.milestones[1].id), true, 'fresh work can use the confirmed replacement');
+    assert.deepEqual(writes, [config.milestones[1].id]);
+  } finally { activity.disconnect(); }
+});
+
+function consentFixture({ groups = ',C0001,', chosen = false, loaded = true } = {}) {
+  const windowTarget = new EventTarget();
+  let consentChanged;
+  if (loaded) windowTarget.OneTrust = {
+    IsAlertBoxClosed: () => chosen,
+    OnConsentChanged: callback => { consentChanged = callback; },
+  };
+  windowTarget.OnetrustActiveGroups = groups;
+  let enabled = false;
+  const calls = [];
+  const activity = {
+    snapshot: () => ({ enabled, phase: enabled ? 'connected' : 'off' }),
+    resume: async () => false,
+    enable: async () => { calls.push('enable'); enabled = true; return true; },
+    disconnect: () => { calls.push('disconnect'); enabled = false; },
+  };
+  const syncLocal = async () => { calls.push('sync'); };
+  const change = (nextGroups, nextChosen = true) => {
+    windowTarget.OnetrustActiveGroups = nextGroups; chosen = nextChosen;
+    consentChanged?.();
+  };
+  return { windowTarget, activity, calls, syncLocal, change };
+}
+const flushConsent = async () => { await new Promise(resolve => setImmediate(resolve)); };
+
+async function bindConsent(fixture) {
+  const runtime = await import('../../web/nemoclaw/scripts/_activity_runtime.js');
+  assert.equal(typeof runtime.bindNemoClawProgressConsent, 'function', 'course runtime needs a consent bridge');
+  return runtime.bindNemoClawProgressConsent(fixture);
+}
+
+test('performance consent requires a valid saved choice, not a default active category', async () => {
+  const fixture = consentFixture({ groups: ',C0001,C0002,', chosen: false });
+  await bindConsent(fixture); await flushConsent();
+  assert.equal(fixture.calls.includes('enable'), false);
+  fixture.change(',C0001,C0002,'); await flushConsent();
+  assert.deepEqual(fixture.calls.filter(call => call !== 'disconnect'), ['enable', 'sync']);
+});
+
+test('saved performance consent enables progress once and ignores unrelated category changes', async () => {
+  const fixture = consentFixture({ groups: ',C0001,C0002,', chosen: true });
+  await bindConsent(fixture); await flushConsent();
+  fixture.change(',C0001,C0002,C0003,'); await flushConsent();
+  assert.equal(fixture.calls.filter(call => call === 'enable').length, 1);
+  assert.equal(fixture.calls.filter(call => call === 'sync').length, 1);
+});
+
+test('rejecting or withdrawing performance consent stops progress and later acceptance reconnects', async () => {
+  const fixture = consentFixture({ groups: ',C0001,C0002,', chosen: true });
+  await bindConsent(fixture); await flushConsent();
+  fixture.change(',C0001,C0003,');
+  assert.equal(fixture.activity.snapshot().enabled, false);
+  fixture.change(',C0001,C0002,'); await flushConsent();
+  assert.equal(fixture.activity.snapshot().enabled, true);
+  assert.equal(fixture.calls.filter(call => call === 'enable').length, 2);
+});
+
+test('missing or delayed CMP fails closed and bannerLoaded reconciles late initialization', async () => {
+  const fixture = consentFixture({ loaded: false, groups: ',C0001,C0002,', chosen: true });
+  await bindConsent(fixture); await flushConsent();
+  assert.equal(fixture.calls.includes('enable'), false);
+  fixture.windowTarget.OneTrust = { IsAlertBoxClosed: () => true, OnConsentChanged: () => {} };
+  fixture.windowTarget.dispatchEvent(new Event('bannerLoaded')); await flushConsent();
+  assert.equal(fixture.calls.includes('enable'), true);
+});
+
+test('withdrawal while enabling cannot sync a stale connection', async () => {
+  const fixture = consentFixture({ groups: ',C0001,C0002,', chosen: true });
+  let finish;
+  fixture.activity.enable = () => new Promise(resolve => { finish = resolve; fixture.calls.push('enable'); });
+  await bindConsent(fixture); await flushConsent();
+  fixture.change(',C0001,');
+  finish(true); await flushConsent();
+  assert.equal(fixture.calls.includes('disconnect'), true);
+  assert.equal(fixture.calls.includes('sync'), false);
+});
+
+test('malformed category identifiers do not grant performance consent', async () => {
+  const fixture = consentFixture({ groups: ',C0001,C00020,', chosen: true });
+  await bindConsent(fixture); await flushConsent();
+  assert.equal(fixture.calls.includes('enable'), false);
+});
+
+ test('saved CMP consent resumes the matching Activity choice before making a fresh opt-in', async () => {
+  const fixture = consentFixture({ groups: ',C0001,C0002,', chosen: true });
+  fixture.activity.resume = async () => { fixture.calls.push('resume'); return true; };
+  await bindConsent(fixture); await flushConsent();
+  assert.deepEqual(fixture.calls, ['resume', 'sync']);
+});
+
+test('waiting for the CMP preserves stored choices while an off adapter cannot collect', async () => {
+  const fixture = consentFixture({ loaded: false, groups: undefined });
+  await bindConsent(fixture); await flushConsent();
+  assert.deepEqual(fixture.calls, []);
+  fixture.windowTarget.OneTrust = { IsAlertBoxClosed: () => true, OnConsentChanged: () => {} };
+  fixture.windowTarget.OnetrustActiveGroups = ',C0001,C0002,';
+  fixture.activity.resume = async () => { fixture.calls.push('resume'); return true; };
+  fixture.windowTarget.dispatchEvent(new Event('bannerLoaded')); await flushConsent();
+  assert.deepEqual(fixture.calls, ['resume', 'sync']);
+});
+
+test('loss of the CMP cancels a pending consent connection before its phase becomes connecting', async () => {
+  const fixture = consentFixture({ groups: ',C0001,C0002,', chosen: true });
+  let finish;
+  fixture.activity.enable = () => new Promise(resolve => { finish = resolve; });
+  await bindConsent(fixture); await flushConsent();
+  delete fixture.windowTarget.OneTrust;
+  fixture.windowTarget.dispatchEvent(new Event('bannerLoaded'));
+  assert.deepEqual(fixture.calls, ['disconnect']);
+  finish(true); await flushConsent();
+  assert.equal(fixture.calls.includes('sync'), false);
+});

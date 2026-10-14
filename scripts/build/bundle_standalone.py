@@ -990,6 +990,36 @@ def _first_file(*paths: Path) -> Path:
     raise FileNotFoundError(names)
 
 
+# Supplied OneTrust test notice for the public course host.
+NVIDIA_COOKIE_CONSENT_NOTICE = """<!-- OneTrust Cookies Consent Notice start for nvdli.github.io -->
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js"  type="text/javascript" charset="UTF-8" data-domain-script="01a13400-6831-707e-9897-c2ef6262efc7-test" ></script>
+<script type="text/javascript">
+function OptanonWrapper() {
+var event = new Event('bannerLoaded');
+        window.dispatchEvent(event);
+ }
+</script>
+<script type="text/javascript" src="https://images.nvidia.com/aem-dam/Solutions/ot-js/ot-custom.js"></script>
+<!-- OneTrust Cookies Consent Notice end for nvdli.github.io -->"""
+
+
+# Policy destinations and labels match the NVIDIA Omniverse Labs footer.
+# Consent/analytics configuration is site-specific and is supplied separately.
+NVIDIA_POLICY_FOOTER = """<footer class="nvidia-policy-footer">
+  <nav aria-label="NVIDIA legal and policies" lang="en">
+    <ul>
+      <li><a href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a></li>
+      <li><a href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Your Privacy Choices</a></li>
+      <li><a href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a></li>
+      <li><a href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a></li>
+      <li><a href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a></li>
+      <li><a href="https://www.nvidia.com/en-us/product-security/">Product Security</a></li>
+      <li><a href="https://www.nvidia.com/en-us/contact/">Contact</a></li>
+    </ul>
+  </nav>
+</footer>"""
+
+
 def bundle_one(html_path: Path, css_text: str, lite_css: str, shared_js: str,
                full: bool = False) -> str:
     """Bundle one page into a self-contained file.
@@ -1025,7 +1055,7 @@ def bundle_one(html_path: Path, css_text: str, lite_css: str, shared_js: str,
 
     # 1b) Favicon on every bundled page. In the full build also inject the pre-paint theme init so
     #     the page opens in the saved/OS palette without a flash; the lite iframe export stays baked.
-    head_inject = FAVICON_LINK + ("\n" + THEME_INIT_JS if full else "")
+    head_inject = NVIDIA_COOKIE_CONSENT_NOTICE + "\n" + FAVICON_LINK + ("\n" + THEME_INIT_JS if full else "")
     new_html = new_html.replace("</head>", head_inject + "\n</head>", 1)
 
     # 2) The lite export strips the lab-only chrome (topbar / journey map / the JS that mounts
@@ -1064,6 +1094,10 @@ def bundle_one(html_path: Path, css_text: str, lite_css: str, shared_js: str,
     if not full:
         autosize_tag = f"<script>{LITE_AUTOSIZE_JS}</script>\n</body>"
         new_html = new_html.replace("</body>", autosize_tag, 1)
+
+    # Static policy navigation is shared by full, iframe, and localized exports.
+    # Keep the page's existing course/support footer and lesson content intact.
+    new_html = new_html.replace("</body>", NVIDIA_POLICY_FOOTER + "\n</body>", 1)
 
     return new_html
 

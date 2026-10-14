@@ -31,6 +31,17 @@ and source retrieval is a separate acquisition/review activity so upstream drift
 change a release. This process produces review evidence; it does not replace open-source or legal
 approval.
 
+## Externally hosted consent scripts
+
+Generated course pages load the supplied OneTrust test notice. These scripts execute in the course page; they are external runtime dependencies, not linked reference pages. Their bytes are not redistributed or covered by this repository's Apache-2.0 license. Runtime URLs are provider-managed and are not version-pinned by the course.
+
+| Provider | Runtime script | Purpose |
+|---|---|---|
+| OneTrust | [otSDKStub.js](https://cdn.cookielaw.org/scripttemplates/otSDKStub.js) | Loads the tenant's cookie consent configuration. |
+| NVIDIA | [ot-custom.js](https://images.nvidia.com/aem-dam/Solutions/ot-js/ot-custom.js) | Website consent customization supplied with the notice. |
+
+OneTrust also supplies the tenant configuration. Consent owners must publish the supplied test tenant and provide production domain configuration before production use. Course packaging preserves the snippet and does not attest external script contents. The authored Activity runtime maps the supplied configuration’s `C0002` Performance Cookies category to progress syncing only after OneTrust confirms a valid saved choice. The deployed collection policy remains an independent gate.
+
 ## Browser runtime and browser-build packages
 
 Source of truth: [`scripts/browser-vendor/package-lock.json`](scripts/browser-vendor/package-lock.json). Rows marked `browser-runtime` also appear in the shipped browser manifest and have checked-in license text. Platform-specific esbuild packages are build-only optional packages.

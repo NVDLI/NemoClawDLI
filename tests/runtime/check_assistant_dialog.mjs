@@ -63,7 +63,12 @@ try {
     const panel = page.locator('#course-assistant-panel');
     assert.equal(await page.locator('.course-license-note a').first().getAttribute('href'),
       'https://github.com/NVDLI/NemoClawDLI/blob/main/LICENSE');
-    assert.ok(await page.locator('.course-license-note a[href*="privacy-policy"]').count());
+    assert.ok(await page.locator('.nvidia-policy-footer a[href*="privacy-policy"], .course-license-note a[href*="privacy-policy"]').count());
+    if (await page.locator('.nvidia-policy-footer').count()) {
+      assert.equal(await page.locator('.course-license-note').evaluate(node => node.tagName), 'DIV');
+      assert.equal(await page.locator('.nvidia-policy-footer a[href*="privacy-policy"]').count(), 1);
+      assert.equal(await page.locator('.course-license-note a[href*="privacy-policy"]').count(), 0);
+    }
     for (const width of [1280, 390]) {
       await page.setViewportSize({ width, height: 900 });
       await launcher.click();

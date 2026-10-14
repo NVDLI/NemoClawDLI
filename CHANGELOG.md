@@ -5,6 +5,10 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Connect milestone tracking to Performance Cookie consent and simplify the Progress tab and footer.
+  Update the Activity SDK and localized runtime controls. Thanks to Lisa Guo for the consent
+  and milestone experience requirements; Codex assisted implementation and independent review.
+
 - Support Brev Skybridge launchable links and their host-specific access cookie. Keep access
   credentials bound to the selected launchable and discard obsolete connection audits.
   Thanks to Vadim Kudlay for the connected setup wording and to the independent Codex Astra

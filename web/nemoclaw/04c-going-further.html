@@ -510,44 +510,49 @@
 
 <script type="module">
 import { buildNav, updateKeyPill, mountJourneyMap } from "./scripts/_shared.js";
-import { getInstalledNemoClawActivity } from "./scripts/_activity_runtime.js";
-import { localizeCourseUiText } from "./scripts/_locale.js";
 mountJourneyMap("#journey-map", "4c");
 document.getElementById("nav").innerHTML = buildNav("04c-going-further.html");
 updateKeyPill(document.getElementById("key-status"));
 hljs.highlightAll();
 document.getElementById("open-course-assistant").addEventListener("click", () => document.querySelector(".course-assistant-launcher")?.click());
+</script>
+
+<script type="module">
+import { getInstalledNemoClawActivity, installNemoClawActivityTracking } from "./scripts/_activity_runtime.js";
+import { ACTIVITY_MILESTONE_ORDER } from "./scripts/_activity.js";
+import { localizeCourseUiText } from "./scripts/_locale.js";
 const finishButton = document.getElementById("finish-course");
 const finishStatus = document.getElementById("finish-course-status");
-const courseActivity = getInstalledNemoClawActivity();
+const courseActivity = getInstalledNemoClawActivity() || installNemoClawActivityTracking();
 const text = value => localizeCourseUiText(value);
-async function refreshCompletion() {
+function refreshCompletion(state) {
   if (finishButton.closest('[hidden]')) return;
-  if (courseActivity?.snapshot().phase !== "connected") {
+  if (state.phase !== "connected") {
     finishButton.disabled = true;
-    finishStatus.textContent = text("Remote progress is off. Open Activity in the toolbar to enable it.");
+    finishStatus.textContent = text("Remote progress is off. Open Progress in the toolbar to enable it.");
     return;
   }
   try {
-    const state = await courseActivity.getCourseActivityState();
     if (state.completedAt) {
       finishButton.textContent = text("Course completed");
       finishButton.disabled = true;
       finishStatus.textContent = text("Course completed. You can return to the course home or continue exploring the resources above.");
       return;
     }
-    const ready = Number.isInteger(state.progressPercent) && state.progressPercent === 100;
+    const reached = ACTIVITY_MILESTONE_ORDER.filter(id => state.milestones.some(marker => marker.milestoneId === id && marker.completedAt !== null)).length;
+    const ready = reached === ACTIVITY_MILESTONE_ORDER.length;
     finishButton.disabled = !ready;
     if (ready) {
       finishStatus.textContent = text("All verified checkpoints are complete. Finish the course when you are ready.");
     } else {
       finishStatus.replaceChildren(
         document.createTextNode(`${text("Verified progress:")} `),
-        document.createTextNode(`${Number(state.progressPercent) || 0}%. `),
+        document.createTextNode(`${reached}/${ACTIVITY_MILESTONE_ORDER.length}. `),
         document.createTextNode(text("Complete the remaining hands-on checkpoints before finishing.")),
       );
     }
   } catch (_) {
+    finishButton.disabled = true;
     finishStatus.textContent = text("Course progress is temporarily unavailable. Reload this page to try again.");
   }
 }
@@ -562,14 +567,15 @@ finishButton.addEventListener("click", async () => {
     finishButton.disabled = !connected;
     finishStatus.textContent = connected
       ? text("Completion was not recorded. Check your connection and try again.")
-      : text("Remote progress is off. Open Activity in the toolbar to enable it.");
+      : text("Remote progress is off. Open Progress in the toolbar to enable it.");
   }
 });
 courseActivity?.subscribe(state => {
-  if (state.phase === "connected") void refreshCompletion();
+  finishButton.closest(".section").hidden = state.phase !== "connected";
+  if (state.phase === "connected") refreshCompletion(state);
   else {
     finishButton.disabled = true;
-    finishStatus.textContent = text("Remote progress is off. Open Activity in the toolbar to enable it.");
+    finishStatus.textContent = text("Remote progress is off. Open Progress in the toolbar to enable it.");
   }
 });
 </script>

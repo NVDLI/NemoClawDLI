@@ -3,36 +3,14 @@
 
 import {
   ACTIVITY_MILESTONES,
+  ACTIVITY_MILESTONE_ORDER as MILESTONE_ORDER,
   ACTIVITY_REFERRALS,
   createNemoClawActivity,
-  isActivityPolicyApproved,
 } from './_activity.js';
 import { localizeCourseUiText } from './_locale.js';
 
 const EVIDENCE_KEY_PREFIX = 'dli_activity:nemoclaw:evidence:v1';
 const CHECKPOINT_CONTRACT_VERSION = '1';
-const MILESTONE_ORDER = Object.freeze([
-  '01a:model-call-verified',
-  '01b:react-loop-complete',
-  '01c:tool-roundtrip-complete',
-  '02a:routed-workflow-complete',
-  '02b:grounded-answer-complete',
-  '02c:deep-research-complete',
-  '03a:nemoclaw-connected',
-  '03b:workspace-inspected',
-  '03c:scheduled-run-complete',
-  '04a:policy-boundary-verified',
-  '04b:live-agent-operated',
-]);
-
-export function highestContiguousMilestone(completed) {
-  let latest = null;
-  for (const milestone of MILESTONE_ORDER) {
-    if (!completed.has(milestone)) break;
-    latest = milestone;
-  }
-  return latest;
-}
 
 export function getInstalledNemoClawActivity(windowTarget = globalThis.window) {
   return windowTarget?.__nemoclawActivity || null;
@@ -65,51 +43,90 @@ function evidenceStorage(target, artifactVersion) {
   };
 }
 
-function localProgress(evidence) {
-  const completed = new Set(MILESTONE_ORDER.filter(item => evidence.has(`milestone:${item}`)));
-  const latest = highestContiguousMilestone(completed);
-  return latest ? ACTIVITY_MILESTONES[latest].progressPercent : 0;
+
+// C0002 is Performance Cookies in the nvdli.github.io OneTrust configuration.
+export function bindNemoClawProgressConsent({ windowTarget, activity, syncLocal }) {
+  let lastConsent;
+  let generation = 0;
+  let registeredCmp;
+  const consentChangeListeners = new Set();
+  const allowsProgress = () => {
+    try {
+      return windowTarget.OneTrust?.IsAlertBoxClosed?.() === true
+        && typeof windowTarget.OnetrustActiveGroups === 'string'
+        && windowTarget.OnetrustActiveGroups.split(',').includes('C0002');
+    } catch (_) { return false; }
+  };
+  const reconcile = () => {
+    const cmp = windowTarget.OneTrust;
+    if (cmp && cmp !== registeredCmp && typeof cmp.OnConsentChanged === 'function') {
+      registeredCmp = cmp;
+      cmp.OnConsentChanged(() => {
+        for (const listener of consentChangeListeners) listener();
+        reconcile();
+      });
+    }
+    const ready = typeof cmp?.IsAlertBoxClosed === 'function'
+      && typeof windowTarget.OnetrustActiveGroups === 'string';
+    const consent = ready ? allowsProgress() : null;
+    if (consent === lastConsent) return;
+    const previousConsent = lastConsent;
+    lastConsent = consent;
+    const currentGeneration = ++generation;
+    if (!consent) {
+      // Also abort a connection that is still pending when consent is withdrawn.
+      const state = activity.snapshot();
+      if (consent === false || previousConsent === true || state.enabled || state.phase === 'connecting') activity.disconnect();
+      return;
+    }
+    if (activity.snapshot().enabled) return;
+    const connect = async () => {
+      if (await activity.resume()) return true;
+      if (currentGeneration !== generation || !allowsProgress()) return false;
+      return activity.enable();
+    };
+    void connect().then(connected => {
+      if (connected && currentGeneration === generation && allowsProgress()) return syncLocal();
+    }).catch(() => {});
+  };
+  windowTarget.addEventListener('bannerLoaded', reconcile);
+  windowTarget.addEventListener('OneTrustGroupsUpdated', reconcile);
+  reconcile();
+  return {
+    allowsProgress,
+    reconcile,
+    subscribeConsentChanges(listener) {
+      consentChangeListeners.add(listener);
+      return () => consentChangeListeners.delete(listener);
+    },
+  };
 }
 
-function mountActivityInterface({ windowTarget, documentTarget, activity, evidence, syncLocal }) {
+function mountActivityInterface({ windowTarget, documentTarget, activity, evidence, consent }) {
   const topbar = documentTarget.querySelector?.('.topbar');
   if (!topbar || typeof documentTarget.createElement !== 'function') return null;
   const text = value => localizeCourseUiText(value);
   const root = documentTarget.createElement('div');
   root.className = 'activity-control';
   root.innerHTML = `
-    <button type="button" class="activity-control-toggle" aria-expanded="false" aria-controls="activity-control-panel" aria-label="${text('Activity')}" title="${text('Activity')}">
-      <span aria-hidden="true">🏃</span> <span data-activity-label></span>
+    <button type="button" class="activity-control-toggle" aria-expanded="false" aria-controls="activity-control-panel" aria-label="${text('Progress')}" title="${text('Progress')}">
+      <span data-activity-label></span>
     </button>
-    <section id="activity-control-panel" class="activity-control-panel" hidden role="dialog" aria-label="${text('Course activity and privacy')}">
-      <header><strong>${text('Course activity')}</strong><button type="button" data-activity-close aria-label="${text('Close activity panel')}">×</button></header>
-      <p data-activity-notice>${text('Remote progress is off. Nothing is sent until you enable it.')}</p>
-      <p data-activity-http hidden>${text('This lab uses HTTP. Someone on the network could read or alter your progress and session. Enable syncing only if you accept this risk.')}</p>
-      <p data-activity-status role="status" aria-live="polite"></p>
-      <label id="activity-progress-label" for="activity-progress"></label>
-      <progress id="activity-progress" max="100" value="0" aria-labelledby="activity-progress-label"></progress>
-      <p data-activity-sync></p>
-      <p>${text('Progress records successful course activity checkpoints.')}</p>
-      <div class="activity-control-actions">
-        <button type="button" data-activity-enable>${text('Enable remote progress')}</button>
-        <button type="button" data-activity-refresh hidden>${text('Refresh saved progress')}</button>
-        <button type="button" data-activity-disable hidden>${text('Disconnect this tab')}</button>
+    <section id="activity-control-panel" class="activity-control-panel" hidden role="dialog" aria-label="${text('Course progress')}">
+      <header><strong>${text('Progress')}</strong><button type="button" data-activity-close aria-label="${text('Close progress panel')}">×</button></header>
+      <div class="activity-progress-stage" data-tracking="off">
+      <div data-activity-milestones inert aria-hidden="true">
+      <p class="milestone-summary" data-milestone-summary role="status" aria-live="polite"></p>
+      <p class="milestone-intro">${text('Complete the exercises below. Checkmarks appear after each milestone is saved.')}</p>
+      <ol class="course-milestones" aria-label="${text('Course milestones')}"></ol>
       </div>
-      <label class="activity-referral-choice"><input type="checkbox" data-activity-referrals disabled> ${text('Record selections of approved NVIDIA resources')}</label>
-      <details>
-        <summary>${text('Data, purpose, and retention')}</summary>
-        <p>${text('If enabled, this course sends its version, a session identifier, and completed checkpoints to NVIDIA to save your progress. Link tracking is a separate choice. The service also receives connection metadata such as your IP address.')}</p>
-        <p data-activity-browser-retention></p>
-        <p data-activity-service-retention></p>
-        <p>${text('The course does not send API keys, prompts, model responses, terminal output, or workspace files to the Activity API.')}</p>
-      </details>
-      <details>
-        <summary>${text('Service status')}</summary>
-        <p>${text('Syncing is optional. If it is unavailable, keep working and retry later. Saved progress is shown only after the API confirms it.')}</p>
-        <p data-activity-observation>${text('No connection has been measured in this tab.')}</p>
-      </details>
-      <p class="activity-control-links"><a data-activity-policy target="_blank" rel="noopener noreferrer">${text('NVIDIA Privacy Policy')}</a><a data-activity-rights target="_blank" rel="noopener noreferrer">${text('Privacy choices and requests')}</a></p>
-      <p data-activity-gpc hidden>${text('Global Privacy Control is enabled. Referral tracking remains off.')}</p>
+      <div class="activity-progress-overlay" data-activity-overlay>
+      <div class="activity-control-actions">
+        <button type="button" data-activity-enable>${text('Enable Milestone Tracking')}</button>
+      </div>
+      <p data-activity-explanation>${text('This enables Performance Cookies to measure website visits and interactions, recognize returning visitors, and improve website performance.')}</p>
+      </div>
+      </div>
     </section>`;
   const keyPill = topbar.querySelector('.key-pill');
   topbar.insertBefore(root, keyPill || null);
@@ -117,19 +134,11 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
   const toggle = root.querySelector('.activity-control-toggle');
   const label = root.querySelector('[data-activity-label]');
   const panel = root.querySelector('.activity-control-panel');
-  const notice = root.querySelector('[data-activity-notice]');
-  const status = root.querySelector('[data-activity-status]');
-  const progressBar = root.querySelector('#activity-progress');
-  const progressLabel = root.querySelector('#activity-progress-label');
-  const syncStatus = root.querySelector('[data-activity-sync]');
+  const summary = root.querySelector('[data-milestone-summary]');
+  const milestones = root.querySelector('[data-activity-milestones]');
   const enable = root.querySelector('[data-activity-enable]');
-  const refresh = root.querySelector('[data-activity-refresh]');
-  const disable = root.querySelector('[data-activity-disable]');
-  const referrals = root.querySelector('[data-activity-referrals]');
-  const observation = root.querySelector('[data-activity-observation]');
-  const gpc = windowTarget.navigator?.globalPrivacyControl === true;
-  if (gpc) root.querySelector('[data-activity-gpc]').hidden = false;
-
+  const stage = root.querySelector('.activity-progress-stage');
+  const overlay = root.querySelector('[data-activity-overlay]');
   const setPanel = open => {
     panel.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open));
@@ -143,87 +152,101 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
     if (event.key === 'Escape') { setPanel(false); toggle.focus(); }
   });
 
-  let policy = null;
-  let refreshing = false;
-  const render = state => {
-    const progress = localProgress(evidence);
-    const saved = state.enabled && Boolean(state.progressCheckedAt);
-    const shownProgress = saved ? state.progressPercent : progress;
-    const progressKind = saved
-      ? (state.phase === 'connected' ? 'Saved progress:' : 'Last confirmed progress:')
-      : 'Local verified progress:';
-    root.dataset.state = state.phase;
-    label.textContent = `${shownProgress}%`;
-    const connection = text(state.phase === 'connected' ? 'Connected' : 'Not connected');
-    toggle.setAttribute('aria-label', `${text('Activity')} ${shownProgress}%. ${connection}`);
-    toggle.title = `${text('Activity')}: ${connection}`;
-    progressLabel.textContent = `${text(progressKind)} ${shownProgress}%`;
-    progressBar.value = shownProgress;
-    progressBar.setAttribute('aria-valuetext', progressLabel.textContent);
-    syncStatus.replaceChildren();
-    if (saved && progress > state.progressPercent) {
-      syncStatus.append(documentTarget.createTextNode(
-        `${text('Local verified progress:')} ${progress}%. ${text('Waiting for API confirmation.')}`,
-      ));
-    } else if (saved && state.phase === 'connected') {
-      syncStatus.textContent = text('Confirmed by the Activity API.');
+  const rows = MILESTONE_ORDER.map(id => {
+    const milestone = ACTIVITY_MILESTONES[id];
+    const row = documentTarget.createElement('li');
+    row.dataset.milestone = id;
+    const icon = documentTarget.createElement('span');
+    icon.className = 'milestone-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    const content = documentTarget.createElement('div');
+    const link = documentTarget.createElement('a');
+    link.href = milestone.href;
+    link.textContent = text(milestone.label);
+    const description = documentTarget.createElement('p');
+    description.textContent = text(milestone.description);
+    const stateLabel = documentTarget.createElement('span');
+    stateLabel.className = 'milestone-state';
+    content.append(link, description, stateLabel);
+    row.append(icon, content);
+    root.querySelector('.course-milestones').append(row);
+    let callout;
+    const [lesson, anchor] = milestone.href.split('#');
+    const target = lesson === pageName() && documentTarget.getElementById(anchor);
+    if (target) {
+      callout = documentTarget.createElement('aside');
+      callout.className = 'course-milestone-callout';
+      callout.setAttribute('aria-label', text('Course milestone'));
+      const heading = documentTarget.createElement('strong');
+      heading.textContent = text(milestone.label);
+      const instruction = documentTarget.createElement('p');
+      instruction.textContent = text(milestone.description);
+      const badge = documentTarget.createElement('span');
+      badge.className = 'milestone-state';
+      callout.append(heading, instruction, badge);
+      target.before(callout);
     }
-    disable.hidden = state.phase === 'off' || state.phase === 'blocked';
-    enable.hidden = state.enabled;
-    refresh.hidden = !state.enabled;
-    refresh.disabled = refreshing || state.phase === 'connecting';
-    referrals.disabled = state.phase !== 'connected' || gpc;
-    referrals.checked = state.referralTracking && !gpc;
-    if (state.phase === 'connecting') status.textContent = text('Connecting to the Activity API.');
-    else if (state.phase === 'connected') status.textContent = state.completedAt ? text('Course completed') : '';
-    else if (state.phase === 'unavailable') status.textContent = text('The Activity API is unavailable. Local course work is unchanged.');
-    else if (state.reason === 'secure-context') status.textContent = text('Open this course over HTTPS to enable remote progress.');
-    else if (state.reason === 'artifact') status.textContent = text('Remote progress is available only from a validated course build.');
-    else if (state.phase === 'blocked') status.textContent = text('Remote progress is unavailable for this course deployment.');
-    else status.textContent = '';
-    status.hidden = !status.textContent;
-    if (state.observedAt && Number.isInteger(state.observedLatencyMs)) {
-      observation.replaceChildren(
-        documentTarget.createTextNode(`${text('Last connection:')} `),
-        documentTarget.createTextNode(`${state.observedLatencyMs} ms, `),
-        Object.assign(documentTarget.createElement('time'), {
-          dateTime: state.observedAt, textContent: state.observedAt,
-        }),
-      );
-    } else observation.textContent = text('No connection has been measured in this tab.');
-    const approved = isActivityPolicyApproved(policy);
-    enable.disabled = state.phase === 'connecting' || !approved;
-    notice.hidden = state.phase === 'connecting';
-    notice.textContent = approved
-      ? text(state.enabled ? 'Remote progress is enabled.' : 'Remote progress is off. Nothing is sent until you enable it.')
-      : text('Remote progress is unavailable for this course deployment.');
-    root.querySelector('[data-activity-http]').hidden = documentTarget.location?.protocol !== 'http:';
+    return { id, milestone, row, icon, stateLabel, callout };
+  });
+
+  const render = state => {
+    const saved = state.enabled && Boolean(state.milestonesCheckedAt);
+    let count = 0;
+    rows.forEach(({ id, milestone, row, icon, stateLabel, callout }) => {
+      const confirmed = saved && state.milestones?.some(marker => marker.milestoneId === id && marker.completedAt !== null);
+      const local = evidence.has(`milestone:${id}`);
+      const reached = confirmed;
+      if (reached) count++;
+      const caption = confirmed ? 'Saved' : local ? 'Waiting to save' : 'Not yet reached';
+      row.dataset.completed = String(reached);
+      row.setAttribute('aria-label', `${text(milestone.label)}: ${text(caption)}`);
+      icon.textContent = reached ? '✓' : '○';
+      stateLabel.textContent = text(caption);
+      if (callout) {
+        callout.hidden = !consent.allowsProgress();
+        callout.dataset.completed = String(reached);
+        callout.querySelector('.milestone-state').textContent = reached
+          ? `✓ ${text(caption)}` : text('Course milestone');
+      }
+    });
+    root.dataset.state = state.phase;
+    const optedIn = consent.allowsProgress();
+    label.textContent = optedIn ? `${text('Progress')} ${count}/${rows.length}` : text('Progress');
+    toggle.setAttribute('aria-label', optedIn ? `${text('Progress')}: ${count} / ${rows.length}` : text('Progress'));
+    toggle.title = text('Progress');
+    summary.textContent = state.completedAt ? text('✓ Course complete')
+      : `${count} / ${rows.length} ${text('milestones reached')}`;
+    stage.dataset.tracking = optedIn ? 'on' : 'off';
+    milestones.inert = !optedIn;
+    milestones.setAttribute('aria-hidden', String(!optedIn));
+    overlay.hidden = optedIn;
+    enable.hidden = optedIn;
+    enable.disabled = false;
   };
   activity.subscribe(render);
-
-  enable.addEventListener('click', async () => {
-    if (await activity.enable()) await syncLocal();
-  });
-  refresh.addEventListener('click', async () => {
-    if (refreshing) return;
-    refreshing = true;
-    refresh.disabled = true;
-    try { if (await activity.getCourseActivityState()) await syncLocal(); }
-    finally { refreshing = false; render(activity.snapshot()); }
-  });
-  disable.addEventListener('click', () => activity.disconnect());
-  referrals.addEventListener('change', () => activity.setReferralTracking(referrals.checked && !gpc));
-
-  void activity.getPolicy().then(value => {
-    policy = value;
-    if (!policy) return render(activity.snapshot());
-    root.querySelector('[data-activity-browser-retention]').textContent = text(policy.browser_retention);
-    root.querySelector('[data-activity-service-retention]').textContent = text(policy.service_retention_notice || 'See NVIDIA’s Privacy Policy for service data retention and privacy requests.');
-    root.querySelector('[data-activity-policy]').href = policy.privacy_policy_url;
-    root.querySelector('[data-activity-rights]').href = policy.privacy_center_url;
+  let pendingOptIn = false;
+  consent.subscribeConsentChanges(() => { pendingOptIn = false; });
+  const applyOptIn = () => {
+    const cmp = windowTarget.OneTrust;
+    if (!pendingOptIn || typeof cmp?.UpdateConsent !== 'function'
+        || typeof cmp?.SetAlertBoxClosed !== 'function') return;
+    pendingOptIn = false;
+    // This explicit course choice grants only Performance Cookies.
+    cmp.SetAlertBoxClosed();
+    cmp.UpdateConsent('Category', 'C0002:1');
+    consent.reconcile();
     render(activity.snapshot());
+  };
+  const consentReady = () => {
+    applyOptIn();
+    render(activity.snapshot());
+  };
+  windowTarget.addEventListener('bannerLoaded', consentReady);
+  windowTarget.addEventListener('OneTrustGroupsUpdated', consentReady);
+  enable.addEventListener('click', () => {
+    pendingOptIn = true;
+    applyOptIn();
   });
-  void activity.resume().then(connected => { if (connected) return syncLocal(); });
   return { root, refresh: () => render(activity.snapshot()) };
 }
 
@@ -245,25 +268,53 @@ export function installNemoClawActivityTracking({
   const page = pageName();
 
   let activityInterface;
+  // Stored exercise flags are hints; only new success events are eligible to send.
+  const pending = new Map();
+  const partial = new Set();
+  let partialSessionId = activity.snapshot().sessionId;
+  const bindSession = state => {
+    const sessionId = state.sessionId;
+    if (sessionId !== partialSessionId) {
+      // Live work before enabling may bind once; replacement discards old partners.
+      if (partialSessionId !== null) partial.clear();
+      partialSessionId = sessionId;
+    }
+    if (state.enabled && sessionId) {
+      for (const [id, boundSessionId] of pending) {
+        if (boundSessionId === null) pending.set(id, sessionId);
+        else if (boundSessionId !== sessionId) pending.delete(id);
+      }
+    }
+  };
+  activity.subscribe(bindSession);
+  const syncLocal = async () => {
+    bindSession(activity.snapshot());
+    if (!activity.snapshot().enabled || !activity.snapshot().sessionId || !pending.size) return false;
+    if (!await activity.getCourseActivityState()) return false;
+    for (const [id, sessionId] of pending) {
+      if (sessionId !== activity.snapshot().sessionId) { pending.delete(id); continue; }
+      if (!await activity.recordMilestone(id, { sessionId })) return false;
+      pending.delete(id);
+    }
+    return true;
+  };
+
   const record = milestone => {
+    if (!ACTIVITY_MILESTONES[milestone]) return Promise.resolve(false);
     evidence.add(`milestone:${milestone}`);
+    pending.set(milestone, activity.snapshot().sessionId);
     activityInterface?.refresh();
-    const completed = new Set(MILESTONE_ORDER.filter(item => evidence.has(`milestone:${item}`)));
-    const latest = highestContiguousMilestone(completed);
-    return latest ? activity.recordMilestone(latest) : Promise.resolve(false);
+    return syncLocal();
   };
-  const syncLocal = () => {
-    const latest = highestContiguousMilestone(
-      new Set(MILESTONE_ORDER.filter(item => evidence.has(`milestone:${item}`))),
-    );
-    return latest ? activity.recordMilestone(latest) : Promise.resolve(false);
-  };
+  const consent = bindNemoClawProgressConsent({ windowTarget, activity, syncLocal });
   activityInterface = mountActivityInterface({
-    windowTarget, documentTarget, activity, evidence, syncLocal,
+    windowTarget, documentTarget, activity, evidence, consent,
   });
   const markPair = (key, partner, milestone) => {
+    bindSession(activity.snapshot());
     evidence.add(key);
-    if (evidence.has(partner)) record(milestone);
+    partial.add(key);
+    if (partial.has(partner)) record(milestone);
   };
 
   documentTarget.addEventListener('click', event => {
@@ -274,8 +325,9 @@ export function installNemoClawActivityTracking({
   }, true);
 
   windowTarget.addEventListener('nemoclaw:run-succeeded', event => {
+    bindSession(activity.snapshot());
     const { cellId, hasContent, hasAgent } = event.detail || {};
-    if (page === '01a-loop.html' && cellId === 'cell-onecall' && evidence.has('01a:key')
+    if (page === '01a-loop.html' && cellId === 'cell-onecall' && partial.has('01a:key')
         && hasContent) {
       record('01a:model-call-verified');
     } else if (page === '03b-openclaw.html' && cellId === 'cell-introspect') {
@@ -287,7 +339,11 @@ export function installNemoClawActivityTracking({
     }
   });
 
-  windowTarget.addEventListener('nemoclaw:api-key-verified', () => evidence.add('01a:key'));
+  windowTarget.addEventListener('nemoclaw:api-key-verified', () => {
+    bindSession(activity.snapshot());
+    evidence.add('01a:key');
+    partial.add('01a:key');
+  });
 
   windowTarget.addEventListener('nemoclaw:chat-completed', event => {
     const { containerId, successCount, hasAnswer } = event.detail || {};

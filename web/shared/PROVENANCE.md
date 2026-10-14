@@ -5,3 +5,5 @@
 `favicon.ico` is the unmodified NVIDIA corporate favicon used by the existing browser course. NVIDIA Logo and Brand Guidelines and trademark rights apply. It is not third-party software and is not offered under Apache-2.0.
 
 `runtime-workbench.css` and `runtime-workbench.js` are NVIDIA-authored Apache-2.0 course interface primitives. They keep runtime-tool disclosure and focus behavior consistent across independent browser courses and the executable Pyodide reference. They do not contain a runtime, credential, service endpoint, or third-party source.
+
+`activity-sdk.js` is NVIDIA-authored, hand-maintained browser JavaScript under the repository Apache-2.0 license. Courses import this ES module directly; it is not a packaged or generated SDK distribution. Course milestone definitions and consent policy remain in the course adapter.

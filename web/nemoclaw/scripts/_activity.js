@@ -1,7 +1,7 @@
 // Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { DLIActivity } from '../../shared/activity-sdk.js';
+import { DLIActivity, createBrowserActivityStorage } from '../../shared/activity-sdk.js';
 
 export const BUILD_SIGNUP_URL = 'https://build.nvidia.com/?ncid=ref-dli-146986';
 const ACTIVITY_BASE_URL = 'https://activity-api.learn.nvidia.com';
@@ -11,19 +11,100 @@ const MATERIALIZED_MANIFEST = 'materialized-sha256.txt';
 
 export const ACTIVITY_ARTIFACT_ID = 'artifact_nemoclaw_web';
 
-export const ACTIVITY_MILESTONES = Object.freeze({
-  '01a:model-call-verified': Object.freeze({ progressPercent: 10 }),
-  '01b:react-loop-complete': Object.freeze({ progressPercent: 15 }),
-  '01c:tool-roundtrip-complete': Object.freeze({ progressPercent: 25 }),
-  '02a:routed-workflow-complete': Object.freeze({ progressPercent: 35 }),
-  '02b:grounded-answer-complete': Object.freeze({ progressPercent: 45 }),
-  '02c:deep-research-complete': Object.freeze({ progressPercent: 50 }),
-  '03a:nemoclaw-connected': Object.freeze({ progressPercent: 60 }),
-  '03b:workspace-inspected': Object.freeze({ progressPercent: 70 }),
-  '03c:scheduled-run-complete': Object.freeze({ progressPercent: 80 }),
-  '04a:policy-boundary-verified': Object.freeze({ progressPercent: 90 }),
-  '04b:live-agent-operated': Object.freeze({ progressPercent: 100 }),
-});
+// Course-owned milestone definitions; the shared client has no course configuration dependency.
+export const ACTIVITY_MILESTONES = Object.freeze(Object.fromEntries(
+  [
+  [
+    "01a:model-call-verified",
+    {
+      "label": "Make your first model call",
+      "description": "Verify your API key, then run the one-call exercise and receive a response.",
+      "href": "01a-loop.html#cell-onecall"
+    }
+  ],
+  [
+    "01b:react-loop-complete",
+    {
+      "label": "Complete a ReAct loop",
+      "description": "Run the ReAct activity with at least one successful step and a final answer.",
+      "href": "01b-react.html#react-artifact"
+    }
+  ],
+  [
+    "01c:tool-roundtrip-complete",
+    {
+      "label": "Complete a tool round trip",
+      "description": "Run the tool-calling activity with a successful step and a final answer.",
+      "href": "01c-tools.html#tools-artifact"
+    }
+  ],
+  [
+    "02a:routed-workflow-complete",
+    {
+      "label": "Run a routed workflow",
+      "description": "Complete the routing activity with a successful step and a final answer.",
+      "href": "02a-routing.html#router-artifact"
+    }
+  ],
+  [
+    "02b:grounded-answer-complete",
+    {
+      "label": "Complete the retrieval activity",
+      "description": "Run the RAG activity with a successful step and a final answer.",
+      "href": "02b-rag.html#rag-artifact"
+    }
+  ],
+  [
+    "02c:deep-research-complete",
+    {
+      "label": "Complete a research run",
+      "description": "Finish the deep-research activity with a successful step and a final answer.",
+      "href": "02c-deep.html#deep-artifact"
+    }
+  ],
+  [
+    "03a:nemoclaw-connected",
+    {
+      "label": "Connect to NemoClaw",
+      "description": "Pass the connection checks for metadata, gateway, terminal, and health.",
+      "href": "03a-kickstart.html#probe-claw"
+    }
+  ],
+  [
+    "03b:workspace-inspected",
+    {
+      "label": "Inspect your workspace",
+      "description": "Successfully run both the introspection and workspace terminal exercises.",
+      "href": "03b-openclaw.html#cell-introspect"
+    }
+  ],
+  [
+    "03c:scheduled-run-complete",
+    {
+      "label": "Run and clean up a scheduled job",
+      "description": "Observe a successful scheduled run, then confirm the job was removed.",
+      "href": "03c-always-on.html#probe-cron"
+    }
+  ],
+  [
+    "04a:policy-boundary-verified",
+    {
+      "label": "Check the policy boundary",
+      "description": "Read the live agent policy, then confirm the policy comparison agrees.",
+      "href": "04a-safety.html#cell-live-policy"
+    }
+  ],
+  [
+    "04b:live-agent-operated",
+    {
+      "label": "Operate a live agent",
+      "description": "Send a non-command message to the live agent and receive a successful response.",
+      "href": "04b-modern-clis.html#agent-chat"
+    }
+  ]
+].map(([id, value]) => [id, Object.freeze(value)]),
+));
+export const ACTIVITY_MILESTONE_ORDER = Object.freeze(Object.keys(ACTIVITY_MILESTONES));
 
 export const ACTIVITY_REFERRALS = Object.freeze({
   [BUILD_SIGNUP_URL]: 'build:nvidia-api-key',
@@ -50,32 +131,14 @@ export const ACTIVITY_REFERRALS = Object.freeze({
 });
 
 function createSessionStorageAdapter(target, artifactVersion, artifactDigest) {
-  const storageKey = `dli_activity:nemoclaw:${artifactVersion}:${artifactDigest}`;
-  let memoryValue = null;
+  const cache = createBrowserActivityStorage({ storage: target ?? null,
+    key: `dli_activity:nemoclaw:${ACTIVITY_BASE_URL}:${artifactVersion}:${artifactDigest}` });
   let disposed = false;
   return {
-    load() {
-      if (disposed) return null;
-      try {
-        const raw = target?.getItem(storageKey);
-        return raw ? JSON.parse(raw) : memoryValue;
-      } catch (_) { return memoryValue; }
-    },
-    save(value) {
-      if (disposed) return;
-      memoryValue = value;
-      try { target?.setItem(storageKey, JSON.stringify(value)); } catch (_) {}
-    },
-    clear() {
-      if (disposed) return;
-      memoryValue = null;
-      try { target?.removeItem(storageKey); } catch (_) {}
-    },
-    dispose() {
-      if (disposed) return;
-      this.clear();
-      disposed = true;
-    },
+    load: () => disposed ? null : cache.load(),
+    save(value) { if (!disposed) cache.save(value); },
+    clear() { if (!disposed) cache.clear(); },
+    dispose() { if (!disposed) cache.clear(); disposed = true; },
   };
 }
 
@@ -261,10 +324,11 @@ export function createNemoClawActivity({
   let enableAttempt;
   let connectionGeneration = 0;
   let stateRead = 0;
+  let operationQueue = Promise.resolve();
   let connectionAbort;
   const listeners = new Set();
   let storage;
-  let state = Object.freeze({ phase: 'off', enabled, referralTracking, progressPercent: 0 });
+  let state = Object.freeze({ phase: 'off', enabled, referralTracking, sessionId: null, milestones: [] });
   const preferenceKey = 'dli_activity:progress-preference';
   const preference = () => {
     try { return JSON.parse(storageTarget?.getItem(preferenceKey) || 'null'); }
@@ -340,24 +404,37 @@ export function createNemoClawActivity({
     return attempt;
   }
 
-  async function attempt(operation, failureValue = false) {
+  function attempt(operation, failureValue = false, expectedSessionId) {
     const generation = connectionGeneration;
     const isCurrent = () => generation === connectionGeneration;
-    try {
-      const activity = await initializeActivity();
-      if (!isCurrent()) return failureValue;
-      const result = await operation(activity, isCurrent);
-      return isCurrent() ? result : failureValue;
-    } catch (_) {
-      if (enabled && isCurrent()) publish({ phase: 'unavailable', reason: 'service' });
-      return failureValue;
-    }
+    const run = async () => {
+      if (!isCurrent() || (expectedSessionId !== undefined && state.sessionId !== expectedSessionId)) return failureValue;
+      try {
+        const activity = await initializeActivity();
+        if (!isCurrent()) return failureValue;
+        // SDK state reads may renew authentication. Publish that renewal before a queued write.
+        const confirmed = expectedSessionId === undefined ? null : await readConfirmedState(activity, isCurrent);
+        if (!isCurrent() || (expectedSessionId !== undefined && confirmed?.sessionId !== expectedSessionId)) return failureValue;
+        const result = await operation(activity, isCurrent, confirmed);
+        return isCurrent() ? result : failureValue;
+      } catch (_) {
+        if (enabled && isCurrent()) publish({ phase: 'unavailable', reason: 'service' });
+        return failureValue;
+      }
+    };
+    const result = operationQueue.then(run, run);
+    operationQueue = result.then(() => undefined, () => undefined);
+    return result;
   }
 
-  function validateProgress(remote) {
-    if (!Number.isInteger(remote?.progressPercent)
-        || remote.progressPercent < 0 || remote.progressPercent > 100) {
-      throw new Error('The Activity API returned invalid progress');
+  function validateMilestones(remote) {
+    const markers = remote?.milestones;
+    if (!isNonEmptyString(remote?.sessionId) || !Array.isArray(markers)
+        || markers.length !== ACTIVITY_MILESTONE_ORDER.length
+        || new Set(markers.map(marker => marker.milestoneId)).size !== markers.length
+        || !markers.every(marker => ACTIVITY_MILESTONE_ORDER.includes(marker.milestoneId)
+          && (marker.completedAt === null || (isNonEmptyString(marker.completedAt) && Number.isFinite(Date.parse(marker.completedAt)))))) {
+      throw new Error('The Activity API milestone policy does not match this course');
     }
     return remote;
   }
@@ -365,16 +442,17 @@ export function createNemoClawActivity({
   async function readConfirmedState(activity, isCurrent) {
     const reading = ++stateRead;
     let remote;
-    try { remote = validateProgress(await activity.getState()); }
+    try { remote = validateMilestones(await activity.getState()); }
     catch (error) {
       if (!isCurrent() || reading !== stateRead) return null;
       throw error;
     }
-    if (isCurrent() && reading === stateRead) publish({
+    if (!isCurrent() || reading !== stateRead) return null;
+    publish({
       phase: 'connected', reason: null,
-      progressPercent: remote.progressPercent,
+      sessionId: remote.sessionId, milestones: remote.milestones,
       completedAt: remote.completedAt || null,
-      progressCheckedAt: (now ? now() : new Date()).toISOString(),
+      milestonesCheckedAt: (now ? now() : new Date()).toISOString(),
     });
     return remote;
   }
@@ -454,9 +532,9 @@ export function createNemoClawActivity({
           if (storage === attemptStorage) storage = undefined;
           return false;
         }
-        const remote = activity ? await attempt(async value => validateProgress(await value.getState()), null) : null;
+        const remote = activity ? await attempt(readConfirmedState, null) : null;
         if (generation !== connectionGeneration) {
-          initializedActivity = undefined;
+          if (initializedActivity === activityPromise) initializedActivity = undefined;
           attemptStorage?.dispose();
           if (storage === attemptStorage) storage = undefined;
           return false;
@@ -471,9 +549,9 @@ export function createNemoClawActivity({
         const endedAt = performanceImpl?.now?.() ?? Date.now();
         publish({
           phase: 'connected',
-          progressPercent: remote.progressPercent,
+          sessionId: remote.sessionId, milestones: remote.milestones,
           completedAt: remote.completedAt || null,
-          progressCheckedAt: (now ? now() : new Date()).toISOString(),
+          milestonesCheckedAt: (now ? now() : new Date()).toISOString(),
           observedLatencyMs: Math.max(0, Math.round(endedAt - startedAt)),
           observedAt: (now ? now() : new Date()).toISOString(),
         });
@@ -485,6 +563,8 @@ export function createNemoClawActivity({
     },
     disconnect() {
       connectionGeneration += 1;
+      enableAttempt = undefined;
+      operationQueue = Promise.resolve();
       enabled = false;
       referralTracking = false;
       savePreference();
@@ -493,7 +573,7 @@ export function createNemoClawActivity({
       storage = undefined;
       connectionAbort?.abort();
       connectionAbort = undefined;
-      return publish({ phase: 'off', reason: null, progressPercent: 0, completedAt: null, progressCheckedAt: null, observedLatencyMs: null, observedAt: null });
+      return publish({ phase: 'off', reason: null, sessionId: null, milestones: [], completedAt: null, milestonesCheckedAt: null, observedLatencyMs: null, observedAt: null });
     },
     setReferralTracking(value) {
       referralTracking = enabled && value === true && !globalPrivacyControl;
@@ -508,27 +588,29 @@ export function createNemoClawActivity({
       if (!enabled || !referralTracking) return Promise.resolve(false);
       const referenceId = ACTIVITY_REFERRALS[destinationUrl];
       if (!referenceId) return Promise.resolve(false);
-      return attempt(async activity => {
+      const expectedSessionId = state.sessionId;
+      return attempt(async (activity, isCurrent) => {
+        if (!referralTracking) return false;
         await activity.referral({
           referenceId,
           destinationUrl,
           idempotencyKey: `nemoclaw:referral:${referenceId}`,
         });
-        return true;
-      });
+        return Boolean(await readConfirmedState(activity, isCurrent));
+      }, false, expectedSessionId);
     },
-    recordMilestone(milestoneRef) {
+    recordMilestone(milestoneRef, { sessionId = state.sessionId } = {}) {
       if (!enabled) return Promise.resolve(false);
       const milestone = ACTIVITY_MILESTONES[milestoneRef];
       if (!milestone) return Promise.resolve(false);
       return attempt(async (activity, isCurrent) => {
-        await activity.progress(milestone.progressPercent, {
+        await activity.completeMilestone(milestoneRef, {
           idempotencyKey: `nemoclaw:milestone:${milestoneRef}`,
         });
         if (!isCurrent()) return false;
-        await readConfirmedState(activity, isCurrent);
-        return true;
-      });
+        const remote = await readConfirmedState(activity, isCurrent);
+        return Boolean(remote?.milestones.some(marker => marker.milestoneId === milestoneRef && marker.completedAt !== null));
+      }, false, sessionId);
     },
     getCourseActivityState() {
       if (!enabled) return Promise.resolve(null);
@@ -536,15 +618,16 @@ export function createNemoClawActivity({
     },
     recordCompletion() {
       if (!enabled) return Promise.resolve(false);
-      return attempt(async (activity, isCurrent) => {
-        const state = await readConfirmedState(activity, isCurrent);
+      const expectedSessionId = state.sessionId;
+      return attempt(async (activity, isCurrent, confirmed) => {
+        const state = confirmed;
         if (!isCurrent()) return false;
-        if (!Number.isInteger(state?.progressPercent) || state.progressPercent !== 100) return false;
+        if (!state || !ACTIVITY_MILESTONE_ORDER.every(id => state.milestones.some(marker => marker.milestoneId === id && marker.completedAt !== null))) return false;
         const result = await activity.complete({ idempotencyKey: 'nemoclaw:course:completed' });
         if (!isCurrent()) return false;
         await readConfirmedState(activity, isCurrent);
         return result?.written !== false;
-      });
+      }, false, expectedSessionId);
     },
   };
 }

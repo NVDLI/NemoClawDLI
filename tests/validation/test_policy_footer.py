@@ -1,0 +1,66 @@
+# Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+"""Published course pages retain policy links and the supplied consent notice."""
+from pathlib import Path
+import re
+import tempfile
+import unittest
+
+from scripts.build.assemble_locale_overlay import assemble
+from scripts.build.bundle_standalone import bundle_one
+
+
+class PolicyFooterTests(unittest.TestCase):
+    def test_every_course_export_has_static_policy_links(self):
+        root = Path(__file__).resolve().parents[2]
+        sources = [root / "web/nemoclaw"]
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        for locale in sorted(root.glob("i18n/*/locale.json")):
+            output = Path(temporary.name) / locale.parent.name
+            assemble(locale.parent, output)
+            sources.append(output / "web/nemoclaw")
+        expected = [
+            ("https://www.nvidia.com/en-us/about-nvidia/privacy-policy/", "Privacy Policy"),
+            ("https://www.nvidia.com/en-us/about-nvidia/privacy-center/", "Your Privacy Choices"),
+            ("https://www.nvidia.com/en-us/about-nvidia/terms-of-service/", "Terms of Service"),
+            ("https://www.nvidia.com/en-us/about-nvidia/accessibility/", "Accessibility"),
+            ("https://www.nvidia.com/en-us/about-nvidia/company-policies/", "Corporate Policies"),
+            ("https://www.nvidia.com/en-us/product-security/", "Product Security"),
+            ("https://www.nvidia.com/en-us/contact/", "Contact"),
+        ]
+        for directory in sources:
+            for page in sorted(directory.glob("*.html")):
+                for full in (False, True):
+                    with self.subTest(page=str(page), full=full):
+                        result = bundle_one(page, "", "", "", full=full)
+                        footers = re.findall(
+                            r'<footer class="nvidia-policy-footer">(.*?)</footer>',
+                            result, re.S,
+                        )
+                        self.assertEqual(len(footers), 1)
+                        self.assertIn('aria-label="NVIDIA legal and policies"', footers[0])
+                        self.assertEqual(re.findall(r'<a href="([^"]+)">([^<]+)</a>', footers[0]), expected)
+                        self.assertLess(result.index(footers[0]), result.index("</body>"))
+                        # The footer must not introduce a consent or analytics script.
+                        self.assertNotIn("<script", footers[0])
+                        # Preserve the supplied test tenant and ordered consent bootstrap.
+                        stub = 'https://cdn.cookielaw.org/scripttemplates/otSDKStub.js'
+                        custom = 'https://images.nvidia.com/aem-dam/Solutions/ot-js/ot-custom.js'
+                        tenant = '01a13400-6831-707e-9897-c2ef6262efc7-test'
+                        self.assertEqual(result.count(stub), 1)
+                        self.assertEqual(result.count(custom), 1)
+                        self.assertEqual(result.count('data-domain-script="' + tenant + '"'), 1)
+                        self.assertLess(result.index(stub), result.index('function OptanonWrapper()'))
+                        self.assertLess(result.index('function OptanonWrapper()'), result.index(custom))
+                        self.assertLess(result.index(custom), result.index('</head>'))
+                        self.assertIn("new Event('bannerLoaded')", result)
+                        self.assertIn('window.dispatchEvent(event)', result)
+                        source = page.read_text(encoding="utf-8")
+                        for footer in re.findall(r"<footer>.*?</footer>", source, re.S):
+                            self.assertIn(footer, result)
+
+
+if __name__ == "__main__":
+    unittest.main()

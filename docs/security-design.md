@@ -258,3 +258,9 @@ The audit rejects stale projections, unclassified local services or volumes, mis
 nodes, dangling edges, undocumented trust-boundary crossings, unlabeled sensitive flows, broken
 evidence anchors, overlaps, and ambiguous collinear flows. The flow register uses three lines per
 edge: endpoints, transport and data, then authentication and trust boundary.
+
+## Generated-page consent dependencies
+
+The shared course bundler injects the supplied OneTrust notice into generated pages. The browser loads the executable consent scripts listed in `THIRD_PARTY_LICENSES.md`; OneTrust also retrieves the supplied tenant configuration. These requests cross the course browser boundary to provider-operated services. The scripts run in the page origin and are not pinned or vendored course dependencies. Their operation and domain configuration remain externally owned.
+
+The authored-source runtime graph observer does not discover scripts injected by the bundler. Review generated HTML and browser network traffic alongside that graph; the external consent-script inventory is recorded in `THIRD_PARTY_LICENSES.md`. Activity progress syncing defaults to off and remains subject to the deployed collection policy. The runtime requires a valid OneTrust saved choice with the configured `C0002` Performance Cookies category active before connecting. Its `bannerLoaded` event only triggers reconciliation of that choice; the event alone never authorizes Activity writes. Withdrawal invalidates pending connections, aborts transport and clears the tab's Activity session. Referral consent remains separate.

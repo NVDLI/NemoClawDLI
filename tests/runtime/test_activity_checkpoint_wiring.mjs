@@ -3,325 +3,166 @@
 
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import path from 'node:path';
 import test from 'node:test';
-import { pathToFileURL } from 'node:url';
+const nativeFetch = globalThis.fetch;
+globalThis.fetch = async url => url instanceof URL && url.protocol === 'file:'
+  ? new Response(fs.readFileSync(url, 'utf8')) : nativeFetch(url);
+const { installCourseActivityTracking, getInstalledCourseActivity, ACTIVITY_MILESTONE_ORDER } = await import('../../web/nemoclaw/scripts/_activity_runtime.js');
+globalThis.fetch = nativeFetch;
 
-const COURSE_ROOTS = fs.readdirSync('web', { withFileTypes: true })
-  .filter(entry => entry.isDirectory() && fs.existsSync(path.join('web', entry.name, 'activity-policy.json')))
-  .map(entry => path.join('web', entry.name));
-assert.equal(COURSE_ROOTS.length, 1, 'expected one discovered Activity-enabled course');
-const [COURSE_ROOT] = COURSE_ROOTS;
-const COURSE_ID = path.basename(COURSE_ROOT);
-const runtimeModule = await import(pathToFileURL(path.resolve(COURSE_ROOT, 'scripts', '_activity_runtime.js')));
-const {
-  ACTIVITY_MILESTONE_ORDER,
-  getInstalledCourseActivity,
-  highestContiguousMilestone,
-  installCourseActivityTracking,
-} = runtimeModule;
-
-const read = path => fs.readFileSync(path, 'utf8');
-const source = (...parts) => path.join(COURSE_ROOT, ...parts);
-const event = name => `${COURSE_ID}:${name}`;
-const connectedMilestone = `03a:${COURSE_ID}-connected`;
-const evidenceKey = version => `dli_activity:${COURSE_ID}:evidence:v1:${version}`;
-
-function trackingFixture(page = '01a-loop.html', providedStorageTarget) {
-  const previousLocation = globalThis.location;
-  Object.defineProperty(globalThis, 'location', {
-    configurable: true,
-    value: { pathname: `/${COURSE_ID}/${page}` },
-  });
-  const windowTarget = new EventTarget();
-  const documentTarget = new EventTarget();
+const read = file => fs.readFileSync(`web/nemoclaw/${file}`, 'utf8');
+const flush = () => new Promise(resolve => setImmediate(resolve));
+function dispatch(target, type, detail = {}) {
+  const event = new Event(`nemoclaw:${type}`); event.detail = detail; target.dispatchEvent(event);
+}
+function fixture(page = '01a-loop.html', { sessionId = 'session-a', storageTarget, write = async () => true } = {}) {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'location');
+  Object.defineProperty(globalThis, 'location', { configurable: true, value: { pathname: `/nemoclaw/${page}` } });
+  const windowTarget = new EventTarget(); const documentTarget = new EventTarget();
+  windowTarget.OneTrust = { IsAlertBoxClosed: () => true, OnConsentChanged: () => {} };
+  windowTarget.OnetrustActiveGroups = ',C0001,C0002,';
   const values = new Map();
-  const storageTarget = providedStorageTarget || {
-    getItem: key => values.get(key) || null,
-    setItem: (key, value) => values.set(key, value),
-  };
-  const milestones = [];
+  const storage = storageTarget || { getItem: key => values.get(key) || null, setItem: (key, value) => values.set(key, value) };
+  const listeners = new Set(); const milestones = [];
+  let state = { enabled: Boolean(sessionId), sessionId };
   const activity = {
-    start: async () => true,
-    recordMilestone: async milestone => { milestones.push(milestone); },
+    snapshot: () => state,
+    resume: async () => false,
+    enable: async () => state.enabled,
+    subscribe(listener) { listeners.add(listener); listener(state); return () => listeners.delete(listener); },
+    getCourseActivityState: async () => state,
+    recordMilestone: async id => { milestones.push(id); return write(id); },
     trackReferral: async () => true,
   };
-  installCourseActivityTracking({ windowTarget, documentTarget, storageTarget, activity });
-  return {
-    milestones,
-    storageTarget,
-    windowTarget,
-    restore() {
-      if (previousLocation === undefined) delete globalThis.location;
-      else Object.defineProperty(globalThis, 'location', { configurable: true, value: previousLocation });
-    },
+  installCourseActivityTracking({ windowTarget, documentTarget, activity, storageTarget: storage });
+  return { windowTarget, documentTarget, activity, milestones, storage,
+    session(sessionId) { state = { enabled: Boolean(sessionId), sessionId }; listeners.forEach(listener => listener(state)); },
+    restore() { if (previous) Object.defineProperty(globalThis, 'location', previous); else delete globalThis.location; },
   };
 }
 
-function dispatch(target, type, detail) {
-  const event = new Event(type);
-  event.detail = detail;
-  target.dispatchEvent(event);
-}
+const pairs = [
+  ['03b-openclaw.html', ['run-succeeded', { cellId: 'cell-introspect' }], ['run-succeeded', { cellId: 'cell-workspace-term' }], '03b:workspace-inspected'],
+  ['03c-always-on.html', ['canvas-node-succeeded', { canvasId: 'probe-cron', nodeId: 'cr-run', runObserved: true }], ['canvas-node-succeeded', { canvasId: 'probe-cron', nodeId: 'cr-rm', cleanupSucceeded: true }], '03c:scheduled-run-complete'],
+  ['04a-safety.html', ['run-succeeded', { cellId: 'cell-live-policy', hasAgent: true }], ['canvas-node-succeeded', { canvasId: 'cell-predict-confirm', nodeId: 'compare', policyAgreed: true }], '04a:policy-boundary-verified'],
+];
 
-test('out-of-order outcomes advance only through contiguous checkpoints', () => {
-  assert.equal(highestContiguousMilestone(new Set(['04b:live-agent-operated'])), null);
-  assert.equal(highestContiguousMilestone(new Set([
-    '01a:model-call-verified', '01b:react-loop-complete', '01c:tool-roundtrip-complete',
-  ])), '01c:tool-roundtrip-complete');
-  assert.equal(highestContiguousMilestone(new Set(ACTIVITY_MILESTONE_ORDER)), '04b:live-agent-operated');
+test('course bootstrap and reinstall do not award a milestone', () => {
+  const f = fixture(); try {
+    assert.deepEqual(f.milestones, []);
+    assert.equal(installCourseActivityTracking({ windowTarget: f.windowTarget, documentTarget: f.documentTarget }), f.activity);
+    assert.equal(getInstalledCourseActivity(f.windowTarget), f.activity);
+  } finally { f.restore(); }
 });
 
-test('shared runtimes publish success-only activity signals', () => {
-  const canvas = read(source('scripts', '_canvas.js'));
-  assert.match(canvas, new RegExp(event('run-succeeded')));
-  assert.match(canvas, new RegExp(event('canvas-node-succeeded')));
-  assert.doesNotMatch(canvas, /publishActivitySignal\([^;]+\bresult\s*[,}]/s);
-  assert.match(read(source('scripts', '_chat.js')), new RegExp(event('chat-completed')));
-  assert.match(read(source('scripts', '_openclaw.js')), new RegExp(event('connection-audit-passed')));
-  assert.match(read(source('scripts', '_openclaw_cli.js')), new RegExp(event('live-agent-operated')));
+test('later successful exercises save independently of earlier exercises', async () => {
+  const f = fixture('01b-react.html'); try {
+    dispatch(f.windowTarget, 'chat-completed', { containerId: 'react-artifact', successCount: 0, hasAnswer: true }); await flush();
+    assert.deepEqual(f.milestones, []);
+    dispatch(f.windowTarget, 'chat-completed', { containerId: 'react-artifact', successCount: 1, hasAnswer: true }); await flush();
+    assert.deepEqual(f.milestones, ['01b:react-loop-complete']);
+  } finally { f.restore(); }
 });
 
-test('checkpoint predicates require explicit successful evidence', () => {
-  const runtimeSource = read(source('scripts', '_activity_runtime.js'));
-  assert.match(runtimeSource, /successCount < 1/);
-  assert.match(runtimeSource, /&& runObserved/);
-  assert.match(runtimeSource, /&& cleanupSucceeded/);
-  assert.match(runtimeSource, /&& policyAgreed/);
-});
-
-test('the activity runtime maps every approved checkpoint to evidence', () => {
-  const runtimeSource = read(source('scripts', '_activity_runtime.js'));
-  for (const milestone of ACTIVITY_MILESTONE_ORDER) {
-    assert.match(runtimeSource, new RegExp(milestone.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  }
-});
-
-test('the shared course entrypoint installs activity tracking', () => {
-  const sharedSource = read(source('scripts', '_shared.js'));
-  assert.match(sharedSource, /install\w+ActivityTracking/);
-});
-
-test('installing activity tracking on a page does not advance progress', () => {
-  const fixture = trackingFixture();
-  try {
-    assert.deepEqual(fixture.milestones, []);
-  } finally {
-    fixture.restore();
-  }
-});
-
-test('course bootstrap survives browsers that deny sessionStorage access', () => {
-  const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'sessionStorage');
-  Object.defineProperty(globalThis, 'sessionStorage', {
-    configurable: true,
-    get() { throw new DOMException('denied', 'SecurityError'); },
-  });
-  const windowTarget = new EventTarget();
-  const documentTarget = new EventTarget();
-  const activity = { start: async () => true, recordMilestone: async () => true };
-  try {
-    assert.equal(installCourseActivityTracking({ windowTarget, documentTarget, activity }), activity);
-  } finally {
-    if (descriptor) Object.defineProperty(globalThis, 'sessionStorage', descriptor);
-    else delete globalThis.sessionStorage;
-  }
-});
-
-test('checkpoint prerequisites remain available in memory when session storage is denied', () => {
-  const storageTarget = {
-    getItem() { throw new DOMException('denied', 'SecurityError'); },
-    setItem() { throw new DOMException('denied', 'SecurityError'); },
-  };
-  const fixture = trackingFixture('01a-loop.html', storageTarget);
-  try {
-    dispatch(fixture.windowTarget, event('api-key-verified'));
-    dispatch(fixture.windowTarget, event('run-succeeded'), {
-      cellId: 'cell-onecall', hasContent: true,
-    });
-    assert.deepEqual(fixture.milestones, ['01a:model-call-verified']);
-  } finally {
-    fixture.restore();
-  }
-});
-
-test('checkpoint evidence from an older release cannot advance the current release', () => {
-  const fixture = trackingFixture('01b-react.html');
-  try {
-    fixture.storageTarget.setItem(evidenceKey(0), JSON.stringify({
-      'milestone:01a:model-call-verified': true,
-    }));
-    dispatch(fixture.windowTarget, event('chat-completed'), {
-      containerId: 'react-artifact', successCount: 1, hasAnswer: true,
-    });
-    assert.deepEqual(fixture.milestones, []);
-  } finally {
-    fixture.restore();
-  }
-});
-
-test('Module 1a advances only after key verification and successful model content', () => {
-  const fixture = trackingFixture();
-  try {
-    dispatch(fixture.windowTarget, event('run-succeeded'), {
-      cellId: 'cell-onecall', hasContent: true,
-    });
-    assert.deepEqual(fixture.milestones, []);
-
-    dispatch(fixture.windowTarget, event('api-key-verified'));
-    dispatch(fixture.windowTarget, event('run-succeeded'), {
-      cellId: 'cell-onecall', hasContent: false,
-    });
-    assert.deepEqual(fixture.milestones, []);
-
-    dispatch(fixture.windowTarget, event('run-succeeded'), {
-      cellId: 'cell-onecall', hasContent: true,
-    });
-    assert.deepEqual(fixture.milestones, ['01a:model-call-verified']);
-  } finally {
-    fixture.restore();
-  }
-});
-
-test('every 01b through 04b checkpoint requires its full success predicate', () => {
-  const cases = [
-    ['01b-react.html', event('chat-completed'),
-      { containerId: 'react-artifact', successCount: 1, hasAnswer: true },
-      { containerId: 'react-artifact', successCount: 0, hasAnswer: true }, '01b:react-loop-complete'],
-    ['01c-tools.html', event('chat-completed'),
-      { containerId: 'tools-artifact', successCount: 1, hasAnswer: true },
-      { containerId: 'tools-artifact', successCount: 1, hasAnswer: false }, '01c:tool-roundtrip-complete'],
-    ['02a-routing.html', event('chat-completed'),
-      { containerId: 'router-artifact', successCount: 1, hasAnswer: true },
-      { containerId: 'wrong-artifact', successCount: 1, hasAnswer: true }, '02a:routed-workflow-complete'],
-    ['02b-rag.html', event('chat-completed'),
-      { containerId: 'rag-artifact', successCount: 1, hasAnswer: true },
-      { containerId: 'rag-artifact', successCount: 0, hasAnswer: false }, '02b:grounded-answer-complete'],
-    ['02c-deep.html', event('chat-completed'),
-      { containerId: 'deep-artifact', successCount: 1, hasAnswer: true },
-      { containerId: 'deep-artifact', successCount: 0, hasAnswer: true }, '02c:deep-research-complete'],
-    ['03a-connect.html', event('connection-audit-passed'), {}, null, connectedMilestone],
-    ['04b-operate.html', event('live-agent-operated'), {}, null, '04b:live-agent-operated'],
-  ];
-  const order = [
-    '01a:model-call-verified', '01b:react-loop-complete', '01c:tool-roundtrip-complete',
-    '02a:routed-workflow-complete', '02b:grounded-answer-complete', '02c:deep-research-complete',
-    connectedMilestone, '03b:workspace-inspected', '03c:scheduled-run-complete',
-    '04a:policy-boundary-verified', '04b:live-agent-operated',
-  ];
-  for (const [page, type, positive, negative, milestone] of cases) {
-    const fixture = trackingFixture(page);
-    try {
-      const position = order.indexOf(milestone);
-      fixture.storageTarget.setItem(evidenceKey(1),
-        JSON.stringify(Object.fromEntries(order.slice(0, position)
-          .map(item => [`milestone:${item}`, true]))));
-      if (negative) {
-        dispatch(fixture.windowTarget, type, negative);
-        assert.deepEqual(fixture.milestones, [], `${milestone} accepted partial evidence`);
-      }
-      dispatch(fixture.windowTarget, type, positive);
-      assert.deepEqual(fixture.milestones, [milestone], `${milestone} did not advance contiguously`);
-    } finally { fixture.restore(); }
-  }
-});
-
-test('paired checkpoints reject partial evidence in either order', async t => {
-  const cases = [
-    ['03b-openclaw.html',
-      [event('run-succeeded'), { cellId: 'cell-introspect' }],
-      [event('run-succeeded'), { cellId: 'cell-workspace-term' }],
-      '03b:workspace-inspected', 7],
-    ['03c-always-on.html',
-      [event('canvas-node-succeeded'), { canvasId: 'probe-cron', nodeId: 'cr-run', runObserved: true }],
-      [event('canvas-node-succeeded'), { canvasId: 'probe-cron', nodeId: 'cr-rm', cleanupSucceeded: true }],
-      '03c:scheduled-run-complete', 8],
-    ['04a-safety.html',
-      [event('run-succeeded'), { cellId: 'cell-live-policy', hasAgent: true }],
-      [event('canvas-node-succeeded'), { canvasId: 'cell-predict-confirm', nodeId: 'compare', policyAgreed: true }],
-      '04a:policy-boundary-verified', 9],
-  ];
-  const order = [
-    '01a:model-call-verified', '01b:react-loop-complete', '01c:tool-roundtrip-complete',
-    '02a:routed-workflow-complete', '02b:grounded-answer-complete', '02c:deep-research-complete',
-    connectedMilestone, '03b:workspace-inspected', '03c:scheduled-run-complete',
-  ];
-  for (const [page, left, right, milestone, priorCount] of cases) {
+test('paired live success predicates work in either order, without trusting stored flags', async () => {
+  for (const [page, left, right, milestone] of pairs) {
     for (const [first, second] of [[left, right], [right, left]]) {
-      await t.test(`${milestone}: ${first[1].cellId || first[1].nodeId} first`, () => {
-        const fixture = trackingFixture(page);
-        try {
-          fixture.storageTarget.setItem(evidenceKey(1),
-            JSON.stringify(Object.fromEntries(order.slice(0, priorCount).map(item => [`milestone:${item}`, true]))));
-          dispatch(fixture.windowTarget, first[0], first[1]);
-          assert.deepEqual(fixture.milestones, [], `${milestone} accepted partial evidence`);
-          dispatch(fixture.windowTarget, second[0], second[1]);
-          assert.deepEqual(fixture.milestones, [milestone]);
-        } finally { fixture.restore(); }
-      });
+      const f = fixture(page); try {
+        f.storage.setItem('dli_activity:nemoclaw:evidence:v1:1', JSON.stringify({ '03b:introspect': true, '03b:workspace': true, '03c:run': true, '03c:removed': true, '04a:policy': true, '04a:agreement': true }));
+        dispatch(f.windowTarget, ...first); await flush(); assert.deepEqual(f.milestones, []);
+        dispatch(f.windowTarget, ...second); await flush(); assert.deepEqual(f.milestones, [milestone]);
+      } finally { f.restore(); }
     }
   }
 });
 
-test('Module 3c records the combined authored cron result only after run and cleanup evidence', () => {
-  const order = [
-    '01a:model-call-verified', '01b:react-loop-complete', '01c:tool-roundtrip-complete',
-    '02a:routed-workflow-complete', '02b:grounded-answer-complete', '02c:deep-research-complete',
-    connectedMilestone, '03b:workspace-inspected',
-  ];
-  const prerequisiteEvidence = Object.fromEntries(order.map(item => [`milestone:${item}`, true]));
-  const cases = [
-    [{ runObserved: true, cleanupSucceeded: false }, []],
-    [{ runObserved: false, cleanupSucceeded: true }, []],
-    [{ runObserved: true, cleanupSucceeded: true }, ['03c:scheduled-run-complete']],
-  ];
-  for (const [detail, expected] of cases) {
-    const fixture = trackingFixture('03c-always-on.html');
-    try {
-      fixture.storageTarget.setItem(evidenceKey(1), JSON.stringify(prerequisiteEvidence));
-      dispatch(fixture.windowTarget, event('canvas-node-succeeded'), {
-        canvasId: 'probe-cron', nodeId: 'cr-run', ...detail,
-      });
-      assert.deepEqual(fixture.milestones, expected);
-    } finally { fixture.restore(); }
+test('paired success halves cannot cross sessions, including disconnect and replacement', async () => {
+  for (const [page, first, second] of pairs) {
+    const f = fixture(page); try {
+      dispatch(f.windowTarget, ...first); f.session(null); f.session('session-b');
+      dispatch(f.windowTarget, ...second); await flush(); assert.deepEqual(f.milestones, []);
+    } finally { f.restore(); }
   }
 });
 
-test('Module 3c authored cron nodes publish the verified result contract', () => {
-  const cronSource = read(source('03c-always-on.html'));
-  assert.match(cronSource, /state\.demoCronVerified = false/);
-  assert.match(cronSource, /state\.demoCronVerified = true/);
-  assert.match(cronSource, /return \{run_status: state\.demoCronVerified \? "ok" : null, removed: !state\.demoCronId\};/);
-  assert.equal((cronSource.match(/return \{run_status: state\.demoCronVerified \? "ok" : null, removed: !state\.demoCronId\};/g) || []).length, 2);
-  assert.match(read(source('scripts', '_activity_runtime.js')), /\['cr-run', 'cr-rm'\]\.includes\(nodeId\)/);
-  assert.doesNotMatch(read(source('scripts', '_activity_runtime.js')), /nodeId === 'cr-watch'/);
+test('fresh work before enabling may bind once; stale saved evidence cannot bind', async () => {
+  const f = fixture('03b-openclaw.html', { sessionId: null }); try {
+    dispatch(f.windowTarget, 'run-succeeded', { cellId: 'cell-introspect' });
+    f.session('session-a');
+    dispatch(f.windowTarget, 'run-succeeded', { cellId: 'cell-workspace-term' }); await flush();
+    assert.deepEqual(f.milestones, ['03b:workspace-inspected']);
+  } finally { f.restore(); }
 });
 
-test('reinstalling the tracker returns the existing page activity client', () => {
-  const listeners = new Map();
-  const windowTarget = {
-    addEventListener: (name, listener) => listeners.set(name, listener),
-  };
-  const documentTarget = { addEventListener() {} };
-  const activity = { start() {}, recordMilestone() {} };
-
-  assert.equal(installCourseActivityTracking({ windowTarget, documentTarget, activity }), activity);
-  assert.equal(installCourseActivityTracking({ windowTarget, documentTarget }), activity);
-  assert.equal(getInstalledCourseActivity(windowTarget), activity);
+test('failed milestone evidence cannot transfer to a replacement session', async () => {
+  const f = fixture('01b-react.html', { write: async () => false }); try {
+    dispatch(f.windowTarget, 'chat-completed', { containerId: 'react-artifact', successCount: 1, hasAnswer: true }); await flush();
+    assert.equal(f.milestones.length, 1);
+    f.session('session-b');
+    dispatch(f.windowTarget, 'chat-completed', { containerId: 'tools-artifact', successCount: 1, hasAnswer: true }); await flush();
+    assert.deepEqual(f.milestones, ['01b:react-loop-complete', '01c:tool-roundtrip-complete']);
+  } finally { f.restore(); }
 });
 
-test('Going Further keeps the unfinished completion action hidden and inactive', () => {
-  const page = read(source('04c-going-further.html'));
-  assert.match(page, /id="course-finish" hidden/);
-  assert.match(page, /if \(finishButton\.closest\('\[hidden\]'\)\) return/);
-  assert.match(page, /id="finish-course"/);
-  assert.match(page, /getInstalled\w+Activity/);
-  assert.doesNotMatch(page, /create\w+Activity/);
-  assert.match(page, /getCourseActivityState/);
-  assert.match(page, /recordCompletion/);
-  assert.match(page, /Course completed/);
-  assert.match(page, /state\.progressPercent/);
-  assert.match(page, /Number\.isInteger\(state\.progressPercent\)\s*&&\s*state\.progressPercent\s*===\s*100/);
-  assert.match(page, /state\.completedAt/);
-  assert.doesNotMatch(page, /state\.(?:progress_percent|completed_at)/);
+test('model-call milestone requires a live key verification and nonempty successful content', async () => {
+  const f = fixture(); try {
+    f.storage.setItem('dli_activity:nemoclaw:evidence:v1:1', JSON.stringify({ '01a:key': true }));
+    dispatch(f.windowTarget, 'run-succeeded', { cellId: 'cell-onecall', hasContent: true }); await flush(); assert.deepEqual(f.milestones, []);
+    dispatch(f.windowTarget, 'api-key-verified');
+    dispatch(f.windowTarget, 'run-succeeded', { cellId: 'cell-onecall', hasContent: false }); await flush(); assert.deepEqual(f.milestones, []);
+    dispatch(f.windowTarget, 'run-succeeded', { cellId: 'cell-onecall', hasContent: true }); await flush(); assert.deepEqual(f.milestones, ['01a:model-call-verified']);
+  } finally { f.restore(); }
+});
+
+test('success predicates survive denied sessionStorage', async () => {
+  const denied = { getItem() { throw new DOMException('denied', 'SecurityError'); }, setItem() { throw new DOMException('denied', 'SecurityError'); } };
+  const f = fixture('01a-loop.html', { storageTarget: denied }); try {
+    dispatch(f.windowTarget, 'api-key-verified'); dispatch(f.windowTarget, 'run-succeeded', { cellId: 'cell-onecall', hasContent: true }); await flush();
+    assert.deepEqual(f.milestones, ['01a:model-call-verified']);
+  } finally { f.restore(); }
+});
+
+test('every configured milestone retains success-only runtime evidence and the shared entrypoint installs tracking', () => {
+  const runtime = read('scripts/_activity_runtime.js');
+  for (const id of ACTIVITY_MILESTONE_ORDER) assert.ok(runtime.includes(id));
+  assert.match(read('scripts/_shared.js'), /install\w+ActivityTracking/);
+  for (const [file, signal] of [['scripts/_canvas.js', 'run-succeeded'], ['scripts/_chat.js', 'chat-completed'], ['scripts/_openclaw.js', 'connection-audit-passed'], ['scripts/_openclaw_cli.js', 'live-agent-operated']]) assert.ok(read(file).includes(`nemoclaw:${signal}`));
+  assert.match(runtime, /successCount < 1/);
+  assert.match(runtime, /&& runObserved/); assert.match(runtime, /&& cleanupSucceeded/); assert.match(runtime, /&& policyAgreed/);
+  assert.match(read('03c-always-on.html'), /state\.demoCronVerified = true/);
+});
+
+test('Going Further uses the installed facade and requires every configured ID before explicit Finish Course', () => {
+  const page = read('04c-going-further.html');
+  assert.match(page, /getInstalled\w+Activity/); assert.match(page, /recordCompletion/);
+  assert.doesNotMatch(page, /progressPercent|progress_percent/);
+  assert.match(page, /ACTIVITY_MILESTONE_ORDER/);
+  assert.match(page, /completedAt/);
+});
+
+test('each independent checkpoint requires its full success predicate', async () => {
+  const cases = [
+    ['react-artifact', '01b:react-loop-complete'], ['tools-artifact', '01c:tool-roundtrip-complete'],
+    ['router-artifact', '02a:routed-workflow-complete'], ['rag-artifact', '02b:grounded-answer-complete'], ['deep-artifact', '02c:deep-research-complete'],
+  ];
+  for (const [containerId, id] of cases) {
+    const f = fixture(); try {
+      for (const detail of [{ containerId, successCount: 0, hasAnswer: true }, { containerId, successCount: 1, hasAnswer: false }]) {
+        dispatch(f.windowTarget, 'chat-completed', detail); await flush(); assert.deepEqual(f.milestones, []);
+      }
+      dispatch(f.windowTarget, 'chat-completed', { containerId, successCount: 1, hasAnswer: true }); await flush(); assert.deepEqual(f.milestones, [id]);
+    } finally { f.restore(); }
+  }
+  for (const [signal, id] of [['connection-audit-passed', '03a:nemoclaw-connected'], ['live-agent-operated', '04b:live-agent-operated']]) {
+    const f = fixture(); try { dispatch(f.windowTarget, signal); await flush(); assert.deepEqual(f.milestones, [id]); } finally { f.restore(); }
+  }
+});
+
+test('combined cron result requires both run and cleanup evidence', async () => {
+  for (const [runObserved, cleanupSucceeded, expected] of [[true, false, []], [false, true, []], [true, true, ['03c:scheduled-run-complete']]]) {
+    const f = fixture('03c-always-on.html'); try {
+      dispatch(f.windowTarget, 'canvas-node-succeeded', { canvasId: 'probe-cron', nodeId: 'cr-run', runObserved, cleanupSucceeded }); await flush();
+      assert.deepEqual(f.milestones, expected);
+    } finally { f.restore(); }
+  }
 });

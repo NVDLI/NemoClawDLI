@@ -38,6 +38,45 @@ export function createMemoryActivityStorage(initialValue = null) {
   };
 }
 
+export function createBrowserActivityStorage({ storage, key } = {}) {
+  const memory = createMemoryActivityStorage();
+  if (typeof key !== "string" || !key.trim()) return memory;
+  let backing;
+  try {
+    backing = storage === void 0 ? globalThis.sessionStorage : storage;
+    if (!backing || ["getItem", "setItem", "removeItem"].some((method) => typeof backing[method] !== "function")) backing = null;
+  } catch (_) {
+    backing = null;
+  }
+  return {
+    load() {
+      if (backing) {
+        try {
+          const raw = backing.getItem(key);
+          memory.save(raw === null ? null : JSON.parse(raw));
+        } catch (_) {
+          backing = null;
+        }
+      }
+      return memory.load();
+    },
+    save(value) {
+      memory.save(value);
+      if (backing) {
+        try {
+          if (value === null) backing.removeItem(key);
+          else backing.setItem(key, JSON.stringify(value));
+        } catch (_) {
+          backing = null;
+        }
+      }
+    },
+    clear() {
+      this.save(null);
+    }
+  };
+}
+
 function normalizeBaseUrl(raw) {
   let url;
   try { url = new URL(String(raw || '').trim()); }
@@ -80,6 +119,7 @@ function translatePublicError(error) {
       ? 'idempotency_conflict'
       : 'activity_error');
   const messages = {
+    session_changed: 'Activity session changed; read state before retrying',
     invalid_configuration: 'Activity configuration is invalid',
     network_error: 'Activity request failed',
     request_rejected: 'Activity request was rejected',
@@ -117,6 +157,24 @@ function normalizeStateJson(value) {
       key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase()),
       normalizeStateJson(entry),
     ]));
+}
+
+function validateMarkerState(state) {
+  const validTimestamp = (value) => {
+    if (value === null) return true;
+    if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.test(value) || !Number.isFinite(Date.parse(value))) return false;
+    const [year, month, day] = value.slice(0, 10).split("-").map(Number);
+    return day >= 1 && day <= new Date(Date.UTC(year, month, 0)).getUTCDate();
+  };
+  const ids = /* @__PURE__ */ new Set();
+  if (!state || Object.hasOwn(state, "progress_percent") || !Array.isArray(state.milestones) || !validTimestamp(state.completed_at) || state.milestones?.some((marker) => {
+    if (!marker || typeof marker.milestone_id !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/.test(marker.milestone_id) || ids.has(marker.milestone_id) || !validTimestamp(marker.completed_at)) return true;
+    ids.add(marker.milestone_id);
+    return false;
+  })) {
+    throw new ActivitySdkError("Activity marker state is invalid", { code: "invalid_response", category: "response", operation: "state" });
+  }
+  return state;
 }
 
 function validateArtifact(artifact) {
@@ -166,6 +224,7 @@ export function createActivityClient({
 } = {}) {
   const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
   const normalizedArtifact = validateArtifact(artifact);
+  const scope = JSON.stringify([normalizedBaseUrl, normalizedArtifact]);
   if (typeof fetchImpl !== 'function') throw new ActivitySdkError('Fetch API is unavailable', {
     code: 'invalid_configuration', category: 'configuration',
   });
@@ -189,47 +248,45 @@ export function createActivityClient({
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (session) headers.Authorization = `Bearer ${session.session_token}`;
     if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
-    const controller = typeof AbortController === 'function' ? new AbortController() : null;
-    const timer = controller ? setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS) : null;
+    const controller = new AbortController();
+    let timer;
     let response;
-    try {
+    const deadline = new Promise((_, reject) => {
+      timer = setTimeout(() => {
+        controller.abort();
+        reject(new ActivitySdkError('Activity request failed', {
+          code: 'network_error', operation, category: 'timeout',
+        }));
+      }, REQUEST_TIMEOUT_MS);
+    });
+    const request = async () => {
       response = await fetchImpl(`${normalizedBaseUrl}${path}`, {
-        method, headers,
-        body: body === undefined ? undefined : JSON.stringify(body),
-        cache: 'no-store',
-        credentials: 'omit',
-        keepalive: operation === 'referral',
-        mode: 'cors',
-        redirect: 'error',
-        referrerPolicy: 'no-referrer',
-        signal: controller?.signal,
+        method, headers, body: body === undefined ? undefined : JSON.stringify(body),
+        cache: 'no-store', credentials: 'omit', keepalive: operation === 'referral',
+        mode: 'cors', redirect: 'error', referrerPolicy: 'no-referrer', signal: controller.signal,
       });
-    } catch (error) {
-      const category = error?.name === 'AbortError' ? 'timeout' : 'network';
-      diagnostic(operation, category);
-      throw new ActivitySdkError('Activity request failed', {
-        code: 'network_error', operation, category,
+      if (!response.ok) {
+        const category = categoryForStatus(response.status);
+        throw new ActivitySdkError('Activity request was rejected', {
+          code: category === 'idempotency-conflict' ? 'idempotency_conflict' : 'request_rejected',
+          operation, category, status: response.status,
+        });
+      }
+      try { return { result: await response.json(), replayed: response.status === 200 }; }
+      catch (_) {
+        throw new ActivitySdkError('Activity response is invalid', {
+          code: 'invalid_response', operation, category: 'validation', status: response.status,
+        });
+      }
+    };
+    try { return await Promise.race([request(), deadline]); }
+    catch (error) {
+      const failure = error instanceof ActivitySdkError ? error : new ActivitySdkError('Activity request failed', {
+        code: 'network_error', operation, category: controller.signal.aborted ? 'timeout' : 'network',
       });
-    } finally {
-      if (timer) clearTimeout(timer);
-    }
-    if (!response.ok) {
-      const category = categoryForStatus(response.status);
-      diagnostic(operation, category, response.status);
-      throw new ActivitySdkError('Activity request was rejected', {
-        code: category === 'idempotency-conflict' ? 'idempotency_conflict' : 'request_rejected',
-        operation, category, status: response.status,
-      });
-    }
-    let result;
-    try { result = await response.json(); }
-    catch (_) {
-      diagnostic(operation, 'validation', response.status);
-      throw new ActivitySdkError('Activity response is invalid', {
-        code: 'invalid_response', operation, category: 'validation', status: response.status,
-      });
-    }
-    return { result, replayed: response.status === 200 };
+      diagnostic(operation, failure.category, failure.status);
+      throw failure;
+    } finally { clearTimeout(timer); }
   }
 
   async function createSession() {
@@ -237,13 +294,13 @@ export function createActivityClient({
       body: normalizedArtifact,
     });
     const session = validateSession(result);
-    storage.save(session);
+    storage.save({ ...session, scope });
     return session;
   }
 
   async function ensureSession() {
     const stored = storage.load();
-    if (stored) {
+    if (stored?.scope === scope) {
       try {
         const session = validateSession(stored);
         if (Date.parse(session.expires_at) > now().getTime()) return session;
@@ -261,14 +318,15 @@ export function createActivityClient({
   }
 
   function clearSessionIfCurrent(rejectedSession) {
-    if (!sameSession(storage.load(), rejectedSession)) return;
+    const saved = storage.load();
+    if (saved?.scope !== scope || !sameSession(saved, rejectedSession)) return;
     if (typeof storage.clear === 'function') storage.clear();
     else storage.save(null);
   }
 
   async function refreshSession(rejectedSession) {
     const current = storage.load();
-    if (current && !sameSession(current, rejectedSession)) {
+    if (current?.scope === scope && !sameSession(current, rejectedSession)) {
       try {
         const validated = validateSession(current);
         if (Date.parse(validated.expires_at) > now().getTime()) return validated;
@@ -277,7 +335,7 @@ export function createActivityClient({
     if (!refreshing) {
       refreshing = Promise.resolve().then(() => {
         const latest = storage.load();
-        if (latest && !sameSession(latest, rejectedSession)) {
+        if (latest?.scope === scope && !sameSession(latest, rejectedSession)) {
           try {
             const validated = validateSession(latest);
             if (Date.parse(validated.expires_at) > now().getTime()) return validated;
@@ -318,17 +376,22 @@ export function createActivityClient({
     return key;
   }
 
-  async function authenticatedWrite(operation, suffix, body, idempotencyKey) {
+  async function authenticatedWrite(operation, suffix, body, idempotencyKey, expectedSessionId) {
     const key = requireIdempotencyKey(idempotencyKey);
-    const write = async session => requestJson(
-      operation,
-      `/v1/activity-sessions/${encodeURIComponent(session.session_id)}/${suffix}`,
-      { body, session, idempotencyKey: key },
-    );
+    const write = async session => {
+      if (expectedSessionId !== undefined && session.session_id !== expectedSessionId) {
+        throw new ActivitySdkError('Activity session changed; read state before retrying completion', {
+          code: 'session_changed', category: 'session', operation,
+        });
+      }
+      return requestJson(operation, `/v1/activity-sessions/${encodeURIComponent(session.session_id)}/${suffix}`,
+        { body, session, idempotencyKey: key });
+    };
     return withAuthenticationRefresh(write);
   }
 
   return {
+    get sessionId() { const saved = storage.load(); return saved?.scope === scope ? saved.session_id : undefined; },
     ensureSession,
     recordReferral({ referenceId, destinationUrl, idempotencyKey }) {
       return authenticatedWrite('referral', 'referrals', {
@@ -336,33 +399,31 @@ export function createActivityClient({
         destination_url: destinationUrl,
       }, idempotencyKey);
     },
-    recordProgress({ progressPercent, idempotencyKey }) {
-      return authenticatedWrite('progress', 'updates', {
-        type: 'progress', payload: { progress_percent: progressPercent },
-      }, idempotencyKey);
+    recordMilestoneCompleted({ milestoneId, idempotencyKey, expectedSessionId }) {
+      return authenticatedWrite('milestone', 'updates', {
+        type: 'milestone_completed', payload: { milestone_id: milestoneId },
+      }, idempotencyKey, expectedSessionId);
     },
-    recordCompleted({ idempotencyKey }) {
+    recordCompleted({ idempotencyKey, expectedSessionId }) {
       return authenticatedWrite('completion', 'updates', {
         type: 'completed', payload: {},
-      }, idempotencyKey);
+      }, idempotencyKey, expectedSessionId);
     },
     async getState() {
-      const read = async session => requestJson(
+      const read = async session => ({ ...await requestJson(
         'state', `/v1/activity-sessions/${encodeURIComponent(session.session_id)}/state`,
         { session, method: 'GET' },
-      );
+      ), sessionId: session.session_id });
       const response = await withAuthenticationRefresh(read);
       const { result } = response;
-      return result;
+      return validateMarkerState({ ...result, session_id: response.sessionId });
     },
   };
 }
 
 export class DLIActivity {
   #client;
-  #progressPercent = 0;
-  #progressHydrated = false;
-  #progressQueue = Promise.resolve();
+  #writeQueue = Promise.resolve();
 
   /**
    * Creates the lesson-facing activity facade. Storage, fetchImpl, now, and
@@ -404,77 +465,128 @@ export class DLIActivity {
     return attempt;
   }
 
-  async progress(progressPercent, { idempotencyKey } = {}) {
-    if (!Number.isInteger(progressPercent) || progressPercent < 0 || progressPercent > 100) {
-      throw new DLIActivityError(
-        'invalid_progress',
-        'Activity progress must be an integer from 0 through 100',
-      );
+  async completeMilestone(milestoneId, { idempotencyKey } = {}) {
+    if (typeof milestoneId !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/.test(milestoneId)) {
+      throw new DLIActivityError("invalid_milestone", "Activity milestone ID is invalid");
     }
-    const operation = async () => {
-      if (!this.#progressHydrated) await this.#getState();
-      if (progressPercent < this.#progressPercent) {
-        return { written: false, progressPercent: this.#progressPercent };
-      }
-      const response = await this.#client.recordProgress({
-        progressPercent,
-        idempotencyKey: idempotencyKey || `dli-activity:progress:${progressPercent}`,
+    return this.#serialize(async (expectedSessionId) => {
+      const state = await this.#getState();
+      this.#requireSession(expectedSessionId);
+      const marker = state.milestones?.find((item) => item.milestoneId === milestoneId);
+      if (!marker) throw new DLIActivityError("invalid_milestone", "Activity milestone ID is not registered");
+      this.#requireSession(state.sessionId);
+      if (marker.completedAt !== null) return { written: false, state };
+      await this.#client.recordMilestoneCompleted({
+        milestoneId,
+        idempotencyKey: idempotencyKey ?? `dli-activity:milestone:${milestoneId}`,
+        expectedSessionId: state.sessionId
       });
-      const recordedProgress = response.result?.state?.progress_percent;
-      this.#progressPercent = Math.max(
-        this.#progressPercent,
-        Number.isInteger(recordedProgress) ? recordedProgress : progressPercent,
-      );
-      return response;
-    };
-    const result = this.#progressQueue.then(operation, operation);
-    this.#progressQueue = result.then(() => undefined, () => undefined);
-    try { return await result; }
-    catch (error) { throw translatePublicError(error); }
+      return { written: true, state: await this.#confirm(
+        state.sessionId,
+        (next) => next.milestones?.some((item) => item.milestoneId === milestoneId && item.completedAt !== null)
+      ) };
+    });
   }
-
-  async referral({ referenceId, destinationUrl, idempotencyKey } = {}) {
-    const normalizedReferenceId = String(referenceId || '').trim();
-    let destination;
-    try { destination = new URL(String(destinationUrl || '').trim()); }
-    catch (_) {
-      throw new DLIActivityError('invalid_referral', 'Activity referral destination URL is invalid');
+  async #serialize(operation) {
+    const sessionId = this.#client.sessionId;
+    const authorization = sessionId === void 0 ? this.#client.ensureSession().then((session) => ({ sessionId: session.session_id }), (error) => ({ error })) : Promise.resolve({ sessionId });
+    const run = async () => {
+      const authorized = await authorization;
+      if ("error" in authorized) throw authorized.error;
+      this.#requireSession(authorized.sessionId);
+      return operation(authorized.sessionId);
+    };
+    const result = this.#writeQueue.then(run, run);
+    this.#writeQueue = result.then(() => void 0, () => void 0);
+    try {
+      return await result;
+    } catch (error) {
+      throw translatePublicError(error);
     }
-    if (!normalizedReferenceId || destination.protocol !== 'https:') {
-      throw new DLIActivityError('invalid_referral', 'Activity referral is invalid');
+  }
+  #requireSession(sessionId) {
+    if (this.#client.sessionId !== sessionId) {
+      throw new DLIActivityError("session_changed", "Activity session changed; read state before retrying");
+    }
+  }
+  async #confirm(sessionId, confirmed) {
+    let active = true;
+    let timer;
+    const deadline = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new DLIActivityError(
+        "confirmation_pending",
+        "Activity update is pending server confirmation; check state before retrying"
+      )), 3e4);
+    });
+    const poll = async () => {
+      while (active) {
+        this.#requireSession(sessionId);
+        const state = await this.#getState();
+        this.#requireSession(sessionId);
+        if (state.sessionId !== sessionId) {
+          throw new DLIActivityError("session_changed", "Activity session changed; read state before retrying");
+        }
+        if (confirmed(state)) return state;
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+    };
+    try {
+      return await Promise.race([poll(), deadline]);
+    } finally {
+      active = false;
+      clearTimeout(timer);
+    }
+  }
+  async referral({ referenceId, destinationUrl, idempotencyKey } = {}) {
+    const normalizedReferenceId = String(referenceId || "").trim();
+    let destination;
+    try {
+      destination = new URL(String(destinationUrl || "").trim());
+    } catch (_) {
+      throw new DLIActivityError("invalid_referral", "Activity referral destination URL is invalid");
+    }
+    if (!normalizedReferenceId || destination.protocol !== "https:") {
+      throw new DLIActivityError("invalid_referral", "Activity referral is invalid");
     }
     try {
       return await this.#client.recordReferral({
         referenceId: normalizedReferenceId,
         destinationUrl: destination.href,
-        idempotencyKey: idempotencyKey || `dli-activity:referral:${normalizedReferenceId}`,
+        idempotencyKey: idempotencyKey || `dli-activity:referral:${normalizedReferenceId}`
       });
-    } catch (error) { throw translatePublicError(error); }
+    } catch (error) {
+      throw translatePublicError(error);
+    }
   }
-
   async #getState() {
-    const state = normalizeStateJson(await this.#client.getState());
-    this.#progressHydrated = true;
-    if (Number.isInteger(state.progressPercent)) {
-      this.#progressPercent = Math.max(this.#progressPercent, state.progressPercent);
-    }
-    return state;
+    const raw = await this.#client.getState();
+    return {
+      ...normalizeStateJson(raw),
+      sessionId: raw.session_id,
+      completedAt: raw.completed_at,
+      milestones: raw.milestones?.map((marker) => ({ milestoneId: marker.milestone_id, completedAt: marker.completed_at })) ?? null
+    };
   }
-
   async getState() {
-    try { return await this.#getState(); }
-    catch (error) { throw translatePublicError(error); }
-  }
-
-  async complete({ idempotencyKey } = {}) {
-    const state = await this.getState();
-    if (!Number.isInteger(state.progressPercent) || state.progressPercent !== 100) {
-      return { written: false, state };
-    }
     try {
-      return await this.#client.recordCompleted({
-        idempotencyKey: idempotencyKey || 'dli-activity:completed',
-      });
-    } catch (error) { throw translatePublicError(error); }
+      return await this.#getState();
+    } catch (error) {
+      throw translatePublicError(error);
+    }
   }
-}
+  async complete({ idempotencyKey } = {}) {
+    return this.#serialize(async (expectedSessionId) => {
+      const state = await this.#getState();
+      this.#requireSession(expectedSessionId);
+      this.#requireSession(state.sessionId);
+      if (state.completedAt !== null || !state.milestones.length || state.milestones.some((marker) => marker.completedAt === null)) {
+        return { written: false, state };
+      }
+      await this.#client.recordCompleted({
+        idempotencyKey: idempotencyKey ?? "dli-activity:completed",
+        expectedSessionId: state.sessionId
+      });
+      return { written: true, state: await this.#confirm(state.sessionId, (next) => next.completedAt !== null) };
+    });
+  }
+};
