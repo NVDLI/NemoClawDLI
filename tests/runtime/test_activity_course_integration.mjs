@@ -86,6 +86,16 @@ const APPROVED_ARTIFACT = Object.freeze({
 const SESSION_ID = '019f38f1-e5ab-7688-af0d-0e8925299e93';
 const STAMP = '2026-09-09T19:00:00Z';
 const IDS = Object.keys(ACTIVITY_MILESTONES);
+test('course config is the single immutable source of milestone UI and registration definitions', async () => {
+  const config = await import(pathToFileURL(path.resolve(COURSE_ROOT, 'scripts', '_activity_config.js')));
+  assert.equal(config.ACTIVITY_MILESTONES, ACTIVITY_MILESTONES);
+  assert.equal(IDS.length, 11);
+  assert.ok(Object.isFrozen(config.ACTIVITY_MILESTONES));
+  for (const value of Object.values(config.ACTIVITY_MILESTONES)) assert.ok(Object.isFrozen(value));
+  assert.deepEqual(config.ACTIVITY_SESSION_MILESTONES, IDS.map(id => ({ id, label: ACTIVITY_MILESTONES[id].label, description: ACTIVITY_MILESTONES[id].description })));
+  const source = fs.readFileSync(ACTIVITY_SOURCE, 'utf8');
+  assert.doesNotMatch(source, /"description":/);
+});
 const confirmedState = (count = 0) => ({ sessionId: SESSION_ID, completedAt: null,
   milestones: IDS.map((milestoneId, index) => ({ milestoneId, completedAt: index < count ? STAMP : null })) });
 const rawState = (count = 0) => ({ session_id: SESSION_ID, completed_at: null,
@@ -303,6 +313,8 @@ test('course activity is local-only until the learner enables remote progress', 
   assert.equal(calls[0][0], 'initialize');
   assert.equal(calls[0][1].baseUrl, 'https://activity-api.learn.nvidia.com');
   assert.deepEqual(calls[0][1].artifact, APPROVED_ARTIFACT);
+  assert.deepEqual(calls[0][1].milestones, IDS.map(id => ({ id, label: ACTIVITY_MILESTONES[id].label, description: ACTIVITY_MILESTONES[id].description })));
+  assert.deepEqual(Object.keys(calls[0][1].artifact), ['artifact_id', 'artifact_version', 'artifact_digest']);
   assert.equal('activity' in calls[0][1], false);
   assert.equal(typeof calls[0][1].storage.load, 'function');
 });
@@ -423,7 +435,8 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     await context.route('**/*', route => {
       const url = new URL(route.request().url());
       if (url.hostname === 'activity-api.learn.nvidia.com') {
-        apiRequests.push({ method: route.request().method(), pathname: url.pathname });
+        apiRequests.push({ method: route.request().method(), pathname: url.pathname,
+          body: route.request().method() === 'POST' ? route.request().postDataJSON() : undefined });
         if (apiMode === 'blocked') return route.abort();
         const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS' };
         if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
@@ -677,6 +690,10 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     assert.equal(await page.locator('.course-milestones li').count(), IDS.length);
     assert.equal(apiRequests.slice(journeyStart).filter(request => request.method === 'POST'
       && request.pathname.endsWith('/activity-sessions')).length, 1);
+    assert.deepEqual(apiRequests.slice(journeyStart).find(request => request.method === 'POST'
+      && request.pathname.endsWith('/activity-sessions')).body.milestones, IDS.map(id => ({
+      id, label: ACTIVITY_MILESTONES[id].label, description: ACTIVITY_MILESTONES[id].description,
+    })));
 
     const successfulExercises = {
       '01a:model-call-verified': [['api-key-verified', {}], ['run-succeeded', { cellId: 'cell-onecall', hasContent: true }]],

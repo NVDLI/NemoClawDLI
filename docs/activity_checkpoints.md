@@ -44,19 +44,21 @@ Referral tracking remains off in the milestone-only UI. If separately enabled wi
 
 ## Course completion
 
-The learner selects **Finish Course** on the Going Further page after all 11 configured milestones have server-confirmed timestamps. The course reads the authorized session state and checks every configured ID before asking the SDK to record completion. A final activity alone cannot complete the course. The API enforces its registered required IDs independently.
+The learner selects **Finish Course** on the Going Further page after all 11 configured milestones have server-confirmed timestamps. The course reads the authorized session state and checks every configured ID before asking the SDK to record completion. A final activity alone cannot complete the course. The API enforces the session snapshot's required IDs independently.
 
 ## Data boundaries
 
-Milestone events contain fixed activity identifiers and success evidence only. They do not include API keys, learner prompts, model responses, terminal output, or other learner-generated content.
+Session initialization sends course-authored milestone labels and descriptions. Milestone events contain fixed activity identifiers and success evidence only. They do not include API keys, learner prompts, model responses, terminal output, or other learner-generated content.
 
 ## Bootstrap milestones in a web course
 
-Define objectives in `ACTIVITY_MILESTONES` in `web/nemoclaw/scripts/_activity.js`. Keep IDs stable across wording changes. Each course-owned milestone contains a label, description and exercise link. The same definitions populate the checklist and the instructions beside each exercise.
+Define objectives in `ACTIVITY_MILESTONES` in `web/nemoclaw/scripts/_activity_config.js`. Keep IDs stable across wording changes. Each course-owned milestone contains a label, description and exercise link. The same definitions populate the checklist and the instructions beside each exercise.
 
 The adapter uses the fixed public API URL and resolves artifact identity from the validated delivered manifest before SDK initialization. Course policy, consent and authenticated lab transport still control collection.
 
-Before enabling collection for a new course build, an operator must register these milestone definitions against the resolved publication and delivered artifact identity in the Activity API. The adapter requires the server to return exactly the configured IDs.
+After valid saved Performance Cookie consent, the adapter passes `ACTIVITY_SESSION_MILESTONES` to `DLIActivity.initialize({ baseUrl, artifact, milestones })`. Session creation sends the definitions as `{id,label,description}` beside the three artifact identity fields. The API saves an immutable snapshot for that session; no operator registration step is needed for a new course build. An exact operator registration remains authoritative, and conflicting definitions are rejected. The adapter requires the server to return exactly the configured IDs.
+
+The SDK validates and copies the optional list before making a request. Lists contain 1 to 1,000 unique ASCII milestone IDs, nonblank labels up to 256 characters, and nonblank descriptions up to 4,096 characters. Definitions participate in session storage and concurrent initialization scope, so a changed list creates a new session without reusing the old bearer. Omitting the list retains the service's legacy session behavior. Browser session creation does not modify a global course policy.
 
 Wire each ID to a verified success event in `_activity_runtime.js`. Keep acceptance predicates in the course, not in the SDK. Live multipart exercises must finish within the same authorized session; saved local flags do not create milestone records.
 

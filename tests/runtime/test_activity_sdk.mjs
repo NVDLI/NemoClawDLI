@@ -105,3 +105,56 @@ test('authentication recovery never forwards a different client scope token',asy
  await clientB.ensureSession();releaseA(new Response('{}',{status:401}));await pending;
  assert.equal(aAuth.includes('Bearer token-b-long-enough'),false);assert.equal(aSessions,2);
 });
+
+const definitions = () => [{id:'early',label:'Early exercise',description:'Finish the early exercise.'}];
+test('session initialization carries copied course definitions beside exactly three artifact fields',async()=>{
+ const f=fixture();const bodies=[];const milestones=definitions();const expected=definitions();
+ const client=createActivityClient({...f.options,milestones,fetchImpl:async(url,options)=>{bodies.push(JSON.parse(options.body));return f.options.fetchImpl(url,options);}});
+ milestones[0].label='Changed after construction';milestones.push({id:'later',label:'Later',description:'Later'});
+ await client.ensureSession();assert.deepEqual(bodies,[{...artifact,milestones:expected}]);assert.deepEqual(Object.keys(artifact),['artifact_id','artifact_version','artifact_digest']);
+});
+test('malformed milestone configuration fails before any network operation',async()=>{
+ const f=fixture();let requests=0;const options={...f.options,fetchImpl:async()=>{requests++;assert.fail('invalid configuration must not request');}};
+ for(const milestones of [null,{},[],new Array(1),[{id:'early',label:' ',description:'Valid'}],[{id:'early',label:'Valid',description:''}],[{id:'early',label:'Valid',description:' '}],new Array(1001).fill(definitions()[0]),[...definitions(),...definitions()],
+  [{id:'bad id',label:'Valid',description:'Valid'}],[{id:'a'.repeat(129),label:'Valid',description:'Valid'}],
+  [{id:'early',label:'',description:'Valid'}],[{id:'early',label:'a'.repeat(257),description:'Valid'}],
+  [{id:'early',label:3,description:'Valid'}],[{id:'early',label:'Valid'}],
+  [{id:'early',label:'Valid',description:'a'.repeat(4097)}],[{id:'early',label:'Valid',description:'Valid',unexpected:true}]]) {
+  assert.throws(()=>createActivityClient({...options,milestones}),error=>error.code==='invalid_configuration');
+  await assert.rejects(DLIActivity.initialize({...options,milestones}),error=>error.code==='invalid_configuration');
+ }
+ assert.equal(requests,0);
+});
+test('a changed registration renews sessions without forwarding the old bearer',async()=>{
+ const f=fixture();const requests=[];let sessions=0;const storage=createMemoryActivityStorage();
+ const fetchImpl=async(url,options)=>{
+  requests.push({url,options});
+  if(url.endsWith('/activity-sessions'))return new Response(JSON.stringify({session_id:sessionId,session_token:`scope-token-${++sessions}-long-enough`,expires_at:'2099-01-01T00:00:00Z'}),{status:201});
+  return f.options.fetchImpl(url,options);
+ };
+ const options={...f.options,storage,fetchImpl,milestones:definitions()};
+ await createActivityClient(options).getState();await createActivityClient(options).getState();assert.equal(sessions,1);
+ await createActivityClient({...options,milestones:[{...definitions()[0],description:'Changed definition'}]}).getState();
+ await createActivityClient({...options,milestones:undefined}).getState();assert.equal(sessions,3);
+ assert.deepEqual(requests.filter(r=>r.url.endsWith('/state')).map(r=>r.options.headers.Authorization),['Bearer scope-token-1-long-enough','Bearer scope-token-1-long-enough','Bearer scope-token-2-long-enough','Bearer scope-token-3-long-enough']);
+ assert.ok(requests.filter(r=>r.url.endsWith('/activity-sessions')).every(r=>r.options.headers.Authorization===undefined));
+});
+test('concurrent initialize isolates different course definitions and coalesces identical snapshots',async()=>{
+ const f=fixture();const pending=[];const bodies=[];
+ const options={...f.options,fetchImpl:async(url,request)=>{bodies.push(JSON.parse(request.body));await new Promise(resolve=>pending.push(resolve));return f.options.fetchImpl(url,request);}};
+ const original=definitions();const a=DLIActivity.initialize({...options,milestones:original});
+ original[0].label='Changed';
+ const equivalent=DLIActivity.initialize({...options,milestones:definitions()});
+ const b=DLIActivity.initialize({...options,milestones:original});
+ await Promise.resolve();assert.equal(pending.length,2);pending.forEach(resolve=>resolve());
+ const [first,same,different]=await Promise.all([a,equivalent,b]);assert.equal(first,same);assert.notEqual(first,different);
+ assert.deepEqual(bodies.map(body=>body.milestones[0].label),['Early exercise','Changed']);
+});
+
+test('a session definition conflict is a rejected request while write conflicts remain idempotency conflicts',async()=>{
+ const f=fixture();
+ await assert.rejects(DLIActivity.initialize({...f.options,milestones:definitions(),fetchImpl:async()=>new Response('{}',{status:409})}),error=>error.code==='request_rejected' && error.status===409 && error.operation==='session');
+ const client=createActivityClient({...f.options,fetchImpl:async(url,options)=>url.endsWith('/activity-sessions')?f.options.fetchImpl(url,options):new Response('{}',{status:409})});
+ await assert.rejects(client.recordReferral({referenceId:'fixture',destinationUrl:'https://example.test',idempotencyKey:'fixture'}),error=>error.code==='idempotency_conflict' && error.status===409);
+ await assert.rejects(client.recordMilestoneCompleted({milestoneId:'early',idempotencyKey:'fixture'}),error=>error.code==='idempotency_conflict' && error.status===409);
+});

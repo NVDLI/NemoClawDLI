@@ -191,6 +191,31 @@ function validateArtifact(artifact) {
   };
 }
 
+function validateMilestones(milestones) {
+  if (milestones === undefined) return undefined;
+  const ids = new Set();
+  if (!Array.isArray(milestones) || milestones.length < 1 || milestones.length > 1000) {
+    throw new ActivitySdkError('Activity milestones are invalid', {
+      code: 'invalid_configuration', category: 'configuration',
+    });
+  }
+  return Object.freeze(Array.from(milestones, marker => {
+    if (!marker || typeof marker !== 'object' || Array.isArray(marker)
+        || Object.keys(marker).some(key => !['id', 'label', 'description'].includes(key))
+        || typeof marker.id !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/.test(marker.id)
+        || ids.has(marker.id) || typeof marker.label !== 'string'
+        || !marker.label.trim() || Array.from(marker.label).length < 1 || Array.from(marker.label).length > 256
+        || typeof marker.description !== 'string' || !marker.description.trim()
+        || Array.from(marker.description).length > 4096) {
+      throw new ActivitySdkError('Activity milestones are invalid', {
+        code: 'invalid_configuration', category: 'configuration',
+      });
+    }
+    ids.add(marker.id);
+    return Object.freeze({ id: marker.id, label: marker.label, description: marker.description });
+  }));
+}
+
 function validateSession(value) {
   const expiresAt = Date.parse(value?.expires_at || '');
   if (!SESSION_ID_PATTERN.test(value?.session_id || '') ||
@@ -207,9 +232,9 @@ function validateSession(value) {
   };
 }
 
-function categoryForStatus(status) {
+function categoryForStatus(status, idempotencyKey) {
   if (status === 401 || status === 403) return 'authentication';
-  if (status === 409) return 'idempotency-conflict';
+  if (status === 409 && idempotencyKey) return 'idempotency-conflict';
   if (status === 422) return 'validation';
   return status >= 500 ? 'server' : 'request';
 }
@@ -217,6 +242,7 @@ function categoryForStatus(status) {
 export function createActivityClient({
   baseUrl,
   artifact,
+  milestones,
   storage = createMemoryActivityStorage(),
   fetchImpl = globalThis.fetch?.bind(globalThis),
   now = () => new Date(),
@@ -224,7 +250,8 @@ export function createActivityClient({
 } = {}) {
   const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
   const normalizedArtifact = validateArtifact(artifact);
-  const scope = JSON.stringify([normalizedBaseUrl, normalizedArtifact]);
+  const normalizedMilestones = validateMilestones(milestones);
+  const scope = JSON.stringify([normalizedBaseUrl, normalizedArtifact, normalizedMilestones]);
   if (typeof fetchImpl !== 'function') throw new ActivitySdkError('Fetch API is unavailable', {
     code: 'invalid_configuration', category: 'configuration',
   });
@@ -266,7 +293,7 @@ export function createActivityClient({
         mode: 'cors', redirect: 'error', referrerPolicy: 'no-referrer', signal: controller.signal,
       });
       if (!response.ok) {
-        const category = categoryForStatus(response.status);
+        const category = categoryForStatus(response.status, idempotencyKey);
         throw new ActivitySdkError('Activity request was rejected', {
           code: category === 'idempotency-conflict' ? 'idempotency_conflict' : 'request_rejected',
           operation, category, status: response.status,
@@ -291,7 +318,7 @@ export function createActivityClient({
 
   async function createSession() {
     const { result } = await requestJson('session', '/v1/activity-sessions', {
-      body: normalizedArtifact,
+      body: { ...normalizedArtifact, ...(normalizedMilestones === undefined ? {} : { milestones: normalizedMilestones }) },
     });
     const session = validateSession(result);
     storage.save({ ...session, scope });
@@ -429,7 +456,7 @@ export class DLIActivity {
    * Creates the lesson-facing activity facade. Storage, fetchImpl, now, and
    * onDiagnostic are integration and test adapters, not lesson-facing options.
    */
-  constructor({ baseUrl, artifact, storage, fetchImpl, now, onDiagnostic, ...unsupported } = {}) {
+  constructor({ baseUrl, artifact, milestones, storage, fetchImpl, now, onDiagnostic, ...unsupported } = {}) {
     try {
       if (Object.keys(unsupported).length > 0) {
         throw new ActivitySdkError('Activity configuration contains unsupported options', {
@@ -437,7 +464,7 @@ export class DLIActivity {
         });
       }
       this.#client = createActivityClient({
-        baseUrl: normalizeDLIActivityBaseUrl(baseUrl), artifact, storage, fetchImpl, now, onDiagnostic,
+        baseUrl: normalizeDLIActivityBaseUrl(baseUrl), artifact, milestones, storage, fetchImpl, now, onDiagnostic,
       });
     } catch (error) {
       throw translatePublicError(error);
@@ -451,7 +478,8 @@ export class DLIActivity {
       instance = new DLIActivity(options);
       const normalizedArtifact = validateArtifact(options?.artifact);
       key = JSON.stringify([
-        normalizeDLIActivityBaseUrl(options?.baseUrl), normalizedArtifact, storageIdentity(options?.storage),
+        normalizeDLIActivityBaseUrl(options?.baseUrl), normalizedArtifact, validateMilestones(options?.milestones),
+        storageIdentity(options?.storage),
       ]);
     } catch (error) {
       throw translatePublicError(error);
