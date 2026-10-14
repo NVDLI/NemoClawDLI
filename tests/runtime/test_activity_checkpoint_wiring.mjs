@@ -16,7 +16,7 @@ test('Activity Milestones documentation matches every course definition and exer
   const { ACTIVITY_MILESTONES } = await import('../../web/nemoclaw/scripts/_activity.js');
   const doc = fs.readFileSync('docs/activity_checkpoints.md', 'utf8');
   assert.match(doc, /^# Activity Milestones\n/);
-  const rows = [...doc.matchAll(/^\| [^|]+ \| `([^`]+)` \| \[([^\]]+)\]\(\.\.\/web\/nemoclaw\/([^)]*)\) \| ([^|]+) \|$/gm)];
+  const rows = [...doc.matchAll(/^\| [^|]+ \| `([^`]+)` \| \[([^\]]+)\]\(https:\/\/nvdli\.github\.io\/NemoClawDLI\/nemoclaw\/([^)]*)\) \| ([^|]+) \|$/gm)];
   assert.deepEqual(rows.map(row => row[1]), Object.keys(ACTIVITY_MILESTONES));
   for (const [, id, label, href, criteria] of rows) {
     const milestone = ACTIVITY_MILESTONES[id];

@@ -18,17 +18,17 @@ The Progress panel shows a read-only milestone checklist, with an instruction an
 
 | Section | Milestone ID | Milestone and exercise | Acceptance criteria |
 | --- | --- | --- | --- |
-| 1a | `01a:model-call-verified` | [Make your first model call](../web/nemoclaw/01a-loop.html#cell-onecall) | Verify your API key, then run the one-call exercise and receive a response. |
-| 1b | `01b:react-loop-complete` | [Complete a ReAct loop](../web/nemoclaw/01b-react.html#react-artifact) | Run the ReAct activity with at least one successful step and a final answer. |
-| 1c | `01c:tool-roundtrip-complete` | [Complete a tool round trip](../web/nemoclaw/01c-tools.html#tools-artifact) | Run the tool-calling activity with a successful step and a final answer. |
-| 2a | `02a:routed-workflow-complete` | [Run a routed workflow](../web/nemoclaw/02a-routing.html#router-artifact) | Complete the routing activity with a successful step and a final answer. |
-| 2b | `02b:grounded-answer-complete` | [Complete the retrieval activity](../web/nemoclaw/02b-rag.html#rag-artifact) | Run the RAG activity with a successful step and a final answer. |
-| 2c | `02c:deep-research-complete` | [Complete a research run](../web/nemoclaw/02c-deep.html#deep-artifact) | Finish the deep-research activity with a successful step and a final answer. |
-| 3a | `03a:nemoclaw-connected` | [Connect to NemoClaw](../web/nemoclaw/03a-kickstart.html#probe-claw) | Pass the connection checks for metadata, gateway, terminal, and health. |
-| 3b | `03b:workspace-inspected` | [Inspect your workspace](../web/nemoclaw/03b-openclaw.html#cell-introspect) | Successfully run both the introspection and workspace terminal exercises. |
-| 3c | `03c:scheduled-run-complete` | [Run and clean up a scheduled job](../web/nemoclaw/03c-always-on.html#probe-cron) | Observe a successful scheduled run, then confirm the job was removed. |
-| 4a | `04a:policy-boundary-verified` | [Check the policy boundary](../web/nemoclaw/04a-safety.html#cell-live-policy) | Read the live agent policy, then confirm the policy comparison agrees. |
-| 4b | `04b:live-agent-operated` | [Operate a live agent](../web/nemoclaw/04b-modern-clis.html#agent-chat) | Send a non-command message to the live agent and receive a successful response. |
+| 1a | `01a:model-call-verified` | [Make your first model call](https://nvdli.github.io/NemoClawDLI/nemoclaw/01a-loop.html#cell-onecall) | Verify your API key, then run the one-call exercise and receive a response. |
+| 1b | `01b:react-loop-complete` | [Complete a ReAct loop](https://nvdli.github.io/NemoClawDLI/nemoclaw/01b-react.html#react-artifact) | Run the ReAct activity with at least one successful step and a final answer. |
+| 1c | `01c:tool-roundtrip-complete` | [Complete a tool round trip](https://nvdli.github.io/NemoClawDLI/nemoclaw/01c-tools.html#tools-artifact) | Run the tool-calling activity with a successful step and a final answer. |
+| 2a | `02a:routed-workflow-complete` | [Run a routed workflow](https://nvdli.github.io/NemoClawDLI/nemoclaw/02a-routing.html#router-artifact) | Complete the routing activity with a successful step and a final answer. |
+| 2b | `02b:grounded-answer-complete` | [Complete the retrieval activity](https://nvdli.github.io/NemoClawDLI/nemoclaw/02b-rag.html#rag-artifact) | Run the RAG activity with a successful step and a final answer. |
+| 2c | `02c:deep-research-complete` | [Complete a research run](https://nvdli.github.io/NemoClawDLI/nemoclaw/02c-deep.html#deep-artifact) | Finish the deep-research activity with a successful step and a final answer. |
+| 3a | `03a:nemoclaw-connected` | [Connect to NemoClaw](https://nvdli.github.io/NemoClawDLI/nemoclaw/03a-kickstart.html#probe-claw) | Pass the connection checks for metadata, gateway, terminal, and health. |
+| 3b | `03b:workspace-inspected` | [Inspect your workspace](https://nvdli.github.io/NemoClawDLI/nemoclaw/03b-openclaw.html#cell-introspect) | Successfully run both the introspection and workspace terminal exercises. |
+| 3c | `03c:scheduled-run-complete` | [Run and clean up a scheduled job](https://nvdli.github.io/NemoClawDLI/nemoclaw/03c-always-on.html#probe-cron) | Observe a successful scheduled run, then confirm the job was removed. |
+| 4a | `04a:policy-boundary-verified` | [Check the policy boundary](https://nvdli.github.io/NemoClawDLI/nemoclaw/04a-safety.html#cell-live-policy) | Read the live agent policy, then confirm the policy comparison agrees. |
+| 4b | `04b:live-agent-operated` | [Operate a live agent](https://nvdli.github.io/NemoClawDLI/nemoclaw/04b-modern-clis.html#agent-chat) | Send a non-command message to the live agent and receive a successful response. |
 
 ## Cookie consent notice
 
