@@ -45,10 +45,10 @@ class PolicyFooterTests(unittest.TestCase):
                         self.assertLess(result.index(footers[0]), result.index("</body>"))
                         # The footer must not introduce a consent or analytics script.
                         self.assertNotIn("<script", footers[0])
-                        # Preserve the supplied test tenant and ordered consent bootstrap.
+                        # Preserve the published production tenant and ordered consent bootstrap.
                         stub = 'https://cdn.cookielaw.org/scripttemplates/otSDKStub.js'
                         custom = 'https://images.nvidia.com/aem-dam/Solutions/ot-js/ot-custom.js'
-                        tenant = '01a13400-6831-707e-9897-c2ef6262efc7-test'
+                        tenant = '01a13400-6831-707e-9897-c2ef6262efc7'
                         self.assertEqual(result.count(stub), 1)
                         self.assertEqual(result.count(custom), 1)
                         self.assertEqual(result.count('data-domain-script="' + tenant + '"'), 1)

@@ -32,7 +32,7 @@ The Progress panel shows a read-only milestone checklist, with an instruction an
 
 ## Cookie consent notice
 
-Generated full, iframe and localized course pages include the supplied OneTrust notice. The shared bundler keeps its test domain identifier, ordered consent scripts, and `OptanonWrapper` callback that dispatches `bannerLoaded`. The external scripts are loaded at runtime, not vendored into the SDK. A production identifier and domain configuration must come from the website consent owner before production use.
+Generated full, iframe and localized course pages include the supplied OneTrust notice. The shared bundler keeps its production domain identifier, ordered consent scripts, and `OptanonWrapper` callback that dispatches `bannerLoaded`. The external scripts are loaded at runtime, not vendored into the SDK. The published production identifier targets the public course host; domain configuration remains owned by the website consent owner.
 
 The course runtime maps the supplied configuration's `C0002` Performance Cookies category to progress syncing. It requires a valid saved OneTrust choice as well as an active `C0002` category; an active default category alone does not enable collection. It reads saved consent on page load and listens for consent updates. Accepting performance cookies connects progress; rejecting or withdrawing them disconnects and cancels pending Activity operations. Missing or unavailable consent never grants permission. The milestone tracking button records an explicit consent choice and enables only Performance Cookies. If the consent SDK is still loading, the click is applied when the SDK becomes ready. Referral tracking remains a separate choice.
 

@@ -990,9 +990,9 @@ def _first_file(*paths: Path) -> Path:
     raise FileNotFoundError(names)
 
 
-# Supplied OneTrust test notice for the public course host.
+# Published OneTrust production notice for the public course host.
 NVIDIA_COOKIE_CONSENT_NOTICE = """<!-- OneTrust Cookies Consent Notice start for nvdli.github.io -->
-<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js"  type="text/javascript" charset="UTF-8" data-domain-script="01a13400-6831-707e-9897-c2ef6262efc7-test" ></script>
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js"  type="text/javascript" charset="UTF-8" data-domain-script="01a13400-6831-707e-9897-c2ef6262efc7" ></script>
 <script type="text/javascript">
 function OptanonWrapper() {
 var event = new Event('bannerLoaded');

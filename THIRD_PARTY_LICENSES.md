@@ -33,14 +33,14 @@ approval.
 
 ## Externally hosted consent scripts
 
-Generated course pages load the supplied OneTrust test notice. These scripts execute in the course page; they are external runtime dependencies, not linked reference pages. Their bytes are not redistributed or covered by this repository's Apache-2.0 license. Runtime URLs are provider-managed and are not version-pinned by the course.
+Generated course pages load the published OneTrust production notice. These scripts execute in the course page; they are external runtime dependencies, not linked reference pages. Their bytes are not redistributed or covered by this repository's Apache-2.0 license. Runtime URLs are provider-managed and are not version-pinned by the course.
 
 | Provider | Runtime script | Purpose |
 |---|---|---|
 | OneTrust | [otSDKStub.js](https://cdn.cookielaw.org/scripttemplates/otSDKStub.js) | Loads the tenant's cookie consent configuration. |
 | NVIDIA | [ot-custom.js](https://images.nvidia.com/aem-dam/Solutions/ot-js/ot-custom.js) | Website consent customization supplied with the notice. |
 
-OneTrust also supplies the tenant configuration. Consent owners must publish the supplied test tenant and provide production domain configuration before production use. Course packaging preserves the snippet and does not attest external script contents. The authored Activity runtime maps the supplied configuration’s `C0002` Performance Cookies category to progress syncing only after OneTrust confirms a valid saved choice. The deployed collection policy remains an independent gate.
+OneTrust also supplies the tenant configuration. The production tenant is published for the public course host; consent owners maintain its domain configuration. Course packaging preserves the snippet and does not attest external script contents. The authored Activity runtime maps the supplied configuration’s `C0002` Performance Cookies category to progress syncing only after OneTrust confirms a valid saved choice. The deployed collection policy remains an independent gate.
 
 ## Browser runtime and browser-build packages
 
