@@ -56,7 +56,7 @@ REQUIRED = {
     # message cannot block the ship while dropping the contract still does.
     "gw_transport_audit": ["gw connect transport audit", "/cli/gateway", "sender-bound Cloudflare route", "direct browser credential boundary"],
     "gw_recover_compile_audit": ["gw recover compile audit", "private _uniqueId"],
-    "connection_audit": ["openclaw connection audit", "retired relay", "same-origin co-located launchable", "terminal helper", "04b-modern-clis.html"],
+    "connection_audit": ["openclaw connection audit", "retired relay", "same-origin co-located launchable", "terminal helper", "discoverGatewayInventory", "lesson-map.json", "cliConsumerFindings(cliLessonPage, sources)"],
 }
 
 

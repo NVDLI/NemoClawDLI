@@ -80,7 +80,8 @@ async function fixture(options = {}) {
       const override = await options.gateway(method, params, f);
       if (override !== undefined) return override;
     }
-    if (method === 'connect') return {server:{version:'fixture'},auth:{scopes:['operator.read','operator.write']}};
+    if (method === 'connect') return {server:{version:'fixture'},auth:{scopes:
+      params.scopes.filter(scope => ['operator.read','operator.write','operator.admin'].includes(scope))}};
     if (method === 'sessions.messages.subscribe' || method === 'chat.abort') return {};
     if (method === 'chat.send') return {runId:'model-run-' + calls.length};
     if (method === 'cron.add') {
@@ -160,8 +161,7 @@ async function fixture(options = {}) {
   const helpers = {
     ...shared, signal:controller.signal, log,
     refreshOpenClawGatewayToken:async () => ({token:'fixture-only-token'}),
-    getOpenClawConnection:() => ({rawUrl:owner}),
-    openclawGatewayWsUrl:() => ({url:'wss://gateway.example.test',displayUrl:'fixture gateway'}),
+    openclawGatewayWsUrl:() => ({...shared.openclawGatewayWsUrl(owner),url:'wss://gateway.example.test',displayUrl:'fixture gateway',openSocket:() => new GatewaySocket()}),
     delay:async (_ms, signal) => {
       assert.equal(signal, controller.signal, 'poll waiting observes this cell Stop');
       if (options.stop) controller.abort();
@@ -191,7 +191,26 @@ async function fixture(options = {}) {
     sessionStorage:{getItem:k => storage.get(k) ?? null,setItem:(k,v) => storage.set(k,v),removeItem:k => storage.delete(k)},
   };
   f.helpers = helpers;
-  f.execute = code => vm.runInNewContext('(async (helpers, state) => {\n' + code + '\n})', globals)(helpers,state);
+  f.execute = async code => {
+    // Imported runtime modules and displayed cells share the browser's actual
+    // storage boundary; only the external gateway and filesystem are fixtures.
+    const previous = Object.fromEntries(['location','localStorage','sessionStorage'].map(key => [key,{
+      present:Object.hasOwn(globalThis,key),value:globalThis[key],
+    }]));
+    const persistent = new Map();
+    globalThis.location = new URL('https://course.example.test/03c-plugins.html');
+    globalThis.localStorage = {getItem:key => persistent.get(key) ?? null,
+      setItem:(key,value) => persistent.set(key,String(value)),removeItem:key => persistent.delete(key)};
+    globalThis.sessionStorage = globals.sessionStorage;
+    try {
+      shared.setOpenClawConnection({rawUrl:owner,token:'fixture-only-token',accessSession:''});
+      return await vm.runInNewContext('(async (helpers, state) => {\n' + code + '\n})', globals)(helpers,state);
+    } finally {
+      for (const [key,entry] of Object.entries(previous)) {
+        if (entry.present) globalThis[key]=entry.value; else delete globalThis[key];
+      }
+    }
+  };
   f.close = () => { for (const socket of sockets) socket.close(); };
   return f;
 }

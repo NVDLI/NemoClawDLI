@@ -874,7 +874,7 @@ async function openLocale(browser, language, filename, init) {
       const foreign = {id:'foreign-job', name:'unrelated'};
       const gateway = async (method, params = {}) => {
         calls.push({method, params});
-        if (method === 'connect') return {server:{version:'fixture'},auth:{scopes:['operator.read','operator.write']}};
+        if (method === 'connect') return {server:{version:'fixture'},auth:{scopes:params.scopes}};
         if (method === 'cron.add') {
           if ('id' in params || !params.name || params.schedule?.kind !== 'at' ||
               !Number.isFinite(Date.parse(params.schedule.at)) || Date.parse(params.schedule.at) <= Date.now() ||
@@ -915,10 +915,9 @@ async function openLocale(browser, language, filename, init) {
       const controller = new AbortController();
       const log = () => ({textContent:'',setAttribute(){}});
       log.details = log;
+      shared.setOpenClawConnection({rawUrl:owner,token:'fixture-only-token',accessSession:''});
       const helpers = {...shared, log, signal:controller.signal,
-        getOpenClawConnection:() => ({rawUrl:owner}),
         refreshOpenClawGatewayToken:async () => ({token:'fixture-only-token'}),
-        openclawGatewayWsUrl:() => ({url:'wss://cron-audit.example.test',displayUrl:'fixture gateway'}),
         delay:async (ms, signal) => {
           if (signal !== controller.signal) throw new Error('poll delay lost Stop signal');
           delays.push(ms);
@@ -942,6 +941,7 @@ async function openLocale(browser, language, filename, init) {
         window.WebSocket = RealWebSocket;
         sockets.forEach(socket=>socket.close());
         sessionStorage.removeItem(storageKey);
+        shared.setOpenClawConnection({rawUrl:'',token:'',accessSession:''});
       }
     });
     results.cron[language.code] = checkCronLifecycle(observation);

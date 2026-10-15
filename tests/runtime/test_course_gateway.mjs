@@ -203,6 +203,24 @@ test('gateway discovery follows actual metadata through new, nested, deleted and
   const good = '<script>await helpers.courseTurn(state, helpers, "session", "question");</script>';
   try {
     assert.deepEqual(discoverGatewayInventory(temporary).findings, []);
+    const moved = path.join(temporary, 'web', 'renamed-course');
+    fs.renameSync(directory, moved);
+    assert.equal(discoverGatewayInventory(temporary).canonical, moved);
+    fs.renameSync(moved, directory);
+    fs.renameSync(owner, owner + '.missing');
+    assert.throws(() => discoverGatewayInventory(temporary), /gateway runtime owner/);
+    fs.renameSync(owner + '.missing', owner);
+    const cli = profile.lessons.find(lesson => lesson.module === 4 && lesson.lesson === 2);
+    const movedCli = path.join(directory, 'alternate-cli.html');
+    fs.renameSync(path.join(directory, cli.id + '.html'), movedCli);
+    cli.id = 'alternate-cli'; save();
+    assert.equal(discoverGatewayInventory(temporary).paths.en4b, movedCli);
+    fs.unlinkSync(movedCli);
+    assert(discoverGatewayInventory(temporary).findings.some(item => item.includes('declared lesson is missing')));
+    fs.writeFileSync(movedCli, '<h1>CLI</h1>');
+    cli.id = '../malformed-cli'; save();
+    assert.throws(() => discoverGatewayInventory(temporary), /malformed lesson identity/);
+    cli.id = 'alternate-cli'; save();
     const added = path.join(directory, 'nested', 'new.html');
     fs.mkdirSync(path.dirname(added)); fs.writeFileSync(added, good);
     let inventory = discoverGatewayInventory(temporary);

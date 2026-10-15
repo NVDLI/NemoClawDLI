@@ -1180,11 +1180,11 @@ export async function updateKeyPill(pill) {
 function clawSessionOk(timeoutMs = 6000) {
   const connection = getOpenClawConnection();
   if (!connection.rawUrl) return Promise.resolve(false);
-  const wsUrl = openclawGatewayWsUrl(connection.rawUrl, connection.accessSession, null, null, connection.accessProvider).url;
+  const gateway = openclawGatewayWsUrl(connection.rawUrl, connection.accessSession, null, null, connection.accessProvider);
   return new Promise(res => {
     let done = false, ws;
     const finish = ok => { if (done) return; done = true; try { ws.close(); } catch (_) {} res(ok); };
-    try { ws = new WebSocket(wsUrl); } catch (_) { return res(false); }
+    try { ws = gateway.openSocket(); } catch (_) { return res(false); }
     const t = setTimeout(() => finish(false), timeoutMs);
     ws.onmessage = ev => { try { if (JSON.parse(ev.data).event === "connect.challenge") { clearTimeout(t); finish(true); } } catch (_) {} };
     ws.onerror = () => { clearTimeout(t); finish(false); };

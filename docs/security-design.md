@@ -126,12 +126,23 @@ new threat, mitigation, or evidence claim.
 
 ## Browser routing by host
 
-NemoClaw launchables on `gobrev.dev` retain the direct-first Pomerium transport.
-Their manual relay fallback uses `__Host-skybridge-brev-prd`, selected from the
-validated target host, and older Pomerium launchables keep `_pomerium`. Neither route
+New launch handoffs on `gobrev.dev` use Skybridge's authenticated terminal, directly
+or through the existing provider-bound relay, to carry gateway frames to the fixed
+loopback listener. The relay's compatibility provider name remains `pomerium`; its
+access cookie is `__Host-skybridge-brev-prd`, while older Pomerium launchables keep `_pomerium`. Neither route
 forwards unrelated browser cookies or treats `cf_clearance` as an identity session.
-The course and relay source changes require separate operator deployment and live
-authentication evidence; local fixtures do not establish upstream acceptance.
+The course adapter requires no relay change. It preserves the signed browser-device
+handshake and checks all required scopes. Exact device approval matches request ID,
+device ID, public key, and bounded scopes.
+
+The browser transiently handles a bootstrap
+gateway credential during enrollment and retains the device credential in AES-GCM encrypted
+IndexedDB storage with nonextractable keys. Tab storage holds a random locator. Connection
+changes invalidate that locator and pending operations; expired vault records are removed on
+access after their 24-hour lifetime. Same-origin script compromise remains a risk, and browser
+session restoration can restore tab storage. Approval runs in the sandbox and returns only its outcome.
+Native browser sign-in and pasted-session
+relay paths need separate live evidence; local fixtures do not establish upstream acceptance.
 
 | Course host | Model service | NemoClaw runtime |
 |---|---|---|

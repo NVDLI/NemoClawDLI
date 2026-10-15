@@ -4,6 +4,13 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { discoverGatewayInventory } from './gateway_token_audit.mjs';
+
+const inventory = discoverGatewayInventory();
+if (inventory.findings.length) throw new Error(inventory.findings.join('\n'));
+const runtimePath = name => path.join(inventory.canonical, 'scripts', name);
+const courseLocation = page => new URL(`https://course.example.test/${path.basename(inventory.canonical)}/${page}`);
 
 const storage = new Map();
 const secretStorage = new Map();
@@ -17,10 +24,11 @@ globalThis.sessionStorage = {
   setItem: (key, value) => secretStorage.set(key, String(value)),
   removeItem: key => secretStorage.delete(key),
 };
-globalThis.location = new URL('https://course.example.test/nemoclaw/03a-kickstart.html');
+globalThis.location = courseLocation(path.basename(inventory.paths.en));
 
-const source = fs.readFileSync('web/nemoclaw/scripts/_connection.js', 'utf8');
-const mod = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
+const source = fs.readFileSync(runtimePath('_connection.js'), 'utf8');
+const moduleUrl = pathToFileURL(runtimePath('_connection.js')).href;
+const mod = await import(moduleUrl);
 const approved = 'https://openclaw-cors-proxy.experiments.courses.nvidia.com';
 const launchable = 'https://nemoclaw-test123.brevlab.com';
 const pomeriumLaunchable = 'https://nemoclaw-test123.apps.run.brev.nvidia.com';
@@ -187,7 +195,7 @@ ok(!sameOrigin.viaProxy &&
 
 // Terminal WebSocket selection mirrors the production launchable path: a browser-bound
 // session stays direct; a pasted session tries direct, then its provider-bound relay.
-globalThis.location = new URL('https://course.example.test/nemoclaw/04b-modern-clis.html');
+globalThis.location = courseLocation(path.basename(inventory.paths.en4b));
 const terminalPath = '/ws/terminal?cmd=' + encodeURIComponent('bash');
 function terminalRoutes(rawUrl, accessSession, accessProvider, relayWebSocket = null) {
   const direct = mod.openclawWebSocketUrl(
@@ -246,7 +254,7 @@ for (const [rawUrl, provider, session] of [
     `${provider} launchable no longer infers its own access provider`);
 }
 
-const openshell = fs.readFileSync('web/nemoclaw/scripts/_openshell.js', 'utf8');
+const openshell = fs.readFileSync(runtimePath('_openshell.js'), 'utf8');
 ok(openshell.includes('openclawWebSocketUrl(') &&
    openshell.includes('"/ws/terminal?cmd=" + encodeURIComponent(cmd)'),
   'terminal helper bypasses shared launchable routing');
@@ -262,7 +270,7 @@ ok(openshell.includes('POMERIUM_LOOPBACK_PROBES') &&
    openshell.includes('export async function openclawLoopbackProbe') &&
    !openshell.includes('curl -fsS --max-time 10 " + path'),
   'Pomerium loopback bootstrap is missing or accepts a caller-controlled shell path');
-const openclaw = fs.readFileSync('web/nemoclaw/scripts/_openclaw.js', 'utf8');
+const openclaw = fs.readFileSync(runtimePath('_openclaw.js'), 'utf8');
 ok(openclaw.includes('opts.proxyControls === true') &&
    openclaw.includes('setOpenClawProxyConfig({') &&
    openclaw.includes('proxyBaseInp.setCustomValidity(e.message)') &&
@@ -302,18 +310,9 @@ ok(openclaw.includes('[text("What"), step.what || ""]') &&
   'connection audit lost endpoint explanations or useful redacted credential delivery');
 // A locale page is the bytes the build publishes. When it ships from a key-based resource there is
 // no HTML file to read, so the caller renders the published pages and names their root here.
-const localeRoot = process.env.NEMOCLAW_LOCALE_PAGES || 'i18n';
-const courseRoots = ['web/nemoclaw'];
-for (const entry of fs.readdirSync(localeRoot, { withFileTypes: true })) {
-  if (!entry.isDirectory()) continue;
-  const metadataPath = path.join(localeRoot, entry.name, 'locale.json');
-  ok(fs.existsSync(metadataPath), `${metadataPath}: every locale directory must declare locale.json`);
-  const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-  ok(metadata.url_code === entry.name, `${metadataPath}: url_code must match its directory`);
-  courseRoots.push(path.join(localeRoot, entry.name, 'web/nemoclaw'));
-}
+const courseRoots = inventory.courses.map(course => course.root);
 for (const courseRoot of courseRoots) {
-  const pagePath = path.join(courseRoot, '03a-kickstart.html');
+  const pagePath = path.join(courseRoot, path.relative(inventory.canonical, inventory.paths.en));
   const page = fs.readFileSync(pagePath, 'utf8');
   ok(page.includes('helpers.runOpenClawConnectionAudit({') &&
      page.includes('baseUrl: connection.rawUrl') &&
@@ -325,8 +324,9 @@ for (const courseRoot of courseRoots) {
      !page.includes('CF-Access-Jwt-Assertion'),
     `${pagePath}: learner probe does not expose all four shared, redacted connection checks`);
 }
-const openclawCli = fs.readFileSync('web/nemoclaw/scripts/_openclaw_cli.js', 'utf8');
-ok(openclawCli.includes('runtime.openclawGatewayWsUrl(connection.rawUrl, connection.accessSession, null, null, connection.accessProvider).url'),
+const openclawCli = fs.readFileSync(runtimePath('_openclaw_cli.js'), 'utf8');
+ok(openclawCli.includes('runtime.openclawGatewayWsUrl(connection.rawUrl, connection.accessSession, null, null, connection.accessProvider)') &&
+   openclawCli.includes('endpoint.openSocket()'),
   'OpenClaw CLI runtime bypasses shared gateway routing');
 ok(!openclawCli.includes('return u + "/cli/gateway"'),
   'OpenClaw CLI runtime rebuilt a direct gateway URL');
@@ -358,7 +358,7 @@ function cliConsumerFindings(expectedPage, sources) {
   return findings;
 }
 
-const lessonMap = JSON.parse(fs.readFileSync('web/nemoclaw/lesson-map.json', 'utf8'));
+const lessonMap = JSON.parse(fs.readFileSync(path.join(inventory.canonical, 'lesson-map.json'), 'utf8'));
 const cliLesson = lessonMap.lessons?.filter(entry => entry.module === 4 && entry.lesson === 2) || [];
 ok(cliLesson.length === 1 && typeof cliLesson[0].id === 'string' && /^[A-Za-z0-9_/-]+$/.test(cliLesson[0].id)
    && !cliLesson[0].id.startsWith('/') && !cliLesson[0].id.split('/').includes('..'),
@@ -389,13 +389,13 @@ for (const [label, expectedPage, entries, needle] of [
 // provider, relay, or route on the learner's behalf.
 clearStorage();
 storage.set('nemoclaw_clawrawurl', launchable);
-globalThis.location = new URL('https://course.example.test/nemoclaw/03a-kickstart.html?' + new URLSearchParams({
+globalThis.location = new URL(courseLocation(path.basename(inventory.paths.en)).href + '?' + new URLSearchParams({
   openclaw_url: pomeriumLaunchable,
   openclaw_proxy: '0',
   openclaw_proxy_base: 'https://relay.example.test',
   openclaw_access_provider: 'pomerium',
 }));
-const queryMod = await import('data:text/javascript;base64,' + Buffer.from(source + '\n// retired-query-fixture').toString('base64'));
+const queryMod = await import(moduleUrl + '?retired-query-fixture');
 const queryState = queryMod.getOpenClawConnection();
 ok(queryState.rawUrl === launchable &&
    queryState.accessProvider === 'auto' &&

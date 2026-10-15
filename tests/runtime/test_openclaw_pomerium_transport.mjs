@@ -395,3 +395,24 @@ test('terminal Stop rejects and prevents an already stopped socket from opening'
     terminalResult = 'exit';
   }
 });
+
+test('terminal input follows the launchable JSON input protocol', async () => {
+  const originalSocket = globalThis.WebSocket;
+  connection.setOpenClawConnection({rawUrl:launchable,accessProvider:'pomerium',accessSession:''});
+  try {
+    globalThis.WebSocket = class {
+      constructor() {setTimeout(() => this.onopen?.(),0);}
+      send(bytes) {
+        const frame = JSON.parse(bytes);
+        assert.deepEqual(frame,{type:'input',data:"printf 'ready\\n'\n"});
+        this.onmessage?.({data:JSON.stringify({type:'output',data:'ready\n'})});
+        this.onmessage?.({data:JSON.stringify({type:'exit',code:0})});
+      }
+      close() {}
+    };
+    const result = await openshell.terminal('bash',{send:["printf 'ready\\n'"],idleMs:3000,totalMs:5000});
+    assert.equal(result.output,'ready');
+    assert.equal(result.completion,'exit');
+    assert.equal(result.exitCode,0);
+  } finally {globalThis.WebSocket = originalSocket;}
+});
