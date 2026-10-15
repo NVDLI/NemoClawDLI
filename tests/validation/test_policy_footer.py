@@ -48,9 +48,7 @@ class PolicyFooterTests(unittest.TestCase):
                         self.assertIn('aria-label="NVIDIA legal and policies"', footers[0])
                         self.assertEqual(re.findall(r'<a href="([^"]+)">([^<]+)</a>', footers[0]), expected)
                         self.assertLess(result.index(footers[0]), result.index("</body>"))
-                        # The footer must not introduce a consent or analytics script.
                         self.assertNotIn("<script", footers[0])
-                        # Preserve the published production tenant and ordered consent bootstrap.
                         stub = 'https://cdn.cookielaw.org/scripttemplates/otSDKStub.js'
                         custom = 'https://images.nvidia.com/aem-dam/Solutions/ot-js/ot-custom.js'
                         tenant = '01a13400-6831-707e-9897-c2ef6262efc7'

@@ -1,6 +1,6 @@
 # Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""Course-home JSON, Markdown and real exercise targets must agree."""
+"""Check milestone generation and exercise targets."""
 import copy
 import json
 from pathlib import Path

@@ -646,7 +646,6 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     assert.equal(await page.evaluate(() => sessionStorage.getItem('learner-work')), 'retained');
     assert.equal(apiRequests.length, beforeDisconnect, 'disconnect must work without the service');
 
-    // The shared client writes a later ID independently and Finish remains explicit.
     confirmWrites = true;
     await page.evaluate(() => sessionStorage.clear());
     await page.goto(`http://127.0.0.1:${port}/${COURSE_ROOT}/04c-going-further.html`);
@@ -679,9 +678,7 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     assert.equal(courseCompleted, true);
     assert.equal(eventWrites.filter(event => event.type === 'completed').length, 1);
 
-    // Follow every rendered exercise link, then deliver the external exercise's
-    // success evidence. The course runtime, adapter, SDK, requests and UI are real;
-    // the API and exercise-success signals are controlled fixtures in this test.
+    // Simulate exercise success and API responses; run the real course modules.
     await page.evaluate(() => { window.OneTrust.RejectAll(); sessionStorage.clear(); });
     confirmedIds.clear();
     courseCompleted = false;

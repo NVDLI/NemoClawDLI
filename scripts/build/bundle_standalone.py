@@ -1105,8 +1105,6 @@ def bundle_one(html_path: Path, css_text: str, lite_css: str, shared_js: str,
         autosize_tag = f"<script>{LITE_AUTOSIZE_JS}</script>\n</body>"
         new_html = new_html.replace("</body>", autosize_tag, 1)
 
-    # Static policy navigation is shared by full, iframe, and localized exports.
-    # Keep the page's existing course/support footer and lesson content intact.
     new_html = new_html.replace("</body>", NVIDIA_POLICY_FOOTER + "\n</body>", 1)
 
     return new_html

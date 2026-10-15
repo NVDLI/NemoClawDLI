@@ -251,8 +251,7 @@ async function dismissCookieNotice(page) {
   await page.waitForFunction(() => typeof window.OneTrust?.RejectAll === 'function'
       && document.querySelector('#onetrust-consent-sdk'),
     null, { timeout: Math.min(timeoutMs, 45000) });
-  // This audit exercises course controls with telemetry declined. The dedicated
-  // Activity browser journey verifies consent grant and withdrawal separately.
+  // Consent flows have separate tests; keep telemetry off here.
   await page.evaluate(() => window.OneTrust.RejectAll());
   await page.locator('.onetrust-pc-dark-filter').last().waitFor({ state: 'hidden' });
 }

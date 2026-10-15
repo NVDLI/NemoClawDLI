@@ -233,7 +233,6 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
     if (!pendingOptIn || typeof cmp?.UpdateConsent !== 'function'
         || typeof cmp?.SetAlertBoxClosed !== 'function') return;
     pendingOptIn = false;
-    // This explicit course choice grants only Performance Cookies.
     cmp.SetAlertBoxClosed();
     cmp.UpdateConsent('Category', 'C0002:1');
     consent.reconcile();
@@ -260,7 +259,6 @@ export function installNemoClawActivityTracking({
 } = {}) {
   if (!windowTarget || !documentTarget) return null;
   if (!ACTIVITY_CONFIG) {
-    // An unavailable config disables tracking while unrelated exercises still load.
     windowTarget.__nemoclawActivityConfigUnavailable = true;
     return null;
   }
