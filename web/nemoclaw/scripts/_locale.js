@@ -1579,6 +1579,7 @@ function translatedText(value, recordMiss = false) {
   const collapsed = value.replace(/\s+/g, " ").trim();
   const direct = maps.text.get(value) || maps.text.get(collapsed);
   if (direct) return direct;
+  if (collapsed === "Progress" && maps.text.has("Activity")) return maps.text.get("Activity");
   if (maps.localized.has(value) || maps.localized.has(collapsed)) return value;
   for (const [pattern, render] of DYNAMIC_TEXT[document.documentElement.lang.toLowerCase()] || []) {
     const match = value.match(pattern);

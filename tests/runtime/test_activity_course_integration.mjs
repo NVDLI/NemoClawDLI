@@ -30,6 +30,22 @@ const COURSE_ROOTS = fs.readdirSync('web', { withFileTypes: true })
   .filter(entry => entry.isDirectory() && fs.existsSync(path.join('web', entry.name, 'COURSE_CANON.md')))
   .map(entry => path.join('web', entry.name));
 assert.ok(COURSE_ROOTS.length, 'expected discovered Activity course contracts');
+test('Progress toolbar uses the reviewed Activity translation in each locale', async () => {
+  const { localizeCourseUiText } = await import('../../web/nemoclaw/scripts/_locale.js');
+  const originalDocument = globalThis.document;
+  try {
+    for (const lang of ['es-ES', 'pt-BR', 'zh-TW', 'zh-CN']) {
+      globalThis.document = { documentElement: { lang } };
+      assert.notEqual(localizeCourseUiText('Activity'), 'Activity', lang);
+      assert.equal(localizeCourseUiText('Progress'), localizeCourseUiText('Activity'), lang);
+    }
+    globalThis.document = { documentElement: { lang: 'en' } };
+    assert.equal(localizeCourseUiText('Progress'), 'Progress');
+  } finally {
+    if (originalDocument === undefined) delete globalThis.document;
+    else globalThis.document = originalDocument;
+  }
+});
 for (const COURSE_ROOT of COURSE_ROOTS) {
 const COURSE_ID = path.basename(COURSE_ROOT);
 const ACTIVITY_SOURCE = path.join('web/activity', '_activity.js');
