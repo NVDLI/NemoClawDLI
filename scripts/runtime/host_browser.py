@@ -13,16 +13,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 RUNTIME_NODE_MODULES = ROOT / "scripts" / "runtime" / "node_modules"
-MAC_BROWSERS = (
-    Path("/Applications/Chromium.app/Contents/MacOS/Chromium"),
-    Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
-    Path("/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"),
-)
-PLAYWRIGHT_BROWSER_NAMES = (
-    "chrome-headless-shell-linux64/chrome-headless-shell",
-    "chrome-linux/chrome",
-    "chrome-linux64/chrome",
-)
 
 
 class BrowserRuntimeError(RuntimeError):
@@ -53,31 +43,18 @@ def resolve_node_path() -> str:
 
 
 def resolve_chrome() -> str:
-    requested = executable(os.environ.get("CHROME_BIN"))
-    if requested:
-        return requested
-    for name in ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable"):
-        found = executable(name)
-        if found:
-            return found
-    roots = (
-        Path(os.environ.get("PLAYWRIGHT_BROWSERS_PATH", "/tmp/pw-browsers")),
-        Path("/sandbox/.cache/ms-playwright"),
-        Path(os.environ.get("HOME", "/root")) / ".cache/ms-playwright",
-    )
-    for root in roots:
-        if not root.is_dir():
-            continue
-        for revision in sorted(root.iterdir()):
-            for name in PLAYWRIGHT_BROWSER_NAMES:
-                found = executable(str(revision / name))
-                if found:
-                    return found
-    for path in MAC_BROWSERS:
-        if path.is_file() and os.access(path, os.X_OK):
-            return str(path)
-    raise BrowserRuntimeError("Chromium or compatible Chrome is required; install it or set CHROME_BIN")
-
+    try:
+        result = subprocess.run(
+            [resolve_node(), str(ROOT / "scripts/runtime/browser_environment.cjs"), "--chrome"],
+            env={**os.environ, "NODE_PATH": resolve_node_path()},
+            text=True, capture_output=True, timeout=10, check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise BrowserRuntimeError(f"browser discovery failed: {exc}") from exc
+    found = executable(result.stdout.strip()) if result.returncode == 0 else None
+    if found:
+        return found
+    raise BrowserRuntimeError(result.stderr.strip() or "Browser discovery returned no executable")
 
 def main() -> int:
     try:

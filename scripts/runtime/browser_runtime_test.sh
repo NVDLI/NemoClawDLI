@@ -13,22 +13,6 @@ ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 NODE_BIN=${NODE_BIN:-$(command -v node || true)}
 NODE_PATH=${NODE_PATH:-$ROOT/scripts/runtime/node_modules}
 
-find_chrome() {
-  if [[ -n "${CHROME_BIN:-}" && -x "$CHROME_BIN" ]]; then printf '%s\n' "$CHROME_BIN"; return; fi
-  local candidate
-  for candidate in \
-    "$(command -v chromium 2>/dev/null || true)" \
-    "$(command -v chromium-browser 2>/dev/null || true)" \
-    "$(command -v google-chrome 2>/dev/null || true)" \
-    "$(command -v google-chrome-stable 2>/dev/null || true)" \
-    "/Applications/Chromium.app/Contents/MacOS/Chromium" \
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"; do
-    if [[ -n "$candidate" && -x "$candidate" ]]; then printf '%s\n' "$candidate"; return; fi
-  done
-  return 1
-}
-
 if [[ -z "$NODE_BIN" || ! -x "$NODE_BIN" ]]; then
   echo "browser runtime: Node.js 20+ is required; install Node.js or set NODE_BIN" >&2
   exit 2
@@ -38,7 +22,7 @@ if [[ ! -f "$NODE_PATH/playwright-core/package.json" ]]; then
   echo "run: (cd scripts/runtime && corepack enable && pnpm install --frozen-lockfile --ignore-scripts)" >&2
   exit 2
 fi
-CHROME_BIN=$(find_chrome) || {
+CHROME_BIN=$(NODE_PATH="$NODE_PATH" "$NODE_BIN" "$ROOT/scripts/runtime/browser_environment.cjs" --chrome) || {
   echo "browser runtime: Chromium or a compatible Chrome binary is required" >&2
   echo "install Chromium/Chrome for your OS, or set CHROME_BIN to its executable" >&2
   exit 2
