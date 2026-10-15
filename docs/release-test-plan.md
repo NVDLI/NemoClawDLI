@@ -77,6 +77,16 @@ python3 scripts/validation/release_gate.py --tier ship
 The matrix below explains its constituent claims and adds conditional browser, service,
 host, and external-review work. Any applicable nonzero exit blocks the candidate.
 
+Skybridge connection changes also run `node --test tests/runtime/test_openclaw_terminal_gateway_transport.mjs`
+and `node --test tests/runtime/test_openclaw_skybridge_transport.mjs`. Verify fragmented Unicode
+frames, terminal echo suppression, failed starts, cancellation, host/session rotation, scoped
+device authentication, and navigation reuse. Live acceptance uses the deployed terminal relay
+and the built course's displayed Connect flow; confirm read RPCs as well as the initial challenge.
+Keep native sign-in, pasted-session, and legacy launchable evidence distinct.
+Device persistence checks also require nonexportable signing/encryption keys, ciphertext tamper
+rejection, storage-failure handling, expiry cleanup, and zero stale connect frames after clearing
+during decryption or signing. Repeat navigation acceptance with real browser IndexedDB.
+
 | ID | Claim | Command | Pass condition | Evidence |
 |---|---|---|---|---|
 | A01 | Design and test evidence remain complete and public-safe | `python3 scripts/validation/release_evidence_audit.py --self-test` then `python3 scripts/validation/release_evidence_audit.py` | Every mutation is detected; repository audit has zero findings | CI log and validation report |

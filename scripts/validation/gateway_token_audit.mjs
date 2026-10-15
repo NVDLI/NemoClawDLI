@@ -10,7 +10,7 @@ import { pathToFileURL } from 'node:url';
 // no HTML file to read, so the caller renders the published pages and names their root here.
 const LOCALE_ROOT = process.env.NEMOCLAW_LOCALE_PAGES || 'i18n';
 
-function discoverLocaleCourses(root = LOCALE_ROOT, courseName = 'nemoclaw', publishedRoot = root) {
+function discoverLocaleCourses(root, courseName, publishedRoot = root) {
   if (!fs.existsSync(root)) return [];
   const seen = new Set();
   return fs.readdirSync(root, { withFileTypes: true })
@@ -356,7 +356,8 @@ export function audit(overrides = {}) {
       findings.push(`${key}: Module 4b bypasses the shared OpenClaw CLI runtime`);
     }
   }
-  if (!files.cliRuntime.includes('runtime.openclawGatewayWsUrl(connection.rawUrl, connection.accessSession, null, null, connection.accessProvider).url')) {
+  if (!files.cliRuntime.includes('runtime.openclawGatewayWsUrl(connection.rawUrl, connection.accessSession, null, null, connection.accessProvider)')
+      || !files.cliRuntime.includes('endpoint.openSocket()')) {
     findings.push('OpenClaw CLI runtime bypasses shared OpenClaw routing');
   }
 
@@ -451,7 +452,8 @@ function selfTest() {
     ['gateway direct default', { helper: base.helper.replace('if (!relayEnabled)', 'if (false)') }],
     ['gateway Pomerium manual fallback', { helper: base.helper.replace('provider === "pomerium" && Boolean(String(accessSession || "").trim())', 'provider === "pomerium" && false') }],
     ['gateway relay opt-in', { helper: base.helper.replace('proxyEnabled === true', 'proxyEnabled !== false') }],
-    ['downstream gateway', { cliRuntime: base.cliRuntime.replace('runtime.openclawGatewayWsUrl(connection.rawUrl, connection.accessSession, null, null, connection.accessProvider).url', 'connection.rawUrl + "/cli/gateway"') }],
+    ['downstream gateway', { cliRuntime: base.cliRuntime.replace('runtime.openclawGatewayWsUrl(connection.rawUrl, connection.accessSession, null, null, connection.accessProvider)', 'connection.rawUrl + "/cli/gateway"') }],
+    ['downstream raw socket bypass', { cliRuntime: base.cliRuntime.replace('endpoint.openSocket()', 'new WebSocket(endpoint.url)') }],
     ['downstream page boundary', { en4b: base.en4b.replace('helpers.mountOpenClawCli("#agent-chat", { signal: helpers.signal })', 'mountDirectCli("#agent-chat")') }],
     ['shared export', { shared: base.shared.replaceAll('gatewayTokenFromAgentMetadata', 'removedGatewayTokenParser') }],
     ['automatic token bootstrap', { helper: base.helper.replaceAll('refreshOpenClawGatewayToken({ signal', 'removedGatewayTokenRefresh({ signal') }],

@@ -10,6 +10,7 @@ import { discoverGatewayInventory } from './gateway_token_audit.mjs';
 const { canonical } = discoverGatewayInventory();
 const runtimePath = name => path.join(canonical, 'scripts', name);
 const { randomId } = await import(pathToFileURL(runtimePath('_ids.js')).href);
+const { openclawGatewayConnectParams, assertOpenClawGatewayGrant } = await import(pathToFileURL(runtimePath('_gateway_auth.js')).href);
 const src = fs.readFileSync(runtimePath('_openclaw.js'), 'utf8');
 const m = src.match(/export const GW_CONNECT = `([\s\S]*?)`;\n/);
 if (!m) throw new Error('GW_CONNECT not found');
@@ -35,9 +36,10 @@ globalThis.localStorage = storageApi(storage);
 globalThis.sessionStorage = storageApi(tabStorage);
 globalThis.location = new URL('https://course.example.test/nemoclaw/03a-kickstart.html');
 const connectionSource = fs.readFileSync(runtimePath('_connection.js'), 'utf8');
-const connection = await import('data:text/javascript;base64,' + Buffer.from(connectionSource).toString('base64'));
+const connection = await import(pathToFileURL(runtimePath('_connection.js')).href);
 const opened = [];
 let tokenRefreshes = 0;
+let grantedScopes = ['operator.read','operator.write','operator.admin'];
 class FakeWebSocket {
   constructor(url) {
     this.url = url;
@@ -50,7 +52,7 @@ class FakeWebSocket {
     if (msg.method === 'connect') {
       setTimeout(() => this.onmessage && this.onmessage({ data: JSON.stringify({
         type: 'res', id: msg.id, ok: true,
-        payload: { server: { version: 'test' }, auth: { scopes: ['operator.admin'] } },
+        payload: { server: { version: 'test' }, auth: { scopes: grantedScopes } },
       }) }), 0);
     }
   }
@@ -64,16 +66,15 @@ const helpers = {
   fetch: async () => { throw new Error('GW_CONNECT must not probe a retired metadata route'); },
   refreshOpenClawGatewayToken: async () => { tokenRefreshes++; return { token: 'test-token', source: 'metadata' }; },
   getOpenClawConnection: () => connection.getOpenClawConnection(),
-  openclawGatewayWsUrl: (raw, session, proxyBase, proxyEnabled, provider) =>
-    connection.openclawWebSocketUrl(
+  openclawGatewayWsUrl: (raw, session, proxyBase, proxyEnabled, provider) => ({
+    ...connection.openclawGatewaySocketRoute(
       raw,
-      '/cli/gateway',
       proxyEnabled === true ? session : '',
       proxyEnabled === true
         ? { enabled: true, base: proxyBase || 'https://openclaw-cors-proxy.experiments.courses.nvidia.com' }
         : { enabled: false, base: '' },
       provider,
-    ),
+    ),connectParams:openclawGatewayConnectParams,assertGrant:assertOpenClawGatewayGrant}),
   signal: null,
 };
 const state = {};
@@ -86,5 +87,12 @@ const expected = `wss://${cloudflareHost}/cli/gateway`;
 if (opened[0] !== expected) throw new Error(`expected sender-bound Cloudflare route ${expected}, got ${opened[0]}`);
 if (logs.some(x => x.includes('via hosted relay')) || /access_session|cf_access_jwt/.test(opened[0])) {
   throw new Error('gateway connection did not preserve the direct browser credential boundary');
+}
+for (const incomplete of [[], ['operator.read'], ['operator.admin']]) {
+  grantedScopes = incomplete;
+  let rejected = false;
+  try { await fn({}, helpers, helpers, console); }
+  catch (error) { rejected = /required course permissions/.test(error.message); }
+  if (!rejected) throw new Error('GW_CONNECT accepted an incomplete gateway permission grant');
 }
 console.log('gw connect transport audit: ok');

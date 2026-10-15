@@ -7,7 +7,7 @@
 
 import {
   accessProviderForOpenClawUrl, getOpenClawConnection, getOpenClawProxyConfig,
-  openclawWebSocketUrl,
+  openclawAccessCookieName, openclawWebSocketUrl,
 } from "./_connection.js";
 import { filterOpenClawRuntimeNoise } from "./_runtime_text.js";
 
@@ -150,7 +150,7 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
         let i = 0;
         (function pump() {
           if (finished || i >= send.length) return;
-          setTimeout(() => { if (finished) return; try { socket.send(send[i] + "\n"); } catch (_) {} i++; pump(); }, 1500);
+          setTimeout(() => { if (finished) return; try { socket.send(JSON.stringify({ type: "input", data: send[i] + "\n" })); } catch (_) {} i++; pump(); }, 1500);
         })();
       };
       socket.onmessage = ev => {
@@ -200,7 +200,11 @@ export async function openclawLoopbackProbe(path, { baseUrl = null, signal = nul
   }
   const endpoint = POMERIUM_LOOPBACK_PROBES[String(path || "")];
   if (!endpoint) throw new Error("Unsupported loopback bootstrap path.");
-  const command = "curl -fsS --max-time 10 " + endpoint;
+  // This is a public runtime selector, not an access credential. Without it the
+  // Skybridge nginx front door sends /healthz to the onboarding application.
+  const selector = path === "/healthz" && openclawAccessCookieName(rawUrl) === "__Host-skybridge-brev-prd"
+    ? "--cookie nemoclaw_dashboard=openclaw " : "";
+  const command = "curl -fsS --max-time 10 " + selector + endpoint;
   const result = await terminal(command, {
     baseUrl: rawUrl,
     idleMs: 1500,

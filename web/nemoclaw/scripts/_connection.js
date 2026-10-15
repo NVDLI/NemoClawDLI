@@ -13,7 +13,15 @@ export const OPENCLAW_TOKEN_KEY = "nemoclaw_clawtoken";
 export const OPENCLAW_ACCESS_JWT_KEY = "nemoclaw_clawcfjwt";
 export const OPENCLAW_ACCESS_PROVIDER_KEY = "nemoclaw_openclaw_access_provider_v1";
 export const OPENCLAW_ACCESS_SESSION_KEY = "nemoclaw_openclaw_access_session_v1";
+export const OPENCLAW_DEVICE_AUTH_KEY = "nemoclaw_gateway_device_v1";
+let deviceGeneration = 0;
+export const getOpenClawDeviceGeneration = () => deviceGeneration;
+function clearDeviceAuth(secrets) {
+  deviceGeneration++;
+  secrets?.removeItem(OPENCLAW_DEVICE_AUTH_KEY);
+}
 const OPENCLAW_CREDENTIAL_ORIGIN_KEY = "nemoclaw_openclaw_credential_origin_v1";
+const OPENCLAW_TERMINAL_GATEWAY_KEY = "nemoclaw_openclaw_terminal_gateway_v1";
 
 function storage() {
   try { return globalThis.localStorage || null; }
@@ -37,8 +45,10 @@ function boundSecretStorage(rawUrl) {
   // Routing persists across tabs; credentials never follow another tab's host change.
   // Older credentials have no provable origin and must be entered again.
   if (secrets?.getItem(OPENCLAW_CREDENTIAL_ORIGIN_KEY) !== credentialOrigin(rawUrl)) {
+    if (secrets?.getItem(OPENCLAW_DEVICE_AUTH_KEY)) clearDeviceAuth(secrets);
     for (const key of [OPENCLAW_TOKEN_KEY, OPENCLAW_ACCESS_SESSION_KEY,
-      OPENCLAW_ACCESS_JWT_KEY, OPENCLAW_CREDENTIAL_ORIGIN_KEY]) secrets?.removeItem(key);
+      OPENCLAW_ACCESS_JWT_KEY, OPENCLAW_CREDENTIAL_ORIGIN_KEY, OPENCLAW_DEVICE_AUTH_KEY,
+      OPENCLAW_TERMINAL_GATEWAY_KEY]) secrets?.removeItem(key);
   }
   return secrets;
 }
@@ -230,7 +240,11 @@ export function openclawWebSocketUrl(rawUrl, pathAndQuery = "/cli/gateway", acce
   // Validate an explicit provider even on direct routes. Routing must not make
   // a mismatched provider/host pair silently acceptable.
   const provider = accessProviderForOpenClawUrl(rawUrl, accessProvider);
-  const routed = openclawHttpUrl(rawUrl, pathAndQuery, config, provider, accessSession);
+  const native = pathAndQuery === "/cli/gateway" &&
+    openclawAccessCookieName(rawUrl, provider) === "__Host-skybridge-brev-prd" &&
+    secretStorage()?.getItem(OPENCLAW_CREDENTIAL_ORIGIN_KEY) === credentialOrigin(rawUrl) &&
+    secretStorage()?.getItem(OPENCLAW_TERMINAL_GATEWAY_KEY) === "1";
+  const routed = openclawHttpUrl(rawUrl, native ? gatewayTerminalPath() : pathAndQuery, config, provider, accessSession);
   if (!routed.url) return routed;
   const url = new URL(routed.url, pageBase());
   url.protocol = url.protocol === "http:" ? "ws:" : "wss:";
@@ -249,7 +263,35 @@ export function openclawWebSocketUrl(rawUrl, pathAndQuery = "/cli/gateway", acce
   const display = new URL(url.href);
   if (display.searchParams.has("access_session")) display.searchParams.set("access_session", "...");
   if (display.searchParams.has("cf_access_jwt")) display.searchParams.set("cf_access_jwt", "...");
-  return { ...routed, url: url.href, displayUrl: display.href };
+  if (native) display.searchParams.set("cmd", "<gateway adapter>");
+  return { ...routed, url: url.href, displayUrl: display.href, gatewayViaTerminal: native,
+    transport: native ? (routed.viaProxy ? "hosted relay terminal gateway" : "direct terminal gateway")
+      : routed.viaProxy ? "hosted relay" : "direct browser",
+    openSocket: () => native ? new GatewayTerminalSocket(url.href) : new WebSocket(url.href) };
+}
+
+// Transport helpers construct sockets through the same provider-bound router.
+export function setOpenClawTerminalGateway(enabled, expected = getOpenClawConnection()) {
+  const connection = getOpenClawConnection();
+  if (["rawUrl", "accessProvider", "accessSession", "token"].some(key => connection[key] !== expected[key]))
+    throw new Error("The connected gateway changed; run Connect again.");
+  const secrets = secretStorage();
+  if (enabled && openclawAccessCookieName(connection.rawUrl, connection.accessProvider) === "__Host-skybridge-brev-prd")
+    secrets?.setItem(OPENCLAW_TERMINAL_GATEWAY_KEY, "1");
+  else {
+    secrets?.removeItem(OPENCLAW_TERMINAL_GATEWAY_KEY);
+    if (!enabled) clearDeviceAuth(secrets);
+  }
+}
+
+export function openclawGatewaySocketRoute(rawUrl, accessSession, config, accessProvider) {
+  return openclawWebSocketUrl(rawUrl, "/cli/gateway", accessSession, config, accessProvider);
+}
+
+export function openOpenClawWebSocket(rawUrl, pathAndQuery, accessSession, config, accessProvider) {
+  if (pathAndQuery === "/cli/gateway")
+    return openclawGatewaySocketRoute(rawUrl, accessSession, config, accessProvider).openSocket();
+  return new WebSocket(openclawWebSocketUrl(rawUrl, pathAndQuery, accessSession, config, accessProvider).url);
 }
 
 export function migrateOpenClawConnectionStorage() {
@@ -318,6 +360,11 @@ export function setOpenClawConnection({ rawUrl, token, accessProvider, accessSes
     ? (originChanged ? "" : legacySession)
     : String(suppliedSession || "").trim();
   const resolvedAccessProvider = accessProviderForOpenClawUrl(clean, nextAccessProvider);
+  if (originChanged || nextAccessSession !== legacySession || nextAccessProvider !== savedProvider) {
+    clearDeviceAuth(secrets);
+    secrets?.removeItem(OPENCLAW_TERMINAL_GATEWAY_KEY);
+  }
+  target?.removeItem(OPENCLAW_DEVICE_AUTH_KEY);
   if (!target) return {
     rawUrl: clean,
     effectiveUrl: openclawHttpUrl(
@@ -350,7 +397,7 @@ export function setOpenClawConnection({ rawUrl, token, accessProvider, accessSes
   target.removeItem(OPENCLAW_TOKEN_KEY);
   if (nextAccessSession) secrets?.setItem(OPENCLAW_ACCESS_SESSION_KEY, nextAccessSession);
   else secrets?.removeItem(OPENCLAW_ACCESS_SESSION_KEY);
-  if (clean && (nextToken || nextAccessSession)) secrets?.setItem(OPENCLAW_CREDENTIAL_ORIGIN_KEY, credentialOrigin(clean));
+  if (clean) secrets?.setItem(OPENCLAW_CREDENTIAL_ORIGIN_KEY, credentialOrigin(clean));
   else secrets?.removeItem(OPENCLAW_CREDENTIAL_ORIGIN_KEY);
   target.removeItem(OPENCLAW_ACCESS_SESSION_KEY);
   secrets?.removeItem(OPENCLAW_ACCESS_JWT_KEY);
@@ -392,3 +439,121 @@ export function getOpenClawConnection() {
 }
 
 migrateOpenClawConnectionStorage();
+
+// Forward gateway frames through Skybridge's existing authenticated terminal.
+// The browser still signs the gateway challenge and retains its scoped device.
+const PREFIX = "__DLI_GATEWAY__";
+const LIMIT = 8 * 1024 * 1024;
+const PROGRAM = `
+const prefix='${PREFIX}',limit=${LIMIT};
+if(process.stdin.isTTY)process.stdin.setRawMode(true);
+process.stdin.setEncoding('utf8');
+const socket=new WebSocket('ws://127.0.0.1:18789');
+let input='',done=false;
+const emit=value=>process.stdout.write(prefix+Buffer.from(JSON.stringify(value)).toString('base64')+'\\n');
+const finish=code=>{if(done)return;done=true;emit({type:'close',code});socket.close();setTimeout(()=>process.exit(0),20)};
+socket.addEventListener('open',()=>emit({type:'open'}));
+socket.addEventListener('message',event=>{if(typeof event.data!=='string'||event.data.length>limit)return finish(1009);emit({type:'message',data:event.data})});
+socket.addEventListener('error',()=>finish(1011));
+socket.addEventListener('close',event=>finish(event.code));
+process.stdin.on('data',chunk=>{input+=chunk;if(input.length>limit*2)return finish(1009);let end;while((end=input.indexOf('\\n'))>=0){const line=input.slice(0,end).trim();input=input.slice(end+1);if(!line)continue;if(socket.readyState!==1)return finish(1011);socket.send(Buffer.from(line,'base64').toString('utf8'))}});
+process.stdin.on('end',()=>finish(1000));
+`;
+
+function encode(text) {
+  const bytes = new TextEncoder().encode(text);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 16384)
+    binary += String.fromCharCode(...bytes.subarray(i, i + 16384));
+  return btoa(binary);
+}
+
+export function gatewayTerminalPath() {
+  // This command contains public code only. Credentials travel in input frames.
+  return "/ws/terminal?cmd=" + encodeURIComponent(
+    'node -e eval(Buffer.from("' + encode(PROGRAM) + '","base64").toString())');
+}
+
+export class GatewayTerminalSocket extends EventTarget {
+  static CONNECTING = 0;
+  static OPEN = 1;
+  static CLOSING = 2;
+  static CLOSED = 3;
+  readyState = 0;
+  onopen = null;
+  onmessage = null;
+  onerror = null;
+  onclose = null;
+  #terminal;
+  #buffer = "";
+
+  constructor(url) {
+    super();
+    this.url = url;
+    this.#terminal = new WebSocket(url);
+    this.#terminal.onmessage = event => {
+      if (this.readyState >= 2) return;
+      let frame;
+      try { frame = JSON.parse(event.data); } catch (_) { return this.#fail(); }
+      if (frame.type === "exit") return this.#finish(1006);
+      if (typeof frame.data !== "string") return;
+      this.#buffer += frame.data;
+      if (this.#buffer.length > LIMIT * 2) return this.#fail();
+      let end;
+      while ((end = this.#buffer.indexOf("\n")) >= 0) {
+        const line = this.#buffer.slice(0, end).replace(/\r$/, "");
+        this.#buffer = this.#buffer.slice(end + 1);
+        if (!line.startsWith(PREFIX)) continue;
+        let value;
+        try {
+          const bytes = Uint8Array.from(atob(line.slice(PREFIX.length)), c => c.charCodeAt(0));
+          value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+        } catch (_) { return this.#fail(); }
+        if (value.type === "open" && this.readyState === 0) {
+          this.readyState = 1;
+          this.#emit(new Event("open"));
+        } else if (value.type === "message" && this.readyState === 1 && typeof value.data === "string") {
+          this.#emit(new MessageEvent("message", { data: value.data }));
+        } else if (value.type === "close") this.#finish(value.code);
+        else return this.#fail();
+      }
+    };
+    this.#terminal.onerror = () => this.#fail();
+    this.#terminal.onclose = () => this.#finish(1006);
+  }
+
+  #emit(event) {
+    this.dispatchEvent(event);
+    this["on" + event.type]?.call(this, event);
+  }
+
+  #finish(code) {
+    if (this.readyState === 3) return;
+    this.readyState = 3;
+    this.#buffer = "";
+    this.#terminal.close();
+    const event = new Event("close");
+    Object.assign(event, { code: Number.isInteger(code) ? code : 1006, reason: "", wasClean: code === 1000 });
+    this.#emit(event);
+  }
+
+  #fail() {
+    if (this.readyState >= 2) return;
+    this.readyState = 2;
+    try { this.#emit(new Event("error")); }
+    finally { this.#finish(1011); }
+  }
+
+  send(data) {
+    if (this.readyState !== 1) throw new DOMException("Gateway is not open.", "InvalidStateError");
+    if (typeof data !== "string" || data.length > LIMIT) throw new TypeError("Gateway requires a bounded text frame.");
+    this.#terminal.send(JSON.stringify({ type: "input", data: encode(data) + "\n" }));
+  }
+
+  close() {
+    if (this.readyState >= 2) return;
+    this.readyState = 2;
+    this.#terminal.close();
+    this.#finish(1000);
+  }
+}

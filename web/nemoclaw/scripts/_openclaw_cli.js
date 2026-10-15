@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { randomId as uniqueId } from "./_ids.js";
+import { openclawGatewayConnectParams, assertOpenClawGatewayGrant } from "./_gateway_auth.js";
 
 // OpenClaw CLI artifact runtime.
 // This module keeps gateway transport and session tabs out of the student editing surface.
@@ -89,11 +90,15 @@ function createGatewayRpc(runtime) {
     if (!(connection.token && connection.rawUrl)) {
       return Promise.reject(new Error("Connect on Module 3a first (URL + token)."));
     }
-    if (activeSocket?.ready && activeSocket.ws.readyState === WebSocket.OPEN) return Promise.resolve(activeSocket);
+    const sameConnection = activeSocket && ["rawUrl","token","accessProvider","accessSession"]
+      .every(key => activeSocket.connection[key] === connection[key]);
+    if (sameConnection && activeSocket.ready && activeSocket.ws.readyState === WebSocket.OPEN) return Promise.resolve(activeSocket);
+    try { activeSocket?.ws.close(); } catch (_) {}
+    activeSocket = null;
 
     return new Promise((resolve, reject) => {
-      const endpoint = runtime.openclawGatewayWsUrl(connection.rawUrl, connection.accessSession, null, null, connection.accessProvider).url;
-      const socket = { ws: new WebSocket(endpoint), pending: {}, ready: false };
+      const endpoint = runtime.openclawGatewayWsUrl(connection.rawUrl, connection.accessSession, null, null, connection.accessProvider);
+      const socket = { ws: endpoint.openSocket(), pending: {}, ready: false, connection };
       let settled = false;
       let connectTimer = null;
       const finish = (callback, value) => {
@@ -101,6 +106,7 @@ function createGatewayRpc(runtime) {
         settled = true;
         clearTimeout(connectTimer);
         signal?.removeEventListener("abort", stop);
+        if (callback === reject) { try { socket.ws.close(); } catch (_) {} }
         callback(value);
       };
       const stop = () => {
@@ -119,19 +125,12 @@ function createGatewayRpc(runtime) {
         let message;
         try { message = JSON.parse(event.data); } catch (_) { return; }
         if (!socket.ready && message.event === "connect.challenge") {
-          send(socket, "connect", {
-            minProtocol: 4,
-            maxProtocol: 4,
-            client: { id: "openclaw-control-ui", version: "0.1.0", platform: "browser", mode: "webchat" },
-            caps: ["tool-events"],
-            role: "operator",
-            scopes: ["operator.read", "operator.write", "operator.admin"],
-            auth: { token: connection.token },
-          }, signal).then(() => {
+          openclawGatewayConnectParams(connection.token, message.payload, signal, connection).then(params => send(socket, "connect", params, signal)).then(payload => {
+            assertOpenClawGatewayGrant(payload);
             socket.ready = true;
             activeSocket = socket;
             finish(resolve, socket);
-          }, error => finish(reject, error));
+          }).catch(error => finish(reject, error));
           return;
         }
         if (message.type !== "res" || !message.id || !socket.pending[message.id]) return;

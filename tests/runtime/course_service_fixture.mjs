@@ -20,7 +20,8 @@ export function courseServiceFixture() {
   return {
     files, scheduled, scheduledRuns, terminalReads, scheduler,
     rpc(method, params) {
-      if (method === 'connect') return {server:{version:'fixture'},auth:{scopes:['operator.read','operator.write']}};
+      if (method === 'connect') return {server:{version:'fixture'},auth:{scopes:(params?.scopes || [])
+        .filter(scope => ['operator.read','operator.write','operator.admin'].includes(scope))}};
       if (method === 'chat.send') return {runId:'fixture-run-' + ++sequence};
       if (['sessions.messages.subscribe','chat.abort'].includes(method)) return {};
       if (['sessions.reset','sessions.delete'].includes(method)) { memories.delete(params.key); return {}; }

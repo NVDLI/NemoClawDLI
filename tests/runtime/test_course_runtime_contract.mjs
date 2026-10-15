@@ -86,7 +86,9 @@ function sockets(onRequest) {
     send(raw) {
       const request = JSON.parse(raw);
       requests.push(request);
-      if (['connect','sessions.messages.subscribe','chat.abort'].includes(request.method)) this.reply(request);
+      if (request.method === 'connect') this.reply(request,{auth:{scopes:request.params.scopes
+        .filter(scope => ['operator.read','operator.write','operator.admin'].includes(scope))}});
+      else if (['sessions.messages.subscribe','chat.abort'].includes(request.method)) this.reply(request);
       onRequest(this,request);
     }
     close() {
@@ -496,7 +498,10 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
         frame(frame) {this.onmessage?.({data:JSON.stringify({type:'event',...frame})});}
         send(raw) {
           const request=JSON.parse(raw);
-          this.frame({type:'res',id:request.id,ok:true,payload:request.method==='chat.send'?{runId:'cli-owned'}:{}});
+          const payload = request.method === 'connect' ? {auth:{scopes:request.params.scopes
+            .filter(scope => ['operator.read','operator.write','operator.admin'].includes(scope))}}
+            : request.method === 'chat.send' ? {runId:'cli-owned'} : {};
+          this.frame({type:'res',id:request.id,ok:true,payload});
           if(request.method!=='chat.send')return;
           queueMicrotask(() => {
             const payload={sessionKey:request.params.sessionKey,runId:'cli-owned'};

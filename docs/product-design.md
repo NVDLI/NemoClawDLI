@@ -119,13 +119,28 @@ decides whether the selected deployment needs an external privacy assessment.
 
 ## Cryptography and integrity
 
-The production browser runtime implements no custom cryptographic algorithm and generates no
-cryptographic key. It relies on platform services:
+The production browser runtime uses platform cryptography:
 
 - HTTPS and WSS provide transport protection between browser, host, relays, model service, and runtime.
 - Bearer and gateway credentials provide service authentication.
+- Web Crypto generates an Ed25519 device identity and signs OpenClaw gateway challenges.
+  The signing key is nonextractable. IndexedDB retains that key, a nonextractable AES-GCM
+  key, and the encrypted device record; tab storage holds only a random locator. Authenticated
+  encryption binds the record to its version, locator, launchable, provider, and access session.
+  Clearing or changing the connection retires the locator and invalidates pending restores.
+  Records expire after 24 hours and expired entries are deleted on storage access. This protects
+  persisted credential bytes, but cannot protect against compromised same-origin JavaScript.
 - SHA-256 binds each committed browser dependency asset to its generated public inventory.
 - SHA-256 digests bind the release archive, manifest, SBOM, and attached assets.
+
+Verified Skybridge launch handoffs use the launchable's existing authenticated terminal transport
+to reach its fixed loopback gateway. The adapter installs no service and accepts no upstream
+address. It disables terminal echo before accepting input. Gateway credentials travel only in
+protocol frames, while credential discovery and exact device approval run through the existing
+authenticated terminal. The browser transiently handles the bootstrap gateway credential during
+device enrollment and retains the resulting device credential in the encrypted browser vault. Pairing
+approval runs inside the sandbox and returns only its outcome. Other launchable families retain
+their gateway routes.
 
 Python packages used by local authoring or scanning may depend on standard cryptography libraries.
 Those packages are not executed by the production static site and remain visible in the exact locks

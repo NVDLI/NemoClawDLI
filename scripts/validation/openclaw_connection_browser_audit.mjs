@@ -111,7 +111,11 @@ try {
         response(id, payload = {}) { this.emit({ type: 'res', id, ok: true, payload }); }
         send(raw) {
           const request = JSON.parse(raw);
-          if (request.method === 'connect' || request.method === 'sessions.messages.subscribe') {
+          if (request.method === 'connect') {
+            this.response(request.id, {auth:{scopes:request.params.scopes
+              .filter(scope => ['operator.read','operator.write','operator.admin'].includes(scope))}}); return;
+          }
+          if (request.method === 'sessions.messages.subscribe') {
             this.response(request.id, {}); return;
           }
           if (request.method === 'chat.abort') { this.response(request.id, {}); return; }
