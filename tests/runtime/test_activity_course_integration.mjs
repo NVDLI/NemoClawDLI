@@ -27,14 +27,13 @@ test('candidate label scan distinguishes removed examples from introduced config
 });
 
 const COURSE_ROOTS = fs.readdirSync('web', { withFileTypes: true })
-  .filter(entry => entry.isDirectory() && (fs.existsSync(path.join('web', entry.name, 'activity-policy.json'))
-    || fs.existsSync(path.join('web', entry.name, 'scripts', '_activity.js'))))
+  .filter(entry => entry.isDirectory() && fs.existsSync(path.join('web', entry.name, 'COURSE_CANON.md')))
   .map(entry => path.join('web', entry.name));
 assert.ok(COURSE_ROOTS.length, 'expected discovered Activity course contracts');
 for (const COURSE_ROOT of COURSE_ROOTS) {
 const COURSE_ID = path.basename(COURSE_ROOT);
-const ACTIVITY_SOURCE = path.join(COURSE_ROOT, 'scripts', '_activity.js');
-const ACTIVITY_RUNTIME_SOURCE = path.join(COURSE_ROOT, 'scripts', '_activity_runtime.js');
+const ACTIVITY_SOURCE = path.join('web/activity', '_activity.js');
+const ACTIVITY_RUNTIME_SOURCE = path.join('web/activity', '_activity_runtime.js');
 const originalFetch = globalThis.fetch;
 globalThis.fetch = async url => url instanceof URL && url.protocol === 'file:'
   ? new Response(fs.readFileSync(url, 'utf8'), { status: 200 }) : originalFetch(url);
@@ -86,8 +85,8 @@ const APPROVED_ARTIFACT = Object.freeze({
 const SESSION_ID = '019f38f1-e5ab-7688-af0d-0e8925299e93';
 const STAMP = '2026-09-09T19:00:00Z';
 const IDS = Object.keys(ACTIVITY_MILESTONES);
-test('course JSON is the single immutable source of local UI and exercise evidence definitions', () => {
-  const config = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity_milestones.json'), 'utf8'));
+test('generated Activity JSON defines immutable UI and exercise evidence', () => {
+  const config = JSON.parse(fs.readFileSync(path.join('web/activity', 'activity_milestones.json'), 'utf8'));
   assert.equal(config.milestones.length, 11);
   assert.ok(Object.isFrozen(ACTIVITY_MILESTONES));
   assert.deepEqual(config.milestones.map(({id}) => id), IDS);
@@ -234,11 +233,11 @@ test('the default Pages layout ships the public activity SDK at its imported pat
     path.join(output, 'i18n', 'novel', 'web', COURSE_ID),
   ]) {
     execFileSync('bash', ['scripts/build/build_pages.sh', '--stage-activity-sdk', courseRoot]);
-    for (const file of ['activity-sdk.js']) {
+    for (const file of ['activity-sdk.js', '_activity.js', '_activity_runtime.js', 'activity-policy.json', 'activity_milestones.json']) {
       assert.deepEqual(
-        fs.readFileSync(path.resolve(courseRoot, 'scripts', '../../shared', file)),
-        fs.readFileSync(path.join('web/shared', file)),
-        `${courseRoot}: ${file} must preserve the shared JavaScript client`,
+        fs.readFileSync(path.resolve(courseRoot, '../activity', file)),
+        fs.readFileSync(path.join('web/activity', file)),
+        `${courseRoot}: ${file} must preserve the complete Activity runtime`,
       );
     }
   }
@@ -319,7 +318,7 @@ test('course activity is local-only until the learner enables remote progress', 
 });
 
 test('a deployment with collection disabled blocks artifact and API access', async () => {
-  const policy = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8'));
+  const policy = JSON.parse(fs.readFileSync(path.join('web/activity', 'activity-policy.json'), 'utf8'));
   policy.collection_enabled = false;
   const activity = createCourseActivity({
     policyLoader: async () => policy,
@@ -399,7 +398,8 @@ test('browser artifact discovery preserves same-origin authentication and blocks
   try {
     browser = await chromium.launch({
       headless: true,
-      executablePath: execFileSync('python3', ['scripts/runtime/host_browser.py'], { encoding: 'utf8' }).trim(),
+      executablePath: process.platform === 'darwin' ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+        : execFileSync('python3', ['scripts/runtime/host_browser.py'], { encoding: 'utf8' }).trim(),
       args: ['--host-resolver-rules=MAP course.test 127.0.0.1', '--no-proxy-server'],
     });
     const context = await browser.newContext();
@@ -1209,7 +1209,7 @@ test('Module 1a explicitly wires session, referral, and verified progress events
 });
 
 test('the published notice permits consented collection and keeps both opt-in defaults off', () => {
-  const policy = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8'));
+  const policy = JSON.parse(fs.readFileSync(path.join('web/activity', 'activity-policy.json'), 'utf8'));
   assert.equal(isActivityPolicyApproved(policy), true);
   assert.equal(isActivityPolicyApproved({ ...policy, collection_enabled: false }), false);
   for (const key of Object.keys(policy)) {
@@ -1225,7 +1225,7 @@ test('the published notice permits consented collection and keeps both opt-in de
 });
 
 test('HTTP lab transport requires deployment permission and preserves authenticated HTTPS SDK semantics', async () => {
-  const policy = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8'));
+  const policy = JSON.parse(fs.readFileSync(path.join('web/activity', 'activity-policy.json'), 'utf8'));
   policy.collection_enabled = true;
   policy.lab_transport = { base_path: '/lab/api/course/activity', allow_http: true };
   const identity = { ...APPROVED_ARTIFACT, artifact_version: `git-${'a'.repeat(40)}-adapter-${'b'.repeat(64)}` };
@@ -1268,11 +1268,11 @@ test('HTTP lab transport requires deployment permission and preserves authentica
 }
 
 for (const COURSE_ROOT of COURSE_ROOTS) {
-const adapterUrl = pathToFileURL(path.resolve(COURSE_ROOT, 'scripts/_activity.js'));
-const runtimeUrl = pathToFileURL(path.resolve(COURSE_ROOT, 'scripts/_activity_runtime.js'));
+const adapterUrl = pathToFileURL(path.resolve('web/activity', '_activity.js'));
+const runtimeUrl = pathToFileURL(path.resolve('web/activity', '_activity_runtime.js'));
 const {ACTIVITY_ARTIFACT_ID} = await import(adapterUrl);
 test('course adapter writes independent milestones with the shared JavaScript facade', () => {
-  const source = fs.readFileSync(path.join(COURSE_ROOT, 'scripts/_activity.js'), 'utf8');
+  const source = fs.readFileSync(path.join('web/activity', '_activity.js'), 'utf8');
   assert.match(source, /activity\.completeMilestone\(milestoneRef/);
   assert.doesNotMatch(source, /progressPercent|activity\.progress\(/);
 });
@@ -1294,7 +1294,7 @@ test('concurrent authentication renewal cannot move live exercise evidence into 
   const remote = session_id => ({ session_id, completed_at: null, milestones: config.milestones.map(({ id: milestone_id }) => ({
     milestone_id, completed_at: marked.has(`${session_id}:${milestone_id}`) ? '2026-10-12T12:00:00Z' : null,
   })) });
-  const policy = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8'));
+  const policy = JSON.parse(fs.readFileSync(path.join('web/activity', 'activity-policy.json'), 'utf8'));
   policy.collection_enabled = true;
   const activity = createCourseActivity({ storageTarget: null,
     policyLoader: async () => policy,
@@ -1351,7 +1351,7 @@ test('concurrent authentication renewal cannot move live exercise evidence into 
 test('a failed SDK write that renews authentication cannot transfer the next pending milestone', async () => {
   const { createCourseActivity } = await import(adapterUrl);
   const config = { milestones: Object.keys((await import(adapterUrl)).ACTIVITY_MILESTONES).map(id => ({ id })) };
-  const policy = JSON.parse(fs.readFileSync(path.join(COURSE_ROOT, 'activity-policy.json'), 'utf8')); policy.collection_enabled = true;
+  const policy = JSON.parse(fs.readFileSync(path.join('web/activity', 'activity-policy.json'), 'utf8')); policy.collection_enabled = true;
   const sessionA = '019f38f1-e5ab-7688-af0d-0e8925299e93';
   const sessionB = '019f38f1-e5ab-7688-af0d-0e8925299e94';
   let sessions = 0;

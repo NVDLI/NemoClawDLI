@@ -26,11 +26,11 @@ T1="$(cd "$HERE/../.." && pwd)"  # repo root (implementation lives under scripts
 
 stage_activity_sdk() {
     local course_root="$1" target
-    target="$(dirname "$course_root")/shared"
+    target="$(dirname "$course_root")/activity"
     mkdir -p "$target"
-    cp "$T1/web/shared/activity-sdk.js" "$target/activity-sdk.js"
-    cmp -s "$T1/web/shared/activity-sdk.js" "$target/activity-sdk.js" || {
-        echo "[build_pages]   ERROR: staged activity SDK differs from source" >&2
+    cp -R "$T1/web/activity/." "$target/"
+    diff -qr "$T1/web/activity" "$target" || {
+        echo "[build_pages]   ERROR: staged Activity assets differ from source" >&2
         return 1
     }
 }
@@ -101,6 +101,8 @@ if [ "${BUILD_PAGES_PREFLIGHT_ONLY:-0}" = "1" ]; then
     exit 0
 fi
 
+python3 "$T1/scripts/validation/activity_milestone_contract.py"
+
 rm -rf "$OUT"; mkdir -p "$OUT"
 
 # ── 0. Rebase materials to the web's ground truth (best-effort), then refresh the gate ──
@@ -158,7 +160,7 @@ for c in nemoclaw; do
     echo "[build_pages]   $c -> $course_out/ ($(find "$course_out" -name '*.html' | wc -l) pages)"
 done
 
-# _activity.js resolves this shared facade two levels above the bundled scripts directory.
+# Activity runtime assets are shared siblings of every bundled course.
 stage_activity_sdk "$OUT/${COURSE_PREFIX:+$COURSE_PREFIX/}nemoclaw"
 
 # Declared previews are review surfaces, not releases, but a foyer link must still resolve in the
@@ -283,6 +285,7 @@ if [ -d "$T1/web/nemoclaw" ]; then
     cp "$T1/web/_skill_explorer.js" "$mirror_out/web/_skill_explorer.js"
     ( cd "$T1" && find web/nemoclaw -path 'web/nemoclaw/standalone' -prune -o -type f \
         -print0 | tar --null -cf - -T - ) | ( cd "$mirror_out" && tar -xf - )
+    stage_activity_sdk "$mirror_out/web/nemoclaw"
     test -f "$mirror_out/web/_skill_explorer.js"
     echo "[build_pages] validated source -> ${mirror_out%/}/web/nemoclaw/ ($(find "$mirror_out/web/nemoclaw" -type f | wc -l) files, read-only for the report preview)"
 fi

@@ -5,7 +5,7 @@ import { randomId } from "./_ids.js";
 export { randomId };
 
 // Optional tracking must not delay navigation, key setup or exercise helpers.
-void import("./_activity_runtime.js")
+void import("../../activity/_activity_runtime.js")
   .then(({ installNemoClawActivityTracking }) => installNemoClawActivityTracking())
   .catch(() => {});
 

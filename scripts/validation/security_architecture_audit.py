@@ -9,6 +9,7 @@ import argparse
 import copy
 import hashlib
 import json
+import tempfile
 import re
 import sys
 from html.parser import HTMLParser
@@ -118,7 +119,7 @@ def runtime_contract(root: Path) -> tuple[list[str], list[str]]:
         parser.feed(path.read_text(encoding="utf-8", errors="replace"))
         urls.extend(parser.urls)
         scripts.extend(parser.scripts)
-    for folder in (root / "web/nemoclaw/scripts", root / "scripts/cors-proxy"):
+    for folder in (root / "web/nemoclaw/scripts", root / "web/activity", root / "scripts/cors-proxy"):
         for path in sorted(folder.glob("*.js")):
             scripts.append(path.read_text(encoding="utf-8", errors="replace"))
     for text in scripts:
@@ -809,6 +810,14 @@ def self_test() -> list[str]:
     probe_stages, probe_jobs = ci_contract("stages: [test, deploy, review]\n\npages:\n  stage: deploy\n\nrelease_check:\n  stage: review\n")
     if probe_stages != ["test", "deploy", "review"] or probe_jobs != {"pages": "deploy", "release_check": "review"}:
         failures.append(f"CI observer missed a release topology change: {probe_stages}, {probe_jobs}")
+    with tempfile.TemporaryDirectory() as directory:
+        fixture = Path(directory)
+        activity = fixture / "web/activity"
+        activity.mkdir(parents=True)
+        (activity / "adapter.js").write_text('const ACTIVITY_BASE_URL = "https://new.activity.test";', encoding="utf-8")
+        hosts, _ = runtime_contract(fixture)
+        if "new.activity.test" not in hosts:
+            failures.append("runtime observer missed endpoint in relocated Activity directory")
     parser = RuntimeHTMLParser()
     parser.feed('<script src="https://new.cdn.test/app.js"></script>')
     declared = DECLARED_URL_RE.search('const MODEL_API_URL = `wss://new.model.test/v1`;')

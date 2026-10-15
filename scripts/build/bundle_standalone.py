@@ -917,6 +917,14 @@ def _self_test() -> int:
     return 0
 
 
+def _copy_activity_assets(source: Path, destination: Path) -> None:
+    """Preserve the shared Activity tree beside each standalone course."""
+    activity = source.parent / "activity"
+    target = destination.parent / "activity"
+    if activity.is_dir() and activity.resolve() != target.resolve():
+        shutil.copytree(activity, target, dirs_exist_ok=True)
+
+
 def _copy_linked_course_files(source: Path, destination: Path) -> list[str]:
     """Ship root JSON metadata and relative SKILL links without a filename allowlist."""
     skill = source / "SKILL.html"
@@ -991,7 +999,6 @@ def _first_file(*paths: Path) -> Path:
     raise FileNotFoundError(names)
 
 
-# Published OneTrust production notice for the public course host.
 NVIDIA_COOKIE_CONSENT_NOTICE = """<!-- OneTrust Cookies Consent Notice start for nvdli.github.io -->
 <script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js"  type="text/javascript" charset="UTF-8" data-domain-script="01a13400-6831-707e-9897-c2ef6262efc7" ></script>
 <script type="text/javascript">
@@ -1004,8 +1011,6 @@ var event = new Event('bannerLoaded');
 <!-- OneTrust Cookies Consent Notice end for nvdli.github.io -->"""
 
 
-# Policy destinations and labels match the NVIDIA Omniverse Labs footer.
-# Consent/analytics configuration is site-specific and is supplied separately.
 NVIDIA_POLICY_FOOTER = """<footer class="nvidia-policy-footer">
   <nav aria-label="NVIDIA legal and policies" lang="en">
     <ul>
@@ -1155,8 +1160,9 @@ def main() -> int:
         print(f"web/ not found at {web}", file=sys.stderr)
         return 1
 
-    if (web / "activity-policy.json").exists() or (web / "scripts/_activity.js").exists():
-        contract_findings = audit_course(web)
+    if (web / "COURSE_CANON.md").is_file() or (web.parent / "activity").is_dir():
+        contract_document = web.parent.parent / "docs/ACTIVITY_MILESTONES.md"
+        contract_findings = audit_course(web, document=contract_document if contract_document.is_file() else TASK1 / "docs/ACTIVITY_MILESTONES.md")
         if contract_findings:
             print("\n".join(contract_findings), file=sys.stderr)
             return 1
@@ -1194,6 +1200,14 @@ def main() -> int:
         kb = len(bundled.encode("utf-8")) / 1024
         print(f"  bundled {src.name:<28} → {dst.name}  ({kb:5.1f} KB)")
 
+    _copy_activity_assets(web, out)
+    if (web.parent / "activity").is_dir():
+        documentation = out / "docs/ACTIVITY_MILESTONES.md"
+        documentation.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(contract_document if contract_document.is_file() else TASK1 / "docs/ACTIVITY_MILESTONES.md", documentation)
+        skill = out / "SKILL.html"
+        if skill.is_file():
+            skill.write_text(skill.read_text(encoding="utf-8").replace("../../docs/ACTIVITY_MILESTONES.md", "docs/ACTIVITY_MILESTONES.md"), encoding="utf-8")
     linked_course_files = _copy_linked_course_files(web, out)
     if linked_course_files:
         print(f"  copied course metadata and SKILL-linked files ({', '.join(linked_course_files)})")
@@ -1300,7 +1314,7 @@ def main() -> int:
     projected_skills = project_artifact_navigation(out)
     print(f"  projected artifact-local navigation ({projected_skills} files)")
 
-    link_findings = artifact_link_audit.audit(out)
+    link_findings = artifact_link_audit.audit(out.parent, source_roots=[out])
     if link_findings:
         print("artifact link audit: FAIL", file=sys.stderr)
         for finding in link_findings:

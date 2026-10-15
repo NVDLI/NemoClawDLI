@@ -18,8 +18,14 @@ class ActivityMilestoneContractTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
-        self.course = Path(self.directory.name) / "novel-course"
-        self.course.mkdir()
+        self.root = Path(self.directory.name)
+        self.course = self.root / "web" / "novel-course"
+        self.course.mkdir(parents=True)
+        self.activity = self.course.parent / "activity"
+        self.activity.mkdir()
+        (self.course / "COURSE_CANON.md").write_text("fixture course")
+        (self.root / "docs").mkdir()
+        self.document = self.root / "docs/ACTIVITY_MILESTONES.md"
         self.config = {"schemaVersion": 1, "milestones": [
             {"id": "fixture:first", "label": "First exercise", "description": "Complete the first exercise.",
              "href": "lesson.html#exercise", "evidence": [
@@ -32,13 +38,13 @@ class ActivityMilestoneContractTests(unittest.TestCase):
         self.write(self.config)
         (self.course / "lesson.html").write_text('<html><body><div id="exercise"></div></body></html>')
         (self.course / "followup.html").write_text('<html><body><div id="result"></div><div id="cleanup"></div></body></html>')
-        rows = [f"| `{marker['id']}` | [{marker['label']}]({marker['href']}) | {marker['description']} |"
-                for marker in self.config["milestones"]]
-        (self.course / "ACTIVITY_MILESTONES.md").write_text(
-            "# Activity Milestones\n\n| ID | Exercise | Criteria |\n| --- | --- | --- |\n" + "\n".join(rows) + "\n")
+        self.write_source(self.config)
+
+    def write_source(self, config):
+        self.document.write_text("# Activity Milestones\n\n```json\n" + json.dumps(config, indent=2) + "\n```\n")
 
     def write(self, config):
-        (self.course / "activity_milestones.json").write_text(json.dumps(config))
+        (self.activity / "activity_milestones.json").write_text(json.dumps(config, indent=2) + "\n")
 
     def test_current_courses_have_required_home_contracts(self):
         self.assertEqual(audit(ROOT), [])
@@ -47,8 +53,8 @@ class ActivityMilestoneContractTests(unittest.TestCase):
         self.assertEqual(audit_course(self.course), [])
 
     def test_missing_or_renamed_required_files_fail(self):
-        for filename in ("ACTIVITY_MILESTONES.md", "activity_milestones.json"):
-            path = self.course / filename
+        for path in (self.document, self.activity / "activity_milestones.json"):
+            filename = path.name
             path.rename(path.with_suffix(".old"))
             self.assertTrue(audit_course(self.course), filename)
             path.with_suffix(".old").rename(path)
@@ -83,17 +89,93 @@ class ActivityMilestoneContractTests(unittest.TestCase):
         (self.course / "scripts/_activity_config.js").write_text("export const ACTIVITY_MILESTONES = {};\n")
         self.assertTrue(audit_course(self.course))
 
-    def test_bundler_copies_required_root_files_through_existing_discovery(self):
-        (self.course / "SKILL.html").write_text('<a href="ACTIVITY_MILESTONES.md">Activity Milestones</a>')
-        destination = Path(self.directory.name) / "bundle"
-        destination.mkdir()
-        copied = bundle_standalone._copy_linked_course_files(self.course, destination)
-        self.assertIn("ACTIVITY_MILESTONES.md", copied)
-        self.assertIn("activity_milestones.json", copied)
+    def test_write_generates_projection_and_refuses_invalid_targets(self):
+        from scripts.validation.activity_milestone_contract import audit
+        projection = self.activity / "activity_milestones.json"
+        projection.unlink()
+        self.assertEqual(audit(self.root, write=True), [])
+        self.assertEqual(json.loads(projection.read_text()), self.config)
+        before = projection.read_bytes()
+        changed = copy.deepcopy(self.config)
+        changed["milestones"][0]["href"] = "../escape.html#exercise"
+        self.write_source(changed)
+        self.assertTrue(audit(self.root, write=True))
+        self.assertEqual(projection.read_bytes(), before)
+
+    def test_missing_duplicate_and_malformed_json_blocks_fail(self):
+        for source in ("# Activity Milestones\n", self.document.read_text() * 2,
+                       "# Activity Milestones\n```json\n{broken}\n```\n"):
+            self.document.write_text(source)
+            self.assertTrue(audit_course(self.course))
+
+    def test_source_change_requires_regeneration(self):
+        changed = copy.deepcopy(self.config)
+        changed["milestones"][0]["label"] = "Updated exercise"
+        self.write_source(changed)
+        self.assertTrue(audit_course(self.course))
+        self.assertEqual(audit(self.root, write=True), [])
+        self.assertEqual(audit_course(self.course), [])
+
+    def test_malformed_evidence_refuses_generation(self):
+        for evidence in (None, {}, [{"page": "lesson.html", "target": "exercise"}],
+                         [{"event": 7, "page": "lesson.html", "target": "exercise"}]):
+            changed = copy.deepcopy(self.config)
+            changed["milestones"][0]["evidence"] = evidence
+            self.write_source(changed)
+            self.assertTrue(audit(self.root, write=True))
+
+    def test_sdk_invalid_evidence_never_replaces_projection(self):
+        projection = self.activity / "activity_milestones.json"
+        before = projection.read_bytes()
+        mutations = [
+            {"event": "click"}, {"requires": [0]}, {"requires": [True]},
+            {"matches": {"unsafe": {"nested": True}}}, {"matches": {"constructor": True}},
+            {"matches": {"hasAnswer": []}}, {"minimum": {"count": -1}},
+            {"minimum": {"count": True}}, {"minimum": {"count": 1.5}},
+            {"unknown": "field"},
+        ]
+        for mutation in mutations:
+            with self.subTest(mutation=mutation):
+                changed = copy.deepcopy(self.config)
+                changed["milestones"][0]["evidence"][0].update(mutation)
+                self.write_source(changed)
+                self.assertTrue(audit(self.root, write=True))
+                self.assertEqual(projection.read_bytes(), before)
+
+    def test_matching_unsafe_source_and_projection_fail(self):
+        changed = copy.deepcopy(self.config)
+        changed["milestones"][0]["evidence"][0]["page"] = "../escape.html"
+        self.write_source(changed)
+        self.write(changed)
+        self.assertTrue(audit_course(self.course))
+
+    def test_bundler_copies_complete_activity_as_sibling(self):
+        from scripts.build.bundle_standalone import _copy_activity_assets
+        (self.activity / "activity-sdk.js").write_text("export const fixture = true;")
+        nested = self.activity / "nested"
+        nested.mkdir()
+        (nested / "asset.txt").write_text("preserve all assets")
+        destination = self.root / "bundle/course"
+        destination.mkdir(parents=True)
+        _copy_activity_assets(self.course, destination)
+        self.assertEqual((destination.parent / "activity/nested/asset.txt").read_text(), "preserve all assets")
+
+    def test_link_audit_uses_deployment_boundary_for_scoped_course(self):
+        from scripts.validation import artifact_link_audit
+        delivered = self.root / "delivery"
+        course = delivered / "course"
+        course.mkdir(parents=True)
+        (delivered / "activity").mkdir()
+        (delivered / "activity/config.json").write_text("{}")
+        (course / "index.html").write_text('<a href="../activity/config.json">configuration</a>')
+        (delivered / "unrelated.html").write_text('<a href="missing.html">unrelated</a>')
+        self.assertEqual(artifact_link_audit.audit(delivered, source_roots=[course]), [])
+        (course / "index.html").write_text('<a href="../../escape.html">escape</a>')
+        self.assertTrue(artifact_link_audit.audit(delivered, source_roots=[course]))
+        self.assertTrue(artifact_link_audit.audit(delivered, source_roots=[self.root]))
 
     def test_bundler_refuses_missing_required_contract_before_assembly(self):
-        (self.course / "activity-policy.json").write_text("{}")
-        (self.course / "activity_milestones.json").unlink()
+        (self.activity / "activity_milestones.json").unlink()
         with patch("sys.argv", ["bundle_standalone.py", "--src", str(self.course), "--out", str(self.course / "output")]):
             self.assertEqual(bundle_standalone.main(), 1)
         self.assertFalse((self.course / "output").exists())
@@ -118,3 +200,16 @@ class ActivityMilestoneContractTests(unittest.TestCase):
         source = (course / "SKILL.html").read_text()
         self.assertIn('"source": "lesson-map.json"', source)
         self.assertIn('href="lesson-map.json"', source)
+
+    def test_activity_beacon_is_infrastructure_not_a_course(self):
+        from scripts.skills import gen_skill_hierarchy
+        root = Path(self.directory.name) / "graph"
+        activity = root / "web/activity"
+        activity.mkdir(parents=True)
+        (activity / "SKILL.html").write_text("activity")
+        with patch.object(gen_skill_hierarchy, "TASK1", root):
+            self.assertEqual(gen_skill_hierarchy.courses_in("web"), [])
+            gen_skill_hierarchy.gen_surface("web")
+        source = (root / "web/SKILL.html").read_text()
+        self.assertIn('"path": "web/activity/SKILL.html"', source)
+        self.assertIn('href="activity/SKILL.html"', source)

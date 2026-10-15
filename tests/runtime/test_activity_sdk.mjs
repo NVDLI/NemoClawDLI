@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { DLIActivity, DLIActivityError, ActivitySdkError, createActivityClient, createMemoryActivityStorage, createBrowserActivityStorage } from '../../web/shared/activity-sdk.js';
+import { DLIActivity, DLIActivityError, ActivitySdkError, createActivityClient, createMemoryActivityStorage, createBrowserActivityStorage } from '../../web/activity/activity-sdk.js';
 
 const sessionId='019f38f1-e5ab-7688-af0d-0e8925299e93';
 const artifact={artifact_id:'fixture-course',artifact_version:'v1',artifact_digest:'sha256:'+ 'a'.repeat(64)};

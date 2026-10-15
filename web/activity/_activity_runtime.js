@@ -8,8 +8,8 @@ import {
   ACTIVITY_REFERRALS,
   createNemoClawActivity,
 } from './_activity.js';
-import { localizeCourseUiText } from './_locale.js';
-import { bindActivityMilestones } from '../../shared/activity-sdk.js';
+import { localizeCourseUiText } from '../nemoclaw/scripts/_locale.js';
+import { bindActivityMilestones } from './activity-sdk.js';
 
 const EVIDENCE_KEY_PREFIX = 'dli_activity:nemoclaw:evidence:v1';
 const CHECKPOINT_CONTRACT_VERSION = '1';

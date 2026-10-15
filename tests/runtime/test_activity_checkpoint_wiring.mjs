@@ -7,32 +7,31 @@ import test from 'node:test';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 const COURSE_ROOTS = fs.readdirSync('web', {withFileTypes:true})
-  .filter(entry => entry.isDirectory() && (fs.existsSync(path.join('web', entry.name, 'activity-policy.json'))
-    || fs.existsSync(path.join('web', entry.name, 'scripts/_activity.js'))))
+  .filter(entry => entry.isDirectory() && fs.existsSync(path.join('web', entry.name, 'COURSE_CANON.md')))
   .map(entry => path.join('web', entry.name));
 assert.ok(COURSE_ROOTS.length, 'expected courses with milestone contracts');
 for (const COURSE_ROOT of COURSE_ROOTS) {
 const nativeFetch = globalThis.fetch;
 globalThis.fetch = async url => url instanceof URL && url.protocol === 'file:'
   ? new Response(fs.readFileSync(url, 'utf8')) : nativeFetch(url);
-const { installCourseActivityTracking, getInstalledCourseActivity, ACTIVITY_MILESTONE_ORDER } = await import(pathToFileURL(path.resolve(COURSE_ROOT, 'scripts/_activity_runtime.js')));
+const { installCourseActivityTracking, getInstalledCourseActivity, ACTIVITY_MILESTONE_ORDER } = await import(pathToFileURL(path.resolve('web/activity', '_activity_runtime.js')));
 globalThis.fetch = nativeFetch;
 
 const read = file => fs.readFileSync(path.join(COURSE_ROOT, file), 'utf8');
 
 test('Activity Milestones documentation matches every course definition and exercise', async () => {
-  const { ACTIVITY_MILESTONES } = await import(pathToFileURL(path.resolve(COURSE_ROOT, 'scripts/_activity.js')));
-  const doc = read('ACTIVITY_MILESTONES.md');
+  const { ACTIVITY_MILESTONES } = await import(pathToFileURL(path.resolve('web/activity', '_activity.js')));
+  const doc = fs.readFileSync('docs/ACTIVITY_MILESTONES.md', 'utf8');
   assert.match(doc, /^# Activity Milestones\n/);
-  const rows = [...doc.matchAll(/^\| `([^`]+)` \| \[([^\]]+)\]\(([^)]*)\) \| ([^|]+) \|$/gm)];
-  assert.deepEqual(rows.map(row => row[1]), Object.keys(ACTIVITY_MILESTONES));
-  for (const [, id, label, href, criteria] of rows) {
-    const milestone = ACTIVITY_MILESTONES[id];
-    assert.equal(label, milestone.label, id);
-    assert.equal(href, milestone.href, id);
-    assert.equal(criteria.trim(), milestone.description, id);
-    const [file, fragment] = href.split('#');
-    assert.ok(read(file).includes('id="' + fragment + '"'), id + ' exercise anchor');
+  const blocks = [...doc.matchAll(/^```json[ \t]*\n([\s\S]*?)^```[ \t]*$/gm)];
+  assert.equal(blocks.length, 1);
+  const { validateActivityMilestoneConfig } = await import('../../web/activity/activity-sdk.js');
+  const config = validateActivityMilestoneConfig(JSON.parse(blocks[0][1]));
+  assert.deepEqual(config.milestones.map(marker => marker.id), Object.keys(ACTIVITY_MILESTONES));
+  for (const milestone of config.milestones) {
+    assert.deepEqual(milestone, ACTIVITY_MILESTONES[milestone.id]);
+    const [file, fragment] = milestone.href.split('#');
+    assert.ok(read(file).includes('id="' + fragment + '"'), milestone.id + ' exercise anchor');
   }
 });
 const flush = () => new Promise(resolve => setImmediate(resolve));
@@ -148,8 +147,8 @@ test('success predicates survive denied sessionStorage', async () => {
 });
 
 test('every configured milestone retains success-only runtime evidence and the shared entrypoint installs tracking', () => {
-  const runtime = read('scripts/_activity_runtime.js');
-  const config = JSON.parse(read('activity_milestones.json'));
+  const runtime = fs.readFileSync('web/activity/_activity_runtime.js', 'utf8');
+  const config = JSON.parse(fs.readFileSync('web/activity/activity_milestones.json', 'utf8'));
   assert.deepEqual(config.milestones.map(({id}) => id), ACTIVITY_MILESTONE_ORDER);
   assert.match(runtime, /bindActivityMilestones/);
   for (const id of ACTIVITY_MILESTONE_ORDER) assert.equal(runtime.includes(id), false);
@@ -174,7 +173,7 @@ test('each independent checkpoint requires its full success predicate', async ()
     ['router-artifact', '02a:routed-workflow-complete'], ['rag-artifact', '02b:grounded-answer-complete'], ['deep-artifact', '02c:deep-research-complete'],
   ];
   for (const [containerId, id] of cases) {
-    const milestone = JSON.parse(read('activity_milestones.json')).milestones.find(marker => marker.id === id);
+    const milestone = JSON.parse(fs.readFileSync('web/activity/activity_milestones.json', 'utf8')).milestones.find(marker => marker.id === id);
     const f = fixture(milestone.href.split('#')[0]); try {
       for (const detail of [{ containerId, successCount: 0, hasAnswer: true }, { containerId, successCount: 1, hasAnswer: false }]) {
         dispatch(f.windowTarget, 'chat-completed', detail); await flush(); assert.deepEqual(f.milestones, []);
@@ -183,7 +182,7 @@ test('each independent checkpoint requires its full success predicate', async ()
     } finally { f.restore(); }
   }
   for (const [signal, id] of [['connection-audit-passed', '03a:nemoclaw-connected'], ['live-agent-operated', '04b:live-agent-operated']]) {
-    const milestone = JSON.parse(read('activity_milestones.json')).milestones.find(marker => marker.id === id);
+    const milestone = JSON.parse(fs.readFileSync('web/activity/activity_milestones.json', 'utf8')).milestones.find(marker => marker.id === id);
     const f = fixture(milestone.href.split('#')[0]); try { dispatch(f.windowTarget, signal); await flush(); assert.deepEqual(f.milestones, [id]); } finally { f.restore(); }
   }
 });

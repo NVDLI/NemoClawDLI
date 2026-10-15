@@ -6,11 +6,10 @@ import test from 'node:test';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 const COURSE_ROOTS = fs.readdirSync('web', {withFileTypes:true})
-  .filter(entry => entry.isDirectory() && (fs.existsSync(path.join('web', entry.name, 'activity-policy.json'))
-    || fs.existsSync(path.join('web', entry.name, 'scripts/_activity.js'))))
+  .filter(entry => entry.isDirectory() && fs.existsSync(path.join('web', entry.name, 'COURSE_CANON.md')))
   .map(entry => path.join('web', entry.name));
 assert.ok(COURSE_ROOTS.length, 'expected courses with milestone contracts');
-import * as sdkModule from '../../web/shared/activity-sdk.js';
+import * as sdkModule from '../../web/activity/activity-sdk.js';
 const contract = () => ({schemaVersion:1,milestones:[{id:'fixture:done',label:'Complete exercise',description:'Run the exercise successfully.',href:'lesson.html#exercise',evidence:[{event:'fixture:success',page:'lesson.html',target:'exercise',matches:{success:true},minimum:{count:1}}]}]});
 const session={session_id:'019f38f1-e5ab-7688-af0d-0e8925299e93',session_token:'fixture-token-long-enough',expires_at:'2099-01-01T00:00:00Z'};
 const artifact={artifact_id:'fixture-course',artifact_version:'v1',artifact_digest:'sha256:'+'a'.repeat(64)};
@@ -48,13 +47,13 @@ test('declarative ordered evidence and session replacement preserve live-only pa
  emit('fixture:success');emit('fixture:key');assert.deepEqual(reached,[]);binding.bindSession({sessionId:'a'});emit('fixture:success');assert.equal(reached.length,1);
  binding.bindSession({sessionId:'b'});emit('fixture:success');assert.equal(reached.length,1);emit('fixture:key');emit('fixture:success');assert.equal(reached.length,2);binding.dispose();
 });
-test('course home owns exactly one JSON definition source and its canonical Markdown',()=>{
- for(const root of COURSE_ROOTS){const config=JSON.parse(fs.readFileSync(path.join(root,'activity_milestones.json'),'utf8'));assert.ok(config.milestones.length>0);const doc=fs.readFileSync(path.join(root,'ACTIVITY_MILESTONES.md'),'utf8');assert.match(doc,/^# Activity Milestones\n/);const documented=[...doc.matchAll(/^\| `([^`]+)` \|/gm)].map(match=>match[1]);assert.deepEqual(config.milestones.map(marker=>marker.id),documented);assert.equal(fs.existsSync(path.join(root,'scripts/_activity_config.js')),false);}
+test('canonical Markdown owns the generated Activity JSON definition',()=>{
+ for(const root of COURSE_ROOTS){const config=JSON.parse(fs.readFileSync(path.join('web/activity','activity_milestones.json'),'utf8'));assert.ok(config.milestones.length>0);const doc=fs.readFileSync(path.join('docs','ACTIVITY_MILESTONES.md'),'utf8');assert.match(doc,/^# Activity Milestones\n/);const blocks=[...doc.matchAll(/^```json[ \t]*\n([\s\S]*?)^```[ \t]*$/gm)];assert.equal(blocks.length,1);assert.deepEqual(config,JSON.parse(blocks[0][1]));assert.equal(fs.existsSync(path.join(root,'scripts/_activity_config.js')),false);}
 });
 
 test('course module remains importable when its JSON config is unavailable',async()=>{
  const {execFileSync}=await import('node:child_process');
- for(const root of COURSE_ROOTS) execFileSync(process.execPath,['--input-type=module','-e',"globalThis.fetch=async()=>new Response('{}',{status:503}); const m=await import(process.argv[1]); if(m.ACTIVITY_CONFIG!==null || Object.keys(m.ACTIVITY_MILESTONES).length) process.exit(1);",pathToFileURL(path.resolve(root,'scripts/_activity.js')).href],{cwd:process.cwd()});
+ for(const root of COURSE_ROOTS) execFileSync(process.execPath,['--input-type=module','-e',"globalThis.fetch=async()=>new Response('{}',{status:503}); const m=await import(process.argv[1]); if(m.ACTIVITY_CONFIG!==null || Object.keys(m.ACTIVITY_MILESTONES).length) process.exit(1);",pathToFileURL(path.resolve('web/activity','_activity.js')).href],{cwd:process.cwd()});
 });
 
 test('invalid fetched JSON stops initialization before any Activity request and can be retried',async()=>{
@@ -97,6 +96,15 @@ test('real course navigation renders with JSON held and makes no Activity API re
  const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox']});let apiRequests=0;const held=[];
  try {const context=await browser.newContext();await context.route('**/*',route=>{const url=new URL(route.request().url());if(url.hostname==='activity-api.learn.nvidia.com'){apiRequests++;return route.abort();}if(url.pathname.endsWith('/activity_milestones.json')){held.push(route);return;}if(url.hostname!=='127.0.0.1')return route.abort();return route.continue();});
  const port=server.address().port;
- for(const root of COURSE_ROOTS){const config=JSON.parse(fs.readFileSync(path.join(root,'activity_milestones.json'),'utf8'));const firstLesson=config.milestones[0].href.split('#')[0];const completionPages=fs.readdirSync(root).filter(file=>file.endsWith('.html') && fs.readFileSync(path.join(root,file),'utf8').includes('id="finish-course"'));for(const lesson of new Set([firstLesson,...completionPages])){const page=await context.newPage();const configRequested=page.waitForRequest(request=>request.url().endsWith('/activity_milestones.json'));await page.goto(`http://127.0.0.1:${port}/${root}/${lesson}`,{waitUntil:'commit'});await configRequested;await page.waitForFunction(()=>document.querySelector('#nav')?.children.length>0);assert.equal(await page.evaluate(async()=>typeof(await import('./scripts/_shared.js')).getModelId),'function');assert.equal(apiRequests,0);assert.ok(held.length>0);await page.close();}}
+ for(const root of COURSE_ROOTS){const config=JSON.parse(fs.readFileSync(path.join('web/activity','activity_milestones.json'),'utf8'));const firstLesson=config.milestones[0].href.split('#')[0];const completionPages=fs.readdirSync(root).filter(file=>file.endsWith('.html') && fs.readFileSync(path.join(root,file),'utf8').includes('id="finish-course"'));for(const lesson of new Set([firstLesson,...completionPages])){const page=await context.newPage();const configRequested=page.waitForRequest(request=>request.url().endsWith('/activity_milestones.json'));await page.goto(`http://127.0.0.1:${port}/${root}/${lesson}`,{waitUntil:'commit'});await configRequested;await page.waitForFunction(()=>document.querySelector('#nav')?.children.length>0);assert.equal(await page.evaluate(async()=>typeof(await import('./scripts/_shared.js')).getModelId),'function');assert.equal(apiRequests,0);assert.ok(held.length>0);await page.close();}}
  }finally{await Promise.all(held.map(route=>route.abort().catch(()=>{})));await browser.close();await new Promise(resolve=>server.close(resolve));}
+});
+
+test('Activity browser runtime is isolated from the course directory',()=>{
+ for(const file of ['activity-sdk.js','_activity.js','_activity_runtime.js','activity-policy.json','activity_milestones.json']) assert.ok(fs.existsSync('web/activity/'+file),file);
+ const adapter=fs.readFileSync('web/activity/_activity.js','utf8');
+ assert.match(adapter,/new URL\('\.\/activity_milestones\.json', import\.meta\.url\)/);
+ assert.match(adapter,/new URL\('\.\/activity-policy\.json', import\.meta\.url\)/);
+ assert.match(fs.readFileSync('web/activity/_activity_runtime.js','utf8'),/from '\.\.\/nemoclaw\/scripts\/_locale\.js'/);
+ assert.match(fs.readFileSync('web/nemoclaw/scripts/_shared.js','utf8'),/import\("\.\.\/\.\.\/activity\/_activity_runtime\.js"\)/);
 });

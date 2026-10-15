@@ -1,15 +1,15 @@
 // Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { DLIActivity, createBrowserActivityStorage, loadActivityMilestoneConfig } from '../../shared/activity-sdk.js';
-export const ACTIVITY_CONFIG_URL = new URL('../activity_milestones.json', import.meta.url);
+import { DLIActivity, createBrowserActivityStorage, loadActivityMilestoneConfig } from './activity-sdk.js';
+export const ACTIVITY_CONFIG_URL = new URL('./activity_milestones.json', import.meta.url);
 export const ACTIVITY_CONFIG = await loadActivityMilestoneConfig(ACTIVITY_CONFIG_URL).catch(() => null);
 export const ACTIVITY_MILESTONES = Object.freeze(Object.fromEntries((ACTIVITY_CONFIG?.milestones || []).map(marker => [marker.id, marker])));
 export const ACTIVITY_MILESTONE_ORDER = Object.freeze((ACTIVITY_CONFIG?.milestones || []).map(marker => marker.id));
 
 export const BUILD_SIGNUP_URL = 'https://build.nvidia.com/?ncid=ref-dli-146986';
 const ACTIVITY_BASE_URL = 'https://activity-api.learn.nvidia.com';
-const ACTIVITY_POLICY_URL = new URL('../activity-policy.json', import.meta.url);
+const ACTIVITY_POLICY_URL = new URL('./activity-policy.json', import.meta.url);
 const PAGES_MANIFEST = 'pages-sha256.txt';
 const MATERIALIZED_MANIFEST = 'materialized-sha256.txt';
 
