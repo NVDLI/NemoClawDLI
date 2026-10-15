@@ -243,30 +243,53 @@ class RuntimeArtifactLocaleTests(unittest.TestCase):
 
 
 class RuntimeBrowserFixtureTests(unittest.TestCase):
-    def test_runtime_audit_rejects_delayed_cookie_notice_before_exercises(self):
+    def test_runtime_audit_keeps_declined_consent_across_navigation(self):
         prefix = RUNTIME_JS.split("(async () => {", 1)[0]
         checks = r"""
 (async () => {
   const assert = require('assert/strict');
   const browser = await chromium.launch({executablePath: process.env.CHROME_BIN, headless:true, args:['--no-sandbox']});
+  let sdkRequests = 0;
+  const stub = 'https://cdn.cookielaw.org/scripttemplates/otSDKStub.js';
+  const custom = 'https://images.nvidia.com/aem-dam/Solutions/ot-js/ot-custom.js';
+  const document = `<script data-domain-script="fixture" src="${stub}"></script>
+    <script src="${custom}"></script><button id="exercise" onclick="window.exerciseClicked=true">Run</button>`;
   try {
-    const page = await browser.newPage();
-    await page.setContent(`<script data-domain-script="fixture"></script>
-      <button id="exercise" onclick="window.exerciseClicked=true">Run</button>
-      <script>window.OneTrust = {RejectAll() {
-        window.cookieRejected = true;
-        document.querySelector('.onetrust-pc-dark-filter').style.display = 'none';
-      }};
-      setTimeout(() => {
-        const notice = document.createElement('div');
-        notice.id = 'onetrust-consent-sdk';
-        notice.innerHTML = '<div class="onetrust-pc-dark-filter" style="position:fixed;inset:0;z-index:100"></div>';
-        document.body.appendChild(notice);
-      }, 100);</script>`);
-    await dismissCookieNotice(page);
-    await page.locator('#exercise').click({timeout:1000});
-    assert.equal(await page.evaluate(() => window.cookieRejected), true);
-    assert.equal(await page.evaluate(() => window.exerciseClicked), true);
+    const auditBrowser = {newPage: async options => {
+      const page = await browser.newPage(options);
+      await page.route(url('/consent-fixture.html'), route => route.fulfill({contentType:'text/html', body:document}));
+      await page.route(stub, route => {
+        sdkRequests++;
+        return route.fulfill({contentType:'text/javascript', body:`
+          window.OneTrust = {IsAlertBoxClosed:()=>true, RejectAll() {
+            document.querySelector('.onetrust-pc-dark-filter').hidden = true;
+            setTimeout(() => location.reload(), 10);
+          }};
+          document.addEventListener('DOMContentLoaded', () => {
+            const notice = document.createElement('div'); notice.id = 'onetrust-consent-sdk';
+            notice.innerHTML = '<div class="onetrust-pc-dark-filter" style="position:fixed;inset:0;z-index:100"></div>';
+            document.body.appendChild(notice);
+          });`});
+      });
+      await page.route(custom, route => {sdkRequests++; return route.fulfill({contentType:'text/javascript', body:''});});
+      return page;
+    }};
+    const {page} = await open(auditBrowser, '/consent-fixture.html');
+    assert.equal(sdkRequests, 0, 'runtime fixtures must not execute the reloading cookie SDK');
+    for (let navigation = 0; navigation < 2; navigation++) {
+      if (navigation) await page.reload();
+      const consent = await page.evaluate(() => {
+        let changes = 0, events = 0;
+        OneTrust.OnConsentChanged(() => changes++);
+        window.addEventListener('OneTrustGroupsUpdated', () => events++);
+        OneTrust.RejectAll();
+        return {closed:OneTrust.IsAlertBoxClosed(), groups:window.OnetrustActiveGroups, changes, events};
+      });
+      assert.deepEqual(consent, {closed:true, groups:',C0001,', changes:1, events:1});
+      await page.locator('#exercise').click({timeout:1000});
+      assert.equal(await page.evaluate(() => window.exerciseClicked), true);
+    }
+    assert.equal(sdkRequests, 0);
   } finally { await browser.close(); }
 })().catch(error => {console.error(error);process.exitCode=1;});
 """

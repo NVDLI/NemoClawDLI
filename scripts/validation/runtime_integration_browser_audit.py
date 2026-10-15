@@ -131,6 +131,7 @@ const timeoutMs = Number(process.env.AUDIT_TIMEOUT_MS || 120000);
 const locales = JSON.parse(process.env.ARTIFACT_LOCALES);
 const english = locales.find(locale => locale.code === 'en');
 const retiredBillingHeader = 'x-billing-' + 'source';
+let activityRequests = 0;
 const mime = { '.html':'text/html; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.css':'text/css; charset=utf-8', '.json':'application/json; charset=utf-8', '.svg':'image/svg+xml', '.png':'image/png', '.woff2':'font/woff2' };
 
 function safeJoin(base, urlPath) {
@@ -246,27 +247,45 @@ function courseExplorerPath() {
   return found;
 }
 
-async function dismissCookieNotice(page) {
-  if (!await page.locator('script[data-domain-script]').count()) return;
-  await page.waitForFunction(() => typeof window.OneTrust?.RejectAll === 'function'
-      && document.querySelector('#onetrust-consent-sdk'),
-    null, { timeout: Math.min(timeoutMs, 45000) });
-  // Consent flows have separate tests; keep telemetry off here.
-  await page.evaluate(() => window.OneTrust.RejectAll());
-  await page.locator('.onetrust-pc-dark-filter').last().waitFor({ state: 'hidden' });
+async function installDeclinedConsent(page) {
+  // The live SDK can reload after rejection and erase exercise fixtures.
+  await page.route('https://cdn.cookielaw.org/scripttemplates/otSDKStub.js', route => route.fulfill({
+    contentType: 'text/javascript', body: `
+      const listeners = new Set();
+      window.OneTrust = {
+        IsAlertBoxClosed: () => true,
+        OnConsentChanged: listener => listeners.add(listener),
+        UpdateConsent() { throw new Error('Runtime audit keeps optional cookies disabled'); },
+        RejectAll() {
+          window.OnetrustActiveGroups = ',C0001,';
+          window.OptanonActiveGroups = ',C0001,';
+          for (const listener of listeners) listener();
+          window.dispatchEvent(new Event('OneTrustGroupsUpdated'));
+        },
+      };
+      window.OneTrust.RejectAll();
+      window.dispatchEvent(new Event('bannerLoaded'));
+    `,
+  }));
+  await page.route('https://images.nvidia.com/aem-dam/Solutions/ot-js/ot-custom.js', route => route.fulfill({
+    contentType: 'text/javascript', body: '',
+  }));
 }
 
 async function open(browser, pageName, init) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const errors = [];
   page.on('pageerror', error => errors.push(error.message || String(error)));
-  await page.route('https://activity-api.learn.nvidia.com/**', route => route.fulfill({
-    status: 503, contentType: 'application/json', body: '{"error":"audit service unavailable"}',
-  }));
+  await installDeclinedConsent(page);
+  await page.route('https://activity-api.learn.nvidia.com/**', route => {
+    activityRequests++;
+    return route.fulfill({
+      status: 503, contentType: 'application/json', body: '{"error":"audit service unavailable"}',
+    });
+  });
   if (init) await page.addInitScript({ content: topLevelInitScript(init) });
   const response = await page.goto(url(pageName), { waitUntil: 'domcontentloaded', timeout: timeoutMs });
   if (!response?.ok()) fail(`course route failed: ${pageName} (${response?.status()})`);
-  await dismissCookieNotice(page);
   return { page, errors };
 }
 
@@ -1088,6 +1107,8 @@ async function openLocale(browser, language, filename, init) {
       cronContract: true, policyContract: true, translatedGuidanceChecked: !!connectionPattern };
   }
 
+  if (activityRequests) fail(`Activity API received ${activityRequests} requests without consent`);
+  results.activityRequests = activityRequests;
   await browser.close();
   server.close();
   console.log(JSON.stringify({ ok: true, root, results }, null, 2));
