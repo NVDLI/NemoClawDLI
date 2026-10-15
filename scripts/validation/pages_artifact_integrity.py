@@ -26,6 +26,9 @@ from urllib.request import Request, urlopen
 
 MANIFEST_NAME = "pages-sha256.txt"
 MANIFEST_SCHEMA = "nemoclaw-pages-sha256/1"
+CONSENT_STUB = "https://cdn.cookielaw.org/scripttemplates/otSDKStub.js"
+CONSENT_CUSTOM = "https://images.nvidia.com/aem-dam/Solutions/ot-js/ot-custom.js"
+CONSENT_NOTICE_ID = "01a13400-6831-707e-9897-c2ef6262efc7"
 REQUIRED_ROOT = (
     "index.html",
     "branches.json",
@@ -144,8 +147,15 @@ class ExecutableReferenceParser(HTMLParser):
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = {name.lower(): value or "" for name, value in attrs}
         tag = tag.lower()
-        if tag == "script" and remote(values.get("src", "")):
-            self.findings.append(f"remote script source {values['src']}")
+        if tag == "script":
+            names = [name.lower() for name, _ in attrs]
+            if len(names) != len(set(names)):
+                self.findings.append("duplicate script attributes")
+            src = values.get("src", "")
+            consent = src == CONSENT_CUSTOM or (
+                src == CONSENT_STUB and values.get("data-domain-script") == CONSENT_NOTICE_ID)
+            if remote(src) and not consent:
+                self.findings.append(f"remote script source {src}")
         if tag == "link" and "stylesheet" in values.get("rel", "").lower().split() and remote(values.get("href", "")):
             self.findings.append(f"remote stylesheet source {values['href']}")
         if tag == "base" and remote(values.get("href", "")):
@@ -447,6 +457,37 @@ def verify_deployment(
 
 def self_test() -> list[str]:
     failures: list[str] = []
+    consent_scripts = (
+        ('https://cdn.cookielaw.org/scripttemplates/otSDKStub.js',
+         ' data-domain-script="01a13400-6831-707e-9897-c2ef6262efc7"'),
+        ('https://images.nvidia.com/aem-dam/Solutions/ot-js/ot-custom.js', ''),
+    )
+    for src, attrs in consent_scripts:
+        parser = ExecutableReferenceParser()
+        parser.feed(f'<script src="{src}"{attrs}></script>')
+        if parser.findings:
+            failures.append(f"published consent script was rejected: {src}")
+        for changed in (src.replace('https:', 'http:'), src.replace('https:', ''),
+                        src + '?override=1', src + '/extra.js',
+                        src.replace('.js', '-test.js'), src.replace('.org/', '.org.evil.invalid/'),
+                        src.replace('.com/', '.com.evil.invalid/')):
+            if changed == src:
+                continue
+            parser = ExecutableReferenceParser()
+            parser.feed(f'<script src="{changed}"{attrs}></script>')
+            if not parser.findings:
+                failures.append(f"unapproved consent script variant escaped: {changed}")
+        for duplicate in (f'src="https://evil.invalid/x.js" src="{src}"',
+                          f'src="{src}" src="/local.js"'):
+            parser = ExecutableReferenceParser()
+            parser.feed(f'<script {duplicate}{attrs}></script>')
+            if not parser.findings:
+                failures.append("duplicate script source escaped")
+    for attrs in ('', ' data-domain-script="wrong-notice"'):
+        parser = ExecutableReferenceParser()
+        parser.feed(f'<script src="{consent_scripts[0][0]}"{attrs}></script>')
+        if not parser.findings:
+            failures.append("unapproved consent notice escaped")
     fixture_sha = "a" * 40
     valid_report = {
         "schema": "bundle-validation/1",
