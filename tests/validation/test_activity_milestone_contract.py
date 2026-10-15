@@ -155,10 +155,13 @@ class ActivityMilestoneContractTests(unittest.TestCase):
         nested = self.activity / "nested"
         nested.mkdir()
         (nested / "asset.txt").write_text("preserve all assets")
+        renderer = self.course.parent / "_skill_explorer.js"
+        renderer.write_text("fixture renderer")
         destination = self.root / "bundle/course"
         destination.mkdir(parents=True)
         _copy_activity_assets(self.course, destination)
         self.assertEqual((destination.parent / "activity/nested/asset.txt").read_text(), "preserve all assets")
+        self.assertEqual((destination.parent / "_skill_explorer.js").read_bytes(), renderer.read_bytes())
 
     def test_link_audit_uses_deployment_boundary_for_scoped_course(self):
         from scripts.validation import artifact_link_audit

@@ -233,6 +233,11 @@ test('the default Pages layout ships the public activity SDK at its imported pat
     path.join(output, 'i18n', 'novel', 'web', COURSE_ID),
   ]) {
     execFileSync('bash', ['scripts/build/build_pages.sh', '--stage-activity-sdk', courseRoot]);
+    assert.deepEqual(
+      fs.readFileSync(path.resolve(courseRoot, '../_skill_explorer.js')),
+      fs.readFileSync('web/_skill_explorer.js'),
+      `${courseRoot}: Activity directory explorer must preserve its shared renderer`,
+    );
     for (const file of ['activity-sdk.js', '_activity.js', '_activity_runtime.js', 'activity-policy.json', 'activity_milestones.json']) {
       assert.deepEqual(
         fs.readFileSync(path.resolve(courseRoot, '../activity', file)),

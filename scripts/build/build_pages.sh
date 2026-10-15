@@ -29,6 +29,7 @@ stage_activity_sdk() {
     target="$(dirname "$course_root")/activity"
     mkdir -p "$target"
     cp -R "$T1/web/activity/." "$target/"
+    cp "$T1/web/_skill_explorer.js" "$(dirname "$target")/_skill_explorer.js"
     diff -qr "$T1/web/activity" "$target" || {
         echo "[build_pages]   ERROR: staged Activity assets differ from source" >&2
         return 1

@@ -923,6 +923,10 @@ def _copy_activity_assets(source: Path, destination: Path) -> None:
     target = destination.parent / "activity"
     if activity.is_dir() and activity.resolve() != target.resolve():
         shutil.copytree(activity, target, dirs_exist_ok=True)
+    explorer = source.parent / "_skill_explorer.js"
+    delivered_explorer = target.parent / explorer.name
+    if activity.is_dir() and explorer.is_file() and explorer.resolve() != delivered_explorer.resolve():
+        shutil.copy2(explorer, delivered_explorer)
 
 
 def _copy_linked_course_files(source: Path, destination: Path) -> list[str]:
