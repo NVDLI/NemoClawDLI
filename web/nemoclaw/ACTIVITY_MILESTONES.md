@@ -1,6 +1,6 @@
 # Activity Milestones
 
-`activity_milestones.json` is the course-owned definition source. The shared JavaScript SDK reads it during initialization, registers only IDs, labels and descriptions for the authorized session, and binds each configured success event to its page and target element. The checklist uses those same definitions. Clicking or viewing a page never awards a milestone.
+`activity_milestones.json` is the course-owned definition source. The shared JavaScript SDK reads it during initialization for local instrumentation and binds each configured success event to its page and target element. The checklist uses those same definitions. Clicking or viewing a page never awards a milestone.
 
 | Milestone ID | Milestone and exercise | Acceptance criteria |
 | --- | --- | --- |
@@ -16,7 +16,7 @@
 | `04a:policy-boundary-verified` | [Check the policy boundary](04a-safety.html#cell-live-policy) | Read the live agent policy, then confirm the policy comparison agrees. |
 | `04b:live-agent-operated` | [Operate a live agent](04b-modern-clis.html#agent-chat) | Send a non-command message to the live agent and receive a successful response. |
 
-The API definition projection is bounded to 64 KiB of compact UTF-8 JSON across the list. Labels and descriptions exclude NUL characters.
+Local milestone metadata is bounded to 64 KiB of compact UTF-8 JSON across the list. Labels and descriptions exclude NUL characters. Session creation sends only artifact ID, version and digest; a completed milestone update sends its ID. The service's trusted registration workflow consumes the same course definitions separately.
 
 All evidence rules for a milestone must succeed. Fixed event detail matches and minimum counts describe each producer's success evidence; `requires` indexes require earlier live evidence. Multipart evidence stays within one authorized session. Fresh work collected before consent can bind once, while stored hints and a replaced session cannot supply a partner. No keys, prompts, model responses or terminal output enter Activity payloads. These browser interactions do not establish certification or entitlement evidence.
 
