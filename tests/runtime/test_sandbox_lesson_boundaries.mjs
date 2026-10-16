@@ -11,8 +11,11 @@ import {spawnSync, spawn} from 'node:child_process';
 
 const html = fs.readFileSync(new URL('../../web/nemoclaw/04a-safety.html', import.meta.url), 'utf8');
 const mounts = new Map();
-const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)];
-const script = scripts.at(-1)[1].replace(/^import .*?;\s*$/gm, '');
+const moduleTag = '<script type="module">';
+const moduleStart = html.lastIndexOf(moduleTag);
+const moduleEnd = html.indexOf('</script>', moduleStart);
+assert(moduleStart >= 0 && moduleEnd > moduleStart, 'authored lesson module must be complete');
+const script = html.slice(moduleStart + moduleTag.length, moduleEnd).replace(/^import .*?;\s*$/gm, '');
 const noop = () => {};
 vm.runInNewContext(script, {
   document: {getElementById: () => ({}), querySelector: () => null},
