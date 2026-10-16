@@ -29,6 +29,7 @@ let failDirectTerminal = false;
 let terminalResult = 'exit';
 let terminalExitCode = 0;
 let terminalFrames = null;
+let terminalArgumentMode = 'quoted';
 class FakeWebSocket {
   static OPEN = 1;
   constructor(url) {
@@ -46,14 +47,23 @@ class FakeWebSocket {
       this.onopen?.();
       const command = new URL(url).searchParams.get('cmd') || '';
       terminalCommands.push(command);
-      const frames = terminalFrames
-        ? terminalFrames(command)
+      const argumentProbe = command === "printf %s 'DLI-ARG a b-END'";
+      let inspectedCommand = command;
+      if (command.startsWith('python3 -c ')) {
+        const wrapped = /^python3 -c __import__\('os'\)\.execl\('\/bin\/sh','sh','-c',__import__\('base64'\)\.b64decode\('([A-Za-z0-9+/=]*)'\)\.decode\('utf-8'\)\)$/.exec(command);
+        assert(wrapped, 'encoded policy script must use the exact single-argument wrapper');
+        inspectedCommand = Buffer.from(wrapped[1], 'base64').toString('utf8');
+      }
+      const frames = argumentProbe
+        ? [{type:'data',data:terminalArgumentMode === 'quoted' ? 'DLI-ARG a b-END' : "'DLI-ARGab-END'"}]
+        : terminalFrames
+        ? terminalFrames(inspectedCommand)
         : [{ type: 'data', data: command.endsWith('http://127.0.0.1/api/agent')
           ? JSON.stringify({ agent: { dashboardUrl: '/#token=test-gateway-token' } })
           : JSON.stringify({ status: 'ok' }) }];
       for (const frame of frames) this.onmessage?.({ data: JSON.stringify(frame) });
       if (terminalResult === 'exit') {
-        this.onmessage?.({ data: JSON.stringify({ type: 'exit', code: terminalExitCode }) });
+        this.onmessage?.({ data: JSON.stringify({ type: 'exit', code: argumentProbe ? 0 : terminalExitCode }) });
       }
       if (terminalResult !== 'pending') this.close();
     }, 0);
@@ -327,8 +337,9 @@ test('policyGet keeps legacy PTY diagnostics outside YAML without stripping simi
   }
 });
 
-test('policyGet shell wrapper preserves streams and exit status through a real outer shell', async () => {
+for (const mode of ['quoted', 'whitespace']) test('policyGet preserves streams and exit status through real ' + mode + ' argument parsing', async () => {
   connection.setOpenClawConnection({ rawUrl:launchable, accessProvider:'pomerium', accessSession:'' });
+  terminalArgumentMode = mode;
   terminalCommands.length = 0;
   terminalFrames = command => {
     const stdoutMarker = command.match(/__DLI_OPENSHELL_POLICY_STDOUT_END_[a-z0-9]+__/)?.[0];
@@ -339,6 +350,7 @@ test('policyGet shell wrapper preserves streams and exit status through a real o
   const fakeOpenShell = path.join(fakeBin, 'openshell');
   fs.writeFileSync(fakeOpenShell, [
     '#!/bin/sh',
+    '[ "$1" = policy ] && [ "$2" = get ] && [ "$3" = learner-agent ] && [ "$4" = --full ] || exit 125',
     "printf '%s\\n' 'active policy'",
     "printf '%s\\n' '---'",
     "printf '%s\\n' 'message: \"$HOME $(whoami) `uname`\"'",
@@ -348,9 +360,10 @@ test('policyGet shell wrapper preserves streams and exit status through a real o
   try {
     await openshell.policyGet('learner-agent', { idleMs:20 });
     const transportCommand = terminalCommands.at(-1);
-    assert.match(transportCommand, /^sh -c '/);
-    const result = await execFileAsync('sh', ['-c', transportCommand], {
-      env: { ...process.env, PATH: fakeBin + path.delimiter + process.env.PATH },
+    const argv = mode === 'quoted' ? ['sh','-c',transportCommand] : transportCommand.split(/\s+/);
+    assert.match(transportCommand, mode === 'quoted' ? /^sh -c '/ : /^python3 -c /);
+    const result = await execFileAsync(argv[0], argv.slice(1), {
+      env: { PATH: fakeBin + ':/usr/local/bin:/usr/bin:/bin' },
     });
     assert.fail('expected policy command failure, got ' + result.stdout);
   } catch (error) {
@@ -360,6 +373,7 @@ test('policyGet shell wrapper preserves streams and exit status through a real o
     assert.equal(error.stderr, '');
   } finally {
     terminalFrames = null;
+    terminalArgumentMode = 'quoted';
     fs.rmSync(fakeBin, { recursive: true, force: true });
   }
 });

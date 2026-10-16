@@ -954,10 +954,15 @@ async function openLocale(browser, language, filename, init) {
         },
         sandboxExec:async (command, {signal} = {}) => {
           if (signal !== controller.signal || historyReads !== 2) throw new Error('file read lost signal or preceded completed run');
+          if (command === "printf %s 'DLI-ARG a b-END'")
+            return {exitCode:0,completion:'exit',output:"'DLI-ARGab-END'"};
+          const wrapped = /^python3 -c __import__\('os'\)\.execl\('\/bin\/sh','sh','-c',__import__\('base64'\)\.b64decode\('([A-Za-z0-9+/=]*)'\)\.decode\('utf-8'\)\)$/.exec(command);
+          if (!wrapped) throw new Error('readback lost its encoded sandbox command');
+          command = new TextDecoder().decode(Uint8Array.from(atob(wrapped[1]), character => character.charCodeAt(0)));
           const file = command.match(/base64 < '([^']+)'/)?.[1];
           if (file !== state.cronFile) throw new Error('readback did not inspect the scheduled file');
           reads.push(file);
-          return {exitCode:0,output:'\x1e'+btoa(state.cronReference+'\n')+'\x1f'};
+          return {exitCode:0,completion:'exit',output:'\x1e'+btoa(state.cronReference+'\n')+'\x1f'};
         },
       };
       window.WebSocket = GatewaySocket;
@@ -1022,12 +1027,18 @@ async function openLocale(browser, language, filename, init) {
       class FakeWebSocket {
         static OPEN = 1;
         constructor(url) {
-          const wrapped = new URL(url).searchParams.get('cmd') || '';
+          let wrapped = new URL(url).searchParams.get('cmd') || '';
+          const argumentProbe = wrapped === "printf %s 'DLI-ARG a b-END'";
+          if (wrapped.startsWith('python3 -c ')) {
+            const encoded = /^python3 -c __import__\('os'\)\.execl\('\/bin\/sh','sh','-c',__import__\('base64'\)\.b64decode\('([A-Za-z0-9+/=]*)'\)\.decode\('utf-8'\)\)$/.exec(wrapped);
+            if (!encoded) throw new Error('policy fixture received malformed encoded transport');
+            wrapped = new TextDecoder().decode(Uint8Array.from(atob(encoded[1]), character => character.charCodeAt(0)));
+          }
           const command = wrapped.match(/openshell policy get policy-audit-agent --full/)?.[0];
           const stdoutMarker = wrapped.match(/__DLI_OPENSHELL_POLICY_STDOUT_END_[A-Za-z0-9_-]+__/)?.[0];
           const stderrMarker = wrapped.match(/__DLI_OPENSHELL_POLICY_STDERR_END_[A-Za-z0-9_-]+__/)?.[0];
-          if (!command || !stdoutMarker || !stderrMarker) throw new Error('policy fixture received unframed transport command');
-          window.__policyCommands.push(command);
+          if (!argumentProbe && (!command || !stdoutMarker || !stderrMarker)) throw new Error('policy fixture received unframed transport command');
+          if (!argumentProbe) window.__policyCommands.push(command);
           this.readyState = 0;
           setTimeout(() => {
             this.readyState = 1;
@@ -1035,7 +1046,7 @@ async function openLocale(browser, language, filename, init) {
             setTimeout(() => {
               // Model stdout and stderr separately in the legacy one-stream
               // transport. The policy parser must see both generated boundaries.
-              this.onmessage?.({ data: JSON.stringify({ data: transcript + '\n' + stdoutMarker
+              this.onmessage?.({ data: JSON.stringify({ data: argumentProbe ? "'DLI-ARGab-END'" : transcript + '\n' + stdoutMarker
                 + '\nConnection to 172.18.0.1 closed.\n' + stderrMarker + '\n' }) });
               this.onmessage?.({ data: JSON.stringify({ type: 'exit', code: 0 }) });
               this.readyState = 3;

@@ -5,6 +5,11 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Preserve shell command boundaries across launchable argument parsers so workspace readback,
+  skill installation, and policy parsing work. Compact flow diagrams and settle individual
+  node runs after completion or Stop. Release failed gateway handshakes before an explicit retry.
+  Thanks to Vadim Kudlay and the course tester for the reproduced failures.
+
 - Scope the production consent notice to its registered HTTPS host, show progress synchronization
   failures with a reconnect action, and check artifact integrity before merge. Complete milestone
   UI translation drafts in the four supported locales. Thanks to Vadim Kudlay for the refresh report.

@@ -385,18 +385,26 @@ async function connectedSandbox(agent, signal) {
 
 // Run a command inside the connected sandbox and return its observed output and status.
 // The command rides the cmd= query string rather than being retyped into the PTY.
-export async function sandboxExec(command, { agent = null, idleMs = 8000, totalMs = 30000, signal = null } = {}) {
-  /* @doc <code>helpers.sandboxExec(command, {agent})</code> ::
+export async function sandboxExec(command, { agent = null, idleMs = 8000, totalMs = 30000, signal = null, shell = false } = {}) {
+  /* @doc <code>helpers.sandboxExec(command, {agent, shell})</code> ::
        Run <code>command</code> inside your live OpenShell sandbox via <code>openshell sandbox
        exec</code> and return its output and status. A failure alone does not identify which
        mechanism rejected an operation. Discovers the
        sandbox name if <code>agent</code> is omitted. Use it to confirm a
        <code>helpers.evalSandboxNetwork</code> / <code>evalSandboxFs</code> prediction against
-       the running sandbox. Launchable only.
+       the running sandbox. Set <code>shell: true</code> for shell expressions, quotes, or
+       redirections; the script runs only inside the sandbox and retains its exit status.
+       Whitespace-splitting launchables require sandbox Python 3 for this mode. Launchable only.
   */
   const {name, baseUrl} = await connectedSandbox(agent, signal);
-  const res = await terminal("openshell sandbox exec -n " + name + " -- " + command, {baseUrl, idleMs, totalMs, signal, stdio: "pipe"});
-  if (getOpenClawConnection().rawUrl !== baseUrl) throw new Error("The connected runtime changed during the command.");
+  const execute = async inner => {
+    signal?.throwIfAborted();
+    if (getOpenClawConnection().rawUrl !== baseUrl) throw new Error("The connected runtime changed before the command.");
+    const result = await terminal("openshell sandbox exec -n " + name + " -- " + inner, {baseUrl, idleMs, totalMs, signal, stdio: "pipe"});
+    if (getOpenClawConnection().rawUrl !== baseUrl) throw new Error("The connected runtime changed during the command.");
+    return result;
+  };
+  const res = shell ? await executeShellScript(command, execute, signal, baseUrl) : await execute(command);
   return {...res, sandbox:name, command};
 }
 
@@ -412,7 +420,8 @@ export async function policyGet(agent = null, { idleMs = 8000, totalMs = 30000, 
        command, its stdout body, separately labelled stderr when available, the complete terminal
        transcript, the status header, the parsed policy object, and an explicit parser error
        when no policy is available (the shape
-       <code>evalSandboxNetwork</code> / <code>evalSandboxFs</code> read). Launchable only.
+       <code>evalSandboxNetwork</code> / <code>evalSandboxFs</code> read). Whitespace-splitting
+       launchables require Python 3 on the operator host. Launchable only.
   */
   const {name, baseUrl} = await connectedSandbox(agent, signal);
   const command = "openshell policy get " + name + " --full";
@@ -422,10 +431,13 @@ export async function policyGet(agent = null, { idleMs = 8000, totalMs = 30000, 
   const script = "tmp=$(mktemp) || exit 125; trap 'rm -f \"$tmp\"' EXIT; "
     + command + " </dev/null 2>\"$tmp\"; status=$?; printf '\\n" + stdoutMarker
     + "\\n'; cat \"$tmp\"; printf '\\n" + stderrMarker + "\\n'; exit \"$status\"";
-  const transportCommand = "sh -c " + shellQuote(script);
-  const res = await terminal(transportCommand, {baseUrl, idleMs, totalMs, signal, stdio: "pipe"});
+  const res = await executeShellScript(script, inner => {
+    if (getOpenClawConnection().rawUrl !== baseUrl) throw new Error("The connected runtime changed before reading policy.");
+    return terminal(inner, {baseUrl, idleMs, totalMs, signal, stdio: "pipe"});
+  }, signal, baseUrl);
   if (getOpenClawConnection().rawUrl !== baseUrl) throw new Error("The connected runtime changed while reading policy.");
-  if (res.exitCode !== 0) throw new Error("Policy command did not complete successfully: " + res.completion);
+  if (res.exitCode !== 0 || res.completion !== "exit")
+    throw new Error("Policy command did not complete successfully: exit " + (res.exitCode ?? "unknown") + "; " + res.completion);
   const stdout = String(res.stdout || "");
   const stdoutAt = stdout.lastIndexOf(stdoutMarker);
   const afterStdout = stdoutAt >= 0 ? stdout.slice(stdoutAt + stdoutMarker.length).replace(/^\r?\n/, "") : "";
@@ -756,14 +768,45 @@ export function mountPolicyMap(sel, { policy = OPENSHELL_POLICY_HARDENED, binari
   return { setBinary: p => { bin.value = p; render(p); } };
 }
 
+async function executeShellScript(command, execute, signal, owner) {
+  signal?.throwIfAborted();
+  // Probe argument parsing without executing any learner action. Legacy launchables
+  // honor shell quotes; some split on whitespace and preserve quote characters.
+  const probe = await execute("printf %s 'DLI-ARG a b-END'");
+  signal?.throwIfAborted();
+  if (probe.exitCode !== 0 || probe.completion !== "exit")
+    throw new Error("Terminal argument probe did not complete successfully.");
+  let wrapped;
+  if (probe.output === "DLI-ARG a b-END") {
+    wrapped = "sh -c " + shellQuote(command);
+  } else if (probe.output === "'DLI-ARGab-END'") {
+    // A whitespace-free Python expression survives this parser. Decode at the
+    // selected boundary, then replace Python with sh to preserve streams and exit status.
+    const encoded = btoa(Array.from(new TextEncoder().encode(command), byte => String.fromCharCode(byte)).join(''));
+    wrapped = "python3 -c __import__('os').execl('/bin/sh','sh','-c',__import__('base64').b64decode('"
+      + encoded + "').decode('utf-8'))";
+  } else {
+    throw new Error("Terminal argument parsing is unsupported; no course command was run.");
+  }
+  if (getOpenClawConnection().rawUrl !== owner)
+    throw new Error("The connected runtime changed during the argument probe.");
+  const result = await execute(wrapped);
+  signal?.throwIfAborted();
+  if (getOpenClawConnection().rawUrl !== owner)
+    throw new Error("The connected runtime changed during the command.");
+  return result;
+}
+
 export async function courseShell(helpers, command) {
   /* @doc <code>helpers.courseShell(helpers, command)</code> ::
        Run a command in the connected sandbox and require an exit status of zero. Pass the current
-       cell helpers for cancellation. Returns terminal text; use readback to verify file content. */
-  helpers.signal?.throwIfAborted();
-  const result = await helpers.sandboxExec(command, {signal:helpers.signal});
-  helpers.signal?.throwIfAborted();
-  if (result.exitCode !== 0) throw new Error("Sandbox command did not complete successfully: " + (result.completion || "unknown status"));
+       cell helpers for cancellation. Returns terminal text; use readback to verify file content.
+       Launchables that split arguments on whitespace require Python 3 inside the sandbox. */
+  const owner = getOpenClawConnection().rawUrl;
+  const result = await executeShellScript(command,
+    inner => helpers.sandboxExec(inner, {signal:helpers.signal}), helpers.signal, owner);
+  if (result.exitCode !== 0 || result.completion !== "exit")
+    throw new Error("Sandbox command did not complete successfully: exit " + (result.exitCode ?? "unknown") + "; " + (result.completion || "unknown status"));
   return result.output;
 }
 export async function courseRead(helpers, path) {

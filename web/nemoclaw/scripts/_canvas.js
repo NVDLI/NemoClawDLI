@@ -298,7 +298,7 @@ function _installStructuredLog(log, host, onAppend = () => {}, svgFn = null) {
 export function mountCanvasFlow(targetSel, opts) {
   const target = typeof targetSel === "string" ? document.querySelector(targetSel) : targetSel;
   if (!target) return;
-  const { label, intro, nodes, edges = [], minHeight = 320 } = opts;
+  const { label, intro, nodes, edges = [], minHeight = 0 } = opts;
 
   const ns = {};
   for (const n of nodes) ns[n.id] = { code: n.code || "", status: "idle", output: null, logs: [], cm: null };
@@ -722,7 +722,21 @@ helpers.viz.sideBySide(
       // Run this one node under the shared cancellation.
       // The Run-all button flips to "⏹ Stop" so it can abort even a single-node run.
       const epoch = beginRun();
-      try { await runNode(node.id); } catch (_) {} finally { if (epoch === runEpoch) endRun(); }
+      const signal = runAC.signal;
+      try {
+        await runNode(node.id);
+        if (epoch !== runEpoch) return;
+        signal.throwIfAborted();
+        const complete = nodes.every(item => ns[item.id].status === "complete");
+        setFlowState(complete ? "succeeded" : "ready");
+        statusBar.textContent = complete ? "✓ ran " + nodes.length + " nodes" : localizeCourseUiText("Ready");
+        statusBar.className = complete ? "cf-status-bar ok" : "cf-status-bar";
+      } catch (_) {
+        if (epoch !== runEpoch) return;
+        setFlowState(signal.aborted ? "stopped" : "failed");
+        statusBar.textContent = signal.aborted ? "⏹ stopped" : "✗ stopped at " + (node.title || node.id);
+        statusBar.className = signal.aborted ? "cf-status-bar" : "cf-status-bar err";
+      } finally { if (epoch === runEpoch) endRun(); }
     });
 
     panel.querySelector(".cf-panel-reset").addEventListener("click", (e) => {
@@ -968,11 +982,13 @@ helpers.viz.sideBySide(
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
     const epoch = runEpoch;
+    const _sig = runAC?.signal;
     const s = ns[nodeId];
     const panel = panelsHost.querySelector(`.cf-panel[data-id="${nodeId}"]`);
     // Lab-only steps can't run outside the lab; explain instead of failing.
     const _cfg = await getConfig();
     if (epoch !== runEpoch) return;
+    _sig?.throwIfAborted();
     if (_cfg.mode !== "proxy" && _stepLabOnly(node)) { _labReachable = false; _labOnlyNotice(node, panel); return; }
     setStatus(nodeId, "running");
     flowEdgesInto(nodeId, true);
@@ -1135,7 +1151,6 @@ helpers.viz.sideBySide(
       const helpers = { ...baseHelpers, viz: { ...viz } };
       // Cancellation wiring: expose the run's signal and auto-inject it into the network helpers, so a cell aborts on Stop without the student threading `signal` by hand.
       // A cell that passes its own signal keeps it; we only fill when absent.
-      const _sig = runAC ? runAC.signal : null;
       if (_sig) bindRunSignal(helpers, _sig);
       _liveHelpers = helpers; _liveViz = helpers.viz;   // expose to the self-deriving helper menu
       _auditHelperMenu(helpers);
@@ -1148,6 +1163,9 @@ helpers.viz.sideBySide(
       }
       const result = await fn(shared, helpers, helpers, cellConsole);
       if (epoch !== runEpoch) return;
+      // Helpers or learner overrides may settle normally after Stop. Do not publish
+      // their late result, state overview, or completion evidence as a successful run.
+      _sig?.throwIfAborted();
       s.output = result;
 
       // Render the return value, de-duplicated against the stream view: when the return is a string already most of what streamed, the redundant pre is omitted (no "same content shown twice" after a cell streams a reply then returns it).
@@ -1205,7 +1223,7 @@ helpers.viz.sideBySide(
     } catch (e) {
       if (epoch !== runEpoch) return;
       // A Stop press aborts the run; show it as stopped, not a red code error.
-      if (runAC && runAC.signal.aborted) {
+      if (_sig?.aborted) {
         setStatus(nodeId, "idle");
         if (metaEl) { metaEl.textContent = "stopped"; metaEl.className = "cf-det-meta"; }
         flowEdgesInto(nodeId, false);

@@ -2157,7 +2157,7 @@ export async function openclawChat(message, { session = "main", onToken, onTool,
       finished = true; clearTimeout(idle); clearTimeout(glob); clearTimeout(endGrace);
       sock.setCb(null); sock.setFailure(null); signal?.removeEventListener("abort", stop);
       if (view && usedTok) view.usage({context:usedTok, window:winTok || undefined, model:lastModel});
-      if (error) { sock.call("chat.abort", {sessionKey:session, ...(myRun ? {runId:myRun} : {})}).catch(() => {}); reject(error); }
+      if (error) { if (myRun) sock.call("chat.abort", {sessionKey:session, runId:myRun}).catch(() => {}); reject(error); }
       else resolve(text);
     };
     const stop = () => done(new DOMException("Stopped", "AbortError"));
@@ -2256,6 +2256,7 @@ helpers.log("→ " + gateway.displayUrl + (gateway.viaProxy ? "  (via hosted rel
 
 // Keep one live gateway socket per flow.
 if (state._ws) { try { state._ws.close(); } catch (_) {} state._chatCb = null; }
+delete state.call;
 
 const _pend = {};
 const nextId = helpers.randomId;
@@ -2283,7 +2284,6 @@ const call = (method, params) => new Promise((resolve, reject) => {
   _pend[id] = { resolve, reject, tmo };
   _ws.send(JSON.stringify({ type: "req", id, method, params: params || {} }));
 });
-state.call = call;
 _ws.onclose = () => {
   const error = new Error("Gateway socket closed");
   for (const id of Object.keys(_pend)) {
@@ -2294,36 +2294,55 @@ _ws.onclose = () => {
   if (state.call === call) state._onGatewayClose?.(error);
 };
 await new Promise((resolve, reject) => {
-  let challenged = false;
+  let settled = false;
   let challengeTimer = null;
   const base = _ws.onmessage;
   const priorClose = _ws.onclose;
+  const finish = (error, payload) => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(challengeTimer);
+    helpers.signal?.removeEventListener("abort", stop);
+    if (error) {
+      _ws.onmessage = () => {};
+      if (state._ws === _ws) delete state._ws;
+      if (state.call === call) delete state.call;
+      try { _ws.close(); } catch (_) {}
+      reject(error);
+    } else {
+      state.call = call;
+      resolve(payload);
+    }
+  };
+  const stop = () => finish(new DOMException("Stopped", "AbortError"));
   _ws.onclose = event => {
     priorClose?.(event);
-    if (!challenged) {
-      clearTimeout(challengeTimer);
-      reject(new Error("gateway socket closed before the challenge" + (event?.code ? " (code " + event.code + ")" : "")));
-    }
+    if (helpers.signal?.aborted) { stop(); return; }
+    finish(new Error("gateway socket closed before authentication completed" + (event?.code ? " (code " + event.code + ")" : "")));
   };
   _ws.onerror = () => {
-    if (!challenged) {
-      clearTimeout(challengeTimer);
-      reject(new Error("gateway WebSocket failed before the challenge; verify the launchable access session and transport"));
-    }
+    finish(new Error("gateway WebSocket failed before authentication completed; verify the launchable access session and transport"));
   };
   _ws.onmessage = ev => {
+    if (settled) return;
     let d; try { d = JSON.parse(ev.data); } catch (_) { return; }
     if (d.event !== "connect.challenge") { base(ev); return; }
-    challenged = true;
     _ws.onmessage = base;
-    gateway.connectParams(token, d.payload, helpers.signal, connection).then(params => state.call("connect", params)).then(pl => {
+    gateway.connectParams(token, d.payload, helpers.signal, connection).then(params => {
+      if (settled) return;
+      if (state._ws !== _ws) throw new Error("Gateway connection was replaced; run Connect again.");
+      return call("connect", params);
+    }).then(pl => {
+      if (settled) return;
       gateway.assertGrant(pl);
-      clearTimeout(challengeTimer);
+      if (state._ws !== _ws) throw new Error("Gateway connection was replaced; run Connect again.");
       helpers.log("● connected  v" + (pl?.server?.version || "?") + "  scopes: " + (pl?.auth?.scopes || []).join(", "));
-      resolve(pl);
-    }).catch(error => { clearTimeout(challengeTimer); try { _ws.close(); } catch (_) {} reject(error); });
+      finish(null, pl);
+    }).catch(error => finish(error));
   };
-  challengeTimer = setTimeout(() => reject(new Error("no challenge arrived within 30s. Open the launchable, then retry with a fresh matching access session in Module 3a.")), 30000);
+  helpers.signal?.addEventListener("abort", stop, {once:true});
+  if (helpers.signal?.aborted) { stop(); return; }
+  challengeTimer = setTimeout(() => finish(new Error("Gateway authentication did not complete within 30s. Open the launchable, then retry with a fresh matching access session in Module 3a.")), 30000);
 });
 `;
 

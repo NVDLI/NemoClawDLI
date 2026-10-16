@@ -66,7 +66,13 @@ export function courseServiceFixture() {
     },
     terminal(command) {
       const exec = command.match(/^openshell sandbox exec -n [\w.-]+ -- ([\s\S]+)$/);
-      const shell = exec ? exec[1] : command;
+      let shell = exec ? exec[1] : command;
+      if (exec && shell === "printf %s 'DLI-ARG a b-END'") return {code:0,data:"'DLI-ARGab-END'"};
+      const wrapped = /^python3 -c __import__\('os'\)\.execl\('\/bin\/sh','sh','-c',__import__\('base64'\)\.b64decode\('([A-Za-z0-9+/=]*)'\)\.decode\('utf-8'\)\)$/.exec(shell);
+      if (wrapped) {
+        if (!exec) throw new Error('Encoded course script must execute inside the sandbox');
+        shell = Buffer.from(wrapped[1], 'base64').toString('utf8');
+      }
       if (shell === "printf '__NEMOCLAW_CONNECTION_READY__\\n'") return {code:0,data:'__NEMOCLAW_CONNECTION_READY__\n'};
       const read = shell.match(/base64 < '([^']+)'/);
       if (read) {
