@@ -10,6 +10,10 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
   node runs after completion or Stop. Release failed gateway handshakes before an explicit retry.
   Thanks to Vadim Kudlay and the course tester for the reproduced failures.
 
+- Bound browser model waits and SDK retries, reconstruct complete streamed responses, and stop
+  workflows when required evidence is missing. Keep sandbox package probes temporary and terminate
+  their owned processes on completion or Stop.
+
 - Scope the production consent notice to its registered HTTPS host, show progress synchronization
   failures with a reconnect action, and check artifact integrity before merge. Complete milestone
   UI translation drafts in the four supported locales. Thanks to Vadim Kudlay for the refresh report.
