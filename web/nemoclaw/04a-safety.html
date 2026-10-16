@@ -412,7 +412,7 @@ helpers.mountChatUI("#trajectory-artifact", {
     const outcomes = [];
     for (const [index, step] of steps.entries()) {
       checkStopped();
-      const result = await helpers.sandboxExec(step.command, { signal: ctx.signal });
+      const result = await helpers.sandboxExec(step.command, { signal: ctx.signal, shell: true });
       checkStopped();
       const outcome = commandOutcome(result);
       outcomes.push(outcome);
@@ -469,13 +469,14 @@ helpers.log("Trajectory controls mounted below.");
   <script type="module">
     // Picker writes window.__sbxAction, then auto-runs Predict.
     window.__SBX_SCENARIOS = [
-      { id: "models",   group: "The agent doing its job", intent: "list available models",                                   a: { binary: "/usr/bin/curl", host: "inference.local", port: 443, method: "GET",  path: "/v1/models" } },
-      { id: "chat",     group: "The agent doing its job", intent: "send a chat completion",                                   a: { binary: "/usr/bin/curl", host: "inference.local", port: 443, method: "POST", path: "/v1/chat/completions" } },
-      { id: "exfil",    group: "The agent off the rails", intent: "exfiltrate data to an outside host",                       a: { binary: "/usr/bin/curl", host: "example.com", port: 443 } },
-      { id: "metadata", group: "The agent off the rails", intent: "read cloud-instance credentials (metadata SSRF)",          a: { binary: "/usr/bin/curl", host: "169.254.169.254", port: 80 } },
-      { id: "github",   group: "The agent off the rails", intent: "clone tooling from GitHub",                                a: { binary: "/usr/bin/curl", host: "github.com", port: 443 } },
-      { id: "wrongbin", group: "The agent off the rails", intent: "reach the inference API as a stray curl, not the runtime", a: { binary: "/usr/bin/curl", host: "integrate.api.nvidia.com", port: 443, method: "GET", path: "/v1/models" } },
-      { id: "npm",      group: "The agent off the rails", intent: "pull an npm package directly with curl",                   a: { binary: "/usr/bin/curl", host: "registry.npmjs.org", port: 443 } },
+      { id: "package-info", label: "The agent doing its job", title: "read package metadata",                             a: { binary: "/usr/bin/curl", host: "pypi.org", port: 443, method: "GET", path: "/pypi/idna/json" } },
+      { id: "models",   label: "The agent doing its job", title: "list available models",                                   a: { binary: "/usr/bin/curl", host: "inference.local", port: 443, method: "GET",  path: "/v1/models" } },
+      { id: "chat",     label: "The agent doing its job", title: "send a chat completion",                                   a: { binary: "/usr/bin/curl", host: "inference.local", port: 443, method: "POST", path: "/v1/chat/completions" } },
+      { id: "exfil",    label: "The agent off the rails", title: "exfiltrate data to an outside host",                       a: { binary: "/usr/bin/curl", host: "example.com", port: 443 } },
+      { id: "metadata", label: "The agent off the rails", title: "read cloud-instance credentials (metadata SSRF)",          a: { binary: "/usr/bin/curl", host: "169.254.169.254", port: 80 } },
+      { id: "github",   label: "The agent off the rails", title: "clone tooling from GitHub",                                a: { binary: "/usr/bin/curl", host: "github.com", port: 443 } },
+      { id: "wrongbin", label: "The agent off the rails", title: "reach the inference API as a stray curl, not the runtime", a: { binary: "/usr/bin/curl", host: "integrate.api.nvidia.com", port: 443, method: "GET", path: "/v1/models" } },
+      { id: "npm",      label: "The agent off the rails", title: "pull an npm package directly with curl",                   a: { binary: "/usr/bin/curl", host: "registry.npmjs.org", port: 443 } },
     ];
 
     const SCEN = window.__SBX_SCENARIOS;
@@ -494,18 +495,18 @@ helpers.log("Trajectory controls mounted below.");
       window.__sbxAction = s.a;
       Object.values(btns).forEach((b) => b.classList.remove("on"));
       btns[s.id].classList.add("on");
-      disp.textContent = "the agent tries to " + s.intent + "   ·   " + describe(s.a) + "   ·   run Confirm next, then Compare";
+      disp.textContent = "the agent tries to " + s.title + "   ·   " + describe(s.a) + "   ·   run Confirm next, then Compare";
       if (run) runPredict();
     };
-    [...new Set(SCEN.map((s) => s.group))].forEach((g) => {
+    [...new Set(SCEN.map((s) => s.label))].forEach((g) => {
       const row = document.createElement("div");
       row.className = "chatui-mods";
       row.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 4px";
       const lab = document.createElement("label"); lab.textContent = g; row.appendChild(lab);
 
-      SCEN.filter((s) => s.group === g).forEach((s) => {
+      SCEN.filter((s) => s.label === g).forEach((s) => {
         const b = document.createElement("button");
-        b.type = "button"; b.className = "chatui-modchip"; b.textContent = s.intent; b.title = describe(s.a);
+        b.type = "button"; b.className = "chatui-modchip"; b.textContent = s.title; b.title = describe(s.a);
         b.addEventListener("click", () => pick(s, true));
         btns[s.id] = b; row.appendChild(b);
       });
@@ -645,12 +646,31 @@ mountRunCell("#cell-layers", {
 
 async function probe(command) {
   AbortSignal.throwIfAborted();
-  const result = await helpers.sandboxExec(command, { signal: AbortSignal });
+  const result = await helpers.sandboxExec(command, { signal: AbortSignal, shell: true, totalMs: 45000 });
   AbortSignal.throwIfAborted();
   const outcome = commandOutcome(result);
   helpers.log(command + " · " + outcome + " · exit " + (result.exitCode ?? "unknown"));
   helpers.log.details("Command evidence", { command, outcome, exitCode: result.exitCode ?? null, completion: result.completion, transport: result.transport, stdout: result.stdout, stderr: result.stderr, output: result.output || "" });
   return { command, outcome, exitCode: result.exitCode ?? null, output: result.output || "" };
+}
+function packageProbe(command) {
+  const script = [
+    "set -eu",
+    "probe_dir=$(mktemp -d /tmp/nemoclaw-packages.XXXXXX)",
+    'cleanup() { result=$?; trap - EXIT HUP INT TERM; probe_pid="\${probe_pid:-\${!:-}}"; if [ -n "$probe_pid" ]; then /bin/kill -KILL -- -"$probe_pid" 2>/dev/null || /bin/kill -KILL "$probe_pid" 2>/dev/null || true; wait "$probe_pid" 2>/dev/null || true; fi; rm -rf -- "$probe_dir" || exit 125; exit "$result"; }',
+    "trap cleanup EXIT",
+    "probe_pid=",
+    'stop() { exit 130; }',
+    "trap stop HUP INT TERM",
+    'echo "Temporary probe directory: $probe_dir"',
+    'mkdir "$probe_dir/tmp"',
+    ': > "$probe_dir/npm-globalrc"',
+    'export TMPDIR="$probe_dir/tmp"',
+    'cd "$probe_dir"',
+    "timeout --signal=TERM --kill-after=5s 25s " + command + " & probe_pid=$!",
+    'wait "$probe_pid"',
+  ].join("; ");
+  return "sh -c '" + script.replace(/'/g, "'\\\\''") + "'";
 }
 const questions = [
   ["Which network requests complete?", [
@@ -658,13 +678,13 @@ const questions = [
     "curl -sS -m 8 -o /dev/null -w '\\\\ncode=%{http_code}\\\\n' https://en.wikipedia.org",
     "curl -sS -m 6 -o /dev/null -w '\\\\ncode=%{http_code}\\\\n' http://169.254.169.254/latest/meta-data/",
   ]],
-  ["Can this user install the requested software?", [
-    "apt-get install -y cowsay",
-    "pip install --break-system-packages --retries 0 --timeout 5 --no-input cowsay",
-    "npm install --no-audit --no-fund left-pad",
+  ["Which package downloads or user-space installs complete?", [
+    packageProbe("apt-get -o Acquire::Retries=0 -o Acquire::http::Timeout=5 -o Acquire::https::Timeout=5 download cowsay"),
+    packageProbe('pip --isolated install --target "$probe_dir/pip" --only-binary=:all: --no-deps --no-cache-dir --disable-pip-version-check --retries 0 --timeout 5 --no-input cowsay'),
+    packageProbe('npm install --prefix "$probe_dir/npm" --cache "$probe_dir/cache" --userconfig /dev/null --globalconfig "$probe_dir/npm-globalrc" --ignore-scripts --no-audit --no-fund --fetch-retries=0 --fetch-timeout=5000 left-pad'),
   ]],
   ["What happens when these commands request more authority?", [
-    "sudo id", "nsenter -t 1 -m -- id", "docker ps", "dd if=/proc/1/environ of=/dev/null status=none",
+    "sudo id", "nsenter -t 1 -m -- id", "docker ps", "dd if=/proc/1/environ of=/dev/null count=0 status=none",
   ]],
   ["Who owns the persona? Can this user change an exercise file's mode?", [
     "ls -la /sandbox/.openclaw/workspace/SOUL.md",
@@ -681,12 +701,13 @@ for (const [question, commands] of questions) {
     const result = await probe(command);
     results.push(result);
     if (result.outcome === "incomplete") {
-      helpers.log("No exit status arrived. Check the runtime before running more probes.");
-      return { probes: results.length, results };
+      throw new Error("No exit status arrived. Check the runtime before running more probes.");
     }
   }
 }
 // helpers.log.details("All probe results", results);
+if (results.every(result => result.outcome === "command failed"))
+  throw new Error(results.map(result => result.output).filter(Boolean).join("\\n"));
 helpers.log("Review the evidence for each command. Missing tools, ordinary command errors, and access denials require different explanations. These probes do not establish that every download or escalation path is closed.");
 return { probes: results.length, results };
 `,
@@ -721,10 +742,12 @@ helpers.log("");
 helpers.log(p.status || "(no status header returned)");
 
 if (!p.policy) {
-  helpers.log("\\nCould not parse the live policy: " + (p.parseError || "unknown parser error"));
+  const parseError = p.parseError || "unknown parser error";
+  const message = "\\nCould not parse the live policy: " + parseError;
+  helpers.log(message);
   helpers.log("Keep your launchable open in another tab, then re-run. Check the sandbox name with: openshell sandbox list");
   helpers.log.details("raw output", p.raw);
-  return;
+  throw new Error(message);
 }
 
 const nets = Object.keys(p.policy.network_policies || {});
@@ -769,7 +792,7 @@ state.observed = null;
 state.observedKey = null;
 state.policyKey = null;
 const policy = window.__SBX_POLICY;
-if (!policy) { helpers.log("Run the 'Read your launchable's live policy' cell above first, so this predicts from YOUR box's policy."); return; }
+if (!policy) throw new Error("Run the 'Read your launchable's live policy' cell above first, so this predicts from YOUR box's policy.");
 if (window.__SBX_POLICY_OWNER !== helpers.getOpenClawConnection().rawUrl)
   throw new Error("Read the policy from the currently connected gateway before predicting.");
 state.policyKey = JSON.stringify([window.__SBX_POLICY_OWNER, window.__SBX_POLICY_AGENT, window.__SBX_POLICY_LOAD, policy]);
@@ -808,7 +831,7 @@ return verdict;
   return result.exitCode === 0 ? "completed" : "command failed";
 }
 
-if (!state.action || !state.actionKey) { helpers.log("Run Predict first."); return; }
+if (!state.action || !state.actionKey) throw new Error("Run Predict first.");
 const action = { ...state.action };
 const actionKey = state.actionKey;
 const predictionRun = state.predictionRun;
@@ -834,17 +857,17 @@ const command = "/usr/bin/curl -sS --max-time 8 -o /dev/null -w '\\\\ncode=%{htt
 helpers.log("Request: " + method + " " + url);
 helpers.log("Command: " + command);
 helpers.signal?.throwIfAborted();
-const result = await helpers.sandboxExec(command, { signal: helpers.signal, agent: policyAgent });
+const result = await helpers.sandboxExec(command, { signal: helpers.signal, agent: policyAgent, shell: true });
 helpers.signal?.throwIfAborted();
 const outcome = commandOutcome(result);
 const status = Number(String(result.stdout ?? result.output ?? "").match(/code=(\\d{3})\\b/)?.[1]) || null;
-// A plain HTTP 403/407 may come from a proxy or the application. Keep it unresolved.
+// An HTTP error may come from a proxy or the application. Keep it unresolved.
 const observed = outcome === "access-denial evidence" ? "deny"
-  : outcome === "completed" && status && ![403, 407].includes(status) ? "allow" : "unknown";
+  : outcome === "completed" && status >= 200 && status < 400 ? "allow" : "unknown";
 helpers.log.details("Request evidence", { command, outcome, httpStatus: status, exitCode: result.exitCode ?? null, output: result.output || "" });
 if (state.actionKey !== actionKey || state.predictionRun !== predictionRun
     || policyKey !== JSON.stringify([helpers.getOpenClawConnection().rawUrl, window.__SBX_POLICY_AGENT, window.__SBX_POLICY_LOAD, window.__SBX_POLICY])
-    || (window.__sbxAction && JSON.stringify(window.__sbxAction) !== actionKey)) { helpers.log("The prediction, policy, gateway, or selection changed while this request ran. Run Predict and Confirm for the current selection."); return; }
+    || (window.__sbxAction && JSON.stringify(window.__sbxAction) !== actionKey)) throw new Error("The prediction, policy, gateway, or selection changed while this request ran. Run Predict and Confirm for the current selection.");
 state.observed = observed;
 state.observedKey = actionKey;
 helpers.log("Observed: " + observed + ". Status and output describe this request; identify the enforcing component separately.");
@@ -859,13 +882,12 @@ return { observed, outcome, httpStatus: status, exitCode: result.exitCode ?? nul
       code: `if (!state.predicted || !state.observed || state.observedKey !== state.actionKey
     || state.policyKey !== JSON.stringify([helpers.getOpenClawConnection().rawUrl, window.__SBX_POLICY_AGENT, window.__SBX_POLICY_LOAD, window.__SBX_POLICY])
     || (window.__sbxAction && JSON.stringify(window.__sbxAction) !== state.actionKey)) {
-  helpers.log("Run Predict and Confirm for the same action first."); return;
+  throw new Error("Run Predict and Confirm for the same action first.");
 }
 helpers.log("Predicted: " + state.predicted);
 helpers.log("Observed: " + state.observed);
 if (state.observed === "unknown") {
-  helpers.log("The command did not establish an allow/deny result. Inspect its completion, response source, and error before comparing policy.");
-  return { predicted: state.predicted, observed: state.observed, agree: null };
+  throw new Error("The command did not establish an allow/deny result. Inspect its completion, response source, and error before comparing policy.");
 }
 const agree = state.predicted === state.observed;
 helpers.log(agree
@@ -896,7 +918,7 @@ mountCanvasFlow("#cell-token", {
       showCode: false,
       summary: "Calls the listed read methods and records their results. Write authority is not tested.",
       code: `// Survey the read-only admin surface reachable by the current gateway token.
-if (!state.call) { helpers.log("Run Connect first."); return; }
+if (!state.call) throw new Error("Run Connect first.");
 const soul = await state.call("agents.files.get", { agentId: "main", name: "SOUL.md" });
 helpers.log("agents.files.get SOUL.md  -> " + ((soul?.file?.content || "").length) + " bytes of the live persona (read confirmed; write authority not tested)");
 

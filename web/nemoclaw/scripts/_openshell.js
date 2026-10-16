@@ -35,6 +35,8 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
        <code>relayWebSocket: true</code> explicitly selects that recovery route. Pass
        <code>stdio: "pipe"</code> for a one-shot command whose launchable supports labelled
        stdout and stderr frames; the default PTY mode remains for interactive terminal use.
+       Pipe commands wait for their exit frame within <code>totalMs</code>; quiet output does not
+       end a running command. Interactive PTYs retain the <code>idleMs</code> limit.
        Returns <code>{ output, stdout, stderr, raw, frames, exitCode, completion, transport }</code>.
        <code>output</code> keeps the complete ANSI-stripped terminal transcript for interactive
        consumers; <code>stdout</code> and <code>stderr</code> preserve explicitly labelled
@@ -126,7 +128,12 @@ export async function terminal(cmd, { send = [], idleMs = 5000, totalMs = 25000,
       if (!settle()) return;
       reject(error);
     }
-    const bump = () => { if (!finished) { clearTimeout(idleT); idleT = setTimeout(() => finish("idle"), idleMs); } };
+    const bump = () => {
+      if (!finished && stdio === "pty") {
+        clearTimeout(idleT);
+        idleT = setTimeout(() => finish("idle"), idleMs);
+      }
+    };
 
     function openNext() {
       if (finished) return;

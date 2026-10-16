@@ -401,27 +401,202 @@ export function modelRequestCredentials(url) {
   return isDefaultModelApiBaseUrl(url) ? "same-origin" : "include";
 }
 
-// The OpenAI JS SDK (what ChatOpenAI uses) attaches x-stainless-* headers.
-// Strip x-stainless-* headers for browser hosts that reject them during preflight.
+// Stream approved model routes to receive headers before the relay deadline,
+// then reconstruct the caller's nonstream completion without changing its schema.
+function bufferedModelRequest(url, init) {
+  if (String(init.method || "GET").toUpperCase() !== "POST" || typeof init.body !== "string") return null;
+  let endpoint, body;
+  try { endpoint = new URL(url); body = JSON.parse(init.body); } catch (_) { return null; }
+  if (endpoint.protocol !== "https:" || !["integrate.api.nvidia.com", "nvidia-api-cors-proxy.experiments.courses.nvidia.com"].includes(endpoint.hostname)
+      || endpoint.pathname !== "/v1/chat/completions" || !body || typeof body !== "object" || Array.isArray(body) || body.stream === true) return null;
+  return {...body, stream:true, stream_options:{...body.stream_options, include_usage:body.stream_options?.include_usage ?? true}};
+}
+
+function modelResponseBody(response, signal, timeoutMs) {
+  if (!response.body) return response;
+  const reader = response.body.getReader();
+  let ended = false, streamController;
+  const cleanup = () => {
+    signal?.removeEventListener("abort", stop);
+    try { reader.releaseLock(); } catch (_) {}
+  };
+  const fail = error => {
+    if (ended) return;
+    ended = true;
+    cancelModelReader(reader, error);
+    streamController.error(error);
+    cleanup();
+  };
+  const stop = () => fail(signal.reason || new DOMException("Stopped", "AbortError"));
+  const body = new ReadableStream({
+    start(controller) {
+      streamController = controller;
+      signal?.addEventListener("abort", stop, {once:true});
+      if (signal?.aborted) stop();
+    },
+    async pull(controller) {
+      try {
+        const next = await readModelStreamChunk(reader, timeoutMs, signal);
+        if (ended) return;
+        if (next.done) { ended = true; controller.close(); cleanup(); }
+        else controller.enqueue(next.value);
+      } catch (error) { fail(error); }
+    },
+    cancel(reason) {
+      if (ended) return;
+      ended = true; cancelModelReader(reader, reason); cleanup();
+    },
+  });
+  const wrapped = new Response(body, {status:response.status, statusText:response.statusText, headers:response.headers});
+  for (const key of ["url", "redirected", "type"]) Object.defineProperty(wrapped,key,{value:response[key]});
+  return wrapped;
+}
+
+async function accumulateModelStream(response, signal, timeoutMs, {expectedChoices = 1, onDelta = null} = {}) {
+  const reader = response.body.getReader(), decoder = new TextDecoder("utf-8", {fatal:true});
+  const choices = new Map();
+  let pending = "", completed = false, metadata = Object.create(null), usage, raw = null;
+  const assign = (target, key, value) => Object.defineProperty(target,key,{value,writable:true,enumerable:true,configurable:true});
+  const append = (target, key, value) => {
+    if (typeof value !== "string") throw new Error("Invalid text in model stream");
+    target[key] = (target[key] || "") + value;
+  };
+  const fragment = (target, delta) => {
+    if (!delta || typeof delta !== "object" || Array.isArray(delta)) throw new Error("Invalid streamed function call");
+    for (const [key,value] of Object.entries(delta)) {
+      if (["name", "arguments"].includes(key)) append(target,key,value);
+      else assign(target,key,value);
+    }
+  };
+  const consume = frame => {
+    const data = [];
+    for (const line of frame.split(/\r?\n/)) {
+      if (line.startsWith("data:")) data.push(line.slice(5).replace(/^ /,""));
+    }
+    if (!data.length) return;
+    const payload = data.join("\n");
+    if (payload.trim() === "[DONE]") { completed = true; return; }
+    let chunk;
+    try { chunk = JSON.parse(payload); } catch (_) { throw new Error("Malformed JSON in model stream"); }
+    if (chunk?.error) throw new Error(chunk.error.message || "Model stream returned an error");
+    if (!chunk || typeof chunk !== "object" || !Array.isArray(chunk.choices)) throw new Error("Invalid model stream frame");
+    raw = chunk;
+    for (const [key,value] of Object.entries(chunk)) {
+      if (!["choices", "usage", "object"].includes(key)) metadata[key] = value;
+    }
+    if (chunk.usage != null) usage = chunk.usage;
+    // The public single-choice helper historically accepted an omitted index.
+    const indexOf = part => part.index === undefined && expectedChoices === 1 && chunk.choices.length === 1 ? 0 : part.index;
+    for (const part of chunk.choices) {
+      const index = indexOf(part);
+      if (!Number.isInteger(index) || index < 0 || index >= expectedChoices) throw new Error("Invalid model stream choice index");
+      let choice = choices.get(index);
+      if (!choice) {
+        choice = {index, message:{role:"assistant",content:null}, finish_reason:null, logprobs:null};
+        choices.set(index,choice);
+      }
+      const delta = part.delta;
+      if (delta != null && (typeof delta !== "object" || Array.isArray(delta))) throw new Error("Invalid model stream delta");
+      for (const [key,value] of Object.entries(delta || {})) {
+        if (["content", "refusal", "reasoning_content", "reasoning"].includes(key)) {
+          if (value != null) append(choice.message,key,value);
+        } else if (key === "tool_calls") {
+          if (!Array.isArray(value)) throw new Error("Invalid streamed tool calls");
+          choice.message.tool_calls ||= [];
+          for (const tool of value) {
+            if (!Number.isInteger(tool.index) || tool.index < 0 || tool.index > 1024) throw new Error("Invalid streamed tool index");
+            const current = choice.message.tool_calls[tool.index] ||= {id:"",type:"function",function:{name:"",arguments:""}};
+            if (tool.id != null) append(current,"id",tool.id);
+            if (tool.type != null) current.type = tool.type;
+            if (tool.function) fragment(current.function,tool.function);
+          }
+        } else if (key === "function_call") {
+          choice.message.function_call ||= {name:"",arguments:""};
+          fragment(choice.message.function_call,value);
+        } else assign(choice.message,key,value);
+      }
+      if (part.finish_reason != null) {
+        if (typeof part.finish_reason !== "string" || !part.finish_reason) throw new Error("Invalid model stream finish reason");
+        choice.finish_reason = part.finish_reason;
+      }
+      if (part.logprobs != null) {
+        choice.logprobs ||= {};
+        for (const [key,value] of Object.entries(part.logprobs)) {
+          if (Array.isArray(value)) (choice.logprobs[key] ||= []).push(...value);
+          else assign(choice.logprobs,key,value);
+        }
+      }
+    }
+    // Deliver only validated deltas, while the response is still streaming.
+    for (const part of chunk.choices) {
+      signal?.throwIfAborted();
+      onDelta?.(part.delta || {}, indexOf(part));
+      signal?.throwIfAborted();
+    }
+  };
+  try {
+    while (!completed) {
+      const next = await readModelStreamChunk(reader,timeoutMs,signal);
+      if (next.done) { pending += decoder.decode(); break; }
+      pending += decoder.decode(next.value,{stream:true});
+      let boundary;
+      while (!completed && (boundary = /\r?\n\r?\n/.exec(pending))) {
+        consume(pending.slice(0,boundary.index));
+        pending = pending.slice(boundary.index + boundary[0].length);
+      }
+    }
+    if (!completed || choices.size !== expectedChoices || [...choices.values()].some(choice => !choice.finish_reason))
+      throw new Error("Model stream ended before a complete final response");
+    for (const choice of choices.values()) {
+      if (choice.message.tool_calls) {
+        if (choice.message.tool_calls.some(tool => !tool?.id || !tool.function?.name)) throw new Error("Incomplete streamed tool call");
+        choice.message.tool_calls = Array.from(choice.message.tool_calls);
+        if (choice.message.tool_calls.some(tool => !tool)) throw new Error("Incomplete streamed tool call");
+      }
+    }
+    return {completion:{...metadata, object:"chat.completion", choices:[...choices.values()].sort((a,b) => a.index-b.index), ...(usage === undefined ? {} : {usage})}, raw};
+  } finally {
+    cancelModelReader(reader);
+    reader.releaseLock();
+  }
+}
+
+async function modelCompletionFetch(url, init, policy) {
+  const streamed = bufferedModelRequest(url,init);
+  const r = await fetchRetry(
+      url, streamed ? {...init,body:JSON.stringify(streamed)} : init, policy);
+  if (!streamed || !r.ok || !(r.headers.get("content-type") || "").toLowerCase().includes("text/event-stream"))
+    return modelResponseBody(r,init.signal,policy.timeoutMs);
+  const {completion} = await accumulateModelStream(r,init.signal,policy.timeoutMs,{expectedChoices:streamed.n ?? 1});
+  const headers = new Headers(r.headers);
+  headers.set("content-type","application/json");
+  headers.delete("content-length"); headers.delete("content-encoding");
+  return new Response(JSON.stringify(completion),{status:r.status,statusText:r.statusText,headers});
+}
+
+// Strip SDK headers that browser hosts reject during preflight.
 export function browserChatFetch() {
   /* @doc <code>helpers.browserChatFetch()</code> ::
        Returns a <code>fetch</code> that strips the OpenAI SDK's <code>x-stainless-*</code>
        headers. NVIDIA model routes also receive the <code>X-BILLING-INVOKE-ORIGIN</code> tracking tag.
        Custom routes include their browser session credentials. Pass it as
-       <code>configuration.fetch</code> when constructing a browser <code>ChatOpenAI</code>. */
+       <code>configuration.fetch</code> when constructing a browser <code>ChatOpenAI</code>.
+       SDK requests use streamed NVIDIA transport internally; plain fetch requests preserve
+       their authored body. */
   return async (url, init = {}) => {
     const h = init.headers instanceof Headers ? init.headers : new Headers(init.headers || {});
+    const sdkRequest = h.get("x-stainless-lang") === "js";
     for (const k of [...h.keys()]) { if (k.startsWith("x-stainless")) h.delete(k); }
     if (billingAttributionEnabled(url)) h.set("X-BILLING-INVOKE-ORIGIN", BILLING_INVOKE_ORIGIN);
     else h.delete("X-BILLING-INVOKE-ORIGIN");
-    const r = await fetchRetry(
-      url,
-      { ...init, headers: h, credentials: modelRequestCredentials(url) },
-      getModelRequestPolicy(),
-    );
+    const options = {...init, headers:h, credentials: modelRequestCredentials(url)};
+    const policy = getModelRequestPolicy();
+    const r = sdkRequest
+      ? await modelCompletionFetch(url,options,policy)
+      : modelResponseBody(await fetchRetry(url,options,policy),init.signal,policy.timeoutMs);
     // Wrap non-JSON HTTP errors so the SDK surfaces the real status and body.
     if (!r.ok && !(r.headers.get("content-type") || "").toLowerCase().includes("application/json")) {
-      const txt = await r.text().catch(() => "");
+      const txt = await r.text();
       return new Response(
         JSON.stringify({ error: { message: "HTTP " + r.status + " " + r.statusText + ": " + txt.slice(0, 300), type: "http_error", code: r.status } }),
         { status: r.status, statusText: r.statusText, headers: { "Content-Type": "application/json" } },
@@ -488,6 +663,7 @@ async function fetchRetry(url, opts = {}, {
       if (r.ok) return r;
       const retryable = r.status === 429 || (r.status >= 500 && r.status < 600);
       if (retryable && attempt < retries) {
+        try { Promise.resolve(r.body?.cancel()).catch(() => {}); } catch (_) {}
         await delay(retryDelayMs(r, backoffMs, attempt, timeoutMs), opts.signal);
         continue;
       }
@@ -560,7 +736,7 @@ export async function chat({ messages, tools = null, model = null, temperature =
 
   const headers = _apiHeaders(cfg);
 
-  const resp = await fetchRetry(`${cfg.url}/chat/completions`, {
+  const resp = await modelCompletionFetch(`${cfg.url}/chat/completions`, {
     method: "POST",
     headers,
     body: JSON.stringify(body),
@@ -568,6 +744,7 @@ export async function chat({ messages, tools = null, model = null, temperature =
     signal,
   }, getModelRequestPolicy());
   if (!resp.ok) {
+    try { Promise.resolve(resp.body?.cancel()).catch(() => {}); } catch (_) {}
     throw modelHttpFailure(resp);
   }
   return readModelJson(resp, signal);
@@ -652,71 +829,28 @@ export async function chatStream(opts, onChunk, extra = {}) {
     method: "POST", headers, body: JSON.stringify(body), credentials: modelRequestCredentials(cfg.url), signal,
   }, requestPolicy);
   if (!resp.ok) {
+    try { Promise.resolve(resp.body?.cancel()).catch(() => {}); } catch (_) {}
     throw modelHttpFailure(resp);
   }
 
-  const reader = resp.body.getReader();
-  const dec = new TextDecoder();
-  let buf = "";
-  let usage = null, finishReason = null, lastRaw = null, responseModel = useModel;
-  let content = "", reasoning = "";
-  // tool_calls arrive fragmented across frames: the streaming API splits function.arguments JSON into deltas, each tagged with an `index` for the call it belongs to.
-  // Accumulate by index here so the caller ends with a flat [{id, function: {name, arguments}}] array.
-  const toolCalls = [];
-  function accumulateToolCalls(deltaTcs) {
-    if (!deltaTcs) return;
-    for (const tc of deltaTcs) {
-      const i = tc.index ?? 0;
-      const cur = (toolCalls[i] ||= { index: i, id: "", type: "function",
-                                       function: { name: "", arguments: "" } });
-      if (tc.id) cur.id = tc.id;
-      if (tc.type) cur.type = tc.type;
-      if (tc.function?.name) cur.function.name += tc.function.name;
-      if (tc.function?.arguments) cur.function.arguments += tc.function.arguments;
-    }
-  }
-
-  // Boundary-safe SSE frame parser: consume only complete "data: ...\n\n" frames.
-  // Partial frames stay buffered for the next read.
-  try {
-  outer: while (true) {
-    const { done, value } = await readModelStreamChunk(reader, requestPolicy.timeoutMs, signal);
-    if (done) break;
-    buf += dec.decode(value, { stream: true });
-    let idx;
-    while ((idx = buf.indexOf("\n\n")) !== -1) {
-      const frame = buf.slice(0, idx);
-      buf = buf.slice(idx + 2);
-      for (const raw of frame.split("\n")) {
-        if (!raw.startsWith("data: ")) continue;
-        const payload = raw.slice(6).trim();
-        if (payload === "[DONE]") break outer;
-        let obj;
-        try { obj = JSON.parse(payload); } catch (_) { continue; }
-        lastRaw = obj;
-        if (obj.model) responseModel = obj.model;
-        const choice = obj?.choices?.[0];
-        const delta = choice?.delta;
-        if (delta?.content) { content += delta.content; if (onChunk) onChunk(delta.content); }
-        if (delta?.reasoning_content) {
-          reasoning += delta.reasoning_content;
-          if (onReasoning) onReasoning(delta.reasoning_content);
-        }
-        if (delta?.tool_calls) accumulateToolCalls(delta.tool_calls);
-        if (choice?.finish_reason) finishReason = choice.finish_reason;
-        if (obj?.usage) usage = obj.usage;
-      }
-    }
-  }
-  } finally {
-    cancelModelReader(reader);
-    reader.releaseLock();
-  }
-
+  const {completion, raw} = await accumulateModelStream(resp,signal,requestPolicy.timeoutMs,{
+    expectedChoices: body.n ?? 1,
+    onDelta(delta,index) {
+      if (index !== 0) return;
+      if (delta.content) onChunk?.(delta.content);
+      signal?.throwIfAborted();
+      if (delta.reasoning_content) onReasoning?.(delta.reasoning_content);
+    },
+  });
+  const choice = completion.choices[0];
   const summary = {
-    content, reasoning,
-    tool_calls: toolCalls.filter(Boolean),
-    finish_reason: finishReason, usage, model: responseModel, raw: lastRaw,
+    content: choice.message.content || "",
+    reasoning: choice.message.reasoning_content || "",
+    tool_calls: (choice.message.tool_calls || []).map((tool,index) => ({index,...tool})),
+    finish_reason: choice.finish_reason,
+    usage: completion.usage ?? null,
+    model: completion.model || useModel,
+    raw,
   };
   if (onMeta) onMeta(summary);
   return summary;

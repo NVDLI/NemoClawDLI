@@ -568,7 +568,7 @@ export async function mountAgentChat(container, opts = {}) {
       const baseURL = cfg.url.startsWith("http") ? cfg.url : (window.location.origin + cfg.url);
       // The OpenAI SDK adds x-stainless-* platform headers that the CORS proxy rejects in preflights.
       // Strip them with a custom fetch wrapper.
-      const llm = new d.ChatOpenAI({ configuration: { baseURL, dangerouslyAllowBrowser: true,
+      const llm = new d.ChatOpenAI({ maxRetries: 0, configuration: { baseURL, dangerouslyAllowBrowser: true,
         fetch: browserChatFetch() },
         apiKey, model: activeModel, temperature: 0, maxTokens: 16384 });
       const tools = opts.buildTools

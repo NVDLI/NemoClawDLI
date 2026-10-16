@@ -444,20 +444,28 @@ migrateOpenClawConnectionStorage();
 // The browser still signs the gateway challenge and retains its scoped device.
 const PREFIX = "__DLI_GATEWAY__";
 const LIMIT = 8 * 1024 * 1024;
+// Recover only an untouched loopback connection. The browser's original
+// handshake deadline stays in force across this single transport retry.
 const PROGRAM = `
 const prefix='${PREFIX}',limit=${LIMIT};
 if(process.stdin.isTTY)process.stdin.setRawMode(true);
 process.stdin.setEncoding('utf8');
-const socket=new WebSocket('ws://127.0.0.1:18789');
-let input='',done=false;
+let socket=null,retryTimer=null,input='',done=false,opened=false,received=false,sent=false,retried=false;
 const emit=value=>process.stdout.write(prefix+Buffer.from(JSON.stringify(value)).toString('base64')+'\\n');
-const finish=code=>{if(done)return;done=true;emit({type:'close',code});socket.close();setTimeout(()=>process.exit(0),20)};
-socket.addEventListener('open',()=>emit({type:'open'}));
-socket.addEventListener('message',event=>{if(typeof event.data!=='string'||event.data.length>limit)return finish(1009);emit({type:'message',data:event.data})});
-socket.addEventListener('error',()=>finish(1011));
-socket.addEventListener('close',event=>finish(event.code));
-process.stdin.on('data',chunk=>{input+=chunk;if(input.length>limit*2)return finish(1009);let end;while((end=input.indexOf('\\n'))>=0){const line=input.slice(0,end).trim();input=input.slice(end+1);if(!line)continue;if(socket.readyState!==1)return finish(1011);socket.send(Buffer.from(line,'base64').toString('utf8'))}});
+const finish=code=>{if(done)return;done=true;clearTimeout(retryTimer);retryTimer=null;const current=socket;socket=null;emit({type:'close',code});current?.close();setTimeout(()=>process.exit(0),20)};
+const connect=()=>{
+ if(done)return;
+ const current=socket=new WebSocket('ws://127.0.0.1:18789');
+ const owns=()=>!done&&socket===current;
+ const failed=code=>{if(!owns())return;if(!retried&&!received&&!sent&&(code===1006||code===1011)){retried=true;socket=null;current.close();retryTimer=setTimeout(()=>{retryTimer=null;connect()},250)}else finish(code)};
+ current.addEventListener('open',()=>{if(owns()&&!opened){opened=true;emit({type:'open'})}});
+ current.addEventListener('message',event=>{if(!owns())return;received=true;if(typeof event.data!=='string'||event.data.length>limit)return finish(1009);emit({type:'message',data:event.data})});
+ current.addEventListener('error',()=>failed(1011));
+ current.addEventListener('close',event=>failed(event.code));
+};
+process.stdin.on('data',chunk=>{if(done)return;if(chunk.length)sent=true;if(!socket||socket.readyState!==1)return finish(1011);input+=chunk;if(input.length>limit*2)return finish(1009);let end;while((end=input.indexOf('\\n'))>=0){const line=input.slice(0,end).trim();input=input.slice(end+1);if(!line)continue;socket.send(Buffer.from(line,'base64').toString('utf8'))}});
 process.stdin.on('end',()=>finish(1000));
+connect();
 `;
 
 function encode(text) {
