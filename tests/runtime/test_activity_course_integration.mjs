@@ -490,6 +490,14 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     await context.addCookies([{ name: 'course_fixture', value: 'authorized', url: `http://127.0.0.1:${port}` }]);
     const page = await context.newPage();
     await page.goto(`http://127.0.0.1:${port}/${COURSE_ROOT}/index.html`);
+    const referralLink = page.locator('a[aria-label="Open the NVIDIA Build blueprint card"]');
+    const selectReferral = async () => {
+      await referralLink.evaluate(anchor => anchor.addEventListener('click', event => event.preventDefault(), { once: true }));
+      await referralLink.click();
+    };
+    const referralWrites = () => apiRequests.filter(request => request.method === 'POST' && request.pathname.endsWith('/referrals'));
+    await selectReferral();
+    assert.equal(referralWrites().length, 0);
     const assertActivityButton = async (count, connected = false) => {
       const button = page.locator('.activity-control-toggle');
       const optedIn = await page.evaluate(() => window.OneTrust.IsAlertBoxClosed() && window.OnetrustActiveGroups.split(',').includes('C0002'));
@@ -721,6 +729,17 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     assert.deepEqual(Object.keys(apiRequests.slice(journeyStart).find(request => request.method === 'POST'
       && request.pathname.endsWith('/activity-sessions')).body).sort(), ['artifact_digest', 'artifact_id', 'artifact_version']);
 
+    await Promise.all([
+      page.waitForRequest(request => request.method() === 'POST' && new URL(request.url()).pathname.endsWith('/referrals')),
+      selectReferral(),
+    ]);
+    await page.waitForLoadState('networkidle');
+    assert.equal(referralWrites().length, 1);
+    assert.deepEqual(referralWrites()[0].body, {
+      reference_id: 'build:nemoclaw-card',
+      destination_url: 'https://build.nvidia.com/nvidia/nemoclaw-for-openclaw/nemoclawcard?ncid=ref-dli-146986',
+    });
+
     const successfulExercises = {
       '01a:model-call-verified': [['api-key-verified', {}], ['run-succeeded', { cellId: 'cell-onecall', hasContent: true }]],
       '01b:react-loop-complete': [['chat-completed', { containerId: 'react-artifact', successCount: 1, hasAnswer: true }]],
@@ -776,6 +795,11 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     assert.equal(apiRequests.length, beforeWithdrawal);
     assert.equal(await page.locator('[data-activity-enable]').isVisible(), true);
     assert.equal(await page.locator('[data-activity-milestones]').evaluate(node => node.inert), true);
+    await page.goto(`http://127.0.0.1:${port}/${COURSE_ROOT}/index.html`);
+    await selectReferral();
+    await page.waitForTimeout(50);
+    assert.equal(referralWrites().length, 1, 'withdrawn Performance Cookie consent must stop referral writes');
+    assert.equal(apiRequests.length, beforeWithdrawal);
   } finally {
     await browser?.close();
     await new Promise(resolve => server.close(resolve));
@@ -1416,12 +1440,14 @@ function consentFixture({ groups = ',C0001,', chosen = false, loaded = true } = 
   };
   windowTarget.OnetrustActiveGroups = groups;
   let enabled = false;
+  let referralTracking = false;
   const calls = [];
   const activity = {
-    snapshot: () => ({ enabled, phase: enabled ? 'connected' : 'off' }),
+    setReferralTracking: value => { referralTracking = enabled && value; },
+    snapshot: () => ({ enabled, referralTracking, phase: enabled ? 'connected' : 'off' }),
     resume: async () => false,
     enable: async () => { calls.push('enable'); enabled = true; return true; },
-    disconnect: () => { calls.push('disconnect'); enabled = false; },
+    disconnect: () => { calls.push('disconnect'); enabled = false; referralTracking = false; },
   };
   const syncLocal = async () => { calls.push('sync'); };
   const change = (nextGroups, nextChosen = true) => {
@@ -1438,6 +1464,24 @@ async function bindConsent(fixture) {
   return runtime.bindNemoClawProgressConsent(fixture);
 }
 
+test('saved performance consent enables referrals on an existing connection', async () => {
+  const fixture = consentFixture({ groups: ',C0001,C0002,', chosen: true });
+  await fixture.activity.enable();
+  await bindConsent(fixture); await flushConsent();
+  assert.equal(fixture.activity.snapshot().referralTracking, true);
+});
+
+test('reconnecting after an unsuccessful connection enables referrals', async () => {
+  const fixture = consentFixture({ groups: ',C0001,C0002,', chosen: true });
+  const enable = fixture.activity.enable;
+  fixture.activity.enable = async () => false;
+  const consent = await bindConsent(fixture); await flushConsent();
+  assert.equal(fixture.activity.snapshot().referralTracking, false);
+  fixture.activity.enable = enable;
+  assert.equal(await consent.retry(), true);
+  assert.equal(fixture.activity.snapshot().referralTracking, true);
+});
+
 test('performance consent requires a valid saved choice, not a default active category', async () => {
   const fixture = consentFixture({ groups: ',C0001,C0002,', chosen: false });
   await bindConsent(fixture); await flushConsent();
@@ -1452,6 +1496,7 @@ test('saved performance consent enables progress once and ignores unrelated cate
   fixture.change(',C0001,C0002,C0003,'); await flushConsent();
   assert.equal(fixture.calls.filter(call => call === 'enable').length, 1);
   assert.equal(fixture.calls.filter(call => call === 'sync').length, 1);
+  assert.equal(fixture.activity.snapshot().referralTracking, true);
 });
 
 test('rejecting or withdrawing performance consent stops progress and later acceptance reconnects', async () => {
@@ -1459,8 +1504,10 @@ test('rejecting or withdrawing performance consent stops progress and later acce
   await bindConsent(fixture); await flushConsent();
   fixture.change(',C0001,C0003,');
   assert.equal(fixture.activity.snapshot().enabled, false);
+  assert.equal(fixture.activity.snapshot().referralTracking, false);
   fixture.change(',C0001,C0002,'); await flushConsent();
   assert.equal(fixture.activity.snapshot().enabled, true);
+  assert.equal(fixture.activity.snapshot().referralTracking, true);
   assert.equal(fixture.calls.filter(call => call === 'enable').length, 2);
 });
 
@@ -1482,6 +1529,7 @@ test('withdrawal while enabling cannot sync a stale connection', async () => {
   finish(true); await flushConsent();
   assert.equal(fixture.calls.includes('disconnect'), true);
   assert.equal(fixture.calls.includes('sync'), false);
+  assert.equal(fixture.activity.snapshot().referralTracking, false);
 });
 
 test('malformed category identifiers do not grant performance consent', async () => {
@@ -1492,9 +1540,13 @@ test('malformed category identifiers do not grant performance consent', async ()
 
  test('saved CMP consent resumes the matching Activity choice before making a fresh opt-in', async () => {
   const fixture = consentFixture({ groups: ',C0001,C0002,', chosen: true });
-  fixture.activity.resume = async () => { fixture.calls.push('resume'); return true; };
+  fixture.activity.resume = async () => {
+    await fixture.activity.enable(); fixture.calls.length = 0;
+    fixture.calls.push('resume'); return true;
+  };
   await bindConsent(fixture); await flushConsent();
   assert.deepEqual(fixture.calls, ['resume', 'sync']);
+  assert.equal(fixture.activity.snapshot().referralTracking, true);
 });
 
 test('waiting for the CMP preserves stored choices while an off adapter cannot collect', async () => {

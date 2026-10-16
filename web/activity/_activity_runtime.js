@@ -81,14 +81,20 @@ export function bindNemoClawProgressConsent({ windowTarget, activity, syncLocal 
       if (consent === false || previousConsent === true || state.enabled || state.phase === 'connecting') activity.disconnect();
       return;
     }
-    if (activity.snapshot().enabled) return;
+    if (activity.snapshot().enabled) {
+      activity.setReferralTracking(true);
+      return;
+    }
     const connect = async () => {
       if (await activity.resume()) return true;
       if (currentGeneration !== generation || !allowsProgress()) return false;
       return activity.enable();
     };
     void connect().then(connected => {
-      if (connected && currentGeneration === generation && allowsProgress()) return syncLocal();
+      if (connected && currentGeneration === generation && allowsProgress()) {
+        activity.setReferralTracking(true);
+        return syncLocal();
+      }
     }).catch(() => {});
   };
   windowTarget.addEventListener('bannerLoaded', reconcile);
@@ -102,7 +108,10 @@ export function bindNemoClawProgressConsent({ windowTarget, activity, syncLocal 
       const currentGeneration = generation;
       const connected = activity.snapshot().enabled
         ? Boolean(await activity.getCourseActivityState()) : await activity.enable();
-      if (connected && currentGeneration === generation && allowsProgress()) await syncLocal();
+      if (connected && currentGeneration === generation && allowsProgress()) {
+        activity.setReferralTracking(true);
+        await syncLocal();
+      }
       return connected && currentGeneration === generation && allowsProgress();
     },
     subscribeConsentChanges(listener) {
