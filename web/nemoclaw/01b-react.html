@@ -452,7 +452,7 @@ mountRunCell("#cell-react-lab", {
 const cfg = await helpers.getConfig();
 if (cfg.needsKey && !helpers.getKey()) {
   helpers.log("No API key yet. Add your nvapi- key on the course home, then rerun.");
-  return "Add your nvapi- key on the course home, then rerun.";
+  throw new Error("Add your nvapi- key on the course home, then rerun.");
 }
 
 helpers.log("loading LangChain ...");
@@ -475,7 +475,7 @@ const agents = {};
 function getAgent(model) {
   const activeModel = helpers.isDefaultModelApiBaseUrl(cfg.url) ? model : cfg.model;
   if (!agents[activeModel]) {
-    const llm = new ChatOpenAI({
+    const llm = new ChatOpenAI({ maxRetries: 0,
       configuration: { baseURL, dangerouslyAllowBrowser: true, fetch: helpers.browserChatFetch() },
       apiKey: cfg.needsKey ? helpers.getKey() : "no-key-needed",
       model: activeModel, temperature: 0, maxTokens: 16384,

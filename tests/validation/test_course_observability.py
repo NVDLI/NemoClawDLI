@@ -75,28 +75,48 @@ const helpers = {
   assert.equal(requests[0].init.signal, helpers.signal);
   assert(logs.some(line => line.includes('available model IDs')));
   catalog = [{id: 'provider/novel-chat'}];
-  await run(discovery, state, helpers);
+  await assert.rejects(run(discovery, state, helpers), /edit FILTER/);
   assert.deepEqual(state.models, []);
-  assert(logs.some(line => line.includes('edit FILTER')));
   const before = requests.length;
-  await run(measure, state, helpers);
+  await assert.rejects(run(measure, state, helpers), /Fetch matching models/);
   assert.equal(requests.length, before);
   catalog = [{id: 'course/agent'}];
   await run(discovery, state, helpers);
   status = 503;
-  await run(discovery, state, helpers);
+  await assert.rejects(run(discovery, state, helpers), /HTTP 503/);
   assert.deepEqual(state.models, []);
   status = 200;
   await run(discovery, state, helpers);
   config.url = 'https://changed.test/v1';
   const beforeChange = requests.length;
-  await run(measure, state, helpers);
+  await assert.rejects(run(measure, state, helpers), /Connection changed/);
   assert.equal(requests.length, beforeChange);
-  assert(logs.some(line => line.includes('Connection changed')));
   config.needsKey = true;
-  await run(discovery, state, helpers);
+  await assert.rejects(run(discovery, state, helpers), /No API key saved/);
   assert.deepEqual(state.models, []);
   config.needsKey = false;
+  config.url = 'https://course.test/api/llm/v1';
+  await run(discovery, state, helpers);
+  let wire = 'data: {"choices":[{"delta":{"reasoning_content":"fixture reasoning"}}]}\r\n\r\n' +
+    'data: {"choices":[{"delta":{"content":"fixture answer"},"finish_reason":"stop"}]}\r\n\r\n' +
+    'data: [DONE]\r\n\r\n';
+  let cancelled = 0;
+  helpers.browserChatFetch = () => async (_url, init) => {
+    assert.equal(JSON.parse(init.body).model, config.model);
+    return new Response(new ReadableStream({start(controller) {
+      controller.enqueue(new TextEncoder().encode(wire));
+    },cancel() {cancelled++;}}),{headers:{'Content-Type':'text/event-stream'}});
+  };
+  const measured = await run(measure, state, helpers);
+  assert.deepEqual(measured.ranked, ['course/agent']);
+  assert.equal(state.results[0].text, 'fixture answer');
+  assert.equal(state.results[0].think, 'fixture reasoning');
+  assert.equal(cancelled,1,'DONE must cancel the still-open stream');
+  wire = 'data: {"error":{"message":"fixture stream failed"}}\n\n';
+  await assert.rejects(run(measure, state, helpers), /fixture stream failed/);
+  assert.equal(state.results[0].err, 'fixture stream failed');
+  wire = 'data: [DONE]\n\n';
+  await assert.rejects(run(measure, state, helpers), /complete final response/);
   const preview = cell('cell-finish-reason');
   for (const toolCalls of [[], [{id: 'call-clock', function: {name: 'get_current_time', arguments: '{}'}}]]) {
     config.model = toolCalls.length ? 'provider/switched-model' : 'course/agent';

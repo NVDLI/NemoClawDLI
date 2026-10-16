@@ -30,10 +30,12 @@ let terminalResult = 'exit';
 let terminalExitCode = 0;
 let terminalFrames = null;
 let terminalArgumentMode = 'quoted';
+let pipeSocket = null;
 class FakeWebSocket {
   static OPEN = 1;
   constructor(url) {
     this.url = url;
+    if (new URL(url).searchParams.get('stdio') === 'pipe') pipeSocket = this;
     this.readyState = 0;
     terminalUrls.push(url);
     setTimeout(() => {
@@ -242,6 +244,27 @@ test('terminal distinguishes command exit, disconnected output, and idle output'
   }
 });
 
+test('quiet pipe commands wait for exit within the deadline; interactive idle remains separate', async () => {
+  connection.setOpenClawConnection({rawUrl:launchable, accessProvider:'pomerium', accessSession:''});
+  try {
+    terminalResult = 'pending';
+    pipeSocket = null;
+    const pending = openshell.terminal('quiet-command', {baseUrl:launchable, stdio:'pipe', idleMs:5, totalMs:150});
+    await new Promise(resolve => setTimeout(resolve, 30));
+    const socket = pipeSocket;
+    assert(socket, 'the quiet pipe command must still have an open socket');
+    socket.onmessage?.({data:JSON.stringify({type:'exit',code:0})});
+    const result = await pending;
+    assert.equal(result.completion,'exit');
+    assert.equal(result.exitCode,0);
+    const deadline = await openshell.terminal('never-exits', {baseUrl:launchable, stdio:'pipe', idleMs:5, totalMs:40});
+    assert.equal(deadline.completion,'deadline');
+    assert.equal(deadline.exitCode,null);
+  } finally {
+    terminalResult='exit';
+  }
+});
+
 test('sandboxExec requests pipe transport and retains separate command streams and completion', async () => {
   connection.setOpenClawConnection({rawUrl:launchable, accessProvider:'pomerium', accessSession:''});
   terminalFrames = () => {
@@ -254,11 +277,11 @@ test('sandboxExec requests pipe transport and retains separate command streams a
   try {
     for (const mode of ['exit', 'disconnect', 'pending']) {
       terminalResult = mode;
-      const result = await openshell.sandboxExec('printf code=200', {agent:'test-sandbox', idleMs:20});
+      const result = await openshell.sandboxExec('printf code=200', {agent:'test-sandbox', idleMs:20, totalMs:60});
       assert.equal(result.stdout, 'code=200');
       assert.equal(result.stderr, 'Connection to sandbox closed.');
       assert.equal(result.exitCode, mode === 'exit' ? 0 : null);
-      assert.equal(result.completion, mode === 'pending' ? 'idle' : mode);
+      assert.equal(result.completion, mode === 'pending' ? 'deadline' : mode);
     }
   } finally { terminalFrames = null; terminalResult = 'exit'; }
 });

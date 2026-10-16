@@ -4,6 +4,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { sharedRuntime } from './course_runtime_fixture.mjs';
+import {ChatOpenAI} from '../../web/nemoclaw/vendor/langchain-1.4.7.esm.js';
 
 const {
   DEFAULT_MODEL_API_BASE_URL,
@@ -34,6 +35,234 @@ function memoryStorage() {
     removeItem:key => values.delete(key),
   };
 }
+
+function modelTransportFixture(t) {
+  const names = ['fetch','localStorage','sessionStorage','location'];
+  const previous = new Map(names.map(name => [name,Object.getOwnPropertyDescriptor(globalThis,name)]));
+  globalThis.localStorage = memoryStorage();
+  globalThis.sessionStorage = memoryStorage();
+  globalThis.location = new URL('https://nvdli.github.io/NemoClawDLI/nemoclaw/');
+  setModelApiBaseUrl('https://integrate.api.nvidia.com/v1');
+  setIframeProxyMode(false);
+  t.after(() => {
+    for (const [name,descriptor] of previous) {
+      if (descriptor) Object.defineProperty(globalThis,name,descriptor);
+      else delete globalThis[name];
+    }
+  });
+}
+
+function completionFrames(parts, {done = true, newline = '\r\n'} = {}) {
+  return ': keepalive' + newline + newline + parts.map(part => 'data: ' + JSON.stringify(part) + newline + newline).join('')
+    + (done ? 'data: [DONE]' + newline + newline : '');
+}
+
+function streamResponse(text, {cancel = () => {}, keepOpen = false, delayed = false} = {}) {
+  const bytes = new TextEncoder().encode(text);
+  let offset = 0;
+  return new Response(new ReadableStream({
+    async pull(controller) {
+      if (offset === bytes.length) { if (!keepOpen) controller.close(); return; }
+      if (delayed) await new Promise(resolve => setTimeout(resolve,1));
+      const end = Math.min(offset + 7,bytes.length);
+      controller.enqueue(bytes.slice(offset,end)); offset = end;
+    },
+    cancel,
+  }),{headers:{'content-type':'text/event-stream','x-request-id':'fixture-request'}});
+}
+
+test('buffered NVIDIA transport preserves schema, tools, indexed choices, UTF-8 and final usage', async t => {
+  modelTransportFixture(t);
+  let calls = 0, canceled = false, requested;
+  const original = {model:'fixture/model',messages:[{role:'user',content:'fixture'}],temperature:0,max_tokens:123,n:2,
+    response_format:{type:'json_schema',json_schema:{name:'answer',strict:true,schema:{type:'object',properties:{answer:{type:'string'}}}}},
+    tools:[{type:'function',function:{name:'inspect',parameters:{type:'object'}}}],tool_choice:'auto'};
+  const parts = [
+    {id:'completion-fixture',created:7,model:'provider/model',object:'chat.completion.chunk',choices:[
+      {index:1,delta:{role:'assistant',content:'{"answer":"中'},finish_reason:null},
+      {index:0,delta:{role:'assistant',tool_calls:[{index:0,id:'call-',type:'function',function:{name:'ins',arguments:'{"path":'}}]},finish_reason:null},
+    ]},
+    {choices:[{index:0,delta:{reasoning_content:'reason',tool_calls:[{index:0,id:'owned',function:{name:'pect',arguments:'"x"}'}}]},finish_reason:'tool_calls'},
+      {index:1,delta:{content:'文"}',refusal:null},finish_reason:'stop',logprobs:{content:[{token:'文',logprob:-0.2}]}}]},
+    {choices:[],usage:{prompt_tokens:4,completion_tokens:9,total_tokens:13}},
+  ];
+  globalThis.fetch = async (_url,init) => {
+    calls++; requested = JSON.parse(init.body);
+    return streamResponse(completionFrames(parts),{cancel:() => {canceled=true;},keepOpen:true,delayed:true});
+  };
+  const response = await sharedRuntime.browserChatFetch()('https://integrate.api.nvidia.com/v1/chat/completions',{
+    method:'POST',body:JSON.stringify(original),headers:{'content-type':'application/json','x-stainless-lang':'js'},
+  });
+  assert.deepEqual(requested,{...original,stream:true,stream_options:{include_usage:true}});
+  const result = await response.json();
+  assert.equal(result.object,'chat.completion');
+  assert.equal(result.model,'provider/model');
+  assert.equal(result.id,'completion-fixture');
+  assert.equal(result.choices[0].finish_reason,'tool_calls');
+  assert.deepEqual(result.choices[0].message.tool_calls,[{id:'call-owned',type:'function',function:{name:'inspect',arguments:'{"path":"x"}'}}]);
+  assert.equal(result.choices[0].message.reasoning_content,'reason');
+  assert.equal(result.choices[1].message.content,'{"answer":"中文"}');
+  assert.equal(result.choices[1].logprobs.content[0].token,'文');
+  assert.deepEqual(result.usage,{prompt_tokens:4,completion_tokens:9,total_tokens:13});
+  assert.equal(response.headers.get('x-request-id'),'fixture-request');
+  assert.equal(calls,1);
+  assert.equal(canceled,true);
+});
+
+test('actual vendored ChatOpenAI consumes one buffered tool response without replay', async t => {
+  modelTransportFixture(t);
+  let calls = 0, sdkMarker = false;
+  const adaptedFetch = sharedRuntime.browserChatFetch();
+  const sdkFetch = (url,init) => {
+    assert.equal(new Headers(init.headers).get('x-stainless-lang'),'js');
+    sdkMarker = true;
+    return adaptedFetch(url,init);
+  };
+  globalThis.fetch = async (_url,init) => {
+    calls++;
+    assert.equal([...new Headers(init.headers).keys()].some(key=>key.startsWith('x-stainless')),false);
+    const request = JSON.parse(init.body);
+    assert.equal(request.stream,true);
+    assert.equal(request.tools[0].function.name,'inspect');
+    return streamResponse(completionFrames([
+      {id:'tool-completion',model:'fixture/model',created:1,choices:[{index:0,delta:{role:'assistant',tool_calls:[
+        {index:0,id:'owned-tool',type:'function',function:{name:'inspect',arguments:'{"path":'}}]},finish_reason:null}]},
+      {choices:[{index:0,delta:{tool_calls:[{index:0,function:{arguments:'"file"}'}}]},finish_reason:'tool_calls'}]},
+    ]));
+  };
+  const llm = new ChatOpenAI({model:'fixture/model',apiKey:'fixture-only-key',maxRetries:0,
+    configuration:{baseURL:'https://integrate.api.nvidia.com/v1',dangerouslyAllowBrowser:true,fetch:sdkFetch}});
+  const message = await llm.bindTools([{type:'function',function:{name:'inspect',parameters:{type:'object',properties:{path:{type:'string'}}}}}]).invoke('fixture');
+  assert.deepEqual(message.tool_calls.map(call => ({name:call.name,args:call.args,id:call.id})),[
+    {name:'inspect',args:{path:'file'},id:'owned-tool'},
+  ]);
+  assert.equal(calls,1);
+  assert.equal(sdkMarker,true);
+});
+
+test('buffered transport rejects malformed, failed and truncated streams without retry', async t => {
+  modelTransportFixture(t);
+  setModelRequestRetries(2);
+  const complete = {choices:[{index:0,delta:{content:'partial'},finish_reason:'stop'}]};
+  for (const text of [
+    'data: {broken}\n\n',
+    completionFrames([{error:{message:'provider failed'}}]),
+    completionFrames([complete],{done:false}),
+    completionFrames([{choices:[{index:0,delta:{content:'partial'},finish_reason:null}]}]),
+    completionFrames([{choices:[{index:0,delta:{tool_calls:[{index:1,id:'gap',function:{name:'inspect',arguments:'{}'}}]},finish_reason:'tool_calls'}]}]),
+    completionFrames([{choices:[{index:0,delta:{tool_calls:[{index:0,id:'missing-name',function:{arguments:'{}'}}]},finish_reason:'tool_calls'}]}]),
+  ]) {
+    let calls = 0;
+    globalThis.fetch = async () => {calls++;return streamResponse(text);};
+    await assert.rejects(sharedRuntime.browserChatFetch()('https://integrate.api.nvidia.com/v1/chat/completions',{
+      method:'POST',body:JSON.stringify({model:'fixture/model',messages:[]}),headers:{'x-stainless-lang':'js'},
+    }),/Malformed JSON|provider failed|complete final response|Incomplete streamed tool call/);
+    assert.equal(calls,1);
+  }
+});
+
+test('actual vendored ChatOpenAI does not replay a truncated streamed completion', async t => {
+  modelTransportFixture(t);
+  setModelRequestRetries(2);
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls++;
+    return streamResponse(completionFrames([
+      {choices:[{index:0,delta:{content:'partial'},finish_reason:'stop'}]},
+    ],{done:false}));
+  };
+  const llm = new ChatOpenAI({model:'fixture/model',apiKey:'fixture-only-key',maxRetries:0,
+    configuration:{baseURL:'https://integrate.api.nvidia.com/v1',dangerouslyAllowBrowser:true,fetch:sharedRuntime.browserChatFetch()}});
+  await assert.rejects(llm.invoke('fixture'), error => {
+    assert.match(String(error.cause?.message || error.message), /complete final response/);
+    return true;
+  });
+  assert.equal(calls,1);
+});
+
+test('SDK body reads honor Stop after headers without waiting for stalled cancellation', async t => {
+  modelTransportFixture(t);
+  const controller = new AbortController();
+  let canceled = false;
+  globalThis.fetch = async () => new Response(new ReadableStream({cancel() {
+    canceled = true; return new Promise(() => {});
+  }}),{headers:{'content-type':'application/json'}});
+  const response = await sharedRuntime.browserChatFetch()('https://models.example.test/v1/models',{signal:controller.signal});
+  const reading = response.json();
+  controller.abort(new Error('stopped after SDK headers'));
+  await assert.rejects(reading,/stopped after SDK headers/);
+  assert.equal(canceled,true);
+});
+
+test('retry releases an unused HTTP body before the next request', async t => {
+  modelTransportFixture(t);
+  let calls = 0, canceled = false;
+  globalThis.fetch = async () => {
+    if (++calls === 1) return new Response(new ReadableStream({cancel() {canceled=true;return new Promise(() => {});}}),{status:503});
+    assert.equal(canceled,true);
+    return new Response('ready');
+  };
+  const response = await fetchRetry('https://models.example.test/v1/models',{}, {retries:1,backoffMs:0,timeoutMs:100});
+  assert.equal(await response.text(),'ready');
+  assert.equal(calls,2);
+});
+
+test('actual vendored ChatOpenAI stops a stalled JSON body without replay', async t => {
+  modelTransportFixture(t);
+  const controller = new AbortController();
+  let calls = 0, canceled = false;
+  globalThis.fetch = async () => {
+    calls++;
+    setTimeout(() => controller.abort(new Error('learner stopped SDK response')), 5);
+    return new Response(new ReadableStream({cancel() {
+      canceled = true;
+      return new Promise(() => {});
+    }}), {headers:{'content-type':'application/json'}});
+  };
+  const llm = new ChatOpenAI({model:'fixture/model',apiKey:'fixture-only-key',maxRetries:0,
+    configuration:{baseURL:'https://models.example.test/v1',dangerouslyAllowBrowser:true,fetch:sharedRuntime.browserChatFetch()}});
+  await assert.rejects(llm.invoke('fixture', {signal:controller.signal}), /abort|stopped/i);
+  assert.equal(calls,1);
+  assert.equal(canceled,true);
+});
+
+test('custom providers, raw fetch and explicit streaming keep their caller request', async t => {
+  modelTransportFixture(t);
+  for (const [url,body] of [
+    ['https://models.example.test/v1/chat/completions',{messages:[],stream:false}],
+    ['https://integrate.api.nvidia.com/v1/chat/completions',{messages:[],stream:true}],
+  ]) {
+    let requested;
+    globalThis.fetch = async (_url,init) => {requested=init.body;return new Response('{}',{headers:{'content-type':'application/json'}});};
+    const response = await sharedRuntime.browserChatFetch()(url,{method:'POST',body:JSON.stringify(body),headers:{'x-stainless-lang':'js'}});
+    await response.json();
+    assert.equal(requested,JSON.stringify(body));
+  }
+  let raw;
+  globalThis.fetch = async (_url,init) => {raw=init.body;return new Response('{}');};
+  await fetch('https://integrate.api.nvidia.com/v1/chat/completions',{method:'POST',body:'{"stream":false}'});
+  assert.equal(raw,'{"stream":false}');
+});
+
+test('default browserChatFetch preserves the authored JSON wire request and response', async t => {
+  modelTransportFixture(t);
+  const body=' { "model": "fixture/model", "messages": [], "stream": false } ';
+  const reply=' { "choices": [{"message":{"content":"raw response"}}] } ';
+  for (const headers of [{},{'x-stainless-runtime':'browser'}]) {
+    let calls=0;
+    globalThis.fetch=async(_url,init)=>{
+      calls++;
+      assert.equal(init.body,body,'wire bytes match the authored raw request');
+      return new Response(reply,{headers:{'content-type':'application/json; charset=utf-8'}});
+    };
+    const response=await sharedRuntime.browserChatFetch()('https://integrate.api.nvidia.com/v1/chat/completions',{
+      method:'POST',body,headers,
+    });
+    assert.equal(response.headers.get('content-type'),'application/json; charset=utf-8');
+    assert.equal(await response.text(),reply);
+    assert.equal(calls,1);
+  }
+});
 
 test('Stop cancels a pending body read and removes its listener', async () => {
   const controller = new AbortController();
@@ -117,6 +346,94 @@ test('DONE cancels an open response body and preserves the provider model identi
       else globalThis[name] = value;
     }
   }
+});
+
+test('public chatStream delivers incremental CRLF deltas and completes before socket EOF', async t => {
+  modelTransportFixture(t);
+  const usage={prompt_tokens:2,completion_tokens:4,total_tokens:6};
+  const last={model:'provider/actual-model',choices:[],usage};
+  let stream, canceled=false, meta=null;
+  const content=[],reasoning=[];
+  const first={model:'provider/actual-model',choices:[{index:0,delta:{content:'你好',reasoning_content:'Check '},finish_reason:null}]};
+  globalThis.fetch=async () => new Response(new ReadableStream({
+    start(controller) {stream=controller;controller.enqueue(new TextEncoder().encode(completionFrames([first],{done:false})));},
+    cancel(){canceled=true;},
+  }),{headers:{'content-type':'text/event-stream'}});
+  const result=await sharedRuntime.chatStream({messages:[]}, text => {
+    content.push(text);
+    assert.equal(meta,null,'metadata is published only after complete response');
+    // The provider cannot finish until the first incremental callback runs.
+    if(content.length===1) stream.enqueue(new TextEncoder().encode(completionFrames([
+      {choices:[{index:0,delta:{content:' 🌐',reasoning_content:'clock',tool_calls:[{index:0,id:'tool-1',function:{name:'get_',arguments:'{'}}]},finish_reason:null}]},
+      {choices:[{index:0,delta:{tool_calls:[{index:0,function:{name:'time',arguments:'}'}}]},finish_reason:'tool_calls'}]},last,
+    ])));
+  },{onReasoning:text=>reasoning.push(text),onMeta:value=>{meta=value;}});
+  assert.deepEqual(content,['你好',' 🌐']);
+  assert.deepEqual(reasoning,['Check ','clock']);
+  assert.equal(result.content,'你好 🌐');
+  assert.equal(result.reasoning,'Check clock');
+  assert.deepEqual(result.tool_calls,[{index:0,id:'tool-1',type:'function',function:{name:'get_time',arguments:'{}'}}]);
+  assert.equal(result.finish_reason,'tool_calls');
+  assert.equal(result.model,'provider/actual-model');
+  assert.deepEqual(result.usage,usage);
+  assert.deepEqual(result.raw,last);
+  assert.equal(meta,result);
+  assert.equal(canceled,true);
+});
+
+test('single-choice missing indices remain compatible while explicit or ambiguous indices fail', async t => {
+  modelTransportFixture(t);
+  const choice={delta:{content:'one'},finish_reason:'stop'};
+  globalThis.fetch=async()=>streamResponse(completionFrames([{choices:[choice]}]));
+  const delivered=[];
+  assert.equal((await sharedRuntime.chatStream({messages:[]},text=>delivered.push(text))).content,'one');
+  assert.deepEqual(delivered,['one']);
+  for(const [choices,n] of [
+    [[{...choice,index:'0'}],1],
+    [[{...choice,index:null}],1],
+    [[choice,choice],1],
+    [[choice],2],
+    [[choice,choice],2],
+  ]) {
+    globalThis.fetch=async()=>streamResponse(completionFrames([{choices}]));
+    await assert.rejects(sharedRuntime.chatStream({messages:[],extra_body:{n}}),/Invalid model stream choice index/);
+  }
+});
+
+test('public chatStream rejects invalid or incomplete streams without replay or success metadata', async t => {
+  modelTransportFixture(t);
+  setModelRequestRetries(2);
+  for(const text of [
+    'data: {invalid}\r\n\r\n',
+    completionFrames([{error:{message:'stream provider failed'}}]),
+    completionFrames([{choices:[{index:0,delta:{content:'partial'},finish_reason:'stop'}]}],{done:false}),
+    completionFrames([{choices:[{index:0,delta:{content:'partial'},finish_reason:null}]}]),
+    completionFrames([{choices:[{index:0,delta:{content:42},finish_reason:'stop'}]}]),
+  ]) {
+    let calls=0,metadata=0,canceled=false;
+    globalThis.fetch=async()=>{calls++;return streamResponse(text,{keepOpen:text.includes('[DONE]'),cancel(){canceled=true;}});};
+    await assert.rejects(sharedRuntime.chatStream({messages:[]},null,{onMeta(){metadata++;}}),
+      /Malformed JSON|stream provider failed|complete final response|Invalid text/);
+    assert.equal(calls,1);
+    assert.equal(metadata,0);
+    if(text.includes('[DONE]'))assert.equal(canceled,true);
+  }
+});
+
+test('public chatStream Stop during a callback cancels before further callbacks or completion', async t => {
+  modelTransportFixture(t);
+  const controller=new AbortController();
+  let calls=0,canceled=false,reasoning=0,metadata=0;
+  globalThis.fetch=async()=>{calls++;return streamResponse(completionFrames([
+    {choices:[{index:0,delta:{content:'partial',reasoning_content:'late'},finish_reason:'stop'}]},
+  ]),{keepOpen:true,cancel(){canceled=true;return new Promise(()=>{});}});};
+  await assert.rejects(sharedRuntime.chatStream({messages:[],signal:controller.signal},()=>{
+    controller.abort(new Error('stopped incremental output'));
+  },{onReasoning(){reasoning++;},onMeta(){metadata++;}}),/stopped incremental output/);
+  assert.equal(calls,1);
+  assert.equal(canceled,true);
+  assert.equal(reasoning,0);
+  assert.equal(metadata,0);
 });
 
 test('only the former NVIDIA hosted embedding default migrates', () => {

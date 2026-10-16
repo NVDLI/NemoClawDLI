@@ -80,6 +80,41 @@ async function test(label, fn) {
     }
   });
 
+  await test('short SDK examples reserve the verified default model budget for answers without changing custom providers', async () => {
+    const {pathToFileURL}=require('node:url');
+    const sdk=await import(pathToFileURL(path.join(root,'web/nemoclaw/vendor/langchain-1.4.7.esm.js')).href);
+    for (const [flow,node] of [['#cell-m3c-p1','import'],['#cell-m3c-p2','import'],['#cell-m3c-p3','setup']]) {
+      const code=deep.node(flow,node).replace(/await import\(new URL\("\.\/vendor\/langchain-1\.4\.7\.esm\.js", location\.href\)\.href\)/, 'helpers.sdk');
+      for (const [url,model,direct] of [
+        ['https://nvidia-api-cors-proxy.experiments.courses.nvidia.com/v1','nvidia/nemotron-3.5-lightning-30b-a3b',true],
+        ['https://custom.example/v1','nvidia/nemotron-3.5-lightning-30b-a3b',false],
+        ['https://nvidia-api-cors-proxy.experiments.courses.nvidia.com/v1','another/model',false],
+      ]) {
+        const state={};
+        await run(code,state,{sdk,getConfig:async()=>({url,model,needsKey:false}),
+          isDefaultModelApiBaseUrl:value=>value.includes('nvidia-api-cors-proxy.'),browserChatFetch:()=>async()=>{throw new Error('No inference in constructor test');}});
+        assert.equal(state.llm.caller.maxRetries,0);
+        assert.equal(state.llm.invocationParams().chat_template_kwargs?.enable_thinking,direct?false:undefined);
+      }
+    }
+  });
+
+  await test('clock task needs a successful tool result; direct-answer variation remains available', async () => {
+    const code=deep.node('#cell-m3c-p2','invoke');
+    const final={content:'Current time',response_metadata:{finish_reason:'stop'}};
+    const helpers={viz:{messageList:noop}};
+    for (const tool of [null,{name:'get_current_time',tool_call_id:'clock',status:'error'}]) {
+      const messages=tool?[tool,final]:[final];
+      await assert.rejects(run(code,{agent:{invoke:async()=>({messages})}},helpers),d(/No clock result was returned/));
+    }
+    const messages=[{name:'get_current_time',tool_call_id:'clock',status:'success',content:'UTC'},final];
+    assert.equal((await run(code,{agent:{invoke:async()=>({messages})}},helpers)).message_count,2);
+    await assert.rejects(run(code,{agent:{invoke:async()=>({messages:[messages[0],{...final,content:''}]})}},helpers),d(/Model did not return a complete answer/));
+    const direct=code.replace('requireClock: true','requireClock: false');
+    assert.notEqual(direct,code);
+    assert.equal((await run(direct,{agent:{invoke:async()=>({messages:[final]})}},helpers)).message_count,1);
+  });
+
   // These validation diagnostics live in the native inline helper, outside locale resources.
   // Their exact English text remains executable in every materialized locale.
   await test('planner validates final JSON and never silently substitutes a plan', async () => {

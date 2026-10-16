@@ -265,7 +265,7 @@ test('native policy confirmation targets the sandbox whose policy was read, even
   const external = sockets((socket,request) => {
     if (request.method !== 'terminal') return;
     command = request.command;
-    socket.event({type:'data',data:'code=200'});
+    socket.event({type:'data',data:command.endsWith("printf %s 'DLI-ARG a b-END'") ? 'DLI-ARG a b-END' : 'code=200'});
     socket.event({type:'exit',code:0});
   });
   const source = fs.readFileSync(lesson(4, 1),'utf8');

@@ -1598,7 +1598,7 @@ const url = cfg.url + "/chat/completions";
 const headers = { "Content-Type": "application/json" };
 if (cfg.needsKey) {
   const KEY = helpers.getKey();
-  if (!KEY) { log("Save your nvapi- key on the course home page first."); return; }
+  if (!KEY) throw new Error("Save your nvapi- key on the course home page first.");
   headers.Authorization = "Bearer " + KEY;
 }
 const body = {
