@@ -53,6 +53,7 @@ SUMMARIES = {
     "scripts/cors-proxy/deployable/src": "Dependency-free Lambda and CloudFront request-routing implementation.",
     "scripts/cors-proxy/deployable/infrastructure": "Generic operator-parameterized infrastructure template for both relay endpoints.",
     "scripts/cors-proxy/deployable/test": "Node unit tests for request filtering, provider binding, redirects, CORS, streaming, and WebSocket routing.",
+    "web/activity": "Native JavaScript Activity SDK, course adapter, consent runtime, collection policy, and generated milestone configuration. Edit docs/ACTIVITY_MILESTONES.md to change milestone definitions.",
     "web/shared": "Pinned browser libraries and course-authored interface primitives shared without creating sibling-course dependencies.",
     "web/shared/vendor": "Byte-identical publisher browser assets with version, license, digest, and reviewed-copy evidence.",
     "web/shared/vendor/licenses": "Complete upstream license texts for the shared browser assets.",

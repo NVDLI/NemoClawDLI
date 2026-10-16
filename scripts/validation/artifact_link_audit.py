@@ -86,11 +86,16 @@ def _target(root: Path, page: Path, raw: str) -> tuple[Path | None, str, str | N
     return target, parsed.fragment, None
 
 
-def audit(root: Path) -> list[Finding]:
+def audit(root: Path, *, source_roots: list[Path] | None = None) -> list[Finding]:
     root = root.resolve()
     if not root.is_dir():
         return [Finding(".", str(root), "deployment root is not a directory")]
-    documents = _documents(root)
+    documents: dict[Path, Document] = {}
+    for source in source_roots if source_roots is not None else [root]:
+        source = source.resolve()
+        if not source.is_relative_to(root) or not source.is_dir():
+            return [Finding(".", str(source), "document scope is outside the deployment root or missing")]
+        documents.update(_documents(source))
     if not documents:
         return [Finding(".", str(root), "deployment root contains no HTML files")]
 
@@ -149,6 +154,20 @@ def self_test() -> list[str]:
                 failures.append(f"{label}: valid fixture was rejected: {messages}")
             elif expected is not None and not any(expected in message for message in messages):
                 failures.append(f"{label}: mutation was not rejected with {expected!r}: {messages}")
+        root = base / "scoped"
+        course = root / "course"
+        course.mkdir(parents=True)
+        (root / "activity").mkdir()
+        (root / "activity/config.json").write_text("{}")
+        page = course / "index.html"
+        page.write_text('<a href="../activity/config.json">config</a>')
+        if audit(root, source_roots=[course]):
+            failures.append("scoped course: valid sibling resource rejected")
+        page.write_text('<a href="../../escape.html">escape</a>')
+        if not audit(root, source_roots=[course]):
+            failures.append("scoped course: deployment boundary escape accepted")
+        if not audit(root, source_roots=[base]):
+            failures.append("scoped course: outside document scope accepted")
     return failures
 
 

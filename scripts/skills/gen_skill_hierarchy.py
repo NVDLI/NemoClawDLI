@@ -178,7 +178,7 @@ def courses_in(surface: str):
         return []
     out = []
     for d in sorted(p for p in root.iterdir() if p.is_dir() and not p.name.startswith(".")):
-        if surface == "web" and d.name == "shared":
+        if surface == "web" and d.name in {"shared", "activity"}:
             continue
         if (d / "SKILL.html").is_file():
             out.append((d.name, f"{d.name}/SKILL.html"))
@@ -393,10 +393,13 @@ def gen_surface(surface: str):
                    if (TASK1 / "web" / n).is_file()]
         if landing:
             sections.append(("Landing pages", None, landing))
-        shared = TASK1 / "web" / "shared" / "SKILL.html"
-        if shared.is_file():
-            sections.append(("Shared browser infrastructure", "Course-neutral browser assets used without linking one course to another.",
-                             [("shared/", "shared/SKILL.html", "Pinned browser libraries, license evidence, and common NVIDIA favicon provenance.")]))
+        infrastructure = [(name + "/", name + "/SKILL.html", description)
+                          for name, description in (
+                              ("shared", "Pinned browser libraries, license evidence, and common NVIDIA favicon provenance."),
+                              ("activity", "Native Activity SDK, course adapter, consent runtime and generated milestone configuration."))
+                          if (TASK1 / "web" / name / "SKILL.html").is_file()]
+        if infrastructure:
+            sections.append(("Shared browser infrastructure", "Browser assets used without linking one course to another.", infrastructure))
         nav = [(n, f"../scripts/{n}", d) for n, d in
                [("edx_navigator_quick.html", "Course LMS navigator."),
                 ("edx_getting_started.html", "LMS getting-started page.")]
@@ -408,8 +411,8 @@ def gen_surface(surface: str):
     meta = {"node_type": "hub", "level": "surface", "surface": surface, "title": f"{surface} surface",
             "self_path": f"{surface}/SKILL.html",
             "children": ([{"name": n, "path": f"{surface}/{h}"} for n, h in cs]
-                         + ([{"name": "shared", "path": "web/shared/SKILL.html"}]
-                            if surface == "web" and (TASK1 / "web" / "shared" / "SKILL.html").is_file() else []))}
+                         + ([{"name": name, "path": f"web/{name}/SKILL.html"} for name in ("shared", "activity")
+                             if (TASK1 / "web" / name / "SKILL.html").is_file()] if surface == "web" else []))}
     write(TASK1 / surface / "SKILL.html",
           framer_page(meta, f"{surface}/ · surface hub", sections, summary=lead,
                       nav=_nav(surface, "SKILL.html", "task1"),
@@ -494,6 +497,14 @@ def gen_web_course_hubs():
                 "self_path": f"web/{d.name}/SKILL.html",
                 "children": [{"name": _label(p), "path": p.relative_to(TASK1).as_posix()} for p in pages]
                             + [{"name": p.parent.name, "path": p.relative_to(TASK1).as_posix()} for p in support_files]}
+        if (d / "COURSE_CANON.md").is_file() and (d.parent / "activity").is_dir():
+            meta["activity_milestones"] = {
+                "definitions": "../activity/activity_milestones.json", "documentation": "../../docs/ACTIVITY_MILESTONES.md",
+            }
+            sections.append(("Activity milestones", "Course-owned definitions, producer evidence and exercise targets.", [
+                ("Activity Milestones", "../../docs/ACTIVITY_MILESTONES.md", "Canonical milestone definitions and acceptance criteria."),
+                ("Milestone configuration", "../activity/activity_milestones.json", "Generated native SDK initialization and success-event bindings."),
+            ]))
         interface_inventory = d / "interface-inventory.json"
         interface_section = None
         if interface_inventory.is_file():
@@ -522,6 +533,10 @@ def gen_web_course_hubs():
                 interface_items,
             )
         runtime_profiles = sorted(d.glob("*-profile.json"))
+        lesson_map = d / "lesson-map.json"
+        if lesson_map.is_file() and lesson_map not in runtime_profiles:
+            runtime_profiles.append(lesson_map)
+            runtime_profiles.sort()
         profile_items = []
         if runtime_profiles:
             meta["runtime_profiles"] = []
