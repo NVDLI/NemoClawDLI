@@ -1227,7 +1227,8 @@ export function mountCourseLicenseNote() {
   if (document.querySelector(".course-license-note")) return;
   const main = document.querySelector("main");
   if (!main || !document.querySelector(".topbar")) return;
-  const note = document.createElement("footer");
+  const policyFooter = document.querySelector(".nvidia-policy-footer");
+  const note = document.createElement(policyFooter ? "div" : "footer");
   note.className = "course-license-note";
   const language = document.documentElement.lang.toLowerCase();
   note.innerHTML = language.startsWith("zh")
@@ -1254,16 +1255,20 @@ export function mountCourseLicenseNote() {
     : language.startsWith('pt') ? ['Privacidade da NVIDIA', 'Direitos e solicitações de privacidade', 'Termos de avaliação da API NVIDIA', 'Privacidade da hospedagem GitHub']
       : language.startsWith('es') ? ['Privacidad de NVIDIA', 'Derechos y solicitudes de privacidad', 'Términos de prueba de la API de NVIDIA', 'Privacidad del alojamiento en GitHub']
         : ['NVIDIA privacy policy', 'Privacy rights and requests', 'NVIDIA API trial terms', 'GitHub hosting privacy'];
+  const existingDestinations = new Set([...policyFooter?.querySelectorAll('a[href]') || []]
+    .map(link => link.href));
   [
     'https://www.nvidia.com/en-us/about-nvidia/privacy-policy/',
     'https://www.nvidia.com/en-us/about-nvidia/privacy-center/',
     'https://assets.ngc.nvidia.com/products/api-catalog/legal/NVIDIA%20API%20Trial%20Terms%20of%20Service.pdf',
     'https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement',
   ].forEach((href, index) => {
-    if (index) links.append(' · ');
+    if (existingDestinations.has(href)) return;
+    if (links.childNodes.length) links.append(' · ');
     const link = document.createElement('a');
     link.href = href; link.textContent = labels[index]; links.appendChild(link);
   });
   note.appendChild(links);
-  main.appendChild(note);
+  if (policyFooter) policyFooter.prepend(note);
+  else main.appendChild(note);
 }

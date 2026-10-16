@@ -52,6 +52,11 @@
   "summary": "Browser modules that power the Securing Agents course: shared page chrome, learner-selected depth, runnable cells, canvas flows, OpenClaw controls, chat widgets, diagrams, retrieval helpers, and the studio testing and authoring interface. These files are source assets, not generated bundle output.",
   "interfaces": [
     {
+      "name": "Course milestone instrumentation",
+      "entry": "../../activity/activity_milestones.json, ../../activity/_activity.js, ../../activity/_activity_runtime.js",
+      "style": "Author milestone IDs, labels, descriptions, exercise links and producer evidence in docs/ACTIVITY_MILESTONES.md. Generate web/activity/activity_milestones.json from its structured definitions. The native shared SDK reads it on initialization and binds configured success events; runtime owns consent, pending evidence and UI. Keep course-specific definitions out of the shared SDK."
+    },
+    {
       "name": "Course pages",
       "entry": "scripts/_shared.js",
       "style": "Imported by lesson HTML. Keep page code declarative and route larger behavior through the shared modules."
@@ -153,6 +158,7 @@
   <table>
     <thead><tr><th>File</th><th>Role</th></tr></thead>
     <tbody>
+      <tr><td>../../activity/activity_milestones.json, ../../activity/_activity.js, ../../activity/_activity_runtime.js</td><td>Generated JSON definitions from docs/ACTIVITY_MILESTONES.md, consented SDK initialization and generic configured success-event bindings.</td></tr>
       <tr><td>_shared.js</td><td>Page chrome, model gateway helpers, service config, exported API surface for lesson pages.</td></tr>
       <tr><td>_connection.js</td><td>Persistent non-secret route configuration, tab-scoped gateway and access credentials, direct verified sessions, provider-bound manual fallback, provider/host validation, and stale saved-route migration.</td></tr>
       <tr><td>_learning.js</td><td>Lesson numbering, independent native section disclosures, nested section links, and print-state restoration. No global content mode or automatic code collapse.</td></tr>
