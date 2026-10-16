@@ -269,3 +269,13 @@ The audit rejects stale projections, unclassified local services or volumes, mis
 nodes, dangling edges, undocumented trust-boundary crossings, unlabeled sensitive flows, broken
 evidence anchors, overlaps, and ambiguous collinear flows. The flow register uses three lines per
 edge: endpoints, transport and data, then authentication and trust boundary.
+
+## Generated-page consent dependencies
+
+The shared course bundler injects the supplied OneTrust notice into generated pages. The browser loads the executable consent scripts listed in `THIRD_PARTY_LICENSES.md`; OneTrust also retrieves the supplied tenant configuration. These requests cross the course browser boundary to provider-operated services. The scripts run in the page origin and are not pinned or vendored course dependencies. Their operation and domain configuration remain externally owned.
+
+The authored-source runtime graph observer does not discover scripts injected by the bundler. Review generated HTML and browser network traffic alongside that graph; the external consent-script inventory is recorded in `THIRD_PARTY_LICENSES.md`. Activity progress syncing defaults to off and remains subject to the deployed collection policy. The runtime requires a valid OneTrust saved choice with the configured `C0002` Performance Cookies category active before connecting. Its `bannerLoaded` event only triggers reconciliation of that choice; the event alone never authorizes Activity writes. Withdrawal invalidates pending connections, aborts transport and clears the tab's Activity session. Referral consent remains separate.
+
+Course milestone definitions live in `docs/ACTIVITY_MILESTONES.md`, which generates `web/activity/activity_milestones.json` to supply the checklist and typed producer predicates. The shared SDK loader accepts same-origin course config and bounds its local metadata to 64 KiB. Event bindings require the configured page, a real DOM target and live success evidence; views and clicks are excluded. After saved performance-cookie consent and validated artifact identity, session creation sends only artifact ID, version and digest. The service resolves its registered milestone policy independently; no browser operation registers definitions or changes global policy.
+
+The SDK includes local definitions in session and concurrent initialization scope, so changing them cannot reuse or forward the previous bearer. A completion update sends only its milestone ID. These client-reported interactions do not establish certification or entitlement evidence. Learner keys, prompts, responses and terminal output stay outside Activity payloads.

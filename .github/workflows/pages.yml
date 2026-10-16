@@ -109,6 +109,12 @@ jobs:
           # own artifact under the same boundary and before the browser traversal, so a route
           # that only exists after projection cannot fail for the first time inside production.
           python3 scripts/validation/sensitive_content_audit.py --root "$RUNNER_TEMP/pull-request-public" --publication-source-root .
+          python3 scripts/validation/pages_artifact_integrity.py \
+            --root "$RUNNER_TEMP/pull-request-public" --expect-sha "$GITHUB_SHA" \
+            --write-manifest "$RUNNER_TEMP/pull-request-public/pages-sha256.txt"
+          python3 scripts/validation/pages_artifact_integrity.py \
+            --root "$RUNNER_TEMP/pull-request-public" --expect-sha "$GITHUB_SHA" \
+            --check-manifest "$RUNNER_TEMP/pull-request-public/pages-sha256.txt"
           python3 scripts/skills/skill_renderer_runtime_audit.py --site-root "$RUNNER_TEMP/pull-request-public" --timeout-seconds 600
       - name: Exercise runtime integrations in the pull-request Pages artifact
         if: github.event_name == 'pull_request'

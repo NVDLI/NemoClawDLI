@@ -51,6 +51,13 @@ The course pages inline their own CSS and JS and use relative links, so the cour
 from a Pages subpath. Live model calls use the student's own NVIDIA key and call NVIDIA model
 services directly by default. An explicitly enabled iframe mode uses the NVIDIA API CORS relay.
 
+The production OneTrust configuration belongs to `https://nvdli.github.io`. The bundle loads it
+only on that host; other hosts need their own consent integration, and optional Activity collection
+stays off without one. This prevents a localhost preview from repeatedly losing a domain-bound
+cookie choice. The current managed configuration enables refresh after Accept or Reject. Its owner
+must disable `BannerRefreshAfterCallToActionEnabled` and republish to remove that refresh on Pages;
+the course does not intercept browser navigation or override the consent SDK.
+
 Pages-hosted Cloudflare Access launchables use the OpenClaw relay. Pomerium launchables keep their
 HttpOnly session in the signed-in browser: gateway and terminal WebSockets connect directly, and
 the two fixed metadata reads use that authenticated terminal to read launchable loopback. A course
@@ -289,8 +296,10 @@ live-launchable authority.
 `.github/workflows/pages.yml` runs the identical gate, then separates artifact creation
 from deployment on pushes to the default branch. The read-only `build-and-verify` job
 builds `public/`, verifies that `gate.json` names the same commit, rejects symlinks and
-remote executable references, writes a SHA-256 inventory, and exercises the generated tree in
+unapproved remote executable references, writes a SHA-256 inventory, and exercises the generated tree in
 Chromium. A second clean runner independently assembles the tree without package installation.
+The two published cookie-notice scripts are allowed by exact HTTPS URL; the OneTrust stub also
+requires the production notice ID. Other script URLs and duplicate script attributes are rejected.
 Neither builder has OIDC or attestation authority. A later job requires identical manifests,
 then passes only that inventory to a no-checkout signing job. The signer verifies its subject,
 source/ref, workflow, and hosted runner without executing repository source. Only then can the
