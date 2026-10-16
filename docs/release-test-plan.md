@@ -87,6 +87,11 @@ Device persistence checks also require nonexportable signing/encryption keys, ci
 rejection, storage-failure handling, expiry cleanup, and zero stale connect frames after clearing
 during decryption or signing. Repeat navigation acceptance with real browser IndexedDB.
 
+Activity consent changes also run `node --test tests/runtime/test_activity_course_integration.mjs`.
+Verify that a saved `C0002` Performance Cookie choice enables progress and approved referral writes
+for new, resumed, and reconnected sessions. Withdrawal must cancel queued writes and disable both
+features. Missing consent and Global Privacy Control must continue to block referral collection.
+
 | ID | Claim | Command | Pass condition | Evidence |
 |---|---|---|---|---|
 | A01 | Design and test evidence remain complete and public-safe | `python3 scripts/validation/release_evidence_audit.py --self-test` then `python3 scripts/validation/release_evidence_audit.py` | Every mutation is detected; repository audit has zero findings | CI log and validation report |

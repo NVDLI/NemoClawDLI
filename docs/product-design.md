@@ -101,6 +101,7 @@ a credential broker.
 | Prompt and model response | Transmitted to the selected model service; displayed in the current page | Model-service operator and learner browser | Visible action, declared endpoint, no repository-operated copy |
 | Agent command, event, and workspace result | Transmitted to the selected NemoClaw runtime | Runtime operator | Authenticated gateway, runtime policy, learner-visible result |
 | Course preferences and local progress | Browser storage | Learner browser | Local-only state; learner can clear site data |
+| Consented course activity | Artifact and session IDs, completed milestones, completion time, and approved NVIDIA resource selections sent to the NVIDIA DLI Activity API | NVIDIA Activity service | Saved OneTrust `C0002` Performance Cookie consent enables progress and referrals together; withdrawal cancels pending operations; Global Privacy Control blocks referrals |
 | Static access logs | Host-dependent request metadata | Static-host operator | Outside course code; governed by the selected host |
 | Vendored browser dependencies | Loaded from the same static course origin | Static-host operator | Exact lock, package/license inventory, committed artifact SHA-256, source-reference validation |
 | Embedded media | HTTPS request metadata to privacy-enhanced video hosts | External content provider | No-cookie embeds and source validation |

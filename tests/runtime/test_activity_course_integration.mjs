@@ -490,6 +490,14 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     await context.addCookies([{ name: 'course_fixture', value: 'authorized', url: `http://127.0.0.1:${port}` }]);
     const page = await context.newPage();
     await page.goto(`http://127.0.0.1:${port}/${COURSE_ROOT}/index.html`);
+    const referralLink = page.locator('a[aria-label="Open the NVIDIA Build blueprint card"]');
+    const selectReferral = async () => {
+      await referralLink.evaluate(anchor => anchor.addEventListener('click', event => event.preventDefault(), { once: true }));
+      await referralLink.click();
+    };
+    const referralWrites = () => apiRequests.filter(request => request.method === 'POST' && request.pathname.endsWith('/referrals'));
+    await selectReferral();
+    assert.equal(referralWrites().length, 0);
     const assertActivityButton = async (count, connected = false) => {
       const button = page.locator('.activity-control-toggle');
       const optedIn = await page.evaluate(() => window.OneTrust.IsAlertBoxClosed() && window.OnetrustActiveGroups.split(',').includes('C0002'));
@@ -721,6 +729,17 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     assert.deepEqual(Object.keys(apiRequests.slice(journeyStart).find(request => request.method === 'POST'
       && request.pathname.endsWith('/activity-sessions')).body).sort(), ['artifact_digest', 'artifact_id', 'artifact_version']);
 
+    await Promise.all([
+      page.waitForRequest(request => request.method() === 'POST' && new URL(request.url()).pathname.endsWith('/referrals')),
+      selectReferral(),
+    ]);
+    await page.waitForLoadState('networkidle');
+    assert.equal(referralWrites().length, 1);
+    assert.deepEqual(referralWrites()[0].body, {
+      reference_id: 'build:nemoclaw-card',
+      destination_url: 'https://build.nvidia.com/nvidia/nemoclaw-for-openclaw/nemoclawcard?ncid=ref-dli-146986',
+    });
+
     const successfulExercises = {
       '01a:model-call-verified': [['api-key-verified', {}], ['run-succeeded', { cellId: 'cell-onecall', hasContent: true }]],
       '01b:react-loop-complete': [['chat-completed', { containerId: 'react-artifact', successCount: 1, hasAnswer: true }]],
@@ -776,6 +795,11 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     assert.equal(apiRequests.length, beforeWithdrawal);
     assert.equal(await page.locator('[data-activity-enable]').isVisible(), true);
     assert.equal(await page.locator('[data-activity-milestones]').evaluate(node => node.inert), true);
+    await page.goto(`http://127.0.0.1:${port}/${COURSE_ROOT}/index.html`);
+    await selectReferral();
+    await page.waitForTimeout(50);
+    assert.equal(referralWrites().length, 1, 'withdrawn Performance Cookie consent must stop referral writes');
+    assert.equal(apiRequests.length, beforeWithdrawal);
   } finally {
     await browser?.close();
     await new Promise(resolve => server.close(resolve));
@@ -1416,12 +1440,14 @@ function consentFixture({ groups = ',C0001,', chosen = false, loaded = true } = 
   };
   windowTarget.OnetrustActiveGroups = groups;
   let enabled = false;
+  let referralTracking = false;
   const calls = [];
   const activity = {
-    snapshot: () => ({ enabled, phase: enabled ? 'connected' : 'off' }),
+    setReferralTracking: value => { referralTracking = enabled && value; },
+    snapshot: () => ({ enabled, referralTracking, phase: enabled ? 'connected' : 'off' }),
     resume: async () => false,
     enable: async () => { calls.push('enable'); enabled = true; return true; },
-    disconnect: () => { calls.push('disconnect'); enabled = false; },
+    disconnect: () => { calls.push('disconnect'); enabled = false; referralTracking = false; },
   };
   const syncLocal = async () => { calls.push('sync'); };
   const change = (nextGroups, nextChosen = true) => {
@@ -1437,6 +1463,92 @@ async function bindConsent(fixture) {
   assert.equal(typeof runtime.bindNemoClawProgressConsent, 'function', 'course runtime needs a consent bridge');
   return runtime.bindNemoClawProgressConsent(fixture);
 }
+
+async function createConsentActivityFixture({ globalPrivacyControl = false, storageTarget = null } = {}) {
+  const { createCourseActivity, ACTIVITY_MILESTONES, BUILD_SIGNUP_URL } = await import(adapterUrl);
+  const calls = [];
+  const activity = createCourseActivity({
+    globalPrivacyControl, storageTarget,
+    policyLoader: async () => JSON.parse(fs.readFileSync('web/activity/activity-policy.json', 'utf8')),
+    artifactResolver: async () => ({ artifact_id: ACTIVITY_ARTIFACT_ID,
+      artifact_version: `git-${'a'.repeat(40)}`, artifact_digest: `sha256:${'b'.repeat(64)}` }),
+    initialize: async () => ({
+      getState: async () => ({ sessionId: '019f38f1-e5ab-7688-af0d-0e8925299e93', completedAt: null,
+        milestones: Object.keys(ACTIVITY_MILESTONES).map(milestoneId => ({ milestoneId, completedAt: null })) }),
+      referral: async value => { calls.push(['referral', value]); },
+    }),
+  });
+  return { activity, calls, BUILD_SIGNUP_URL };
+}
+
+test('performance consent enables real referral writes and withdrawal cancels queued selections', async () => {
+  const fixture = consentFixture();
+  const { activity, calls, BUILD_SIGNUP_URL } = await createConsentActivityFixture();
+  fixture.activity = activity;
+  await bindConsent(fixture); await flushConsent();
+  assert.equal(await activity.trackReferral(BUILD_SIGNUP_URL), false);
+  assert.equal(calls.some(call => call[0] === 'referral'), false);
+  fixture.change(',C0001,C0002,'); await flushConsent();
+  assert.equal(activity.snapshot().enabled, true);
+  assert.equal(await activity.trackReferral(BUILD_SIGNUP_URL), true);
+  assert.deepEqual(calls.find(call => call[0] === 'referral'), ['referral', {
+    referenceId: 'build:nvidia-api-key', destinationUrl: BUILD_SIGNUP_URL,
+    idempotencyKey: 'nemoclaw:referral:build:nvidia-api-key',
+  }]);
+  const queued = activity.trackReferral(BUILD_SIGNUP_URL);
+  fixture.change(',C0001,');
+  assert.equal(await queued, false);
+  assert.equal(activity.snapshot().enabled, false);
+  assert.equal(activity.snapshot().referralTracking, false);
+  assert.equal(await activity.trackReferral(BUILD_SIGNUP_URL), false);
+  assert.equal(calls.filter(call => call[0] === 'referral').length, 1);
+});
+
+test('saved performance consent respects Global Privacy Control for referrals', async () => {
+  const fixture = consentFixture({ groups: ',C0001,C0002,', chosen: true });
+  const { activity, calls, BUILD_SIGNUP_URL } = await createConsentActivityFixture({ globalPrivacyControl: true });
+  fixture.activity = activity;
+  await bindConsent(fixture); await flushConsent();
+  assert.equal(activity.snapshot().enabled, true);
+  assert.equal(activity.snapshot().referralTracking, false);
+  assert.equal(await activity.trackReferral(BUILD_SIGNUP_URL), false);
+  assert.equal(calls.some(call => call[0] === 'referral'), false);
+});
+
+test('saved performance consent enables referrals for an already connected Activity session', async () => {
+  const fixture = consentFixture({ groups: ',C0001,C0002,', chosen: true });
+  const { activity, BUILD_SIGNUP_URL } = await createConsentActivityFixture();
+  await activity.enable();
+  fixture.activity = activity;
+  await bindConsent(fixture); await flushConsent();
+  assert.equal(await activity.trackReferral(BUILD_SIGNUP_URL), true);
+});
+
+test('resumed Activity sessions enable referrals from the current saved performance consent', async () => {
+  const values = new Map();
+  const storageTarget = { getItem: key => values.get(key), setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key) };
+  const first = await createConsentActivityFixture({ storageTarget });
+  await first.activity.enable();
+  assert.equal(first.activity.snapshot().referralTracking, false);
+  const { activity, BUILD_SIGNUP_URL } = await createConsentActivityFixture({ storageTarget });
+  const fixture = consentFixture({ groups: ',C0001,C0002,', chosen: true });
+  fixture.activity = activity;
+  await bindConsent(fixture); await flushConsent();
+  assert.equal(await activity.trackReferral(BUILD_SIGNUP_URL), true);
+});
+
+test('reconnect after failed initialization enables referrals with current performance consent', async () => {
+  const fixture = consentFixture({ groups: ',C0001,C0002,', chosen: true });
+  const { activity, BUILD_SIGNUP_URL } = await createConsentActivityFixture();
+  const enable = activity.enable.bind(activity);
+  activity.enable = async () => false;
+  fixture.activity = activity;
+  const consent = await bindConsent(fixture); await flushConsent();
+  assert.equal(await activity.trackReferral(BUILD_SIGNUP_URL), false);
+  activity.enable = enable;
+  assert.equal(await consent.retry(), true);
+  assert.equal(await activity.trackReferral(BUILD_SIGNUP_URL), true);
+});
 
 test('performance consent requires a valid saved choice, not a default active category', async () => {
   const fixture = consentFixture({ groups: ',C0001,C0002,', chosen: false });
@@ -1482,6 +1594,7 @@ test('withdrawal while enabling cannot sync a stale connection', async () => {
   finish(true); await flushConsent();
   assert.equal(fixture.calls.includes('disconnect'), true);
   assert.equal(fixture.calls.includes('sync'), false);
+  assert.equal(fixture.activity.snapshot().referralTracking, false);
 });
 
 test('malformed category identifiers do not grant performance consent', async () => {
