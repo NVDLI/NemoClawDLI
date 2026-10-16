@@ -53,6 +53,10 @@ function fixture(page = '01a-loop.html', { sessionId = 'session-a', storageTarge
     snapshot: () => state,
     resume: async () => false,
     enable: async () => state.enabled,
+    setReferralTracking(value) {
+      state.referralTracking = state.enabled && value === true;
+      return state.referralTracking;
+    },
     subscribe(listener) { listeners.add(listener); listener(state); return () => listeners.delete(listener); },
     getCourseActivityState: async () => state,
     recordMilestone: async id => { milestones.push(id); return write(id); },
