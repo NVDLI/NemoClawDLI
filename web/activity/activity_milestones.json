@@ -1,0 +1,241 @@
+{
+  "schemaVersion": 1,
+  "milestones": [
+    {
+      "id": "01a:model-call-verified",
+      "label": "Make your first model call",
+      "description": "Verify your API key, then run the one-call exercise and receive a response.",
+      "href": "01a-loop.html#cell-onecall",
+      "evidence": [
+        {
+          "event": "nemoclaw:api-key-verified",
+          "page": "01a-loop.html",
+          "target": "cell-onecall"
+        },
+        {
+          "event": "nemoclaw:run-succeeded",
+          "page": "01a-loop.html",
+          "target": "cell-onecall",
+          "matches": {
+            "cellId": "cell-onecall",
+            "hasContent": true
+          },
+          "requires": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "01b:react-loop-complete",
+      "label": "Complete a ReAct loop",
+      "description": "Run the ReAct activity with at least one successful step and a final answer.",
+      "href": "01b-react.html#react-artifact",
+      "evidence": [
+        {
+          "event": "nemoclaw:chat-completed",
+          "page": "01b-react.html",
+          "target": "react-artifact",
+          "matches": {
+            "containerId": "react-artifact",
+            "hasAnswer": true
+          },
+          "minimum": {
+            "successCount": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "01c:tool-roundtrip-complete",
+      "label": "Complete a tool round trip",
+      "description": "Run the tool-calling activity with a successful step and a final answer.",
+      "href": "01c-tools.html#tools-artifact",
+      "evidence": [
+        {
+          "event": "nemoclaw:chat-completed",
+          "page": "01c-tools.html",
+          "target": "tools-artifact",
+          "matches": {
+            "containerId": "tools-artifact",
+            "hasAnswer": true
+          },
+          "minimum": {
+            "successCount": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "02a:routed-workflow-complete",
+      "label": "Run a routed workflow",
+      "description": "Complete the routing activity with a successful step and a final answer.",
+      "href": "02a-routing.html#router-artifact",
+      "evidence": [
+        {
+          "event": "nemoclaw:chat-completed",
+          "page": "02a-routing.html",
+          "target": "router-artifact",
+          "matches": {
+            "containerId": "router-artifact",
+            "hasAnswer": true
+          },
+          "minimum": {
+            "successCount": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "02b:grounded-answer-complete",
+      "label": "Complete the retrieval activity",
+      "description": "Run the RAG activity with a successful step and a final answer.",
+      "href": "02b-rag.html#rag-artifact",
+      "evidence": [
+        {
+          "event": "nemoclaw:chat-completed",
+          "page": "02b-rag.html",
+          "target": "rag-artifact",
+          "matches": {
+            "containerId": "rag-artifact",
+            "hasAnswer": true
+          },
+          "minimum": {
+            "successCount": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "02c:deep-research-complete",
+      "label": "Complete a research run",
+      "description": "Finish the deep-research activity with a successful step and a final answer.",
+      "href": "02c-deep.html#deep-artifact",
+      "evidence": [
+        {
+          "event": "nemoclaw:chat-completed",
+          "page": "02c-deep.html",
+          "target": "deep-artifact",
+          "matches": {
+            "containerId": "deep-artifact",
+            "hasAnswer": true
+          },
+          "minimum": {
+            "successCount": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "03a:nemoclaw-connected",
+      "label": "Connect to NemoClaw",
+      "description": "Pass the connection checks for metadata, gateway, terminal, and health.",
+      "href": "03a-kickstart.html#probe-claw",
+      "evidence": [
+        {
+          "event": "nemoclaw:connection-audit-passed",
+          "page": "03a-kickstart.html",
+          "target": "probe-claw"
+        }
+      ]
+    },
+    {
+      "id": "03b:workspace-inspected",
+      "label": "Inspect your workspace",
+      "description": "Successfully run both the introspection and workspace terminal exercises.",
+      "href": "03b-openclaw.html#cell-introspect",
+      "evidence": [
+        {
+          "event": "nemoclaw:run-succeeded",
+          "page": "03b-openclaw.html",
+          "target": "cell-introspect",
+          "matches": {
+            "cellId": "cell-introspect"
+          }
+        },
+        {
+          "event": "nemoclaw:run-succeeded",
+          "page": "03b-openclaw.html",
+          "target": "cell-workspace-term",
+          "matches": {
+            "cellId": "cell-workspace-term"
+          }
+        }
+      ]
+    },
+    {
+      "id": "03c:scheduled-run-complete",
+      "label": "Run and clean up a scheduled job",
+      "description": "Observe a successful scheduled run, then confirm the job was removed.",
+      "href": "03c-always-on.html#probe-cron",
+      "evidence": [
+        {
+          "event": "nemoclaw:canvas-node-succeeded",
+          "page": "03c-always-on.html",
+          "target": "probe-cron",
+          "matches": {
+            "canvasId": "probe-cron",
+            "nodeId": [
+              "cr-run",
+              "cr-rm"
+            ],
+            "runObserved": true
+          }
+        },
+        {
+          "event": "nemoclaw:canvas-node-succeeded",
+          "page": "03c-always-on.html",
+          "target": "probe-cron",
+          "matches": {
+            "canvasId": "probe-cron",
+            "nodeId": [
+              "cr-run",
+              "cr-rm"
+            ],
+            "cleanupSucceeded": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "04a:policy-boundary-verified",
+      "label": "Check the policy boundary",
+      "description": "Read the live agent policy, then confirm the policy comparison agrees.",
+      "href": "04a-safety.html#cell-live-policy",
+      "evidence": [
+        {
+          "event": "nemoclaw:run-succeeded",
+          "page": "04a-safety.html",
+          "target": "cell-live-policy",
+          "matches": {
+            "cellId": "cell-live-policy",
+            "hasAgent": true
+          }
+        },
+        {
+          "event": "nemoclaw:canvas-node-succeeded",
+          "page": "04a-safety.html",
+          "target": "cell-predict-confirm",
+          "matches": {
+            "canvasId": "cell-predict-confirm",
+            "nodeId": "compare",
+            "policyAgreed": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "04b:live-agent-operated",
+      "label": "Operate a live agent",
+      "description": "Send a non-command message to the live agent and receive a successful response.",
+      "href": "04b-modern-clis.html#agent-chat",
+      "evidence": [
+        {
+          "event": "nemoclaw:live-agent-operated",
+          "page": "04b-modern-clis.html",
+          "target": "agent-chat"
+        }
+      ]
+    }
+  ]
+}

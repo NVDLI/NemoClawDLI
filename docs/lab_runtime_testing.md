@@ -2,7 +2,7 @@
 
 The course is static HTML, CSS, and JavaScript. Repository checks run directly on the contributor or CI host; this repository does not define or distribute a container image.
 
-The [Activity checkpoint contract](activity_checkpoints.md) defines which successful runtime events may advance course progress and completion.
+The [Activity milestone contract](ACTIVITY_MILESTONES.md) defines which successful runtime events may advance course progress and completion.
 
 ## Public validation entry point
 

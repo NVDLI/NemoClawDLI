@@ -4,9 +4,10 @@
 import { randomId } from "./_ids.js";
 export { randomId };
 
-import { installNemoClawActivityTracking } from "./_activity_runtime.js";
-
-installNemoClawActivityTracking();
+// Optional tracking must not delay navigation, key setup or exercise helpers.
+void import("../../activity/_activity_runtime.js")
+  .then(({ installNemoClawActivityTracking }) => installNemoClawActivityTracking())
+  .catch(() => {});
 
 // ─── Shared runtime for the nemoclaw web course (frontend track) ─────────────
 

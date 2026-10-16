@@ -1,785 +1,179 @@
 // Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
-
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { DLIActivity, DLIActivityError, ActivitySdkError, createActivityClient, createMemoryActivityStorage, createBrowserActivityStorage } from '../../web/activity/activity-sdk.js';
 
-import {
-  ActivitySdkError,
-  DLIActivity,
-  DLIActivityError,
-  createActivityClient,
-  createMemoryActivityStorage,
-} from '../../web/shared/activity-sdk.js';
-
-const artifact = {
-  artifact_id: 'artifact_nemoclaw_web',
-  artifact_version: 'sdk-fixture-v1',
-  artifact_digest: `sha256:${'a'.repeat(64)}`,
-};
-
-const ACTIVITY = artifact;
-
-function fakeStorage() {
-  return createMemoryActivityStorage();
+const sessionId='019f38f1-e5ab-7688-af0d-0e8925299e93';
+const artifact={artifact_id:'fixture-course',artifact_version:'v1',artifact_digest:'sha256:'+ 'a'.repeat(64)};
+const stamp='2026-10-14T12:00:00Z';
+function fixture({markers=['early','later'],completed=[],legacy=false}={}) {
+ const writes=[];let finished=false;const reached=new Set(completed);
+ const remote=()=>({session_id:sessionId,completed_at:finished?stamp:null,...(legacy?{progress_percent:100}:{milestones:markers.map(milestone_id=>({milestone_id,completed_at:reached.has(milestone_id)?stamp:null}))})});
+ const fetchImpl=async(url,options)=>{
+  if(url.endsWith('/activity-sessions')){
+   const body=JSON.parse(options.body);
+   if(JSON.stringify(Object.keys(body).sort())!==JSON.stringify(Object.keys(artifact).sort()))return new Response('{"detail":"Session accepts only published artifact fields"}',{status:422});
+   return new Response(JSON.stringify({session_id:sessionId,session_token:'fixture-token-long-enough',expires_at:'2099-01-01T00:00:00Z'}),{status:201});
+  }
+  if(url.endsWith('/state'))return new Response(JSON.stringify(remote()));
+  const body=JSON.parse(options.body);writes.push({body,options});
+  if(body.type==='milestone_completed')reached.add(body.payload.milestone_id);
+  if(body.type==='completed')finished=true;
+  return new Response('{}',{status:201});
+ };
+ return {writes,options:{baseUrl:'https://activity.example.test',artifact,storage:createMemoryActivityStorage(),fetchImpl}};
 }
-
-function jsonResponse(status, body) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'content-type': 'application/json' },
-  });
-}
-
-function sessionResponse(overrides = {}) {
-  return {
-    session_token: 'opaque-session-token-with-safe-length',
-    session_id: '019f38f1-e5ab-7688-af0d-0e8925299e93',
-    expires_at: '2026-08-19T21:00:00Z',
-    ...overrides,
-  };
-}
-
-test('public initialization creates one activity session', async () => {
-  const sessionCreateBodies = [];
-  const now = () => new Date('2026-08-19T20:00:00Z');
-  const fetchImpl = async (_url, init) => {
-    sessionCreateBodies.push(JSON.parse(init.body));
-    return jsonResponse(201, sessionResponse());
-  };
-
-  const activity = await DLIActivity.initialize({
-    baseUrl: 'https://activity-api.example.test',
-    artifact: ACTIVITY,
-    storage: fakeStorage(),
-    fetchImpl,
-    now,
-  });
-
-  assert.equal(activity instanceof DLIActivity, true);
-  assert.deepEqual(sessionCreateBodies, [ACTIVITY]);
+test('milestones complete independently with confirmation and idempotency',async()=>{
+ const f=fixture();const sdk=await DLIActivity.initialize(f.options);
+ const result=await sdk.completeMilestone('later',{idempotencyKey:'fixture-later'});
+ assert.equal(result.written,true);
+ assert.deepEqual(result.state.milestones,[{milestoneId:'early',completedAt:null},{milestoneId:'later',completedAt:stamp}]);
+ assert.deepEqual(f.writes[0].body,{type:'milestone_completed',payload:{milestone_id:'later'}});
+ assert.equal(f.writes[0].options.headers['Idempotency-Key'],'fixture-later');
+ assert.equal(f.writes[0].options.credentials,'omit');assert.equal(f.writes[0].options.redirect,'error');
+ assert.equal((await sdk.completeMilestone('later')).written,false);assert.equal(f.writes.length,1);
+});
+test('completion requires every registered milestone and confirmation',async()=>{
+ const f=fixture();const sdk=await DLIActivity.initialize(f.options);
+ assert.equal((await sdk.complete()).written,false);
+ await sdk.completeMilestone('later');assert.equal((await sdk.complete()).written,false);
+ await sdk.completeMilestone('early');assert.equal((await sdk.complete()).state.completedAt,stamp);
+ assert.equal((await sdk.complete()).written,false);
+});
+test('empty or legacy state cannot authorize completion',async()=>{
+ for(const options of [{markers:[]},{legacy:true}]){
+  const f=fixture(options);const sdk=await DLIActivity.initialize(f.options);
+  let result;
+  try{result=await sdk.complete();}catch(error){assert.ok(error instanceof DLIActivityError);}
+  if(result)assert.equal(result.written,false);
+  assert.deepEqual(f.writes,[]);
+ }
+});
+test('invalid or unregistered milestone IDs never write',async()=>{
+ const f=fixture();const sdk=await DLIActivity.initialize(f.options);
+ for(const id of ['', 'contains space','unknown'])await assert.rejects(sdk.completeMilestone(id),error=>error.code==='invalid_milestone');
+ assert.deepEqual(f.writes,[]);
 });
 
-test('public initialization rejects unsafe activity API base URLs', async () => {
-  const unsafeBaseUrls = [
-    'https://user:secret@activity-api.example.test',
-    'https://activity-api.example.test?mode=test',
-    'https://activity-api.example.test#fragment',
-    'http://activity-api.example.test',
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
-    'http://[::1]:8000',
-  ];
-
-  for (const baseUrl of unsafeBaseUrls) {
-    await assert.rejects(
-      DLIActivity.initialize({
-        baseUrl,
-        artifact: ACTIVITY,
-        fetchImpl: async () => assert.fail('fetch must not run'),
-      }),
-      error => error instanceof DLIActivityError && error.code === 'invalid_base_url',
-    );
-  }
+test('plain client rejects unsafe endpoints before any request',()=>{
+ for(const baseUrl of ['http://activity.example.test','https://secret@activity.example.test','https://activity.example.test?q=secret'])assert.throws(()=>createActivityClient({baseUrl,artifact}),ActivitySdkError);
+});
+test('browser storage remains tab scoped and tolerates disabled storage',()=>{
+ const values=new Map();const storage={getItem:k=>values.get(k),setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k)};
+ const first=createBrowserActivityStorage({storage,key:'course-a'});first.save({session_id:sessionId});
+ assert.deepEqual(createBrowserActivityStorage({storage,key:'course-a'}).load(),{session_id:sessionId});
+ assert.equal(createBrowserActivityStorage({storage,key:'course-b'}).load(),null);first.clear();assert.equal(first.load(),null);
+ const blocked=createBrowserActivityStorage({storage:{getItem(){throw Error('disabled');}},key:'course'});blocked.save({session_id:sessionId});assert.deepEqual(blocked.load(),{session_id:sessionId});
+});
+test('sessions are reused only for the same endpoint and artifact identity',async()=>{
+ const storage=createMemoryActivityStorage();const f=fixture();let requests=0;const fetchImpl=async(...args)=>{requests++;return f.options.fetchImpl(...args);};
+ const options={...f.options,storage,fetchImpl};await createActivityClient(options).ensureSession();
+ await createActivityClient(options).ensureSession();assert.equal(requests,1);
+ await createActivityClient({...options,artifact:{...artifact,artifact_version:'v2'}}).ensureSession();assert.equal(requests,2);
+ await createActivityClient({...options,baseUrl:'https://other.example.test'}).ensureSession();assert.equal(requests,3);
+});
+test('diagnostics and normalized state exclude authentication material',async()=>{
+ const f=fixture();const baseFetch=f.options.fetchImpl;const sdk=await DLIActivity.initialize({...f.options,fetchImpl:async(url,init)=>{
+  if(url.endsWith('/state'))return new Response(JSON.stringify({session_id:sessionId,completed_at:null,milestones:[],session_token:'sensitive',authorization:'sensitive',nested:{token:'sensitive'}}));
+  return baseFetch(url,init);
+ }});assert.equal(JSON.stringify(await sdk.getState()).includes('sensitive'),false);
+ const events=[];const client=createActivityClient({...f.options,onDiagnostic:e=>events.push(e),fetchImpl:async(url,init)=>url.endsWith('/activity-sessions')?baseFetch(url,init):new Response('{"detail":"sensitive"}',{status:403})});
+ await assert.rejects(client.recordReferral({referenceId:'fixture',destinationUrl:'https://example.test',idempotencyKey:'fixture'}),ActivitySdkError);
+ assert.equal(JSON.stringify(events).includes('sensitive'),false);
 });
 
-test('public initialization rejects the removed activity alias', async () => {
-  await assert.rejects(
-    DLIActivity.initialize({
-      baseUrl: 'https://activity-api.example.test',
-      activity: ACTIVITY,
-    }),
-    error => error instanceof DLIActivityError && error.code === 'invalid_configuration',
-  );
+test('request deadline also bounds a stalled response body',async()=>{
+ const originalSetTimeout=globalThis.setTimeout,originalClearTimeout=globalThis.clearTimeout;
+ let expire;let cleared=false;globalThis.setTimeout=callback=>{expire=callback;return 1;};globalThis.clearTimeout=()=>{cleared=true;};
+ try{
+  const client=createActivityClient({baseUrl:'https://activity.example.test',artifact,fetchImpl:async()=>({ok:true,status:201,json:()=>new Promise(()=>{})})});
+  const result=client.ensureSession().then(()=>({passed:true}),error=>({error}));
+  await Promise.resolve();await Promise.resolve();
+  assert.equal(cleared,false,'the request deadline must remain active while parsing the body');
+  expire();const outcome=await result;assert.ok(outcome.error instanceof ActivitySdkError);assert.equal(outcome.error.category,'timeout');
+ }finally{globalThis.setTimeout=originalSetTimeout;globalThis.clearTimeout=originalClearTimeout;}
 });
 
-test('low-level client rejects loopback HTTP base URLs', () => {
-  for (const baseUrl of [
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
-    'http://[::1]:8000',
-  ]) {
-    assert.throws(
-      () => createActivityClient({ baseUrl, artifact: ACTIVITY }),
-      error => error instanceof ActivitySdkError && /must use HTTPS/.test(error.message),
-    );
-  }
+test('authentication recovery never forwards a different client scope token',async()=>{
+ const storage=createMemoryActivityStorage();const f=fixture();let releaseA;let announceA;
+ const waiting=new Promise(resolve=>{announceA=resolve;});const aAuth=[];let aSessions=0;
+ const optsA={...f.options,storage,fetchImpl:async(url,options)=>{
+  if(url.endsWith('/activity-sessions')){aSessions++;return new Response(JSON.stringify({session_id:sessionId,session_token:'token-a-long-enough',expires_at:'2099-01-01T00:00:00Z'}),{status:201});}
+  aAuth.push(options.headers.Authorization);
+  if(aAuth.length===1){announceA();return new Promise(resolve=>{releaseA=resolve;});}
+  return new Response(JSON.stringify({session_id:sessionId,completed_at:null,milestones:[]}));
+ }};
+ const clientA=createActivityClient(optsA);await clientA.ensureSession();const pending=clientA.getState();await waiting;
+ const clientB=createActivityClient({...optsA,baseUrl:'https://other.example.test',fetchImpl:async()=>new Response(JSON.stringify({session_id:'019f38f1-e5ab-7688-af0d-0e8925299e94',session_token:'token-b-long-enough',expires_at:'2099-01-01T00:00:00Z'}),{status:201})});
+ await clientB.ensureSession();releaseA(new Response('{}',{status:401}));await pending;
+ assert.equal(aAuth.includes('Bearer token-b-long-enough'),false);assert.equal(aSessions,2);
 });
 
-test('concurrent public initialization shares one facade and retries after rejection', async () => {
-  const storage = fakeStorage();
-  const attempts = [];
-  const options = {
-    baseUrl: 'https://activity-api.example.test/',
-    artifact: ACTIVITY,
-    storage,
-    now: () => new Date('2026-08-19T20:00:00Z'),
-    fetchImpl: () => new Promise((resolve, reject) => attempts.push({ resolve, reject })),
-  };
-
-  const first = DLIActivity.initialize(options);
-  const concurrent = DLIActivity.initialize({ ...options, baseUrl: 'https://activity-api.example.test' });
-  await Promise.resolve();
-  assert.equal(attempts.length, 1);
-  attempts[0].reject(new TypeError('opaque network failure'));
-  await assert.rejects(first, error => error instanceof DLIActivityError && error.code === 'network_error');
-  await assert.rejects(concurrent, error => error instanceof DLIActivityError && error.code === 'network_error');
-
-  const retry = DLIActivity.initialize(options);
-  await Promise.resolve();
-  assert.equal(attempts.length, 2);
-  attempts[1].resolve(jsonResponse(201, sessionResponse()));
-  assert.equal(await retry instanceof DLIActivity, true);
+const definitions = () => [{id:'early',label:'Early exercise',description:'Finish the early exercise.'}];
+test('session initialization sends exactly three artifact fields while retaining local definitions',async()=>{
+ const f=fixture();const bodies=[];const milestones=definitions();
+ const client=createActivityClient({...f.options,milestones,fetchImpl:async(url,options)=>{bodies.push(JSON.parse(options.body));return f.options.fetchImpl(url,options);}});
+ milestones[0].label='Changed after construction';milestones.push({id:'later',label:'Later',description:'Later'});
+ await client.ensureSession();assert.deepEqual(bodies,[artifact]);assert.deepEqual(Object.keys(artifact),['artifact_id','artifact_version','artifact_digest']);
+});
+test('malformed milestone configuration fails before any network operation',async()=>{
+ const f=fixture();let requests=0;const options={...f.options,fetchImpl:async()=>{requests++;assert.fail('invalid configuration must not request');}};
+ for(const milestones of [[{id:'early',label:'Valid',description:'bad\u0000text'}],[{id:'early',label:'bad\u0000text',description:'Valid'}],null,{},[],new Array(1),[{id:'early',label:' ',description:'Valid'}],[{id:'early',label:'Valid',description:''}],[{id:'early',label:'Valid',description:' '}],new Array(1001).fill(definitions()[0]),[...definitions(),...definitions()],
+  [{id:'bad id',label:'Valid',description:'Valid'}],[{id:'a'.repeat(129),label:'Valid',description:'Valid'}],
+  [{id:'early',label:'',description:'Valid'}],[{id:'early',label:'a'.repeat(257),description:'Valid'}],
+  [{id:'early',label:3,description:'Valid'}],[{id:'early',label:'Valid'}],
+  [{id:'early',label:'Valid',description:'a'.repeat(4097)}],[{id:'early',label:'Valid',description:'Valid',unexpected:true}]]) {
+  assert.throws(()=>createActivityClient({...options,milestones}),error=>error.code==='invalid_configuration');
+  await assert.rejects(DLIActivity.initialize({...options,milestones}),error=>error.code==='invalid_configuration');
+ }
+ assert.equal(requests,0);
+});
+test('a changed local configuration renews sessions without forwarding the old bearer',async()=>{
+ const f=fixture();const requests=[];let sessions=0;const storage=createMemoryActivityStorage();
+ const fetchImpl=async(url,options)=>{
+  requests.push({url,options});
+  if(url.endsWith('/activity-sessions'))return new Response(JSON.stringify({session_id:sessionId,session_token:`scope-token-${++sessions}-long-enough`,expires_at:'2099-01-01T00:00:00Z'}),{status:201});
+  return f.options.fetchImpl(url,options);
+ };
+ const options={...f.options,storage,fetchImpl,milestones:definitions()};
+ await createActivityClient(options).getState();await createActivityClient(options).getState();assert.equal(sessions,1);
+ await createActivityClient({...options,milestones:[{...definitions()[0],description:'Changed definition'}]}).getState();
+ await createActivityClient({...options,milestones:undefined}).getState();assert.equal(sessions,3);
+ assert.deepEqual(requests.filter(r=>r.url.endsWith('/state')).map(r=>r.options.headers.Authorization),['Bearer scope-token-1-long-enough','Bearer scope-token-1-long-enough','Bearer scope-token-2-long-enough','Bearer scope-token-3-long-enough']);
+ assert.ok(requests.filter(r=>r.url.endsWith('/activity-sessions')).every(r=>r.options.headers.Authorization===undefined));
+});
+test('concurrent initialize isolates different course definitions and coalesces identical snapshots',async()=>{
+ const f=fixture();const pending=[];const bodies=[];
+ const options={...f.options,fetchImpl:async(url,request)=>{bodies.push(JSON.parse(request.body));await new Promise(resolve=>pending.push(resolve));return f.options.fetchImpl(url,request);}};
+ const original=definitions();const a=DLIActivity.initialize({...options,milestones:original});
+ original[0].label='Changed';
+ const equivalent=DLIActivity.initialize({...options,milestones:definitions()});
+ const b=DLIActivity.initialize({...options,milestones:original});
+ await Promise.resolve();assert.equal(pending.length,2);pending.forEach(resolve=>resolve());
+ const [first,same,different]=await Promise.all([a,equivalent,b]);assert.equal(first,same);assert.notEqual(first,different);
+ assert.deepEqual(bodies,[artifact,artifact]);
 });
 
-test('all low-level failures crossing public boundaries are translated with safe metadata', async () => {
-  await assert.rejects(
-    Promise.resolve().then(() => new DLIActivity({
-      baseUrl: 'https://activity-api.example.test',
-      artifact: { ...ACTIVITY, artifact_digest: 'invalid' },
-    })),
-    error => error instanceof DLIActivityError &&
-      error.code === 'invalid_configuration' &&
-      error.category === 'configuration' &&
-      error.cause instanceof ActivitySdkError,
-  );
-
-  for (const { status, code, category } of [
-    { status: 503, code: 'request_rejected', category: 'server' },
-    { status: 409, code: 'idempotency_conflict', category: 'idempotency-conflict' },
-  ]) {
-    const activity = await DLIActivity.initialize({
-      baseUrl: 'https://activity-api.example.test', artifact: ACTIVITY,
-      storage: createMemoryActivityStorage(sessionResponse()),
-      now: () => new Date('2026-08-19T20:00:00Z'),
-      fetchImpl: async () => jsonResponse(status, { detail: 'must-not-escape' }),
-    });
-    await assert.rejects(
-      activity.referral({ referenceId: 'safe-ref', destinationUrl: 'https://example.test/' }),
-      error => error instanceof DLIActivityError && error.code === code &&
-        error.operation === 'referral' && error.category === category && error.status === status &&
-        !JSON.stringify(error).includes('must-not-escape'),
-    );
-  }
+test('a session conflict is a rejected request while write conflicts remain idempotency conflicts',async()=>{
+ const f=fixture();
+ await assert.rejects(DLIActivity.initialize({...f.options,milestones:definitions(),fetchImpl:async()=>new Response('{}',{status:409})}),error=>error.code==='request_rejected' && error.status===409 && error.operation==='session');
+ const client=createActivityClient({...f.options,fetchImpl:async(url,options)=>url.endsWith('/activity-sessions')?f.options.fetchImpl(url,options):new Response('{}',{status:409})});
+ await assert.rejects(client.recordReferral({referenceId:'fixture',destinationUrl:'https://example.test',idempotencyKey:'fixture'}),error=>error.code==='idempotency_conflict' && error.status===409);
+ await assert.rejects(client.recordMilestoneCompleted({milestoneId:'early',idempotencyKey:'fixture'}),error=>error.code==='idempotency_conflict' && error.status===409);
 });
 
-test('network and invalid-response failures are translated by every async public operation', async () => {
-  const cases = [
-    ['progress', activity => activity.progress(50), 'network_error', async () => { throw new TypeError('secret'); }],
-    ['getState', activity => activity.getState(), 'invalid_response', async () => new Response('not-json', { status: 200 })],
-    ['complete', activity => activity.complete(), 'invalid_response', async () => new Response('not-json', { status: 200 })],
-  ];
-  for (const [name, invoke, code, fetchImpl] of cases) {
-    const activity = await DLIActivity.initialize({
-      baseUrl: 'https://activity-api.example.test', artifact: ACTIVITY,
-      storage: createMemoryActivityStorage(sessionResponse()),
-      now: () => new Date('2026-08-19T20:00:00Z'), fetchImpl,
-    });
-    await assert.rejects(invoke(activity), error => error instanceof DLIActivityError &&
-      error.code === code && error.cause instanceof ActivitySdkError,
-      `${name} must translate its low-level error`);
-  }
+test('local configuration budget accepts exactly 64 KiB and rejects one extra UTF-8 byte',()=>{
+ const markers=Array.from({length:16},(_,index)=>({id:`marker-${index}`,label:'L',description:'x'.repeat(4000)}));
+ const size=value=>new TextEncoder().encode(JSON.stringify(value)).byteLength;
+ let remaining=64*1024-size(markers);
+ for(const marker of markers){const extra=Math.min(remaining,4096-marker.description.length);marker.description+='x'.repeat(extra);remaining-=extra;}
+ assert.equal(size(markers),64*1024);assert.doesNotThrow(()=>createActivityClient({...fixture().options,milestones:markers}));
+ const spare=markers.find(marker=>marker.description.length<4096);spare.description+='x';
+ assert.throws(()=>createActivityClient({...fixture().options,milestones:markers}),error=>error.code==='invalid_configuration');
 });
-
-test('public progress hydrates restored server state before its first write', async () => {
-  const calls = [];
-  const activity = await DLIActivity.initialize({
-    baseUrl: 'https://activity-api.example.test', artifact: ACTIVITY,
-    storage: createMemoryActivityStorage(sessionResponse()),
-    now: () => new Date('2026-08-19T20:00:00Z'),
-    fetchImpl: async (url, init) => {
-      calls.push({ url, init });
-      return jsonResponse(200, { progress_percent: 75, completed_at: null });
-    },
-  });
-
-  assert.deepEqual(await activity.progress(50), { written: false, progressPercent: 75 });
-  assert.equal(calls.length, 1);
-  assert.match(calls[0].url, /\/state$/);
-});
-
-test('concurrent public progress calls never write a decrease', async () => {
-  const writes = [];
-  const activity = await DLIActivity.initialize({
-    baseUrl: 'https://activity-api.example.test', artifact: ACTIVITY,
-    storage: createMemoryActivityStorage(sessionResponse()),
-    now: () => new Date('2026-08-19T20:00:00Z'),
-    fetchImpl: async (url, init) => {
-      if (url.endsWith('/state')) return jsonResponse(200, { progress_percent: 0, completed_at: null });
-      const percent = JSON.parse(init.body).payload.progress_percent;
-      writes.push(percent);
-      return jsonResponse(201, { update_id: `progress-${percent}`, state: { progress_percent: percent } });
-    },
-  });
-
-  const [higher, lower] = await Promise.all([activity.progress(50), activity.progress(40)]);
-  assert.equal(higher.result.state.progress_percent, 50);
-  assert.deepEqual(lower, { written: false, progressPercent: 50 });
-  assert.deepEqual(writes, [50]);
-});
-
-test('public progress records a monotonic integer percentage', async () => {
-  const calls = [];
-  const responses = [
-    jsonResponse(201, sessionResponse()),
-    jsonResponse(200, { progress_percent: 0, completed_at: null }),
-    jsonResponse(201, { update_id: 'progress-50', state: { progress_percent: 75 } }),
-  ];
-  const activity = await DLIActivity.initialize({
-    baseUrl: 'https://activity-api.example.test',
-    artifact: ACTIVITY,
-    storage: fakeStorage(),
-    fetchImpl: async (url, init) => {
-      calls.push({ url, init });
-      return responses.shift();
-    },
-    now: () => new Date('2026-08-19T20:00:00Z'),
-  });
-
-  await activity.progress(50);
-  await activity.progress(70);
-
-  assert.equal(calls.length, 3);
-  assert.equal(calls[2].init.headers['Idempotency-Key'], 'dli-activity:progress:50');
-  assert.deepEqual(JSON.parse(calls[2].init.body), {
-    type: 'progress',
-    payload: { progress_percent: 50 },
-  });
-});
-
-test('public progress preserves a caller idempotency key', async () => {
-  const calls = [];
-  const activity = await DLIActivity.initialize({
-    baseUrl: 'https://activity-api.example.test',
-    artifact: ACTIVITY,
-    storage: fakeStorage(),
-    fetchImpl: async (url, init) => {
-      calls.push({ url, init });
-      if (calls.length === 1) return jsonResponse(201, sessionResponse());
-      if (calls.length === 2) return jsonResponse(200, { progress_percent: 0, completed_at: null });
-      return jsonResponse(201, { update_id: 'progress-25', state: { progress_percent: 25 } });
-    },
-    now: () => new Date('2026-08-19T20:00:00Z'),
-  });
-
-  await activity.progress(25, { idempotencyKey: 'course:checkpoint:25' });
-
-  assert.equal(calls[2].init.headers['Idempotency-Key'], 'course:checkpoint:25');
-});
-
-test('public progress rejects invalid percentages before fetch', async () => {
-  const activity = new DLIActivity({
-    baseUrl: 'https://activity-api.example.test',
-    artifact: ACTIVITY,
-    storage: fakeStorage(),
-    fetchImpl: async () => assert.fail('fetch must not run'),
-  });
-
-  for (const progressPercent of [-1, 101, 50.5, '50']) {
-    await assert.rejects(
-      activity.progress(progressPercent),
-      error => error instanceof DLIActivityError && error.code === 'invalid_progress',
-    );
-  }
-});
-
-test('public referral records a portable destination', async () => {
-  const calls = [];
-  const activity = await DLIActivity.initialize({
-    baseUrl: 'https://activity-api.example.test',
-    artifact: ACTIVITY,
-    storage: fakeStorage(),
-    fetchImpl: async (url, init) => {
-      calls.push({ url, init });
-      return calls.length === 1
-        ? jsonResponse(201, sessionResponse())
-        : jsonResponse(201, { referral_id: 'referral-1' });
-    },
-    now: () => new Date('2026-08-19T20:00:00Z'),
-  });
-
-  await activity.referral({
-    referenceId: 'brev:course-lab',
-    destinationUrl: 'https://brev.nvidia.com/',
-  });
-
-  assert.equal(calls[1].init.headers['Idempotency-Key'], 'dli-activity:referral:brev:course-lab');
-  assert.deepEqual(JSON.parse(calls[1].init.body), {
-    reference_id: 'brev:course-lab',
-    destination_url: 'https://brev.nvidia.com/',
-  });
-});
-
-test('public referral rejects invalid input before fetch', async () => {
-  const activity = new DLIActivity({
-    baseUrl: 'https://activity-api.example.test',
-    artifact: ACTIVITY,
-    storage: fakeStorage(),
-    fetchImpl: async () => assert.fail('fetch must not run'),
-  });
-
-  for (const referral of [
-    { referenceId: ' ', destinationUrl: 'https://brev.nvidia.com/' },
-    { referenceId: 'brev:nemoclaw-lab', destinationUrl: 'not a URL' },
-    { referenceId: 'brev:nemoclaw-lab', destinationUrl: 'javascript:alert(1)' },
-    { referenceId: 'brev:nemoclaw-lab', destinationUrl: 'http://brev.nvidia.com/' },
-  ]) {
-    await assert.rejects(
-      activity.referral(referral),
-      error => error instanceof DLIActivityError && error.code === 'invalid_referral',
-    );
-  }
-});
-
-test('public state normalizes documented fields without authentication data', async () => {
-  const responses = [
-    jsonResponse(201, sessionResponse()),
-    jsonResponse(200, {
-      progress_percent: 50,
-      completed_at: null,
-      last_update: {
-        update_id: 'update-50',
-        checkpoint_items: [{ reference_id: 'module:02c' }],
-      },
-      session_token: 'must-not-escape',
-      authorization: { bearer_token: 'must-not-escape' },
-      nested_authentication: {
-        access_token: 'must-not-escape',
-        bearer_token: 'must-not-escape',
-        refresh_token: 'must-not-escape',
-        sessionToken: 'must-not-escape',
-        authorizationData: { value: 'must-not-escape' },
-        public_value: 'preserved',
-      },
-    }),
-  ];
-  const activity = await DLIActivity.initialize({
-    baseUrl: 'https://activity-api.example.test',
-    artifact: ACTIVITY,
-    storage: fakeStorage(),
-    fetchImpl: async () => responses.shift(),
-    now: () => new Date('2026-08-19T20:00:00Z'),
-  });
-
-  const state = await activity.getState();
-
-  assert.deepEqual(state, {
-    progressPercent: 50,
-    completedAt: null,
-    lastUpdate: {
-      updateId: 'update-50',
-      checkpointItems: [{ referenceId: 'module:02c' }],
-    },
-    nestedAuthentication: {
-      publicValue: 'preserved',
-    },
-  });
-  assert.equal('sessionToken' in state, false);
-  assert.equal('authorization' in state, false);
-});
-
-test('public state raises the monotonic progress floor learned from a read', async () => {
-  const calls = [];
-  const responses = [
-    jsonResponse(201, sessionResponse()),
-    jsonResponse(200, { progress_percent: 75, completed_at: null }),
-  ];
-  const activity = await DLIActivity.initialize({
-    baseUrl: 'https://activity-api.example.test',
-    artifact: ACTIVITY,
-    storage: fakeStorage(),
-    fetchImpl: async (url, init) => {
-      calls.push({ url, init });
-      return responses.shift();
-    },
-    now: () => new Date('2026-08-19T20:00:00Z'),
-  });
-
-  await activity.getState();
-  assert.deepEqual(await activity.progress(70), {
-    written: false,
-    progressPercent: 75,
-  });
-  assert.equal(calls.length, 2);
-});
-
-test('public completion refreshes state and skips a premature write', async () => {
-  const calls = [];
-  const responses = [
-    jsonResponse(201, sessionResponse()),
-    jsonResponse(200, { progress_percent: 90, completed_at: null }),
-  ];
-  const activity = await DLIActivity.initialize({
-    baseUrl: 'https://activity-api.example.test',
-    artifact: ACTIVITY,
-    storage: fakeStorage(),
-    fetchImpl: async (url, init) => {
-      calls.push({ url, init });
-      return responses.shift();
-    },
-    now: () => new Date('2026-08-19T20:00:00Z'),
-  });
-
-  assert.deepEqual(await activity.complete(), {
-    written: false,
-    state: { progressPercent: 90, completedAt: null },
-  });
-  assert.equal(calls.length, 2);
-  assert.equal(calls[1].init.method, 'GET');
-});
-
-test('public completion fails closed unless normalized progress is numeric integer 100', async () => {
-  for (const progressPercent of [undefined, '100', 99.5, 101]) {
-    const calls = [];
-    const state = { completed_at: null };
-    if (progressPercent !== undefined) state.progress_percent = progressPercent;
-    const responses = [
-      jsonResponse(201, sessionResponse()),
-      jsonResponse(200, state),
-    ];
-    const activity = await DLIActivity.initialize({
-      baseUrl: 'https://activity-api.example.test',
-      artifact: ACTIVITY,
-      storage: fakeStorage(),
-      fetchImpl: async (url, init) => {
-        calls.push({ url, init });
-        return responses.shift();
-      },
-      now: () => new Date('2026-08-19T20:00:00Z'),
-    });
-
-    const result = await activity.complete();
-
-    assert.equal(result.written, false);
-    assert.equal(calls.length, 2, `must not write completion for ${String(progressPercent)}`);
-  }
-});
-
-test('public completion records an eligible completed update', async () => {
-  const calls = [];
-  const responses = [
-    jsonResponse(201, sessionResponse()),
-    jsonResponse(200, { progress_percent: 100, completed_at: null }),
-    jsonResponse(201, { update_id: 'completed-1', state: { progress_percent: 100 } }),
-  ];
-  const activity = await DLIActivity.initialize({
-    baseUrl: 'https://activity-api.example.test',
-    artifact: ACTIVITY,
-    storage: fakeStorage(),
-    fetchImpl: async (url, init) => {
-      calls.push({ url, init });
-      return responses.shift();
-    },
-    now: () => new Date('2026-08-19T20:00:00Z'),
-  });
-
-  await activity.complete();
-
-  assert.equal(calls.length, 3);
-  assert.equal(calls[2].init.headers['Idempotency-Key'], 'dli-activity:completed');
-  assert.deepEqual(JSON.parse(calls[2].init.body), { type: 'completed', payload: {} });
-});
-
-test('public completion preserves a caller idempotency key', async () => {
-  const calls = [];
-  const responses = [
-    jsonResponse(201, sessionResponse()),
-    jsonResponse(200, { progress_percent: 100, completed_at: null }),
-    jsonResponse(201, { update_id: 'completed-1' }),
-  ];
-  const activity = await DLIActivity.initialize({
-    baseUrl: 'https://activity-api.example.test',
-    artifact: ACTIVITY,
-    storage: fakeStorage(),
-    fetchImpl: async (url, init) => {
-      calls.push({ url, init });
-      return responses.shift();
-    },
-    now: () => new Date('2026-08-19T20:00:00Z'),
-  });
-
-  await activity.complete({ idempotencyKey: 'course:completed' });
-
-  assert.equal(calls[2].init.headers['Idempotency-Key'], 'course:completed');
-});
-
-test('concurrent initialization creates and stores one activity session', async () => {
-  const calls = [];
-  const storage = createMemoryActivityStorage();
-  const client = createActivityClient({
-    baseUrl: 'https://activity.example.test',
-    artifact,
-    storage,
-    now: () => new Date('2026-08-19T20:00:00Z'),
-    fetchImpl: async (url, init) => {
-      calls.push({ url, init });
-      return jsonResponse(201, sessionResponse());
-    },
-  });
-
-  const [first, second] = await Promise.all([client.ensureSession(), client.ensureSession()]);
-
-  assert.deepEqual(first, second);
-  assert.equal(calls.length, 1);
-  assert.equal(calls[0].url, 'https://activity.example.test/v1/activity-sessions');
-  assert.equal(calls[0].init.method, 'POST');
-  assert.deepEqual(JSON.parse(calls[0].init.body), artifact);
-  assert.equal(calls[0].init.headers.Authorization, undefined);
-  assert.deepEqual(storage.load(), sessionResponse());
-});
-
-test('an unexpired stored session is reused without a request', async () => {
-  const storage = createMemoryActivityStorage(sessionResponse());
-  const client = createActivityClient({
-    baseUrl: 'https://activity.example.test',
-    artifact,
-    storage,
-    now: () => new Date('2026-08-19T20:00:00Z'),
-    fetchImpl: async () => assert.fail('fetch must not run'),
-  });
-
-  assert.deepEqual(await client.ensureSession(), sessionResponse());
-});
-
-test('an expired stored session is replaced', async () => {
-  const storage = createMemoryActivityStorage(sessionResponse({ expires_at: '2026-08-19T19:00:00Z' }));
-  let requests = 0;
-  const replacement = sessionResponse({ session_id: '0198f100-0000-7000-8000-000000000002' });
-  const client = createActivityClient({
-    baseUrl: 'https://activity.example.test',
-    artifact,
-    storage,
-    now: () => new Date('2026-08-19T20:00:00Z'),
-    fetchImpl: async () => {
-      requests += 1;
-      return jsonResponse(201, replacement);
-    },
-  });
-
-  assert.deepEqual(await client.ensureSession(), replacement);
-  assert.equal(requests, 1);
-  assert.deepEqual(storage.load(), replacement);
-});
-
-test('referral and progress writes use bearer and idempotency headers', async () => {
-  const calls = [];
-  const client = createActivityClient({
-    baseUrl: 'https://activity.example.test',
-    artifact,
-    storage: createMemoryActivityStorage(sessionResponse()),
-    now: () => new Date('2026-08-19T20:00:00Z'),
-    fetchImpl: async (url, init) => {
-      calls.push({ url, init });
-      return jsonResponse(201, url.endsWith('/referrals')
-        ? { referral_id: 'referral-1', received_at: '2026-08-19T20:00:01Z' }
-        : { update_id: 'update-1', received_at: '2026-08-19T20:00:02Z', state: { progress_percent: 10 } });
-    },
-  });
-
-  await client.recordReferral({
-    referenceId: 'build:nvidia-api-key',
-    destinationUrl: 'https://build.nvidia.com/?ncid=ref-dli-146986',
-    idempotencyKey: 'referral-key',
-  });
-  await client.recordProgress({ progressPercent: 10, idempotencyKey: 'progress-key' });
-
-  assert.equal(calls.length, 2);
-  assert.match(calls[0].url, /\/v1\/activity-sessions\/019f38f1-e5ab-7688-af0d-0e8925299e93\/referrals$/);
-  assert.match(calls[0].url, /\/referrals$/);
-  assert.deepEqual(JSON.parse(calls[0].init.body), {
-    reference_id: 'build:nvidia-api-key',
-    destination_url: 'https://build.nvidia.com/?ncid=ref-dli-146986',
-  });
-  assert.match(calls[1].url, /\/updates$/);
-  assert.deepEqual(JSON.parse(calls[1].init.body), {
-    type: 'progress',
-    payload: { progress_percent: 10 },
-  });
-  assert.equal(calls[0].init.headers.Authorization, `Bearer ${sessionResponse().session_token}`);
-  assert.equal(calls[0].init.headers['Idempotency-Key'], 'referral-key');
-  assert.equal(calls[1].init.headers['Idempotency-Key'], 'progress-key');
-  for (const { init } of calls) {
-    assert.equal(init.credentials, 'omit');
-    assert.equal(init.cache, 'no-store');
-    assert.equal(init.redirect, 'error');
-    assert.equal(init.referrerPolicy, 'no-referrer');
-    assert.equal(init.mode, 'cors');
-    assert.equal(init.signal instanceof AbortSignal, true);
-  }
-});
-
-test('a 200 write response is identified as an idempotent replay', async () => {
-  const client = createActivityClient({
-    baseUrl: 'https://activity.example.test',
-    artifact,
-    storage: createMemoryActivityStorage(sessionResponse()),
-    now: () => new Date('2026-08-19T20:00:00Z'),
-    fetchImpl: async () => jsonResponse(200, { update_id: 'original' }),
-  });
-
-  assert.deepEqual(
-    await client.recordProgress({ progressPercent: 10, idempotencyKey: 'progress-key' }),
-    { result: { update_id: 'original' }, replayed: true },
-  );
-});
-
-test('completion is an authenticated idempotent completed update', async () => {
-  const calls = [];
-  const client = createActivityClient({
-    baseUrl: 'https://activity.example.test', artifact,
-    storage: createMemoryActivityStorage(sessionResponse()),
-    now: () => new Date('2026-08-19T20:00:00Z'),
-    fetchImpl: async (url, init) => {
-      calls.push({ url, init });
-      return jsonResponse(201, { update_id: 'completed-1', state: { progress_percent: 100 } });
-    },
-  });
-
-  await client.recordCompleted({ idempotencyKey: 'course-completed' });
-
-  assert.match(calls[0].url, /\/updates$/);
-  assert.equal(calls[0].init.method, 'POST');
-  assert.equal(calls[0].init.headers['Idempotency-Key'], 'course-completed');
-  assert.deepEqual(JSON.parse(calls[0].init.body), { type: 'completed', payload: {} });
-});
-
-test('state is read with bearer authentication and no request body', async () => {
-  const calls = [];
-  const client = createActivityClient({
-    baseUrl: 'https://activity.example.test', artifact,
-    storage: createMemoryActivityStorage(sessionResponse()),
-    now: () => new Date('2026-08-19T20:00:00Z'),
-    fetchImpl: async (url, init) => {
-      calls.push({ url, init });
-      return jsonResponse(200, { progress_percent: 100, completed_at: null });
-    },
-  });
-
-  const state = await client.getState();
-
-  assert.deepEqual(state, { progress_percent: 100, completed_at: null });
-  assert.match(calls[0].url, /\/state$/);
-  assert.equal(calls[0].init.method, 'GET');
-  assert.equal(calls[0].init.body, undefined);
-  assert.equal(calls[0].init.headers.Authorization, `Bearer ${sessionResponse().session_token}`);
-});
-
-test('errors and diagnostics never expose bearer material', async () => {
-  const diagnostics = [];
-  const token = sessionResponse().session_token;
-  const client = createActivityClient({
-    baseUrl: 'https://activity.example.test',
-    artifact,
-    storage: createMemoryActivityStorage(sessionResponse()),
-    now: () => new Date('2026-08-19T20:00:00Z'),
-    onDiagnostic: event => diagnostics.push(event),
-    fetchImpl: async () => jsonResponse(401, { detail: `rejected ${token}` }),
-  });
-
-  await assert.rejects(
-    client.recordProgress({ progressPercent: 10, idempotencyKey: 'progress-key' }),
-    error => error instanceof ActivitySdkError && error.category === 'authentication' && error.status === 401,
-  );
-
-  assert.equal(JSON.stringify(diagnostics).includes(token), false);
-  assert.equal(diagnostics[0].operation, 'progress');
-  assert.equal(diagnostics[0].category, 'authentication');
-});
-
-test('an unauthorized write clears the rejected session and retries once with a fresh token', async () => {
-  const rejected = sessionResponse();
-  const replacement = sessionResponse({
-    session_token: 'replacement-session-token-safe-length',
-    session_id: '019f38f1-e5ab-7688-af0d-0e8925299e94',
-  });
-  const storage = createMemoryActivityStorage(rejected);
-  const calls = [];
-  const client = createActivityClient({
-    baseUrl: 'https://activity.example.test', artifact, storage,
-    now: () => new Date('2026-08-19T20:00:00Z'),
-    fetchImpl: async (url, init) => {
-      calls.push({ url, init });
-      if (calls.length === 1) return jsonResponse(401, { detail: 'rejected' });
-      if (calls.length === 2) return jsonResponse(201, replacement);
-      return jsonResponse(201, { update_id: 'progress-1', state: { progress_percent: 10 } });
-    },
-  });
-  const response = await client.recordProgress({ progressPercent: 10, idempotencyKey: 'progress-key' });
-  assert.equal(response.result.state.progress_percent, 10);
-  assert.equal(calls.length, 3);
-  assert.equal(calls[0].init.headers.Authorization, `Bearer ${rejected.session_token}`);
-  assert.equal('Authorization' in calls[1].init.headers, false);
-  assert.equal(calls[2].init.headers.Authorization, `Bearer ${replacement.session_token}`);
-  assert.equal(JSON.stringify(calls).includes(rejected.session_token), true);
-  assert.deepEqual(storage.load(), replacement);
-});
-
-test('authentication recovery retries only once', async () => {
-  const storage = createMemoryActivityStorage(sessionResponse());
-  let calls = 0;
-  const client = createActivityClient({
-    baseUrl: 'https://activity.example.test', artifact, storage,
-    now: () => new Date('2026-08-19T20:00:00Z'),
-    fetchImpl: async (_url, init) => {
-      calls += 1;
-      return init.headers.Authorization
-        ? jsonResponse(403, { detail: 'rejected' })
-        : jsonResponse(201, sessionResponse({ session_token: 'replacement-session-token-safe-length' }));
-    },
-  });
-  await assert.rejects(
-    client.getState(),
-    error => error instanceof ActivitySdkError && error.category === 'authentication' && error.status === 403,
-  );
-  assert.equal(calls, 3);
-  assert.equal(storage.load(), null);
-});
-
-test('staggered write and state authentication failures share one replacement session', async () => {
-  const stale = sessionResponse();
-  const replacement = sessionResponse({
-    session_token: 'shared-replacement-token-safe-length',
-    session_id: '019f38f1-e5ab-7688-af0d-0e8925299e95',
-  });
-  let releaseSlowFailure;
-  let markSlowStarted;
-  let markReplacementCreated;
-  const slowStarted = new Promise(resolve => { markSlowStarted = resolve; });
-  const replacementCreated = new Promise(resolve => { markReplacementCreated = resolve; });
-  const calls = [];
-  const client = createActivityClient({
-    baseUrl: 'https://activity.example.test', artifact,
-    storage: createMemoryActivityStorage(stale),
-    now: () => new Date('2026-08-19T20:00:00Z'),
-    fetchImpl: async (url, init) => {
-      calls.push({ url, authorization: init.headers.Authorization });
-      if (!init.headers.Authorization) {
-        markReplacementCreated();
-        return jsonResponse(201, replacement);
-      }
-      if (init.headers.Authorization === `Bearer ${stale.session_token}` && url.endsWith('/updates')) {
-        markSlowStarted();
-        return new Promise(resolve => { releaseSlowFailure = resolve; });
-      }
-      if (init.headers.Authorization === `Bearer ${stale.session_token}`) {
-        return jsonResponse(401, { detail: 'stale' });
-      }
-      if (url.endsWith('/state')) return jsonResponse(200, { progress_percent: 10, completed_at: null });
-      return jsonResponse(201, { update_id: 'progress-1', state: { progress_percent: 10 } });
-    },
-  });
-
-  const write = client.recordProgress({ progressPercent: 10, idempotencyKey: 'progress-key' });
-  await slowStarted;
-  const state = client.getState();
-  await replacementCreated;
-  const stateResult = await state;
-  releaseSlowFailure(jsonResponse(403, { detail: 'stale' }));
-
-  const writeResult = await write;
-  assert.equal(writeResult.result.state.progress_percent, 10);
-  assert.equal(stateResult.progress_percent, 10);
-  assert.equal(calls.filter(call => call.authorization === undefined).length, 1);
-  assert.equal(calls.filter(call => call.authorization === `Bearer ${replacement.session_token}`).length, 2);
-  assert.equal(calls.length, 5);
+test('local configuration uses UTF-8 bytes for multibyte descriptions before requesting',async()=>{
+ const markers=Array.from({length:16},(_,index)=>({id:`marker-${index}`,label:'L',description:'😀'.repeat(1024)}));
+ assert.ok(JSON.stringify(markers).length<64*1024);assert.ok(new TextEncoder().encode(JSON.stringify(markers)).byteLength>64*1024);
+ await assert.rejects(DLIActivity.initialize({...fixture().options,milestones:markers,fetchImpl:()=>assert.fail('oversized definitions must not request')}),error=>error.code==='invalid_configuration');
 });

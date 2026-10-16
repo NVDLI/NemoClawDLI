@@ -119,20 +119,34 @@ body .course-scroll-containment { overscroll-behavior: contain !important; }
   font-size: 1.2rem; cursor: pointer;
 }
 .activity-control-panel p { margin: 10px 0; }
-.activity-control-panel progress { display: block; width: 100%; height: 12px; margin: 8px 0; accent-color: var(--g); }
+.activity-control-panel .milestone-summary { font-size: 1.2rem; font-weight: 700; margin: 18px 0 6px; }
+.activity-control-panel .milestone-intro { color: var(--td); font-size: .8rem; }
+.course-milestones { list-style: none; margin: 18px 0; padding: 0; }
+.course-milestones li { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--bd); }
+.course-milestones li > div { min-width: 0; }
+.course-milestones a { color: var(--tx); font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+.course-milestones a:hover { color: var(--gs); }
+.course-milestones li p { margin: 5px 0; color: var(--td); font-size: .8rem; }
+.milestone-icon { display: flex; align-items: center; justify-content: center; flex: 0 0 24px; height: 24px; border: 1px solid var(--bd); border-radius: 50%; color: var(--td); }
+.course-milestones [data-completed="true"] .milestone-icon { color: var(--gs); border-color: var(--gd); background: var(--e2); font-weight: 700; }
+.milestone-state { display: block; margin-top: 6px; color: var(--tf); font: .7rem/1.4 var(--mono); }
+[data-completed="true"] .milestone-state { color: var(--gs); }
+.course-milestone-callout { margin: 20px 0 12px; padding: 16px 20px; border: 1px solid var(--bd); border-inline-start: 3px solid var(--g); border-radius: 6px; background: var(--e1); color: var(--tx); }
+.course-milestone-callout p { margin: 6px 0; color: var(--td); }
+.course-milestone-callout strong { font-size: .95rem; }
+.course-milestone-callout + [id] { scroll-margin-top: 10rem; }
 .activity-control-panel ul { margin: 6px 0 12px 20px; }
 .activity-control-panel details { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--bd); }
 .activity-control-panel summary { color: var(--gs); cursor: pointer; font-weight: 700; }
 .activity-control-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-.activity-control-actions button {
+.activity-control-actions button,
+.activity-control-panel > [data-activity-retry] {
   padding: 7px 10px; border: 1px solid var(--gd); border-radius: 6px;
   background: var(--g); color: #0a0a0a; font-weight: 700; cursor: pointer;
 }
-.activity-control-actions button[data-activity-disable] { background: transparent; color: var(--tx); border-color: var(--bd); }
-.activity-control-actions button:disabled { opacity: .5; cursor: not-allowed; }
-.activity-referral-choice { display: flex; align-items: flex-start; gap: 8px; }
-.activity-referral-choice input { margin-top: .22rem; }
-.activity-control-links { display: flex; flex-wrap: wrap; gap: 12px; }
+.activity-control-panel > [data-activity-retry] { color: var(--bg); }
+.activity-control-actions button:disabled,
+.activity-control-panel > [data-activity-retry]:disabled { opacity: .5; cursor: not-allowed; }
 .activity-control :focus-visible { outline: 2px solid var(--gs); outline-offset: 2px; }
 .language-menu { position: relative; flex: 0 0 auto; }
 .language-menu-button {
@@ -321,6 +335,7 @@ body .course-scroll-containment { overscroll-behavior: contain !important; }
 .course-assistant-history button { min-height: 28px; padding: 0 9px; border: 1px solid var(--bd); border-radius: 5px; background: var(--e2); color: var(--td); font: .68rem/1 var(--mono); cursor: pointer; }
 .course-assistant-history pre { min-height: 0; flex: 1; margin: 0; padding: 10px; overflow: auto; border: 1px solid var(--bd); border-radius: 6px; background: var(--e1); color: var(--td); font: .72rem/1.5 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; }
 .course-license-note { margin-top: 4rem; padding-top: 1rem; border-top: 1px solid var(--bd); color: var(--tf); font-size: .74rem; line-height: 1.45; }
+.nvidia-policy-footer .course-license-note { margin-top: 0; margin-bottom: 1rem; padding-top: 0; border-top: 0; }
 .course-license-note a { color: var(--td); }
 .course-license-note a:hover { color: var(--gs); }
 
@@ -362,6 +377,19 @@ body .course-scroll-containment { overscroll-behavior: contain !important; }
 
 /* ── Page layout ─────────────────────────────────────────────────────────────── */
 main { max-width: min(71.25rem, 100%); margin: 0 auto; padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1rem, 4vw, 2rem) 100px; }
+.nvidia-policy-footer {
+  max-width: min(71.25rem, 100%); margin: 0 auto;
+  padding: 1.5rem clamp(1rem, 4vw, 2rem); border-top: 1px solid var(--bd);
+  color: var(--td); font-size: .875rem; line-height: 1.5;
+}
+.nvidia-policy-footer ul {
+  display: flex; flex-wrap: wrap; gap: .5rem 1.25rem;
+  margin: 0; padding: 0; list-style: none;
+}
+.nvidia-policy-footer li { margin: 0; padding: 0; }
+.nvidia-policy-footer a { display: inline-block; padding: .25rem 0; color: inherit; }
+.nvidia-policy-footer a:hover { color: var(--tx); }
+.nvidia-policy-footer a:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
 .hero { margin-bottom: 48px; }
 .hero .eyebrow { font-size: .78rem; text-transform: uppercase; letter-spacing: .12em; color: #76b900; color: var(--g); font-weight: 700; margin-bottom: .4em; }
 .hero h1 { font-size: 2.2rem; line-height: 1.2; font-weight: 800; margin-bottom: .6em; color: #f2f2f2; color: var(--tx); }
@@ -2327,3 +2355,12 @@ main .lp-helpers li > a:first-child {
 }
 
 main code { overflow-wrap: anywhere; word-break: break-word; }
+
+/* Consent prompt overlays a non-interactive preview of the milestone list. */
+.activity-progress-stage { position: relative; }
+.activity-progress-stage[data-tracking="off"] { display: grid; }
+.activity-progress-stage[data-tracking="off"] [data-activity-milestones] { grid-area: 1 / 1; max-height: min(30rem, calc(100vh - 11rem)); overflow: hidden; opacity: .24; filter: blur(1px); pointer-events: none; user-select: none; }
+.activity-progress-overlay { grid-area: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; background: color-mix(in srgb, var(--e1) 65%, transparent); }
+.activity-progress-overlay[hidden] { display: none; }
+.activity-progress-overlay .activity-control-actions button { background: transparent; color: var(--gs); border-color: var(--g); padding: 12px 18px; font-size: .9rem; }
+.activity-progress-overlay .activity-control-actions button:hover { background: color-mix(in srgb, var(--g) 12%, transparent); }

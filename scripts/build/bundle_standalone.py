@@ -49,6 +49,7 @@ from _bootstrap import add_script_paths, find_repo_root
 TASK1 = find_repo_root(Path(__file__).resolve())
 add_script_paths(TASK1 / "scripts")
 import artifact_link_audit
+from validation.activity_milestone_contract import audit_course
 
 WEB_DIR = TASK1 / "web"
 DEFAULT_OUT = TASK1 / "web_standalone"
@@ -916,6 +917,18 @@ def _self_test() -> int:
     return 0
 
 
+def _copy_activity_assets(source: Path, destination: Path) -> None:
+    """Preserve the shared Activity tree beside each standalone course."""
+    activity = source.parent / "activity"
+    target = destination.parent / "activity"
+    if activity.is_dir() and activity.resolve() != target.resolve():
+        shutil.copytree(activity, target, dirs_exist_ok=True)
+    explorer = source.parent / "_skill_explorer.js"
+    delivered_explorer = target.parent / explorer.name
+    if activity.is_dir() and explorer.is_file() and explorer.resolve() != delivered_explorer.resolve():
+        shutil.copy2(explorer, delivered_explorer)
+
+
 def _copy_linked_course_files(source: Path, destination: Path) -> list[str]:
     """Ship root JSON metadata and relative SKILL links without a filename allowlist."""
     skill = source / "SKILL.html"
@@ -990,6 +1003,45 @@ def _first_file(*paths: Path) -> Path:
     raise FileNotFoundError(names)
 
 
+NVIDIA_COOKIE_CONSENT_NOTICE = """<!-- OneTrust Cookies Consent Notice start for nvdli.github.io -->
+<script type="text/javascript">
+(function () {
+  // This production consent configuration is registered to this exact HTTPS host.
+  // Other hosts may supply their own CMP; optional tracking stays off without one.
+  if (location.protocol !== 'https:' || location.hostname !== 'nvdli.github.io') return;
+  window.OptanonWrapper = function OptanonWrapper() {
+    window.dispatchEvent(new Event('bannerLoaded'));
+  };
+  var stub = document.createElement('script');
+  stub.src = 'https://cdn.cookielaw.org/scripttemplates/otSDKStub.js';
+  stub.charset = 'UTF-8';
+  stub.setAttribute('data-domain-script', '01a13400-6831-707e-9897-c2ef6262efc7');
+  stub.onload = function () {
+    var custom = document.createElement('script');
+    custom.src = 'https://images.nvidia.com/aem-dam/Solutions/ot-js/ot-custom.js';
+    document.head.appendChild(custom);
+  };
+  document.head.appendChild(stub);
+}());
+</script>
+<!-- OneTrust Cookies Consent Notice end for nvdli.github.io -->"""
+
+
+NVIDIA_POLICY_FOOTER = """<footer class="nvidia-policy-footer">
+  <nav aria-label="NVIDIA legal and policies" lang="en">
+    <ul>
+      <li><a href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a></li>
+      <li><a href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Your Privacy Choices</a></li>
+      <li><a href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a></li>
+      <li><a href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a></li>
+      <li><a href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a></li>
+      <li><a href="https://www.nvidia.com/en-us/product-security/">Product Security</a></li>
+      <li><a href="https://www.nvidia.com/en-us/contact/">Contact</a></li>
+    </ul>
+  </nav>
+</footer>"""
+
+
 def bundle_one(html_path: Path, css_text: str, lite_css: str, shared_js: str,
                full: bool = False) -> str:
     """Bundle one page into a self-contained file.
@@ -1025,7 +1077,7 @@ def bundle_one(html_path: Path, css_text: str, lite_css: str, shared_js: str,
 
     # 1b) Favicon on every bundled page. In the full build also inject the pre-paint theme init so
     #     the page opens in the saved/OS palette without a flash; the lite iframe export stays baked.
-    head_inject = FAVICON_LINK + ("\n" + THEME_INIT_JS if full else "")
+    head_inject = NVIDIA_COOKIE_CONSENT_NOTICE + "\n" + FAVICON_LINK + ("\n" + THEME_INIT_JS if full else "")
     new_html = new_html.replace("</head>", head_inject + "\n</head>", 1)
 
     # 2) The lite export strips the lab-only chrome (topbar / journey map / the JS that mounts
@@ -1064,6 +1116,8 @@ def bundle_one(html_path: Path, css_text: str, lite_css: str, shared_js: str,
     if not full:
         autosize_tag = f"<script>{LITE_AUTOSIZE_JS}</script>\n</body>"
         new_html = new_html.replace("</body>", autosize_tag, 1)
+
+    new_html = new_html.replace("</body>", NVIDIA_POLICY_FOOTER + "\n</body>", 1)
 
     return new_html
 
@@ -1120,6 +1174,13 @@ def main() -> int:
         print(f"web/ not found at {web}", file=sys.stderr)
         return 1
 
+    if (web / "COURSE_CANON.md").is_file() or (web.parent / "activity").is_dir():
+        contract_document = web.parent.parent / "docs/ACTIVITY_MILESTONES.md"
+        contract_findings = audit_course(web, document=contract_document if contract_document.is_file() else TASK1 / "docs/ACTIVITY_MILESTONES.md")
+        if contract_findings:
+            print("\n".join(contract_findings), file=sys.stderr)
+            return 1
+
     if args.clean and out.exists():
         # Walk and unlink only generated files; skip paths the current user cannot remove.
         for p in sorted(out.rglob("*"), key=lambda x: len(x.parts), reverse=True):
@@ -1153,6 +1214,14 @@ def main() -> int:
         kb = len(bundled.encode("utf-8")) / 1024
         print(f"  bundled {src.name:<28} → {dst.name}  ({kb:5.1f} KB)")
 
+    _copy_activity_assets(web, out)
+    if (web.parent / "activity").is_dir():
+        documentation = out / "docs/ACTIVITY_MILESTONES.md"
+        documentation.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(contract_document if contract_document.is_file() else TASK1 / "docs/ACTIVITY_MILESTONES.md", documentation)
+        skill = out / "SKILL.html"
+        if skill.is_file():
+            skill.write_text(skill.read_text(encoding="utf-8").replace("../../docs/ACTIVITY_MILESTONES.md", "docs/ACTIVITY_MILESTONES.md"), encoding="utf-8")
     linked_course_files = _copy_linked_course_files(web, out)
     if linked_course_files:
         print(f"  copied course metadata and SKILL-linked files ({', '.join(linked_course_files)})")
@@ -1259,7 +1328,7 @@ def main() -> int:
     projected_skills = project_artifact_navigation(out)
     print(f"  projected artifact-local navigation ({projected_skills} files)")
 
-    link_findings = artifact_link_audit.audit(out)
+    link_findings = artifact_link_audit.audit(out.parent, source_roots=[out])
     if link_findings:
         print("artifact link audit: FAIL", file=sys.stderr)
         for finding in link_findings:
