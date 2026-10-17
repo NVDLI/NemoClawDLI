@@ -205,10 +205,12 @@ test('a gateway run acknowledged after Stop is aborted by its exact run ID', asy
     await until(() => acknowledge);
     controller.abort();
     await assert.rejects(pending,{name:'AbortError'});
+    assert.deepEqual(external.requests.filter(request => request.method === 'chat.abort'), [],
+      'Stop before acknowledgment must not abort an unowned run sharing this session');
     acknowledge();
     await tick();
-    assert(external.requests.some(request => request.method === 'chat.abort' && request.params.runId === 'late-run'),
-      'late acknowledged run remains active after the learner stopped');
+    assert.deepEqual(external.requests.filter(request => request.method === 'chat.abort').map(request => request.params),
+      [{sessionKey:'task',runId:'late-run'}], 'only the late acknowledged run may be aborted');
   } finally { external.close(); }
 });
 
@@ -263,7 +265,7 @@ test('native policy confirmation targets the sandbox whose policy was read, even
   const external = sockets((socket,request) => {
     if (request.method !== 'terminal') return;
     command = request.command;
-    socket.event({type:'data',data:'code=200'});
+    socket.event({type:'data',data:command.endsWith("printf %s 'DLI-ARG a b-END'") ? 'DLI-ARG a b-END' : 'code=200'});
     socket.event({type:'exit',code:0});
   });
   const source = fs.readFileSync(lesson(4, 1),'utf8');
@@ -942,6 +944,69 @@ test('discovered browser workflows load real modules and reject import, name and
       const disclosureRoute = '/contract-pages/nested/source-disclosure.html';
       const longCode = 'state.operation = function inspect() { return 7; };\n' + '// supporting code\n'.repeat(45);
       const courseStyles = '/' + path.relative(root, path.join(course, 'styles/_style.css'));
+      const nodeLifecycleRoute = '/contract-pages/nested/individual-node-lifecycle.html';
+      const individualNodes = [
+        {id:'first',title:'Construct shared input',x:0,y:0,code:'state.input = 41;'},
+        {id:'second',title:'Use shared input',x:1,y:0,code:'if (window.failNode) throw new Error("Fixture failure"); if (state.input !== 41) throw new Error("Shared input lost"); return state.input + 1;'},
+        {id:'last',title:'Await external result',x:2,y:0,code:'return await new Promise(resolve => { window.releaseNode = () => resolve({run_status:"ok"}); });'},
+      ];
+      fixtures.set(nodeLifecycleRoute, modulePage(`import {mountCanvasFlow} from '${runtimeUrl}';
+        window.nodeEvents=[];
+        window.addEventListener('nemoclaw:canvas-node-succeeded',event=>window.nodeEvents.push(event.detail));
+        mountCanvasFlow('#exercise',{nodes:${JSON.stringify(individualNodes)}});
+        const multi=document.createElement('div');multi.id='multi';document.body.append(multi);
+        mountCanvasFlow('#multi',{nodes:[{id:'top',title:'Top',x:0,y:0,code:''},{id:'bottom',title:'Bottom',x:0,y:1,code:''}]});`).replace('<div id="exercise">',
+          `<link rel="stylesheet" href="${courseStyles}"><div id="exercise">`));
+      const lifecycleViewport = page.viewportSize();
+      await page.setViewportSize({width:1280,height:900});
+      await page.goto(origin + nodeLifecycleRoute);
+      await page.locator('#multi .cf-node').last().waitFor();
+      const geometry = await page.locator('#exercise .cf-node, #multi .cf-node').evaluateAll(nodes => nodes.map(node => ({
+        title:node.textContent, width:node.getBoundingClientRect().width, height:node.getBoundingClientRect().height,
+      })));
+      assert.equal(geometry.length,5);
+      for (const bounds of geometry) assert(bounds.width > 0 && bounds.height > 0 && bounds.height <= 180,
+        'default node must remain compact at desktop: ' + JSON.stringify(bounds));
+      const nodeRun = id => page.locator('#exercise .cf-panel[data-id="'+id+'"] .cf-panel-runone');
+      const waitFlow = state => page.waitForFunction(state => document.querySelector('#exercise').dataset.state === state,state);
+      await nodeRun('first').click();
+      await waitFlow('ready');
+      assert.equal(await page.locator('#exercise .cf-wrap').getAttribute('aria-busy'),'false');
+      await nodeRun('second').click();
+      await waitFlow('ready');
+      assert.match(await page.locator('#exercise .cf-panel[data-id="second"] .cf-panel-output').innerText(),/42/);
+      await nodeRun('last').click();
+      await page.waitForFunction(()=>typeof window.releaseNode==='function');
+      await page.evaluate(()=>window.releaseNode());
+      await waitFlow('succeeded');
+      await page.evaluate(()=>{window.failNode=true;});
+      await nodeRun('second').click();
+      await waitFlow('failed');
+      assert.match(await page.locator('#exercise .cf-status-bar').textContent(),/Use shared input/);
+      await page.evaluate(()=>{window.failNode=false;});
+      await nodeRun('second').click();
+      await waitFlow('succeeded');
+      const eventsBeforeStop=await page.evaluate(()=>window.nodeEvents.length);
+      await page.evaluate(()=>{window.releaseNode=null;});
+      await nodeRun('last').click();
+      await page.waitForFunction(()=>typeof window.releaseNode==='function');
+      await page.locator('#exercise .cf-btn-run').click();
+      await page.evaluate(()=>window.releaseNode());
+      await waitFlow('stopped');
+      assert.equal(await page.evaluate(()=>window.nodeEvents.length),eventsBeforeStop,
+        'a single-node result settling after Stop must not publish completion');
+      // Reset invalidates the pending handler; its late completion must not overwrite reset.
+      await page.evaluate(()=>{window.releaseNode=null;});
+      await nodeRun('last').click();
+      await page.waitForFunction(()=>typeof window.releaseNode==='function');
+      await page.locator('#exercise .cf-btn-reset').click();
+      await page.evaluate(async()=>{window.releaseNode();await new Promise(resolve=>setTimeout(resolve,0));});
+      assert.equal(await page.locator('#exercise').getAttribute('data-state'),'reset');
+      assert.equal(await page.evaluate(()=>window.nodeEvents.length),eventsBeforeStop);
+      console.log('CANVAS_NODE_LIFECYCLE',JSON.stringify({environment:environment.mode,geometry,
+        covered:['partial','full','error','stop','reset-epoch']}));
+      await page.setViewportSize(lifecycleViewport);
+      fixtures.delete(nodeLifecycleRoute);
       const streamRoute = '/contract-pages/nested/streamed-answer.html';
       const streamCode = `state.call = async method => method === 'chat.send' ? {runId:'owned'} : {};
         window.streamFrame = event => state._chatCb?.(event);

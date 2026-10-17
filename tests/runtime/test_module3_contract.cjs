@@ -171,18 +171,23 @@ async function fixture(options = {}) {
     sandboxExec:async (command, {signal} = {}) => {
       assert.equal(signal, controller.signal, 'file verification observes this cell Stop');
       signal.throwIfAborted();
-      commands.push(command);
       if (options.shellFailure) return {exitCode:1,output:'fixture command failure'};
+      if (command === "printf %s 'DLI-ARG a b-END'")
+        return {exitCode:0,completion:'exit',output:"'DLI-ARGab-END'"};
+      const wrapped = /^python3 -c __import__\('os'\)\.execl\('\/bin\/sh','sh','-c',__import__\('base64'\)\.b64decode\('([A-Za-z0-9+/=]+)'\)\.decode\('utf-8'\)\)$/.exec(command);
+      assert(wrapped, 'course script must cross the sandbox boundary as one encoded argument');
+      command = Buffer.from(wrapped[1], 'base64').toString('utf8');
+      commands.push(command);
       const read = command.match(/base64 < '([^']+)'/);
       if (read) {
         let content = files.get(read[1]);
         if (options.read) content = options.read(read[1], f);
         if (content === undefined) return {exitCode:1,output:'fixture file missing'};
-        return {exitCode:0,output:'\x1e' + Buffer.from(content).toString('base64') + '\x1f'};
+        return {exitCode:0,completion:'exit',output:'\x1e' + Buffer.from(content).toString('base64') + '\x1f'};
       }
       for (const write of command.matchAll(/printf '%s' '([^']+)' \| base64 -d > '([^']+)'/g))
         files.set(write[2], Buffer.from(write[1], 'base64').toString());
-      return {exitCode:0,output:''};
+      return {exitCode:0,completion:'exit',output:''};
     },
   };
   const globals = {

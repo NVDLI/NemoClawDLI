@@ -130,7 +130,7 @@
     "rich.77bacdc2413d": {
       "type": "rich",
       "source": "\n      Once the probe above is green, this artifact opens the same\n      <code>/cli/gateway</code> WebSocket and lets you chat with your live OpenClaw\n      agent. It streams the reply and shows a chip whenever the agent reaches for a\n      tool. Every reply you see here came back over that live gateway connection.\n    ",
-      "value": "\n      上方探測顯示綠色後，此互動元件會開啟同一個\n      <code>/cli/gateway</code> WebSocket，讓您與即時執行的 OpenClaw\n      代理程式聊天。它會以流式方式顯示回覆；代理程式每次準備使用工具時，介面都會顯示一個標籤。您在此看到的每條回覆都透過該即時閘道連線傳回。\n    "
+      "value": "\n      上方探測顯示綠色後，此互動元件會開啟同一個\n      <code>/cli/gateway</code> WebSocket，讓您與即時執行的 OpenClaw\n      代理程式聊天。它會以串流顯示回覆；代理程式每次準備使用工具時，介面都會顯示一個標籤。您在此看到的每條回覆都透過該即時閘道連線傳回。\n    "
     },
     "rich.7bbbef680f75": {
       "type": "rich",
@@ -316,12 +316,6 @@
       "source": "prompt:",
       "value": "提示："
     },
-    "text.10b414e45d15": {
-      "type": "text",
-      "source": " Try another prompt (uncomment one) to compare how the models behave on different work:",
-      "value": " Try another prompt (uncomment one) to compare how the models behave on different work:",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
     "text.1139259614b2": {
       "type": "text",
       "source": "the shell runs",
@@ -389,7 +383,7 @@
     "text.1ff459f42563": {
       "type": "text",
       "source": "The optional benchmark pulls matching models from the catalog, streams one short prompt through\n        each, and records time to first nonempty content chunk, first answer, and completion. These are direct API measurements;\n        they do not measure the planning, tools, or session work added by the OpenClaw gateway.",
-      "value": "選用的效能測試會從目錄取得符合條件的模型，向每個模型串流傳送一則簡短提示詞，並記錄到第一個非空內容區塊、第一段回答及完成所需的時間。這些是直接呼叫 API 的測量結果，不包含 OpenClaw 閘道額外執行的規劃、工具或工作階段處理。"
+      "value": "選用的效能測試會從目錄取得符合條件的模型，向每個模型傳送一則簡短提示詞，並以串流接收回應，記錄到第一個非空內容區塊、第一段回答及完成所需的時間。這些是直接呼叫 API 的測量結果，不包含 OpenClaw 閘道額外執行的規劃、工具或工作階段處理。"
     },
     "text.2144fd972dd6": {
       "type": "text",
@@ -399,7 +393,7 @@
     "text.222f88777073": {
       "type": "text",
       "source": "Streams chat.send under a fresh sessionKey until run-end. Commented prompts offer simpler alternatives.",
-      "value": "使用新的 sessionKey 流式執行 chat.send，直至收到 run-end。註釋掉的提示詞提供了更簡單的替代方案。"
+      "value": "使用新的 sessionKey 執行 chat.send，並以串流接收回應，直到收到 run-end。註釋掉的提示詞提供了更簡單的替代方案。"
     },
     "text.22759a3f3bc5": {
       "type": "text",
@@ -574,6 +568,12 @@
       "source": "Step 2 · Operate the agent through its gateway",
       "value": "步驟 2 · 透過閘道操作代理程式"
     },
+    "text.3dbfcac55ef0": {
+      "type": "text",
+      "source": " Replace the active prompt with one alternative to compare different work:",
+      "value": " Replace the active prompt with one alternative to compare different work:",
+      "untranslated": "Runnable example code/comment remains canonical, matching the existing course comment policy; review pending."
+    },
     "text.3ef7a77a3b39": {
       "type": "text",
       "source": "Plant a fresh code, recall it without resending it, then reset that session and ask again.\n      Reset removes conversation history; shared workspace files remain. These prompts ask the agent\n      not to write the code to a file. Inspect the events before interpreting the result.",
@@ -606,6 +606,12 @@
       "value": "\\\\n",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
+    "text.4285d23d69c3~1": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
     "text.42b0085252ef": {
       "type": "text",
       "source": "Check the model route saved above, its bearer key, and the served model ID.",
@@ -626,6 +632,11 @@
       "type": "text",
       "source": "What code did I give you earlier? If absent, say unknown. Do not read files.",
       "value": "我之前給了你什麼代碼？若記錄中沒有，請回答不知道。不要讀取檔案。"
+    },
+    "text.44c7f5c6cd8a": {
+      "type": "text",
+      "source": "Model stream ended before a complete final response",
+      "value": "模型串流在傳回完整的最終回應前結束。"
     },
     "text.459be464036a": {
       "type": "text",
@@ -671,7 +682,7 @@
     "text.511ff71910ce": {
       "type": "text",
       "source": "The same WebSocket at /cli/gateway that the Control UI uses is written out here as a challenge/response handshake, a JSON-RPC method call, and then a streaming chat turn.",
-      "value": "此處將 Control UI 使用的同一個 /cli/gateway WebSocket 完整展開，依次展示質詢/回應握手、一次 JSON-RPC 方法呼叫，以及一輪流式聊天。"
+      "value": "此處將 Control UI 使用的同一個 /cli/gateway WebSocket 完整展開，依次展示質詢/回應握手、一次 JSON-RPC 方法呼叫，以及一輪串流聊天。"
     },
     "text.5175a09aac75": {
       "type": "text",
@@ -721,6 +732,12 @@
       "type": "text",
       "source": "List five prime numbers.",
       "value": "列出五個質數。"
+    },
+    "text.5cf1fa8d836a": {
+      "type": "text",
+      "source": "utf-8",
+      "value": "utf-8",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.61145368eded": {
       "type": "text",
@@ -835,7 +852,7 @@
     "text.7b65aa343238": {
       "type": "text",
       "source": "\n      A Pomerium launchable keeps bootstrap and WebSocket traffic direct: HTTP checks run through\n      its terminal loopback. Cloudflare sends HTTP checks through the approved relay; its WebSockets\n      try the launchable first and can recover through the relay. The probe shows the route without\n      displaying the session value.\n    ",
-      "value": "\n      Pomerium launchable 會讓引導和 WebSocket 流量保持直連：HTTP 檢查透過其終端機環回執行。Cloudflare 會透過獲准的中繼傳送 HTTP 檢查；其 WebSocket 會先嚐試連線 launchable，並可透過中繼恢復。探測結果會顯示路由，但不會顯示會話值。\n    "
+      "value": "\n      Pomerium launchable 會讓引導和 WebSocket 流量保持直連：HTTP 檢查透過其終端機環回執行。Cloudflare 會透過獲准的中繼傳送 HTTP 檢查；其 WebSocket 會先嘗試連線 launchable，並可透過中繼恢復。探測結果會顯示路由，但不會顯示會話值。\n    "
     },
     "text.7ba81713b6a9": {
       "type": "text",
@@ -876,7 +893,7 @@
     "text.843a61562402": {
       "type": "text",
       "source": "Send a chat message (streaming)",
-      "value": "傳送聊天訊息（流式傳輸）"
+      "value": "傳送聊天訊息（串流）"
     },
     "text.844f786418f4": {
       "type": "text",
@@ -1035,7 +1052,7 @@
     "text.a7d28389c5a9": {
       "type": "text",
       "source": "The settings card mirrors the course model route saved on the home page or in Module 1a. Change\n      it only if the direct probe fails. The course model route and the launchable connection retain\n      separate credentials and state.",
-      "value": "設定卡片會映象課程首頁或模組 1a 中儲存的課程模型路由。只有直接探測失敗時才需要更改。課程模型路由與可啟動執行個體連線各自使用獨立的憑證和狀態。"
+      "value": "設定卡片會顯示課程首頁或模組 1a 中儲存的課程模型路由。只有直接探測失敗時才需要更改。課程模型路由與可啟動執行個體連線各自使用獨立的憑證和狀態。"
     },
     "text.abea8c9b2fde": {
       "type": "text",

@@ -94,7 +94,7 @@ test(path.relative(root, course) + ': loopback program disables echo before read
     send(value) { events.push(['input', value]); }
     close() { events.push(['close']); }
   }
-  vm.runInNewContext(program, {WebSocket:ExternalGateway,Buffer,setTimeout:() => 1,
+  vm.runInNewContext(program, {WebSocket:ExternalGateway,Buffer,setTimeout:() => 1,clearTimeout(){},
     process:{stdin:{isTTY:true,setRawMode:value => events.push(['raw',value]),setEncoding(){},on:(name,callback) => {input[name] = callback;}},
       stdout:{write:value => output.push(value)},exit:code => events.push(['exit',code])}});
   assert.deepEqual(events, [['raw',true]]);
@@ -109,4 +109,83 @@ test(path.relative(root, course) + ': loopback program disables echo before read
   assert.match(decoded[1].data, /connect.challenge/);
   input.end();
   assert.ok(events.some(value => value[0] === 'close'));
+});
+
+function loopbackFixture() {
+  const command = new URL('https://launchable.example' + gatewayTerminalPath()).searchParams.get('cmd');
+  const program = Buffer.from(command.match(/Buffer\.from\("([A-Za-z0-9+/=]+)"/)[1], 'base64').toString();
+  const sockets = [], input = {}, output = [], timers = new Map();
+  let sequence = 0;
+  class Gateway {
+    readyState = 1; listeners = {}; sent = []; closes = 0;
+    constructor(url) { assert.equal(url,'ws://127.0.0.1:18789'); sockets.push(this); }
+    addEventListener(name,callback) { this.listeners[name] = callback; }
+    send(data) { this.sent.push(data); }
+    close() { this.closes++; this.readyState = 3; this.listeners.close?.({code:1000}); }
+    event(name,value = {}) { this.listeners[name](value); }
+  }
+  vm.runInNewContext(program,{WebSocket:Gateway,Buffer,
+    setTimeout(callback,ms) { const id=++sequence;timers.set(id,{callback,ms});return id; },
+    clearTimeout(id) {timers.delete(id);},
+    process:{stdin:{setEncoding(){},on(name,callback){input[name]=callback;}},
+      stdout:{write(line){output.push(JSON.parse(Buffer.from(line.trim().slice(prefix.length),'base64').toString()));}},exit(){}}});
+  return {sockets,input,output,timers,retry() {
+    const entry = [...timers].find(([,timer])=>timer.ms===250);
+    assert.ok(entry,'one bounded reconnect scheduled');
+    timers.delete(entry[0]);entry[1].callback();
+  }};
+}
+
+test('loopback retries once before traffic, suppressing stale callbacks and duplicate readiness', () => {
+  for (const opened of [false,true]) for (const cause of ['error',1006,1011]) {
+    const f = loopbackFixture(), first = f.sockets[0];
+    if (opened) first.event('open');
+    first.event(cause === 'error' ? 'error' : 'close',{code:cause});
+    assert.equal(first.closes,1);
+    first.event('message',{data:'stale challenge'});
+    first.event('open');
+    first.event('error');
+    f.retry();
+    assert.equal(f.sockets.length,2);
+    const second=f.sockets[1];second.event('open');
+    second.event('message',{data:'current challenge'});
+    const request='{"method":"connect"}';
+    f.input.data(Buffer.from(request).toString('base64')+'\n');
+    assert.deepEqual(first.sent,[]);
+    assert.deepEqual(second.sent,[request]);
+    assert.deepEqual(f.output,[{type:'open'},{type:'message',data:'current challenge'}]);
+    second.event('close',{code:1011});
+    assert.equal(f.output.at(-1).code,1011);
+    assert.equal([...f.timers.values()].filter(timer=>timer.ms===250).length,0);
+  }
+});
+
+test('loopback never retries observed frames, browser input, or nontransient closes', () => {
+  for (const before of ['message','malformed','input','partial-input',1000,1008,4001]) {
+    const f=loopbackFixture(), socket=f.sockets[0];socket.event('open');
+    if (before==='message') socket.event('message',{data:'challenge'});
+    if (before==='malformed') socket.event('message',{data:new Uint8Array([1])});
+    if (before==='input') f.input.data(Buffer.from('request').toString('base64')+'\n');
+    if (before==='partial-input') f.input.data('c');
+    socket.event('close',{code:typeof before==='number'?before:1011});
+    assert.equal(f.sockets.length,1,String(before));
+    assert.equal([...f.timers.values()].filter(timer=>timer.ms===250).length,0,String(before));
+    assert.equal(f.output.filter(frame=>frame.type==='close').length,1);
+  }
+});
+
+test('loopback Stop clears pending recovery and closes owned sockets without replay', () => {
+  for (const phase of ['pending','reconnected','second-failure']) {
+    const f=loopbackFixture();f.sockets[0].event('error');
+    const pending=[...f.timers.values()].find(timer=>timer.ms===250).callback;
+    if (phase!=='pending') f.retry();
+    if (phase==='second-failure') f.sockets[1].event('error');
+    f.input.end();
+    pending(); // Even an already-queued callback cannot revive a stopped bridge.
+    f.input.data(Buffer.from('late request').toString('base64')+'\n');
+    assert.equal(f.sockets.length,phase==='pending'?1:2);
+    assert.ok(f.sockets.every(socket=>socket.closes===1 && socket.sent.length===0));
+    assert.equal([...f.timers.values()].filter(timer=>timer.ms===250).length,0);
+    assert.equal(f.output.filter(frame=>frame.type==='close').length,1);
+  }
 });

@@ -169,11 +169,23 @@ test(language.label + ': commands distinguish denial evidence, ordinary failure 
     [{ exitCode: null, output: 'partial output' }, 'incomplete'],
   ];
   for (const [result, outcome] of cases) {
-    const { log } = recorder();
-    const value = await execute(displayed.layers, { log, sandboxExec: async () => result });
-    assert(value.results.length > 0);
-    assert(value.results.every(item => item.outcome === t(outcome)), outcome);
-    if (outcome === 'incomplete') assert.equal(value.results.length, 1);
+    const { log, entries } = recorder();
+    let calls = 0;
+    const pending = execute(displayed.layers, { log, sandboxExec: async () => { calls++; return result; } });
+    if (outcome === 'incomplete') {
+      await assert.rejects(pending, error => error.message === t('No exit status arrived. Check the runtime before running more probes.'));
+      assert.equal(calls, 1, 'an incomplete command must stop subsequent probes');
+    } else if (outcome === 'command failed') {
+      await assert.rejects(pending, error => error.message.includes(result.output));
+      assert(calls > 1, 'ordinary failures remain available for comparison');
+    } else {
+      const value = await pending;
+      assert(value.results.length > 0);
+      assert(value.results.every(item => item.outcome === t(outcome)), outcome);
+    }
+    const evidence = entries.map(row => row[1]).filter(value => value && typeof value === 'object' && 'outcome' in value);
+    assert.equal(evidence.length, calls, 'every attempted command retains classified evidence');
+    assert(evidence.every(item => item.outcome === t(outcome)), outcome);
   }
 });
 
@@ -195,7 +207,7 @@ test(language.label + ': permission experiment cleans its own file on completion
       const { log } = recorder();
       await execute(displayed.layers, { log, sandboxExec: async command => {
         commands.push(command);
-        if (!command.includes('mktemp')) return { exitCode: 0, output: '' };
+        if (!command.includes('chmod 0444')) return { exitCode: 0, output: '' };
         // Execute only the displayed exercise-owned permission command. All
         // network, package and authority probes remain external-service fixtures.
         permissionResult = spawnSync('sh', ['-c', command], {
@@ -211,7 +223,7 @@ test(language.label + ': permission experiment cleans its own file on completion
       assert.deepEqual(commands.filter(command => command.includes('SOUL.md')),
         ['ls -la /sandbox/.openclaw/workspace/SOUL.md'], 'persona metadata is observed only');
       assert(!commands.some(command => /\bchattr\b/.test(command)), 'no immutable state can survive cleanup');
-      assert(commands.includes('dd if=/proc/1/environ of=/dev/null status=none'), 'environment access probe discards all contents');
+      assert(commands.includes('dd if=/proc/1/environ of=/dev/null count=0 status=none'), 'environment access probe must not read contents');
     } finally {
       fs.rmSync(fixture, { recursive: true, force: true });
     }
@@ -276,6 +288,44 @@ function policyWindow(action = {}) {
     } } },
   };
 }
+function scenariosFrom(html) {
+  const match = html.match(/window\.__SBX_SCENARIOS\s*=\s*(\[[\s\S]*?\n\s*\]);/);
+  assert(match, 'read the scenario array used by the actual picker');
+  return vm.runInNewContext(match[1]);
+}
+test(language.label + ': every scenario localizes its UI roles while retaining its wire action', () => {
+  const canonical = scenariosFrom(fs.readFileSync(path.join(root,'web',path.basename(course),'04a-safety.html'),'utf8'));
+  const actual = scenariosFrom(safety);
+  assert.equal(actual.length,canonical.length);
+  actual.forEach((item,index) => {
+    const source = canonical[index];
+    assert.equal(item.id,source.id);
+    assert.equal(item.title,t(source.title));
+    assert.equal(item.label,t(source.label));
+    assert.equal(JSON.stringify(item.a),JSON.stringify(source.a));
+  });
+});
+test(language.label + ': the default policy comparison needs no managed inference or credentials', async () => {
+  const scenarios = scenariosFrom(safety);
+  const action = scenarios[0].a;
+  assert.equal(scenarios[0].title, t('read package metadata'));
+  assert.equal(action.host, 'pypi.org');
+  assert.equal(action.path, '/pypi/idna/json');
+  assert.equal(action.method, 'GET');
+  const state = {}, window = policyWindow(action), {log} = recorder();
+  window.__SBX_POLICY.network_policies.fixture.endpoints = [
+    {host:action.host,port:action.port,rules:[{allow:{method:'GET',path:'/**'}}]},
+  ];
+  const helpers = {log,evalSandboxNetwork,sandboxExec:async command => {
+    assert(command.includes("'https://" + action.host + ':' + action.port + action.path + "'"));
+    assert(!/Authorization|--data|--json/.test(command), 'the probe must not send credentials or invoke a model');
+    return {exitCode:0,output:'code=200'};
+  }};
+  await execute(displayed.predict,helpers,state,window);
+  await execute(displayed.confirm,helpers,state,window);
+  assert.equal((await execute(displayed.compare,helpers,state,window)).agree,true);
+  assert(scenarios.some(row => row.a.host === 'inference.local'), 'managed inference remains available');
+});
 test(language.label + ': Confirm executes selected method and custom port; Predict invalidates prior observations', async () => {
   const state = {}, window = policyWindow(), { log } = recorder();
   const helpers = { log, evalSandboxNetwork, sandboxExec: async command => {
@@ -291,7 +341,7 @@ test(language.label + ': Confirm executes selected method and custom port; Predi
   await execute(displayed.predict, helpers, state, window);
   assert.equal(state.predicted, 'deny');
   assert.equal(state.observed, null);
-  assert.equal(await execute(displayed.compare, helpers, state), undefined);
+  await assert.rejects(execute(displayed.compare, helpers, state), error => error.message === t('Run Predict and Confirm for the same action first.'));
 });
 test(language.label + ': Confirm reads labelled stdout without swallowing transport diagnostics', async () => {
   const state = {}, window = policyWindow(), {log} = recorder();
@@ -314,15 +364,31 @@ test(language.label + ': Confirm preserves IPv6 URL brackets', async () => {
   assert(command.includes("'https://[2001:db8::1]:8443/v1/chat/completions'"));
   assert.equal(state.observed,'allow');
 });
-test(language.label + ': plain HTTP denial, missing exit and ordinary command errors remain unresolved', async () => {
-  for (const result of [{ exitCode: 0, output: 'code=403' }, { exitCode: null, output: '' }, { exitCode: 6, output: 'Could not resolve host' }]) {
+test(language.label + ': HTTP errors, missing exit and ordinary command errors remain unresolved', async () => {
+  const responses = [199,400,401,403,407,429,500,503,599].map(status => ({exitCode:0,output:'code='+status}));
+  responses.push({exitCode:0,output:'{"error":"cluster inference is not configured"}\ncode=503'});
+  for (const result of [...responses, { exitCode: null, output: '' }, { exitCode: 6, output: 'Could not resolve host' }]) {
     const state = {}, window = policyWindow(), { log } = recorder();
     const helpers = { log, evalSandboxNetwork, sandboxExec: async () => result };
     await execute(displayed.predict, helpers, state, window);
     await execute(displayed.confirm, helpers, state, window);
     assert.equal(state.observed, 'unknown');
-    assert.equal((await execute(displayed.compare, helpers, state, window)).agree, null);
+    await assert.rejects(execute(displayed.compare, helpers, state, window), error => error.message === t('The command did not establish an allow/deny result. Inspect its completion, response source, and error before comparing policy.'));
   }
+});
+test(language.label + ': only completed success or redirect responses establish acceptance; explicit denial wins', async () => {
+  for (const status of [200,299,300,399]) {
+    const state={},window=policyWindow(),{log}=recorder();
+    const helpers={log,evalSandboxNetwork,sandboxExec:async()=>({exitCode:0,output:'code='+status})};
+    await execute(displayed.predict,helpers,state,window);
+    await execute(displayed.confirm,helpers,state,window);
+    assert.equal(state.observed,'allow');
+  }
+  const state={},window=policyWindow(),{log}=recorder();
+  const helpers={log,evalSandboxNetwork,sandboxExec:async()=>({exitCode:56,output:'CONNECT tunnel failed, response 403\ncode=200'})};
+  await execute(displayed.predict,helpers,state,window);
+  await execute(displayed.confirm,helpers,state,window);
+  assert.equal(state.observed,'deny');
 });
 test(language.label + ': an older in-flight Confirm cannot replace a newer prediction, even for the same action', async () => {
   const state = {}, window = policyWindow(), { log } = recorder();
@@ -332,7 +398,7 @@ test(language.label + ': an older in-flight Confirm cannot replace a newer predi
   const pending = execute(displayed.confirm, helpers, state, window);
   await execute(displayed.predict, helpers, state, window);
   release({ exitCode: 0, output: 'code=200' });
-  await pending;
+  await assert.rejects(pending, error => error.message === t('The prediction, policy, gateway, or selection changed while this request ran. Run Predict and Confirm for the current selection.'));
   assert.equal(state.observed, null);
 });
 test(language.label + ': missing policy and a changed picker cannot reuse an earlier observation', async () => {
@@ -341,9 +407,9 @@ test(language.label + ': missing policy and a changed picker cannot reuse an ear
   await execute(displayed.predict, helpers, state, window);
   await execute(displayed.confirm, helpers, state, window);
   window.__sbxAction.method = 'GET';
-  assert.equal(await execute(displayed.compare, helpers, state, window), undefined);
+  await assert.rejects(execute(displayed.compare, helpers, state, window), error => error.message === t('Run Predict and Confirm for the same action first.'));
   window.__SBX_POLICY = null;
-  await execute(displayed.predict, helpers, state, window);
+  await assert.rejects(execute(displayed.predict, helpers, state, window), error => error.message === t("Run the 'Read your launchable's live policy' cell above first, so this predicts from YOUR box's policy."));
   assert.equal(state.predicted, null);
   assert.equal(state.observed, null);
 });
@@ -360,6 +426,21 @@ test(language.label + ': a failed policy reload clears the old policy and render
   assert.equal(cleared, 1);
 });
 
+test(language.label + ': policy parse failure logs and throws the same cause or fallback', async () => {
+  for (const cause of ['invalid YAML at line 7', null]) {
+    const window = policyWindow(), {log, entries} = recorder();
+    const prefix = t(String.raw`\\nCould not parse the live policy: `).replace(/^\\+n/, '\n');
+    const expected = prefix + (cause || t('unknown parser error'));
+    await assert.rejects(execute(displayed.policy, {
+      log, policyGet:async () => ({command:'openshell policy get example --full', policy:null, parseError:cause, raw:'invalid policy'}),
+    }, {}, window), error => error.message === expected);
+    assert(entries.some(args => args.length === 1 && args[0] === expected));
+    assert(entries.some(args => args[0] === t('raw output') && args[1] === 'invalid policy'));
+    assert.equal(window.__SBX_POLICY, null);
+    assert.equal(window.__SBX_POLICY_OWNER, null);
+  }
+});
+
 test(language.label + ': Confirm cannot publish an observation for a policy replaced during the request', async () => {
   const state = {}, window = policyWindow(), {log} = recorder();
   let release;
@@ -368,9 +449,9 @@ test(language.label + ': Confirm cannot publish an observation for a policy repl
   const pending = execute(displayed.confirm, helpers, state, window);
   window.__SBX_POLICY = {network_policies:{}};
   release({exitCode:0, output:'code=200'});
-  await pending;
+  await assert.rejects(pending, error => error.message === t('The prediction, policy, gateway, or selection changed while this request ran. Run Predict and Confirm for the current selection.'));
   assert.equal(state.observed, null);
-  assert.equal(await execute(displayed.compare, helpers, state, window), undefined);
+  await assert.rejects(execute(displayed.compare, helpers, state, window), error => error.message === t('Run Predict and Confirm for the same action first.'));
 });
 test(language.label + ': read-only survey uses the returned persona field', async () => {
   const { log, entries } = recorder();

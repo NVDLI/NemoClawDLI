@@ -7,19 +7,146 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
+import vm from 'node:vm';
 import {createRequire} from 'node:module';
 import {discoverGatewayInventory, gatewayConsumerFindings, gatewayLifecycleFindings} from '../../scripts/validation/gateway_token_audit.mjs';
 const {discoverCourses} = createRequire(import.meta.url)('./course_exercise_fixture.cjs');
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const course = discoverCourses(root).roots[0];
 await import(pathToFileURL(path.join(course,'scripts/_shared.js')));
-const {courseTurn, openclawMessageText, filterOpenClawRuntimeValue} =
+const {GW_CONNECT, courseTurn, openclawMessageText, filterOpenClawRuntimeValue} =
   await import(pathToFileURL(path.join(course,'scripts/_openclaw.js')));
 
 const frame = (state, runId, sessionKey, text, event = 'chat', extra = {}) => state._chatCb?.({
   event, payload:{runId, sessionKey, state:'final', message:{content:text}, ...extra},
 });
 const tick = () => new Promise(resolve => setImmediate(resolve));
+
+// Execute the authored connection snippet; only the external socket, signing and clock
+// are controlled. Retain callbacks to exercise frames already queued before close.
+function handshakeFixture({state = {}, sign = async () => ({})} = {}) {
+  const timers = new Map(), requests = [], entries = [], controller = new AbortController();
+  let timerId = 0;
+  const socket = {
+    readyState:1,
+    send(data) { requests.push(JSON.parse(data)); },
+    close() { if (this.readyState === 3) return; this.readyState = 3; this.onclose?.({code:1000}); },
+    deliver(value) { this.onmessage?.({data:JSON.stringify(value)}); },
+  };
+  const helpers = {
+    signal:controller.signal, log:(...args) => entries.push(args), randomId:() => 'request-' + (requests.length + 1),
+    refreshOpenClawGatewayToken:async () => ({token:'fixture'}),
+    getOpenClawConnection:() => ({rawUrl:'https://fixture.invalid',accessProvider:'auto',accessSession:''}),
+    openclawGatewayWsUrl:() => ({url:'wss://fixture.invalid',displayUrl:'fixture',openSocket:() => socket,
+      connectParams:sign, assertGrant:payload => assert.equal(payload?.accepted, true)}),
+  };
+  const pending = vm.runInNewContext('(async () => {' + GW_CONNECT + '\n})()', {
+    state, helpers, DOMException,
+    setTimeout(callback, ms) { const id = ++timerId; timers.set(id,{callback,ms}); return id; },
+    clearTimeout(id) { timers.delete(id); },
+  });
+  pending.catch(() => {});
+  return {state, socket, requests, entries, controller, pending, timers,
+    expire() { const entry = [...timers.values()].find(timer => timer.ms === 30000); assert(entry); entry.callback(); },
+    challenge() { socket.deliver({event:'connect.challenge',payload:{nonce:'fixture'}}); },
+    accept() { const request = requests.at(-1); assert.equal(request.method,'connect');
+      socket.deliver({type:'res',id:request.id,ok:true,payload:{accepted:true,server:{version:'fixture'}}}); },
+  };
+}
+
+test('gateway handshake timeout closes transport and ignores late challenge callbacks', async () => {
+  let signed = 0;
+  const f = handshakeFixture({sign:async () => { signed++; return {}; }});
+  await tick();
+  const lateFrame = f.socket.onmessage;
+  f.expire();
+  await assert.rejects(f.pending,/authentication did not complete/);
+  lateFrame({data:JSON.stringify({event:'connect.challenge',payload:{}})});
+  await tick();
+  assert.equal(f.socket.readyState,3);
+  assert.equal(f.state._ws,undefined);
+  assert.equal(f.state.call,undefined);
+  assert.equal(f.timers.size,0);
+  assert.equal(signed,0);
+  assert.deepEqual(f.requests,[]);
+  assert(!f.entries.some(entry => String(entry[0]).includes('● connected')));
+});
+
+test('gateway timeout during signing prevents late authentication', async () => {
+  let completeSigning;
+  const f = handshakeFixture({sign:() => new Promise(resolve => { completeSigning = resolve; })});
+  await tick(); f.challenge();
+  f.expire(); await assert.rejects(f.pending,/authentication did not complete/);
+  completeSigning({}); await tick();
+  assert.deepEqual(f.requests,[]);
+  assert.equal(f.state.call,undefined);
+  assert.equal(f.timers.size,0);
+});
+
+test('pre-challenge close 1011 settles cleanly and only an explicit rerun authenticates', async () => {
+  let signed = 0;
+  const failed = handshakeFixture({sign:async () => { signed++; return {}; }});
+  await tick();
+  const lateFrame = failed.socket.onmessage;
+  failed.socket.readyState = 3;
+  failed.socket.onclose({code:1011});
+  await assert.rejects(failed.pending,/closed before authentication completed \(code 1011\)/);
+  assert.equal(failed.socket.readyState,3);
+  assert.equal(failed.state._ws,undefined);
+  assert.equal(failed.state.call,undefined);
+  assert.equal(failed.timers.size,0);
+  lateFrame({data:JSON.stringify({event:'connect.challenge',payload:{nonce:'late'}})});
+  await tick();
+  assert.equal(signed,0);
+  assert.deepEqual(failed.requests,[],'failure must not authenticate or replay learner actions');
+  assert(!failed.entries.some(entry => String(entry[0]).includes('● connected')));
+
+  const rerun = handshakeFixture({state:failed.state});
+  await tick();
+  assert.equal(rerun.state.call,undefined,'replacement cannot publish an unauthenticated RPC');
+  rerun.challenge(); await tick(); rerun.accept(); await rerun.pending;
+  const currentCall = rerun.state.call;
+  assert.equal(typeof currentCall,'function');
+  assert.equal(rerun.state._ws,rerun.socket);
+  assert.equal(rerun.timers.size,0);
+  lateFrame({data:JSON.stringify({event:'connect.challenge',payload:{nonce:'still-late'}})});
+  failed.controller.abort(); await tick();
+  assert.equal(signed,0);
+  assert.equal(rerun.state.call,currentCall);
+  assert.equal(rerun.socket.readyState,1,'old run cleanup cannot close the replacement socket');
+  assert.deepEqual(rerun.requests.map(request => request.method),['connect'],
+    'explicit rerun authenticates once without replaying any learner action');
+  rerun.socket.close();
+});
+
+test('reconnect cannot send an old challenge through its replacement connection', async () => {
+  let completeSigning;
+  const old = handshakeFixture({sign:() => new Promise(resolve => { completeSigning = resolve; })});
+  await tick(); old.challenge();
+  const replacement = handshakeFixture({state:old.state});
+  await assert.rejects(old.pending,/closed before authentication completed/);
+  await tick(); replacement.challenge(); await tick(); replacement.accept();
+  await replacement.pending;
+  const currentCall = replacement.state.call;
+  completeSigning({}); await tick();
+  assert.deepEqual(old.requests,[]);
+  assert.equal(replacement.requests.length,1);
+  assert.equal(replacement.state.call,currentCall);
+  assert.equal(replacement.state._ws,replacement.socket);
+  assert.equal(old.timers.size,0);
+  replacement.socket.close();
+});
+
+test('handshake uses its captured RPC and Stop closes pending authentication', async () => {
+  const f = handshakeFixture(); await tick();
+  f.state.call = () => { throw new Error('mutable state RPC used'); };
+  f.challenge(); await tick();
+  assert.equal(f.requests[0]?.method,'connect');
+  f.controller.abort();
+  await assert.rejects(f.pending,{name:'AbortError'});
+  assert.equal(f.socket.readyState,3);
+  assert.equal(f.timers.size,0);
+});
 function fixture(call) {
   const controller = new AbortController(), entries = [];
   const log = (...args) => entries.push(args);

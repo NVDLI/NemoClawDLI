@@ -98,6 +98,12 @@
       "source": "<a href=\"https://www.openpolicyagent.org/docs/latest/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent</a>. The policy-as-data engine behind the OPA-evaluated CONNECT proxy that gates every outbound connection.",
       "value": "<a href=\"https://www.openpolicyagent.org/docs/latest/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent</a>. Mecanismo de política como datos que evalúa el proxy CONNECT y controla cada conexión de salida."
     },
+    "placeholder.64ed70318be8": {
+      "type": "placeholder",
+      "source": "cleanup() { result=$?; trap - EXIT HUP INT TERM; probe_pid=\"\\${probe_pid:-\\${!:-}}\"; if [ -n \"$probe_pid\" ]; then /bin/kill -KILL -- -\"$probe_pid\" 2>/dev/null || /bin/kill -KILL \"$probe_pid\" 2>/dev/null || true; wait \"$probe_pid\" 2>/dev/null || true; fi; rm -rf -- \"$probe_dir\" || exit 125; exit \"$result\"; }",
+      "value": "cleanup() { result=$?; trap - EXIT HUP INT TERM; probe_pid=\"\\${probe_pid:-\\${!:-}}\"; if [ -n \"$probe_pid\" ]; then /bin/kill -KILL -- -\"$probe_pid\" 2>/dev/null || /bin/kill -KILL \"$probe_pid\" 2>/dev/null || true; wait \"$probe_pid\" 2>/dev/null || true; fi; rm -rf -- \"$probe_dir\" || exit 125; exit \"$result\"; }",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "rich.1379ecd555ca": {
       "type": "rich",
       "source": "The agent runs as a <strong>non-root process</strong> under the\n         unprivileged <code>sandbox</code> user. A successful exploit therefore\n         starts with less authority. The lower starting authority reduces\n         blast radius, though it does not prove escalation is impossible. The\n         host, container configuration, and syscall policy remain part of the\n         security boundary.",
@@ -198,6 +204,12 @@
       "source": "<strong>Peer preservation.</strong> An agent's verdict about a peer can change with social\n        context. Compare its judgments across controlled variations of that context.",
       "value": "<strong>Preservación entre pares.</strong> El veredicto de un agente sobre otro puede cambiar según el contexto social. Compara sus juicios al variar ese contexto de forma controlada."
     },
+    "text.023675bece6b": {
+      "type": "text",
+      "source": "pip --isolated install --target \"$probe_dir/pip\" --only-binary=:all: --no-deps --no-cache-dir --disable-pip-version-check --retries 0 --timeout 5 --no-input cowsay",
+      "value": "pip --isolated install --target \"$probe_dir/pip\" --only-binary=:all: --no-deps --no-cache-dir --disable-pip-version-check --retries 0 --timeout 5 --no-input cowsay",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.02bb7383df41": {
       "type": "text",
       "source": "A split-out root power such as",
@@ -245,6 +257,12 @@
       "source": "Do they agree?",
       "value": "¿Están de acuerdo?"
     },
+    "text.0602bfaed734": {
+      "type": "text",
+      "source": ": > \"$probe_dir/npm-globalrc\"",
+      "value": ": > \"$probe_dir/npm-globalrc\"",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.07bdc21bc756": {
       "type": "text",
       "source": "Supply-chain or unexpected code execution",
@@ -273,6 +291,12 @@
       "value": "predicted: ",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
+    "text.0995b9d72a81": {
+      "type": "text",
+      "source": "echo \"Temporary probe directory: $probe_dir\"",
+      "value": "echo \"Temporary probe directory: $probe_dir\"",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.0a07f6594619": {
       "type": "text",
       "source": ", ",
@@ -285,10 +309,21 @@
       "value": ", ",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/04b-modern-clis.html carries the canonical source at this unit unchanged"
     },
+    "text.0a21fb08c9c8": {
+      "type": "text",
+      "source": "pull an npm package directly with curl",
+      "value": "descargar un paquete npm directamente con curl"
+    },
     "text.0a26cd903046": {
       "type": "text",
       "source": "Compares the policy prediction with the command result; a mismatch needs further investigation.",
       "value": "Compara la predicción de la política con el resultado del comando; una discrepancia requiere más investigación."
+    },
+    "text.0a2d3f8f9b72": {
+      "type": "text",
+      "source": "; ",
+      "value": "; ",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.0a349a7a8d53": {
       "type": "text",
@@ -323,6 +358,12 @@
       "value": "main",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
+    "text.0da894b89b5c": {
+      "type": "text",
+      "source": " An HTTP error may come from a proxy or the application. Keep it unresolved.",
+      "value": " An HTTP error may come from a proxy or the application. Keep it unresolved.",
+      "untranslated": "Runnable example code/comment remains canonical, matching the existing course comment policy; review pending."
+    },
     "text.0dfcce901854": {
       "type": "text",
       "source": "Untrusted input, private data, and external communication together form the lethal trifecta.",
@@ -333,6 +374,11 @@
       "source": "length",
       "value": "length",
       "untranslated": "Exact Chat Completions finish_reason value selecting the token-budget truncation diagnostic."
+    },
+    "text.0f90d55046c8": {
+      "type": "text",
+      "source": "Which package downloads or user-space installs complete?",
+      "value": "¿Qué descargas de paquetes o instalaciones en el espacio de usuario se completan?"
     },
     "text.0fc5ed3804ab": {
       "type": "text",
@@ -348,6 +394,12 @@
       "type": "text",
       "source": "Static verdict vs the live sandbox",
       "value": "Veredicto estático frente al sandbox activo"
+    },
+    "text.11691b230471": {
+      "type": "text",
+      "source": " & probe_pid=$!",
+      "value": " & probe_pid=$!",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.1321991d7340": {
       "type": "text",
@@ -377,6 +429,12 @@
       "source": "Why enforcement belongs below the model",
       "value": "Por qué la aplicación de políticas debe estar por debajo del modelo"
     },
+    "text.15ee4aeec2d6": {
+      "type": "text",
+      "source": "probe_dir=$(mktemp -d /tmp/nemoclaw-packages.XXXXXX)",
+      "value": "probe_dir=$(mktemp -d /tmp/nemoclaw-packages.XXXXXX)",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.16091000896f": {
       "type": "text",
       "source": "; chmod 0444 \\\\",
@@ -399,6 +457,12 @@
       "source": "config.get                -> ",
       "value": "config.get                -> ",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+    },
+    "text.18244150e957": {
+      "type": "text",
+      "source": "probe_pid=",
+      "value": "probe_pid=",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.1a011e731153": {
       "type": "text",
@@ -483,6 +547,12 @@
       "source": "Syscall allowlist",
       "value": "Lista de syscalls permitidas"
     },
+    "text.2251fa5bbd4c": {
+      "type": "text",
+      "source": "apt-get -o Acquire::Retries=0 -o Acquire::http::Timeout=5 -o Acquire::https::Timeout=5 download cowsay",
+      "value": "apt-get -o Acquire::Retries=0 -o Acquire::http::Timeout=5 -o Acquire::https::Timeout=5 download cowsay",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.235800578893": {
       "type": "text",
       "source": " · exit ",
@@ -528,6 +598,12 @@
       "value": "'",
       "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
     },
+    "text.265fda17a346~3": {
+      "type": "text",
+      "source": "'",
+      "value": "'",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
+    },
     "text.269f22d4b1e4": {
       "type": "text",
       "source": "Connect the runtime in Module 3a first. Commands run in that sandbox.",
@@ -542,6 +618,11 @@
       "type": "text",
       "source": "network / filesystem",
       "value": "red / sistema de archivos"
+    },
+    "text.27d336db7711": {
+      "type": "text",
+      "source": "clone tooling from GitHub",
+      "value": "clonar herramientas desde GitHub"
     },
     "text.28000742d88b": {
       "type": "text",
@@ -587,6 +668,17 @@
       "type": "text",
       "source": " does not prevent its owner from changing that mode or unlinking the file.",
       "value": " no impide que el propietario cambie ese modo o elimine el archivo."
+    },
+    "text.30063475d9e8": {
+      "type": "text",
+      "source": "cd \"$probe_dir\"",
+      "value": "cd \"$probe_dir\"",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
+    "text.30103e0a25ef": {
+      "type": "text",
+      "source": "exfiltrate data to an outside host",
+      "value": "exfiltrar datos a un servidor externo"
     },
     "text.3026a0ca485e": {
       "type": "text",
@@ -728,6 +820,12 @@
       "type": "text",
       "source": "\\\\nCould not parse the live policy: ",
       "value": "\\\\nNo se pudo interpretar la política activa: "
+    },
+    "text.4285d23d69c3": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
     },
     "text.434a7e64d74f": {
       "type": "text",
@@ -968,10 +1066,22 @@
       "value": "'\\\\\\\\''",
       "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
     },
+    "text.6092d3cf0039~1": {
+      "type": "text",
+      "source": "'\\\\\\\\''",
+      "value": "'\\\\\\\\''",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
+    },
     "text.61557a774304": {
       "type": "text",
       "source": "The response was not valid JSON. No commands ran; inspect the raw response and retry.",
       "value": "La respuesta no era JSON válido. No se ejecutó ningún comando; examina la respuesta sin procesar y reinténtalo."
+    },
+    "text.61822006bdcd": {
+      "type": "text",
+      "source": "stop() { exit 130; }",
+      "value": "stop() { exit 130; }",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.631adf3c8bef": {
       "type": "text",
@@ -1019,6 +1129,11 @@
       "type": "text",
       "source": "References",
       "value": "Referencias"
+    },
+    "text.6b3372dc30f6": {
+      "type": "text",
+      "source": "list available models",
+      "value": "listar los modelos disponibles"
     },
     "text.6c19d98e88b3": {
       "type": "text",
@@ -1093,12 +1208,6 @@
       "value": "sudo id",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.748279552226": {
-      "type": "text",
-      "source": "npm install --no-audit --no-fund left-pad",
-      "value": "npm install --no-audit --no-fund left-pad",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
-    },
     "text.7615f47928e7": {
       "type": "text",
       "source": "Control still needed above it",
@@ -1152,6 +1261,12 @@
       "source": "Run Predict and Confirm for the same action first.",
       "value": "Ejecuta «Predecir» y «Confirmar» para la misma acción primero."
     },
+    "text.827555bbdb2a": {
+      "type": "text",
+      "source": "dd if=/proc/1/environ of=/dev/null count=0 status=none",
+      "value": "dd if=/proc/1/environ of=/dev/null count=0 status=none",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.82acf0c810e9": {
       "type": "text",
       "source": "describe a goal, run the agent's trajectory, in code",
@@ -1161,6 +1276,11 @@
       "type": "text",
       "source": "Check whether the agent can reach the public internet",
       "value": "Comprueba si el agente puede acceder a Internet"
+    },
+    "text.850f0c1cdb6d": {
+      "type": "text",
+      "source": "read cloud-instance credentials (metadata SSRF)",
+      "value": "leer las credenciales de la instancia en la nube (SSRF de metadatos)"
     },
     "text.8535d2194c59": {
       "type": "text",
@@ -1250,15 +1370,16 @@
       "source": "Filter program that checks syscall numbers and arguments before execution.",
       "value": "Programa de filtrado que comprueba los números y argumentos de las syscalls antes de ejecutarlas."
     },
-    "text.8d8832c75e8c": {
-      "type": "text",
-      "source": " A plain HTTP 403/407 may come from a proxy or the application. Keep it unresolved.",
-      "value": " Un HTTP 403/407 sin más detalles puede proceder de un proxy o de la aplicación. Mantén la causa sin resolver."
-    },
     "text.8df1cf775383": {
       "type": "text",
       "source": "This launchable combines four operating-system mechanisms. Each answers a\n     question you can test, and together they apply policy at more than one\n     boundary. Read the live policy later on this page before treating any one\n     guarantee as universal.",
       "value": "Este launchable combina cuatro mecanismos del sistema operativo. Cada uno responde a una pregunta que puede comprobar, y juntos aplican la política en más de un límite. Lee la política activa más adelante en la página antes de considerar universal cualquier garantía."
+    },
+    "text.8eab349ea091": {
+      "type": "text",
+      "source": "trap stop HUP INT TERM",
+      "value": "trap stop HUP INT TERM",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.8f6e2ff687ed": {
       "type": "text",
@@ -1281,10 +1402,22 @@
       "source": "Linux Security Module that lets an unprivileged process restrict its own future access.",
       "value": "Módulo de seguridad de Linux que permite a un proceso sin privilegios restringir su propio acceso futuro."
     },
+    "text.93324999c6a8": {
+      "type": "text",
+      "source": "sh -c '",
+      "value": "sh -c '",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.93ae7009d75a": {
       "type": "text",
       "source": "Which network requests complete?",
       "value": "¿Qué solicitudes de red se completan?"
+    },
+    "text.9419ee37efd7": {
+      "type": "text",
+      "source": "wait \"$probe_pid\"",
+      "value": "wait \"$probe_pid\"",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.94a366ca236a": {
       "type": "text",
@@ -1306,6 +1439,21 @@
       "source": " model(s) the runtime serves",
       "value": " model(s) the runtime serves",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+    },
+    "text.97d084da7ffc": {
+      "type": "text",
+      "source": "The agent doing its job",
+      "value": "El agente cumple su tarea"
+    },
+    "text.97d084da7ffc~1": {
+      "type": "text",
+      "source": "The agent doing its job",
+      "value": "El agente cumple su tarea"
+    },
+    "text.97d084da7ffc~2": {
+      "type": "text",
+      "source": "The agent doing its job",
+      "value": "El agente cumple su tarea"
     },
     "text.9afb60a992dc": {
       "type": "text",
@@ -1355,6 +1503,12 @@
       "value": "#trajectory-artifact",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
+    "text.a1f52e018227": {
+      "type": "text",
+      "source": "timeout --signal=TERM --kill-after=5s 25s ",
+      "value": "timeout --signal=TERM --kill-after=5s 25s ",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.a27347cd34e3": {
       "type": "text",
       "source": "A checked path changes through a symbolic link before use.",
@@ -1377,6 +1531,12 @@
       "source": "example.com",
       "value": "example.com",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+    },
+    "text.a3d1d8ee7cb7": {
+      "type": "text",
+      "source": "mkdir \"$probe_dir/tmp\"",
+      "value": "mkdir \"$probe_dir/tmp\"",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.a404e8f0ffc8": {
       "type": "text",
@@ -1419,6 +1579,12 @@
       "source": "How the sandbox mechanisms answer testable questions",
       "value": "Cómo responden los mecanismos del sandbox a preguntas verificables"
     },
+    "text.aabd3c0e85f3": {
+      "type": "text",
+      "source": "npm install --prefix \"$probe_dir/npm\" --cache \"$probe_dir/cache\" --userconfig /dev/null --globalconfig \"$probe_dir/npm-globalrc\" --ignore-scripts --no-audit --no-fund --fetch-retries=0 --fetch-timeout=5000 left-pad",
+      "value": "npm install --prefix \"$probe_dir/npm\" --cache \"$probe_dir/cache\" --userconfig /dev/null --globalconfig \"$probe_dir/npm-globalrc\" --ignore-scripts --no-audit --no-fund --fetch-retries=0 --fetch-timeout=5000 left-pad",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.ac9e67ff9018": {
       "type": "text",
       "source": "The syscall set allowed to run; everything else receives a policy action.",
@@ -1439,12 +1605,6 @@
       "source": "Survey the reach",
       "value": "Examina el alcance"
     },
-    "text.b0ee9abcffd7": {
-      "type": "text",
-      "source": "dd if=/proc/1/environ of=/dev/null status=none",
-      "value": "dd if=/proc/1/environ of=/dev/null status=none",
-      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
-    },
     "text.b10f708e6941": {
       "type": "text",
       "source": "seccomp",
@@ -1464,6 +1624,12 @@
       "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
     },
     "text.b17cedbdb942~2": {
+      "type": "text",
+      "source": "command failed",
+      "value": "command failed",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.b17cedbdb942~3": {
       "type": "text",
       "source": "command failed",
       "value": "command failed",
@@ -1518,12 +1684,6 @@
       "type": "text",
       "source": "Privilege escalation",
       "value": "Escalada de privilegios"
-    },
-    "text.b5a889c5f545": {
-      "type": "text",
-      "source": "apt-get install -y cowsay",
-      "value": "apt-get install -y cowsay",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
     "text.b667ac3378a2": {
       "type": "text",
@@ -1620,6 +1780,11 @@
       "source": "Can protect selected files when policy makes them read-only",
       "value": "Puede proteger archivos específicos cuando la política los establece como solo lectura"
     },
+    "text.c3a2e3667e18": {
+      "type": "text",
+      "source": "read package metadata",
+      "value": "consultar los metadatos del paquete"
+    },
     "text.c3e1143c7ee0": {
       "type": "text",
       "source": "'\\\\\\\\'' EXIT; trap '\\\\\\\\''exit 130'\\\\\\\\'' HUP INT TERM; printf exercise > \\\\",
@@ -1685,11 +1850,6 @@
       "value": " This predicts from YOUR launchable's live policy. Run the live-policy cell above first",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
     },
-    "text.cad81dffd464": {
-      "type": "text",
-      "source": "Can this user install the requested software?",
-      "value": "¿Puede este usuario instalar el software solicitado?"
-    },
     "text.cb5aaa85dbb7": {
       "type": "text",
       "source": "Filesystem boundary",
@@ -1711,11 +1871,11 @@
       "source": "These results show the read methods reached with this operator token. They do not test write authority.",
       "value": "Estos resultados muestran los métodos de lectura accesibles con este token de operador. No prueban permisos de escritura."
     },
-    "text.cdaffc777873": {
+    "text.cf1ea3087f7a": {
       "type": "text",
-      "source": "pip install --break-system-packages --retries 0 --timeout 5 --no-input cowsay",
-      "value": "pip install --break-system-packages --retries 0 --timeout 5 --no-input cowsay",
-      "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+      "source": "export TMPDIR=\"$probe_dir/tmp\"",
+      "value": "export TMPDIR=\"$probe_dir/tmp\"",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.cfae0d4248f7": {
       "type": "text",
@@ -1765,6 +1925,12 @@
       "source": "sessions.list             -> ",
       "value": "sessions.list             -> ",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+    },
+    "text.d5965541dc2c": {
+      "type": "text",
+      "source": "trap cleanup EXIT",
+      "value": "trap cleanup EXIT",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.d840b391646e": {
       "type": "text",
@@ -1849,6 +2015,12 @@
       "source": "cron.list                 -> ",
       "value": "cron.list                 -> ",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/04a-safety.html carries the canonical source at this unit unchanged"
+    },
+    "text.e3e17af49650": {
+      "type": "text",
+      "source": "set -eu",
+      "value": "set -eu",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.e3e8fbb1b1a1": {
       "type": "text",
@@ -2043,6 +2215,31 @@
       "source": "Limits reachable files, processes, and destinations after the model is steered",
       "value": "Limita los archivos, procesos y destinos alcanzables después de desviar el modelo"
     },
+    "text.f4022d6b35ff": {
+      "type": "text",
+      "source": "The agent off the rails",
+      "value": "El agente se desvía de su tarea"
+    },
+    "text.f4022d6b35ff~1": {
+      "type": "text",
+      "source": "The agent off the rails",
+      "value": "El agente se desvía de su tarea"
+    },
+    "text.f4022d6b35ff~2": {
+      "type": "text",
+      "source": "The agent off the rails",
+      "value": "El agente se desvía de su tarea"
+    },
+    "text.f4022d6b35ff~3": {
+      "type": "text",
+      "source": "The agent off the rails",
+      "value": "El agente se desvía de su tarea"
+    },
+    "text.f4022d6b35ff~4": {
+      "type": "text",
+      "source": "The agent off the rails",
+      "value": "El agente se desvía de su tarea"
+    },
     "text.f445170bf4c2": {
       "type": "text",
       "source": "denied · EACCES",
@@ -2092,10 +2289,20 @@
       "value": "; chmod 0644 \\\\",
       "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
     },
+    "text.f8ba5623a2ea": {
+      "type": "text",
+      "source": "reach the inference API as a stray curl, not the runtime",
+      "value": "acceder a la API de inferencia mediante curl en lugar del proceso del agente"
+    },
     "text.f910da3df4b8": {
       "type": "text",
       "source": "Bind mount",
       "value": "Montaje enlazado"
+    },
+    "text.f92410d806fe": {
+      "type": "text",
+      "source": "send a chat completion",
+      "value": "enviar una solicitud de chat"
     },
     "text.fb038009f88d": {
       "type": "text",

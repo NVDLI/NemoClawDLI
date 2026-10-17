@@ -98,6 +98,12 @@
       "source": "<a href=\"https://www.openpolicyagent.org/docs/latest/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent</a>. The policy-as-data engine behind the OPA-evaluated CONNECT proxy that gates every outbound connection.",
       "value": "<a href=\"https://www.openpolicyagent.org/docs/latest/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent</a>。CONNECT 代理使用此策略即数据引擎评估策略，管控每个出站连接。"
     },
+    "placeholder.64ed70318be8": {
+      "type": "placeholder",
+      "source": "cleanup() { result=$?; trap - EXIT HUP INT TERM; probe_pid=\"\\${probe_pid:-\\${!:-}}\"; if [ -n \"$probe_pid\" ]; then /bin/kill -KILL -- -\"$probe_pid\" 2>/dev/null || /bin/kill -KILL \"$probe_pid\" 2>/dev/null || true; wait \"$probe_pid\" 2>/dev/null || true; fi; rm -rf -- \"$probe_dir\" || exit 125; exit \"$result\"; }",
+      "value": "cleanup() { result=$?; trap - EXIT HUP INT TERM; probe_pid=\"\\${probe_pid:-\\${!:-}}\"; if [ -n \"$probe_pid\" ]; then /bin/kill -KILL -- -\"$probe_pid\" 2>/dev/null || /bin/kill -KILL \"$probe_pid\" 2>/dev/null || true; wait \"$probe_pid\" 2>/dev/null || true; fi; rm -rf -- \"$probe_dir\" || exit 125; exit \"$result\"; }",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "rich.1379ecd555ca": {
       "type": "rich",
       "source": "The agent runs as a <strong>non-root process</strong> under the\n         unprivileged <code>sandbox</code> user. A successful exploit therefore\n         starts with less authority. The lower starting authority reduces\n         blast radius, though it does not prove escalation is impossible. The\n         host, container configuration, and syscall policy remain part of the\n         security boundary.",
@@ -198,6 +204,12 @@
       "source": "<strong>Peer preservation.</strong> An agent's verdict about a peer can change with social\n        context. Compare its judgments across controlled variations of that context.",
       "value": "<strong>维护同伴。</strong>智能体对同伴的判定可能随社交语境改变。请控制语境的变化条件，比较它在不同情况下的判断。"
     },
+    "text.023675bece6b": {
+      "type": "text",
+      "source": "pip --isolated install --target \"$probe_dir/pip\" --only-binary=:all: --no-deps --no-cache-dir --disable-pip-version-check --retries 0 --timeout 5 --no-input cowsay",
+      "value": "pip --isolated install --target \"$probe_dir/pip\" --only-binary=:all: --no-deps --no-cache-dir --disable-pip-version-check --retries 0 --timeout 5 --no-input cowsay",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.02bb7383df41": {
       "type": "text",
       "source": "A split-out root power such as",
@@ -245,6 +257,12 @@
       "source": "Do they agree?",
       "value": "两者一致吗？"
     },
+    "text.0602bfaed734": {
+      "type": "text",
+      "source": ": > \"$probe_dir/npm-globalrc\"",
+      "value": ": > \"$probe_dir/npm-globalrc\"",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.07bdc21bc756": {
       "type": "text",
       "source": "Supply-chain or unexpected code execution",
@@ -272,6 +290,12 @@
       "source": "predicted: ",
       "value": "预测结果："
     },
+    "text.0995b9d72a81": {
+      "type": "text",
+      "source": "echo \"Temporary probe directory: $probe_dir\"",
+      "value": "echo \"Temporary probe directory: $probe_dir\"",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.0a07f6594619": {
       "type": "text",
       "source": ", ",
@@ -284,10 +308,21 @@
       "value": ", ",
       "untranslated": "kept English: exact executable code, protocol, punctuation, or interface literal"
     },
+    "text.0a21fb08c9c8": {
+      "type": "text",
+      "source": "pull an npm package directly with curl",
+      "value": "直接用 curl 下载 npm 软件包"
+    },
     "text.0a26cd903046": {
       "type": "text",
       "source": "Compares the policy prediction with the command result; a mismatch needs further investigation.",
       "value": "比较策略预测与命令结果；不一致时需要进一步调查。"
+    },
+    "text.0a2d3f8f9b72": {
+      "type": "text",
+      "source": "; ",
+      "value": "; ",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.0a349a7a8d53": {
       "type": "text",
@@ -322,6 +357,12 @@
       "value": "main",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
+    "text.0da894b89b5c": {
+      "type": "text",
+      "source": " An HTTP error may come from a proxy or the application. Keep it unresolved.",
+      "value": " An HTTP error may come from a proxy or the application. Keep it unresolved.",
+      "untranslated": "Runnable example code/comment remains canonical, matching the existing course comment policy; review pending."
+    },
     "text.0dfcce901854": {
       "type": "text",
       "source": "Untrusted input, private data, and external communication together form the lethal trifecta.",
@@ -332,6 +373,11 @@
       "source": "length",
       "value": "length",
       "untranslated": "Exact Chat Completions finish_reason value selecting the token-budget truncation diagnostic."
+    },
+    "text.0f90d55046c8": {
+      "type": "text",
+      "source": "Which package downloads or user-space installs complete?",
+      "value": "哪些软件包下载或用户空间安装可以完成？"
     },
     "text.0fc5ed3804ab": {
       "type": "text",
@@ -347,6 +393,12 @@
       "type": "text",
       "source": "Static verdict vs the live sandbox",
       "value": "静态判定与实时沙盒对比"
+    },
+    "text.11691b230471": {
+      "type": "text",
+      "source": " & probe_pid=$!",
+      "value": " & probe_pid=$!",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.1321991d7340": {
       "type": "text",
@@ -376,6 +428,12 @@
       "source": "Why enforcement belongs below the model",
       "value": "为什么策略执行应位于模型之下"
     },
+    "text.15ee4aeec2d6": {
+      "type": "text",
+      "source": "probe_dir=$(mktemp -d /tmp/nemoclaw-packages.XXXXXX)",
+      "value": "probe_dir=$(mktemp -d /tmp/nemoclaw-packages.XXXXXX)",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.16091000896f": {
       "type": "text",
       "source": "; chmod 0444 \\\\",
@@ -398,6 +456,12 @@
       "source": "config.get                -> ",
       "value": "config.get                -> ",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.18244150e957": {
+      "type": "text",
+      "source": "probe_pid=",
+      "value": "probe_pid=",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.1a011e731153": {
       "type": "text",
@@ -482,6 +546,12 @@
       "source": "Syscall allowlist",
       "value": "系统调用允许列表"
     },
+    "text.2251fa5bbd4c": {
+      "type": "text",
+      "source": "apt-get -o Acquire::Retries=0 -o Acquire::http::Timeout=5 -o Acquire::https::Timeout=5 download cowsay",
+      "value": "apt-get -o Acquire::Retries=0 -o Acquire::http::Timeout=5 -o Acquire::https::Timeout=5 download cowsay",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.235800578893": {
       "type": "text",
       "source": " · exit ",
@@ -527,6 +597,12 @@
       "value": "'",
       "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
     },
+    "text.265fda17a346~3": {
+      "type": "text",
+      "source": "'",
+      "value": "'",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
+    },
     "text.269f22d4b1e4": {
       "type": "text",
       "source": "Connect the runtime in Module 3a first. Commands run in that sandbox.",
@@ -541,6 +617,11 @@
       "type": "text",
       "source": "network / filesystem",
       "value": "网络 / 文件系统"
+    },
+    "text.27d336db7711": {
+      "type": "text",
+      "source": "clone tooling from GitHub",
+      "value": "从 GitHub 克隆工具"
     },
     "text.28000742d88b": {
       "type": "text",
@@ -587,6 +668,17 @@
       "source": " does not prevent its owner from changing that mode or unlinking the file.",
       "value": " does not prevent its owner from changing that mode or unlinking the file.",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.30063475d9e8": {
+      "type": "text",
+      "source": "cd \"$probe_dir\"",
+      "value": "cd \"$probe_dir\"",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
+    "text.30103e0a25ef": {
+      "type": "text",
+      "source": "exfiltrate data to an outside host",
+      "value": "将数据外传到外部主机"
     },
     "text.3026a0ca485e": {
       "type": "text",
@@ -726,6 +818,12 @@
       "type": "text",
       "source": "\\\\nCould not parse the live policy: ",
       "value": "\\\\n 无法解析实时策略："
+    },
+    "text.4285d23d69c3": {
+      "type": "text",
+      "source": "\\\\n",
+      "value": "\\\\n",
+      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
     "text.434a7e64d74f": {
       "type": "text",
@@ -965,10 +1063,22 @@
       "value": "'\\\\\\\\''",
       "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
     },
+    "text.6092d3cf0039~1": {
+      "type": "text",
+      "source": "'\\\\\\\\''",
+      "value": "'\\\\\\\\''",
+      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
+    },
     "text.61557a774304": {
       "type": "text",
       "source": "The response was not valid JSON. No commands ran; inspect the raw response and retry.",
       "value": "响应不是有效的 JSON。尚未执行任何命令；请检查原始响应，再重试。"
+    },
+    "text.61822006bdcd": {
+      "type": "text",
+      "source": "stop() { exit 130; }",
+      "value": "stop() { exit 130; }",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.631adf3c8bef": {
       "type": "text",
@@ -1016,6 +1126,11 @@
       "type": "text",
       "source": "References",
       "value": "参考资料"
+    },
+    "text.6b3372dc30f6": {
+      "type": "text",
+      "source": "list available models",
+      "value": "列出可用模型"
     },
     "text.6c19d98e88b3": {
       "type": "text",
@@ -1089,12 +1204,6 @@
       "value": "sudo id",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
-    "text.748279552226": {
-      "type": "text",
-      "source": "npm install --no-audit --no-fund left-pad",
-      "value": "npm install --no-audit --no-fund left-pad",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
     "text.7615f47928e7": {
       "type": "text",
       "source": "Control still needed above it",
@@ -1148,6 +1257,12 @@
       "source": "Run Predict and Confirm for the same action first.",
       "value": "请先对相同操作运行 “预测” 和 “确认”。"
     },
+    "text.827555bbdb2a": {
+      "type": "text",
+      "source": "dd if=/proc/1/environ of=/dev/null count=0 status=none",
+      "value": "dd if=/proc/1/environ of=/dev/null count=0 status=none",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.82acf0c810e9": {
       "type": "text",
       "source": "describe a goal, run the agent's trajectory, in code",
@@ -1157,6 +1272,11 @@
       "type": "text",
       "source": "Check whether the agent can reach the public internet",
       "value": "检查智能体能否访问公共互联网"
+    },
+    "text.850f0c1cdb6d": {
+      "type": "text",
+      "source": "read cloud-instance credentials (metadata SSRF)",
+      "value": "读取云实例凭据（元数据 SSRF）"
     },
     "text.8535d2194c59": {
       "type": "text",
@@ -1246,16 +1366,16 @@
       "source": "Filter program that checks syscall numbers and arguments before execution.",
       "value": "在执行前检查系统调用编号和参数的过滤程序。"
     },
-    "text.8d8832c75e8c": {
-      "type": "text",
-      "source": " A plain HTTP 403/407 may come from a proxy or the application. Keep it unresolved.",
-      "value": " A plain HTTP 403/407 may come from a proxy or the application. Keep it unresolved.",
-      "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
     "text.8df1cf775383": {
       "type": "text",
       "source": "This launchable combines four operating-system mechanisms. Each answers a\n     question you can test, and together they apply policy at more than one\n     boundary. Read the live policy later on this page before treating any one\n     guarantee as universal.",
       "value": "此可启动实例组合了四种操作系统机制。每种机制都回答一个可以测试的问题，它们共同在多道边界上应用策略。在将任何一项保证视为普遍适用之前，请先阅读本页后面的实时策略。\n     "
+    },
+    "text.8eab349ea091": {
+      "type": "text",
+      "source": "trap stop HUP INT TERM",
+      "value": "trap stop HUP INT TERM",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.8f6e2ff687ed": {
       "type": "text",
@@ -1278,10 +1398,22 @@
       "source": "Linux Security Module that lets an unprivileged process restrict its own future access.",
       "value": "一种 Linux 安全模块，允许非特权进程限制自身未来的访问权限。"
     },
+    "text.93324999c6a8": {
+      "type": "text",
+      "source": "sh -c '",
+      "value": "sh -c '",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.93ae7009d75a": {
       "type": "text",
       "source": "Which network requests complete?",
       "value": "哪些网络请求能完成？"
+    },
+    "text.9419ee37efd7": {
+      "type": "text",
+      "source": "wait \"$probe_pid\"",
+      "value": "wait \"$probe_pid\"",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.94a366ca236a": {
       "type": "text",
@@ -1304,6 +1436,21 @@
       "type": "text",
       "source": " model(s) the runtime serves",
       "value": " 个由运行时提供服务的模型"
+    },
+    "text.97d084da7ffc": {
+      "type": "text",
+      "source": "The agent doing its job",
+      "value": "智能体执行任务"
+    },
+    "text.97d084da7ffc~1": {
+      "type": "text",
+      "source": "The agent doing its job",
+      "value": "智能体执行任务"
+    },
+    "text.97d084da7ffc~2": {
+      "type": "text",
+      "source": "The agent doing its job",
+      "value": "智能体执行任务"
     },
     "text.9afb60a992dc": {
       "type": "text",
@@ -1353,6 +1500,12 @@
       "value": "#trajectory-artifact",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
+    "text.a1f52e018227": {
+      "type": "text",
+      "source": "timeout --signal=TERM --kill-after=5s 25s ",
+      "value": "timeout --signal=TERM --kill-after=5s 25s ",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.a27347cd34e3": {
       "type": "text",
       "source": "A checked path changes through a symbolic link before use.",
@@ -1375,6 +1528,12 @@
       "source": "example.com",
       "value": "example.com",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.a3d1d8ee7cb7": {
+      "type": "text",
+      "source": "mkdir \"$probe_dir/tmp\"",
+      "value": "mkdir \"$probe_dir/tmp\"",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.a404e8f0ffc8": {
       "type": "text",
@@ -1418,6 +1577,12 @@
       "source": "How the sandbox mechanisms answer testable questions",
       "value": "沙盒机制如何回答可测试的问题"
     },
+    "text.aabd3c0e85f3": {
+      "type": "text",
+      "source": "npm install --prefix \"$probe_dir/npm\" --cache \"$probe_dir/cache\" --userconfig /dev/null --globalconfig \"$probe_dir/npm-globalrc\" --ignore-scripts --no-audit --no-fund --fetch-retries=0 --fetch-timeout=5000 left-pad",
+      "value": "npm install --prefix \"$probe_dir/npm\" --cache \"$probe_dir/cache\" --userconfig /dev/null --globalconfig \"$probe_dir/npm-globalrc\" --ignore-scripts --no-audit --no-fund --fetch-retries=0 --fetch-timeout=5000 left-pad",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
     "text.ac9e67ff9018": {
       "type": "text",
       "source": "The syscall set allowed to run; everything else receives a policy action.",
@@ -1438,12 +1603,6 @@
       "source": "Survey the reach",
       "value": "调查访问范围"
     },
-    "text.b0ee9abcffd7": {
-      "type": "text",
-      "source": "dd if=/proc/1/environ of=/dev/null status=none",
-      "value": "dd if=/proc/1/environ of=/dev/null status=none",
-      "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
-    },
     "text.b10f708e6941": {
       "type": "text",
       "source": "seccomp",
@@ -1463,6 +1622,12 @@
       "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
     },
     "text.b17cedbdb942~2": {
+      "type": "text",
+      "source": "command failed",
+      "value": "command failed",
+      "untranslated": "Exact command outcome discriminator used in controller comparisons; translating it would change behavior."
+    },
+    "text.b17cedbdb942~3": {
       "type": "text",
       "source": "command failed",
       "value": "command failed",
@@ -1517,12 +1682,6 @@
       "type": "text",
       "source": "Privilege escalation",
       "value": "权限提升"
-    },
-    "text.b5a889c5f545": {
-      "type": "text",
-      "source": "apt-get install -y cowsay",
-      "value": "apt-get install -y cowsay",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
     },
     "text.b667ac3378a2": {
       "type": "text",
@@ -1619,6 +1778,11 @@
       "source": "Can protect selected files when policy makes them read-only",
       "value": "当策略将指定文件设为只读时，可以保护这些文件"
     },
+    "text.c3a2e3667e18": {
+      "type": "text",
+      "source": "read package metadata",
+      "value": "读取软件包元数据"
+    },
     "text.c3e1143c7ee0": {
       "type": "text",
       "source": "'\\\\\\\\'' EXIT; trap '\\\\\\\\''exit 130'\\\\\\\\'' HUP INT TERM; printf exercise > \\\\",
@@ -1683,11 +1847,6 @@
       "value": " This predicts from YOUR launchable's live policy. Run the live-policy cell above first",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
     },
-    "text.cad81dffd464": {
-      "type": "text",
-      "source": "Can this user install the requested software?",
-      "value": "这个用户能安装指定的软件吗？"
-    },
     "text.cb5aaa85dbb7": {
       "type": "text",
       "source": "Filesystem boundary",
@@ -1709,11 +1868,11 @@
       "source": "These results show the read methods reached with this operator token. They do not test write authority.",
       "value": "这些结果显示此操作员 token 可调用的读取方法，未测试写入权限。"
     },
-    "text.cdaffc777873": {
+    "text.cf1ea3087f7a": {
       "type": "text",
-      "source": "pip install --break-system-packages --retries 0 --timeout 5 --no-input cowsay",
-      "value": "pip install --break-system-packages --retries 0 --timeout 5 --no-input cowsay",
-      "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+      "source": "export TMPDIR=\"$probe_dir/tmp\"",
+      "value": "export TMPDIR=\"$probe_dir/tmp\"",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.cfae0d4248f7": {
       "type": "text",
@@ -1763,6 +1922,12 @@
       "source": "sessions.list             -> ",
       "value": "sessions.list             -> ",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.d5965541dc2c": {
+      "type": "text",
+      "source": "trap cleanup EXIT",
+      "value": "trap cleanup EXIT",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.d840b391646e": {
       "type": "text",
@@ -1848,6 +2013,12 @@
       "source": "cron.list                 -> ",
       "value": "cron.list                 -> ",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.e3e17af49650": {
+      "type": "text",
+      "source": "set -eu",
+      "value": "set -eu",
+      "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
     },
     "text.e3e8fbb1b1a1": {
       "type": "text",
@@ -2044,6 +2215,31 @@
       "source": "Limits reachable files, processes, and destinations after the model is steered",
       "value": "限制模型受到操纵后能够访问的文件、进程和目标地址"
     },
+    "text.f4022d6b35ff": {
+      "type": "text",
+      "source": "The agent off the rails",
+      "value": "智能体偏离任务"
+    },
+    "text.f4022d6b35ff~1": {
+      "type": "text",
+      "source": "The agent off the rails",
+      "value": "智能体偏离任务"
+    },
+    "text.f4022d6b35ff~2": {
+      "type": "text",
+      "source": "The agent off the rails",
+      "value": "智能体偏离任务"
+    },
+    "text.f4022d6b35ff~3": {
+      "type": "text",
+      "source": "The agent off the rails",
+      "value": "智能体偏离任务"
+    },
+    "text.f4022d6b35ff~4": {
+      "type": "text",
+      "source": "The agent off the rails",
+      "value": "智能体偏离任务"
+    },
     "text.f445170bf4c2": {
       "type": "text",
       "source": "denied · EACCES",
@@ -2092,10 +2288,20 @@
       "value": "; chmod 0644 \\\\",
       "untranslated": "Executable shell command or escaped shell fragment; preserve command operands, quoting and cleanup semantics."
     },
+    "text.f8ba5623a2ea": {
+      "type": "text",
+      "source": "reach the inference API as a stray curl, not the runtime",
+      "value": "用 curl 而非智能体进程访问推理 API"
+    },
     "text.f910da3df4b8": {
       "type": "text",
       "source": "Bind mount",
       "value": "绑定挂载"
+    },
+    "text.f92410d806fe": {
+      "type": "text",
+      "source": "send a chat completion",
+      "value": "发送聊天补全请求"
     },
     "text.fb038009f88d": {
       "type": "text",

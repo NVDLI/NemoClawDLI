@@ -444,7 +444,7 @@ async function run(cmd, con, ctx) {
     const inner = t.slice(5).trim();
     if (!inner) return con.write('usage: agent <command>   runs <command> inside your agent sandbox, for example: agent ls', "da-dim");
     let r;
-    try { r = await helpers.sandboxExec(inner, { signal: ctx.signal }); } catch (e) {
+    try { r = await helpers.sandboxExec(inner, { signal: ctx.signal, shell: true }); } catch (e) {
       con.write(String((e && e.message) || e), "da-err");
       return { status: "error", message: "Command failed. Read the message, then retry." };
     }

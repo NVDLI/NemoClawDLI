@@ -489,11 +489,13 @@ helpers.log("import OK");
 const cfg = await helpers.getConfig();
 // LangChain calls new URL(baseURL) internally, so it needs an absolute URL, not a relative path.
 const baseURL = cfg.url.startsWith("http") ? cfg.url : (window.location.origin + cfg.url);
-state.llm = new ChatOpenAI({
+state.llm = new ChatOpenAI({ maxRetries: 0,
   configuration: { baseURL, dangerouslyAllowBrowser: true, fetch: helpers.browserChatFetch() },
   apiKey:    cfg.needsKey ? helpers.getKey() : "no-key-needed",
   model:     cfg.model,
   maxTokens: 800,
+  modelKwargs: helpers.isDefaultModelApiBaseUrl(cfg.url) && cfg.model === "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ? { chat_template_kwargs: { enable_thinking: false } } : {},
   temperature: 0,
 });
 return { ready: true, baseURL, model: cfg.model };
@@ -512,6 +514,7 @@ const messages = [
 const result = await state.llm.invoke(messages, { signal: helpers.signal });
 helpers.log.details('model response', result);
 if (result.response_metadata?.finish_reason === 'length') throw new Error('Model output reached the token limit. Inspect its response before changing the budget.');
+if (typeof result.content !== 'string' || !result.content.trim()) throw new Error('Model did not return a complete answer.');
 return {
   content: result.content,
   type:    result.constructor.name,
@@ -545,11 +548,14 @@ helpers.log("imports OK");
 
 const cfg = await helpers.getConfig();
 const baseURL = cfg.url.startsWith("http") ? cfg.url : (window.location.origin + cfg.url);
-state.llm = new ChatOpenAI({
+state.llm = new ChatOpenAI({ maxRetries: 0,
   configuration: { baseURL, dangerouslyAllowBrowser: true, fetch: helpers.browserChatFetch() },
   apiKey:    cfg.needsKey ? helpers.getKey() : "no-key-needed",
   model:     cfg.model,
   maxTokens: 1200,
+  temperature: 0,
+  modelKwargs: helpers.isDefaultModelApiBaseUrl(cfg.url) && cfg.model === "nvidia/nemotron-3.5-lightning-30b-a3b"
+    ? { chat_template_kwargs: { enable_thinking: false } } : {},
 });
 return { imports: Object.keys(state.deps) };
 `,
@@ -579,6 +585,7 @@ return { name: state.getCurrentTime.name, description: state.getCurrentTime.desc
 state.agent = state.deps.createReactAgent({
   llm:   state.llm,
   tools: [state.getCurrentTime],
+  prompt: "Use get_current_time before answering a question about the current time. Answer other questions directly when no tool is needed.",
 });
 return { graph_compiled: true };
 `,
@@ -588,19 +595,21 @@ return { graph_compiled: true };
       id: "invoke", icon: "🚀", title: "Inspect the trajectory", x: 0, y: 3,
       summary: "Run the graph and render its messages, including tool calls and results.",
       code: `// Ask the agent a concrete question to drive the loop.
-const question = "What time is it right now in UTC? Use get_current_time to read the clock.";
-// Try another (uncomment one) and rerun to watch the trajectory change:
-// const question = "What is the capital of France?";               // answered directly, no tool call
-// const question = "What time is it, and is that AM or PM in UTC?"; // inspect whether the model requests the clock
+const task = { question: "What time is it right now in UTC? Use get_current_time to read the clock.", requireClock: true };
+// Replace the active task with one alternative, then rerun to compare trajectories:
+// const task = { question: "What is the capital of France?", requireClock: false }; // answered directly, no tool call
+// const task = { question: "What time is it, and is that AM or PM in UTC?", requireClock: true }; // inspect the clock result
 const result = await state.agent.invoke({
-  messages: [{ role: "user", content: question }],
+  messages: [{ role: "user", content: task.question }],
 }, { signal: helpers.signal });
 
 helpers.log.details('graph response', result);
 if (result.messages.some(m => m.response_metadata?.finish_reason === 'length'))
   throw new Error('A graph response reached the token limit. Inspect the trajectory before changing the budget.');
-if (!result.messages.some(m => m.tool_call_id && m.name === 'get_current_time'))
-  helpers.log('No clock result was returned. Any current-time claim in the reply is unsupported.');
+if (task.requireClock && !result.messages.some(m => m.tool_call_id && m.name === 'get_current_time' && m.status !== 'error'))
+  throw new Error('No clock result was returned. Any current-time claim in the reply is unsupported.');
+if (typeof result.messages.at(-1)?.content !== 'string' || !result.messages.at(-1).content.trim())
+  throw new Error('Model did not return a complete answer.');
 // Map LangGraph message objects to the role-tagged shape viz.messageList wants.
 const roleFor = type =>
   /Human/i.test(type) ? "user"
@@ -648,11 +657,14 @@ state.deps = { ChatOpenAI, tool, createReactAgent, z };
 
 const cfg = await helpers.getConfig();
 const baseURL = cfg.url.startsWith("http") ? cfg.url : (window.location.origin + cfg.url);
-state.llm = new ChatOpenAI({
+state.answerSettings = helpers.isDefaultModelApiBaseUrl(cfg.url) && cfg.model === "nvidia/nemotron-3.5-lightning-30b-a3b"
+  ? { chat_template_kwargs: { enable_thinking: false } } : {};
+state.llm = new ChatOpenAI({ maxRetries: 0,
   configuration: { baseURL, dangerouslyAllowBrowser: true, fetch: helpers.browserChatFetch() },
   apiKey:    cfg.needsKey ? helpers.getKey() : "no-key-needed",
   model:     cfg.model,
   maxTokens: 1500,
+  modelKwargs: state.answerSettings,
   temperature: 0,
 });
 return { imports: Object.keys(state.deps) };
@@ -884,6 +896,7 @@ const out = await helpers.chatStream({
     { role: "user",   content: "Goal: " + state.goal + "\\n\\nFiles on the virtual filesystem:\\n\\n" + corpus },
   ],
   max_tokens: window.DEEP_AGENT_MAX_TOKENS,
+  extra_body: state.answerSettings,
 });
 
 helpers.log.details('synthesis response', out);
