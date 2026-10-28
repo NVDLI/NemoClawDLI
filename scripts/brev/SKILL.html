@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Brev course delivery · explore</title>
+
+<script type="application/json" id="skill-meta">
+{
+  "schema": "dir-skill/1.0",
+  "node_type": "directory-explorer",
+  "title": "Brev course delivery",
+  "source_dir": "scripts/brev/",
+  "summary": "Serves the built Pages course at /dli/ on Brev. A Compose-mode Brev launchable serves it from its own Secure Link, and a NemoClaw launchable serves it beside the agent on the same origin. This directory holds only configuration and shell; every container image lives in the operator's Compose file outside the repository.",
+  "related": [
+    "scripts/brev/dli-location.conf",
+    "scripts/brev/route.sh",
+    "scripts/brev/provider.sh",
+    "scripts/build/build_pages.sh"
+  ],
+  "explorer": "../../web/_skill_explorer.js"
+}
+</script>
+
+<script type="application/json" id="explorer-config">
+{
+  "title": "Brev course delivery",
+  "summary": "One nginx location file defines the /dli/ route for both Brev shapes. route.sh adds it to a NemoClaw launchable's own nginx with nginx -t and rollback, and provider.sh points the launchable's agent at Nebius Token Factory or NVIDIA Build through canonical NemoClaw commands.",
+  "nav": {
+    "home": "../../web/index.html",
+    "up": {
+      "label": "scripts",
+      "href": "../SKILL.html"
+    }
+  },
+  "files": [
+    {
+      "path": "compose-server.conf",
+      "role": "Compose server block",
+      "desc": "Replaces the nginx image's default site in the Compose service. It listens unprivileged on 8080, includes the shared route, and returns 404 outside /dli/.",
+      "bytes": 611
+    },
+    {
+      "path": "dli-location.conf",
+      "role": "shared /dli/ route",
+      "desc": "The single route both Brev shapes include. It serves the built site read-only, opts the Brev origin into the course model relay at the entry URL, and refuses framing by other sites.",
+      "bytes": 2102
+    },
+    {
+      "path": "provider.sh",
+      "role": "agent provider switch",
+      "desc": "Points the launchable's onboarded agent at Nebius Token Factory or back to NVIDIA Build with nemoclaw inference set. The key travels only through the environment.",
+      "bytes": 3091
+    },
+    {
+      "path": "route.sh",
+      "role": "same-origin route installer",
+      "desc": "Installs a built site and the shared route into a NemoClaw launchable's nginx, validates with nginx -t, reloads, and restores the previous configuration on failure.",
+      "bytes": 6000
+    }
+  ],
+  "tour": [
+    {
+      "title": "Entry URL selects the course relay",
+      "file": "dli-location.conf",
+      "lines": [
+        9,
+        20
+      ],
+      "note": "integrate.api.nvidia.com sends no CORS headers to a Brev origin, so the entry URL sets the course's existing iframe_proxy opt-in once for that origin."
+    },
+    {
+      "title": "Framing boundary on a shared origin",
+      "file": "dli-location.conf",
+      "lines": [
+        42,
+        46
+      ],
+      "note": "On a NemoClaw launchable the course shares an origin with the host terminal route, so other sites may not frame course pages."
+    },
+    {
+      "title": "Validated include with rollback",
+      "file": "route.sh",
+      "lines": [
+        67,
+        77
+      ],
+      "note": "The image's site gains one include line only after nginx -t and a reload both pass."
+    },
+    {
+      "title": "Compatible endpoint through canonical NemoClaw",
+      "file": "provider.sh",
+      "lines": [
+        52,
+        69
+      ],
+      "note": "NemoClaw registers the Nebius endpoint, verifies a request from the sandbox, and restores the previous route if that request fails."
+    }
+  ],
+  "related": [
+    {
+      "label": "the site this directory serves: build_pages.sh",
+      "href": "../build/build_pages.sh"
+    },
+    {
+      "label": "where the course connects a launchable: Kickstart",
+      "href": "../../web/nemoclaw/03a-kickstart.html"
+    }
+  ]
+}
+</script>
+<style data-skill-static="1">
+.skill-static{padding:24px clamp(18px,4vw,44px);border-bottom:1px solid #2a2a2a;background:#0d0d0d;color:#f2f2f2;font:15px/1.55 system-ui,sans-serif}
+.skill-static a{color:#76b900}.skill-static h1{margin:.1em 0 .25em;color:#76b900;font-size:1.65rem}.skill-static h2{font-size:1.02rem;margin:1.2rem 0 .45rem}.skill-static p{max-width:76rem;color:#b0b0b0}.skill-list{display:grid;grid-template-columns:1fr;max-width:76rem;margin:.7rem 0}.skill-link{display:grid;grid-template-columns:minmax(180px,280px) 1fr;gap:12px;border-top:1px solid #2a2a2a;padding:9px 4px;text-decoration:none}.skill-link:last-child{border-bottom:1px solid #2a2a2a}.skill-link b{display:block;color:#aee23a;margin-bottom:4px}.skill-link code,.skill-cmd code{font-family:ui-monospace,Consolas,monospace}.skill-link span{color:#b0b0b0;font-size:.9rem}.skill-cmds{display:grid;gap:8px;margin:.7rem 0}.skill-cmd{display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:8px;align-items:center;border:1px solid #2a2a2a;border-radius:8px;background:#111;padding:9px 11px}.skill-cmd b{color:#aee23a}.skill-cmd code{display:block;overflow:auto;white-space:nowrap;color:#f2f2f2}.skill-note{border-left:3px solid #76b900;background:rgba(118,185,0,.08);padding:10px 13px;margin:.8rem 0;color:#ddd}.skill-nav{display:flex;gap:12px;flex-wrap:wrap;margin:.8rem 0}.skill-nav a{border:1px solid #2a2a2a;border-radius:999px;padding:5px 10px;text-decoration:none}.skill-nav a:hover{border-color:#76b900}@media(max-width:700px){.skill-cmd{grid-template-columns:1fr}.skill-static{padding:18px}.skill-link{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<section class="skill-static" aria-labelledby="skill-title">
+  <header data-skill-header="1">
+<nav class="skill-nav" aria-label="Skill navigation"><a href="../../web/index.html">Home</a><a href="../SKILL.html">scripts</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../SKILL.html">Repository map</a></nav>
+</header>
+  <h1 id="skill-title">Brev course delivery</h1>
+  <p>Brev serves the same built Pages site that GitHub Pages publishes, under the /dli/ path. On a NemoClaw launchable, the course then shares the agent's origin, so the course reaches the launchable with the browser's own Secure Link session instead of a pasted access cookie. The GitHub Pages deployment and its build are unchanged.</p>
+  <div class="skill-note">Container images, packages, and toolchains for this delivery live in the operator's Compose file, which stays outside the repository. This directory adds configuration and shell only.</div>
+  <h2>Executable checks</h2>
+  <div class="skill-cmds">
+    <div class="skill-cmd"><b>Shell syntax</b><code>for f in scripts/brev/*.sh; do bash -n "$f"; done</code></div>
+    <div class="skill-cmd"><b>Route on a launchable</b><code>sudo nginx -t &amp;&amp; curl -fsS http://127.0.0.1/dli/healthz</code></div>
+    <div class="skill-cmd"><b>Agent route</b><code>bash scripts/brev/provider.sh status</code></div>
+  </div>
+  <h2>Operator commands</h2>
+  <div class="skill-cmds">
+    <div class="skill-cmd"><b>Same-origin route</b><code>sudo bash scripts/brev/route.sh install SITE</code></div>
+    <div class="skill-cmd"><b>Route status</b><code>bash scripts/brev/route.sh status</code></div>
+    <div class="skill-cmd"><b>Agent on Nebius</b><code>NEBIUS_API_KEY=... bash scripts/brev/provider.sh nebius</code></div>
+    <div class="skill-cmd"><b>Agent on NVIDIA Build</b><code>bash scripts/brev/provider.sh build</code></div>
+  </div>
+  <h2>Linkage map</h2>
+  <div class="skill-list">
+    <a class="skill-link" href="dli-location.conf"><b>dli-location.conf</b><span>The shared /dli/ route, headers, and entry redirect.</span></a>
+    <a class="skill-link" href="compose-server.conf"><b>compose-server.conf</b><span>The Compose service's server block around the shared route.</span></a>
+    <a class="skill-link" href="route.sh"><b>route.sh</b><span>Same-origin install, status, and removal on a NemoClaw launchable.</span></a>
+    <a class="skill-link" href="provider.sh"><b>provider.sh</b><span>Nebius Token Factory or NVIDIA Build for the launchable's agent.</span></a>
+    <a class="skill-link" href="../build/SKILL.html"><b>build/SKILL.html</b><span>The Pages build that produces the served site.</span></a>
+  </div>
+  <h2>Interactive explorer</h2>
+  <p>The explorer below opens each file and tours the boundaries it enforces.</p>
+</section>
+<div id="explorer"></div>
+
+<noscript>
+  <section class="skill-static"><h2>JavaScript disabled</h2><p>The static commands and links above remain usable. Enable JavaScript for source viewing and guided tours.</p></section>
+</noscript>
+
+<script src="../../web/_skill_explorer.js"></script>
+</body>
+</html>
