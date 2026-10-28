@@ -159,7 +159,7 @@ test('the base URL resolver always uses the public endpoint and rejects runtime 
   assert.equal(resolveActivityBaseUrl({}), 'https://activity-api.learn.nvidia.com');
 });
 
-test('activity identity is derived from the exact Pages manifest', async () => {
+test('activity uses the main version and binds the delivered Pages manifest digest', async () => {
   const commit = '1'.repeat(40);
   const manifest = `# ${COURSE_ID}-pages-sha256/1 commit=${commit}\nabc  ${COURSE_ID}/index.html\n`;
   const manifestUrl = `https://example.test/release/${COURSE_ID}/pages-sha256.txt`;
@@ -173,12 +173,12 @@ test('activity identity is derived from the exact Pages manifest', async () => {
   });
   assert.deepEqual(artifact, {
     artifact_id: `artifact_${COURSE_ID}_web`,
-    artifact_version: `git-${commit}`,
+    artifact_version: 'main',
     artifact_digest: `sha256:${createHash('sha256').update(manifest).digest('hex')}`,
   });
 });
 
-test('materialized activity identity binds source, adapter and delivered manifest bytes', async () => {
+test('materialized activity uses main with a digest of source and adapter manifest bytes', async () => {
   const commit = '2'.repeat(40);
   const adapter = '3'.repeat(64);
   const manifest = `# ${COURSE_ID}-materialized-sha256/1 commit=${commit} adapter=${adapter}\n`;
@@ -192,7 +192,7 @@ test('materialized activity identity binds source, adapter and delivered manifes
         arrayBuffer: async () => new TextEncoder().encode(manifest).buffer,
       }),
     });
-    assert.equal(artifact.artifact_version, `git-${commit}-adapter-${adapter}`);
+    assert.equal(artifact.artifact_version, 'main');
     assert.equal(artifact.artifact_digest, `sha256:${createHash('sha256').update(manifest).digest('hex')}`);
   }
 });
@@ -1277,7 +1277,7 @@ test('HTTP lab transport requires deployment permission and preserves authentica
   const policy = JSON.parse(fs.readFileSync(path.join('web/activity', 'activity-policy.json'), 'utf8'));
   policy.collection_enabled = true;
   policy.lab_transport = { base_path: '/lab/api/course/activity', allow_http: true };
-  const identity = { ...APPROVED_ARTIFACT, artifact_version: `git-${'a'.repeat(40)}-adapter-${'b'.repeat(64)}` };
+  const identity = { ...APPROVED_ARTIFACT, artifact_version: 'main' };
   const requests = [];
   let sdkOptions;
   const make = p => createCourseActivity({

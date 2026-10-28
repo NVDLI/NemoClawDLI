@@ -105,7 +105,7 @@ export async function resolveActivityArtifact({
       if (!match) continue;
       return Object.freeze({
         artifact_id: ACTIVITY_ARTIFACT_ID,
-        artifact_version: `git-${match[1]}${match[2] ? `-adapter-${match[2]}` : ''}`,
+        artifact_version: 'main',
         artifact_digest: `sha256:${await sha256(bytes, cryptoImpl)}`,
       });
     } catch (_) {}
@@ -412,7 +412,7 @@ export function createNemoClawActivity({
             if (!response.ok || response.url !== `${baseUrl}/artifact`) throw new Error('Lab activity identity unavailable');
             const value = await response.json();
             if (value.artifact?.artifact_id !== ACTIVITY_ARTIFACT_ID
-                || !/^git-[0-9a-f]{40}-adapter-[0-9a-f]{64}$/.test(value.artifact?.artifact_version || '')
+                || value.artifact?.artifact_version !== 'main'
                 || !/^sha256:[0-9a-f]{64}$/.test(value.artifact?.artifact_digest || '')
                 || !isNonEmptyString(value.xsrf_token)) throw new Error('Invalid lab activity identity');
             artifact = Object.freeze(value.artifact);
