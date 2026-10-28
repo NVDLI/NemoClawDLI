@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import json
 import io
+import os
+import stat
 import hashlib
 import importlib.util
 import re
@@ -640,12 +642,30 @@ class PublicationPreparationTests(unittest.TestCase):
             self.assertTrue((output / "es" / self.primary / "index.html").is_file())
 
 
+def _root_owned_regular_file(*candidates: str) -> Path:
+    """Return the real path of the first candidate meeting the publisher's file contract.
+
+    Hosted runner images change which system paths are symlinks or group-writable, so the
+    fixture selects a qualifying file instead of assuming one. The publisher check is unchanged.
+    """
+    for candidate in candidates:
+        path = Path(os.path.realpath(candidate))
+        try:
+            info = path.lstat()
+        except OSError:
+            continue
+        if stat.S_ISREG(info.st_mode) and info.st_uid == 0 and not info.st_mode & 0o022:
+            return path
+    raise AssertionError(f"no root-owned regular file among {candidates}")
+
+
 class PublisherBoundaryTests(unittest.TestCase):
     def _fixture(self, root: Path) -> tuple[Path, Path, Path]:
         publication = root / "publication"; publication.mkdir()
         (publication / "index.html").write_text("course")
         digest = __import__("hashlib").sha256(b"course").hexdigest()
-        aws = Path("/usr/bin/true")
+        aws = _root_owned_regular_file("/usr/bin/true", "/bin/true", "/usr/bin/env")
+        aws_file = _root_owned_regular_file("/etc/hosts", "/etc/passwd", "/etc/protocols", "/etc/services")
         aws_digest = __import__("hashlib").sha256(aws.read_bytes()).hexdigest()
         account_id = "".join(map(str, range(10))) + "01"
         plan = root / "plan.json"; config = root / "config.json"
@@ -659,7 +679,7 @@ class PublisherBoundaryTests(unittest.TestCase):
             "aws_account_id": account_id,
             "principal_arn": f"arn:aws:sts::{account_id}:assumed-role/DLICoursePublisher/",
             "aws_executable": str(aws), "aws_executable_sha256": aws_digest,
-            "aws_config_file": "/etc/hosts", "aws_credentials_file": "/etc/hosts",
+            "aws_config_file": str(aws_file), "aws_credentials_file": str(aws_file),
             "bucket_name": "example-course-bucket",
             "key_prefix": "course-static",
             "public_base_url": "https://course-cdn.example",
@@ -674,6 +694,42 @@ class PublisherBoundaryTests(unittest.TestCase):
             (publication / "extra.js").write_text("unexpected")
             with self.assertRaisesRegex(ValueError, "do not match"):
                 devbox_cdn_publisher.validate(publication, plan, config)
+
+    def test_aws_runtime_files_must_be_root_owned_regular_files(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); publication, plan, config = self._fixture(root)
+            document = json.loads(config.read_text())
+            link = root / "aws-link"; link.symlink_to(document["aws_config_file"])
+            candidate = root / "aws-file"; candidate.write_text("[default]\n"); candidate.chmod(0o644)
+            path_type, real_stat = type(candidate), type(candidate).stat
+
+            def reported(owner: int, mode: int):
+                # Report fixed ownership and permission bits for the candidate only, so each
+                # predicate is exercised alone whether the suite runs as root or not.
+                def fake(path, *args, **kwargs):
+                    info = real_stat(path, *args, **kwargs)
+                    if path != candidate:
+                        return info
+                    values = list(info)
+                    values[stat.ST_UID], values[stat.ST_MODE] = owner, stat.S_IFREG | mode
+                    return os.stat_result(values)
+                return fake
+
+            rejected = "root-owned AWS runtime configuration"
+            for field in ("aws_config_file", "aws_credentials_file"):
+                config.write_text(json.dumps({**document, field: str(link)}))
+                with self.assertRaisesRegex(ValueError, rejected):
+                    devbox_cdn_publisher.validate(publication, plan, config)
+                config.write_text(json.dumps({**document, field: str(candidate)}))
+                for owner, mode in ((1000, 0o644), (0, 0o664), (0, 0o646)):
+                    with patch.object(path_type, "stat", reported(owner, mode)), \
+                            self.assertRaisesRegex(ValueError, rejected):
+                        devbox_cdn_publisher.validate(publication, plan, config)
+                # Control: the same reporting with root ownership and 0644 is accepted.
+                with patch.object(path_type, "stat", reported(0, 0o644)):
+                    devbox_cdn_publisher.validate(publication, plan, config)
+            config.write_text(json.dumps(document))
+            devbox_cdn_publisher.validate(publication, plan, config)
 
     def test_destination_identifiers_must_come_from_root_owned_config(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -699,7 +755,8 @@ class PublisherBoundaryTests(unittest.TestCase):
     def test_publish_uses_only_configured_identity_and_fixed_target(self, run, remote, verify) -> None:
         with tempfile.TemporaryDirectory() as directory:
             publication, plan, config = self._fixture(Path(directory))
-            account_id = json.loads(config.read_text())["aws_account_id"]
+            document = json.loads(config.read_text())
+            account_id = document["aws_account_id"]
             run.side_effect = [
                 subprocess.CompletedProcess([], 0, stdout=json.dumps({
                     "Account": account_id,
@@ -720,8 +777,8 @@ class PublisherBoundaryTests(unittest.TestCase):
             upload_command = run.call_args_list[1].args[0]
             self.assertNotIn("AWS_ACCESS_KEY_ID", identity_env)
             self.assertEqual("/var/empty", identity_env["HOME"])
-            self.assertEqual("/etc/hosts", identity_env["AWS_CONFIG_FILE"])
-            self.assertEqual("/usr/bin/true", upload_command[0])
+            self.assertEqual(document["aws_config_file"], identity_env["AWS_CONFIG_FILE"])
+            self.assertEqual(document["aws_executable"], upload_command[0])
             self.assertEqual(
                 "s3" + "://" + "example-course-bucket/course-static/" + "a" * 40 + "/",
                 upload_command[-1],
