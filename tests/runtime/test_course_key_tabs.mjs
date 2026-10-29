@@ -52,7 +52,7 @@ test('published course origins and plain-HTTP hosts never open the channel', asy
     const other = peer();
     const tab = await openTab(page, tag);
     await settle();
-    tab.setKey('nvapi-stays-in-this-tab');
+    tab.setKey('nvapi-tab-kept');
     other.channel.postMessage({ type:'ask' });
     await settle();
     assert.deepEqual(other.received, [], page);
@@ -64,26 +64,26 @@ test('a new launchable tab takes the key from an open tab, answers for it, and s
   const other = peer();
   other.channel.onmessage = ({ data }) => {
     other.received.push(data);
-    if (data?.type === 'ask') other.channel.postMessage({ type:'key', key:'nvapi-from-another-tab' });
+    if (data?.type === 'ask') other.channel.postMessage({ type:'key', key:'nvapi-tab-other' });
   };
   const tab = await openTab(LAUNCHABLE, 'new');
   await settle();
   assert.deepEqual(other.received[0], { type:'ask' });
-  assert.equal(tab.getKey(), 'nvapi-from-another-tab');
+  assert.equal(tab.getKey(), 'nvapi-tab-other');
 
   other.received.length = 0;
   other.channel.postMessage({ type:'ask' });
   await settle();
-  assert.deepEqual(other.received.at(-1), { type:'key', key:'nvapi-from-another-tab' });
+  assert.deepEqual(other.received.at(-1), { type:'key', key:'nvapi-tab-other' });
 
   other.received.length = 0;
-  tab.setKey('nvapi-entered-here');
+  tab.setKey('nvapi-tab-here');
   await settle();
-  assert.deepEqual(other.received.at(-1), { type:'key', key:'nvapi-entered-here' });
+  assert.deepEqual(other.received.at(-1), { type:'key', key:'nvapi-tab-here' });
 
-  other.channel.postMessage({ type:'key', key:'nvapi-someone-else' });
+  other.channel.postMessage({ type:'key', key:'nvapi-tab-third' });
   await settle();
-  assert.equal(tab.getKey(), 'nvapi-entered-here', 'a tab that holds a key keeps it');
+  assert.equal(tab.getKey(), 'nvapi-tab-here', 'a tab that holds a key keeps it');
 
   tab.setKey('');
   await settle();
