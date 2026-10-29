@@ -304,10 +304,12 @@ export function getKey() {
   /* @doc <code>helpers.getKey()</code> ::
        Returns the model bearer key held for this browser tab (<code>sessionStorage</code>), or
        <code>null</code>. NVIDIA keys start with <code>nvapi-</code>. Model calls use the tab-scoped
-       value automatically; closing the tab discards it. */
+       value automatically; closing the tab discards it. On a NemoClaw launchable, the course's open
+       tabs share it, so a key entered in one tab reaches the others. */
   try { return sessionStorage.getItem("nvapi"); }
   catch (_) { return null; }
 }
+let keyChannel = null;
 export function setKey(k) {
   const key = String(k || "").trim();
   try {
@@ -315,11 +317,35 @@ export function setKey(k) {
     else sessionStorage.removeItem("nvapi");
     sessionStorage.removeItem("nvapi_ok");
   } catch (_) {}
+  if (key) keyChannel?.postMessage({ type: "key", key });
   if (typeof window !== 'undefined' && typeof window.CustomEvent === 'function') {
     window.dispatchEvent(new window.CustomEvent('nemoclaw:prerequisites'));
   }
 }
 export function hasKey() { return !!getKey(); }
+
+// On a NemoClaw launchable the course's tabs share the key each tab holds: a new tab asks the open
+// ones, and a key entered in one tab reaches the open tabs that have none. Each tab still keeps it
+// only in sessionStorage, and the channel never leaves the launchable's own origin.
+keyChannel = (() => {
+  try {
+    const loc = globalThis.location;
+    if (typeof BroadcastChannel !== "function" || loc?.protocol !== "https:" || !isOpenClawLaunchableHost(loc.hostname)) return null;
+    const channel = new BroadcastChannel("nemoclaw-course-key-v1");
+    channel.unref?.();
+    channel.onmessage = ({ data }) => {
+      const held = getKey();
+      if (data?.type === "ask" && held) channel.postMessage({ type: "key", key: held });
+      if (data?.type === "key" && !held && typeof data.key === "string" && data.key.trim()) {
+        setKey(data.key);
+        const pill = globalThis.document?.getElementById?.("key-status");
+        if (pill) updateKeyPill(pill);
+      }
+    };
+    if (!getKey()) channel.postMessage({ type: "ask" });
+    return channel;
+  } catch (_) { return null; }
+})();
 
 export function getEmbeddingKey() {
   try {
