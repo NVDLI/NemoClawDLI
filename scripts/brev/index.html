@@ -5,18 +5,20 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Start here · Securing Agents with OpenShell and NemoClaw</title>
 <link rel="icon" href="../../web/nemoclaw/assets/favicon.ico"/>
+<script>(function(){try{var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
 <style>
-:root{color-scheme:light dark;--green:#76b900;--ink:#1d1d1d;--muted:#5c5c5c;--page:#fafafa;--card:#fff;--line:#e3e3e3;--code:#f1f3ee}
-@media (prefers-color-scheme:dark){:root{--ink:#ececec;--muted:#a6a6a6;--page:#111;--card:#1a1a1a;--line:#2c2c2c;--code:#202417}}
+:root{color-scheme:light;--green:#76b900;--green-text:#4a7a00;--ink:#1d1d1d;--muted:#5c5c5c;--page:#fafafa;--card:#fff;--line:#e3e3e3;--code:#f1f3ee;--error:#b42318}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--green-text:#76b900;--ink:#ececec;--muted:#a6a6a6;--page:#111;--card:#1a1a1a;--line:#2c2c2c;--code:#202417;--error:#ff8a80}}
+:root[data-theme="dark"]{color-scheme:dark;--green-text:#76b900;--ink:#ececec;--muted:#a6a6a6;--page:#111;--card:#1a1a1a;--line:#2c2c2c;--code:#202417;--error:#ff8a80}
 *{box-sizing:border-box}
 [hidden]{display:none !important}
 body{margin:0;background:var(--page);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
 main{max-width:68rem;margin:0 auto;padding:2.5rem 16px 3rem}
 h1{margin:0 0 .4rem;font-size:clamp(1.6rem,4vw,2.2rem);line-height:1.2}
-h1 span{color:var(--green)}
+h1 span{color:var(--green-text)}
 h2{margin:2.2rem 0 .8rem;font-size:1.2rem}
 p{margin:.3rem 0;color:var(--muted)}
-a{color:var(--green)}
+a{color:var(--green-text)}
 a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--green);outline-offset:2px}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(15rem,100%),1fr));gap:14px}
 .card{display:block;padding:1.1rem 1.2rem;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);text-decoration:none}
@@ -29,7 +31,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(-
 form{display:flex;flex-wrap:wrap;gap:8px;margin:.4rem 0 1rem}
 input{flex:1 1 20rem;min-width:0;padding:.55rem .7rem;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit}
 button{padding:.55rem 1rem;border:0;border-radius:8px;background:var(--green);color:#111;font:inherit;font-weight:600;cursor:pointer}
-.error{color:#d14343}
+.error{color:var(--error)}
 .reference{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(26rem,100%),1fr));gap:14px}
 .reference section{padding:1rem 1.2rem;border:1px solid var(--line);border-radius:12px;background:var(--card)}
 .reference h3{margin:0 0 .5rem;font-size:1rem}
