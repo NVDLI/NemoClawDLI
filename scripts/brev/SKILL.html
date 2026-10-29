@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Brev course delivery · explore</title>
+
+<script type="application/json" id="skill-meta">
+{
+  "schema": "dir-skill/1.0",
+  "node_type": "directory-explorer",
+  "title": "Brev course delivery",
+  "source_dir": "scripts/brev/",
+  "summary": "Serves the built Pages course at /dli/ on a NemoClaw Brev launchable, beside the agent on the same origin. The launchable's image supplies NemoClaw, OpenShell, nginx, and every package; this directory holds only configuration and shell.",
+  "related": [
+    "scripts/brev/dli-location.conf",
+    "scripts/brev/route.sh",
+    "scripts/brev/provider.sh",
+    "scripts/build/build_pages.sh"
+  ],
+  "explorer": "../../web/_skill_explorer.js"
+}
+</script>
+
+<script type="application/json" id="explorer-config">
+{
+  "title": "Brev course delivery",
+  "summary": "One nginx location file defines the /dli/ route. route.sh adds it to the server that answers a NemoClaw launchable's Secure Link, with nginx -t and rollback, and provider.sh points the launchable's agent at Nebius Token Factory or NVIDIA Build through canonical NemoClaw commands.",
+  "nav": {
+    "home": "../../web/index.html",
+    "up": {
+      "label": "scripts",
+      "href": "../SKILL.html"
+    }
+  },
+  "files": [
+    {
+      "path": "dli-location.conf",
+      "role": "/dli/ route",
+      "desc": "The route route.sh adds to the launchable's nginx. It serves the starter page at /dli/, the startup script's setup progress, the image's own xterm.js build for the terminal popups, and the built site read-only beneath it. Any missing address gets the launchable's own page with its error status, never the server's, and other sites may not frame the course.",
+      "bytes": 4319
+    },
+    {
+      "path": "provider.sh",
+      "role": "agent provider switch",
+      "desc": "Points the launchable's onboarded agent at Nebius Token Factory or back to NVIDIA Build with nemoclaw inference set. The key travels only through the environment.",
+      "bytes": 3091
+    },
+    {
+      "path": "index.html",
+      "role": "starter page",
+      "desc": "The /dli/ landing page, installed as start.html beside the site: one NVIDIA API key that both starts OpenClaw through NemoClaw's onboarding API and serves the course's exercises, OpenClaw's chat, with Hermes Agent and LangChain Deep Agents Code mentioned only once an agent is running, the course with its copy progress, the agent's live status, a live trace of the agent's connections and requests with OpenShell's decisions, a guide to using the course with NemoClaw with a screenshot behind each step, terminal popups on the image's own terminal server, and a quick reference whose commands run in the VM terminal for inspecting and reconfiguring NemoClaw and OpenShell. Its course links use repository paths, which the link checks verify, and route.sh rewrites them for the site root. As the deployment's entry page it is an index page, the kind the link checks let link into a course.",
+      "bytes": 39578
+    },
+    {
+      "path": "route.sh",
+      "role": "same-origin route installer",
+      "desc": "Installs a built site and the route into the server that listens on port 80 in a NemoClaw launchable's nginx, writes the page every missing /dli/ address answers with, serves the image's own xterm.js build and the guide screenshots for the starter page, and adds the optional course port. It validates with nginx -t, reloads, and restores the previous configuration on failure.",
+      "bytes": 14133
+    },
+    {
+      "path": "course-port.conf",
+      "role": "course port server",
+      "desc": "An optional second nginx server, for a Brev Secure Link named course on port 8090, that sends every address to /dli/ on the nemoclaw link, where the course runs beside the agent. route.sh installs it only when the port is free and removes it on failure or uninstall.",
+      "bytes": 1165
+    },
+    {
+      "path": "guide-connect.webp",
+      "role": "guide screenshot",
+      "desc": "Module 3a's Connect NemoClaw form after its checks pass, captured 2026-10-29 on a live DLI launchable with the instance hostname replaced by nemoclaw-<id>.",
+      "bytes": 21226
+    },
+    {
+      "path": "guide-chat.webp",
+      "role": "guide screenshot",
+      "desc": "Module 3b's chat with an answer from the OpenClaw agent, captured 2026-10-29 on a live DLI launchable.",
+      "bytes": 31544
+    },
+    {
+      "path": "guide-dashboard.webp",
+      "role": "guide screenshot",
+      "desc": "NemoClaw's dashboard (the NemoClaw image's onboarding UI, Apache-2.0) on a live DLI launchable, captured 2026-10-29 and cropped above its log panel, which names the instance.",
+      "bytes": 14758
+    }
+  ],
+  "tour": [
+    {
+      "title": "Starter page at the entry URL",
+      "file": "dli-location.conf",
+      "lines": [
+        9,
+        27
+      ],
+      "note": "/dli/ serves the starter page from index.html. integrate.api.nvidia.com sends no CORS headers to a Brev origin, so on an HTTPS NemoClaw launchable host the course sends model calls through its relay by default. The page's course links also carry the iframe_proxy opt-in for builds published before that default."
+    },
+    {
+      "title": "Framing boundary on a shared origin",
+      "file": "dli-location.conf",
+      "lines": [
+        96,
+        100
+      ],
+      "note": "On a NemoClaw launchable the course shares an origin with the host terminal route, so other sites may not frame course pages."
+    },
+    {
+      "title": "No bare server error pages",
+      "file": "dli-location.conf",
+      "lines": [
+        54,
+        65
+      ],
+      "note": "Every missing /dli/ address, including a folder without an index or a terminal asset an image lacks, answers with the launchable's own page and keeps its error status. Mid-copy, that page says the course is still copying and reloads."
+    },
+    {
+      "title": "One key for the course and NemoClaw",
+      "file": "index.html",
+      "lines": [
+        285,
+        400
+      ],
+      "note": "The page keeps the key with the course's own getKey and setKey helpers and posts it to the image's /api/onboard, the request NemoClaw's wizard sends, so one paste starts OpenClaw on NVIDIA's provider and serves the course's exercises in every open course tab. The form works from the first second: the course's helpers load once the copy is ready, and a key entered before then starts OpenClaw at once and reaches the course when they do. When an agent already runs, the key goes to the course only."
+    },
+    {
+      "title": "A key saved in the course starts OpenClaw",
+      "file": "index.html",
+      "lines": [
+        630,
+        648
+      ],
+      "note": "A key already saved in a course page, or shared by another course tab, starts OpenClaw when the start page opens, once per tab, so nobody pastes it twice. Without a key, the page follows a setup started from NemoClaw's own wizard."
+    },
+    {
+      "title": "The agent trace",
+      "file": "index.html",
+      "lines": [
+        650,
+        724
+      ],
+      "note": "The image's /api/logs streams the sandbox's OCSF events. The page keeps the ones with an OpenShell decision, a connection or an HTTP request, and shows each with its time, decision, policy, and the reason a blocked one was refused. Log text is set as text, never as markup, and the stream opens only once an agent runs."
+    },
+    {
+      "title": "Agent actions only where the launchable serves the page",
+      "file": "index.html",
+      "lines": [
+        402,
+        445
+      ],
+      "note": "At /dli/ the page links the launchable's own /onboard, /agent, and /dashboard routes and reads the image's /api/agent status. The Pages copy has no such routes, so there the actions stay off."
+    },
+    {
+      "title": "Course copy progress",
+      "file": "index.html",
+      "lines": [
+        447,
+        479
+      ],
+      "note": "The startup script writes /dli/setup-status.json as it copies the course. The page shows the count, holds the course links until the copy is ready, and keeps the while-it-sets-up tips visible until both the course and the agent are ready."
+    },
+    {
+      "title": "Terminal popups on the image's own terminal server",
+      "file": "index.html",
+      "lines": [
+        481,
+        626
+      ],
+      "note": "The OpenShell TUI, VM, and sandbox terminals use the dashboard's commands over the image's /ws/terminal server, drawn with the image's xterm.js build. Run buttons paste quick-reference commands, with the sandbox name filled in. Without that build the buttons open the dashboard. Chat stays off until the agent runs, because the image answers /agent with an error before onboarding."
+    },
+    {
+      "title": "The port 80 server, not a fixed line",
+      "file": "route.sh",
+      "lines": [
+        40,
+        62
+      ],
+      "note": "route.sh finds the server that listens on port 80, in the image's usual site file or any file nginx -T reports, so image releases that move or reword their routes keep working."
+    },
+    {
+      "title": "Validated include with rollback",
+      "file": "route.sh",
+      "lines": [
+        105,
+        116
+      ],
+      "note": "The image's site gains one include line only after nginx -t and a reload both pass."
+    },
+    {
+      "title": "Course links projected at install",
+      "file": "route.sh",
+      "lines": [
+        161,
+        166
+      ],
+      "note": "index.html names the course as ../../web/nemoclaw/, the path the repository and Pages link checks resolve. Beside the installed site the course is ./nemoclaw/, so the installer rewrites that one prefix, as the Pages build does for its own pages."
+    },
+    {
+      "title": "The image's xterm.js, not a new package",
+      "file": "route.sh",
+      "lines": [
+        216,
+        226
+      ],
+      "note": "route.sh copies xterm.js, its fit addon, and both licenses from the image's onboarding UI, so the terminal popups add no browser package to the course and follow the image's version."
+    },
+    {
+      "title": "Using the course with NemoClaw",
+      "file": "index.html",
+      "lines": [
+        193,
+        219
+      ],
+      "note": "Three steps join the course and the agent: Test connection in Module 3a, chat in Module 3b, and the dashboard and OpenShell TUI. Each step's screenshot stays folded under What it looks like, and its buttons reuse the page's course gating and launchable links."
+    },
+    {
+      "title": "An optional course port",
+      "file": "route.sh",
+      "lines": [
+        249,
+        279
+      ],
+      "note": "route.sh adds course-port.conf only beside a working /dli/, only when the port is free, and keeps it only if it answers after the reload. Otherwise it restores the previous server, and the course is unaffected."
+    },
+    {
+      "title": "Compatible endpoint through canonical NemoClaw",
+      "file": "provider.sh",
+      "lines": [
+        52,
+        69
+      ],
+      "note": "NemoClaw registers the Nebius endpoint, verifies a request from the sandbox, and restores the previous route if that request fails."
+    }
+  ],
+  "related": [
+    {
+      "label": "the site this directory serves: build_pages.sh",
+      "href": "../build/build_pages.sh"
+    },
+    {
+      "label": "where the course connects a launchable: Kickstart",
+      "href": "../../web/nemoclaw/03a-kickstart.html"
+    }
+  ]
+}
+</script>
+<style data-skill-static="1">
+.skill-static{padding:24px clamp(18px,4vw,44px);border-bottom:1px solid #2a2a2a;background:#0d0d0d;color:#f2f2f2;font:15px/1.55 system-ui,sans-serif}
+.skill-static a{color:#76b900}.skill-static h1{margin:.1em 0 .25em;color:#76b900;font-size:1.65rem}.skill-static h2{font-size:1.02rem;margin:1.2rem 0 .45rem}.skill-static p{max-width:76rem;color:#b0b0b0}.skill-list{display:grid;grid-template-columns:1fr;max-width:76rem;margin:.7rem 0}.skill-link{display:grid;grid-template-columns:minmax(180px,280px) 1fr;gap:12px;border-top:1px solid #2a2a2a;padding:9px 4px;text-decoration:none}.skill-link:last-child{border-bottom:1px solid #2a2a2a}.skill-link b{display:block;color:#aee23a;margin-bottom:4px}.skill-link code,.skill-cmd code{font-family:ui-monospace,Consolas,monospace}.skill-link span{color:#b0b0b0;font-size:.9rem}.skill-cmds{display:grid;gap:8px;margin:.7rem 0}.skill-cmd{display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:8px;align-items:center;border:1px solid #2a2a2a;border-radius:8px;background:#111;padding:9px 11px}.skill-cmd b{color:#aee23a}.skill-cmd code{display:block;overflow:auto;white-space:nowrap;color:#f2f2f2}.skill-note{border-left:3px solid #76b900;background:rgba(118,185,0,.08);padding:10px 13px;margin:.8rem 0;color:#ddd}.skill-nav{display:flex;gap:12px;flex-wrap:wrap;margin:.8rem 0}.skill-nav a{border:1px solid #2a2a2a;border-radius:999px;padding:5px 10px;text-decoration:none}.skill-nav a:hover{border-color:#76b900}@media(max-width:700px){.skill-cmd{grid-template-columns:1fr}.skill-static{padding:18px}.skill-link{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<section class="skill-static" aria-labelledby="skill-title">
+  <header data-skill-header="1">
+<nav class="skill-nav" aria-label="Skill navigation"><a href="../../web/index.html">Home</a><a href="../SKILL.html">scripts</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../SKILL.html">Repository map</a></nav>
+</header>
+  <h1 id="skill-title">Brev course delivery</h1>
+  <p>A NemoClaw Brev launchable serves the same built Pages site that GitHub Pages publishes, under the /dli/ path beside its agent. The course then shares the agent's origin, so it reaches the launchable with the browser's own Secure Link session instead of a pasted access cookie. The GitHub Pages deployment and its build are unchanged.</p>
+  <div class="skill-note">The launchable's image supplies NemoClaw, OpenShell, nginx, and every package. The startup script that runs route.sh on a new launchable stays outside the repository. This directory adds configuration and shell only.</div>
+  <h2>Executable checks</h2>
+  <div class="skill-cmds">
+    <div class="skill-cmd"><b>Shell syntax</b><code>for f in scripts/brev/*.sh; do bash -n "$f"; done</code></div>
+    <div class="skill-cmd"><b>Route on a launchable</b><code>sudo nginx -t &amp;&amp; curl -fsS http://127.0.0.1/dli/healthz</code></div>
+    <div class="skill-cmd"><b>Agent route</b><code>bash scripts/brev/provider.sh status</code></div>
+  </div>
+  <h2>Operator commands</h2>
+  <div class="skill-cmds">
+    <div class="skill-cmd"><b>Same-origin route</b><code>sudo bash scripts/brev/route.sh install SITE</code></div>
+    <div class="skill-cmd"><b>Route status</b><code>bash scripts/brev/route.sh status</code></div>
+    <div class="skill-cmd"><b>Agent on Nebius</b><code>NEBIUS_API_KEY=... bash scripts/brev/provider.sh nebius</code></div>
+    <div class="skill-cmd"><b>Agent on NVIDIA Build</b><code>bash scripts/brev/provider.sh build</code></div>
+  </div>
+  <h2>Linkage map</h2>
+  <div class="skill-list">
+    <a class="skill-link" href="index.html"><b>index.html</b><span>The /dli/ starter page: one key for OpenClaw and the course, agent links, and a command reference.</span></a>
+    <a class="skill-link" href="dli-location.conf"><b>dli-location.conf</b><span>The /dli/ route, headers, and entry redirect.</span></a>
+    <a class="skill-link" href="route.sh"><b>route.sh</b><span>Same-origin install, status, and removal on a NemoClaw launchable.</span></a>
+    <a class="skill-link" href="course-port.conf"><b>course-port.conf</b><span>The optional course port, which sends every address to /dli/ on the nemoclaw link.</span></a>
+    <a class="skill-link" href="provider.sh"><b>provider.sh</b><span>Nebius Token Factory or NVIDIA Build for the launchable's agent.</span></a>
+    <a class="skill-link" href="../build/SKILL.html"><b>build/SKILL.html</b><span>The Pages build that produces the served site.</span></a>
+  </div>
+  <h2>Interactive explorer</h2>
+  <p>The explorer below opens each file and tours the boundaries it enforces.</p>
+</section>
+<div id="explorer"></div>
+
+<noscript>
+  <section class="skill-static"><h2>JavaScript disabled</h2><p>The static commands and links above remain usable. Enable JavaScript for source viewing and guided tours.</p></section>
+</noscript>
+
+<script src="../../web/_skill_explorer.js"></script>
+</body>
+</html>

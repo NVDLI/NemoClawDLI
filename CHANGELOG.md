@@ -5,6 +5,13 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Serve the course from a NemoClaw Brev launchable at /dli/, where one NVIDIA API key starts
+  OpenClaw and serves the course. On a launchable the course uses its own launchable and the
+  model relay by default, and Module 3a says so. Thanks to Vadim Kudlay for the launchable
+  requirements and to the independent Claude reviewer for automated review of the revised
+  Module 3a text in Spanish, Brazilian Portuguese, Simplified Chinese and Taiwan Traditional
+  Chinese.
+
 - Preserve shell command boundaries across launchable argument parsers so workspace readback,
   skill installation, and policy parsing work. Compact flow diagrams and settle individual
   node runs after completion or Stop. Release failed gateway handshakes before an explicit retry.

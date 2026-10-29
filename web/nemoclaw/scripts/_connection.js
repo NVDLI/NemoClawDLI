@@ -83,8 +83,12 @@ export function accessProviderForOpenClawUrl(rawUrl, selected = "auto") {
   if (!["auto", "cloudflare", "pomerium"].includes(choice)) {
     throw new Error("Access provider must be Automatic, Cloudflare Access, or Pomerium");
   }
+  // An unset launchable is not this page. Resolving "" against the course's own URL would make a
+  // course hosted on a Brev link (course-<id>.gobrev.dev) look like a misnamed launchable.
+  const clean = normalizeOpenClawLaunchableUrl(rawUrl);
+  if (!clean) return choice;
   let host = "";
-  try { host = new URL(normalizeOpenClawLaunchableUrl(rawUrl), pageBase()).hostname; }
+  try { host = new URL(clean, pageBase()).hostname; }
   catch (_) { return choice; }
   if (isBrevLaunchableFamily(host) && !isOpenClawLaunchableHost(host)) {
     throw new Error("Use the NemoClaw App URL: https://nemoclaw-<id>.brevlab.com or https://nemoclaw-<id>.apps.run.brev.nvidia.com");
@@ -102,12 +106,22 @@ export function openclawAccessCookieName(rawUrl, accessProvider = "auto") {
   const provider = accessProviderForOpenClawUrl(rawUrl, accessProvider);
   if (provider === "cloudflare") return "CF_Authorization";
   if (provider !== "pomerium") return "";
-  const host = new URL(normalizeOpenClawLaunchableUrl(rawUrl), pageBase()).hostname;
+  const clean = normalizeOpenClawLaunchableUrl(rawUrl);
+  const host = clean ? new URL(clean, pageBase()).hostname : "";
   return host.toLowerCase().endsWith(".gobrev.dev") ? "__Host-skybridge-brev-prd" : "_pomerium";
 }
 
 function pageBase() {
   return browserLocation()?.href || "http://localhost/";
+}
+
+// The DLI launchable serves the course at /dli/ beside its own agent, so a page on an HTTPS NemoClaw
+// launchable host is that launchable until the learner saves another. Other course hosts have none.
+function pageLaunchableOrigin() {
+  try {
+    const url = new URL(browserLocation()?.href || "");
+    return url.protocol === "https:" && isOpenClawLaunchableHost(url.hostname) ? url.origin : "";
+  } catch (_) { return ""; }
 }
 
 export function normalizeOpenClawProxyBase(raw) {
@@ -343,7 +357,7 @@ export function setOpenClawConnection({ rawUrl, token, accessProvider, accessSes
   const secrets = secretStorage();
   const current = migrateOpenClawConnectionStorage();
   const clean = rawUrl === undefined
-    ? current.rawUrl
+    ? current.rawUrl || pageLaunchableOrigin()
     : normalizeOpenClawLaunchableUrl(rawUrl);
   const originChanged = rawUrl !== undefined && clean !== current.rawUrl;
   const nextToken = token === undefined
@@ -418,8 +432,15 @@ export function getOpenClawConnection() {
   const target = storage();
   const secrets = secretStorage();
   const migrated = migrateOpenClawConnectionStorage();
-  const accessProvider = target?.getItem(OPENCLAW_ACCESS_PROVIDER_KEY) || "auto";
-  const resolvedAccessProvider = accessProviderForOpenClawUrl(migrated.rawUrl, accessProvider);
+  const pageDefault = migrated.rawUrl ? "" : pageLaunchableOrigin();
+  const rawUrl = migrated.rawUrl || pageDefault;
+  let accessProvider = target?.getItem(OPENCLAW_ACCESS_PROVIDER_KEY) || "auto";
+  // A provider left by a cleared launchable of another host family does not bind this page.
+  if (pageDefault) {
+    try { accessProviderForOpenClawUrl(rawUrl, accessProvider); }
+    catch (_) { accessProvider = "auto"; }
+  }
+  const resolvedAccessProvider = accessProviderForOpenClawUrl(rawUrl, accessProvider);
   // Legacy persistent credentials lack an origin binding; discard instead of replaying.
   target?.removeItem(OPENCLAW_TOKEN_KEY);
   target?.removeItem(OPENCLAW_ACCESS_SESSION_KEY);
@@ -427,8 +448,9 @@ export function getOpenClawConnection() {
   const accessSession = secrets?.getItem(OPENCLAW_ACCESS_SESSION_KEY) ||
     secrets?.getItem(OPENCLAW_ACCESS_JWT_KEY) || "";
   return {
-    rawUrl: migrated.rawUrl,
-    effectiveUrl: target?.getItem(OPENCLAW_URL_KEY) || "",
+    rawUrl,
+    // The page's own launchable is the same origin, which the course reaches directly.
+    effectiveUrl: target?.getItem(OPENCLAW_URL_KEY) || pageDefault,
     token: secrets?.getItem(OPENCLAW_TOKEN_KEY) || "",
     accessProvider,
     resolvedAccessProvider,
