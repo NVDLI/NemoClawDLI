@@ -111,7 +111,7 @@
       <p class="more" id="more-agents" hidden>Hermes Agent and LangChain Deep Agents Code are in onboarding too, when you want to compare agents.</p>
       <div class="actions">
         <a class="btn primary" data-launchable-path="/onboard" aria-disabled="true">Set up OpenClaw</a>
-        <a class="btn secondary" data-launchable-path="/agent" aria-disabled="true" target="_blank" rel="noopener">Open chat</a>
+        <a class="btn secondary" data-launchable-path="/agent" data-needs-agent aria-disabled="true" target="_blank" rel="noopener">Open chat</a>
       </div>
     </section>
     <section class="step" aria-labelledby="step-course">
@@ -198,8 +198,9 @@ const ready = { agent: false, course: false };
 let sandbox = "";
 let terminalsReady = false;
 
+// Chat opens the agent's own dashboard, which the image routes only once an agent runs.
 for (const link of document.querySelectorAll("[data-launchable-path]")) {
-  if (!served) continue;
+  if (!served || link.hasAttribute("data-needs-agent")) continue;
   link.href = link.dataset.launchablePath;
   link.removeAttribute("aria-disabled");
 }
@@ -222,6 +223,11 @@ async function refreshAgent() {
     if (agent.status === "running") {
       ready.agent = true;
       document.getElementById("more-agents").hidden = false;
+      if (agent.dashboardUrl) {
+        const chat = document.querySelector("[data-needs-agent]");
+        chat.href = chat.dataset.launchablePath;
+        chat.removeAttribute("aria-disabled");
+      }
       const model = agent.model ? `, using ${agent.model}` : "";
       return showAgent("running", `${label} is running in sandbox ${agent.name}${model}.`);
     }

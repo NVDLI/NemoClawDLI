@@ -37,8 +37,8 @@
     {
       "path": "dli-location.conf",
       "role": "/dli/ route",
-      "desc": "The route route.sh adds to the launchable's nginx. It serves the starter page at /dli/, the startup script's setup progress, the image's own xterm.js build for the terminal popups, and the built site read-only beneath it, and refuses framing by other sites.",
-      "bytes": 3644
+      "desc": "The route route.sh adds to the launchable's nginx. It serves the starter page at /dli/, the startup script's setup progress, the image's own xterm.js build for the terminal popups, and the built site read-only beneath it. Any missing address gets the launchable's own page with its error status, never the server's, and other sites may not frame the course.",
+      "bytes": 4319
     },
     {
       "path": "provider.sh",
@@ -50,13 +50,13 @@
       "path": "index.html",
       "role": "starter page",
       "desc": "The /dli/ landing page, installed as start.html beside the site: OpenClaw's setup and chat, with Hermes Agent and LangChain Deep Agents Code mentioned only once an agent is running, the course with its copy progress, the agent's live status, terminal popups on the image's own terminal server, and a quick reference whose commands run in the VM terminal for inspecting and reconfiguring NemoClaw and OpenShell. Its course links use repository paths, which the link checks verify, and route.sh rewrites them for the site root. As the deployment's entry page it is an index page, the kind the link checks let link into a course.",
-      "bytes": 22514
+      "bytes": 22864
     },
     {
       "path": "route.sh",
       "role": "same-origin route installer",
-      "desc": "Installs a built site and the route into the server that listens on port 80 in a NemoClaw launchable's nginx, serves the image's own xterm.js build for the starter page, validates with nginx -t, reloads, and restores the previous configuration on failure.",
-      "bytes": 9114
+      "desc": "Installs a built site and the route into the server that listens on port 80 in a NemoClaw launchable's nginx, writes the page every missing /dli/ address answers with, serves the image's own xterm.js build for the starter page, validates with nginx -t, reloads, and restores the previous configuration on failure.",
+      "bytes": 11947
     }
   ],
   "tour": [
@@ -65,7 +65,7 @@
       "file": "dli-location.conf",
       "lines": [
         9,
-        26
+        27
       ],
       "note": "/dli/ serves the starter page from index.html. integrate.api.nvidia.com sends no CORS headers to a Brev origin, so the page's course links set the course's existing iframe_proxy opt-in."
     },
@@ -73,17 +73,26 @@
       "title": "Framing boundary on a shared origin",
       "file": "dli-location.conf",
       "lines": [
-        80,
-        84
+        96,
+        100
       ],
       "note": "On a NemoClaw launchable the course shares an origin with the host terminal route, so other sites may not frame course pages."
+    },
+    {
+      "title": "No bare server error pages",
+      "file": "dli-location.conf",
+      "lines": [
+        54,
+        65
+      ],
+      "note": "Every missing /dli/ address, including a folder without an index or a terminal asset an image lacks, answers with the launchable's own page and keeps its error status. Mid-copy, that page says the course is still copying and reloads."
     },
     {
       "title": "Agent actions only where the launchable serves the page",
       "file": "index.html",
       "lines": [
         187,
-        232
+        238
       ],
       "note": "At /dli/ the page links the launchable's own /onboard, /agent, and /dashboard routes and reads the image's /api/agent status. The Pages copy has no such routes, so there the actions stay off."
     },
@@ -91,8 +100,8 @@
       "title": "Course copy progress",
       "file": "index.html",
       "lines": [
-        234,
-        265
+        240,
+        271
       ],
       "note": "The startup script writes /dli/setup-status.json as it copies the course. The page shows the count, holds the course links until the copy is ready, and keeps the while-it-sets-up tips visible until both the course and the agent are ready."
     },
@@ -100,10 +109,10 @@
       "title": "Terminal popups on the image's own terminal server",
       "file": "index.html",
       "lines": [
-        267,
-        404
+        273,
+        410
       ],
-      "note": "The OpenShell TUI, VM, and sandbox terminals use the dashboard's commands over the image's /ws/terminal server, drawn with the image's xterm.js build. Run buttons paste quick-reference commands, with the sandbox name filled in. Without that build the buttons open the dashboard."
+      "note": "The OpenShell TUI, VM, and sandbox terminals use the dashboard's commands over the image's /ws/terminal server, drawn with the image's xterm.js build. Run buttons paste quick-reference commands, with the sandbox name filled in. Without that build the buttons open the dashboard. Chat stays off until the agent runs, because the image answers /agent with an error before onboarding."
     },
     {
       "title": "The port 80 server, not a fixed line",
@@ -136,8 +145,8 @@
       "title": "The image's xterm.js, not a new package",
       "file": "route.sh",
       "lines": [
-        162,
-        172
+        210,
+        220
       ],
       "note": "route.sh copies xterm.js, its fit addon, and both licenses from the image's onboarding UI, so the terminal popups add no browser package to the course and follow the image's version."
     },

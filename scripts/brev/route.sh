@@ -159,6 +159,54 @@ install_course() {
   chmod 644 "$STATE/site/.start.html.next"
   mv -f "$STATE/site/.start.html.next" "$STATE/site/start.html"
 
+  # Any /dli/ address with nothing behind it answers with this page instead of the server's own
+  # error page. While the startup script is still copying the course it says so and reloads.
+  cat > "$STATE/site/.missing.html.next" <<'HTML'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Not on this launchable · Securing Agents with OpenShell and NemoClaw</title>
+<script>(function(){try{var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<style>
+:root{color-scheme:dark;--g:#76b900;--bg:#0d0d0d;--card:#161616;--line:#262626;--tx:#f2f2f2;--td:#b0b0b0;--on-g:#0a0a0a}
+:root[data-theme="light"]{color-scheme:light;--g:#3f6900;--bg:#ffffff;--card:#f6f8fa;--line:#e1e6eb;--tx:#1a1a1a;--td:#3b3b3b;--on-g:#ffffff}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--tx);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+main{max-width:34rem;margin:16px;padding:28px 30px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.eyebrow{margin:0 0 .6em;font:600 .72rem ui-monospace,Consolas,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--g)}
+h1{margin:0 0 .4em;font-size:1.45rem;line-height:1.25}
+p{margin:0 0 1.2em;color:var(--td)}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+a{display:inline-flex;padding:8px 14px;border-radius:8px;font-weight:600;text-decoration:none;border:1px solid var(--g);background:var(--g);color:var(--on-g)}
+a.secondary{background:transparent;color:var(--tx);border-color:var(--line)}
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">NemoClaw launchable</p>
+  <h1 id="title">This page is not on the launchable</h1>
+  <p id="detail">The address may be mistyped, or the page may have moved. The start page links to everything the launchable serves.</p>
+  <div class="actions">
+    <a href="/dli/">Go to the start page</a>
+    <a class="secondary" href="/dli/nemoclaw/index.html?iframe_proxy=1">Open the course</a>
+  </div>
+</main>
+<script>
+fetch("/dli/setup-status.json", { cache: "no-store" }).then(response => response.json()).then(status => {
+  if (status.stage === "ready") return;
+  document.getElementById("title").textContent = "The course is still copying";
+  document.getElementById("detail").textContent = "This page opens on its own when the copy finishes, usually within a minute. The start page shows the progress.";
+  setTimeout(() => location.reload(), 5000);
+}).catch(() => {});
+</script>
+</body>
+</html>
+HTML
+  chmod 644 "$STATE/site/.missing.html.next"
+  mv -f "$STATE/site/.missing.html.next" "$STATE/site/missing.html"
+
   # The starter page's terminal popups use the image's own xterm.js build and its licenses, so the
   # course adds no browser package. Without them the page sends terminals to the dashboard.
   local xterm="$RUNTIME_ROOT/onboard-ui/node_modules/@xterm"
