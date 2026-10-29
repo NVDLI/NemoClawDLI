@@ -49,8 +49,8 @@
     {
       "path": "index.html",
       "role": "starter page",
-      "desc": "The /dli/ landing page, installed as start.html beside the site: one NVIDIA API key that both starts OpenClaw through NemoClaw's onboarding API and serves the course's exercises, OpenClaw's chat, with Hermes Agent and LangChain Deep Agents Code mentioned only once an agent is running, the course with its copy progress, the agent's live status, a guide to using the course with NemoClaw with a screenshot behind each step, terminal popups on the image's own terminal server, and a quick reference whose commands run in the VM terminal for inspecting and reconfiguring NemoClaw and OpenShell. Its course links use repository paths, which the link checks verify, and route.sh rewrites them for the site root. As the deployment's entry page it is an index page, the kind the link checks let link into a course.",
-      "bytes": 32447
+      "desc": "The /dli/ landing page, installed as start.html beside the site: one NVIDIA API key that both starts OpenClaw through NemoClaw's onboarding API and serves the course's exercises, OpenClaw's chat, with Hermes Agent and LangChain Deep Agents Code mentioned only once an agent is running, the course with its copy progress, the agent's live status, a live trace of the agent's connections and requests with OpenShell's decisions, a guide to using the course with NemoClaw with a screenshot behind each step, terminal popups on the image's own terminal server, and a quick reference whose commands run in the VM terminal for inspecting and reconfiguring NemoClaw and OpenShell. Its course links use repository paths, which the link checks verify, and route.sh rewrites them for the site root. As the deployment's entry page it is an index page, the kind the link checks let link into a course.",
+      "bytes": 39531
     },
     {
       "path": "route.sh",
@@ -115,26 +115,35 @@
       "title": "One key for the course and NemoClaw",
       "file": "index.html",
       "lines": [
-        254,
-        356
+        285,
+        400
       ],
-      "note": "The page keeps the key with the course's own getKey and setKey helpers and posts it to the image's /api/onboard, the request NemoClaw's wizard sends, so one paste starts OpenClaw on NVIDIA's provider and serves the course's exercises. When an agent already runs, the key goes to the course only."
+      "note": "The page keeps the key with the course's own getKey and setKey helpers and posts it to the image's /api/onboard, the request NemoClaw's wizard sends, so one paste starts OpenClaw on NVIDIA's provider and serves the course's exercises in every open course tab. The form works from the first second: the course's helpers load once the copy is ready, and a key entered before then starts OpenClaw at once and reaches the course when they do. When an agent already runs, the key goes to the course only."
     },
     {
       "title": "A key saved in the course starts OpenClaw",
       "file": "index.html",
       "lines": [
-        582,
-        594
+        630,
+        648
       ],
-      "note": "A key already saved in a course page starts OpenClaw when the start page opens, once per tab, so nobody pastes it twice. Without a key, the page follows a setup started from NemoClaw's own wizard."
+      "note": "A key already saved in a course page, or shared by another course tab, starts OpenClaw when the start page opens, once per tab, so nobody pastes it twice. Without a key, the page follows a setup started from NemoClaw's own wizard."
+    },
+    {
+      "title": "The agent trace",
+      "file": "index.html",
+      "lines": [
+        650,
+        724
+      ],
+      "note": "The image's /api/logs streams the sandbox's OCSF events. The page keeps the ones with an OpenShell decision, a connection or an HTTP request, and shows each with its time, decision, policy, and the reason a blocked one was refused. Log text is set as text, never as markup, and the stream opens only once an agent runs."
     },
     {
       "title": "Agent actions only where the launchable serves the page",
       "file": "index.html",
       "lines": [
-        358,
-        400
+        402,
+        445
       ],
       "note": "At /dli/ the page links the launchable's own /onboard, /agent, and /dashboard routes and reads the image's /api/agent status. The Pages copy has no such routes, so there the actions stay off."
     },
@@ -142,8 +151,8 @@
       "title": "Course copy progress",
       "file": "index.html",
       "lines": [
-        402,
-        433
+        447,
+        479
       ],
       "note": "The startup script writes /dli/setup-status.json as it copies the course. The page shows the count, holds the course links until the copy is ready, and keeps the while-it-sets-up tips visible until both the course and the agent are ready."
     },
@@ -151,8 +160,8 @@
       "title": "Terminal popups on the image's own terminal server",
       "file": "index.html",
       "lines": [
-        435,
-        580
+        481,
+        626
       ],
       "note": "The OpenShell TUI, VM, and sandbox terminals use the dashboard's commands over the image's /ws/terminal server, drawn with the image's xterm.js build. Run buttons paste quick-reference commands, with the sandbox name filled in. Without that build the buttons open the dashboard. Chat stays off until the agent runs, because the image answers /agent with an error before onboarding."
     },
@@ -196,8 +205,8 @@
       "title": "Using the course with NemoClaw",
       "file": "index.html",
       "lines": [
-        162,
-        188
+        193,
+        219
       ],
       "note": "Three steps join the course and the agent: Test connection in Module 3a, chat in Module 3b, and the dashboard and OpenShell TUI. Each step's screenshot stays folded under What it looks like, and its buttons reuse the page's course gating and launchable links."
     },

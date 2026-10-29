@@ -84,6 +84,25 @@
   .reference dt code { display: inline-block; max-width: 100%; overflow-wrap: anywhere; font-family: var(--mono);
                        font-size: .86rem; padding: 2px 7px; border-radius: 5px; background: var(--e2); color: var(--gs); }
   .reference dd { color: var(--td); font-size: .92rem; margin-top: .2em; }
+  .trace-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 9px 14px; font-size: .88rem;
+                background: var(--e2); border: 1px solid var(--e3); border-bottom: none; border-radius: 10px 10px 0 0; }
+  .trace-head .grow { flex: 1; }
+  .trace-head label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+  #trace-state { color: var(--td); }
+  .trace { list-style: none; margin: 0; padding: 4px 0; max-height: 360px; overflow-y: auto; background: var(--e1);
+           border: 1px solid var(--e3); border-radius: 0 0 10px 10px; font-size: .86rem; }
+  .trace:empty::after { content: "No requests yet."; display: block; padding: 10px 14px; color: var(--td); }
+  .trace li { display: grid; grid-template-columns: 5.6em 4.6em minmax(0, 1fr) auto; gap: 2px 12px; align-items: baseline;
+              padding: 5px 14px; border-top: 1px solid var(--e3); }
+  .trace li:first-child { border-top: none; }
+  .trace time, .trace .policy { font-family: var(--mono); font-size: .8rem; color: var(--td); }
+  .trace .what { font-family: var(--mono); font-size: .82rem; overflow-wrap: anywhere; }
+  .trace b { font-size: .8rem; color: var(--gs); }
+  .trace li[data-decision="denied"] b { color: var(--err); }
+  :root[data-theme="light"] .trace li[data-decision="denied"] b { color: #b42318; }
+  .trace .reason { grid-column: 3 / -1; color: var(--td); font-size: .8rem; }
+  .trace.blocked-only li[data-decision="allowed"] { display: none; }
+  @media (max-width: 620px) { .trace li { grid-template-columns: 5.6em minmax(0, 1fr); } .trace .what, .trace .reason { grid-column: 1 / -1; } }
   .guide { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr)); gap: 14px; }
   .guide section { display: flex; flex-direction: column; gap: .55em; padding: 16px 20px; background: var(--e1);
                    border: 1px solid var(--e3); border-radius: 10px; }
@@ -150,13 +169,25 @@
       </div>
     </section>
     <section class="step" aria-labelledby="step-sandbox">
-      <div class="step-head"><span class="n">3</span><h2 id="step-sandbox">Watch the sandbox</h2></div>
-      <p>Open the OpenShell TUI on this page to watch the sandbox's traffic, or the dashboard for agent health, logs, and security events.</p>
+      <div class="step-head"><span class="n">3</span><h2 id="step-sandbox">Watch the agent</h2></div>
+      <p>The trace below lists each connection and request the agent makes, and whether OpenShell allowed or blocked it. Module 3b shows the agent's own tool calls.</p>
       <div class="actions">
-        <a class="btn primary" data-launchable-path="/dashboard" aria-disabled="true" target="_blank" rel="noopener">Open the dashboard</a>
-        <a class="btn secondary" href="#terminals">Terminals</a>
+        <a class="btn primary" href="#trace">Open the trace</a>
+        <a class="btn secondary" data-launchable-path="/dashboard" aria-disabled="true" target="_blank" rel="noopener">Dashboard</a>
       </div>
     </section>
+  </div>
+
+  <div class="section" id="trace">
+    <h2>Agent trace</h2>
+    <p class="help">Each line is a connection or request the agent made from its sandbox, with OpenShell's decision and the policy behind it. Ask the agent something in Module 3b, and watch its requests arrive here.</p>
+    <div class="trace-head">
+      <span id="trace-state" role="status" aria-live="polite">The trace starts once OpenClaw runs.</span>
+      <span class="grow"></span>
+      <span><b id="trace-allowed">0</b> allowed · <b id="trace-denied">0</b> blocked</span>
+      <label><input type="checkbox" id="trace-blocked-only"/> Blocked only</label>
+    </div>
+    <ol class="trace" id="trace-list" aria-label="Agent trace, newest first"></ol>
   </div>
 
   <div class="section" id="guide">
@@ -177,10 +208,10 @@
       </section>
       <section aria-labelledby="guide-watch">
         <h3 id="guide-watch">Watch the agent in NemoClaw</h3>
-        <p>Open the dashboard for the agent's health, chat, and terminals. The OpenShell TUI below shows the requests that policy blocked.</p>
+        <p>Follow each request the agent makes in the trace above. Open the dashboard for the agent's health, logs, chat, and terminals.</p>
         <div class="actions">
           <a class="btn primary" data-launchable-path="/dashboard" aria-disabled="true" target="_blank" rel="noopener">Open the dashboard</a>
-          <a class="btn secondary" href="#terminals">Terminals</a>
+          <a class="btn secondary" href="#trace">Trace</a>
         </div>
         <details><summary>What it looks like</summary><a href="guide-dashboard.webp" target="_blank" rel="noopener" title="Open full size"><img src="guide-dashboard.webp" width="960" height="334" loading="lazy" alt="The NemoClaw dashboard with the running agent and its chat and terminal buttons"/></a></details>
       </section>
@@ -251,12 +282,20 @@ let terminalsReady = false;
 let agentExists = false;
 let onboarding = false;
 
-// One NVIDIA API key serves both sides: the course keeps it for this tab through its own helpers,
-// and NemoClaw's onboarding API, the same one its wizard calls, starts OpenClaw with it.
-// The course's helpers load in the background, so the rest of the page is live at once on a slow link.
+// One NVIDIA API key serves both sides: the course keeps it through its own helpers, which share it
+// with the course's other tabs, and NemoClaw's onboarding API, the same one its wizard calls, starts
+// OpenClaw with it. The helpers load in the background once the course copy is ready, so the key
+// form works from the first second; a key entered before then waits in memory for them.
 let course = null;
+let pendingKey = "";
+let courseFilesReady;
+const courseFiles = new Promise(resolve => { courseFilesReady = resolve; });
 const courseReady = served
-  ? import("../../web/nemoclaw/scripts/_shared.js").then(module => (course = module)).catch(() => null)
+  ? courseFiles.then(() => import("../../web/nemoclaw/scripts/_shared.js")).then(module => {
+      course = module;
+      if (pendingKey) { course.setKey(pendingKey); pendingKey = ""; }
+      return module;
+    }).catch(() => null)
   : Promise.resolve(null);
 const keyForm = document.getElementById("key-form");
 const keyInput = document.getElementById("key-input");
@@ -273,9 +312,9 @@ function showKeyError(text) {
 }
 
 function updateKeyStep() {
-  if (!served || !course) return;
+  if (!served) return;
   keyInput.disabled = keySubmit.disabled = false;
-  const hasCourseKey = Boolean(course.getKey());
+  const hasCourseKey = Boolean(pendingKey || course?.getKey());
   keyForm.hidden = onboarding || (agentExists && hasCourseKey);
   keyNote.hidden = keyForm.hidden;
   if (onboarding) keyIntro.textContent = "NemoClaw is starting OpenClaw with your key. Its progress shows at the top of the page.";
@@ -344,15 +383,20 @@ keyForm.addEventListener("submit", event => {
   event.preventDefault();
   const key = keyInput.value.trim();
   keyInput.value = "";
-  if (!course) return;
+  if (!served) return;
   if (!key.startsWith("nvapi-") || key.length < 12) {
     showKeyError("NVIDIA API keys start with nvapi-. Copy the whole key from build.nvidia.com.");
     return;
   }
   showKeyError("");
-  course.setKey(key);
-  if (agentExists) updateKeyStep();
-  else startOpenClaw(key);
+  // OpenClaw starts first, so saving the key cannot trigger a second start from the saved-key path.
+  if (!agentExists) {
+    try { sessionStorage.setItem("nemoclaw_dli_autostart", "1"); } catch (_) {}
+    startOpenClaw(key);
+  }
+  if (course) course.setKey(key);
+  else pendingKey = key;
+  updateKeyStep();
 });
 
 // Chat opens the agent's own dashboard, which the image routes only once an agent runs.
@@ -384,6 +428,7 @@ async function refreshAgent() {
     const label = LABELS[agent.agent] || agent.agent || "The agent";
     if (agent.status === "running") {
       ready.agent = true;
+      startTrace();
       document.getElementById("more-agents").hidden = false;
       if (agent.dashboardUrl) {
         const chat = document.querySelector("[data-needs-agent]");
@@ -414,6 +459,7 @@ async function refreshCourse() {
     if (response.ok) status = await response.json();
   } catch (_) {}
   ready.course = status.stage === "ready";
+  if (ready.course) courseFilesReady();
   progress.hidden = ready.course;
   for (const link of document.querySelectorAll("[data-course-link]")) {
     if (ready.course) link.removeAttribute("aria-disabled");
@@ -581,22 +627,108 @@ document.getElementById("term-close").onclick = () => {
 
 // A key already saved in a course page starts OpenClaw without asking again, once per tab. Without
 // an agent, the page also follows a setup started from NemoClaw's own onboarding wizard.
-async function startFromSavedKey() {
-  await refreshAgent();
-  if (agentExists) return;
-  await courseReady;
-  const saved = course?.getKey();
+// A key already saved in the course, or one another course tab shares, starts OpenClaw without asking
+// again, once per tab. Without one, the page follows a setup started from NemoClaw's own wizard.
+function maybeAutostart() {
+  if (!course || agentExists || onboarding) return;
+  const saved = course.getKey();
   let started = false;
   try { started = sessionStorage.getItem("nemoclaw_dli_autostart") === "1"; } catch (_) {}
-  if (!saved || started) return followOnboarding(false);
+  if (!saved || started) return;
   try { sessionStorage.setItem("nemoclaw_dli_autostart", "1"); } catch (_) {}
   startOpenClaw(saved);
 }
+
+async function startFromSavedKey() {
+  await refreshAgent();
+  if (agentExists) return;
+  followOnboarding(false);
+  await courseReady;
+  maybeAutostart();
+}
+
+// The trace: OpenShell logs one OCSF event for each connection and request the sandbox makes, with
+// its decision, for example
+//   [1793307440.816] [sandbox] [OCSF ] [ocsf] NET:OPEN [MED] DENIED /usr/local/bin/node(1302) -> host:443 [policy:- engine:opa] [reason:...]
+//   [1793307440.848] [sandbox] [OCSF ] [ocsf] HTTP:GET [INFO] ALLOWED GET http://host:443/path [policy:openclaw_api engine:l7]
+// The image's /api/logs streams those lines; SSH, relay, and Landlock housekeeping are left out.
+const TRACE_EVENT = /^\[(\d+(?:\.\d+)?)\] \[sandbox\] \[OCSF \] \[ocsf\] (NET:OPEN|HTTP:[A-Z]+) \[\w+\] (ALLOWED|DENIED) (.+)$/;
+const TRACE_ROWS = 80;
+const traceList = document.getElementById("trace-list");
+const traceCounts = { allowed: 0, denied: 0 };
+let trace = null;
+
+function traceEvent(message) {
+  const match = TRACE_EVENT.exec(message);
+  if (!match) return null;
+  const [, seconds, kind, decision, rest] = match;
+  const policy = /\[policy:([^\s\]]+)/.exec(rest)?.[1] || "";
+  const reason = /\[reason:([^\]]+)\]/.exec(rest)?.[1] || "";
+  const detail = rest.replace(/\s*\[[a-z]+:[^\]]*\]/g, "").trim();
+  let what = detail;
+  if (kind === "NET:OPEN") {
+    const net = /^(\S+?)(?:\(\d+\))? -> (\S+)$/.exec(detail);
+    if (net) what = `${net[1].split("/").pop()} → ${net[2]}`;
+  } else {
+    const http = /^([A-Z]+) https?:\/\/([^\s/:]+)(?::\d+)?(\/\S*)?$/.exec(detail);
+    if (http) what = `${http[1]} ${http[2]}${http[3] || "/"}`;
+  }
+  return { time: new Date(Number(seconds) * 1000), decision: decision.toLowerCase(), what, policy: policy === "-" ? "" : policy, reason };
+}
+
+function addTraceRow(event) {
+  const row = document.createElement("li");
+  row.dataset.decision = event.decision;
+  const time = document.createElement("time");
+  time.dateTime = event.time.toISOString();
+  time.textContent = event.time.toLocaleTimeString([], { hour12: false });
+  const decision = document.createElement("b");
+  decision.textContent = event.decision === "denied" ? "Blocked" : "Allowed";
+  const what = document.createElement("span");
+  what.className = "what";
+  what.textContent = event.what;
+  const policy = document.createElement("span");
+  policy.className = "policy";
+  policy.textContent = event.policy ? `policy ${event.policy}` : "no policy";
+  row.append(time, decision, what, policy);
+  if (event.reason) {
+    const reason = document.createElement("span");
+    reason.className = "reason";
+    reason.textContent = event.reason;
+    row.append(reason);
+  }
+  traceList.prepend(row);
+  while (traceList.children.length > TRACE_ROWS) traceList.lastElementChild.remove();
+  traceCounts[event.decision] += 1;
+  document.getElementById("trace-allowed").textContent = traceCounts.allowed;
+  document.getElementById("trace-denied").textContent = traceCounts.denied;
+}
+
+function startTrace() {
+  if (trace || !served) return;
+  const state = document.getElementById("trace-state");
+  state.textContent = "Listening to the agent's sandbox. New lines appear at the top.";
+  trace = new EventSource("/api/logs?source=agent");
+  trace.onmessage = message => {
+    let line;
+    try { line = JSON.parse(message.data); } catch (_) { return; }
+    const event = traceEvent(String(line?.message || ""));
+    if (event) addTraceRow(event);
+  };
+  trace.onerror = () => { state.textContent = "The agent's log paused. The trace resumes on its own."; };
+  trace.onopen = () => { state.textContent = "Listening to the agent's sandbox. New lines appear at the top."; };
+}
+
+document.getElementById("trace-blocked-only").addEventListener("change", event => {
+  traceList.classList.toggle("blocked-only", event.target.checked);
+});
+addEventListener("pagehide", () => trace?.close());
 
 if (served) {
   enableTerminals();
   updateKeyStep();
   courseReady.then(updateKeyStep);
+  addEventListener("nemoclaw:prerequisites", () => { updateKeyStep(); maybeAutostart(); });
   startFromSavedKey();
   poll();
 } else {
