@@ -11,7 +11,7 @@
   "node_type": "directory-explorer",
   "title": "Brev course delivery",
   "source_dir": "scripts/brev/",
-  "summary": "Serves the built Pages course at /dli/ on Brev. A Compose-mode Brev launchable serves it from its own Secure Link, and a NemoClaw launchable serves it beside the agent on the same origin. This directory holds only configuration and shell; every container image lives in the operator's Compose file outside the repository.",
+  "summary": "Serves the built Pages course at /dli/ on a NemoClaw Brev launchable, beside the agent on the same origin. The launchable's image supplies NemoClaw, OpenShell, nginx, and every package; this directory holds only configuration and shell.",
   "related": [
     "scripts/brev/dli-location.conf",
     "scripts/brev/route.sh",
@@ -25,7 +25,7 @@
 <script type="application/json" id="explorer-config">
 {
   "title": "Brev course delivery",
-  "summary": "One nginx location file defines the /dli/ route for both Brev shapes. route.sh adds it to a NemoClaw launchable's own nginx with nginx -t and rollback, and provider.sh points the launchable's agent at Nebius Token Factory or NVIDIA Build through canonical NemoClaw commands.",
+  "summary": "One nginx location file defines the /dli/ route. route.sh adds it to the server that answers a NemoClaw launchable's Secure Link, with nginx -t and rollback, and provider.sh points the launchable's agent at Nebius Token Factory or NVIDIA Build through canonical NemoClaw commands.",
   "nav": {
     "home": "../../web/index.html",
     "up": {
@@ -35,16 +35,10 @@
   },
   "files": [
     {
-      "path": "compose-server.conf",
-      "role": "Compose server block",
-      "desc": "Replaces the nginx image's default site in the Compose service. It listens unprivileged on 8080, includes the shared route, and returns 404 outside /dli/.",
-      "bytes": 611
-    },
-    {
       "path": "dli-location.conf",
-      "role": "shared /dli/ route",
-      "desc": "The single route both Brev shapes include. It serves the starter page at /dli/ and the built site read-only beneath it, and refuses framing by other sites.",
-      "bytes": 2424
+      "role": "/dli/ route",
+      "desc": "The route route.sh adds to the launchable's nginx. It serves the starter page at /dli/, the startup script's setup progress, the image's own xterm.js build for the terminal popups, and the built site read-only beneath it, and refuses framing by other sites.",
+      "bytes": 3644
     },
     {
       "path": "provider.sh",
@@ -55,14 +49,14 @@
     {
       "path": "index.html",
       "role": "starter page",
-      "desc": "The /dli/ landing page, installed as start.html beside the site: the course, the launchable's agent setup, chat, and dashboard terminals, and a quick reference for inspecting and reconfiguring NemoClaw and OpenShell. It reads the launchable address through the course's connection module. Its links use repository paths, which the link checks verify, and the installers rewrite them for the site root. As the deployment's entry page it is an index page, the kind the link checks let link into a course.",
-      "bytes": 9816
+      "desc": "The /dli/ landing page, installed as start.html beside the site: OpenClaw's setup and chat, with Hermes Agent and LangChain Deep Agents Code mentioned only once an agent is running, the course with its copy progress, the agent's live status, terminal popups on the image's own terminal server, and a quick reference whose commands run in the VM terminal for inspecting and reconfiguring NemoClaw and OpenShell. Its course links use repository paths, which the link checks verify, and route.sh rewrites them for the site root. As the deployment's entry page it is an index page, the kind the link checks let link into a course.",
+      "bytes": 22514
     },
     {
       "path": "route.sh",
       "role": "same-origin route installer",
-      "desc": "Installs a built site and the shared route into a NemoClaw launchable's nginx, validates with nginx -t, reloads, and restores the previous configuration on failure.",
-      "bytes": 6604
+      "desc": "Installs a built site and the route into the server that listens on port 80 in a NemoClaw launchable's nginx, serves the image's own xterm.js build for the starter page, validates with nginx -t, reloads, and restores the previous configuration on failure.",
+      "bytes": 9114
     }
   ],
   "tour": [
@@ -79,26 +73,53 @@
       "title": "Framing boundary on a shared origin",
       "file": "dli-location.conf",
       "lines": [
-        48,
-        52
+        80,
+        84
       ],
       "note": "On a NemoClaw launchable the course shares an origin with the host terminal route, so other sites may not frame course pages."
     },
     {
-      "title": "One source for the launchable address",
+      "title": "Agent actions only where the launchable serves the page",
       "file": "index.html",
       "lines": [
-        98,
-        135
+        187,
+        232
       ],
-      "note": "The page imports the course's connection module instead of reading its storage keys, so the address matches what Module 3a saved."
+      "note": "At /dli/ the page links the launchable's own /onboard, /agent, and /dashboard routes and reads the image's /api/agent status. The Pages copy has no such routes, so there the actions stay off."
+    },
+    {
+      "title": "Course copy progress",
+      "file": "index.html",
+      "lines": [
+        234,
+        265
+      ],
+      "note": "The startup script writes /dli/setup-status.json as it copies the course. The page shows the count, holds the course links until the copy is ready, and keeps the while-it-sets-up tips visible until both the course and the agent are ready."
+    },
+    {
+      "title": "Terminal popups on the image's own terminal server",
+      "file": "index.html",
+      "lines": [
+        267,
+        404
+      ],
+      "note": "The OpenShell TUI, VM, and sandbox terminals use the dashboard's commands over the image's /ws/terminal server, drawn with the image's xterm.js build. Run buttons paste quick-reference commands, with the sandbox name filled in. Without that build the buttons open the dashboard."
+    },
+    {
+      "title": "The port 80 server, not a fixed line",
+      "file": "route.sh",
+      "lines": [
+        38,
+        60
+      ],
+      "note": "route.sh finds the server that listens on port 80, in the image's usual site file or any file nginx -T reports, so image releases that move or reword their routes keep working."
     },
     {
       "title": "Validated include with rollback",
       "file": "route.sh",
       "lines": [
-        67,
-        77
+        103,
+        114
       ],
       "note": "The image's site gains one include line only after nginx -t and a reload both pass."
     },
@@ -106,10 +127,19 @@
       "title": "Course links projected at install",
       "file": "route.sh",
       "lines": [
-        118,
-        123
+        155,
+        160
       ],
       "note": "index.html names the course as ../../web/nemoclaw/, the path the repository and Pages link checks resolve. Beside the installed site the course is ./nemoclaw/, so the installer rewrites that one prefix, as the Pages build does for its own pages."
+    },
+    {
+      "title": "The image's xterm.js, not a new package",
+      "file": "route.sh",
+      "lines": [
+        162,
+        172
+      ],
+      "note": "route.sh copies xterm.js, its fit addon, and both licenses from the image's onboarding UI, so the terminal popups add no browser package to the course and follow the image's version."
     },
     {
       "title": "Compatible endpoint through canonical NemoClaw",
@@ -144,8 +174,8 @@
 <nav class="skill-nav" aria-label="Skill navigation"><a href="../../web/index.html">Home</a><a href="../SKILL.html">scripts</a> <span aria-hidden="true"> · </span> <a data-skill-nav="map" href="../../SKILL.html">Repository map</a></nav>
 </header>
   <h1 id="skill-title">Brev course delivery</h1>
-  <p>Brev serves the same built Pages site that GitHub Pages publishes, under the /dli/ path. On a NemoClaw launchable, the course then shares the agent's origin, so the course reaches the launchable with the browser's own Secure Link session instead of a pasted access cookie. The GitHub Pages deployment and its build are unchanged.</p>
-  <div class="skill-note">Container images, packages, and toolchains for this delivery live in the operator's Compose file, which stays outside the repository. This directory adds configuration and shell only.</div>
+  <p>A NemoClaw Brev launchable serves the same built Pages site that GitHub Pages publishes, under the /dli/ path beside its agent. The course then shares the agent's origin, so it reaches the launchable with the browser's own Secure Link session instead of a pasted access cookie. The GitHub Pages deployment and its build are unchanged.</p>
+  <div class="skill-note">The launchable's image supplies NemoClaw, OpenShell, nginx, and every package. The startup script that runs route.sh on a new launchable stays outside the repository. This directory adds configuration and shell only.</div>
   <h2>Executable checks</h2>
   <div class="skill-cmds">
     <div class="skill-cmd"><b>Shell syntax</b><code>for f in scripts/brev/*.sh; do bash -n "$f"; done</code></div>
@@ -162,8 +192,7 @@
   <h2>Linkage map</h2>
   <div class="skill-list">
     <a class="skill-link" href="index.html"><b>index.html</b><span>The /dli/ starter page with agent links and a command reference.</span></a>
-    <a class="skill-link" href="dli-location.conf"><b>dli-location.conf</b><span>The shared /dli/ route, headers, and entry redirect.</span></a>
-    <a class="skill-link" href="compose-server.conf"><b>compose-server.conf</b><span>The Compose service's server block around the shared route.</span></a>
+    <a class="skill-link" href="dli-location.conf"><b>dli-location.conf</b><span>The /dli/ route, headers, and entry redirect.</span></a>
     <a class="skill-link" href="route.sh"><b>route.sh</b><span>Same-origin install, status, and removal on a NemoClaw launchable.</span></a>
     <a class="skill-link" href="provider.sh"><b>provider.sh</b><span>Nebius Token Factory or NVIDIA Build for the launchable's agent.</span></a>
     <a class="skill-link" href="../build/SKILL.html"><b>build/SKILL.html</b><span>The Pages build that produces the served site.</span></a>

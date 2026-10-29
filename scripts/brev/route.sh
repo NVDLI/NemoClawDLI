@@ -4,8 +4,10 @@
 #
 # Serve the course at /dli/ on a NemoClaw Brev launchable, the same origin as its agent.
 # Uses only the image's own nginx: it installs a built Pages site and dli-location.conf, then
-# adds one include line to the image's site. Every change is validated with nginx -t and rolled
-# back on failure, following the image's configure-launchable-routing pattern.
+# adds one include line to the server that listens on port 80. It finds that server rather than a
+# particular line in it, so image releases that move or reword their routes keep working. Every
+# change is validated with nginx -t and rolled back on failure, following the image's
+# configure-launchable-routing pattern.
 #
 # SITE is the output of scripts/build/build_pages.sh: a directory, or a tar archive of it such as
 # the Pages workflow's artifact.tar (compressed or not).
@@ -19,11 +21,11 @@ set -euo pipefail
 
 readonly HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly PROVISION="${NEMOCLAW_DLI_PROVISION:-/etc/nemoclaw/provision.json}"
-readonly SITE="${NEMOCLAW_DLI_NGINX_SITE:-/etc/nginx/sites-available/nemoclaw}"
+readonly RUNTIME_ROOT="${NEMOCLAW_DLI_RUNTIME_ROOT:-/opt/nemoclaw-image}"
 readonly INCLUDE="${NEMOCLAW_DLI_NGINX_INCLUDE:-/etc/nginx/nemoclaw-dli-location.inc}"
 readonly STATE="${NEMOCLAW_DLI_STATE:-/var/lib/nemoclaw-dli}"
-readonly ANCHOR="    include /etc/nginx/nemoclaw-agent-routes.inc;"
 readonly LINE="    include $INCLUDE;"
+SITE=""
 
 fail() {
   echo "nemoclaw-dli route: $*" >&2
@@ -33,11 +35,37 @@ fail() {
 backup_dir="$(mktemp -d)"
 trap 'rm -rf "$backup_dir"' EXIT
 
+# Line number of the first directive that makes a server listen on port 80, such as
+# "listen 80;", "listen [::]:80;", or "listen 0.0.0.0:80 default_server;".
+listen_line() {
+  grep -n -E '^[[:space:]]*listen[[:space:]]+([^;]*:)?80([[:space:]][^;]*)?;' "$1" | head -n 1 | cut -d: -f1 | grep .
+}
+
+# The launchable's public site is the file whose server listens on port 80: the image's usual
+# path first, then every file that nginx -T reports.
+find_site() {
+  local candidate
+  if [ -n "${NEMOCLAW_DLI_NGINX_SITE:-}" ]; then
+    SITE="$NEMOCLAW_DLI_NGINX_SITE"
+    return 0
+  fi
+  for candidate in /etc/nginx/sites-available/nemoclaw $(nginx -T 2>/dev/null | sed -n 's/^# configuration file \(.*\):$/\1/p'); do
+    candidate="$(readlink -f "$candidate" 2>/dev/null || printf '%s' "$candidate")"
+    if [ -f "$candidate" ] && listen_line "$candidate" >/dev/null; then
+      SITE="$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
 require_launchable() {
   [ "$(id -u)" -eq 0 ] || fail "must run as root"
-  [ -r "$PROVISION" ] || fail "not a NemoClaw launchable: $PROVISION is missing"
-  [ -f "$SITE" ] || fail "launchable nginx site is missing: $SITE"
+  [ -r "$PROVISION" ] || [ -d "$RUNTIME_ROOT" ] \
+    || fail "not a NemoClaw launchable: neither $PROVISION nor $RUNTIME_ROOT exists"
   command -v nginx >/dev/null 2>&1 || fail "nginx is not installed"
+  find_site || fail "no nginx server listening on port 80 was found"
+  [ -f "$SITE" ] || fail "launchable nginx site is missing: $SITE"
   # Uninstall deletes $STATE; it must be this tool's own dedicated directory.
   case "$STATE" in
     */nemoclaw-dli) ;;
@@ -45,8 +73,17 @@ require_launchable() {
   esac
 }
 
+# Finds ("find") or filters out ("drop") this tool's include line, whatever its indentation.
+include_lines() {
+  awk -v want="include $INCLUDE;" -v mode="$1" '
+    { line = $0; gsub(/^[ \t]+|[ \t]+$/, "", line); gsub(/[ \t]+/, " ", line) }
+    mode == "drop" && line != want { print }
+    mode == "find" && line == want { found = 1 }
+    END { if (mode == "find") exit !found }' "$SITE"
+}
+
 site_has_include() {
-  grep -qxF "$LINE" "$SITE"
+  include_lines find
 }
 
 backup_nginx() {
@@ -91,13 +128,13 @@ await_health() {
 }
 
 install_course() {
-  local source="${1:-}"
+  local source="${1:-}" at
   [ -n "$source" ] || fail "usage: route.sh install SITE (a built Pages directory or tar archive)"
   [ -e "$source" ] || fail "site is unavailable: $source"
   [ -f "$HERE/dli-location.conf" ] || fail "missing $HERE/dli-location.conf"
   [ -f "$HERE/index.html" ] || fail "missing $HERE/index.html"
   grep -qF "../../web/nemoclaw/" "$HERE/index.html" || fail "index.html has no course links to project"
-  grep -qxF "$ANCHOR" "$SITE" || fail "launchable site has no agent-routes include to anchor on"
+  at="$(listen_line "$SITE")" || fail "no port 80 listener in $SITE"
 
   # Stage a complete release before touching nginx.
   local release
@@ -122,11 +159,24 @@ install_course() {
   chmod 644 "$STATE/site/.start.html.next"
   mv -f "$STATE/site/.start.html.next" "$STATE/site/start.html"
 
+  # The starter page's terminal popups use the image's own xterm.js build and its licenses, so the
+  # course adds no browser package. Without them the page sends terminals to the dashboard.
+  local xterm="$RUNTIME_ROOT/onboard-ui/node_modules/@xterm"
+  rm -rf "$STATE/site/brev-terminal"
+  install -d -m 755 "$STATE/site/brev-terminal"
+  if [ -f "$xterm/xterm/lib/xterm.js" ] && [ -f "$xterm/xterm/css/xterm.css" ] && [ -f "$xterm/addon-fit/lib/addon-fit.js" ]; then
+    install -m 644 "$xterm/xterm/lib/xterm.js" "$xterm/xterm/css/xterm.css" "$xterm/addon-fit/lib/addon-fit.js" \
+      "$STATE/site/brev-terminal/"
+    install -m 644 "$xterm/xterm/LICENSE" "$STATE/site/brev-terminal/xterm-LICENSE.txt"
+    install -m 644 "$xterm/addon-fit/LICENSE" "$STATE/site/brev-terminal/addon-fit-LICENSE.txt"
+  fi
+
+  # The include goes right after the port 80 listen directive; nginx picks the /dli/ locations by
+  # match type, not by their position in the server block.
   backup_nginx
   install -m 644 "$HERE/dli-location.conf" "$INCLUDE"
   if ! site_has_include; then
-    awk -v anchor="$ANCHOR" -v line="$LINE" \
-      '$0 == anchor { print line } { print }' "$SITE" > "$backup_dir/site.edited"
+    awk -v at="$at" -v line="$LINE" '{ print } NR == at + 0 { print line }' "$SITE" > "$backup_dir/site.edited"
     install -m 644 "$backup_dir/site.edited" "$SITE"
   fi
   apply_nginx_change
@@ -144,7 +194,7 @@ install_course() {
 uninstall_course() {
   backup_nginx
   if site_has_include; then
-    grep -vxF "$LINE" "$SITE" > "$backup_dir/site.edited" || true
+    include_lines drop > "$backup_dir/site.edited"
     install -m 644 "$backup_dir/site.edited" "$SITE"
   fi
   rm -f "$INCLUDE"
@@ -155,7 +205,12 @@ uninstall_course() {
 }
 
 status() {
-  if site_has_include; then echo "include: present in $SITE"; else echo "include: absent"; fi
+  [ -n "$SITE" ] || find_site || true
+  if [ -n "$SITE" ] && [ -f "$SITE" ] && site_has_include; then
+    echo "include: present in $SITE"
+  else
+    echo "include: absent"
+  fi
   if [ -L "$STATE/site/dli" ]; then echo "release: $(readlink "$STATE/site/dli")"; else echo "release: none"; fi
   if command -v curl >/dev/null 2>&1; then
     echo "health: $(curl -sS -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1/dli/healthz || echo unreachable)"

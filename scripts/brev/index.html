@@ -6,133 +6,417 @@
 <title>Start here · Securing Agents with OpenShell and NemoClaw</title>
 <link rel="icon" href="../../web/nemoclaw/assets/favicon.ico"/>
 <script>(function(){try{var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../../web/nemoclaw/styles/_style.css"/>
 <style>
-:root{color-scheme:light;--green:#76b900;--green-text:#4a7a00;--ink:#1d1d1d;--muted:#5c5c5c;--page:#fafafa;--card:#fff;--line:#e3e3e3;--code:#f1f3ee;--error:#b42318}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--green-text:#76b900;--ink:#ececec;--muted:#a6a6a6;--page:#111;--card:#1a1a1a;--line:#2c2c2c;--code:#202417;--error:#ff8a80}}
-:root[data-theme="dark"]{color-scheme:dark;--green-text:#76b900;--ink:#ececec;--muted:#a6a6a6;--page:#111;--card:#1a1a1a;--line:#2c2c2c;--code:#202417;--error:#ff8a80}
-*{box-sizing:border-box}
-[hidden]{display:none !important}
-body{margin:0;background:var(--page);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:68rem;margin:0 auto;padding:2.5rem 16px 3rem}
-h1{margin:0 0 .4rem;font-size:clamp(1.6rem,4vw,2.2rem);line-height:1.2}
-h1 span{color:var(--green-text)}
-h2{margin:2.2rem 0 .8rem;font-size:1.2rem}
-p{margin:.3rem 0;color:var(--muted)}
-a{color:var(--green-text)}
-a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--green);outline-offset:2px}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(15rem,100%),1fr));gap:14px}
-.card{display:block;padding:1.1rem 1.2rem;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);text-decoration:none}
-.card:hover{border-color:var(--green)}
-.card b{display:block;margin-bottom:.25rem;font-size:1.05rem}
-.card span{color:var(--muted);font-size:.93rem}
-.card.primary{border-left:4px solid var(--green)}
-.card[aria-disabled="true"]{opacity:.5;cursor:not-allowed}
-.status{margin:.6rem 0 1rem;padding:.7rem .9rem;border-left:3px solid var(--green);background:var(--card);border-radius:6px}
-form{display:flex;flex-wrap:wrap;gap:8px;margin:.4rem 0 1rem}
-input{flex:1 1 20rem;min-width:0;padding:.55rem .7rem;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit}
-button{padding:.55rem 1rem;border:0;border-radius:8px;background:var(--green);color:#111;font:inherit;font-weight:600;cursor:pointer}
-.error{color:var(--error)}
-.reference{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(26rem,100%),1fr));gap:14px}
-.reference section{padding:1rem 1.2rem;border:1px solid var(--line);border-radius:12px;background:var(--card)}
-.reference h3{margin:0 0 .5rem;font-size:1rem}
-dl{margin:0}
-dt{margin-top:.55rem}
-dt code{display:inline-block;max-width:100%;overflow-wrap:anywhere;padding:.15rem .4rem;border-radius:5px;background:var(--code);font:.88rem/1.4 ui-monospace,Consolas,monospace}
-dd{margin:.15rem 0 0;color:var(--muted);font-size:.92rem}
-.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .hero { margin: .6em 0 1.8em; }
+  .hero .eyebrow { font-family: var(--mono); font-size: .72rem; color: var(--gs); text-transform: uppercase;
+                   letter-spacing: .12em; margin-bottom: .7em; }
+  .hero h1 { font-size: clamp(1.9rem, 4.6vw, 2.5rem); font-weight: 700; line-height: 1.12; letter-spacing: -.01em;
+             margin: 0 0 .5em; }
+  .hero h1 .accent { color: var(--g); }
+  .hero .lead { font-size: 1.06rem; color: var(--td); max-width: 48rem; }
+  .agent-status { display: flex; align-items: baseline; gap: 10px; margin-top: 1.3em; padding: 11px 16px;
+                  background: var(--e1); border: 1px solid var(--e3); border-radius: 10px; font-size: .95rem; }
+  .agent-status::before { content: ""; flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--tf);
+                          transform: translateY(-1px); }
+  .agent-status[data-state="running"]::before { background: var(--g); }
+  .agent-status[data-state="starting"]::before { background: var(--warn); }
+
+  .waiting { margin: 0 0 1.6em; padding: 16px 20px; border: 1px solid var(--e3); border-left: 3px solid var(--g);
+             border-radius: 10px; background: var(--e1); }
+  .waiting h2 { margin: 0 0 .5em; font-size: 1.02rem; }
+  .waiting ul { list-style: none; display: grid; gap: .55em; }
+  .waiting li { color: var(--td); font-size: .93rem; padding-left: 1.1em; position: relative; }
+  .waiting li::before { content: "›"; position: absolute; left: 0; color: var(--g); font-weight: 700; }
+  .waiting b { color: var(--tx); font-weight: 600; }
+  .waiting code, .help code { font-family: var(--mono); font-size: .88em; padding: 1px 6px; border-radius: 4px;
+                              background: var(--e2); color: var(--gs); }
+
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr)); gap: 14px; }
+  .step { display: flex; flex-direction: column; gap: .55em; padding: 18px 20px; background: var(--e1);
+          border: 1px solid var(--e3); border-radius: 10px; }
+  .step .n { font-family: var(--mono); color: #0a0a0a; background: var(--g); border-radius: 999px; width: 22px;
+             height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: .75rem;
+             font-weight: 700; flex: none; }
+  .step-head { display: flex; align-items: center; gap: 10px; }
+  .step h2 { margin: 0; font-size: 1.08rem; }
+  .step p { color: var(--td); font-size: .93rem; flex: 1; }
+  .step p.more { flex: none; font-size: .88rem; }
+  .step .progress { flex: none; font-size: .88rem; color: var(--tx); }
+  .bar { height: 6px; margin-top: .45em; border-radius: 999px; background: var(--e3); overflow: hidden; }
+  .bar span { display: block; height: 100%; width: 0; background: var(--g); transition: width .4s ease; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: .3em; }
+  .btn { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 8px; font-size: .9rem;
+         font-weight: 600; text-decoration: none; border: 1px solid var(--g); }
+  .btn.primary { background: var(--g); color: #0a0a0a; }
+  .btn.secondary { color: var(--tx); border-color: var(--e3); background: var(--e2); }
+  .btn:hover { text-decoration: none; filter: brightness(1.08); }
+  .btn[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+
+  .section > h2 { margin: 2.4em 0 .4em; padding-bottom: .35em; border-bottom: 1px solid var(--e3); font-size: 1.2rem; }
+  .section .help { color: var(--td); font-size: .93rem; margin: .5em 0 1.1em; }
+  .reference { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(26rem, 100%), 1fr)); gap: 14px; }
+  .reference section { padding: 16px 20px; background: var(--e1); border: 1px solid var(--e3); border-radius: 10px; }
+  .reference h3 { font-size: 1rem; margin: 0 0 .3em; }
+  .reference dt { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: .7em; }
+  .run { font: inherit; font-size: .78rem; font-weight: 600; padding: 2px 10px; border-radius: 6px; cursor: pointer;
+         border: 1px solid var(--e3); background: var(--e2); color: var(--tx); }
+  .run:hover { border-color: var(--g); }
+
+  .term { margin-top: 14px; border: 1px solid var(--e3); border-radius: 10px; overflow: hidden; background: #111417; }
+  .term-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px 12px; background: var(--e2);
+               border-bottom: 1px solid var(--e3); font-size: .88rem; }
+  .term-head .state { color: var(--td); }
+  .term-head .grow { flex: 1; }
+  .term-head button { font: inherit; font-size: .82rem; font-weight: 600; padding: 4px 11px; border-radius: 6px;
+                      cursor: pointer; border: 1px solid var(--e3); background: var(--e1); color: var(--tx); }
+  .term-screen { height: 380px; min-height: 200px; max-height: 80vh; padding: 10px; resize: vertical; overflow: hidden; }
+  button.btn { font: inherit; font-size: .9rem; cursor: pointer; }
+  button.btn:disabled { opacity: .45; cursor: not-allowed; }
+  .reference dt code { display: inline-block; max-width: 100%; overflow-wrap: anywhere; font-family: var(--mono);
+                       font-size: .86rem; padding: 2px 7px; border-radius: 5px; background: var(--e2); color: var(--gs); }
+  .reference dd { color: var(--td); font-size: .92rem; margin-top: .2em; }
+
+  :root[data-theme="light"] .step .n,
+  :root[data-theme="light"] .btn.primary { color: #fff; }
 </style>
 </head>
 <body>
+<div class="topbar">
+  <a class="logo" href="../../web/nemoclaw/index.html">NVIDIA · Securing Agents</a>
+  <div class="spacer"></div>
+</div>
+
 <main>
-  <h1>Securing Agents with <span>OpenShell</span> and <span>NemoClaw</span></h1>
-  <p>Start the course here, then open your NemoClaw launchable to run, inspect, and reconfigure the agent the lessons talk to.</p>
-
-  <h2>Course</h2>
-  <div class="cards">
-    <a class="card primary" href="../../web/nemoclaw/?iframe_proxy=1"><b>Open the course</b><span>Four modules, from a first agent loop to OpenShell policy. Each lesson has editable exercises.</span></a>
-    <a class="card" href="../../web/nemoclaw/03a-kickstart.html?iframe_proxy=1"><b>Connect your launchable</b><span>Module 3a saves your launchable address and gateway token for the lessons that drive a live agent.</span></a>
-    <a class="card" href="../../web/nemoclaw/04a-safety.html?iframe_proxy=1"><b>OpenShell policy lesson</b><span>Module 4a explains what the sandbox allows and how network rules are approved.</span></a>
+  <div class="hero">
+    <div class="eyebrow">NemoClaw launchable</div>
+    <h1>Securing Agents with <span class="accent">OpenShell</span> and <span class="accent">NemoClaw</span></h1>
+    <p class="lead">This launchable runs NemoClaw and the course side by side. Set up the OpenClaw agent, work through the lessons, and use the terminals to see what OpenShell allows and blocks.</p>
+    <p id="agent-status" class="agent-status" role="status" aria-live="polite">Checking for an agent.</p>
   </div>
 
-  <h2>Your NemoClaw launchable</h2>
-  <p id="launchable-status" class="status" role="status" aria-live="polite">Checking for a saved launchable.</p>
-  <form id="launchable-form" hidden>
-    <label for="launchable-url" class="visually-hidden">NemoClaw launchable address</label>
-    <input id="launchable-url" type="url" inputmode="url" autocomplete="url" placeholder="https://nemoclaw-<id>.brevlab.com" required/>
-    <button type="submit">Use this launchable</button>
-    <p id="launchable-error" class="error" role="alert"></p>
-  </form>
-  <div class="cards">
-    <a class="card" data-launchable-path="/onboard" target="_blank" rel="noopener"><b>Choose an agent</b><span>Set up OpenClaw, Hermes, or LangChain Deep Agents Code, and pick its model provider.</span></a>
-    <a class="card" data-launchable-path="/agent" target="_blank" rel="noopener"><b>Chat with your agent</b><span>Opens the selected agent's own dashboard.</span></a>
-    <a class="card" data-launchable-path="/dashboard" target="_blank" rel="noopener"><b>Dashboard and terminals</b><span>Agent health, logs, and security events. Its buttons open the OpenShell TUI, a sandbox terminal, and a VM terminal.</span></a>
-    <a class="card" id="launch-new" href="https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990" target="_blank" rel="noopener"><b>Launch NemoClaw on Brev</b><span>Start a launchable if you do not have one yet. Keep it running for Modules 3 and 4.</span></a>
+  <div class="waiting" id="waiting" hidden>
+    <h2>While it sets up</h2>
+    <ul>
+      <li><b>Set up OpenClaw now.</b> NemoClaw has it ready in a minute or two, and that runs while the course copies.</li>
+      <li><b>Look at the gateway.</b> Open the VM terminal below and run <code>openshell status</code>. Once your agent exists, <code>nemoclaw list</code> shows its sandbox.</li>
+      <li><b>Skim the plan.</b> Modules 1 and 2 build an agent loop in your browser, Module 3 drives the agent on this launchable, and Module 4 covers what OpenShell allows and how you change it.</li>
+    </ul>
   </div>
 
-  <h2>Quick reference</h2>
-  <p>Run these in the dashboard's VM terminal. Replace <code>&lt;name&gt;</code> with your sandbox name from <code>nemoclaw list</code>.</p>
-  <div class="reference">
-    <section aria-labelledby="ref-inspect"><h3 id="ref-inspect">Inspect</h3><dl>
-      <dt><code>nemoclaw list</code></dt><dd>Sandboxes on this launchable and the agent in each.</dd>
-      <dt><code>nemoclaw &lt;name&gt; status</code></dt><dd>Health of one sandbox, its gateway, and its inference route.</dd>
-      <dt><code>nemoclaw &lt;name&gt; logs --follow</code></dt><dd>Stream the sandbox log while you run an exercise.</dd>
-      <dt><code>nemoclaw &lt;name&gt; connect</code></dt><dd>Open a shell inside the sandbox to see what the agent sees.</dd>
-    </dl></section>
-    <section aria-labelledby="ref-policy"><h3 id="ref-policy">Network policy</h3><dl>
-      <dt><code>openshell term</code></dt><dd>Watch the sandbox live. Run an exercise again and inspect the request that policy blocked.</dd>
-      <dt><code>nemoclaw &lt;name&gt; policy list</code></dt><dd>The sandbox's current policy, including the presets it uses.</dd>
-      <dt><code>nemoclaw &lt;name&gt; policy add &lt;preset&gt; --dry-run</code></dt><dd>Preview a preset's endpoints. Drop <code>--dry-run</code> to apply it.</dd>
-      <dt><code>nemoclaw &lt;name&gt; policy remove &lt;channel&gt;</code></dt><dd>Withdraw access you added.</dd>
-    </dl></section>
-    <section aria-labelledby="ref-models"><h3 id="ref-models">Models</h3><dl>
-      <dt><code>nemoclaw inference get</code></dt><dd>The provider and model the agent uses now.</dd>
-      <dt><code>nemoclaw inference set --provider &lt;provider&gt; --model &lt;model&gt;</code></dt><dd>Switch the agent's model. NemoClaw tests the route from the sandbox before it commits the change.</dd>
-    </dl></section>
-    <section aria-labelledby="ref-recover"><h3 id="ref-recover">Recover</h3><dl>
-      <dt><code>nemoclaw &lt;name&gt; doctor</code></dt><dd>Diagnose a sandbox that stopped answering.</dd>
-      <dt><code>nemoclaw &lt;name&gt; gateway restart</code></dt><dd>Restart the agent gateway after a configuration change.</dd>
-      <dt><code>nemoclaw &lt;name&gt; recover</code></dt><dd>Re-run the sandbox readiness checks and restore its dashboard forward.</dd>
-    </dl></section>
+  <div class="steps">
+    <section class="step" aria-labelledby="step-agent">
+      <div class="step-head"><span class="n">1</span><h2 id="step-agent">Set up OpenClaw</h2></div>
+      <p>Onboarding opens with OpenClaw selected. Pick its model provider, and NemoClaw has its sandbox ready in a minute or two. Module 3 drives this agent.</p>
+      <p class="more" id="more-agents" hidden>Hermes Agent and LangChain Deep Agents Code are in onboarding too, when you want to compare agents.</p>
+      <div class="actions">
+        <a class="btn primary" data-launchable-path="/onboard" aria-disabled="true">Set up OpenClaw</a>
+        <a class="btn secondary" data-launchable-path="/agent" aria-disabled="true" target="_blank" rel="noopener">Open chat</a>
+      </div>
+    </section>
+    <section class="step" aria-labelledby="step-course">
+      <div class="step-head"><span class="n">2</span><h2 id="step-course">Work through the course</h2></div>
+      <p>Modules 1 and 2 run in your browser. From Module 3 on, the exercises drive the agent on this launchable.</p>
+      <div class="progress" id="course-progress" role="status" aria-live="polite" hidden>
+        <span id="course-progress-text">Getting the course ready.</span>
+        <div class="bar" aria-hidden="true"><span id="course-progress-bar"></span></div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" data-course-link href="../../web/nemoclaw/index.html?iframe_proxy=1">Open the course</a>
+        <a class="btn secondary" data-course-link href="../../web/nemoclaw/03a-kickstart.html?iframe_proxy=1">Module 3a</a>
+      </div>
+    </section>
+    <section class="step" aria-labelledby="step-sandbox">
+      <div class="step-head"><span class="n">3</span><h2 id="step-sandbox">Watch the sandbox</h2></div>
+      <p>Open the OpenShell TUI on this page to watch the sandbox's traffic, or the dashboard for agent health, logs, and security events.</p>
+      <div class="actions">
+        <a class="btn primary" data-launchable-path="/dashboard" aria-disabled="true" target="_blank" rel="noopener">Open the dashboard</a>
+        <a class="btn secondary" href="#terminals">Terminals</a>
+      </div>
+    </section>
+  </div>
+
+  <div class="section" id="terminals">
+    <h2>Terminals</h2>
+    <p class="help">The dashboard's terminals, opened on this page. The OpenShell TUI shows the sandbox's traffic and the requests that policy blocked.</p>
+    <div class="actions">
+      <button type="button" class="btn primary" data-terminal="tui" disabled>OpenShell TUI</button>
+      <button type="button" class="btn secondary" data-terminal="vm" disabled>VM terminal</button>
+      <button type="button" class="btn secondary" data-terminal="sandbox" disabled>Sandbox terminal</button>
+    </div>
+    <div class="term" id="term" hidden>
+      <div class="term-head">
+        <b id="term-title">Terminal</b>
+        <span class="state" id="term-state" role="status" aria-live="polite"></span>
+        <span class="grow"></span>
+        <button type="button" id="term-reconnect">Reconnect</button>
+        <button type="button" id="term-close">Close</button>
+      </div>
+      <div class="term-screen" id="term-screen"></div>
+    </div>
+  </div>
+
+  <div class="section" id="reference">
+    <h2>Quick reference</h2>
+    <p class="help">Run these in the VM terminal. Each Run button pastes the command there, with your sandbox name in place of <code>&lt;name&gt;</code> once you have an agent.</p>
+    <div class="reference">
+      <section aria-labelledby="ref-inspect"><h3 id="ref-inspect">Inspect</h3><dl>
+        <dt><code>nemoclaw list</code></dt><dd>Sandboxes on this launchable and the agent in each.</dd>
+        <dt><code>nemoclaw &lt;name&gt; status</code></dt><dd>Health of one sandbox, its gateway, and its inference route.</dd>
+        <dt><code>nemoclaw &lt;name&gt; logs --follow</code></dt><dd>Stream the sandbox log while you run an exercise.</dd>
+        <dt><code>nemoclaw &lt;name&gt; connect</code></dt><dd>Open a shell inside the sandbox to see what the agent sees.</dd>
+      </dl></section>
+      <section aria-labelledby="ref-policy"><h3 id="ref-policy">Network policy</h3><dl>
+        <dt><code>openshell term</code></dt><dd>Watch the sandbox live. Run an exercise again and inspect the request that policy blocked.</dd>
+        <dt><code>nemoclaw &lt;name&gt; policy list</code></dt><dd>The sandbox's current policy, including the presets it uses.</dd>
+        <dt><code>nemoclaw &lt;name&gt; policy add &lt;preset&gt; --dry-run</code></dt><dd>Preview a preset's endpoints. Drop <code>--dry-run</code> to apply it.</dd>
+        <dt><code>nemoclaw &lt;name&gt; policy remove &lt;channel&gt;</code></dt><dd>Withdraw access you added.</dd>
+      </dl></section>
+      <section aria-labelledby="ref-models"><h3 id="ref-models">Models</h3><dl>
+        <dt><code>nemoclaw inference get</code></dt><dd>The provider and model the agent uses now.</dd>
+        <dt><code>nemoclaw inference set --provider &lt;provider&gt; --model &lt;model&gt;</code></dt><dd>Switch the agent's model. NemoClaw tests the route from the sandbox before it commits the change.</dd>
+      </dl></section>
+      <section aria-labelledby="ref-recover"><h3 id="ref-recover">Recover</h3><dl>
+        <dt><code>nemoclaw &lt;name&gt; doctor</code></dt><dd>Diagnose a sandbox that stopped answering.</dd>
+        <dt><code>nemoclaw &lt;name&gt; gateway restart</code></dt><dd>Restart the agent gateway after a configuration change.</dd>
+        <dt><code>nemoclaw &lt;name&gt; recover</code></dt><dd>Re-run the sandbox readiness checks and restore its dashboard forward.</dd>
+      </dl></section>
+    </div>
   </div>
 </main>
 <script type="module">
-// The launchable address comes from the course's own connection module: the page's origin when
-// this page is served by a NemoClaw launchable, otherwise the address saved in Module 3a.
-import { getOpenClawConnection, setOpenClawConnection, isOpenClawLaunchableHost } from "../../web/nemoclaw/scripts/_connection.js";
+// The launchable serves this page at /dli/, beside its own /onboard, /agent, and /dashboard routes.
+// Anywhere else (the repository's Pages copy) those routes do not exist, so the live parts stay off.
+const served = location.pathname === "/dli/";
+const LABELS = { openclaw: "OpenClaw", hermes: "Hermes Agent", "langchain-deepagents-code": "LangChain Deep Agents Code" };
+const agentStatus = document.getElementById("agent-status");
+const waiting = document.getElementById("waiting");
+const progress = document.getElementById("course-progress");
+const progressText = document.getElementById("course-progress-text");
+const progressBar = document.getElementById("course-progress-bar");
+const ready = { agent: false, course: false };
+let sandbox = "";
+let terminalsReady = false;
 
-const own = isOpenClawLaunchableHost(location.hostname) ? location.origin : "";
-const status = document.getElementById("launchable-status");
-const form = document.getElementById("launchable-form");
-const input = document.getElementById("launchable-url");
-const error = document.getElementById("launchable-error");
-
-function render() {
-  const base = own || getOpenClawConnection().rawUrl;
-  for (const link of document.querySelectorAll("[data-launchable-path]")) {
-    if (base) {
-      link.href = base + link.dataset.launchablePath;
-      link.removeAttribute("aria-disabled");
-    } else {
-      link.removeAttribute("href");
-      link.setAttribute("aria-disabled", "true");
-    }
-  }
-  document.getElementById("launch-new").hidden = Boolean(base);
-  form.hidden = Boolean(own);
-  if (own) status.textContent = "This page is served by your NemoClaw launchable, so the links below open its own tools.";
-  else if (base) status.textContent = "Using the launchable saved by the course: " + base + ". Enter another address to change it.";
-  else status.textContent = "No launchable saved yet. Enter its NemoClaw App address, or connect it in Module 3a.";
-  if (base && !own) input.value = base;
+for (const link of document.querySelectorAll("[data-launchable-path]")) {
+  if (!served) continue;
+  link.href = link.dataset.launchablePath;
+  link.removeAttribute("aria-disabled");
 }
 
-form.addEventListener("submit", event => {
-  event.preventDefault();
-  error.textContent = "";
-  try { setOpenClawConnection({ rawUrl: input.value }); }
-  catch (failure) { error.textContent = failure.message; }
-  render();
-});
-render();
+function showAgent(state, text) {
+  agentStatus.dataset.state = state;
+  agentStatus.textContent = text;
+}
+
+// /api/agent is the image's own status route; it reports the selected agent and its sandbox phase.
+async function refreshAgent() {
+  try {
+    const response = await fetch("/api/agent", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const { agent } = await response.json();
+    if (!agent) return showAgent("none", "No agent yet. Set up OpenClaw to start.");
+    sandbox = agent.name;
+    document.querySelector('[data-terminal="sandbox"]').disabled = false;
+    const label = LABELS[agent.agent] || agent.agent || "The agent";
+    if (agent.status === "running") {
+      ready.agent = true;
+      document.getElementById("more-agents").hidden = false;
+      const model = agent.model ? `, using ${agent.model}` : "";
+      return showAgent("running", `${label} is running in sandbox ${agent.name}${model}.`);
+    }
+    showAgent("starting", `${label} is ${agent.status === "stopped" ? "stopped" : "starting"} in sandbox ${agent.name}.`);
+  } catch (_) {
+    showAgent("none", "Agent status is not available yet. The launchable may still be starting.");
+  }
+}
+
+// The startup script reports its copy of the course in /dli/setup-status.json.
+const STAGES = {
+  starting: () => "Getting the course ready.",
+  downloading: status => `Copying the course: ${status.done.toLocaleString()} of ${status.total.toLocaleString()} files.`,
+  verifying: () => "Checking every file against the published build.",
+  installing: () => "Opening the course.",
+  failed: () => "The course copy stopped and will retry on its own. The agent tools work meanwhile.",
+};
+async function refreshCourse() {
+  let status = { stage: "starting", done: 0, total: 0 };
+  try {
+    const response = await fetch("/dli/setup-status.json", { cache: "no-store" });
+    if (response.ok) status = await response.json();
+  } catch (_) {}
+  ready.course = status.stage === "ready";
+  progress.hidden = ready.course;
+  for (const link of document.querySelectorAll("[data-course-link]")) {
+    if (ready.course) link.removeAttribute("aria-disabled");
+    else link.setAttribute("aria-disabled", "true");
+  }
+  if (!ready.course) {
+    progressText.textContent = (STAGES[status.stage] || STAGES.starting)(status);
+    const share = status.total ? Math.min(1, status.done / status.total) : 0;
+    progressBar.style.width = `${Math.round((status.stage === "downloading" ? share : status.stage === "starting" ? 0 : 1) * 100)}%`;
+  }
+}
+
+async function poll() {
+  await Promise.all([ready.agent || refreshAgent(), ready.course || refreshCourse()]);
+  waiting.hidden = ready.agent && ready.course;
+  if (!(ready.agent && ready.course)) setTimeout(poll, 3000);
+}
+
+// Terminals: the image's /ws/terminal session server, drawn with the image's own xterm.js build,
+// which route.sh serves from /dli/brev-terminal/. The commands match the dashboard's buttons.
+const TERMINAL_ASSETS = "/dli/brev-terminal/";
+const TERMINALS = {
+  tui: { title: "OpenShell TUI", command: () => "openshell term" },
+  vm: { title: "VM terminal", command: () => "bash" },
+  sandbox: { title: "Sandbox terminal", command: () => sandbox && `openshell sandbox exec --tty --name ${sandbox} -- /bin/bash` },
+};
+const panel = document.getElementById("term");
+const screen = document.getElementById("term-screen");
+const termTitle = document.getElementById("term-title");
+const termState = document.getElementById("term-state");
+const term = { view: null, fit: null, socket: null, kind: "", ping: 0 };
+let xterm = null;
+
+function loadXterm() {
+  const script = name => new Promise((resolve, reject) => {
+    const node = document.createElement("script");
+    node.src = TERMINAL_ASSETS + name;
+    node.onload = resolve;
+    node.onerror = () => reject(new Error(`could not load ${name}`));
+    document.head.append(node);
+  });
+  xterm ||= (async () => {
+    const style = document.createElement("link");
+    style.rel = "stylesheet";
+    style.href = TERMINAL_ASSETS + "xterm.css";
+    document.head.append(style);
+    await script("xterm.js");
+    await script("addon-fit.js");
+    return { Terminal: window.Terminal, FitAddon: window.FitAddon.FitAddon };
+  })();
+  return xterm;
+}
+
+function send(message) {
+  if (term.socket?.readyState === WebSocket.OPEN) term.socket.send(JSON.stringify(message));
+}
+
+function resize() {
+  if (!term.view) return;
+  term.fit.fit();
+  send({ type: "resize", cols: term.view.cols, rows: term.view.rows });
+}
+
+// One panel holds one session; opening another terminal replaces it, and text queued for a
+// session is typed once its shell has printed its first output.
+function connect(kind, typed = "") {
+  const command = TERMINALS[kind].command();
+  if (!command) return;
+  term.socket?.close();
+  clearInterval(term.ping);
+  term.kind = kind;
+  term.view.reset();
+  termTitle.textContent = TERMINALS[kind].title;
+  termState.textContent = "Connecting.";
+  const url = new URL("/ws/terminal", location.href);
+  url.protocol = location.protocol === "https:" ? "wss:" : "ws:";
+  url.searchParams.set("cmd", command);
+  const socket = term.socket = new WebSocket(url);
+  let pending = typed;
+  socket.onopen = () => {
+    termState.textContent = "Connected.";
+    resize();
+    term.ping = setInterval(() => send({ type: "ping" }), 25000);
+    term.view.focus();
+  };
+  socket.onmessage = event => {
+    let message;
+    try { message = JSON.parse(event.data); } catch (_) { return; }
+    if (message.type === "output") {
+      term.view.write(message.data);
+      if (pending) {
+        const text = pending;
+        pending = "";
+        setTimeout(() => send({ type: "input", data: text }), 300);
+      }
+    } else if (message.type === "exit") {
+      termState.textContent = `Exited with code ${message.code}. Reconnect to start it again.`;
+    }
+  };
+  socket.onclose = () => {
+    clearInterval(term.ping);
+    if (term.socket === socket && !termState.textContent.startsWith("Exited")) termState.textContent = "Disconnected.";
+  };
+}
+
+async function openTerminal(kind, typed = "") {
+  panel.hidden = false;
+  let lib;
+  try { lib = await loadXterm(); } catch (_) {
+    panel.hidden = true;
+    window.open("/dashboard", "_blank", "noopener");
+    return;
+  }
+  if (!term.view) {
+    term.view = new lib.Terminal({ cursorBlink: !matchMedia("(prefers-reduced-motion: reduce)").matches, fontSize: 13,
+      fontFamily: getComputedStyle(document.body).getPropertyValue("--mono") || "monospace",
+      theme: { background: "#111417" } });
+    term.fit = new lib.FitAddon();
+    term.view.loadAddon(term.fit);
+    term.view.open(screen);
+    term.view.onData(data => send({ type: "input", data }));
+    new ResizeObserver(resize).observe(screen);
+  }
+  if (term.kind === kind && term.socket?.readyState === WebSocket.OPEN) {
+    if (typed) send({ type: "input", data: typed });
+    term.view.focus();
+  } else {
+    connect(kind, typed);
+  }
+  panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+// A command is pasted with Enter only when nothing in it is left to fill in.
+function runCommand(text) {
+  const command = sandbox ? text.replaceAll("<name>", sandbox) : text;
+  openTerminal("vm", /<[a-z-]+>/.test(command) ? command : command + "\r");
+}
+
+async function enableTerminals() {
+  const probe = await fetch(TERMINAL_ASSETS + "xterm.js", { method: "HEAD", cache: "no-store" }).catch(() => null);
+  terminalsReady = Boolean(probe?.ok);
+  for (const button of document.querySelectorAll("[data-terminal]")) {
+    button.disabled = button.dataset.terminal === "sandbox" && !sandbox;
+    button.onclick = () => terminalsReady ? openTerminal(button.dataset.terminal) : window.open("/dashboard", "_blank", "noopener");
+  }
+  if (!terminalsReady) return;
+  for (const code of document.querySelectorAll(".reference dt code")) {
+    const run = document.createElement("button");
+    run.type = "button";
+    run.className = "run";
+    run.textContent = "Run";
+    run.setAttribute("aria-label", `Run ${code.textContent} in the VM terminal`);
+    run.onclick = () => runCommand(code.textContent);
+    code.after(run);
+  }
+}
+
+document.getElementById("term-reconnect").onclick = () => term.kind && connect(term.kind);
+document.getElementById("term-close").onclick = () => {
+  term.socket?.close();
+  clearInterval(term.ping);
+  term.kind = "";
+  panel.hidden = true;
+};
+
+if (served) {
+  enableTerminals();
+  poll();
+} else {
+  showAgent("off", "Open this page from your NemoClaw launchable at /dli/ to reach its agent.");
+}
 </script>
 </body>
 </html>
