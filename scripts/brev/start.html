@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Start here · Securing Agents with OpenShell and NemoClaw</title>
+<link rel="icon" href="/dli/favicon.ico"/>
+<style>
+:root{color-scheme:light dark;--green:#76b900;--ink:#1d1d1d;--muted:#5c5c5c;--page:#fafafa;--card:#fff;--line:#e3e3e3;--code:#f1f3ee}
+@media (prefers-color-scheme:dark){:root{--ink:#ececec;--muted:#a6a6a6;--page:#111;--card:#1a1a1a;--line:#2c2c2c;--code:#202417}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{margin:0;background:var(--page);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:68rem;margin:0 auto;padding:2.5rem 16px 3rem}
+h1{margin:0 0 .4rem;font-size:clamp(1.6rem,4vw,2.2rem);line-height:1.2}
+h1 span{color:var(--green)}
+h2{margin:2.2rem 0 .8rem;font-size:1.2rem}
+p{margin:.3rem 0;color:var(--muted)}
+a{color:var(--green)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(15rem,100%),1fr));gap:14px}
+.card{display:block;padding:1.1rem 1.2rem;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);text-decoration:none}
+.card:hover{border-color:var(--green)}
+.card b{display:block;margin-bottom:.25rem;font-size:1.05rem}
+.card span{color:var(--muted);font-size:.93rem}
+.card.primary{border-left:4px solid var(--green)}
+.card[aria-disabled="true"]{opacity:.5;cursor:not-allowed}
+.status{margin:.6rem 0 1rem;padding:.7rem .9rem;border-left:3px solid var(--green);background:var(--card);border-radius:6px}
+form{display:flex;flex-wrap:wrap;gap:8px;margin:.4rem 0 1rem}
+input{flex:1 1 20rem;min-width:0;padding:.55rem .7rem;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit}
+button{padding:.55rem 1rem;border:0;border-radius:8px;background:var(--green);color:#111;font:inherit;font-weight:600;cursor:pointer}
+.error{color:#d14343}
+.reference{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(26rem,100%),1fr));gap:14px}
+.reference section{padding:1rem 1.2rem;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.reference h3{margin:0 0 .5rem;font-size:1rem}
+dl{margin:0}
+dt{margin-top:.55rem}
+dt code{display:inline-block;max-width:100%;overflow-wrap:anywhere;padding:.15rem .4rem;border-radius:5px;background:var(--code);font:.88rem/1.4 ui-monospace,Consolas,monospace}
+dd{margin:.15rem 0 0;color:var(--muted);font-size:.92rem}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+<main>
+  <h1>Securing Agents with <span>OpenShell</span> and <span>NemoClaw</span></h1>
+  <p>Start the course here, then open your NemoClaw launchable to run, inspect, and reconfigure the agent the lessons talk to.</p>
+
+  <h2>Course</h2>
+  <div class="cards">
+    <a class="card primary" href="/dli/nemoclaw/?iframe_proxy=1"><b>Open the course</b><span>Four modules, from a first agent loop to OpenShell policy. Each lesson has editable exercises.</span></a>
+    <a class="card" href="/dli/nemoclaw/03a-kickstart.html?iframe_proxy=1"><b>Connect your launchable</b><span>Module 3a saves your launchable address and gateway token for the lessons that drive a live agent.</span></a>
+    <a class="card" href="/dli/nemoclaw/04a-safety.html?iframe_proxy=1"><b>OpenShell policy lesson</b><span>Module 4a explains what the sandbox allows and how network rules are approved.</span></a>
+  </div>
+
+  <h2>Your NemoClaw launchable</h2>
+  <p id="launchable-status" class="status" role="status" aria-live="polite">Checking for a saved launchable.</p>
+  <form id="launchable-form" hidden>
+    <label for="launchable-url" class="visually-hidden">NemoClaw launchable address</label>
+    <input id="launchable-url" type="url" inputmode="url" autocomplete="url" placeholder="https://nemoclaw-<id>.brevlab.com" required/>
+    <button type="submit">Use this launchable</button>
+    <p id="launchable-error" class="error" role="alert"></p>
+  </form>
+  <div class="cards">
+    <a class="card" data-launchable-path="/onboard" target="_blank" rel="noopener"><b>Choose an agent</b><span>Set up OpenClaw, Hermes, or LangChain Deep Agents Code, and pick its model provider.</span></a>
+    <a class="card" data-launchable-path="/agent" target="_blank" rel="noopener"><b>Chat with your agent</b><span>Opens the selected agent's own dashboard.</span></a>
+    <a class="card" data-launchable-path="/dashboard" target="_blank" rel="noopener"><b>Dashboard and terminals</b><span>Agent health, logs, and security events. Its buttons open the OpenShell TUI, a sandbox terminal, and a VM terminal.</span></a>
+    <a class="card" id="launch-new" href="https://brev.nvidia.com/launchable/deploy/now?launchableID=env-3Azt0aYgVNFEuz7opyx3gscmowS&amp;ncid=ref-dli-759990" target="_blank" rel="noopener"><b>Launch NemoClaw on Brev</b><span>Start a launchable if you do not have one yet. Keep it running for Modules 3 and 4.</span></a>
+  </div>
+
+  <h2>Quick reference</h2>
+  <p>Run these in the dashboard's VM terminal. Replace <code>&lt;name&gt;</code> with your sandbox name from <code>nemoclaw list</code>.</p>
+  <div class="reference">
+    <section aria-labelledby="ref-inspect"><h3 id="ref-inspect">Inspect</h3><dl>
+      <dt><code>nemoclaw list</code></dt><dd>Sandboxes on this launchable and the agent in each.</dd>
+      <dt><code>nemoclaw &lt;name&gt; status</code></dt><dd>Health of one sandbox, its gateway, and its inference route.</dd>
+      <dt><code>nemoclaw &lt;name&gt; logs --follow</code></dt><dd>Stream the sandbox log while you run an exercise.</dd>
+      <dt><code>nemoclaw &lt;name&gt; connect</code></dt><dd>Open a shell inside the sandbox to see what the agent sees.</dd>
+    </dl></section>
+    <section aria-labelledby="ref-policy"><h3 id="ref-policy">Network policy</h3><dl>
+      <dt><code>openshell term</code></dt><dd>Watch the sandbox live. Run an exercise again and inspect the request that policy blocked.</dd>
+      <dt><code>nemoclaw &lt;name&gt; policy list</code></dt><dd>The sandbox's current policy, including the presets it uses.</dd>
+      <dt><code>nemoclaw &lt;name&gt; policy add &lt;preset&gt; --dry-run</code></dt><dd>Preview a preset's endpoints. Drop <code>--dry-run</code> to apply it.</dd>
+      <dt><code>nemoclaw &lt;name&gt; policy remove &lt;channel&gt;</code></dt><dd>Withdraw access you added.</dd>
+    </dl></section>
+    <section aria-labelledby="ref-models"><h3 id="ref-models">Models</h3><dl>
+      <dt><code>nemoclaw inference get</code></dt><dd>The provider and model the agent uses now.</dd>
+      <dt><code>nemoclaw inference set --provider &lt;provider&gt; --model &lt;model&gt;</code></dt><dd>Switch the agent's model. NemoClaw tests the route from the sandbox before it commits the change.</dd>
+    </dl></section>
+    <section aria-labelledby="ref-recover"><h3 id="ref-recover">Recover</h3><dl>
+      <dt><code>nemoclaw &lt;name&gt; doctor</code></dt><dd>Diagnose a sandbox that stopped answering.</dd>
+      <dt><code>nemoclaw &lt;name&gt; gateway restart</code></dt><dd>Restart the agent gateway after a configuration change.</dd>
+      <dt><code>nemoclaw &lt;name&gt; recover</code></dt><dd>Re-run the sandbox readiness checks and restore its dashboard forward.</dd>
+    </dl></section>
+  </div>
+</main>
+<script type="module">
+// The launchable address comes from the course's own connection module: the page's origin when
+// this page is served by a NemoClaw launchable, otherwise the address saved in Module 3a.
+import { getOpenClawConnection, setOpenClawConnection, isOpenClawLaunchableHost } from "/dli/nemoclaw/scripts/_connection.js";
+
+const own = isOpenClawLaunchableHost(location.hostname) ? location.origin : "";
+const status = document.getElementById("launchable-status");
+const form = document.getElementById("launchable-form");
+const input = document.getElementById("launchable-url");
+const error = document.getElementById("launchable-error");
+
+function render() {
+  const base = own || getOpenClawConnection().rawUrl;
+  for (const link of document.querySelectorAll("[data-launchable-path]")) {
+    if (base) {
+      link.href = base + link.dataset.launchablePath;
+      link.removeAttribute("aria-disabled");
+    } else {
+      link.removeAttribute("href");
+      link.setAttribute("aria-disabled", "true");
+    }
+  }
+  document.getElementById("launch-new").hidden = Boolean(base);
+  form.hidden = Boolean(own);
+  if (own) status.textContent = "This page is served by your NemoClaw launchable, so the links below open its own tools.";
+  else if (base) status.textContent = "Using the launchable saved by the course: " + base + ". Enter another address to change it.";
+  else status.textContent = "No launchable saved yet. Enter its NemoClaw App address, or connect it in Module 3a.";
+  if (base && !own) input.value = base;
+}
+
+form.addEventListener("submit", event => {
+  event.preventDefault();
+  error.textContent = "";
+  try { setOpenClawConnection({ rawUrl: input.value }); }
+  catch (failure) { error.textContent = failure.message; }
+  render();
+});
+render();
+</script>
+</body>
+</html>

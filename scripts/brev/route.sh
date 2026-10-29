@@ -95,6 +95,7 @@ install_course() {
   [ -n "$source" ] || fail "usage: route.sh install SITE (a built Pages directory or tar archive)"
   [ -e "$source" ] || fail "site is unavailable: $source"
   [ -f "$HERE/dli-location.conf" ] || fail "missing $HERE/dli-location.conf"
+  [ -f "$HERE/start.html" ] || fail "missing $HERE/start.html"
   grep -qxF "$ANCHOR" "$SITE" || fail "launchable site has no agent-routes include to anchor on"
 
   # Stage a complete release before touching nginx.
@@ -112,6 +113,10 @@ install_course() {
     rm -rf "$release"
     fail "not a built Pages site (needs nemoclaw/index.html and languages.json): $source"
   fi
+
+  # The starter page answers /dli/ beside the site.
+  install -m 644 "$HERE/start.html" "$STATE/site/.start.html.next"
+  mv -f "$STATE/site/.start.html.next" "$STATE/site/start.html"
 
   backup_nginx
   install -m 644 "$HERE/dli-location.conf" "$INCLUDE"

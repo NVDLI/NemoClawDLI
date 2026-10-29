@@ -43,8 +43,8 @@
     {
       "path": "dli-location.conf",
       "role": "shared /dli/ route",
-      "desc": "The single route both Brev shapes include. It serves the built site read-only, opts the Brev origin into the course model relay at the entry URL, and refuses framing by other sites.",
-      "bytes": 2102
+      "desc": "The single route both Brev shapes include. It serves the starter page at /dli/ and the built site read-only beneath it, and refuses framing by other sites.",
+      "bytes": 2388
     },
     {
       "path": "provider.sh",
@@ -53,30 +53,45 @@
       "bytes": 3091
     },
     {
+      "path": "start.html",
+      "role": "starter page",
+      "desc": "The /dli/ landing page: the course, the launchable's agent setup, chat, and dashboard terminals, and a quick reference for inspecting and reconfiguring NemoClaw and OpenShell. It reads the launchable address through the course's connection module.",
+      "bytes": 9269
+    },
+    {
       "path": "route.sh",
       "role": "same-origin route installer",
       "desc": "Installs a built site and the shared route into a NemoClaw launchable's nginx, validates with nginx -t, reloads, and restores the previous configuration on failure.",
-      "bytes": 6000
+      "bytes": 6247
     }
   ],
   "tour": [
     {
-      "title": "Entry URL selects the course relay",
+      "title": "Starter page at the entry URL",
       "file": "dli-location.conf",
       "lines": [
         9,
-        20
+        26
       ],
-      "note": "integrate.api.nvidia.com sends no CORS headers to a Brev origin, so the entry URL sets the course's existing iframe_proxy opt-in once for that origin."
+      "note": "/dli/ serves start.html. integrate.api.nvidia.com sends no CORS headers to a Brev origin, so the page's course links set the course's existing iframe_proxy opt-in."
     },
     {
       "title": "Framing boundary on a shared origin",
       "file": "dli-location.conf",
       "lines": [
-        42,
-        46
+        48,
+        52
       ],
       "note": "On a NemoClaw launchable the course shares an origin with the host terminal route, so other sites may not frame course pages."
+    },
+    {
+      "title": "One source for the launchable address",
+      "file": "start.html",
+      "lines": [
+        96,
+        133
+      ],
+      "note": "The page imports the course's connection module instead of reading its storage keys, so the address matches what Module 3a saved."
     },
     {
       "title": "Validated include with rollback",
@@ -137,6 +152,7 @@
   </div>
   <h2>Linkage map</h2>
   <div class="skill-list">
+    <a class="skill-link" href="start.html"><b>start.html</b><span>The /dli/ starter page with agent links and a command reference.</span></a>
     <a class="skill-link" href="dli-location.conf"><b>dli-location.conf</b><span>The shared /dli/ route, headers, and entry redirect.</span></a>
     <a class="skill-link" href="compose-server.conf"><b>compose-server.conf</b><span>The Compose service's server block around the shared route.</span></a>
     <a class="skill-link" href="route.sh"><b>route.sh</b><span>Same-origin install, status, and removal on a NemoClaw launchable.</span></a>
