@@ -667,8 +667,8 @@ function traceEvent(message) {
   const detail = rest.replace(/\s*\[[a-z]+:[^\]]*\]/g, "").trim();
   let what = detail;
   if (kind === "NET:OPEN") {
-    const net = /^(\S+?)(?:\(\d+\))? -> (\S+)$/.exec(detail);
-    if (net) what = `${net[1].split("/").pop()} → ${net[2]}`;
+    const net = /^(\S+?)(?:\(\d+\))? -> (.+)$/.exec(detail);
+    if (net) what = `${net[1].split("/").pop()} → ${net[2].replace(/https?:\/\/([^\s/:]+)(?::\d+)?/, "$1")}`;
   } else {
     const http = /^([A-Z]+) https?:\/\/([^\s/:]+)(?::\d+)?(\/\S*)?$/.exec(detail);
     if (http) what = `${http[1]} ${http[2]}${http[3] || "/"}`;
