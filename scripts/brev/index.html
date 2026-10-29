@@ -84,6 +84,14 @@
   .reference dt code { display: inline-block; max-width: 100%; overflow-wrap: anywhere; font-family: var(--mono);
                        font-size: .86rem; padding: 2px 7px; border-radius: 5px; background: var(--e2); color: var(--gs); }
   .reference dd { color: var(--td); font-size: .92rem; margin-top: .2em; }
+  .guide { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr)); gap: 14px; }
+  .guide section { display: flex; flex-direction: column; gap: .55em; padding: 16px 20px; background: var(--e1);
+                   border: 1px solid var(--e3); border-radius: 10px; }
+  .guide h3 { margin: 0; font-size: 1rem; }
+  .guide p { color: var(--td); font-size: .93rem; flex: 1; }
+  .guide b { color: var(--tx); font-weight: 600; }
+  .guide summary { cursor: pointer; font-size: .88rem; color: var(--gs); }
+  .guide img { display: block; width: 100%; height: auto; margin-top: .6em; border: 1px solid var(--e3); border-radius: 8px; }
 
   :root[data-theme="light"] .step .n,
   :root[data-theme="light"] .btn.primary { color: #fff; }
@@ -149,6 +157,34 @@
         <a class="btn secondary" href="#terminals">Terminals</a>
       </div>
     </section>
+  </div>
+
+  <div class="section" id="guide">
+    <h2>Use the course with NemoClaw</h2>
+    <p class="help">The course and NemoClaw share this launchable, so the course reaches your agent without a URL or access session to paste.</p>
+    <div class="guide">
+      <section aria-labelledby="guide-connect">
+        <h3 id="guide-connect">Connect the course to the agent</h3>
+        <p>In Module 3a, select <b>Test connection</b>. The address is already filled in, and four checks confirm the agent, its gateway, its terminal, and its health.</p>
+        <div class="actions"><a class="btn primary" data-course-link href="../../web/nemoclaw/03a-kickstart.html?iframe_proxy=1">Open Module 3a</a></div>
+        <details><summary>What it looks like</summary><a href="guide-connect.webp" target="_blank" rel="noopener" title="Open full size"><img src="guide-connect.webp" width="960" height="261" loading="lazy" alt="Module 3a's Connect NemoClaw form with this launchable's address filled in and every check passed"/></a></details>
+      </section>
+      <section aria-labelledby="guide-chat">
+        <h3 id="guide-chat">Chat with the agent</h3>
+        <p>In Module 3b, ask the agent a question. The course sends it to OpenClaw through the gateway and shows each tool the agent calls.</p>
+        <div class="actions"><a class="btn primary" data-course-link href="../../web/nemoclaw/03b-openclaw.html?iframe_proxy=1">Open Module 3b</a></div>
+        <details><summary>What it looks like</summary><a href="guide-chat.webp" target="_blank" rel="noopener" title="Open full size"><img src="guide-chat.webp" width="960" height="465" loading="lazy" alt="Module 3b's chat with an answer from the OpenClaw agent on this launchable"/></a></details>
+      </section>
+      <section aria-labelledby="guide-watch">
+        <h3 id="guide-watch">Watch the agent in NemoClaw</h3>
+        <p>Open the dashboard for the agent's health, chat, and terminals. The OpenShell TUI below shows the requests that policy blocked.</p>
+        <div class="actions">
+          <a class="btn primary" data-launchable-path="/dashboard" aria-disabled="true" target="_blank" rel="noopener">Open the dashboard</a>
+          <a class="btn secondary" href="#terminals">Terminals</a>
+        </div>
+        <details><summary>What it looks like</summary><a href="guide-dashboard.webp" target="_blank" rel="noopener" title="Open full size"><img src="guide-dashboard.webp" width="960" height="334" loading="lazy" alt="The NemoClaw dashboard with the running agent and its chat and terminal buttons"/></a></details>
+      </section>
+    </div>
   </div>
 
   <div class="section" id="terminals">

@@ -25,6 +25,8 @@ readonly RUNTIME_ROOT="${NEMOCLAW_DLI_RUNTIME_ROOT:-/opt/nemoclaw-image}"
 readonly INCLUDE="${NEMOCLAW_DLI_NGINX_INCLUDE:-/etc/nginx/nemoclaw-dli-location.inc}"
 readonly STATE="${NEMOCLAW_DLI_STATE:-/var/lib/nemoclaw-dli}"
 readonly LINE="    include $INCLUDE;"
+readonly COURSE_PORT="${NEMOCLAW_DLI_COURSE_PORT:-8090}"
+readonly COURSE_SERVER="${NEMOCLAW_DLI_COURSE_SERVER:-/etc/nginx/conf.d/nemoclaw-dli-course.conf}"
 SITE=""
 
 fail() {
@@ -151,6 +153,10 @@ install_course() {
     rm -rf "$release"
     fail "not a built Pages site (needs nemoclaw/index.html and languages.json): $source"
   fi
+  # The starter page's guide screenshots sit beside it at /dli/.
+  for image in "$HERE"/guide-*.webp; do
+    if [ -f "$image" ]; then install -m 644 "$image" "$release/"; fi
+  done
 
   # The starter page (index.html) answers /dli/ as start.html beside the site. Its links name the
   # course by repository path (../../web/nemoclaw/), which the link checks verify; at the site root
@@ -234,9 +240,42 @@ HTML
   mv -T "$STATE/site/.dli.next" "$STATE/site/dli"
   find "$STATE/releases" -mindepth 1 -maxdepth 1 -type d ! -path "$release" -exec rm -rf {} +
   await_health live
+  install_course_port
 
   echo "nemoclaw-dli route: serving $source at /dli/"
   status
+}
+
+# The course port: a second server for a Brev Secure Link named "course", from course-port.conf.
+# Every address on it sends the browser to the start page on the nemoclaw link. It is optional:
+# without course-port.conf, with the port taken, or if nginx refuses it, /dli/ is unaffected.
+install_course_port() {
+  local previous="" answered=""
+  [ -f "$HERE/course-port.conf" ] || return 0
+  if [ ! -f "$COURSE_SERVER" ] && command -v ss >/dev/null 2>&1 \
+      && [ -n "$(ss -Hltn "sport = :$COURSE_PORT" 2>/dev/null)" ]; then
+    echo "nemoclaw-dli route: port $COURSE_PORT is in use; the course port is off"
+    return 0
+  fi
+  if [ -f "$COURSE_SERVER" ]; then previous="$backup_dir/course-server"; cp -p "$COURSE_SERVER" "$previous"; fi
+  sed "s/@PORT@/$COURSE_PORT/g" "$HERE/course-port.conf" > "$backup_dir/course-server.next"
+  install -d -m 755 "$(dirname "$COURSE_SERVER")"
+  install -m 644 "$backup_dir/course-server.next" "$COURSE_SERVER"
+  if nginx -t >/dev/null 2>&1 && systemctl reload nginx; then
+    if ! command -v curl >/dev/null 2>&1; then answered=1; fi
+    for _ in $(seq 1 50); do
+      [ -z "$answered" ] || break
+      [ "$(curl -sS -m 2 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$COURSE_PORT/" 2>/dev/null || true)" = 200 ] && answered=1
+      sleep 0.2
+    done
+  fi
+  if [ -n "$answered" ]; then
+    echo "nemoclaw-dli route: port $COURSE_PORT sends browsers to /dli/ on the nemoclaw link"
+    return 0
+  fi
+  if [ -n "$previous" ]; then install -m 644 "$previous" "$COURSE_SERVER"; else rm -f "$COURSE_SERVER"; fi
+  { nginx -t && systemctl reload nginx; } >/dev/null 2>&1 || true
+  echo "nemoclaw-dli route: port $COURSE_PORT could not be served; the course port is off"
 }
 
 uninstall_course() {
@@ -245,7 +284,7 @@ uninstall_course() {
     include_lines drop > "$backup_dir/site.edited"
     install -m 644 "$backup_dir/site.edited" "$SITE"
   fi
-  rm -f "$INCLUDE"
+  rm -f "$INCLUDE" "$COURSE_SERVER"
   apply_nginx_change
   await_health gone
   rm -rf "$STATE"
@@ -263,6 +302,7 @@ status() {
   if command -v curl >/dev/null 2>&1; then
     echo "health: $(curl -sS -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1/dli/healthz || echo unreachable)"
   fi
+  if [ -f "$COURSE_SERVER" ]; then echo "course port: $COURSE_PORT"; else echo "course port: off"; fi
   echo "open: https://<your nemoclaw Secure Link>/dli/"
 }
 
