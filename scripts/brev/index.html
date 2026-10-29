@@ -253,7 +253,11 @@ let onboarding = false;
 
 // One NVIDIA API key serves both sides: the course keeps it for this tab through its own helpers,
 // and NemoClaw's onboarding API, the same one its wizard calls, starts OpenClaw with it.
-const course = served ? await import("../../web/nemoclaw/scripts/_shared.js").catch(() => null) : null;
+// The course's helpers load in the background, so the rest of the page is live at once on a slow link.
+let course = null;
+const courseReady = served
+  ? import("../../web/nemoclaw/scripts/_shared.js").then(module => (course = module)).catch(() => null)
+  : Promise.resolve(null);
 const keyForm = document.getElementById("key-form");
 const keyInput = document.getElementById("key-input");
 const keySubmit = document.getElementById("key-submit");
@@ -580,6 +584,7 @@ document.getElementById("term-close").onclick = () => {
 async function startFromSavedKey() {
   await refreshAgent();
   if (agentExists) return;
+  await courseReady;
   const saved = course?.getKey();
   let started = false;
   try { started = sessionStorage.getItem("nemoclaw_dli_autostart") === "1"; } catch (_) {}
@@ -591,6 +596,7 @@ async function startFromSavedKey() {
 if (served) {
   enableTerminals();
   updateKeyStep();
+  courseReady.then(updateKeyStep);
   startFromSavedKey();
   poll();
 } else {
