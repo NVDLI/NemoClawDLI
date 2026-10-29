@@ -42,6 +42,14 @@
   .step h2 { margin: 0; font-size: 1.08rem; }
   .step p { color: var(--td); font-size: .93rem; flex: 1; }
   .step p.more { flex: none; font-size: .88rem; }
+  .key-form { display: flex; flex-wrap: wrap; gap: 8px; }
+  .key-form input { flex: 1 1 12rem; min-width: 0; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--e3);
+                    background: var(--bg); color: var(--tx); font: inherit; font-size: .9rem; }
+  .key-form input:focus-visible { outline: 2px solid var(--g); outline-offset: 1px; }
+  .key-note { flex: none; font-size: .85rem; }
+  .key-error { flex: none; font-size: .88rem; color: var(--err); }
+  :root[data-theme="light"] .key-error { color: #b42318; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .step .progress { flex: none; font-size: .88rem; color: var(--tx); }
   .bar { height: 6px; margin-top: .45em; border-radius: 999px; background: var(--e3); overflow: hidden; }
   .bar span { display: block; height: 100%; width: 0; background: var(--g); transition: width .4s ease; }
@@ -98,7 +106,7 @@
   <div class="waiting" id="waiting" hidden>
     <h2>While it sets up</h2>
     <ul>
-      <li><b>Set up OpenClaw now.</b> NemoClaw has it ready in a minute or two, and that runs while the course copies.</li>
+      <li><b>Start OpenClaw now.</b> Paste your key in step 1, and NemoClaw builds the agent while the course copies.</li>
       <li><b>Look at the gateway.</b> Open the VM terminal below and run <code>openshell status</code>. Once your agent exists, <code>nemoclaw list</code> shows its sandbox.</li>
       <li><b>Skim the plan.</b> Modules 1 and 2 build an agent loop in your browser, Module 3 drives the agent on this launchable, and Module 4 covers what OpenShell allows and how you change it.</li>
     </ul>
@@ -106,11 +114,18 @@
 
   <div class="steps">
     <section class="step" aria-labelledby="step-agent">
-      <div class="step-head"><span class="n">1</span><h2 id="step-agent">Set up OpenClaw</h2></div>
-      <p>Onboarding opens with OpenClaw selected. Pick its model provider, and NemoClaw has its sandbox ready in a minute or two. Module 3 drives this agent.</p>
+      <div class="step-head"><span class="n">1</span><h2 id="step-agent">Start OpenClaw</h2></div>
+      <p id="key-intro">Paste your NVIDIA API key once. The course's exercises use it, and NemoClaw starts OpenClaw with it on NVIDIA's hosted Nemotron model, ready in a minute or two.</p>
+      <form class="key-form" id="key-form">
+        <label class="visually-hidden" for="key-input">NVIDIA API key</label>
+        <input id="key-input" type="password" autocomplete="off" spellcheck="false" placeholder="nvapi-..." required disabled/>
+        <button type="submit" class="btn primary" id="key-submit" disabled>Start OpenClaw</button>
+      </form>
+      <p class="key-error" id="key-error" role="alert" hidden></p>
+      <p class="key-note" id="key-note"><a href="https://build.nvidia.com/settings/api-keys?ncid=ref-dli-146986" target="_blank" rel="noopener">Get a key at build.nvidia.com</a>. It stays in this browser tab and in NemoClaw on this launchable.</p>
       <p class="more" id="more-agents" hidden>Hermes Agent and LangChain Deep Agents Code are in onboarding too, when you want to compare agents.</p>
       <div class="actions">
-        <a class="btn primary" data-launchable-path="/onboard" aria-disabled="true">Set up OpenClaw</a>
+        <a class="btn secondary" data-launchable-path="/onboard" aria-disabled="true">Other providers</a>
         <a class="btn secondary" data-launchable-path="/agent" data-needs-agent aria-disabled="true" target="_blank" rel="noopener">Open chat</a>
       </div>
     </section>
@@ -197,6 +212,108 @@ const progressBar = document.getElementById("course-progress-bar");
 const ready = { agent: false, course: false };
 let sandbox = "";
 let terminalsReady = false;
+let agentExists = false;
+let onboarding = false;
+
+// One NVIDIA API key serves both sides: the course keeps it for this tab through its own helpers,
+// and NemoClaw's onboarding API, the same one its wizard calls, starts OpenClaw with it.
+const course = served ? await import("../../web/nemoclaw/scripts/_shared.js").catch(() => null) : null;
+const keyForm = document.getElementById("key-form");
+const keyInput = document.getElementById("key-input");
+const keySubmit = document.getElementById("key-submit");
+const keyIntro = document.getElementById("key-intro");
+const keyNote = document.getElementById("key-note");
+const keyError = document.getElementById("key-error");
+const INTRO = keyIntro.textContent;
+let events = null;
+
+function showKeyError(text) {
+  keyError.textContent = text;
+  keyError.hidden = !text;
+}
+
+function updateKeyStep() {
+  if (!served || !course) return;
+  keyInput.disabled = keySubmit.disabled = false;
+  const hasCourseKey = Boolean(course.getKey());
+  keyForm.hidden = onboarding || (agentExists && hasCourseKey);
+  keyNote.hidden = keyForm.hidden;
+  if (onboarding) keyIntro.textContent = "NemoClaw is starting OpenClaw with your key. Its progress shows at the top of the page.";
+  else if (agentExists && hasCourseKey) keyIntro.textContent = "Your key is set for the course, and OpenClaw runs on this launchable. Module 3 drives it.";
+  else if (agentExists) keyIntro.textContent = "OpenClaw is set up. Paste the same NVIDIA API key once more so the course's own exercises can use it too.";
+  else keyIntro.textContent = INTRO;
+  keySubmit.textContent = agentExists ? "Use in the course" : "Start OpenClaw";
+}
+
+// NemoClaw streams its setup as step, progress, complete, and error events.
+function followOnboarding(startedHere) {
+  events?.close();
+  events = new EventSource("/api/onboard/status");
+  events.onmessage = message => {
+    let event;
+    try { event = JSON.parse(message.data); } catch (_) { return; }
+    if (event.type === "step") {
+      onboarding = true;
+      updateKeyStep();
+      showAgent("starting", `Starting OpenClaw: ${event.label}.`);
+    } else if (event.type === "complete") {
+      events.close();
+      onboarding = false;
+      refreshAgent();
+    } else if (event.type === "error") {
+      events.close();
+      if (!onboarding && !startedHere) return;
+      onboarding = false;
+      showKeyError(`NemoClaw could not start OpenClaw: ${event.message}`);
+      updateKeyStep();
+      refreshAgent();
+    }
+  };
+  events.onerror = () => events.close();
+}
+
+async function startOpenClaw(key) {
+  onboarding = true;
+  showKeyError("");
+  updateKeyStep();
+  showAgent("starting", "Starting OpenClaw. NemoClaw is checking the key.");
+  try {
+    const response = await fetch("/api/onboard", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ agent: "openclaw", provider: "cloud", apiKey: key, intent: "fresh" }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (response.ok || (response.status === 409 && /in progress/i.test(result.error || ""))) {
+      followOnboarding(true);
+      return;
+    }
+    onboarding = false;
+    if (!(response.status === 409 && /already exists/i.test(result.error || ""))) {
+      showKeyError(`NemoClaw could not start OpenClaw: ${result.error || `HTTP ${response.status}`}`);
+    }
+  } catch (_) {
+    onboarding = false;
+    showKeyError("NemoClaw did not answer. The launchable may still be starting; try again in a minute.");
+  }
+  updateKeyStep();
+  refreshAgent();
+}
+
+keyForm.addEventListener("submit", event => {
+  event.preventDefault();
+  const key = keyInput.value.trim();
+  keyInput.value = "";
+  if (!course) return;
+  if (!key.startsWith("nvapi-") || key.length < 12) {
+    showKeyError("NVIDIA API keys start with nvapi-. Copy the whole key from build.nvidia.com.");
+    return;
+  }
+  showKeyError("");
+  course.setKey(key);
+  if (agentExists) updateKeyStep();
+  else startOpenClaw(key);
+});
 
 // Chat opens the agent's own dashboard, which the image routes only once an agent runs.
 for (const link of document.querySelectorAll("[data-launchable-path]")) {
@@ -216,7 +333,12 @@ async function refreshAgent() {
     const response = await fetch("/api/agent", { cache: "no-store" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const { agent } = await response.json();
-    if (!agent) return showAgent("none", "No agent yet. Set up OpenClaw to start.");
+    agentExists = Boolean(agent);
+    updateKeyStep();
+    if (!agent) {
+      if (!onboarding) showAgent("none", "No agent yet. Paste your NVIDIA API key in step 1 to start OpenClaw.");
+      return;
+    }
     sandbox = agent.name;
     document.querySelector('[data-terminal="sandbox"]').disabled = false;
     const label = LABELS[agent.agent] || agent.agent || "The agent";
@@ -417,8 +539,23 @@ document.getElementById("term-close").onclick = () => {
   panel.hidden = true;
 };
 
+// A key already saved in a course page starts OpenClaw without asking again, once per tab. Without
+// an agent, the page also follows a setup started from NemoClaw's own onboarding wizard.
+async function startFromSavedKey() {
+  await refreshAgent();
+  if (agentExists) return;
+  const saved = course?.getKey();
+  let started = false;
+  try { started = sessionStorage.getItem("nemoclaw_dli_autostart") === "1"; } catch (_) {}
+  if (!saved || started) return followOnboarding(false);
+  try { sessionStorage.setItem("nemoclaw_dli_autostart", "1"); } catch (_) {}
+  startOpenClaw(saved);
+}
+
 if (served) {
   enableTerminals();
+  updateKeyStep();
+  startFromSavedKey();
   poll();
 } else {
   showAgent("off", "Open this page from your NemoClaw launchable at /dli/ to reach its agent.");

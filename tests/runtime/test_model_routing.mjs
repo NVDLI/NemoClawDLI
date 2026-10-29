@@ -457,7 +457,7 @@ test('only the former NVIDIA hosted embedding default migrates', () => {
   }
 });
 
-test('the model relay default covers only the exact published course origins and local files', () => {
+test('the model relay default covers only the exact published course origins, NemoClaw launchables, and local files', () => {
   const cases = [
     ['https://cdn.dli.learn.nvidia.com/course-static/nemoclaw/', true],
     ['https://nvdli.github.io/NemoClawDLI/nemoclaw/', true],
@@ -472,6 +472,13 @@ test('the model relay default covers only the exact published course origins and
     ['https://nvdli.github.io.example.invalid/NemoClawDLI/', false],
     ['http://localhost.example.invalid/nemoclaw/', false],
     ['https://example.com/', false],
+    ['https://nemoclaw-abc123.brevlab.com/dli/nemoclaw/', true],
+    ['https://nemoclaw-abc123.gobrev.dev/dli/nemoclaw/', true],
+    ['https://nemoclaw-abc123.apps.run.brev.nvidia.com/dli/nemoclaw/', true],
+    ['http://nemoclaw-abc123.brevlab.com/dli/nemoclaw/', false],
+    ['https://course-1-abc123.gobrev.dev/dli/nemoclaw/', false],
+    ['https://nemoclaw-abc123.brevlab.com.example.invalid/', false],
+    ['https://notnemoclaw-abc123.gobrev.dev/', false],
     ['data:text/html,course', false],
   ];
   for (const [location, expected] of cases) {
