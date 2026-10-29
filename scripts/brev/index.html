@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Start here · Securing Agents with OpenShell and NemoClaw</title>
-<link rel="icon" href="/dli/favicon.ico"/>
+<link rel="icon" href="../../web/nemoclaw/assets/favicon.ico"/>
 <style>
 :root{color-scheme:light dark;--green:#76b900;--ink:#1d1d1d;--muted:#5c5c5c;--page:#fafafa;--card:#fff;--line:#e3e3e3;--code:#f1f3ee}
 @media (prefers-color-scheme:dark){:root{--ink:#ececec;--muted:#a6a6a6;--page:#111;--card:#1a1a1a;--line:#2c2c2c;--code:#202417}}
@@ -47,9 +47,9 @@ dd{margin:.15rem 0 0;color:var(--muted);font-size:.92rem}
 
   <h2>Course</h2>
   <div class="cards">
-    <a class="card primary" href="/dli/nemoclaw/?iframe_proxy=1"><b>Open the course</b><span>Four modules, from a first agent loop to OpenShell policy. Each lesson has editable exercises.</span></a>
-    <a class="card" href="/dli/nemoclaw/03a-kickstart.html?iframe_proxy=1"><b>Connect your launchable</b><span>Module 3a saves your launchable address and gateway token for the lessons that drive a live agent.</span></a>
-    <a class="card" href="/dli/nemoclaw/04a-safety.html?iframe_proxy=1"><b>OpenShell policy lesson</b><span>Module 4a explains what the sandbox allows and how network rules are approved.</span></a>
+    <a class="card primary" href="../../web/nemoclaw/?iframe_proxy=1"><b>Open the course</b><span>Four modules, from a first agent loop to OpenShell policy. Each lesson has editable exercises.</span></a>
+    <a class="card" href="../../web/nemoclaw/03a-kickstart.html?iframe_proxy=1"><b>Connect your launchable</b><span>Module 3a saves your launchable address and gateway token for the lessons that drive a live agent.</span></a>
+    <a class="card" href="../../web/nemoclaw/04a-safety.html?iframe_proxy=1"><b>OpenShell policy lesson</b><span>Module 4a explains what the sandbox allows and how network rules are approved.</span></a>
   </div>
 
   <h2>Your NemoClaw launchable</h2>
@@ -96,7 +96,7 @@ dd{margin:.15rem 0 0;color:var(--muted);font-size:.92rem}
 <script type="module">
 // The launchable address comes from the course's own connection module: the page's origin when
 // this page is served by a NemoClaw launchable, otherwise the address saved in Module 3a.
-import { getOpenClawConnection, setOpenClawConnection, isOpenClawLaunchableHost } from "/dli/nemoclaw/scripts/_connection.js";
+import { getOpenClawConnection, setOpenClawConnection, isOpenClawLaunchableHost } from "../../web/nemoclaw/scripts/_connection.js";
 
 const own = isOpenClawLaunchableHost(location.hostname) ? location.origin : "";
 const status = document.getElementById("launchable-status");
