@@ -132,6 +132,31 @@ test('same-origin Skybridge stays direct, and unrelated hosts cannot claim its c
   assert.throws(() => connection.accessProviderForOpenClawUrl(launchable, 'cloudflare'), /does not match/);
 });
 
+test('a course hosted on a Brev link reads an unset launchable as unset, not as its own host', () => {
+  const previous = globalThis.location;
+  try {
+    for (const page of ['https://course-example.gobrev.dev/dli/nemoclaw/03a-kickstart.html',
+      'https://dli-example.brevlab.com/dli/nemoclaw/03a-kickstart.html',
+      'https://course-example.apps.run.brev.nvidia.com/dli/nemoclaw/', launchable + '/dli/nemoclaw/03a-kickstart.html']) {
+      globalThis.location = new URL(page);
+      connection.setOpenClawConnection({rawUrl:''});
+      for (const provider of ['auto', 'cloudflare', 'pomerium'])
+        assert.equal(connection.accessProviderForOpenClawUrl('', provider), provider, page);
+      assert.equal(connection.openclawAccessCookieName(''), '', page);
+      assert.equal(connection.openclawHttpUrl('', '/api/agent').url, '', page);
+      const state = connection.getOpenClawConnection();
+      assert.equal(state.rawUrl, '', page);
+      assert.equal(state.resolvedAccessProvider, 'auto', page);
+      // An entered launchable keeps its own provider and naming rule on these pages.
+      assert.equal(connection.accessProviderForOpenClawUrl(launchable), 'pomerium', page);
+      assert.throws(() => connection.accessProviderForOpenClawUrl('https://other.gobrev.dev'), /NemoClaw App URL/, page);
+    }
+  } finally {
+    globalThis.location = previous;
+    connection.setOpenClawConnection({rawUrl:''});
+  }
+});
+
 test('native empty-credential setup retains its device when metadata later supplies a token', () => {
   persistent.clear(); tab.clear();
   connection.setOpenClawConnection({rawUrl:launchable,accessProvider:'pomerium',accessSession:'',token:''});

@@ -83,8 +83,12 @@ export function accessProviderForOpenClawUrl(rawUrl, selected = "auto") {
   if (!["auto", "cloudflare", "pomerium"].includes(choice)) {
     throw new Error("Access provider must be Automatic, Cloudflare Access, or Pomerium");
   }
+  // An unset launchable is not this page. Resolving "" against the course's own URL would make a
+  // course hosted on a Brev link (course-<id>.gobrev.dev) look like a misnamed launchable.
+  const clean = normalizeOpenClawLaunchableUrl(rawUrl);
+  if (!clean) return choice;
   let host = "";
-  try { host = new URL(normalizeOpenClawLaunchableUrl(rawUrl), pageBase()).hostname; }
+  try { host = new URL(clean, pageBase()).hostname; }
   catch (_) { return choice; }
   if (isBrevLaunchableFamily(host) && !isOpenClawLaunchableHost(host)) {
     throw new Error("Use the NemoClaw App URL: https://nemoclaw-<id>.brevlab.com or https://nemoclaw-<id>.apps.run.brev.nvidia.com");
@@ -102,7 +106,8 @@ export function openclawAccessCookieName(rawUrl, accessProvider = "auto") {
   const provider = accessProviderForOpenClawUrl(rawUrl, accessProvider);
   if (provider === "cloudflare") return "CF_Authorization";
   if (provider !== "pomerium") return "";
-  const host = new URL(normalizeOpenClawLaunchableUrl(rawUrl), pageBase()).hostname;
+  const clean = normalizeOpenClawLaunchableUrl(rawUrl);
+  const host = clean ? new URL(clean, pageBase()).hostname : "";
   return host.toLowerCase().endsWith(".gobrev.dev") ? "__Host-skybridge-brev-prd" : "_pomerium";
 }
 
