@@ -28,7 +28,7 @@ jobs:
           persist-credentials: false
       - name: Reject oversized proposed source before expensive analysis
         run: python3 scripts/validation/pages_artifact_integrity.py --source-root .
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.11"
       - name: Pull request submission contract
@@ -63,7 +63,7 @@ jobs:
         env:
           RELEASE_CHANGE_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
         run: python3 scripts/validation/release_change_reminder.py --commit-range "$RELEASE_CHANGE_RANGE" --report docs/validation/release-change-reminder.json
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
       - name: Verify the no-fetch Pages dependency boundary
@@ -134,14 +134,14 @@ jobs:
             -cf "$RUNNER_TEMP/pages-action-canary-artifact.tar" \
             --exclude=.git \
             .
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: github.event_name == 'pull_request'
         with:
           name: pages-action-canary-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/pages-action-canary-artifact.tar
           if-no-files-found: error
           retention-days: 1
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         if: github.event_name == 'pull_request'
         with:
           name: pages-action-canary-${{ github.sha }}-${{ github.run_attempt }}
@@ -157,7 +157,7 @@ jobs:
       - name: Materials drift check (advisory; complains on drift, never blocks the deploy)
         continue-on-error: true
         run: python3 scripts/materials/pull_materials.py --check --fetch-attempts 4 --retry-backoff 2 --host-delay 3
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: gate-report
@@ -175,16 +175,16 @@ jobs:
           persist-credentials: false
       - name: Sensitive content boundary before the deployed artifact
         run: python3 scripts/validation/sensitive_content_audit.py
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: gate-report
           path: docs/validation
       - name: Verify external publication approval
         run: python3 scripts/validation/contribution_safety_audit.py --require-publication-approved
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.11"
       - name: Fix generated time to the reviewed commit
@@ -217,7 +217,7 @@ jobs:
             -cf "$RUNNER_TEMP/artifact.tar" \
             --exclude=.git \
             .
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: github-pages
           path: ${{ runner.temp }}/artifact.tar
@@ -233,11 +233,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: gate-report
           path: docs/validation
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.11"
       - name: Independently rebuild the static tree
@@ -251,7 +251,7 @@ jobs:
           python3 scripts/validation/pages_artifact_integrity.py \
             --root comparison-public --expect-sha "$GITHUB_SHA" \
             --write-manifest comparison-pages-sha256.txt
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pages-comparison-${{ github.sha }}
           path: comparison-pages-sha256.txt
@@ -267,11 +267,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: github-pages
           path: reviewed-pages-artifact
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: pages-comparison-${{ github.sha }}
           path: reviewed-pages-comparison
@@ -286,7 +286,7 @@ jobs:
           cmp reviewed-public/pages-sha256.txt \
             reviewed-pages-comparison/comparison-pages-sha256.txt
       - name: Retain only the independently reproduced inventory
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pages-reviewed-manifest-${{ github.sha }}
           path: reviewed-public/pages-sha256.txt
@@ -304,7 +304,7 @@ jobs:
       attestations: write
       artifact-metadata: write
     steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: pages-reviewed-manifest-${{ github.sha }}
           path: reviewed-pages
@@ -327,7 +327,7 @@ jobs:
             --source-digest "$GITHUB_SHA" --source-ref "$GITHUB_REF" \
             --deny-self-hosted-runners
       - name: Retain the Pages provenance bundle
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pages-provenance-${{ github.sha }}
           path: ${{ steps.pages-provenance.outputs.bundle-path }}
@@ -362,7 +362,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: github-pages
           path: reviewed-pages-artifact
