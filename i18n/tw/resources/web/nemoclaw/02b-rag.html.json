@@ -174,6 +174,11 @@
       "source": "\n    <strong>Build the retrieval ladder in order.</strong>\n    <ol>\n      <li><strong>Generation alone</strong> answers from the model's current context and training.</li>\n      <li><strong>Traditional RAG</strong> runs a fixed retrieval step before every generated answer.</li>\n      <li><strong>Agent-controlled retrieval</strong> exposes retrieval as a tool, so the loop decides whether another lookup is needed.</li>\n    </ol>\n    The exercises keep the corpus and question visible while changing who controls retrieval.\n  ",
       "value": "\n    <strong>按順序建置檢索階梯。</strong>\n    <ol>\n      <li><strong>僅生成</strong>根據模型當前的上下文和訓練內容作答。</li>\n      <li><strong>傳統 RAG</strong> 在每次生成答案之前執行固定的檢索步驟。</li>\n      <li><strong>代理程式控制的檢索</strong>將檢索作為工具提供，由代理程式迴圈決定是否需要再次查詢。</li>\n    </ol>\n    練習會讓您檢視語料庫與問題，同時改變由誰控制檢索。\n  "
     },
+    "rich.441c93233af4": {
+      "type": "rich",
+      "source": "\n    Both use the embedding model through <code>helpers.embed</code>. Set the embedding endpoint\n    and its credential in the model panel before you run the cells below. If the service is\n    unavailable, the cell shows the request and the error.\n  ",
+      "value": "兩者都透過 <code>helpers.embed</code> 使用嵌入模型。執行下方儲存格之前，請在模型面板中設定嵌入端點及其憑證。若服務無法使用，儲存格會顯示請求與錯誤。"
+    },
     "rich.44495e89469c": {
       "type": "rich",
       "source": "\n    <p class=\"pipeline-stage\"><strong>Offline:</strong> build the index once by embedding every passage and storing it for fast lookup.</p>\n    <p class=\"pipeline-stage\"><strong>Live:</strong> embed the question, retrieve the top-K passages, and pass them to the model with the question.</p>\n  ",
@@ -308,11 +313,6 @@
       "source": "<tr><td><div style=\"display:flex;align-items:center;gap:8px\"><div style=\"background:var(--g,#76b900);height:10px;border-radius:3px;width:",
       "value": "<tr><td><div style=\"display:flex;align-items:center;gap:8px\"><div style=\"background:var(--g,#76b900);height:10px;border-radius:3px;width:",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "rich.d17e212a9ec9": {
-      "type": "rich",
-      "source": "\n    Both use the embedding model, called through <code>helpers.embed</code> in this course.\n    Configure the embedding endpoint and its required credential in the model panel.\n    The browser sends your text through the selected route. Inspect the request and\n    returned error if the embedding service is unavailable.\n  ",
-      "value": "\n    兩者都使用嵌入模型，本課程透過 <code>helpers.embed</code> 呼叫該模型。請在模型面板中設定嵌入端點及其所需的憑證。瀏覽器會透過所選路由傳送您的文字。若嵌入服務無法使用，請檢查請求與傳回的錯誤。\n  "
     },
     "rich.d3695596e0f0": {
       "type": "rich",
@@ -506,6 +506,11 @@
       "type": "text",
       "source": "Floyd-Warshall computes all-pairs shortest paths by considering each vertex as an intermediate step.",
       "value": "Floyd-Warshall 依次將每個頂點視為中間節點，從而計算所有頂點對之間的最短路徑。"
+    },
+    "text.0e6e77b242be": {
+      "type": "text",
+      "source": "\n    The corpus ships with the page as a prebuilt index, so only your question is embedded live.\n    The diagram above shows the same split between indexing and serving. The example questions\n    have prebuilt vectors too, so they work before you add a key. Editing a passage re-embeds\n    only that passage.\n  ",
+      "value": "語料庫作為預建置索引隨頁面一同提供，因此只有您的問題需要即時嵌入。上圖呈現的正是索引建置與線上服務之間的這種分離。範例問題也自帶預建置向量，因此在您新增金鑰前即可使用。編輯某個段落時，只會重新嵌入該段落。"
     },
     "text.100582a1acba": {
       "type": "text",
@@ -939,11 +944,6 @@
       "source": " ── 2 · GRAPHRAG map-reduce ────────────────────────────────────────────────────",
       "value": " ── 2 · GRAPHRAG map-reduce ────────────────────────────────────────────────────",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
-    },
-    "text.46d5014c0f39": {
-      "type": "text",
-      "source": "\n    Ask a question. The artifact embeds it with the same endpoint from this page and\n    ranks a small built-in corpus by cosine similarity. The bars show every score. It\n    then answers from the top passages and cites them. Change the question and watch\n    the ranking shift.\n  ",
-      "value": "\n    請輸入一個問題。該互動元件會使用本頁相同的 API 端點對其進行嵌入，並按餘弦相似度對內建的小型語料庫排序。條形圖會顯示所有得分。隨後，元件根據排名靠前的段落作答並引用來源。修改問題，觀察排名如何變化。\n  "
     },
     "text.46f70a7ed608": {
       "type": "text",
@@ -1542,11 +1542,6 @@
       "type": "text",
       "source": "Chunk cosine scores · ★ is the single hit",
       "value": "文字塊餘弦分數 · ★ 表示唯一命中項"
-    },
-    "text.8e90b30fb1ea": {
-      "type": "text",
-      "source": "\n    The corpus is embedded offline and shipped beside the page as a prebuilt index so that only your question gets\n    embedded live. You are watching the indexing-versus-serving split from the diagram above run here. The example\n    questions even carry prebuilt vectors and retrieve before you add a key, while editing a passage re-embeds only that\n    one passage.\n  ",
-      "value": "\n    語料庫已離線嵌入，並作為預建置索引隨頁面一同提供，因此只有問題需要即時嵌入。您正在看到上圖所示的索引建置與線上服務分離機制在此實際執行。示例問題甚至自帶預建置向量，因此在您新增金鑰前即可完成檢索；編輯某個段落時，也只會重新嵌入該段落。\n  "
     },
     "text.8e920ae7d06b": {
       "type": "text",
@@ -2149,6 +2144,11 @@
       "type": "text",
       "source": "summarize each community, then answer from the summaries",
       "value": "先彙總每個社群，再根據這些摘要作答"
+    },
+    "text.cbf50352b20d": {
+      "type": "text",
+      "source": "\n    Ask a question in the artifact below. It ranks a small built-in corpus by cosine similarity\n    to your question and shows each score as a bar. It then answers from the top passages and\n    cites them. Try another question to see the ranking change.\n  ",
+      "value": "在下方的互動元件中提出一個問題。它會依與問題的餘弦相似度對內建的小型語料庫排序，並以長條圖顯示每個得分。隨後，它根據排名靠前的段落作答並引用來源。換一個問題，看看排名如何變化。"
     },
     "text.cc6b69b40bf7": {
       "type": "text",
