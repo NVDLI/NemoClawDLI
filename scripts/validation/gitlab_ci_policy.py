@@ -60,6 +60,12 @@ def job_block(source: str, name: str) -> str:
     return matches[-1].group(1) if matches else ""
 
 
+def browser_tools_setup(core: str) -> str:
+    """Return the setup shell that jobs requesting BROWSER_TOOLS_REQUIRED=1 run before their gate."""
+    match = re.search(r'(?ms)^[ \t]*if \[ "\$\{BROWSER_TOOLS_REQUIRED:-0\}" = "1" \]; then\n(.*?)^[ \t]*fi[ \t]*$', core)
+    return match.group(1) if match else ""
+
+
 def active_yaml(source: str) -> str:
     """Remove YAML-only comments before policy token checks."""
     return "\n".join(line for line in source.splitlines() if not line.lstrip().startswith("#")) + "\n"
@@ -327,6 +333,20 @@ def audit(root: Path = ROOT) -> list[dict[str, str]]:
         out.append(finding("github-privilege-copy", ".github/workflows/",
                            "public GitHub workflow reaches the internal operations module",
                            "remove every direct or wrapped GitHub execution edge into scripts/ci"))
+    # GitLab runs the same ship gate, so it installs every npm workspace a GitHub ship gate installs.
+    # contribution_safety_audit.py owns the nested pnpm browser runtime.
+    browser_setup = browser_tools_setup(core)
+    for path in sorted((root / ".github/workflows").glob("*.y*ml")):
+        workflow = active_yaml(path.read_text(encoding="utf-8"))
+        if "release_gate.py --tier ship" not in workflow:
+            continue
+        for prefix in sorted(set(re.findall(r"\bnpm ci --prefix ([^\s'\"]+)", workflow))):
+            if not re.search(rf"(?m)^[ \t]*npm ci --prefix {re.escape(prefix)} --ignore-scripts[ \t]*$", browser_setup):
+                out.append(finding(
+                    "gitlab-node-workspace-parity", ".gitlab/ci/core.yml",
+                    f"{path.name} installs {prefix} before its ship gate, but GitLab browser tools do not",
+                    f"run npm ci --prefix {prefix} --ignore-scripts where BROWSER_TOOLS_REQUIRED=1 installs browser tools",
+                ))
 
     for path in OWNER_PATHS:
         if not re.search(rf"(?m)^{re.escape(path)}\s+@\S+", owners):
@@ -398,6 +418,20 @@ def self_test() -> list[str]:
         ("privileged-direct-python", ".gitlab/ci/privileged-child.yml",
          "python3 -m scripts.ci.privileged_request", "python3 scripts/ci/privileged_request.py"),
         ("github-privilege-copy", ".github/workflows/pages.yml", "name:", "COURSE_OP:"),
+        ("gitlab-node-workspace-parity", ".gitlab/ci/core.yml",
+         "        npm ci --prefix scripts/browser-vendor --ignore-scripts\n", ""),
+        ("gitlab-node-workspace-parity", ".gitlab/ci/core.yml",
+         "npm ci --prefix scripts/browser-vendor ", "npm ci --prefix scripts/browser-vendor-renamed "),
+        ("gitlab-node-workspace-parity", ".gitlab/ci/core.yml",
+         "npm ci --prefix scripts/browser-vendor ", "npm install --prefix scripts/browser-vendor "),
+        ("gitlab-node-workspace-parity", ".gitlab/ci/core.yml",
+         "        npm ci --prefix scripts/browser-vendor", "        # npm ci --prefix scripts/browser-vendor"),
+        ("gitlab-node-workspace-parity", ".gitlab/ci/core.yml",
+         "        npm ci --prefix scripts/browser-vendor --ignore-scripts\n      fi\n",
+         "      fi\n      npm ci --prefix scripts/browser-vendor --ignore-scripts\n"),
+        ("gitlab-node-workspace-parity", ".github/workflows/pages.yml",
+         "npm ci --prefix scripts/browser-vendor --ignore-scripts\n",
+         "npm ci --prefix scripts/browser-vendor --ignore-scripts\n          npm ci --prefix scripts/novel-workspace --ignore-scripts\n"),
         ("missing-code-owner", ".gitlab/CODEOWNERS", root_owner_line,
          "/.gitlab-ci.yml"),
         ("ci-policy-not-gated", "scripts/validation/release_gate.py", 'unit_test("gitlab_ci_policy")',
