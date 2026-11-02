@@ -103,7 +103,7 @@ Source of truth: [`scripts/browser-vendor/package-lock.json`](scripts/browser-ve
 | browser-runtime | p-queue | 6.6.2 | MIT | [`licenses/p-queue--6.6.2.txt`](web/nemoclaw/vendor/licenses/p-queue--6.6.2.txt) |
 | browser-bundle-input | p-retry | 7.1.1 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
 | browser-runtime | p-timeout | 3.2.0 | MIT | [`licenses/p-timeout--3.2.0.txt`](web/nemoclaw/vendor/licenses/p-timeout--3.2.0.txt) |
-| browser-runtime | zod | 3.25.76 | MIT | [`licenses/zod--3.25.76.txt`](web/nemoclaw/vendor/licenses/zod--3.25.76.txt) |
+| browser-runtime | zod | 4.6.7 | MIT | [`licenses/zod--4.6.7.txt`](web/nemoclaw/vendor/licenses/zod--4.6.7.txt) |
 
 ### Utility source embedded in `@langchain/core`
 
@@ -193,13 +193,13 @@ Sources of truth are the exact lock files named in the Scope column. The same pa
 | material-tooling | beautifulsoup4 | 4.15.0 | MIT | [PyPI](https://pypi.org/pypi/beautifulsoup4/4.15.0/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock) |
 | security-tooling | boolean-py | 5.0 | BSD-2-Clause | [PyPI](https://pypi.org/pypi/boolean-py/5.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | cachecontrol | 0.14.4 | Apache-2.0 | [PyPI](https://pypi.org/pypi/cachecontrol/0.14.4/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
-| material-tooling, security-tooling | certifi | 2026.6.17 | MPL-2.0 | [PyPI](https://pypi.org/pypi/certifi/2026.6.17/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
+| material-tooling, security-tooling | certifi | 2026.10.18 | MPL-2.0 | [PyPI](https://pypi.org/pypi/certifi/2026.10.18/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | chardet | 5.2.0 | LGPL-2.0-or-later | [PyPI](https://pypi.org/pypi/chardet/5.2.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | material-tooling, security-tooling | charset-normalizer | 3.4.9 | MIT | [PyPI](https://pypi.org/pypi/charset-normalizer/3.4.9/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | cyclonedx-bom | 7.5.0 | Apache-2.0 | [PyPI](https://pypi.org/pypi/cyclonedx-bom/7.5.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | cyclonedx-python-lib | 11.11.0 | Apache-2.0 | [PyPI](https://pypi.org/pypi/cyclonedx-python-lib/11.11.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | defusedxml | 0.7.1 | PSF-2.0 | [PyPI](https://pypi.org/pypi/defusedxml/0.7.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
-| security-tooling | filelock | 3.29.7 | MIT | [PyPI](https://pypi.org/pypi/filelock/3.29.7/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
+| security-tooling | filelock | 4.2.1 | MIT | [PyPI](https://pypi.org/pypi/filelock/4.2.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | fqdn | 1.5.1 | MPL-2.0 | [PyPI](https://pypi.org/pypi/fqdn/1.5.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | material-tooling, security-tooling | idna | 3.18 | BSD-3-Clause | [PyPI](https://pypi.org/pypi/idna/3.18/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | isoduration | 20.11.0 | ISC | [PyPI](https://pypi.org/pypi/isoduration/20.11.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
@@ -213,10 +213,10 @@ Sources of truth are the exact lock files named in the Scope column. The same pa
 | security-tooling | markdown-it-py | 4.2.0 | MIT | [PyPI](https://pypi.org/pypi/markdown-it-py/4.2.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | material-tooling | markdownify | 1.2.3 | MIT | [PyPI](https://pypi.org/pypi/markdownify/1.2.3/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock) |
 | security-tooling | mdurl | 0.1.2 | MIT | [PyPI](https://pypi.org/pypi/mdurl/0.1.2/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
-| security-tooling | msgpack | 1.2.1 | Apache-2.0 | [PyPI](https://pypi.org/pypi/msgpack/1.2.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
+| security-tooling | msgpack | 1.2.3 | Apache-2.0 | [PyPI](https://pypi.org/pypi/msgpack/1.2.3/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | packageurl-python | 0.17.6 | MIT | [PyPI](https://pypi.org/pypi/packageurl-python/0.17.6/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | packaging | 26.2 | Apache-2.0 OR BSD-2-Clause | [PyPI](https://pypi.org/pypi/packaging/26.2/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
-| host-bootstrap, security-tooling | pip | 26.2.1 | MIT | [PyPI](https://pypi.org/pypi/pip/26.2.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock); [`docs/lab_runtime_testing.md`](docs/lab_runtime_testing.md) |
+| host-bootstrap, security-tooling | pip | 26.2.2 | MIT | [PyPI](https://pypi.org/pypi/pip/26.2.2/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock); [`docs/lab_runtime_testing.md`](docs/lab_runtime_testing.md) |
 | security-tooling | pip-api | 0.0.34 | Apache-2.0 | [PyPI](https://pypi.org/pypi/pip-api/0.0.34/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | pip-audit | 2.10.1 | Apache-2.0 | [PyPI](https://pypi.org/pypi/pip-audit/2.10.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | pip-requirements-parser | 32.0.1 | MIT | [PyPI](https://pypi.org/pypi/pip-requirements-parser/32.0.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
@@ -232,7 +232,7 @@ Sources of truth are the exact lock files named in the Scope column. The same pa
 | security-tooling | rfc3987-syntax | 1.1.0 | MIT | [PyPI](https://pypi.org/pypi/rfc3987-syntax/1.1.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | rich | 15.0.0 | MIT | [PyPI](https://pypi.org/pypi/rich/15.0.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | rpds-py | 2026.6.3 | MIT | [PyPI](https://pypi.org/pypi/rpds-py/2026.6.3/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
-| security-tooling | setuptools | 84.0.0 | MIT | [PyPI](https://pypi.org/pypi/setuptools/84.0.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
+| security-tooling | setuptools | 84.2.1 | MIT | [PyPI](https://pypi.org/pypi/setuptools/84.2.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | material-tooling, security-tooling | six | 1.17.0 | MIT | [PyPI](https://pypi.org/pypi/six/1.17.0/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | sortedcontainers | 2.4.0 | Apache-2.0 | [PyPI](https://pypi.org/pypi/sortedcontainers/2.4.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | material-tooling | soupsieve | 2.10 | MIT | [PyPI](https://pypi.org/pypi/soupsieve/2.10/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock) |
