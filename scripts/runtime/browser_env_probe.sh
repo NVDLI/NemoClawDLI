@@ -9,19 +9,9 @@ have() { command -v "$1" >/dev/null 2>&1; }
 node_path=${NODE_PATH:-$ROOT/scripts/runtime/node_modules}
 node_bin=${NODE_BIN:-}
 if [[ -z "$node_bin" ]] && have node; then node_bin=$(command -v node); fi
-chrome_bin=${CHROME_BIN:-}
-if [[ -z "$chrome_bin" ]]; then
-  for candidate in chromium chromium-browser google-chrome google-chrome-stable; do
-    if have "$candidate"; then chrome_bin=$(command -v "$candidate"); break; fi
-  done
-fi
-if [[ -z "$chrome_bin" ]]; then
-  for candidate in \
-    "/Applications/Chromium.app/Contents/MacOS/Chromium" \
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"; do
-    if [[ -x "$candidate" ]]; then chrome_bin=$candidate; break; fi
-  done
+chrome_bin=""
+if [[ -n "$node_bin" && -x "$node_bin" && -f "$node_path/playwright-core/package.json" ]]; then
+  chrome_bin=$(NODE_PATH="$node_path" "$node_bin" "$ROOT/scripts/runtime/browser_environment.cjs" --chrome) || exit 2
 fi
 
 echo "browser_env_probe"
