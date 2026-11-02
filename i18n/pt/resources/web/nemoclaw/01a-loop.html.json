@@ -29,10 +29,10 @@
       "source": "<a href=\"https://en.wikipedia.org/wiki/A*_search_algorithm\" target=\"_blank\" rel=\"noopener\">A*</a> biases those same rings toward the goal.",
       "value": "O <a href=\"https://en.wikipedia.org/wiki/A*_search_algorithm\" target=\"_blank\" rel=\"noopener\">A*</a> usa uma heurística de distância para priorizar caminhos promissores sem perder a garantia de menor caminho."
     },
-    "link.89cb16ab43c4": {
+    "link.8dfe78d0f750": {
       "type": "link",
-      "source": "\n  <p>Configure a compatible endpoint in the model panel before running the cell.\n    NVIDIA-hosted endpoints require an\n    <a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NVIDIA API key</a>.\n    Check the selected service's access and quota. The panel shows the active endpoint\n    and credential settings; inspect the redacted request below before sending.</p>\n  <p>The selected route determines which service receives the request and its credential.\n    A browser call requires the endpoint to permit the course origin. The course can use\n    its configured relay when the provider does not allow that direct browser request.\n    Inspect the active route and request headers in the model panel.</p>\n  <strong>Inspect the streaming helper.</strong> <code>chatStream()</code> parses answer text, any returned reasoning text, usage metadata, and the end-of-stream signal. It connects the response to the lesson panel and Stop button. Open the helper source from the cell menu to inspect the request and event handling.\n  ",
-      "value": "\n  <p>Configure um endpoint compatível no painel do modelo antes de executar a célula.\n    Os endpoints hospedados pela NVIDIA exigem uma\n    <a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">chave de API da NVIDIA</a>.\n    Confira o acesso e a cota do serviço selecionado. O painel mostra o endpoint ativo\n    e as configurações de credenciais; examine a solicitação abaixo, com os dados sensíveis ocultos, antes de enviá-la.</p>\n  <p>A rota selecionada determina qual serviço recebe a solicitação e sua credencial.\n    Uma chamada pelo navegador exige que o endpoint permita a origem do curso. O curso pode usar\n    seu serviço de retransmissão configurado quando o provedor não permite essa solicitação direta pelo navegador.\n    Examine a rota ativa e os cabeçalhos da solicitação no painel do modelo.</p>\n  <strong>Examine o helper de streaming.</strong> <code>chatStream()</code> processa o texto da resposta, qualquer texto de raciocínio retornado, os metadados de uso e o sinal de fim da transmissão. Ele conecta a resposta ao painel da lição e ao botão Stop. Abra o código-fonte do helper pelo menu da célula para examinar a solicitação e o tratamento de eventos.\n  "
+      "source": "\n  <p>Before you run the cell, choose a compatible endpoint in the model panel. NVIDIA-hosted\n    endpoints need an\n    <a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NVIDIA API key</a>.</p>\n  <p>The browser calls the endpoint directly when the provider allows it. Otherwise, the course\n    sends the request through its relay. The model panel shows the active route and credential.</p>\n  <strong>Inspect the streaming helper.</strong> <code>chatStream()</code> parses answer text, any returned reasoning text, usage metadata, and the end-of-stream signal. It connects the response to the lesson panel and Stop button. Open the helper source from the cell menu to inspect the request and event handling.\n  ",
+      "value": "\n  <p>Antes de executar a célula, escolha um endpoint compatível no painel do modelo. Os endpoints hospedados pela NVIDIA precisam de uma\n    <a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">chave de API da NVIDIA</a>.</p>\n  <p>O navegador chama o endpoint diretamente quando o provedor permite. Caso contrário, o curso envia a solicitação pelo serviço de retransmissão. O painel do modelo mostra a rota e a credencial ativas.</p>\n  <strong>Examine o helper de streaming.</strong> <code>chatStream()</code> processa o texto da resposta, qualquer texto de raciocínio retornado, os metadados de uso e o sinal de fim da transmissão. Ele conecta a resposta ao painel da lição e ao botão Stop. Abra o código-fonte do helper pelo menu da célula para examinar a solicitação e o tratamento de eventos.\n  "
     },
     "link.917d52288863": {
       "type": "link",
@@ -398,6 +398,11 @@
       "source": "<span style=\"color:#fbbf24\">hint: the image was rejected on this turn. Retry once, or set includeImage:false and compare the text-only reasoning and omni profiles.</span>",
       "value": "<span style=\"color:#fbbf24\">dica: a imagem foi rejeitada neste turno. Tente novamente uma vez ou defina includeImage:false e compare os perfis reasoning e omni, que usam apenas texto.</span>"
     },
+    "rich.5988c0785c09": {
+      "type": "rich",
+      "source": "\n    This chat starts with memory on. With memory off, earlier turns are left out of each\n    <code>chat()</code> call.\n  ",
+      "value": "Este chat começa com a memória ativada. Com a memória desativada, os turnos anteriores ficam fora de cada chamada a <code>chat()</code>."
+    },
     "rich.5bc02b4cf26e": {
       "type": "rich",
       "source": "<div style=\"white-space:pre-wrap\">",
@@ -586,11 +591,6 @@
       "type": "rich",
       "source": "<span style=\"color:#fbbf24\">guardrail: ",
       "value": "<span style=\"color:#fbbf24\">controle: "
-    },
-    "rich.c5690f27913f": {
-      "type": "rich",
-      "source": "\n    This chat starts with conversation history enabled. Tell it your name, then ask\n    what your name is. Turn the memory toggle off and ask again. Each <code>chat()</code>\n    call receives the messages assembled by the interface; with memory off, earlier\n    turns are omitted. Compare the replies and inspect how the code builds the request.\n  ",
-      "value": "Este chat começa com o histórico de conversa ativado. Diga seu nome e depois pergunte qual é o seu nome. Desative o controle de memória e pergunte novamente. Cada chamada a <code>chat()</code> recebe as mensagens montadas pela interface; com a memória desativada, os turnos anteriores são omitidos. Compare as respostas e examine como o código monta a solicitação."
     },
     "rich.c6791c9d7c9c": {
       "type": "rich",
@@ -2165,6 +2165,11 @@
       "source": "The model endpoint uses this format. Module 3's OpenClaw gateway exposes\n     a separate protocol for agent turns, sessions, and runtime operations.",
       "value": "O endpoint do modelo usa esse formato. O gateway do OpenClaw do módulo 3 expõe um protocolo separado para turnos do agente, sessões e operações do ambiente de execução."
     },
+    "text.609bc9c38246": {
+      "type": "text",
+      "source": "Compare the replies, then open the code to see how it builds each request.",
+      "value": "Compare as respostas e depois abra o código para ver como ele monta cada solicitação."
+    },
     "text.6105d6cc76af": {
       "type": "text",
       "source": "image",
@@ -2197,6 +2202,11 @@
       "type": "text",
       "source": "NVIDIA · Securing Agents",
       "value": "NVIDIA · Proteção de Agentes"
+    },
+    "text.67b65d3b9048": {
+      "type": "text",
+      "source": "Turn the memory toggle off and ask again.",
+      "value": "Desative o controle de memória e pergunte novamente."
     },
     "text.680694f37af1": {
       "type": "text",
@@ -3805,6 +3815,11 @@
       "source": " default: list every coordinate travelled",
       "value": " default: list every coordinate travelled",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01a-loop.html carries the canonical source at this unit unchanged"
+    },
+    "text.ff354fc5262e": {
+      "type": "text",
+      "source": "Tell the chat your name, then ask it your name.",
+      "value": "Diga seu nome ao chat e depois pergunte a ele como você se chama."
     },
     "text.ff4ec4732159": {
       "type": "text",
