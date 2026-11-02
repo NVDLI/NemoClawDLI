@@ -174,6 +174,11 @@
       "source": "\n    <strong>Build the retrieval ladder in order.</strong>\n    <ol>\n      <li><strong>Generation alone</strong> answers from the model's current context and training.</li>\n      <li><strong>Traditional RAG</strong> runs a fixed retrieval step before every generated answer.</li>\n      <li><strong>Agent-controlled retrieval</strong> exposes retrieval as a tool, so the loop decides whether another lookup is needed.</li>\n    </ol>\n    The exercises keep the corpus and question visible while changing who controls retrieval.\n  ",
       "value": "\n    <strong>Construye la secuencia de recuperación en orden.</strong>\n    <ol>\n      <li><strong>La generación sin recuperación</strong> responde con el contexto actual y el entrenamiento del modelo.</li>\n      <li><strong>El RAG tradicional</strong> ejecuta un paso fijo de recuperación antes de cada respuesta generada.</li>\n      <li><strong>La recuperación controlada por el agente</strong> expone la recuperación como herramienta, de modo que el bucle decide si necesita otra consulta.</li>\n    </ol>\n    Los ejercicios mantienen visibles el corpus y la pregunta mientras cambia quién controla la recuperación.\n  "
     },
+    "rich.441c93233af4": {
+      "type": "rich",
+      "source": "\n    Both use the embedding model through <code>helpers.embed</code>. Set the embedding endpoint\n    and its credential in the model panel before you run the cells below. If the service is\n    unavailable, the cell shows the request and the error.\n  ",
+      "value": "Ambas usan el modelo de embeddings a través de <code>helpers.embed</code>. Configura el endpoint de embeddings y su credencial en el panel del modelo antes de ejecutar las celdas siguientes. Si el servicio no está disponible, la celda muestra la solicitud y el error."
+    },
     "rich.44495e89469c": {
       "type": "rich",
       "source": "\n    <p class=\"pipeline-stage\"><strong>Offline:</strong> build the index once by embedding every passage and storing it for fast lookup.</p>\n    <p class=\"pipeline-stage\"><strong>Live:</strong> embed the question, retrieve the top-K passages, and pass them to the model with the question.</p>\n  ",
@@ -309,11 +314,6 @@
       "source": "<tr><td><div style=\"display:flex;align-items:center;gap:8px\"><div style=\"background:var(--g,#76b900);height:10px;border-radius:3px;width:",
       "value": "<tr><td><div style=\"display:flex;align-items:center;gap:8px\"><div style=\"background:var(--g,#76b900);height:10px;border-radius:3px;width:",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
-    },
-    "rich.d17e212a9ec9": {
-      "type": "rich",
-      "source": "\n    Both use the embedding model, called through <code>helpers.embed</code> in this course.\n    Configure the embedding endpoint and its required credential in the model panel.\n    The browser sends your text through the selected route. Inspect the request and\n    returned error if the embedding service is unavailable.\n  ",
-      "value": "\n    Ambas operaciones usan el modelo de embeddings, al que este curso llama mediante <code>helpers.embed</code>.\n    Configura el endpoint de embeddings y la credencial que requiera en el panel del modelo.\n    El navegador envía el texto por la ruta seleccionada. Si el servicio de embeddings no está disponible,\n    inspecciona la solicitud y el error devuelto.\n  "
     },
     "rich.d3695596e0f0": {
       "type": "rich",
@@ -511,6 +511,11 @@
       "source": "Floyd-Warshall computes all-pairs shortest paths by considering each vertex as an intermediate step.",
       "value": "Floyd-Warshall computes all-pairs shortest paths by considering each vertex as an intermediate step.",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.0e6e77b242be": {
+      "type": "text",
+      "source": "\n    The corpus ships with the page as a prebuilt index, so only your question is embedded live.\n    The diagram above shows the same split between indexing and serving. The example questions\n    have prebuilt vectors too, so they work before you add a key. Editing a passage re-embeds\n    only that passage.\n  ",
+      "value": "El corpus se distribuye con la página como un índice preconstruido, así que solo tu pregunta necesita un embedding en vivo. El diagrama anterior muestra la misma separación entre indexación y servicio. Las preguntas de ejemplo también tienen vectores preconstruidos, así que funcionan antes de que añadas una clave. Al editar un pasaje, solo se recalcula el embedding de ese pasaje."
     },
     "text.100582a1acba": {
       "type": "text",
@@ -955,11 +960,6 @@
       "source": " ── 2 · GRAPHRAG map-reduce ────────────────────────────────────────────────────",
       "value": " ── 2 · GRAPHRAG map-reduce ────────────────────────────────────────────────────",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
-    },
-    "text.46d5014c0f39": {
-      "type": "text",
-      "source": "\n    Ask a question. The artifact embeds it with the same endpoint from this page and\n    ranks a small built-in corpus by cosine similarity. The bars show every score. It\n    then answers from the top passages and cites them. Change the question and watch\n    the ranking shift.\n  ",
-      "value": "Formula una pregunta. El artefacto usa el mismo endpoint de la página para generar su embedding y clasifica un corpus pequeño mediante similitud coseno. Las barras muestran todas las puntuaciones. Después, el modelo responde a partir de los pasajes mejor clasificados y los cita. Cambia la pregunta y observa cómo varía el orden."
     },
     "text.46f70a7ed608": {
       "type": "text",
@@ -1573,11 +1573,6 @@
       "source": "Chunk cosine scores · ★ is the single hit",
       "value": "Chunk cosine scores · ★ is the single hit",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
-    },
-    "text.8e90b30fb1ea": {
-      "type": "text",
-      "source": "\n    The corpus is embedded offline and shipped beside the page as a prebuilt index so that only your question gets\n    embedded live. You are watching the indexing-versus-serving split from the diagram above run here. The example\n    questions even carry prebuilt vectors and retrieve before you add a key, while editing a passage re-embeds only that\n    one passage.\n  ",
-      "value": "El corpus se procesó offline y se distribuye junto a la página como índice preconstruido; solo la pregunta necesita un embedding en vivo. Así puedes observar la separación entre indexación y servicio. Las preguntas de ejemplo también incluyen vectores preconstruidos y recuperan resultados antes de añadir una clave; al editar un pasaje, solo se vuelve a procesar ese pasaje."
     },
     "text.8e920ae7d06b": {
       "type": "text",
@@ -2195,6 +2190,11 @@
       "source": "summarize each community, then answer from the summaries",
       "value": "summarize each community, then answer from the summaries",
       "untranslated": "kept English: the reviewed es-ES overlay of web/nemoclaw/02b-rag.html carries the canonical source at this unit unchanged"
+    },
+    "text.cbf50352b20d": {
+      "type": "text",
+      "source": "\n    Ask a question in the artifact below. It ranks a small built-in corpus by cosine similarity\n    to your question and shows each score as a bar. It then answers from the top passages and\n    cites them. Try another question to see the ranking change.\n  ",
+      "value": "Haz una pregunta en el artefacto de abajo. Este clasifica un pequeño corpus integrado por similitud coseno con tu pregunta y muestra cada puntuación como una barra. Después, responde a partir de los pasajes mejor clasificados y los cita. Prueba otra pregunta para ver cómo cambia la clasificación."
     },
     "text.cc6b69b40bf7": {
       "type": "text",
