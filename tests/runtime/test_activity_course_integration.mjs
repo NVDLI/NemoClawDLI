@@ -266,10 +266,99 @@ test('the default Pages layout ships the public activity SDK at its imported pat
   }
 });
 
+// GitLab branch and merge-request pipelines fetch only their own ref, so origin/<default> may be absent.
+// Use the merge-request diff base, else fetch the default branch; never narrow the audited range.
+function resolveCandidateBase({ cwd = process.cwd(), env = process.env } = {}) {
+  const git = args => {
+    try {
+      return { ok: true, out: execFileSync('git', args, { cwd, env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim() };
+    } catch (error) {
+      return { ok: false, out: String(error.stderr || error.message).trim() };
+    }
+  };
+  if (git(['rev-parse', '--is-shallow-repository']).out === 'true') {
+    throw new Error('candidate diff audit needs complete history; fetch with GIT_DEPTH 0 or fetch-depth 0');
+  }
+  const requestBase = env.CI_MERGE_REQUEST_DIFF_BASE_SHA;
+  if (requestBase) {
+    if (!git(['merge-base', '--is-ancestor', requestBase, 'HEAD']).ok) {
+      throw new Error(`CI_MERGE_REQUEST_DIFF_BASE_SHA ${requestBase} is not a fetched ancestor of HEAD; fetch the merge request's complete history`);
+    }
+    return requestBase;
+  }
+  const branch = env.CI_DEFAULT_BRANCH || 'main';
+  const tracking = `refs/remotes/origin/${branch}`;
+  if (!git(['rev-parse', '--verify', '--quiet', `${tracking}^{commit}`]).ok) {
+    const fetched = git(['fetch', '--no-tags', '--quiet', 'origin', `+refs/heads/${branch}:${tracking}`]);
+    if (!fetched.ok) {
+      throw new Error(`candidate diff audit cannot resolve origin/${branch}: it is absent and fetching it failed (${fetched.out}); run git fetch origin ${branch} or set CI_MERGE_REQUEST_DIFF_BASE_SHA`);
+    }
+  }
+  const base = git(['merge-base', tracking, 'HEAD']);
+  if (!base.ok) {
+    throw new Error(`candidate diff audit found no common ancestor of origin/${branch} and HEAD; point origin at this repository and fetch its ${branch} history`);
+  }
+  return base.out;
+}
+
+test('candidate base resolution fetches an absent default branch and rejects an unusable one', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'candidate-base-'));
+  // Hooks can export GIT_DIR, and CI exports merge-request variables; neither may reach the fixture.
+  const isolated = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^(?:GIT|CI)_/.test(key)));
+  const env = {
+    ...isolated, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: os.devNull,
+    GIT_AUTHOR_NAME: 'Fixture', GIT_AUTHOR_EMAIL: 'fixture@example.test',
+    GIT_COMMITTER_NAME: 'Fixture', GIT_COMMITTER_EMAIL: 'fixture@example.test',
+  };
+  const git = (cwd, ...args) => execFileSync('git', args, { cwd, env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  const repository = name => {
+    const root = path.join(directory, name);
+    fs.mkdirSync(root);
+    git(root, 'init', '--quiet', '--initial-branch=main');
+    return root;
+  };
+  try {
+    const upstream = repository('upstream');
+    git(upstream, 'commit', '--quiet', '--allow-empty', '-m', 'fork point');
+    const forkPoint = git(upstream, 'rev-parse', 'HEAD');
+    git(upstream, 'switch', '--quiet', '-c', 'feature');
+    git(upstream, 'commit', '--quiet', '--allow-empty', '-m', 'candidate');
+    git(upstream, 'switch', '--quiet', 'main');
+    git(upstream, 'commit', '--quiet', '--allow-empty', '-m', 'main moves on');
+
+    // A branch pipeline holds the complete history of its own ref and no origin/main.
+    const pipeline = repository('pipeline');
+    git(pipeline, 'remote', 'add', 'origin', upstream);
+    git(pipeline, 'fetch', '--quiet', 'origin', '+refs/heads/feature:refs/remotes/origin/feature');
+    git(pipeline, 'checkout', '--quiet', '--detach', 'refs/remotes/origin/feature');
+    assert.equal(resolveCandidateBase({ cwd: pipeline, env }), forkPoint);
+    git(pipeline, 'remote', 'set-url', 'origin', path.join(directory, 'missing'));
+    assert.equal(resolveCandidateBase({ cwd: pipeline, env }), forkPoint, 'a present origin/main needs no fetch');
+
+    // A merge-request pipeline audits from its declared diff base without fetching.
+    git(pipeline, 'update-ref', '-d', 'refs/remotes/origin/main');
+    assert.equal(resolveCandidateBase({ cwd: pipeline, env: { ...env, CI_MERGE_REQUEST_DIFF_BASE_SHA: forkPoint } }), forkPoint);
+    assert.throws(
+      () => resolveCandidateBase({ cwd: pipeline, env: { ...env, CI_MERGE_REQUEST_DIFF_BASE_SHA: 'f'.repeat(40) } }),
+      /CI_MERGE_REQUEST_DIFF_BASE_SHA f{40} is not a fetched ancestor of HEAD/,
+    );
+    assert.throws(() => resolveCandidateBase({ cwd: pipeline, env }), /cannot resolve origin\/main: it is absent and fetching it failed .*run git fetch origin main/s);
+
+    const unrelated = repository('unrelated');
+    git(unrelated, 'commit', '--quiet', '--allow-empty', '-m', 'unrelated root');
+    git(pipeline, 'remote', 'set-url', 'origin', unrelated);
+    assert.throws(() => resolveCandidateBase({ cwd: pipeline, env }), /no common ancestor of origin\/main and HEAD/);
+
+    const shallow = path.join(directory, 'shallow');
+    git(directory, 'clone', '--quiet', '--depth', '1', '--branch', 'feature', pathToFileURL(upstream).href, shallow);
+    assert.throws(() => resolveCandidateBase({ cwd: shallow, env }), /needs complete history/);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
 test('the complete candidate diff contains no private or non-production activity configuration', () => {
-  const candidateBase = execFileSync(
-    'git', ['merge-base', 'origin/main', 'HEAD'], { encoding: 'utf8' },
-  ).trim();
+  const candidateBase = resolveCandidateBase();
   const committedDiff = execFileSync(
     'git', ['diff', '--no-ext-diff', '--unified=0', candidateBase, 'HEAD'], { encoding: 'utf8', maxBuffer:64 * 1024 * 1024 },
   );

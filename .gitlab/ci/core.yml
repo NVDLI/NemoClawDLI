@@ -85,6 +85,8 @@ workflow:
       if [ "${BROWSER_TOOLS_REQUIRED:-0}" = "1" ]; then
         corepack enable
         (cd scripts/runtime && pnpm install --frozen-lockfile --ignore-scripts)
+        # module_linkage.mjs compiles discovered modules with the esbuild locked here.
+        npm ci --prefix scripts/browser-vendor --ignore-scripts
       fi
 
 test:
