@@ -5,6 +5,11 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Rewrite learner instructions on nine lesson pages as short, direct sentences, with steps as
+  lists. Thanks to Vadim Kudlay for the prose review and to the independent Claude reviewer for
+  automated review of the Spanish, Brazilian Portuguese, Simplified Chinese and Taiwan
+  Traditional Chinese updates.
+
 - Preserve shell command boundaries across launchable argument parsers so workspace readback,
   skill installation, and policy parsing work. Compact flow diagrams and settle individual
   node runs after completion or Stop. Release failed gateway handshakes before an explicit retry.
