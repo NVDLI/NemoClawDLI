@@ -75,14 +75,16 @@
 
   <div id="cell-finish-reason"></div>
 
+  <p>The cell makes two calls and prints each call's <code>finish_reason</code> and reply.</p>
+  <ul>
+    <li><b>Call 1</b> asks a general question and offers no tools.</li>
+    <li><b>Call 2</b> asks for the current UTC time and offers a <code>get_current_time</code> tool.</li>
+  </ul>
   <p>
-    The first call offers no tools. In the second, the model is offered a tool and asked
-    for the current time. It still chooses whether to request the clock tool. Compare the displayed questions, replies, and
-    <code>finish_reason</code>. If both calls return <code>"stop"</code>, inspect the
-    second reply: did it admit it cannot check the time, or give an unsupported answer?
-    Change the model or question and rerun. A tool request names work for your code;
-    this preview does not execute it.
+    A tool request comes back as <code>"tool_calls"</code>, and the cell only prints it. If call 2
+    returns <code>"stop"</code> instead, check whether its reply makes up a time.
   </p>
+  <p>The field takes one of four values:</p>
   <ul>
     <li><code>"stop"</code> means the model has written its final answer and the loop can return <code>content</code> to the user.</li>
     <li><code>"tool_calls"</code> means the model is asking your code to run a named function and append the result before calling back.</li>
@@ -200,16 +202,21 @@
 
   <h2>Applying the Same Loop to the Course</h2>
   <p>
-    The loop above hard-wires one tiny tool. LangChain's <a href="https://docs.langchain.com/oss/javascript/langchain/agents" target="_blank" rel="noopener"><code>createReactAgent</code></a>
-    generalizes the same machinery to support more tools, standard interfaces, and observability integrations. The agent below uses a single tool,
-    <code>read_course_page</code>, which hands the agent any page of this course as markdown. The model decides which pages to read for your question, so give it a try.
+    The loop above hard-wires one small tool. LangChain's <a href="https://docs.langchain.com/oss/javascript/langchain/agents" target="_blank" rel="noopener"><code>createReactAgent</code></a>
+    generalizes the same machinery with more tools, standard interfaces, and observability integrations.
+    The agent below has one tool, <code>read_course_page</code>, which returns any course page as Markdown.
+    The model decides which pages to read.
   </p>
-
-
-
-  <p>
-    Run the cell to open a chat panel, then ask <em>“How does the clock loop decide when to stop?”</em> You can leave the page selection empty; the agent will choose which course pages to read. To choose the context yourself, open <b>Model and context options</b> and select the page title under <b>Pages</b> before your first message. The title's tooltip shows its source ID, such as <code>01b-react</code>. If you change the selected pages later, start a <b>New chat</b>. Expand a source chip to compare the answer with what the agent actually read.
-  </p>
+  <ol>
+    <li>Run the cell to open the chat panel.</li>
+    <li>Ask <em>“How does the clock loop decide when to stop?”</em></li>
+    <li>Expand a source chip to compare the answer with the pages the agent read.</li>
+  </ol>
+  <p>To pick the pages yourself:</p>
+  <ul>
+    <li>Before your first message, open <b>Model and context options</b> and select titles under <b>Pages</b>. Hover a title to see its source ID, such as <code>01b-react</code>.</li>
+    <li>Start a <b>New chat</b> after changing the selection.</li>
+  </ul>
   <div id="cell-react-lab"></div>
   <div id="react-artifact" style="margin:1em 0"></div>
 
@@ -272,7 +279,7 @@ hljs.highlightAll();
 mountRunCell("#cell-finish-reason", {
   openCode: true,
   label: "finish_reason · the one field the loop reads to decide what to do next",
-  intro: "Compare two questions, the offered tools, and the actual replies. A model may answer or decline without requesting a tool.",
+  intro: "Make one call without tools and one with a clock tool, then compare their finish_reason values.",
   code: `// On a custom endpoint, change the model in the connection card; that setting owns the route.
 const CFG = await helpers.getConfig();
 const MODEL = helpers.isDefaultModelApiBaseUrl(CFG.url)

@@ -34,15 +34,15 @@
       "source": "After <a href=\"https://lilianweng.github.io/posts/2023-06-23-agent/\" target=\"_blank\" rel=\"noopener\">Lilian Weng (2023)</a>: the model is the agent's core controller, with memory, planning, tools, and action wired around it.",
       "value": "Depois de <a href=\"https://lilianweng.github.io/posts/2023-06-23-agent/\" target=\"_blank\" rel=\"noopener\">Lilian Weng (2023)</a>: o modelo é o controlador central do agente, com memória, planejamento, ferramentas e ação conectados ao redor dele."
     },
+    "link.51e6d1113850": {
+      "type": "link",
+      "source": "\n    The loop above hard-wires one small tool. LangChain's <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n    generalizes the same machinery with more tools, standard interfaces, and observability integrations.\n    The agent below has one tool, <code>read_course_page</code>, which returns any course page as Markdown.\n    The model decides which pages to read.\n  ",
+      "value": "O ciclo acima fixa no código uma pequena ferramenta. O <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a> da LangChain generaliza o mesmo mecanismo com mais ferramentas, interfaces padrão e integrações de observabilidade. O agente abaixo tem uma ferramenta, <code>read_course_page</code>, que retorna qualquer página do curso como Markdown. O modelo decide quais páginas ler."
+    },
     "link.52c80043ccc5": {
       "type": "link",
       "source": "\n      An agent built on a language model runs the same perceive-reason-act\n      loop as anything else, with one detail that gives the pattern its name:\n      the model reasons in words between the actions it takes.\n      <a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al. (2022)</a>\n      called this <strong>ReAct</strong>, for reasoning and acting. They found that\n      interleaving short reasoning traces with tool use handles many tasks more\n      reliably than planning everything first or acting with no reasoning step.\n    ",
       "value": "\n Um agente baseado em um grande modelo de linguagem executa o mesmo ciclo perceber-raciocinar-agir\n que qualquer outra coisa, com um detalhe que dá nome ao padrão:\n o modelo raciocina em palavras entre as ações que ele toma.\n <a href=\"https://arxiv.org/abs/2210.03629\" target=\"_blank\" rel=\"noopener\">Yao et al. (2022)</a>\n chamou isso de <strong>ReAct</strong>, de raciocinar e agir. Os autores descobriram que\n intercalar traços de raciocínio curtos com o uso de ferramentas lida com muitas tarefas de forma mais\n confiável do que planejar tudo primeiro ou agir sem um passo de raciocínio.\n "
-    },
-    "link.5df192642c7d": {
-      "type": "link",
-      "source": "\n    The loop above hard-wires one tiny tool. LangChain's <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n    generalizes the same machinery to support more tools, standard interfaces, and observability integrations. The agent below uses a single tool,\n    <code>read_course_page</code>, which hands the agent any page of this course as markdown. The model decides which pages to read for your question, so give it a try.\n  ",
-      "value": "\n O ciclo acima fixa diretamente uma pequena ferramenta. O <a href=\"https://docs.langchain.com/oss/javascript/langchain/agents\" target=\"_blank\" rel=\"noopener\"><code>createReactAgent</code></a>\n da LangChain generaliza o mesmo mecanismo para oferecer suporte a mais ferramentas, interfaces padrão e integrações de observabilidade. O agente abaixo usa uma única ferramenta,\n <code>read_course_page</code>, que fornece ao agente qualquer página deste curso como markdown. O modelo decide quais páginas ler para responder à sua pergunta; experimente.\n "
     },
     "link.64ae525d2a06": {
       "type": "link",
@@ -96,6 +96,11 @@
       "source": "\n    The harness maintains the messages and executes the tools. Its router reads\n    <code>finish_reason</code> to decide whether to process tool requests or return an answer.\n  ",
       "value": "O harness de execução mantém as mensagens e executa as ferramentas. Seu roteador lê <code>finish_reason</code> para decidir se processa solicitações de ferramentas ou retorna uma resposta."
     },
+    "rich.02cedd2053a3": {
+      "type": "rich",
+      "source": "Before your first message, open <b>Model and context options</b> and select titles under <b>Pages</b>. Hover a title to see its source ID, such as <code>01b-react</code>.",
+      "value": "Antes da primeira mensagem, abra <b>Opções de modelo e contexto</b> e selecione títulos em <b>Páginas</b>. Passe o cursor sobre um título para ver o ID de origem, como <code>01b-react</code>."
+    },
     "rich.04b481fa123f": {
       "type": "rich",
       "source": "\n    Every chat-completions response carries a <code>finish_reason</code>\n    field that tells you why the model stopped generating. Inside an agent\n    loop, read it alongside the response content and tool requests to decide what to do next:\n    run a tool, return the answer to the user, or handle an error. Before reading\n    what its values mean, make two calls and compare their replies.\n  ",
@@ -141,10 +146,20 @@
       "source": "\n    As an exercise, we can try to create a simple loop from scratch.\n    All we need is a single tool named <code>get_current_time</code> plus one system prompt\n    and one <code>while</code> loop. Run it with \"What time is it in UTC?\" to start, and see what else you can ask:\n  ",
       "value": "\n Como um exercício, podemos tentar criar um ciclo simples do agente a partir do zero.\n Tudo o que precisamos é de uma única ferramenta chamada <code>get_current_time</code> mais um prompt do sistema\n e um ciclo <code>while</code>. Execute-o com \"Que horas são em UTC?\" para começar e veja o que mais você pode perguntar:\n "
     },
+    "rich.84a5048b395e": {
+      "type": "rich",
+      "source": "<b>Call 2</b> asks for the current UTC time and offers a <code>get_current_time</code> tool.",
+      "value": "A <b>chamada 2</b> pergunta a hora UTC atual e oferece uma ferramenta <code>get_current_time</code>."
+    },
     "rich.84d160e88d5a": {
       "type": "rich",
       "source": "<code>\"length\"</code> means the token budget ran out before the answer finished.",
       "value": "<code>\"length\"</code> significa que o orçamento de tokens esgotou antes que a resposta terminasse."
+    },
+    "rich.90a40cdb771e": {
+      "type": "rich",
+      "source": "The cell makes two calls and prints each call's <code>finish_reason</code> and reply.",
+      "value": "A célula faz duas chamadas e mostra o <code>finish_reason</code> e a resposta de cada uma."
     },
     "rich.925eff5b49ae": {
       "type": "rich",
@@ -155,11 +170,6 @@
       "type": "rich",
       "source": "The second comparison asks whether each extra tool call supplies useful evidence. Inspect the clock results and their order in <code>messages</code>. If the sequence is unclear, return to the clock-loop canvas and expand its trace before changing the prompt. Your result may differ from another run; explain it from your own trace.",
       "value": "A segunda comparação pergunta se cada chamada adicional traz evidências úteis. Examine os resultados do relógio e a ordem deles em <code>messages</code>. Se a sequência não estiver clara, volte ao diagrama do ciclo e expanda o registro de execução antes de alterar o prompt. O resultado pode variar entre execuções; explique-o a partir do seu próprio registro."
-    },
-    "rich.a35ba46238c7": {
-      "type": "rich",
-      "source": "\n    Run the cell to open a chat panel, then ask <em>“How does the clock loop decide when to stop?”</em> You can leave the page selection empty; the agent will choose which course pages to read. To choose the context yourself, open <b>Model and context options</b> and select the page title under <b>Pages</b> before your first message. The title's tooltip shows its source ID, such as <code>01b-react</code>. If you change the selected pages later, start a <b>New chat</b>. Expand a source chip to compare the answer with what the agent actually read.\n  ",
-      "value": "Execute a célula para abrir o chat e pergunte <em>“Como o ciclo do relógio decide quando parar?”</em> Você pode deixar a seleção de páginas vazia; o agente escolherá quais consultar. Para escolher o contexto, abra <b>Opções de modelo e contexto</b> e selecione um título em <b>Páginas</b> antes da primeira mensagem. A dica do título mostra o ID de origem, como <code>01b-react</code>. Se mudar a seleção depois, inicie uma <b>Nova conversa</b>. Expanda um indicador de fonte para comparar a resposta com o que o agente leu."
     },
     "rich.a5ec72e450db": {
       "type": "rich",
@@ -176,25 +186,40 @@
       "source": "<strong>Tools</strong> are the functions your harness exposes.",
       "value": "<strong>Ferramentas</strong> são as funções que o harness de execução expõe."
     },
+    "rich.baed64797d4c": {
+      "type": "rich",
+      "source": "Ask <em>“How does the clock loop decide when to stop?”</em>",
+      "value": "Pergunte <em>“Como o ciclo do relógio decide quando parar?”</em>"
+    },
     "rich.bd05de694d36": {
       "type": "rich",
       "source": "<code>\"content_filter\"</code> means a safety classifier stopped the output.",
       "value": "<code>\"content_filter\"</code> significa que um classificador de segurança parou a saída."
+    },
+    "rich.c100f323f54c": {
+      "type": "rich",
+      "source": "Start a <b>New chat</b> after changing the selection.",
+      "value": "Inicie uma <b>Nova conversa</b> depois de mudar a seleção."
+    },
+    "rich.c92bf9683be9": {
+      "type": "rich",
+      "source": "<b>Call 1</b> asks a general question and offers no tools.",
+      "value": "A <b>chamada 1</b> faz uma pergunta geral e não oferece ferramentas."
     },
     "rich.ce74f39f4bc6": {
       "type": "rich",
       "source": "<strong>Planning</strong> happens when the model uses the supplied context to choose its next response or tool request.",
       "value": "O <strong>planejamento</strong> ocorre quando o modelo usa o contexto fornecido para escolher sua próxima resposta ou solicitação de ferramenta."
     },
+    "rich.d0e38ecb03ca": {
+      "type": "rich",
+      "source": "\n    A tool request comes back as <code>\"tool_calls\"</code>, and the cell only prints it. If call 2\n    returns <code>\"stop\"</code> instead, check whether its reply makes up a time.\n  ",
+      "value": "Uma solicitação de ferramenta chega como <code>\"tool_calls\"</code>, e a célula apenas a mostra. Se, em vez disso, a chamada 2 retornar <code>\"stop\"</code>, verifique se a resposta inventa um horário."
+    },
     "rich.d43436ee347a": {
       "type": "rich",
       "source": "<strong>Action</strong> is the tool call the harness executes.",
       "value": "<strong>Ação</strong> é a chamada de ferramenta que o harness de execução executa."
-    },
-    "rich.d503e5a1f6fe": {
-      "type": "rich",
-      "source": "\n    The first call offers no tools. In the second, the model is offered a tool and asked\n    for the current time. It still chooses whether to request the clock tool. Compare the displayed questions, replies, and\n    <code>finish_reason</code>. If both calls return <code>\"stop\"</code>, inspect the\n    second reply: did it admit it cannot check the time, or give an unsupported answer?\n    Change the model or question and rerun. A tool request names work for your code;\n    this preview does not execute it.\n  ",
-      "value": "A primeira chamada não oferece ferramentas. Na segunda, o modelo recebe uma ferramenta e uma pergunta sobre a hora atual. Ele decide se solicita o relógio. Compare as perguntas, as respostas e <code>finish_reason</code>. Se ambas retornarem <code>\"stop\"</code>, examine a segunda resposta: o modelo admite que não pode consultar a hora ou responde sem verificá-la? Altere o modelo ou a pergunta e execute novamente. Uma solicitação de ferramenta indica trabalho para seu código; esta prévia não o executa."
     },
     "rich.f72c22dd2753": {
       "type": "rich",
@@ -607,6 +632,16 @@
       "source": " Optional visibility: inspect the exact schema offered to the model.",
       "value": " Inspeção opcional: examine o esquema exato oferecido ao modelo."
     },
+    "text.49db30cb82df": {
+      "type": "text",
+      "source": "Run the cell to open the chat panel.",
+      "value": "Execute a célula para abrir o painel de chat."
+    },
+    "text.4b3eaece2c3c": {
+      "type": "text",
+      "source": "The field takes one of four values:",
+      "value": "O campo assume um de quatro valores:"
+    },
     "text.4d369a6b96b9": {
       "type": "text",
       "source": "What time is it in UTC? Use get_current_time to read the clock.",
@@ -617,6 +652,11 @@
       "source": " MODEL is the swappable brain in the reasoning slot. Change it and rerun to drive the",
       "value": " MODEL is the swappable brain in the reasoning slot. Change it and rerun to drive the",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.50aea47e6275": {
+      "type": "text",
+      "source": "Expand a source chip to compare the answer with the pages the agent read.",
+      "value": "Expanda um indicador de fonte para comparar a resposta com as páginas que o agente leu."
     },
     "text.515a5a5545d2": {
       "type": "text",
@@ -729,11 +769,6 @@
       "type": "text",
       "source": "References",
       "value": "Referências"
-    },
-    "text.6998c813031f": {
-      "type": "text",
-      "source": "Compare two questions, the offered tools, and the actual replies. A model may answer or decline without requesting a tool.",
-      "value": "Compare as duas perguntas, as ferramentas disponíveis e as respostas recebidas. Mesmo sem solicitar uma ferramenta, o modelo pode responder ou informar que não consegue responder."
     },
     "text.6a0c24f0658f": {
       "type": "text",
@@ -1069,6 +1104,11 @@
       "value": " log.json(\"offered tool schema\", TOOLS);",
       "untranslated": "Editable JavaScript diagnostic statement with preserved identifiers."
     },
+    "text.c03e507577fd": {
+      "type": "text",
+      "source": "Make one call without tools and one with a clock tool, then compare their finish_reason values.",
+      "value": "Faça uma chamada sem ferramentas e outra com uma ferramenta de relógio e compare os valores de finish_reason."
+    },
     "text.c0f625cb51db": {
       "type": "text",
       "source": "Common mitigations keep each decision close to the evidence it needs:",
@@ -1154,6 +1194,11 @@
       "source": "err",
       "value": "err",
       "untranslated": "kept English: the reviewed pt-BR overlay of web/nemoclaw/01b-react.html carries the canonical source at this unit unchanged"
+    },
+    "text.db6f4466b70d": {
+      "type": "text",
+      "source": "To pick the pages yourself:",
+      "value": "Para escolher as páginas você mesmo:"
     },
     "text.dbacd9211eb0": {
       "type": "text",

@@ -8,11 +8,6 @@
       "source": "<a href=\"https://learn.chatgpt.com/docs/agent-approvals-security\" target=\"_blank\" rel=\"noopener\"><strong>Codex CLI</strong></a> uses <code>AGENTS.md</code> instructions. Sandbox settings limit access; approval policy controls review. Workspace edits and commands can run automatically within those limits.",
       "value": "<a href=\"https://learn.chatgpt.com/docs/agent-approvals-security\" target=\"_blank\" rel=\"noopener\"><strong>Codex CLI</strong></a> 使用 <code>AGENTS.md</code> 指令。沙箱设置限制访问范围；批准策略控制审查。工作区内的编辑和命令可在这些限制内自动执行。"
     },
-    "link.3169d9d32831": {
-      "type": "link",
-      "source": "Connect your launchable on <a href=\"03a-kickstart.html\">Module 3a</a> first. Type a command, click a\n     chip, or press Tab to autocomplete. On the host, <code>openshell sandbox list</code> shows your agent\n     and <code>openshell status</code> reports the gateway. Your agent runs inside a sandbox, so prefix a\n     command with <code>agent</code> to run it there: <code>agent ls</code> lists its files through\n     <code>openshell sandbox exec</code>. Each command runs in its own short-lived shell, so to chat with the\n     agent interactively, use the panel below rather than the <code>openclaw tui</code>.",
-      "value": "请先在<a href=\"03a-kickstart.html\">模块 3a</a> 中连接 launchable。输入命令、点击快捷项，或按 Tab 键自动补全。在宿主上，<code>openshell sandbox list</code> 会显示智能体，<code>openshell status</code> 会报告网关状态。智能体在沙箱内运行，因此可在命令前加上<code>agent</code>，让命令在其中运行：<code>agent ls</code> 会通过 <code>openshell sandbox exec</code> 列出智能体的文件。每条命令都在各自的短生命周期 shell 中运行，因此如需与智能体进行交互式对话，请使用下方面板，而不是 <code>openclaw tui</code>。"
-    },
     "link.3fb438ebe474": {
       "type": "link",
       "source": "<a href=\"https://hermes-agent.nousresearch.com/docs/user-guide/security/\" target=\"_blank\" rel=\"noopener\"><strong>Hermes</strong></a> provides skills, persistent memory, scheduled jobs, and configured messaging integrations. Its approval mode and terminal backend determine command handling and isolation.",
@@ -22,6 +17,11 @@
       "type": "link",
       "source": "<a href=\"https://cursor.com/docs/agent/security\" target=\"_blank\" rel=\"noopener\"><strong>Cursor</strong></a> uses <code>.cursor/rules/*.mdc</code>. Workspace edits generally run without approval; terminal commands require approval by default. Modes and settings can change those checks.",
       "value": "<a href=\"https://cursor.com/docs/agent/security\" target=\"_blank\" rel=\"noopener\"><strong>Cursor</strong></a> 使用 <code>.cursor/rules/*.mdc</code>。工作区编辑通常无需批准；终端命令默认需要批准。模式和设置可能改变这些检查。"
+    },
+    "link.79e3877efaa7": {
+      "type": "link",
+      "source": "Connect your launchable on <a href=\"03a-kickstart.html\">Module 3a</a> first. Then type a command,\n     click a chip, or press Tab to autocomplete.",
+      "value": "请先在<a href=\"03a-kickstart.html\">模块 3a</a> 中连接 launchable。然后输入命令、点击快捷项，或按 Tab 键自动补全。"
     },
     "link.8a61ef7d5dcd": {
       "type": "link",
@@ -88,6 +88,11 @@
       "source": "<strong>Assumptions and defaults</strong> it bakes in, which decide how far it reaches before you ask.",
       "value": "其中内置的<strong>假设和默认设置</strong>：它们决定了在您提出要求前，智能体框架会介入到什么程度。"
     },
+    "rich.6c51f2374a33": {
+      "type": "rich",
+      "source": "Each command runs in a short-lived shell, so chat with the agent in the panel below, not\n      in <code>openclaw tui</code>.",
+      "value": "每条命令都在短生命周期 shell 中运行，因此请在下方面板中与智能体对话，而不是使用 <code>openclaw tui</code>。"
+    },
     "rich.724b98c8c65f": {
       "type": "rich",
       "source": "Not a command on the launchable host. The host carries openshell, so try openshell --help or openshell sandbox list, or run it inside your agent with: agent <command>.",
@@ -103,10 +108,20 @@
       "source": "routed through the managed <code>inference.local</code> gateway; the Privacy Router decides what context may leave on the operator's policy, not the agent's.",
       "value": "通过托管的 <code>inference.local</code> 网关路由；Privacy Router根据 operator 的策略而非智能体的策略，决定哪些上下文可以传出。"
     },
+    "rich.7c9bdfbfd5bd": {
+      "type": "rich",
+      "source": "<code>openshell sandbox list</code> shows your agent, and <code>openshell status</code> reports the gateway.",
+      "value": "<code>openshell sandbox list</code> 会显示智能体，<code>openshell status</code> 会报告网关状态。"
+    },
     "rich.7fb8da628212": {
       "type": "rich",
       "source": "\n    The browser agent has one <code>js</code> tool that runs JavaScript in this page. It can read the DOM, call <code>fetch</code>, and use course helpers within browser permissions. Stop cancels model requests and prevents later tool calls; it cannot interrupt synchronous JavaScript already executing or undo a completed action.\n  ",
       "value": "浏览器智能体有一个在本页执行 JavaScript 的 <code>js</code> 工具。它可在浏览器权限内读取 DOM、调用 <code>fetch</code>，并使用课程辅助函数。停止会取消模型请求并阻止后续工具调用，但无法中断已在执行的同步 JavaScript，也无法撤销已完成的操作。"
+    },
+    "rich.825c2d1aa556": {
+      "type": "rich",
+      "source": "Prefix a command with <code>agent</code> to run it in the agent's sandbox. For example,\n      <code>agent ls</code> lists the agent's files.",
+      "value": "在命令前加上 <code>agent</code>，即可在智能体的沙箱中运行该命令。例如，<code>agent ls</code> 会列出智能体的文件。"
     },
     "rich.89ae01bfdb0e": {
       "type": "rich",
@@ -301,11 +316,6 @@
       "source": "js",
       "value": "js",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.183b9c7d364d": {
-      "type": "text",
-      "source": "\n    Describe a task and compare how much machinery each harness supplies. The editable\n    cell exposes its system prompt and response logic. It also shows the examples. Rerun\n    the cell after an edit to rebuild the artifact.\n  ",
-      "value": "\n    描述一项任务，比较每种智能体框架提供了多少现成机制。可编辑单元会公开其系统提示词和响应逻辑，并展示示例。编辑后重新运行该单元即可重新构建交互页面。\n  "
     },
     "text.18eed0341ad8": {
       "type": "text",
@@ -1491,6 +1501,11 @@
       "source": "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/README.md",
       "value": "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/README.md",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.eb49e2db2f5b": {
+      "type": "text",
+      "source": "\n    Describe a task and compare how much of that machinery each harness supplies. You can\n    edit the cell's system prompt, response logic, or examples, then rerun it to rebuild the\n    artifact.\n  ",
+      "value": "描述一项任务，比较每种智能体框架提供了多少此类机制。您可以编辑该单元的系统提示词、响应逻辑或示例，然后重新运行以重新构建交互页面。"
     },
     "text.ebe0933570be": {
       "type": "text",

@@ -8,11 +8,6 @@
       "source": "<a href=\"https://learn.chatgpt.com/docs/agent-approvals-security\" target=\"_blank\" rel=\"noopener\"><strong>Codex CLI</strong></a> uses <code>AGENTS.md</code> instructions. Sandbox settings limit access; approval policy controls review. Workspace edits and commands can run automatically within those limits.",
       "value": "<a href=\"https://learn.chatgpt.com/docs/agent-approvals-security\" target=\"_blank\" rel=\"noopener\"><strong>Codex CLI</strong></a> 使用 <code>AGENTS.md</code> 指令。沙箱設定限制存取範圍；核准策略控制審查。工作區內的編輯和命令可在這些限制內自動執行。"
     },
-    "link.3169d9d32831": {
-      "type": "link",
-      "source": "Connect your launchable on <a href=\"03a-kickstart.html\">Module 3a</a> first. Type a command, click a\n     chip, or press Tab to autocomplete. On the host, <code>openshell sandbox list</code> shows your agent\n     and <code>openshell status</code> reports the gateway. Your agent runs inside a sandbox, so prefix a\n     command with <code>agent</code> to run it there: <code>agent ls</code> lists its files through\n     <code>openshell sandbox exec</code>. Each command runs in its own short-lived shell, so to chat with the\n     agent interactively, use the panel below rather than the <code>openclaw tui</code>.",
-      "value": "請先在<a href=\"03a-kickstart.html\">模組 3a</a> 中連線 launchable。輸入命令、選取快捷項，或按 Tab 鍵自動補全。在宿主上，<code>openshell sandbox list</code> 會顯示代理程式，<code>openshell status</code> 會報告閘道狀態。代理程式在沙箱內執行，因此可在命令前加上<code>agent</code>，讓命令在其中執行：<code>agent ls</code> 會透過 <code>openshell sandbox exec</code> 列出代理程式的檔案。每條命令都在各自的短生命週期 shell 中執行，因此如需與代理程式進行互動式對話，請使用下方面板，而不是 <code>openclaw tui</code>。"
-    },
     "link.3fb438ebe474": {
       "type": "link",
       "source": "<a href=\"https://hermes-agent.nousresearch.com/docs/user-guide/security/\" target=\"_blank\" rel=\"noopener\"><strong>Hermes</strong></a> provides skills, persistent memory, scheduled jobs, and configured messaging integrations. Its approval mode and terminal backend determine command handling and isolation.",
@@ -22,6 +17,11 @@
       "type": "link",
       "source": "<a href=\"https://cursor.com/docs/agent/security\" target=\"_blank\" rel=\"noopener\"><strong>Cursor</strong></a> uses <code>.cursor/rules/*.mdc</code>. Workspace edits generally run without approval; terminal commands require approval by default. Modes and settings can change those checks.",
       "value": "<a href=\"https://cursor.com/docs/agent/security\" target=\"_blank\" rel=\"noopener\"><strong>Cursor</strong></a> 使用 <code>.cursor/rules/*.mdc</code>。工作區編輯通常不需核准；終端機命令預設需要核准。模式和設定可能改變這些檢查。"
+    },
+    "link.79e3877efaa7": {
+      "type": "link",
+      "source": "Connect your launchable on <a href=\"03a-kickstart.html\">Module 3a</a> first. Then type a command,\n     click a chip, or press Tab to autocomplete.",
+      "value": "請先在<a href=\"03a-kickstart.html\">模組 3a</a> 中連線 launchable。然後輸入命令、選取快捷項，或按 Tab 鍵自動補全。"
     },
     "link.8a61ef7d5dcd": {
       "type": "link",
@@ -88,6 +88,11 @@
       "source": "<strong>Assumptions and defaults</strong> it bakes in, which decide how far it reaches before you ask.",
       "value": "其中內建的<strong>假設和預設設定</strong>：它們決定了在您提出要求前，代理程式框架會介入到什麼程度。"
     },
+    "rich.6c51f2374a33": {
+      "type": "rich",
+      "source": "Each command runs in a short-lived shell, so chat with the agent in the panel below, not\n      in <code>openclaw tui</code>.",
+      "value": "每條命令都在短生命週期 shell 中執行，因此請在下方面板中與代理程式對話，而不是使用 <code>openclaw tui</code>。"
+    },
     "rich.724b98c8c65f": {
       "type": "rich",
       "source": "Not a command on the launchable host. The host carries openshell, so try openshell --help or openshell sandbox list, or run it inside your agent with: agent <command>.",
@@ -103,10 +108,20 @@
       "source": "routed through the managed <code>inference.local</code> gateway; the Privacy Router decides what context may leave on the operator's policy, not the agent's.",
       "value": "透過託管的 <code>inference.local</code> 閘道路由；Privacy Router根據 operator 的策略而非代理程式的策略，決定哪些上下文可以傳出。"
     },
+    "rich.7c9bdfbfd5bd": {
+      "type": "rich",
+      "source": "<code>openshell sandbox list</code> shows your agent, and <code>openshell status</code> reports the gateway.",
+      "value": "<code>openshell sandbox list</code> 會顯示代理程式，<code>openshell status</code> 會報告閘道狀態。"
+    },
     "rich.7fb8da628212": {
       "type": "rich",
       "source": "\n    The browser agent has one <code>js</code> tool that runs JavaScript in this page. It can read the DOM, call <code>fetch</code>, and use course helpers within browser permissions. Stop cancels model requests and prevents later tool calls; it cannot interrupt synchronous JavaScript already executing or undo a completed action.\n  ",
       "value": "瀏覽器代理程式有一個在本頁執行 JavaScript 的 <code>js</code> 工具。它可在瀏覽器權限內讀取 DOM、呼叫 <code>fetch</code>，並使用課程輔助函式。停止會取消模型請求並阻止後續工具呼叫，但無法中斷已在執行的同步 JavaScript，也無法復原已完成的操作。"
+    },
+    "rich.825c2d1aa556": {
+      "type": "rich",
+      "source": "Prefix a command with <code>agent</code> to run it in the agent's sandbox. For example,\n      <code>agent ls</code> lists the agent's files.",
+      "value": "在命令前加上 <code>agent</code>，即可在代理程式的沙箱中執行該命令。例如，<code>agent ls</code> 會列出代理程式的檔案。"
     },
     "rich.89ae01bfdb0e": {
       "type": "rich",
@@ -301,11 +316,6 @@
       "source": "js",
       "value": "js",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
-    },
-    "text.183b9c7d364d": {
-      "type": "text",
-      "source": "\n    Describe a task and compare how much machinery each harness supplies. The editable\n    cell exposes its system prompt and response logic. It also shows the examples. Rerun\n    the cell after an edit to rebuild the artifact.\n  ",
-      "value": "\n    描述一項任務，比較每種代理程式框架提供了多少現成機制。可編輯單元會公開其系統提示詞和回應邏輯，並展示示例。編輯後重新執行該單元即可重新建置互動頁面。\n  "
     },
     "text.18eed0341ad8": {
       "type": "text",
@@ -1491,6 +1501,11 @@
       "source": "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/README.md",
       "value": "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/README.md",
       "untranslated": "kept English: product name, code/protocol literal, canonical citation title, or exact interface label"
+    },
+    "text.eb49e2db2f5b": {
+      "type": "text",
+      "source": "\n    Describe a task and compare how much of that machinery each harness supplies. You can\n    edit the cell's system prompt, response logic, or examples, then rerun it to rebuild the\n    artifact.\n  ",
+      "value": "描述一項任務，比較每種代理程式框架提供了多少此類機制。您可以編輯該儲存格的系統提示詞、回應邏輯或範例，然後重新執行，以重新建置互動頁面。"
     },
     "text.ebe0933570be": {
       "type": "text",

@@ -43,11 +43,6 @@
       "source": "<strong>The prompt shapes intent.</strong>\n        A rule such as \"do not reveal credentials\" tells the model how it\n        should behave. Models can still be deceived by\n        <a href=\"https://arxiv.org/abs/2302.12173\" target=\"_blank\" rel=\"noopener\">Adversarial\n        retrieved content</a>, malicious tool output, or another agent in\n        the loop. This layer influences the decision. The agent retains whatever\n        authority the runtime granted it.",
       "value": "<strong>O prompt orienta a intenção.</strong> Uma regra como “não revele credenciais” descreve o comportamento esperado. Ainda assim, <a href=\"https://arxiv.org/abs/2302.12173\" target=\"_blank\" rel=\"noopener\">conteúdo recuperado malicioso</a>, a saída de uma ferramenta ou outro agente podem enganar o modelo. Essa camada influencia a decisão; não reduz a autoridade concedida pelo runtime."
     },
-    "link.431b4f114d29": {
-      "type": "link",
-      "source": "A <strong>network namespace</strong> (<code>netns</code>) gives the\n         agent an isolated network stack. Outbound access starts closed. An\n         HTTP <strong>CONNECT proxy</strong> provides the only route out.\n         <a href=\"https://www.openpolicyagent.org/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent (OPA)</a>\n         checks the requesting binary, host, port, and path against policy.\n         Whoever edits that policy decides which connections are allowed.",
-      "value": "Um namespace de <strong>rede</strong> (<code>netns</code>) fornece ao agente uma stack de rede isolada. A saída começa bloqueada. Um proxy HTTP <strong>CONNECT</strong> oferece o único caminho externo. O <a href=\"https://www.openpolicyagent.org/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent (OPA)</a> compara o binário solicitante, host, porta e caminho com a política. Quem controla essa política decide quais conexões são permitidas."
-    },
     "link.4ea5655cdecf": {
       "type": "link",
       "source": "<a href=\"https://en.wikipedia.org/wiki/Rice%27s_theorem\" target=\"_blank\" rel=\"noopener\">Rice's theorem</a>\n           rules out a general test for non-trivial behavior of arbitrary\n           programs. An agent with code execution deserves the same caution:\n           instrument the boundaries around what runs instead of assuming a\n           static check can prove every future action safe.",
@@ -88,6 +83,11 @@
       "source": "<a href=\"https://docs.kernel.org/userspace-api/seccomp_filter.html\" target=\"_blank\" rel=\"noopener\">seccomp filter</a> and <a href=\"https://docs.kernel.org/userspace-api/landlock.html\" target=\"_blank\" rel=\"noopener\">Landlock</a>. The kernel syscall-allowlist and filesystem-capability primitives <code>openshell</code> uses for mechanisms 2 and 3.",
       "value": "<a href=\"https://docs.kernel.org/userspace-api/seccomp_filter.html\" target=\"_blank\" rel=\"noopener\">seccomp filter</a> e <a href=\"https://docs.kernel.org/userspace-api/landlock.html\" target=\"_blank\" rel=\"noopener\">Landlock</a>. Primitivas do kernel para listas de syscalls permitidas e controle de acesso ao sistema de arquivos, usadas pelo <code>openshell</code> nos mecanismos 2 e 3."
     },
+    "link.ca58d14a92f8": {
+      "type": "link",
+      "source": "A <strong>network namespace</strong> (<code>netns</code>) gives the\n         agent its own network stack with no outbound access. An HTTP\n         <strong>CONNECT proxy</strong> provides the only route out, and\n         <a href=\"https://www.openpolicyagent.org/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent (OPA)</a>\n         checks each request's binary, host, port, and path against policy. Whoever\n         edits the policy decides what can connect.",
+      "value": "Um <strong>namespace de rede</strong> (<code>netns</code>) dá ao agente uma stack de rede própria, sem acesso de saída. Um <strong>proxy CONNECT</strong> HTTP é a única saída, e o <a href=\"https://www.openpolicyagent.org/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent (OPA)</a> compara o binário, o host, a porta e o caminho de cada solicitação com a política. Quem edita a política decide o que pode se conectar."
+    },
     "link.d334eb2d03a7": {
       "type": "link",
       "source": "Saltzer and Schroeder, <a href=\"https://www.cs.virginia.edu/~evans/cs551/saltzer/\" target=\"_blank\" rel=\"noopener\"><em>The Protection of Information in Computer Systems</em></a> (1975). Where least privilege was first named; the principle behind deny-by-default containment.",
@@ -103,11 +103,6 @@
       "source": "cleanup() { result=$?; trap - EXIT HUP INT TERM; probe_pid=\"\\${probe_pid:-\\${!:-}}\"; if [ -n \"$probe_pid\" ]; then /bin/kill -KILL -- -\"$probe_pid\" 2>/dev/null || /bin/kill -KILL \"$probe_pid\" 2>/dev/null || true; wait \"$probe_pid\" 2>/dev/null || true; fi; rm -rf -- \"$probe_dir\" || exit 125; exit \"$result\"; }",
       "value": "cleanup() { result=$?; trap - EXIT HUP INT TERM; probe_pid=\"\\${probe_pid:-\\${!:-}}\"; if [ -n \"$probe_pid\" ]; then /bin/kill -KILL -- -\"$probe_pid\" 2>/dev/null || /bin/kill -KILL \"$probe_pid\" 2>/dev/null || true; wait \"$probe_pid\" 2>/dev/null || true; fi; rm -rf -- \"$probe_dir\" || exit 125; exit \"$result\"; }",
       "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
-    },
-    "rich.1379ecd555ca": {
-      "type": "rich",
-      "source": "The agent runs as a <strong>non-root process</strong> under the\n         unprivileged <code>sandbox</code> user. A successful exploit therefore\n         starts with less authority. The lower starting authority reduces\n         blast radius, though it does not prove escalation is impossible. The\n         host, container configuration, and syscall policy remain part of the\n         security boundary.",
-      "value": "O agente é executado como um <strong>processo sem privilégios de root</strong> sob o usuário <code>sandbox</code>. Portanto, uma exploração bem-sucedida começa com menos autoridade. Isso reduz o raio de impacto, mas não prova que uma escalada seja impossível. A configuração do host e do contêiner e a política de syscalls continuam fazendo parte do limite de segurança."
     },
     "rich.195e3695c230": {
       "type": "rich",
@@ -153,6 +148,11 @@
       "type": "rich",
       "source": "<strong>Operator-token plane.</strong> The amber band sits above the\n     checkpoint, the escalation axis the egress rules never see.",
       "value": "<strong>Plano de escalada.</strong> A faixa âmbar representa o plano de controle acima do ponto de aplicação. As regras de saída do agente não enxergam esse eixo."
+    },
+    "rich.8b3a9e3acca3": {
+      "type": "rich",
+      "source": "The agent runs as a <strong>non-root process</strong> under the\n         unprivileged <code>sandbox</code> user, so an exploit starts with less\n         authority. Running without root limits the damage but does not prove\n         escalation is impossible. The host, container configuration, and syscall\n         policy are still part of the security boundary.",
+      "value": "O agente é executado como um <strong>processo não root</strong> sob o usuário sem privilégios <code>sandbox</code>, então uma exploração começa com menos autoridade. Rodar sem root limita o dano, mas não prova que uma escalada de privilégios seja impossível. O host, a configuração do contêiner e a política de syscalls continuam fazendo parte do limite de segurança."
     },
     "rich.995f008aff36": {
       "type": "rich",
@@ -262,6 +262,11 @@
       "source": ": > \"$probe_dir/npm-globalrc\"",
       "value": ": > \"$probe_dir/npm-globalrc\"",
       "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
+    "text.0672cbe83f04": {
+      "type": "text",
+      "source": "The map predicts how the loaded policy treats each destination. Change the calling binary\n     to compare its grants. The live check later in this module tests these predictions with real\n     requests.",
+      "value": "O mapa prevê como a política carregada trata cada destino. Altere o binário que faz a chamada para comparar suas permissões. A verificação ao vivo, mais adiante neste módulo, testa essas previsões com solicitações reais."
     },
     "text.07bdc21bc756": {
       "type": "text",
@@ -1940,11 +1945,6 @@
       "type": "text",
       "source": "Linux errno names for operation not permitted and permission denied.",
       "value": "Nomes errno do Linux para “operação não permitida” e “permissão negada”."
-    },
-    "text.d9f00eff9bc3": {
-      "type": "text",
-      "source": "The map evaluates candidate destinations against the loaded policy. Change the calling\n     binary to inspect how its grants differ, then inspect the matched rule. These are browser\n     predictions; live requests provide a separate observation.",
-      "value": "O mapa avalia os destinos propostos com base na política carregada. Altere o binário que faz a chamada para comparar suas permissões e examine a regra correspondente. São previsões do navegador; as solicitações reais fornecem uma observação separada."
     },
     "text.da807847adb6": {
       "type": "text",

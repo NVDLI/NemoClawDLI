@@ -43,11 +43,6 @@
       "source": "<strong>The prompt shapes intent.</strong>\n        A rule such as \"do not reveal credentials\" tells the model how it\n        should behave. Models can still be deceived by\n        <a href=\"https://arxiv.org/abs/2302.12173\" target=\"_blank\" rel=\"noopener\">Adversarial\n        retrieved content</a>, malicious tool output, or another agent in\n        the loop. This layer influences the decision. The agent retains whatever\n        authority the runtime granted it.",
       "value": "<strong>提示詞塑造意圖。</strong>\n        “不得洩露憑證”之類的規則會告訴模型應如何行事。但模型仍可能被<a href=\"https://arxiv.org/abs/2302.12173\" target=\"_blank\" rel=\"noopener\">對抗性檢索內容</a>、惡意工具輸出或迴圈中的其他代理程式欺騙。此層會影響決策，但代理程式仍保留執行階段授予它的所有權限。"
     },
-    "link.431b4f114d29": {
-      "type": "link",
-      "source": "A <strong>network namespace</strong> (<code>netns</code>) gives the\n         agent an isolated network stack. Outbound access starts closed. An\n         HTTP <strong>CONNECT proxy</strong> provides the only route out.\n         <a href=\"https://www.openpolicyagent.org/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent (OPA)</a>\n         checks the requesting binary, host, port, and path against policy.\n         Whoever edits that policy decides which connections are allowed.",
-      "value": "<strong>網路名稱空間</strong>（<code>netns</code>）為代理程式提供隔離的網路棧。初始狀態下，出站存取處於關閉狀態。\n         HTTP <strong>CONNECT 代理</strong>是唯一的出站路徑。\n         <a href=\"https://www.openpolicyagent.org/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent（OPA）</a>會依據策略檢查發起請求的二進位制檔案、主機、埠和路徑。策略的編輯者決定允許哪些連線。"
-    },
     "link.4ea5655cdecf": {
       "type": "link",
       "source": "<a href=\"https://en.wikipedia.org/wiki/Rice%27s_theorem\" target=\"_blank\" rel=\"noopener\">Rice's theorem</a>\n           rules out a general test for non-trivial behavior of arbitrary\n           programs. An agent with code execution deserves the same caution:\n           instrument the boundaries around what runs instead of assuming a\n           static check can prove every future action safe.",
@@ -88,6 +83,11 @@
       "source": "<a href=\"https://docs.kernel.org/userspace-api/seccomp_filter.html\" target=\"_blank\" rel=\"noopener\">seccomp filter</a> and <a href=\"https://docs.kernel.org/userspace-api/landlock.html\" target=\"_blank\" rel=\"noopener\">Landlock</a>. The kernel syscall-allowlist and filesystem-capability primitives <code>openshell</code> uses for mechanisms 2 and 3.",
       "value": "<a href=\"https://docs.kernel.org/userspace-api/seccomp_filter.html\" target=\"_blank\" rel=\"noopener\">seccomp 過濾器</a>和 <a href=\"https://docs.kernel.org/userspace-api/landlock.html\" target=\"_blank\" rel=\"noopener\">Landlock</a>。這是 <code>openshell</code> 在機制 2 和機制 3 中使用的核心系統呼叫允許列表與檔案系統能力原語。"
     },
+    "link.ca58d14a92f8": {
+      "type": "link",
+      "source": "A <strong>network namespace</strong> (<code>netns</code>) gives the\n         agent its own network stack with no outbound access. An HTTP\n         <strong>CONNECT proxy</strong> provides the only route out, and\n         <a href=\"https://www.openpolicyagent.org/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent (OPA)</a>\n         checks each request's binary, host, port, and path against policy. Whoever\n         edits the policy decides what can connect.",
+      "value": "<strong>網路名稱空間</strong>（<code>netns</code>）為代理程式提供獨立的網路堆疊，且沒有出站存取。HTTP <strong>CONNECT 代理伺服器</strong>是唯一的出口，<a href=\"https://www.openpolicyagent.org/\" target=\"_blank\" rel=\"noopener\">Open Policy Agent（OPA）</a>會依據策略檢查每個請求的二進位檔、主機、埠和路徑。誰編輯策略，誰就決定哪些連線可以建立。"
+    },
     "link.d334eb2d03a7": {
       "type": "link",
       "source": "Saltzer and Schroeder, <a href=\"https://www.cs.virginia.edu/~evans/cs551/saltzer/\" target=\"_blank\" rel=\"noopener\"><em>The Protection of Information in Computer Systems</em></a> (1975). Where least privilege was first named; the principle behind deny-by-default containment.",
@@ -103,11 +103,6 @@
       "source": "cleanup() { result=$?; trap - EXIT HUP INT TERM; probe_pid=\"\\${probe_pid:-\\${!:-}}\"; if [ -n \"$probe_pid\" ]; then /bin/kill -KILL -- -\"$probe_pid\" 2>/dev/null || /bin/kill -KILL \"$probe_pid\" 2>/dev/null || true; wait \"$probe_pid\" 2>/dev/null || true; fi; rm -rf -- \"$probe_dir\" || exit 125; exit \"$result\"; }",
       "value": "cleanup() { result=$?; trap - EXIT HUP INT TERM; probe_pid=\"\\${probe_pid:-\\${!:-}}\"; if [ -n \"$probe_pid\" ]; then /bin/kill -KILL -- -\"$probe_pid\" 2>/dev/null || /bin/kill -KILL \"$probe_pid\" 2>/dev/null || true; wait \"$probe_pid\" 2>/dev/null || true; fi; rm -rf -- \"$probe_dir\" || exit 125; exit \"$result\"; }",
       "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
-    },
-    "rich.1379ecd555ca": {
-      "type": "rich",
-      "source": "The agent runs as a <strong>non-root process</strong> under the\n         unprivileged <code>sandbox</code> user. A successful exploit therefore\n         starts with less authority. The lower starting authority reduces\n         blast radius, though it does not prove escalation is impossible. The\n         host, container configuration, and syscall policy remain part of the\n         security boundary.",
-      "value": "代理程式以<strong>非 root 處理程序</strong>的身分執行，使用無特權的 <code>sandbox</code> 使用者。因此，即使攻擊成功，最初獲得的權限也較少。較低的初始權限可以縮小影響範圍，但不能證明權限提升不可能發生。主機、容器設定和系統呼叫策略仍是安全邊界的一部分。"
     },
     "rich.195e3695c230": {
       "type": "rich",
@@ -153,6 +148,11 @@
       "type": "rich",
       "source": "<strong>Operator-token plane.</strong> The amber band sits above the\n     checkpoint, the escalation axis the egress rules never see.",
       "value": "<strong>Operator-token 平面。</strong>琥珀色區域位於檢查點上方，代表出站規則完全無法感知的權限提升軸。"
+    },
+    "rich.8b3a9e3acca3": {
+      "type": "rich",
+      "source": "The agent runs as a <strong>non-root process</strong> under the\n         unprivileged <code>sandbox</code> user, so an exploit starts with less\n         authority. Running without root limits the damage but does not prove\n         escalation is impossible. The host, container configuration, and syscall\n         policy are still part of the security boundary.",
+      "value": "代理程式以<strong>非 root 處理程序</strong>的身分執行，使用無特權的 <code>sandbox</code> 使用者，因此漏洞利用一開始取得的權限較少。不以 root 執行可以限制損害，但不能證明權限提升不可能發生。主機、容器設定和系統呼叫策略仍是安全邊界的一部分。"
     },
     "rich.995f008aff36": {
       "type": "rich",
@@ -262,6 +262,11 @@
       "source": ": > \"$probe_dir/npm-globalrc\"",
       "value": ": > \"$probe_dir/npm-globalrc\"",
       "untranslated": "Executable model identifier or shell syntax; preserve the exact command and punctuation."
+    },
+    "text.0672cbe83f04": {
+      "type": "text",
+      "source": "The map predicts how the loaded policy treats each destination. Change the calling binary\n     to compare its grants. The live check later in this module tests these predictions with real\n     requests.",
+      "value": "此圖會預測載入的政策如何處理每個目的地。切換發出呼叫的執行檔，比較其授權。本模組稍後的即時檢查會以實際請求驗證這些預測。"
     },
     "text.07bdc21bc756": {
       "type": "text",
@@ -1944,11 +1949,6 @@
       "type": "text",
       "source": "Linux errno names for operation not permitted and permission denied.",
       "value": "Linux 中表示“不允許執行操作”和“權限被拒絕”的 errno 名稱。"
-    },
-    "text.d9f00eff9bc3": {
-      "type": "text",
-      "source": "The map evaluates candidate destinations against the loaded policy. Change the calling\n     binary to inspect how its grants differ, then inspect the matched rule. These are browser\n     predictions; live requests provide a separate observation.",
-      "value": "此圖會根據載入的政策評估候選目的地。切換發出呼叫的執行檔，檢查授權有何不同，再查看符合的規則。這些是瀏覽器的預測；實際請求提供另一份觀察結果。"
     },
     "text.da807847adb6": {
       "type": "text",

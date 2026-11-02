@@ -117,13 +117,15 @@
      an isolated session for this demonstration. OpenClaw can instead bind scheduled work
      to another supported session mode when continuity is more important than isolation.</p>
 
-  <p>The cell installs one uniquely named job and waits up to three minutes for a successful
-    scheduled run. The one-shot job requests automatic deletion after its run, which also limits
-    work if the page closes. The cell verifies a new file reference and removes its owned job, including on
-    failure or Stop. Keep the page open until cleanup finishes. If cleanup fails, retain the logged
-    job ID and use the removal cell. The evidence file remains for inspection.</p>
-  <p>A successful run history entry and matching new file establish that the schedule triggered
-    the write without a new chat message at firing time.</p>
+  <p>The cell schedules a one-shot job and waits up to three minutes for it to run.</p>
+  <ul>
+    <li>The job writes a new file. The run history and that file show the schedule triggered the
+      write, with no chat message.</li>
+    <li>The job deletes itself after it runs. The cell also removes it after a failure or Stop.
+      The file stays.</li>
+    <li>Keep the page open until cleanup finishes. If cleanup fails, copy the job ID from the log
+      and use the removal cell.</li>
+  </ul>
 
   <div id="probe-cron"></div>
 

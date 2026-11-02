@@ -39,7 +39,7 @@ CHECKS = [
         "page": "01b-react.html",
         "label": "tool mechanics before ReAct tool-call discussion",
         "before": "A <strong>tool</strong> is code your harness can run for the model",
-        "after": "offered a tool and asked",
+        "after": "offers a <code>get_current_time</code> tool",
     },
     {
         "page": "01c-tools.html",

@@ -160,15 +160,19 @@
   </details>
 
   <h2>Step 2 · Compare message instructions</h2>
-  <p>Ask the same review question in two fresh sessions. The second request explicitly asks for
-    an auditor's evidence checks. Inspect both prompts and compare the replies. This changes
-    message instructions; it does not edit SOUL.md or route to another persona file.</p>
+  <p>The cell asks the same review question in two fresh sessions. The second request adds an
+    instruction to review it like an auditor. SOUL.md stays unchanged, so any difference in the
+    replies comes from that instruction.</p>
   <div id="cell-personas"></div>
 
   <h2>Step 3 · The agent edits its own context</h2>
-  <p>Ask the agent to append a uniquely labeled preference to MEMORY.md. An operator read verifies
-    the saved reference before a new conversation asks the agent to read it. Acknowledging a save
-    is insufficient evidence. The appended note remains available for inspection.</p>
+  <p>The cell checks that the note actually reaches the file:</p>
+  <ol>
+    <li>The agent appends a uniquely labeled preference to MEMORY.md.</li>
+    <li>An operator read confirms the note is in the file.</li>
+    <li>A new conversation asks the agent to read the note back.</li>
+  </ol>
+  <p>The note stays in MEMORY.md afterward.</p>
 
   <div id="cell-memory"></div>
 
@@ -201,16 +205,16 @@
 
   <h2>Try it · chat with your live agent</h2>
   <p>
-    Use the chat to inspect one workspace file. Compare the answer with the operator read
-    and inspect any tool calls. You can ask the agent to:
+    Ask the agent about a workspace file, then compare its answer with the operator read.
+    You can ask the agent to:
   </p>
   <ul>
-    <li>describe its workspace,</li>
-    <li>read a file,</li>
-    <li>or run a command.</li>
+    <li>describe its workspace</li>
+    <li>read a file</li>
+    <li>run a command</li>
   </ul>
   <p>
-    After editing a file, start a fresh session and check which content the agent uses.
+    After you edit a file, start a fresh session to see which version the agent reads.
   </p>
   <div id="openclaw-cell"></div>
   <div id="openclaw-artifact"></div>

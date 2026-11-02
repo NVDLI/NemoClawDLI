@@ -430,11 +430,6 @@
       "source": "The always-on loop",
       "value": "持续运行的循环"
     },
-    "text.45d7568462c7": {
-      "type": "text",
-      "source": "A successful run history entry and matching new file establish that the schedule triggered\n    the write without a new chat message at firing time.",
-      "value": "成功的执行记录与内容匹配的新文件，可证明写入是由计划任务触发，触发时并未发送新的聊天消息。"
-    },
     "text.465b77719d41": {
       "type": "text",
       "source": "checkout-service is throwing 502s in us-east-1",
@@ -454,6 +449,11 @@
       "type": "text",
       "source": "Where to take this",
       "value": "后续应用方向"
+    },
+    "text.4dcd0b06ddb8": {
+      "type": "text",
+      "source": "The job writes a new file. The run history and that file show the schedule triggered the\n      write, with no chat message.",
+      "value": "该任务会写入一个新文件。执行记录和该文件表明写入由计划任务触发，没有发送聊天消息。"
     },
     "text.4dfb2f544ef6": {
       "type": "text",
@@ -502,6 +502,11 @@
       "source": "/SKILL.md and follow it for this practice incident: checkout-service has returned 502s for 12 minutes.\nReport the runbook reference and propose a next step. Do not execute changes or contact anyone.",
       "value": "/SKILL.md，并按其要求处理这个练习事件：checkout-service 已连续 12 分钟返回 502 错误。报告操作手册的参考码并提出下一步建议。不要执行更改，也不要联系任何人。"
     },
+    "text.61d5b765dac0": {
+      "type": "text",
+      "source": "Keep the page open until cleanup finishes. If cleanup fails, copy the job ID from the log\n      and use the removal cell.",
+      "value": "请保持页面打开，直到清理完成。若清理失败，请从日志中复制任务 ID，并使用移除单元。"
+    },
     "text.64371a28dc46": {
       "type": "text",
       "source": "Summarize what you would do if paged at 3am",
@@ -542,11 +547,6 @@
       "type": "text",
       "source": "configured session",
       "value": "已配置的会话"
-    },
-    "text.6ab729cfcdd9": {
-      "type": "text",
-      "source": "The cell installs one uniquely named job and waits up to three minutes for a successful\n    scheduled run. The one-shot job requests automatic deletion after its run, which also limits\n    work if the page closes. The cell verifies a new file reference and removes its owned job, including on\n    failure or Stop. Keep the page open until cleanup finishes. If cleanup fails, retain the logged\n    job ID and use the removal cell. The evidence file remains for inspection.",
-      "value": "此单元会安装一项具有唯一名称的任务，并等待最多三分钟，确认计划执行成功。这项单次任务会要求在执行后自动删除，因此关闭页面后的工作也能受到限制。单元会验证新的文件参考码，并移除自己创建的任务，包括失败或按下“停止”时。请保持页面打开，直到清理完成。若清理失败，请保留记录中的任务 ID，并使用移除单元。证据文件会保留供您检查。"
     },
     "text.72c1e9a26b8f": {
       "type": "text",
@@ -859,6 +859,11 @@
       "source": "Scheduled run: ",
       "value": "计划执行："
     },
+    "text.e6bb3bf51911": {
+      "type": "text",
+      "source": "The cell schedules a one-shot job and waits up to three minutes for it to run.",
+      "value": "此单元会安排一项单次任务，并最多等待三分钟，直到任务运行。"
+    },
     "text.e92b8c46398a": {
       "type": "text",
       "source": "Install a practice skill, then explicitly read it in a fresh session",
@@ -905,6 +910,11 @@
       "source": "CRON-",
       "value": "CRON-",
       "untranslated": "Unique evidence reference prefix that the scheduled job writes and operator readback verifies."
+    },
+    "text.f9a44968f313": {
+      "type": "text",
+      "source": "The job deletes itself after it runs. The cell also removes it after a failure or Stop.\n      The file stays.",
+      "value": "该任务运行后会自行删除。如果运行失败或按下“停止”，单元也会将其移除。文件会保留。"
     },
     "text.f9b756b3a149": {
       "type": "text",
