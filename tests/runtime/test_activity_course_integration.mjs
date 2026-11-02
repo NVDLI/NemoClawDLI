@@ -912,6 +912,60 @@ test('activity policy validation rejects deleted, renamed, and malformed control
   assert.equal(isActivityPolicyApproved(APPROVED_POLICY), true);
 });
 
+const SOURCE_POLICY = JSON.parse(fs.readFileSync(path.join('web/activity', 'activity-policy.json'), 'utf8'));
+const deploymentPolicy = session => ({ ...SOURCE_POLICY,
+  lab_transport: { base_path: '/dli/api/activity', allow_http: false, ...(session === undefined ? {} : { session }) } });
+
+test('only a deployment-held session is a valid lab transport session', () => {
+  assert.equal(isActivityPolicyApproved(deploymentPolicy('deployment')), true);
+  assert.equal(isActivityPolicyApproved(deploymentPolicy()), true);
+  for (const session of ['Deployment', 'browser', '', null, true]) {
+    assert.throws(() => validateActivityPolicy(deploymentPolicy(session)), /Activity data notice is invalid/);
+  }
+});
+
+// The deployment host relays the Activity API under its own origin. Only the s-fx-43 lab mode
+// needs the lab's /artifact identity and XSRF token.
+for (const [mode, session] of [['deployment-held session', 'deployment'], ['lab session', undefined]]) {
+  test(`a ${mode} sends Activity calls through the same-origin transport`, async () => {
+    const requests = [];
+    const page = 'https://nemoclaw-abc123.gobrev.dev/dli/nemoclaw/01a-loop.html';
+    const labArtifact = { artifact_id: ACTIVITY_ARTIFACT_ID, artifact_version: `git-${'c'.repeat(40)}-adapter-${'d'.repeat(64)}`,
+      artifact_digest: `sha256:${'e'.repeat(64)}` };
+    const activity = createCourseActivity({
+      locationHref: page,
+      policyLoader: async () => deploymentPolicy(session),
+      artifactResolver: async () => APPROVED_ARTIFACT,
+      fetchImpl: async (url, options = {}) => {
+        requests.push({ url: String(url), headers: new Headers(options.headers), credentials: options.credentials });
+        if (String(url).endsWith('/artifact')) {
+          return { ok: true, url: String(url), json: async () => ({ artifact: labArtifact, xsrf_token: 'fixture-xsrf' }) };
+        }
+        return new Response('{}', { status: 201 });
+      },
+      initialize: async options => {
+        await options.fetchImpl(`${options.baseUrl}/v1/activity-sessions`, {
+          method: 'POST', headers: { Authorization: 'Bearer fixture-session', 'Content-Type': 'application/json' }, body: '{}',
+        });
+        return { getState: async () => confirmedState() };
+      },
+    });
+    assert.equal(await activity.enable(), true);
+    const api = requests.find(request => request.url.endsWith('/v1/activity-sessions'));
+    assert.equal(api.url, 'https://nemoclaw-abc123.gobrev.dev/dli/api/activity/v1/activity-sessions');
+    assert.equal(api.credentials, 'same-origin');
+    assert.equal(api.headers.get('Authorization'), null);
+    assert.equal(api.headers.get('X-Activity-Authorization'), 'Bearer fixture-session');
+    if (session === 'deployment') {
+      assert.equal(requests.some(request => request.url.endsWith('/artifact')), false);
+      assert.equal(api.headers.get('X-XSRFToken'), null);
+    } else {
+      assert.equal(requests[0].url, 'https://nemoclaw-abc123.gobrev.dev/dli/api/activity/artifact');
+      assert.equal(api.headers.get('X-XSRFToken'), 'fixture-xsrf');
+    }
+  });
+}
+
 test('unavailable session storage keeps one activity session in memory', async () => {
   const requests = [];
   const storageTarget = {
@@ -1607,6 +1661,24 @@ test('missing or delayed CMP fails closed and bannerLoaded reconciles late initi
   fixture.windowTarget.OneTrust = { IsAlertBoxClosed: () => true, OnConsentChanged: () => {} };
   fixture.windowTarget.dispatchEvent(new Event('bannerLoaded')); await flushConsent();
   assert.equal(fixture.calls.includes('enable'), true);
+});
+
+test('a deployment-held session connects without a consent banner; other policies stay closed', async () => {
+  for (const [lab_transport, connects] of [
+    [{ base_path: '/dli/api/activity', allow_http: false, session: 'deployment' }, true],
+    [{ base_path: '/lab/api/sfx43/activity', allow_http: true }, false],
+    [{ base_path: '/dli/api/activity', allow_http: false, session: 'browser' }, false],
+    [undefined, false],
+  ]) {
+    const fixture = consentFixture({ loaded: false });
+    fixture.activity.getPolicy = async () => ({ lab_transport });
+    const consent = await bindConsent(fixture); await flushConsent();
+    assert.equal(fixture.calls.includes('enable'), connects, JSON.stringify(lab_transport));
+    assert.equal(consent.deploymentSession(), connects);
+    assert.equal(consent.allowsProgress(), connects);
+    assert.equal(fixture.activity.snapshot().referralTracking, connects);
+    if (connects) assert.deepEqual(fixture.calls, ['enable', 'sync']);
+  }
 });
 
 test('withdrawal while enabling cannot sync a stale connection', async () => {

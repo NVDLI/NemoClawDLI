@@ -132,6 +132,70 @@ test('same-origin Skybridge stays direct, and unrelated hosts cannot claim its c
   assert.throws(() => connection.accessProviderForOpenClawUrl(launchable, 'cloudflare'), /does not match/);
 });
 
+test('a course hosted on a Brev link reads an unset launchable as unset, not as its own host', () => {
+  const previous = globalThis.location;
+  try {
+    for (const page of ['https://course-example.gobrev.dev/dli/nemoclaw/03a-kickstart.html',
+      'https://dli-example.brevlab.com/dli/nemoclaw/03a-kickstart.html',
+      'https://course-example.apps.run.brev.nvidia.com/dli/nemoclaw/',
+      'http://nemoclaw-new-session.gobrev.dev/dli/nemoclaw/03a-kickstart.html']) {
+      globalThis.location = new URL(page);
+      connection.setOpenClawConnection({rawUrl:''});
+      for (const provider of ['auto', 'cloudflare', 'pomerium'])
+        assert.equal(connection.accessProviderForOpenClawUrl('', provider), provider, page);
+      assert.equal(connection.openclawAccessCookieName(''), '', page);
+      assert.equal(connection.openclawHttpUrl('', '/api/agent').url, '', page);
+      const state = connection.getOpenClawConnection();
+      assert.equal(state.rawUrl, '', page);
+      assert.equal(state.resolvedAccessProvider, 'auto', page);
+      // An entered launchable keeps its own provider and naming rule on these pages.
+      assert.equal(connection.accessProviderForOpenClawUrl(launchable), 'pomerium', page);
+      assert.throws(() => connection.accessProviderForOpenClawUrl('https://other.gobrev.dev'), /NemoClaw App URL/, page);
+    }
+  } finally {
+    globalThis.location = previous;
+    connection.setOpenClawConnection({rawUrl:''});
+  }
+});
+
+test('the DLI launchable serving the course is the launchable until the learner saves another', () => {
+  const previous = globalThis.location;
+  const other = 'https://nemoclaw-other-session.apps.run.brev.nvidia.com';
+  try {
+    for (const [page, provider] of [[launchable + '/dli/nemoclaw/03a-kickstart.html', 'pomerium'],
+      ['https://nemoclaw-demo.brevlab.com/dli/nemoclaw/', 'cloudflare'],
+      ['https://nemoclaw-demo.apps.run.brev.nvidia.com/dli/', 'pomerium']]) {
+      globalThis.location = new URL(page);
+      const origin = new URL(page).origin;
+      connection.setOpenClawConnection({rawUrl:''});
+      let state = connection.getOpenClawConnection();
+      assert.equal(state.rawUrl, origin, page);
+      assert.equal(state.effectiveUrl, origin, page);
+      assert.equal(state.resolvedAccessProvider, provider, page);
+      assert.equal(connection.openclawHttpUrl(state.rawUrl, '/api/agent').viaProxy, false, page);
+      // Reading the default writes nothing; the first save binds the token to this origin.
+      assert.equal(localStorage.getItem(connection.OPENCLAW_RAW_URL_KEY), null, page);
+      connection.setOpenClawConnection({token:'gateway-token'});
+      state = connection.getOpenClawConnection();
+      assert.equal(localStorage.getItem(connection.OPENCLAW_RAW_URL_KEY), origin, page);
+      assert.equal(state.token, 'gateway-token', page);
+      // A launchable the learner saves still wins on this page.
+      connection.setOpenClawConnection({rawUrl:other});
+      state = connection.getOpenClawConnection();
+      assert.equal(state.rawUrl, other, page);
+      assert.equal(state.token, '', page);
+    }
+    // A provider left from a cleared launchable of another family never breaks the page default.
+    globalThis.location = new URL(launchable + '/dli/');
+    connection.setOpenClawConnection({rawUrl:''});
+    localStorage.setItem(connection.OPENCLAW_ACCESS_PROVIDER_KEY, 'cloudflare');
+    assert.equal(connection.getOpenClawConnection().resolvedAccessProvider, 'pomerium');
+  } finally {
+    globalThis.location = previous;
+    connection.setOpenClawConnection({rawUrl:''});
+  }
+});
+
 test('native empty-credential setup retains its device when metadata later supplies a token', () => {
   persistent.clear(); tab.clear();
   connection.setOpenClawConnection({rawUrl:launchable,accessProvider:'pomerium',accessSession:'',token:''});

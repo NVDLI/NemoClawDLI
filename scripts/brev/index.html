@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Start here · Securing Agents with OpenShell and NemoClaw</title>
+<link rel="icon" href="../../web/nemoclaw/assets/favicon.ico"/>
+<script>(function(){try{var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+<link rel="stylesheet" href="../../web/nemoclaw/styles/_style.css"/>
+<style>
+  .hero { margin: .6em 0 1.8em; }
+  .hero .eyebrow { font-family: var(--mono); font-size: .72rem; color: var(--gs); text-transform: uppercase;
+                   letter-spacing: .12em; margin-bottom: .7em; }
+  .hero h1 { font-size: clamp(1.9rem, 4.6vw, 2.5rem); font-weight: 700; line-height: 1.12; letter-spacing: -.01em;
+             margin: 0 0 .5em; }
+  .hero h1 .accent { color: var(--g); }
+  .hero .lead { font-size: 1.06rem; color: var(--td); max-width: 48rem; }
+  .agent-status { display: flex; align-items: baseline; gap: 10px; margin-top: 1.3em; padding: 11px 16px;
+                  background: var(--e1); border: 1px solid var(--e3); border-radius: 10px; font-size: .95rem; }
+  .agent-status::before { content: ""; flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--tf);
+                          transform: translateY(-1px); }
+  .agent-status[data-state="running"]::before { background: var(--g); }
+  .agent-status[data-state="starting"]::before { background: var(--warn); }
+
+  .waiting { margin: 0 0 1.6em; padding: 16px 20px; border: 1px solid var(--e3); border-left: 3px solid var(--g);
+             border-radius: 10px; background: var(--e1); }
+  .waiting h2 { margin: 0 0 .5em; font-size: 1.02rem; }
+  .waiting ul { list-style: none; display: grid; gap: .55em; }
+  .waiting li { color: var(--td); font-size: .93rem; padding-left: 1.1em; position: relative; }
+  .waiting li::before { content: "›"; position: absolute; left: 0; color: var(--g); font-weight: 700; }
+  .waiting b { color: var(--tx); font-weight: 600; }
+  .waiting code, .help code { font-family: var(--mono); font-size: .88em; padding: 1px 6px; border-radius: 4px;
+                              background: var(--e2); color: var(--gs); }
+
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr)); gap: 14px; }
+  .step { display: flex; flex-direction: column; gap: .55em; padding: 18px 20px; background: var(--e1);
+          border: 1px solid var(--e3); border-radius: 10px; }
+  .step .n { font-family: var(--mono); color: #0a0a0a; background: var(--g); border-radius: 999px; width: 22px;
+             height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: .75rem;
+             font-weight: 700; flex: none; }
+  .step-head { display: flex; align-items: center; gap: 10px; }
+  .step h2 { margin: 0; font-size: 1.08rem; }
+  .step p { color: var(--td); font-size: .93rem; flex: 1; }
+  .step p.more { flex: none; font-size: .88rem; }
+  .key-form { display: flex; flex-wrap: wrap; gap: 8px; }
+  .key-form input { flex: 1 1 12rem; min-width: 0; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--e3);
+                    background: var(--bg); color: var(--tx); font: inherit; font-size: .9rem; }
+  .key-form input:focus-visible { outline: 2px solid var(--g); outline-offset: 1px; }
+  .key-note { flex: none; font-size: .85rem; }
+  .key-error { flex: none; font-size: .88rem; color: var(--err); }
+  :root[data-theme="light"] .key-error { color: #b42318; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .step .progress { flex: none; font-size: .88rem; color: var(--tx); }
+  .bar { height: 6px; margin-top: .45em; border-radius: 999px; background: var(--e3); overflow: hidden; }
+  .bar span { display: block; height: 100%; width: 0; background: var(--g); transition: width .4s ease; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: .3em; }
+  .btn { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 8px; font-size: .9rem;
+         font-weight: 600; text-decoration: none; border: 1px solid var(--g); }
+  .btn.primary { background: var(--g); color: #0a0a0a; }
+  .btn.secondary { color: var(--tx); border-color: var(--e3); background: var(--e2); }
+  .btn:hover { text-decoration: none; filter: brightness(1.08); }
+  .btn[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+
+  .section > h2 { margin: 2.4em 0 .4em; padding-bottom: .35em; border-bottom: 1px solid var(--e3); font-size: 1.2rem; }
+  .section .help { color: var(--td); font-size: .93rem; margin: .5em 0 1.1em; }
+  .reference { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(26rem, 100%), 1fr)); gap: 14px; }
+  .reference section { padding: 16px 20px; background: var(--e1); border: 1px solid var(--e3); border-radius: 10px; }
+  .reference h3 { font-size: 1rem; margin: 0 0 .3em; }
+  .reference dt { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: .7em; }
+  .run { font: inherit; font-size: .78rem; font-weight: 600; padding: 2px 10px; border-radius: 6px; cursor: pointer;
+         border: 1px solid var(--e3); background: var(--e2); color: var(--tx); }
+  .run:hover { border-color: var(--g); }
+
+  .term { margin-top: 14px; border: 1px solid var(--e3); border-radius: 10px; overflow: hidden; background: #111417; }
+  .term-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px 12px; background: var(--e2);
+               border-bottom: 1px solid var(--e3); font-size: .88rem; }
+  .term-head .state { color: var(--td); }
+  .term-head .grow { flex: 1; }
+  .term-head button { font: inherit; font-size: .82rem; font-weight: 600; padding: 4px 11px; border-radius: 6px;
+                      cursor: pointer; border: 1px solid var(--e3); background: var(--e1); color: var(--tx); }
+  .term-screen { height: 380px; min-height: 200px; max-height: 80vh; padding: 10px; resize: vertical; overflow: hidden; }
+  button.btn { font: inherit; font-size: .9rem; cursor: pointer; }
+  button.btn:disabled { opacity: .45; cursor: not-allowed; }
+  .reference dt code { display: inline-block; max-width: 100%; overflow-wrap: anywhere; font-family: var(--mono);
+                       font-size: .86rem; padding: 2px 7px; border-radius: 5px; background: var(--e2); color: var(--gs); }
+  .reference dd { color: var(--td); font-size: .92rem; margin-top: .2em; }
+  .trace-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 9px 14px; font-size: .88rem;
+                background: var(--e2); border: 1px solid var(--e3); border-bottom: none; border-radius: 10px 10px 0 0; }
+  .trace-head .grow { flex: 1; }
+  .trace-head label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+  #trace-state { color: var(--td); }
+  .trace { list-style: none; margin: 0; padding: 4px 0; max-height: 360px; overflow-y: auto; background: var(--e1);
+           border: 1px solid var(--e3); border-radius: 0 0 10px 10px; font-size: .86rem; }
+  .trace:empty::after { content: "No requests yet."; display: block; padding: 10px 14px; color: var(--td); }
+  .trace li { display: grid; grid-template-columns: 5.6em 4.6em minmax(0, 1fr) auto; gap: 2px 12px; align-items: baseline;
+              padding: 5px 14px; border-top: 1px solid var(--e3); }
+  .trace li:first-child { border-top: none; }
+  .trace time, .trace .policy { font-family: var(--mono); font-size: .8rem; color: var(--td); }
+  .trace .what { font-family: var(--mono); font-size: .82rem; overflow-wrap: anywhere; }
+  .trace b { font-size: .8rem; color: var(--gs); }
+  .trace li[data-decision="denied"] b { color: var(--err); }
+  :root[data-theme="light"] .trace li[data-decision="denied"] b { color: #b42318; }
+  .trace .reason { grid-column: 3 / -1; color: var(--td); font-size: .8rem; }
+  .trace.blocked-only li[data-decision="allowed"] { display: none; }
+  @media (max-width: 620px) { .trace li { grid-template-columns: 5.6em minmax(0, 1fr); } .trace .what, .trace .reason { grid-column: 1 / -1; } }
+  .guide { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr)); gap: 14px; }
+  .guide section { display: flex; flex-direction: column; gap: .55em; padding: 16px 20px; background: var(--e1);
+                   border: 1px solid var(--e3); border-radius: 10px; }
+  .guide h3 { margin: 0; font-size: 1rem; }
+  .guide p { color: var(--td); font-size: .93rem; flex: 1; }
+  .guide b { color: var(--tx); font-weight: 600; }
+  .guide summary { cursor: pointer; font-size: .88rem; color: var(--gs); }
+  .guide img { display: block; width: 100%; height: auto; margin-top: .6em; border: 1px solid var(--e3); border-radius: 8px; }
+
+  :root[data-theme="light"] .step .n,
+  :root[data-theme="light"] .btn.primary { color: #fff; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="logo" href="../../web/nemoclaw/index.html">NVIDIA · Securing Agents</a>
+  <div class="spacer"></div>
+</div>
+
+<main>
+  <div class="hero">
+    <div class="eyebrow">NemoClaw launchable</div>
+    <h1>Securing Agents with <span class="accent">OpenShell</span> and <span class="accent">NemoClaw</span></h1>
+    <p class="lead">This launchable runs NemoClaw and the course side by side. Set up the OpenClaw agent, work through the lessons, and use the terminals to see what OpenShell allows and blocks.</p>
+    <p id="agent-status" class="agent-status" role="status" aria-live="polite">Checking for an agent.</p>
+  </div>
+
+  <div class="waiting" id="waiting" hidden>
+    <h2>While it sets up</h2>
+    <ul>
+      <li><b>Start OpenClaw now.</b> Paste your key in step 1, and NemoClaw builds the agent while the course copies.</li>
+      <li><b>Look at the gateway.</b> Open the VM terminal below and run <code>openshell status</code>. Once your agent exists, <code>nemoclaw list</code> shows its sandbox.</li>
+      <li><b>Skim the plan.</b> Modules 1 and 2 build an agent loop in your browser, Module 3 drives the agent on this launchable, and Module 4 covers what OpenShell allows and how you change it.</li>
+    </ul>
+  </div>
+
+  <div class="steps">
+    <section class="step" aria-labelledby="step-agent">
+      <div class="step-head"><span class="n">1</span><h2 id="step-agent">Start OpenClaw</h2></div>
+      <p id="key-intro">Paste your NVIDIA API key once. The course's exercises use it, and NemoClaw starts OpenClaw with it on NVIDIA's hosted Nemotron model, ready in a minute or two.</p>
+      <form class="key-form" id="key-form">
+        <label class="visually-hidden" for="key-input">NVIDIA API key</label>
+        <input id="key-input" type="password" autocomplete="off" spellcheck="false" placeholder="nvapi-..." required disabled/>
+        <button type="submit" class="btn primary" id="key-submit" disabled>Start OpenClaw</button>
+      </form>
+      <p class="key-error" id="key-error" role="alert" hidden></p>
+      <p class="key-note" id="key-note"><a href="https://build.nvidia.com/settings/api-keys?ncid=ref-dli-146986" target="_blank" rel="noopener">Get a key at build.nvidia.com</a>. It stays in this browser tab and in NemoClaw on this launchable.</p>
+      <p class="more" id="more-agents" hidden>Hermes Agent and LangChain Deep Agents Code are in onboarding too, when you want to compare agents.</p>
+      <div class="actions">
+        <a class="btn secondary" data-launchable-path="/onboard" aria-disabled="true">Other providers</a>
+        <a class="btn secondary" data-launchable-path="/agent" data-needs-agent aria-disabled="true" target="_blank" rel="noopener">Open chat</a>
+      </div>
+    </section>
+    <section class="step" aria-labelledby="step-course">
+      <div class="step-head"><span class="n">2</span><h2 id="step-course">Work through the course</h2></div>
+      <p>Modules 1 and 2 run in your browser. From Module 3 on, the exercises drive the agent on this launchable.</p>
+      <div class="progress" id="course-progress" role="status" aria-live="polite" hidden>
+        <span id="course-progress-text">Getting the course ready.</span>
+        <div class="bar" aria-hidden="true"><span id="course-progress-bar"></span></div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" data-course-link href="../../web/nemoclaw/index.html?iframe_proxy=1">Open the course</a>
+        <a class="btn secondary" data-course-link href="../../web/nemoclaw/03a-kickstart.html?iframe_proxy=1">Module 3a</a>
+      </div>
+    </section>
+    <section class="step" aria-labelledby="step-sandbox">
+      <div class="step-head"><span class="n">3</span><h2 id="step-sandbox">Watch the agent</h2></div>
+      <p>The trace below lists each connection and request the agent makes, and whether OpenShell allowed or blocked it. Module 3b shows the agent's own tool calls.</p>
+      <div class="actions">
+        <a class="btn primary" href="#trace">Open the trace</a>
+        <a class="btn secondary" data-launchable-path="/dashboard" aria-disabled="true" target="_blank" rel="noopener">Dashboard</a>
+      </div>
+    </section>
+  </div>
+
+  <div class="section" id="trace">
+    <h2>Agent trace</h2>
+    <p class="help">Each line is a connection or request the agent made from its sandbox, with OpenShell's decision and the policy behind it. Ask the agent something in Module 3b, and watch its requests arrive here.</p>
+    <div class="trace-head">
+      <span id="trace-state" role="status" aria-live="polite">The trace starts once OpenClaw runs.</span>
+      <span class="grow"></span>
+      <span><b id="trace-allowed">0</b> allowed · <b id="trace-denied">0</b> blocked</span>
+      <label><input type="checkbox" id="trace-blocked-only"/> Blocked only</label>
+    </div>
+    <ol class="trace" id="trace-list" aria-label="Agent trace, newest first"></ol>
+  </div>
+
+  <div class="section" id="guide">
+    <h2>Use the course with NemoClaw</h2>
+    <p class="help">The course and NemoClaw share this launchable, so the course reaches your agent without a URL or access session to paste.</p>
+    <div class="guide">
+      <section aria-labelledby="guide-connect">
+        <h3 id="guide-connect">Connect the course to the agent</h3>
+        <p>In Module 3a, select <b>Test connection</b>. The address is already filled in, and four checks confirm the agent, its gateway, its terminal, and its health.</p>
+        <div class="actions"><a class="btn primary" data-course-link href="../../web/nemoclaw/03a-kickstart.html?iframe_proxy=1">Open Module 3a</a></div>
+        <details><summary>What it looks like</summary><a href="guide-connect.webp" target="_blank" rel="noopener" title="Open full size"><img src="guide-connect.webp" width="960" height="261" loading="lazy" alt="Module 3a's Connect NemoClaw form with this launchable's address filled in and every check passed"/></a></details>
+      </section>
+      <section aria-labelledby="guide-chat">
+        <h3 id="guide-chat">Chat with the agent</h3>
+        <p>In Module 3b, ask the agent a question. The course sends it to OpenClaw through the gateway and shows each tool the agent calls.</p>
+        <div class="actions"><a class="btn primary" data-course-link href="../../web/nemoclaw/03b-openclaw.html?iframe_proxy=1">Open Module 3b</a></div>
+        <details><summary>What it looks like</summary><a href="guide-chat.webp" target="_blank" rel="noopener" title="Open full size"><img src="guide-chat.webp" width="960" height="465" loading="lazy" alt="Module 3b's chat with an answer from the OpenClaw agent on this launchable"/></a></details>
+      </section>
+      <section aria-labelledby="guide-watch">
+        <h3 id="guide-watch">Watch the agent in NemoClaw</h3>
+        <p>Follow each request the agent makes in the trace above. Open the dashboard for the agent's health, logs, chat, and terminals.</p>
+        <div class="actions">
+          <a class="btn primary" data-launchable-path="/dashboard" aria-disabled="true" target="_blank" rel="noopener">Open the dashboard</a>
+          <a class="btn secondary" href="#trace">Trace</a>
+        </div>
+        <details><summary>What it looks like</summary><a href="guide-dashboard.webp" target="_blank" rel="noopener" title="Open full size"><img src="guide-dashboard.webp" width="960" height="334" loading="lazy" alt="The NemoClaw dashboard with the running agent and its chat and terminal buttons"/></a></details>
+      </section>
+    </div>
+  </div>
+
+  <div class="section" id="terminals">
+    <h2>Terminals</h2>
+    <p class="help">The dashboard's terminals, opened on this page. The OpenShell TUI shows the sandbox's traffic and the requests that policy blocked.</p>
+    <div class="actions">
+      <button type="button" class="btn primary" data-terminal="tui" disabled>OpenShell TUI</button>
+      <button type="button" class="btn secondary" data-terminal="vm" disabled>VM terminal</button>
+      <button type="button" class="btn secondary" data-terminal="sandbox" disabled>Sandbox terminal</button>
+    </div>
+    <div class="term" id="term" hidden>
+      <div class="term-head">
+        <b id="term-title">Terminal</b>
+        <span class="state" id="term-state" role="status" aria-live="polite"></span>
+        <span class="grow"></span>
+        <button type="button" id="term-reconnect">Reconnect</button>
+        <button type="button" id="term-close">Close</button>
+      </div>
+      <div class="term-screen" id="term-screen"></div>
+    </div>
+  </div>
+
+  <div class="section" id="reference">
+    <h2>Quick reference</h2>
+    <p class="help">Run these in the VM terminal. Each Run button pastes the command there, with your sandbox name in place of <code>&lt;name&gt;</code> once you have an agent.</p>
+    <div class="reference">
+      <section aria-labelledby="ref-inspect"><h3 id="ref-inspect">Inspect</h3><dl>
+        <dt><code>nemoclaw list</code></dt><dd>Sandboxes on this launchable and the agent in each.</dd>
+        <dt><code>nemoclaw &lt;name&gt; status</code></dt><dd>Health of one sandbox, its gateway, and its inference route.</dd>
+        <dt><code>nemoclaw &lt;name&gt; logs --follow</code></dt><dd>Stream the sandbox log while you run an exercise.</dd>
+        <dt><code>nemoclaw &lt;name&gt; connect</code></dt><dd>Open a shell inside the sandbox to see what the agent sees.</dd>
+      </dl></section>
+      <section aria-labelledby="ref-policy"><h3 id="ref-policy">Network policy</h3><dl>
+        <dt><code>openshell term</code></dt><dd>Watch the sandbox live. Run an exercise again and inspect the request that policy blocked.</dd>
+        <dt><code>nemoclaw &lt;name&gt; policy list</code></dt><dd>The sandbox's current policy, including the presets it uses.</dd>
+        <dt><code>nemoclaw &lt;name&gt; policy add &lt;preset&gt; --dry-run</code></dt><dd>Preview a preset's endpoints. Drop <code>--dry-run</code> to apply it.</dd>
+        <dt><code>nemoclaw &lt;name&gt; policy remove &lt;channel&gt;</code></dt><dd>Withdraw access you added.</dd>
+      </dl></section>
+      <section aria-labelledby="ref-models"><h3 id="ref-models">Models</h3><dl>
+        <dt><code>nemoclaw inference get</code></dt><dd>The provider and model the agent uses now.</dd>
+        <dt><code>nemoclaw inference set --provider &lt;provider&gt; --model &lt;model&gt;</code></dt><dd>Switch the agent's model. NemoClaw tests the route from the sandbox before it commits the change.</dd>
+      </dl></section>
+      <section aria-labelledby="ref-recover"><h3 id="ref-recover">Recover</h3><dl>
+        <dt><code>nemoclaw &lt;name&gt; doctor</code></dt><dd>Diagnose a sandbox that stopped answering.</dd>
+        <dt><code>nemoclaw &lt;name&gt; gateway restart</code></dt><dd>Restart the agent gateway after a configuration change.</dd>
+        <dt><code>nemoclaw &lt;name&gt; recover</code></dt><dd>Re-run the sandbox readiness checks and restore its dashboard forward.</dd>
+      </dl></section>
+    </div>
+  </div>
+</main>
+<script type="module">
+// The launchable serves this page at /dli/, beside its own /onboard, /agent, and /dashboard routes.
+// Anywhere else (the repository's Pages copy) those routes do not exist, so the live parts stay off.
+const served = location.pathname === "/dli/";
+const LABELS = { openclaw: "OpenClaw", hermes: "Hermes Agent", "langchain-deepagents-code": "LangChain Deep Agents Code" };
+const agentStatus = document.getElementById("agent-status");
+const waiting = document.getElementById("waiting");
+const progress = document.getElementById("course-progress");
+const progressText = document.getElementById("course-progress-text");
+const progressBar = document.getElementById("course-progress-bar");
+const ready = { agent: false, course: false };
+let sandbox = "";
+let terminalsReady = false;
+let agentExists = false;
+let onboarding = false;
+
+// One NVIDIA API key serves both sides: the course keeps it through its own helpers, which share it
+// with the course's other tabs, and NemoClaw's onboarding API, the same one its wizard calls, starts
+// OpenClaw with it. The helpers load in the background once the course copy is ready, so the key
+// form works from the first second; a key entered before then waits in memory for them.
+let course = null;
+let pendingKey = "";
+let courseFilesReady;
+const courseFiles = new Promise(resolve => { courseFilesReady = resolve; });
+const courseReady = served
+  ? courseFiles.then(() => import("../../web/nemoclaw/scripts/_shared.js")).then(module => {
+      course = module;
+      if (pendingKey) { course.setKey(pendingKey); pendingKey = ""; }
+      return module;
+    }).catch(() => null)
+  : Promise.resolve(null);
+const keyForm = document.getElementById("key-form");
+const keyInput = document.getElementById("key-input");
+const keySubmit = document.getElementById("key-submit");
+const keyIntro = document.getElementById("key-intro");
+const keyNote = document.getElementById("key-note");
+const keyError = document.getElementById("key-error");
+const INTRO = keyIntro.textContent;
+let events = null;
+
+function showKeyError(text) {
+  keyError.textContent = text;
+  keyError.hidden = !text;
+}
+
+function updateKeyStep() {
+  if (!served) return;
+  keyInput.disabled = keySubmit.disabled = false;
+  const hasCourseKey = Boolean(pendingKey || course?.getKey());
+  keyForm.hidden = onboarding || (agentExists && hasCourseKey);
+  keyNote.hidden = keyForm.hidden;
+  if (onboarding) keyIntro.textContent = "NemoClaw is starting OpenClaw with your key. Its progress shows at the top of the page.";
+  else if (agentExists && hasCourseKey) keyIntro.textContent = "Your key is set for the course, and OpenClaw runs on this launchable. Module 3 drives it.";
+  else if (agentExists) keyIntro.textContent = "OpenClaw is set up. Paste the same NVIDIA API key once more so the course's own exercises can use it too.";
+  else keyIntro.textContent = INTRO;
+  keySubmit.textContent = agentExists ? "Use in the course" : "Start OpenClaw";
+}
+
+// NemoClaw streams its setup as step, progress, complete, and error events.
+function followOnboarding(startedHere) {
+  events?.close();
+  events = new EventSource("/api/onboard/status");
+  events.onmessage = message => {
+    let event;
+    try { event = JSON.parse(message.data); } catch (_) { return; }
+    if (event.type === "step") {
+      onboarding = true;
+      updateKeyStep();
+      showAgent("starting", `Starting OpenClaw: ${event.label}.`);
+    } else if (event.type === "complete") {
+      events.close();
+      onboarding = false;
+      refreshAgent();
+    } else if (event.type === "error") {
+      events.close();
+      if (!onboarding && !startedHere) return;
+      onboarding = false;
+      showKeyError(`NemoClaw could not start OpenClaw: ${event.message}`);
+      updateKeyStep();
+      refreshAgent();
+    }
+  };
+  events.onerror = () => events.close();
+}
+
+async function startOpenClaw(key) {
+  onboarding = true;
+  showKeyError("");
+  updateKeyStep();
+  showAgent("starting", "Starting OpenClaw. NemoClaw is checking the key.");
+  try {
+    const response = await fetch("/api/onboard", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ agent: "openclaw", provider: "cloud", apiKey: key, intent: "fresh" }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (response.ok || (response.status === 409 && /in progress/i.test(result.error || ""))) {
+      followOnboarding(true);
+      return;
+    }
+    onboarding = false;
+    if (!(response.status === 409 && /already exists/i.test(result.error || ""))) {
+      showKeyError(`NemoClaw could not start OpenClaw: ${result.error || `HTTP ${response.status}`}`);
+    }
+  } catch (_) {
+    onboarding = false;
+    showKeyError("NemoClaw did not answer. The launchable may still be starting; try again in a minute.");
+  }
+  updateKeyStep();
+  refreshAgent();
+}
+
+keyForm.addEventListener("submit", event => {
+  event.preventDefault();
+  const key = keyInput.value.trim();
+  keyInput.value = "";
+  if (!served) return;
+  if (!key.startsWith("nvapi-") || key.length < 12) {
+    showKeyError("NVIDIA API keys start with nvapi-. Copy the whole key from build.nvidia.com.");
+    return;
+  }
+  showKeyError("");
+  // OpenClaw starts first, so saving the key cannot trigger a second start from the saved-key path.
+  if (!agentExists) {
+    try { sessionStorage.setItem("nemoclaw_dli_autostart", "1"); } catch (_) {}
+    startOpenClaw(key);
+  }
+  if (course) course.setKey(key);
+  else pendingKey = key;
+  updateKeyStep();
+});
+
+// Chat opens the agent's own dashboard, which the image routes only once an agent runs.
+for (const link of document.querySelectorAll("[data-launchable-path]")) {
+  if (!served || link.hasAttribute("data-needs-agent")) continue;
+  link.href = link.dataset.launchablePath;
+  link.removeAttribute("aria-disabled");
+}
+
+function showAgent(state, text) {
+  agentStatus.dataset.state = state;
+  agentStatus.textContent = text;
+}
+
+// /api/agent is the image's own status route; it reports the selected agent and its sandbox phase.
+async function refreshAgent() {
+  try {
+    const response = await fetch("/api/agent", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const { agent } = await response.json();
+    agentExists = Boolean(agent);
+    updateKeyStep();
+    if (!agent) {
+      if (!onboarding) showAgent("none", "No agent yet. Paste your NVIDIA API key in step 1 to start OpenClaw.");
+      return;
+    }
+    sandbox = agent.name;
+    document.querySelector('[data-terminal="sandbox"]').disabled = false;
+    const label = LABELS[agent.agent] || agent.agent || "The agent";
+    if (agent.status === "running") {
+      ready.agent = true;
+      startTrace();
+      document.getElementById("more-agents").hidden = false;
+      if (agent.dashboardUrl) {
+        const chat = document.querySelector("[data-needs-agent]");
+        chat.href = chat.dataset.launchablePath;
+        chat.removeAttribute("aria-disabled");
+      }
+      const model = agent.model ? `, using ${agent.model}` : "";
+      return showAgent("running", `${label} is running in sandbox ${agent.name}${model}.`);
+    }
+    showAgent("starting", `${label} is ${agent.status === "stopped" ? "stopped" : "starting"} in sandbox ${agent.name}.`);
+  } catch (_) {
+    showAgent("none", "Agent status is not available yet. The launchable may still be starting.");
+  }
+}
+
+// The startup script reports its copy of the course in /dli/setup-status.json.
+const STAGES = {
+  starting: () => "Getting the course ready.",
+  downloading: status => `Copying the course: ${status.done.toLocaleString()} of ${status.total.toLocaleString()} files.`,
+  verifying: () => "Checking every file against the published build.",
+  installing: () => "Opening the course.",
+  failed: () => "The course copy stopped and will retry on its own. The agent tools work meanwhile.",
+};
+async function refreshCourse() {
+  let status = { stage: "starting", done: 0, total: 0 };
+  try {
+    const response = await fetch("/dli/setup-status.json", { cache: "no-store" });
+    if (response.ok) status = await response.json();
+  } catch (_) {}
+  ready.course = status.stage === "ready";
+  if (ready.course) courseFilesReady();
+  progress.hidden = ready.course;
+  for (const link of document.querySelectorAll("[data-course-link]")) {
+    if (ready.course) link.removeAttribute("aria-disabled");
+    else link.setAttribute("aria-disabled", "true");
+  }
+  if (!ready.course) {
+    progressText.textContent = (STAGES[status.stage] || STAGES.starting)(status);
+    const share = status.total ? Math.min(1, status.done / status.total) : 0;
+    progressBar.style.width = `${Math.round((status.stage === "downloading" ? share : status.stage === "starting" ? 0 : 1) * 100)}%`;
+  }
+}
+
+async function poll() {
+  await Promise.all([ready.agent || refreshAgent(), ready.course || refreshCourse()]);
+  waiting.hidden = ready.agent && ready.course;
+  if (!(ready.agent && ready.course)) setTimeout(poll, 3000);
+}
+
+// Terminals: the image's /ws/terminal session server, drawn with the image's own xterm.js build,
+// which route.sh serves from /dli/brev-terminal/. The commands match the dashboard's buttons.
+const TERMINAL_ASSETS = "/dli/brev-terminal/";
+const TERMINALS = {
+  tui: { title: "OpenShell TUI", command: () => "openshell term" },
+  vm: { title: "VM terminal", command: () => "bash" },
+  sandbox: { title: "Sandbox terminal", command: () => sandbox && `openshell sandbox exec --tty --name ${sandbox} -- /bin/bash` },
+};
+const panel = document.getElementById("term");
+const screen = document.getElementById("term-screen");
+const termTitle = document.getElementById("term-title");
+const termState = document.getElementById("term-state");
+const term = { view: null, fit: null, socket: null, kind: "", ping: 0 };
+let xterm = null;
+
+function loadXterm() {
+  const script = name => new Promise((resolve, reject) => {
+    const node = document.createElement("script");
+    node.src = TERMINAL_ASSETS + name;
+    node.onload = resolve;
+    node.onerror = () => reject(new Error(`could not load ${name}`));
+    document.head.append(node);
+  });
+  xterm ||= (async () => {
+    const style = document.createElement("link");
+    style.rel = "stylesheet";
+    style.href = TERMINAL_ASSETS + "xterm.css";
+    document.head.append(style);
+    await script("xterm.js");
+    await script("addon-fit.js");
+    return { Terminal: window.Terminal, FitAddon: window.FitAddon.FitAddon };
+  })();
+  return xterm;
+}
+
+function send(message) {
+  if (term.socket?.readyState === WebSocket.OPEN) term.socket.send(JSON.stringify(message));
+}
+
+function resize() {
+  if (!term.view) return;
+  term.fit.fit();
+  send({ type: "resize", cols: term.view.cols, rows: term.view.rows });
+}
+
+// One panel holds one session; opening another terminal replaces it, and text queued for a
+// session is typed once its shell has printed its first output.
+function connect(kind, typed = "") {
+  const command = TERMINALS[kind].command();
+  if (!command) return;
+  term.socket?.close();
+  clearInterval(term.ping);
+  term.kind = kind;
+  term.view.reset();
+  termTitle.textContent = TERMINALS[kind].title;
+  termState.textContent = "Connecting.";
+  const url = new URL("/ws/terminal", location.href);
+  url.protocol = location.protocol === "https:" ? "wss:" : "ws:";
+  url.searchParams.set("cmd", command);
+  const socket = term.socket = new WebSocket(url);
+  let pending = typed;
+  socket.onopen = () => {
+    termState.textContent = "Connected.";
+    resize();
+    term.ping = setInterval(() => send({ type: "ping" }), 25000);
+    term.view.focus();
+  };
+  socket.onmessage = event => {
+    let message;
+    try { message = JSON.parse(event.data); } catch (_) { return; }
+    if (message.type === "output") {
+      term.view.write(message.data);
+      if (pending) {
+        const text = pending;
+        pending = "";
+        setTimeout(() => send({ type: "input", data: text }), 300);
+      }
+    } else if (message.type === "exit") {
+      termState.textContent = `Exited with code ${message.code}. Reconnect to start it again.`;
+    }
+  };
+  socket.onclose = () => {
+    clearInterval(term.ping);
+    if (term.socket === socket && !termState.textContent.startsWith("Exited")) termState.textContent = "Disconnected.";
+  };
+}
+
+async function openTerminal(kind, typed = "") {
+  panel.hidden = false;
+  let lib;
+  try { lib = await loadXterm(); } catch (_) {
+    panel.hidden = true;
+    window.open("/dashboard", "_blank", "noopener");
+    return;
+  }
+  if (!term.view) {
+    term.view = new lib.Terminal({ cursorBlink: !matchMedia("(prefers-reduced-motion: reduce)").matches, fontSize: 13,
+      fontFamily: getComputedStyle(document.body).getPropertyValue("--mono") || "monospace",
+      theme: { background: "#111417" } });
+    term.fit = new lib.FitAddon();
+    term.view.loadAddon(term.fit);
+    term.view.open(screen);
+    term.view.onData(data => send({ type: "input", data }));
+    new ResizeObserver(resize).observe(screen);
+  }
+  if (term.kind === kind && term.socket?.readyState === WebSocket.OPEN) {
+    if (typed) send({ type: "input", data: typed });
+    term.view.focus();
+  } else {
+    connect(kind, typed);
+  }
+  panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+// A command is pasted with Enter only when nothing in it is left to fill in.
+function runCommand(text) {
+  const command = sandbox ? text.replaceAll("<name>", sandbox) : text;
+  openTerminal("vm", /<[a-z-]+>/.test(command) ? command : command + "\r");
+}
+
+async function enableTerminals() {
+  const probe = await fetch(TERMINAL_ASSETS + "xterm.js", { method: "HEAD", cache: "no-store" }).catch(() => null);
+  terminalsReady = Boolean(probe?.ok);
+  for (const button of document.querySelectorAll("[data-terminal]")) {
+    button.disabled = button.dataset.terminal === "sandbox" && !sandbox;
+    button.onclick = () => terminalsReady ? openTerminal(button.dataset.terminal) : window.open("/dashboard", "_blank", "noopener");
+  }
+  if (!terminalsReady) return;
+  for (const code of document.querySelectorAll(".reference dt code")) {
+    const run = document.createElement("button");
+    run.type = "button";
+    run.className = "run";
+    run.textContent = "Run";
+    run.setAttribute("aria-label", `Run ${code.textContent} in the VM terminal`);
+    run.onclick = () => runCommand(code.textContent);
+    code.after(run);
+  }
+}
+
+document.getElementById("term-reconnect").onclick = () => term.kind && connect(term.kind);
+document.getElementById("term-close").onclick = () => {
+  term.socket?.close();
+  clearInterval(term.ping);
+  term.kind = "";
+  panel.hidden = true;
+};
+
+// A key already saved in a course page starts OpenClaw without asking again, once per tab. Without
+// an agent, the page also follows a setup started from NemoClaw's own onboarding wizard.
+// A key already saved in the course, or one another course tab shares, starts OpenClaw without asking
+// again, once per tab. Without one, the page follows a setup started from NemoClaw's own wizard.
+function maybeAutostart() {
+  if (!course || agentExists || onboarding) return;
+  const saved = course.getKey();
+  let started = false;
+  try { started = sessionStorage.getItem("nemoclaw_dli_autostart") === "1"; } catch (_) {}
+  if (!saved || started) return;
+  try { sessionStorage.setItem("nemoclaw_dli_autostart", "1"); } catch (_) {}
+  startOpenClaw(saved);
+}
+
+async function startFromSavedKey() {
+  await refreshAgent();
+  if (agentExists) return;
+  followOnboarding(false);
+  await courseReady;
+  maybeAutostart();
+}
+
+// The trace: OpenShell logs one OCSF event for each connection and request the sandbox makes, with
+// its decision, for example
+//   [1793307440.816] [sandbox] [OCSF ] [ocsf] NET:OPEN [MED] DENIED /usr/local/bin/node(1302) -> host:443 [policy:- engine:opa] [reason:...]
+//   [1793307440.848] [sandbox] [OCSF ] [ocsf] HTTP:GET [INFO] ALLOWED GET http://host:443/path [policy:openclaw_api engine:l7]
+// The image's /api/logs streams those lines; SSH, relay, and Landlock housekeeping are left out.
+const TRACE_EVENT = /^\[(\d+(?:\.\d+)?)\] \[sandbox\] \[OCSF \] \[ocsf\] (NET:OPEN|HTTP:[A-Z]+) \[\w+\] (ALLOWED|DENIED) (.+)$/;
+const TRACE_ROWS = 80;
+const traceList = document.getElementById("trace-list");
+const traceCounts = { allowed: 0, denied: 0 };
+let trace = null;
+
+function traceEvent(message) {
+  const match = TRACE_EVENT.exec(message);
+  if (!match) return null;
+  const [, seconds, kind, decision, rest] = match;
+  const policy = /\[policy:([^\s\]]+)/.exec(rest)?.[1] || "";
+  const reason = /\[reason:([^\]]+)\]/.exec(rest)?.[1] || "";
+  const detail = rest.replace(/\s*\[[a-z]+:[^\]]*\]/g, "").trim();
+  let what = detail;
+  if (kind === "NET:OPEN") {
+    const net = /^(\S+?)(?:\(\d+\))? -> (.+)$/.exec(detail);
+    if (net) what = `${net[1].split("/").pop()} → ${net[2].replace(/https?:\/\/([^\s/:]+)(?::\d+)?/, "$1")}`;
+  } else {
+    const http = /^([A-Z]+) https?:\/\/([^\s/:]+)(?::\d+)?(\/\S*)?$/.exec(detail);
+    if (http) what = `${http[1]} ${http[2]}${http[3] || "/"}`;
+  }
+  return { time: new Date(Number(seconds) * 1000), decision: decision.toLowerCase(), what, policy: policy === "-" ? "" : policy, reason };
+}
+
+function addTraceRow(event) {
+  const row = document.createElement("li");
+  row.dataset.decision = event.decision;
+  const time = document.createElement("time");
+  time.dateTime = event.time.toISOString();
+  time.textContent = event.time.toLocaleTimeString([], { hour12: false });
+  const decision = document.createElement("b");
+  decision.textContent = event.decision === "denied" ? "Blocked" : "Allowed";
+  const what = document.createElement("span");
+  what.className = "what";
+  what.textContent = event.what;
+  const policy = document.createElement("span");
+  policy.className = "policy";
+  policy.textContent = event.policy ? `policy ${event.policy}` : "no policy";
+  row.append(time, decision, what, policy);
+  if (event.reason) {
+    const reason = document.createElement("span");
+    reason.className = "reason";
+    reason.textContent = event.reason;
+    row.append(reason);
+  }
+  traceList.prepend(row);
+  while (traceList.children.length > TRACE_ROWS) traceList.lastElementChild.remove();
+  traceCounts[event.decision] += 1;
+  document.getElementById("trace-allowed").textContent = traceCounts.allowed;
+  document.getElementById("trace-denied").textContent = traceCounts.denied;
+}
+
+function startTrace() {
+  if (trace || !served) return;
+  const state = document.getElementById("trace-state");
+  state.textContent = "Listening to the agent's sandbox. New lines appear at the top.";
+  trace = new EventSource("/api/logs?source=agent");
+  trace.onmessage = message => {
+    let line;
+    try { line = JSON.parse(message.data); } catch (_) { return; }
+    const event = traceEvent(String(line?.message || ""));
+    if (event) addTraceRow(event);
+  };
+  trace.onerror = () => { state.textContent = "The agent's log paused. The trace resumes on its own."; };
+  trace.onopen = () => { state.textContent = "Listening to the agent's sandbox. New lines appear at the top."; };
+}
+
+document.getElementById("trace-blocked-only").addEventListener("change", event => {
+  traceList.classList.toggle("blocked-only", event.target.checked);
+});
+addEventListener("pagehide", () => trace?.close());
+
+if (served) {
+  enableTerminals();
+  updateKeyStep();
+  courseReady.then(updateKeyStep);
+  addEventListener("nemoclaw:prerequisites", () => { updateKeyStep(); maybeAutostart(); });
+  startFromSavedKey();
+  poll();
+} else {
+  showAgent("off", "Open this page from your NemoClaw launchable at /dli/ to reach its agent.");
+}
+</script>
+</body>
+</html>

@@ -119,8 +119,9 @@
           target="_blank" rel="noopener">NemoClaw launchable</a> and sign in.</li>
       <li>Open <code>&lt;launchable&gt;/dashboard</code>.</li>
       <li>Find the running <code>my-assistant</code> card and select <strong>Chat with Agent</strong>.</li>
-      <li>Return here and enter the launchable URL. If this course is not served by the launchable,
-        paste the launchable's browser access session too.</li>
+      <li>Return here and select <strong>Test connection</strong>. When the launchable serves this course,
+        the URL is already filled in. Otherwise, enter the launchable URL and paste the launchable's
+        browser access session first.</li>
     </ol>
     <h3>Copy the launchable access session when this page is hosted separately</h3>
     <p>The gateway token and the launchable access session authorize different things:</p>
@@ -638,7 +639,7 @@ return { ranked: ok.map(r => r.model), errors: results.filter(r => r.err).length
     // ── Probe OpenClaw runtime ───────────────────────────────────────────────────
     mountOpenClawConnectionAudit("#probe-claw", {
       label: "Connect NemoClaw",
-      intro: "Enter the launchable Base URL and its matching Access session when required. The connection probe discovers the provider, relay route, and gateway token.",
+      intro: "Enter the launchable Base URL and its matching Access session when required, or keep the Base URL already filled in when the launchable serves this course. The connection probe discovers the provider, relay route, and gateway token.",
     });
 
     // ── Editable connection audit: all four routes ────────────────────────────────
