@@ -287,6 +287,11 @@ if [ -d "$T1/web/nemoclaw" ]; then
     ( cd "$T1" && find web/nemoclaw -path 'web/nemoclaw/standalone' -prune -o -type f \
         -print0 | tar --null -cf - -T - ) | ( cd "$mirror_out" && tar -xf - )
     stage_activity_sdk "$mirror_out/web/nemoclaw"
+    # Under a prefix the mirror sits apart from the root projection, so a link that leaves the
+    # course (for example ../../docs/ACTIVITY_MILESTONES.md) needs its repository file inside it.
+    if [ -n "$SOURCE_MIRROR_PREFIX" ]; then
+        python3 "$T1/scripts/build/project_source_tree.py" --source-root "$T1" --mirror-root "$mirror_out"
+    fi
     test -f "$mirror_out/web/_skill_explorer.js"
     echo "[build_pages] validated source -> ${mirror_out%/}/web/nemoclaw/ ($(find "$mirror_out/web/nemoclaw" -type f | wc -l) files, read-only for the report preview)"
 fi

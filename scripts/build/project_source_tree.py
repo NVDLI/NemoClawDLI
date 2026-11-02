@@ -17,13 +17,23 @@ import posixpath
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import unquote, urlsplit, urlunsplit
+
+for _p in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
+    if (_p / "scripts" / "_bootstrap.py").exists():
+        sys.path.insert(0, str(_p / "scripts")); break
+from _bootstrap import add_script_paths, find_repo_root
+
+add_script_paths(find_repo_root(Path(__file__).resolve()) / "scripts")
+import artifact_link_audit
 
 GENERATED_OUTPUT_PREFIXES = (("web", "nemoclaw", "standalone"),)
 GENERATED_ALIAS = Path("web/nemoclaw/standalone/SKILL.html")
+HTML_SUFFIXES = {".html", ".htm"}
 PUBLIC_SOURCE_PREFIXES = {
     ".github": Path("source/github"),
     ".gitlab": Path("source/gitlab"),
@@ -172,6 +182,43 @@ def project_json_urls(source_file: Path, artifact_file: Path, output: Path,
     projected = _project_explorer_value(value, source_file, artifact_file, source_files_set)
     if projected != value:
         target.write_text(json.dumps(projected, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def carry_mirror_links(root: Path, mirror: Path) -> list[Path]:
+    """Carry the documents that pages in a relocated source mirror link to.
+
+    A review mirror below a prefix (validated-source/) holds the course tree at its repository
+    path, so a link that leaves the course, such as ../../docs/ACTIVITY_MILESTONES.md, resolves
+    inside the mirror instead of the root projection. Copy each non-HTML authoring source such a
+    link names, byte for byte. HTML targets are navigation, which
+    scripts/build/project_artifact_navigation.py rebases to pages this artifact serves; carrying
+    them would pull the repository's whole SKILL graph into the mirror. Every link left unresolved
+    stays for scripts/validation/artifact_link_audit.py to reject.
+    """
+    root = root.resolve()
+    mirror = mirror.resolve()
+    sources = set(source_files(root, mirror))
+    carried: list[Path] = []
+    for page in sorted(item for item in mirror.rglob("*") if item.suffix.lower() in HTML_SUFFIXES):
+        # Parse URLs exactly as the link audit does, so the two cannot disagree about a link.
+        document = artifact_link_audit.Document()
+        document.feed(page.read_text(encoding="utf-8", errors="replace"))
+        for raw in document.urls:
+            parsed = urlsplit(raw.strip())
+            if parsed.scheme or parsed.netloc or not parsed.path or parsed.path.startswith("/"):
+                continue
+            base = page.parent.relative_to(mirror)
+            normalized = posixpath.normpath((base / unquote(parsed.path)).as_posix())
+            if normalized == ".." or normalized.startswith("../"):
+                continue
+            relative = Path(normalized)
+            target = mirror / relative
+            if relative not in sources or relative.suffix.lower() in HTML_SUFFIXES or target.exists():
+                continue
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(root / relative, target)
+            carried.append(relative)
+    return sorted(carried)
 
 
 def project(root: Path, output: Path) -> tuple[int, list[str]]:
@@ -334,11 +381,132 @@ class ProjectionTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 project(root, root)
 
+    @staticmethod
+    def _mirror_fixture(temp: str, links: list[str], files: dict[str, str]) -> tuple[Path, Path, Path]:
+        """Build a repository, its root projection, and the course mirror below validated-source/."""
+        root = Path(temp) / "repo"
+        artifact = Path(temp) / "artifact"
+        course = root / "web" / "nemoclaw"
+        course.mkdir(parents=True)
+        (course / "SKILL.html").write_text(
+            "".join(f'<a href="{link}">linked</a>' for link in links), encoding="utf-8"
+        )
+        for relative, body in files.items():
+            (root / relative).parent.mkdir(parents=True, exist_ok=True)
+            (root / relative).write_text(body, encoding="utf-8")
+        subprocess.run(["git", "init", "-q", str(root)], check=True)
+        subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
+        project(root, artifact)
+        mirror = artifact / "validated-source"
+        shutil.copytree(course, mirror / "web" / "nemoclaw")
+        return root, artifact, mirror
+
+    @staticmethod
+    def _mirror_findings(artifact: Path) -> list[str]:
+        return [str(item) for item in artifact_link_audit.audit(artifact)
+                if str(item).startswith("validated-source/")]
+
+    def test_mirror_carries_a_novel_linked_doc(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            _root, artifact, mirror = self._mirror_fixture(
+                temp,
+                ["../../docs/NEW_GUIDE.md", "../../docs//NEW_GUIDE.md?view=1#top", "../../assets/figure.svg"],
+                {"docs/NEW_GUIDE.md": "guide", "assets/figure.svg": "<svg/>"},
+            )
+            page = (mirror / "web/nemoclaw/SKILL.html").read_bytes()
+            self.assertTrue(self._mirror_findings(artifact))
+
+            carried = carry_mirror_links(Path(temp) / "repo", mirror)
+
+            self.assertEqual([Path("assets/figure.svg"), Path("docs/NEW_GUIDE.md")], carried)
+            self.assertEqual("guide", (mirror / "docs/NEW_GUIDE.md").read_text(encoding="utf-8"))
+            self.assertEqual(page, (mirror / "web/nemoclaw/SKILL.html").read_bytes())
+            self.assertEqual([], self._mirror_findings(artifact))
+            self.assertEqual([], carry_mirror_links(Path(temp) / "repo", mirror))
+
+    def test_mirror_leaves_html_navigation_to_the_artifact_projection(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root, artifact, mirror = self._mirror_fixture(
+                temp,
+                ["../SKILL.html", "../../guides/"],
+                {"web/SKILL.html": '<a href="../docs/A.md">a</a>', "guides/index.html": "guides",
+                 "docs/A.md": "a"},
+            )
+
+            self.assertEqual([], carry_mirror_links(root, mirror))
+
+            self.assertFalse((mirror / "web/SKILL.html").exists())
+            self.assertFalse((mirror / "docs").exists())
+
+    def test_prefixed_build_carries_mirror_links_before_the_link_audit(self) -> None:
+        """GitHub builds never take the prefixed mirror path, so pin its carrier call here."""
+        build = (Path(__file__).resolve().parent / "build_pages.sh").read_text(encoding="utf-8")
+        mirror = build.index('( cd "$mirror_out" && tar -xf - )')
+        carrier = build.index(
+            'python3 "$T1/scripts/build/project_source_tree.py" --source-root "$T1" --mirror-root "$mirror_out"'
+        )
+        navigation = build.index('python3 "$T1/scripts/build/project_artifact_navigation.py" "$OUT"')
+        audit = build.index('python3 "$T1/scripts/validation/artifact_link_audit.py" "$OUT"')
+        self.assertLess(mirror, carrier)
+        self.assertLess(carrier, navigation)
+        self.assertLess(navigation, audit)
+        guard = build.rindex('if [ -n "$SOURCE_MIRROR_PREFIX" ]; then', 0, carrier)
+        self.assertNotIn("\n    fi\n", build[guard:carrier])
+
+    def test_mirror_leaves_deleted_and_renamed_docs_for_the_link_audit(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root, artifact, mirror = self._mirror_fixture(
+                temp,
+                ["../../docs/DELETED.md", "../../docs/OLD_NAME.md"],
+                {"docs/DELETED.md": "tracked, then deleted", "docs/NEW_NAME.md": "renamed"},
+            )
+            (root / "docs/DELETED.md").unlink()
+            (artifact / "docs/DELETED.md").unlink()
+
+            self.assertEqual([], carry_mirror_links(root, mirror))
+
+            rejected = {item.url for item in artifact_link_audit.audit(artifact)
+                        if item.page.startswith("validated-source/")}
+            self.assertEqual({"../../docs/DELETED.md", "../../docs/OLD_NAME.md"}, rejected)
+            self.assertFalse((mirror / "docs/NEW_NAME.md").exists())
+
+    def test_mirror_never_carries_a_malformed_near_match(self) -> None:
+        near_matches = [
+            "../../docs/GUIDE.md.bak",
+            "../../docs/GUIDE",
+            "../../../docs/GUIDE.md",
+            "/docs/GUIDE.md",
+            "../../ignored/GUIDE.md",
+            "standalone/index.html",
+        ]
+        with tempfile.TemporaryDirectory() as temp:
+            root, artifact, mirror = self._mirror_fixture(
+                temp,
+                near_matches,
+                {
+                    "docs/GUIDE.md": "guide",
+                    ".gitignore": "ignored/\n",
+                    "ignored/GUIDE.md": "ignored output",
+                    "web/nemoclaw/standalone/index.html": "generated output",
+                },
+            )
+            shutil.rmtree(mirror / "web/nemoclaw/standalone")
+
+            self.assertEqual([], carry_mirror_links(root, mirror))
+            self.assertFalse((mirror / "docs").exists())
+
+            # A link that leaves the mirror reaches the root projection, which the audit accepts.
+            rejected = {item.url for item in artifact_link_audit.audit(artifact)
+                        if item.page.startswith("validated-source/")}
+            self.assertEqual(set(near_matches) - {"../../../docs/GUIDE.md"}, rejected)
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-root", type=Path)
     parser.add_argument("--artifact-root", type=Path)
+    parser.add_argument("--mirror-root", type=Path,
+                        help="carry the repository files that this relocated source mirror links to")
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--check-generated", action="store_true")
     args = parser.parse_args()
@@ -353,6 +521,13 @@ def main() -> int:
                 print(f"tracked generated output must be rebuilt, not versioned: {path}")
             return 1
         print("tracked generated output: PASS")
+        return 0
+    if args.mirror_root:
+        if not args.source_root or not args.mirror_root.is_dir():
+            parser.error("--mirror-root needs --source-root and an existing mirror directory")
+        carried = carry_mirror_links(args.source_root, args.mirror_root)
+        print(f"source mirror links: PASS ({len(carried)} carried: "
+              f"{', '.join(path.as_posix() for path in carried) or 'none'})")
         return 0
     if not args.source_root or not args.artifact_root:
         parser.error("--source-root and --artifact-root are required unless a check mode is used")
