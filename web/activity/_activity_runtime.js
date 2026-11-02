@@ -51,8 +51,12 @@ export function bindNemoClawProgressConsent({ windowTarget, activity, syncLocal 
   let lastConsent;
   let generation = 0;
   let registeredCmp;
+  // A deployment that holds the Activity session on its own host, such as a Brev launchable,
+  // tracks the learner's launchable rather than browser cookies, so no consent banner applies.
+  let deploymentSession = false;
   const consentChangeListeners = new Set();
   const allowsProgress = () => {
+    if (deploymentSession) return true;
     try {
       return windowTarget.OneTrust?.IsAlertBoxClosed?.() === true
         && typeof windowTarget.OnetrustActiveGroups === 'string'
@@ -68,8 +72,8 @@ export function bindNemoClawProgressConsent({ windowTarget, activity, syncLocal 
         reconcile();
       });
     }
-    const ready = typeof cmp?.IsAlertBoxClosed === 'function'
-      && typeof windowTarget.OnetrustActiveGroups === 'string';
+    const ready = deploymentSession || (typeof cmp?.IsAlertBoxClosed === 'function'
+      && typeof windowTarget.OnetrustActiveGroups === 'string');
     const consent = ready ? allowsProgress() : null;
     if (consent === lastConsent) return;
     const previousConsent = lastConsent;
@@ -100,8 +104,14 @@ export function bindNemoClawProgressConsent({ windowTarget, activity, syncLocal 
   windowTarget.addEventListener('bannerLoaded', reconcile);
   windowTarget.addEventListener('OneTrustGroupsUpdated', reconcile);
   reconcile();
+  void Promise.resolve(activity.getPolicy?.()).then(policy => {
+    if (policy?.lab_transport?.session !== 'deployment') return;
+    deploymentSession = true;
+    reconcile();
+  }).catch(() => {});
   return {
     allowsProgress,
+    deploymentSession: () => deploymentSession,
     reconcile,
     async retry() {
       if (!allowsProgress()) return false;
@@ -245,8 +255,8 @@ function mountActivityInterface({ windowTarget, documentTarget, activity, eviden
     milestones.setAttribute('aria-hidden', String(!optedIn));
     overlay.hidden = optedIn;
     enable.hidden = optedIn;
-    const cmpReady = typeof windowTarget.OneTrust?.UpdateConsent === 'function'
-      && typeof windowTarget.OneTrust?.SetAlertBoxClosed === 'function';
+    const cmpReady = consent.deploymentSession() || (typeof windowTarget.OneTrust?.UpdateConsent === 'function'
+      && typeof windowTarget.OneTrust?.SetAlertBoxClosed === 'function');
     const failed = optedIn && ['blocked', 'unavailable'].includes(state.phase);
     status.hidden = cmpReady && !failed;
     status.textContent = text(!cmpReady ? 'Remote progress is unavailable for this course deployment.'

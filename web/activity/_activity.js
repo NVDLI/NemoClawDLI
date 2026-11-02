@@ -145,6 +145,7 @@ export function validateActivityPolicy(policy) {
         || (policy.lab_transport !== undefined && (
           !/^\/(?:[a-z0-9-]+\/)*api\/[a-z0-9/-]+$/.test(policy.lab_transport?.base_path || '')
           || typeof policy.lab_transport?.allow_http !== 'boolean'
+          || (policy.lab_transport.session !== undefined && policy.lab_transport.session !== 'deployment')
         ))) throw new Error('Activity data notice is invalid');
     return Object.freeze(policy);
   }
@@ -290,7 +291,7 @@ export function createNemoClawActivity({
           const authorization = headers.get('Authorization');
           headers.delete('Authorization');
           if (authorization) headers.set('X-Activity-Authorization', authorization);
-          headers.set('X-XSRFToken', labTransport.xsrfToken);
+          if (labTransport.xsrfToken) headers.set('X-XSRFToken', labTransport.xsrfToken);
           return await fetchImpl(`${labTransport.baseUrl}${upstream.pathname}`, {
             ...options, credentials: 'same-origin', redirect: 'error', referrerPolicy: 'no-referrer',
             headers,
@@ -406,17 +407,23 @@ export function createNemoClawActivity({
               throw Object.assign(new Error('HTTP lab progress is not enabled'), { code: 'secure-context' });
             }
             const baseUrl = new URL(currentPolicy.lab_transport.base_path, page.origin).href;
-            const response = await fetchImpl(`${baseUrl}/artifact`, {
-              credentials: 'same-origin', cache: 'no-store', redirect: 'error', referrerPolicy: 'no-referrer',
-            });
-            if (!response.ok || response.url !== `${baseUrl}/artifact`) throw new Error('Lab activity identity unavailable');
-            const value = await response.json();
-            if (value.artifact?.artifact_id !== ACTIVITY_ARTIFACT_ID
-                || !/^git-[0-9a-f]{40}-adapter-[0-9a-f]{64}$/.test(value.artifact?.artifact_version || '')
-                || !/^sha256:[0-9a-f]{64}$/.test(value.artifact?.artifact_digest || '')
-                || !isNonEmptyString(value.xsrf_token)) throw new Error('Invalid lab activity identity');
-            artifact = Object.freeze(value.artifact);
-            labTransport = { baseUrl, xsrfToken: value.xsrf_token };
+            if (currentPolicy.lab_transport.session === 'deployment') {
+              // The deployment's host holds the Activity session and its credential, as on a Brev
+              // launchable. The delivered Pages manifest still names the artifact.
+              labTransport = { baseUrl, xsrfToken: null };
+            } else {
+              const response = await fetchImpl(`${baseUrl}/artifact`, {
+                credentials: 'same-origin', cache: 'no-store', redirect: 'error', referrerPolicy: 'no-referrer',
+              });
+              if (!response.ok || response.url !== `${baseUrl}/artifact`) throw new Error('Lab activity identity unavailable');
+              const value = await response.json();
+              if (value.artifact?.artifact_id !== ACTIVITY_ARTIFACT_ID
+                  || !/^git-[0-9a-f]{40}-adapter-[0-9a-f]{64}$/.test(value.artifact?.artifact_version || '')
+                  || !/^sha256:[0-9a-f]{64}$/.test(value.artifact?.artifact_digest || '')
+                  || !isNonEmptyString(value.xsrf_token)) throw new Error('Invalid lab activity identity');
+              artifact = Object.freeze(value.artifact);
+              labTransport = { baseUrl, xsrfToken: value.xsrf_token };
+            }
           }
           artifact ||= await (artifactResolver || (() => resolveActivityArtifact({ fetchImpl, locationHref, cryptoImpl })))();
         }

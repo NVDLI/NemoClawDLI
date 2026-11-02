@@ -27,6 +27,9 @@ readonly STATE="${NEMOCLAW_DLI_STATE:-/var/lib/nemoclaw-dli}"
 readonly LINE="    include $INCLUDE;"
 readonly COURSE_PORT="${NEMOCLAW_DLI_COURSE_PORT:-8090}"
 readonly COURSE_SERVER="${NEMOCLAW_DLI_COURSE_SERVER:-/etc/nginx/conf.d/nemoclaw-dli-course.conf}"
+readonly ACTIVITY_UNIT="${NEMOCLAW_DLI_ACTIVITY_UNIT:-/etc/systemd/system/nemoclaw-dli-activity.service}"
+# dli-location.conf proxies /dli/api/activity/ to this loopback port.
+readonly ACTIVITY_PORT=8095
 SITE=""
 
 fail() {
@@ -225,6 +228,8 @@ HTML
     install -m 644 "$xterm/addon-fit/LICENSE" "$STATE/site/brev-terminal/addon-fit-LICENSE.txt"
   fi
 
+  install_activity_relay "$release"
+
   # The include goes right after the port 80 listen directive; nginx picks the /dli/ locations by
   # match type, not by their position in the server block.
   backup_nginx
@@ -244,6 +249,72 @@ HTML
 
   echo "nemoclaw-dli route: serving $source at /dli/"
   status
+}
+
+# Course progress. activity-relay.py holds the launchable's Activity session, so the course reports
+# milestones to /dli/api/activity/ on its own origin; no browser cookie or consent banner is involved.
+# Only a relay that answers its health check turns progress on, by naming that route in the staged
+# release's Activity policies. Without python3, systemd, or a healthy relay, the course serves as
+# published and keeps its progress in the browser.
+install_activity_relay() {
+  local release="$1" relay="$STATE/activity-relay.py" python answered=""
+  [ -f "$HERE/activity-relay.py" ] || return 0
+  python="$(command -v python3 || true)"
+  if [ -z "$python" ] || ! command -v systemctl >/dev/null 2>&1 || ! command -v curl >/dev/null 2>&1; then
+    echo "nemoclaw-dli route: no python3, systemd, or curl; course progress stays in the browser"
+    return 0
+  fi
+  install -m 644 "$HERE/activity-relay.py" "$relay"
+  cat > "$backup_dir/activity.service" <<UNIT
+[Unit]
+Description=Relay NemoClawDLI course progress from /dli/ to the DLI Activity API
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=$python $relay
+Environment=NEMOCLAW_DLI_ACTIVITY_LISTEN=127.0.0.1:$ACTIVITY_PORT
+DynamicUser=yes
+StateDirectory=nemoclaw-dli-activity
+StateDirectoryMode=0700
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+  install -m 644 "$backup_dir/activity.service" "$ACTIVITY_UNIT"
+  { systemctl daemon-reload && systemctl enable nemoclaw-dli-activity.service \
+      && systemctl restart nemoclaw-dli-activity.service; } >/dev/null 2>&1 || true
+  for _ in $(seq 1 50); do
+    if [ "$(curl -sS -m 2 "http://127.0.0.1:$ACTIVITY_PORT/healthz" 2>/dev/null || true)" = "nemoclaw-dli-activity ok" ]; then
+      answered=1
+      break
+    fi
+    sleep 0.2
+  done
+  if [ -z "$answered" ]; then
+    echo "nemoclaw-dli route: the Activity relay did not start; course progress stays in the browser"
+    return 0
+  fi
+  # The course and each language overlay carry their own copy of the policy beside the course.
+  "$python" - "$release" <<'PY'
+import json, pathlib, sys
+release = pathlib.Path(sys.argv[1])
+for path in [release / "activity/activity-policy.json", *release.glob("*/activity/activity-policy.json")]:
+    if path.is_file():
+        policy = json.loads(path.read_text(encoding="utf-8"))
+        policy["lab_transport"] = {"base_path": "/dli/api/activity", "allow_http": False, "session": "deployment"}
+        path.write_text(json.dumps(policy, indent=2) + "\n", encoding="utf-8")
+PY
+  echo "nemoclaw-dli route: course progress reports through /dli/api/activity/"
 }
 
 # The course port: a second server for a Brev Secure Link named "course", from course-port.conf.
@@ -287,6 +358,11 @@ uninstall_course() {
   rm -f "$INCLUDE" "$COURSE_SERVER"
   apply_nginx_change
   await_health gone
+  if [ -f "$ACTIVITY_UNIT" ]; then
+    systemctl disable --now nemoclaw-dli-activity.service >/dev/null 2>&1 || true
+    rm -f "$ACTIVITY_UNIT"
+    systemctl daemon-reload >/dev/null 2>&1 || true
+  fi
   rm -rf "$STATE"
   echo "nemoclaw-dli route: removed /dli/"
 }
@@ -303,6 +379,11 @@ status() {
     echo "health: $(curl -sS -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1/dli/healthz || echo unreachable)"
   fi
   if [ -f "$COURSE_SERVER" ]; then echo "course port: $COURSE_PORT"; else echo "course port: off"; fi
+  if [ "$(curl -sS -m 2 "http://127.0.0.1:$ACTIVITY_PORT/healthz" 2>/dev/null || true)" = "nemoclaw-dli-activity ok" ]; then
+    echo "course progress: relayed through /dli/api/activity/"
+  else
+    echo "course progress: in the browser only"
+  fi
   echo "open: https://<your nemoclaw Secure Link>/dli/"
 }
 
