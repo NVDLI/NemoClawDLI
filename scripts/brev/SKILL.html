@@ -11,9 +11,10 @@
   "node_type": "directory-explorer",
   "title": "Brev course delivery",
   "source_dir": "scripts/brev/",
-  "summary": "Serves the built Pages course at /dli/ on a NemoClaw Brev launchable, beside the agent on the same origin. The launchable's image supplies NemoClaw, OpenShell, nginx, and every package; this directory holds only configuration and shell.",
+  "summary": "Serves the built Pages course at /dli/ on a NemoClaw Brev launchable, beside the agent on the same origin. The launchable's image supplies NemoClaw, OpenShell, nginx, and every package; this directory holds configuration, shell, and one standard-library relay that runs on the image's own python3.",
   "related": [
     "scripts/brev/dli-location.conf",
+    "scripts/brev/activity-relay.py",
     "scripts/brev/route.sh",
     "scripts/brev/provider.sh",
     "scripts/build/build_pages.sh"
@@ -25,7 +26,7 @@
 <script type="application/json" id="explorer-config">
 {
   "title": "Brev course delivery",
-  "summary": "One nginx location file defines the /dli/ route. route.sh adds it to the server that answers a NemoClaw launchable's Secure Link, with nginx -t and rollback, and provider.sh points the launchable's agent at Nebius Token Factory or NVIDIA Build through canonical NemoClaw commands.",
+  "summary": "One nginx location file defines the /dli/ route. route.sh adds it to the server that answers a NemoClaw launchable's Secure Link, with nginx -t and rollback, and provider.sh points the launchable's agent at Nebius Token Factory or NVIDIA Build through canonical NemoClaw commands. activity-relay.py keeps the launchable's Activity session, so course progress reaches NVIDIA without a browser cookie or consent prompt.",
   "nav": {
     "home": "../../web/index.html",
     "up": {
@@ -37,8 +38,14 @@
     {
       "path": "dli-location.conf",
       "role": "/dli/ route",
-      "desc": "The route route.sh adds to the launchable's nginx. It serves the starter page at /dli/, the startup script's setup progress, the image's own xterm.js build for the terminal popups, and the built site read-only beneath it. Any missing address gets the launchable's own page with its error status, never the server's, and other sites may not frame the course.",
-      "bytes": 4319
+      "desc": "The route route.sh adds to the launchable's nginx. It serves the starter page at /dli/, the startup script's setup progress, the image's own xterm.js build for the terminal popups, and the built site read-only beneath it. Any missing address gets the launchable's own page with its error status, never the server's, and other sites may not frame the course. Its /dli/api/activity/ location forwards course progress to the loopback relay without cookies.",
+      "bytes": 5148
+    },
+    {
+      "path": "activity-relay.py",
+      "role": "course progress relay",
+      "desc": "Holds one Activity API session for the launchable and relays the course's progress calls to it under the published https://brev.nvidia.com origin. The session token never reaches the browser. An expired session is replaced by replaying the milestones already recorded, so progress follows the launchable rather than a browser tab.",
+      "bytes": 10455
     },
     {
       "path": "provider.sh",
@@ -55,8 +62,8 @@
     {
       "path": "route.sh",
       "role": "same-origin route installer",
-      "desc": "Installs a built site and the route into the server that listens on port 80 in a NemoClaw launchable's nginx, writes the page every missing /dli/ address answers with, serves the image's own xterm.js build and the guide screenshots for the starter page, and adds the optional course port. It validates with nginx -t, reloads, and restores the previous configuration on failure.",
-      "bytes": 14133
+      "desc": "Installs a built site and the route into the server that listens on port 80 in a NemoClaw launchable's nginx, writes the page every missing /dli/ address answers with, serves the image's own xterm.js build and the guide screenshots for the starter page, and adds the optional course port. It validates with nginx -t, reloads, and restores the previous configuration on failure. It also installs activity-relay.py as a hardened systemd service and points the course's Activity policies at it only after the relay answers.",
+      "bytes": 17588
     },
     {
       "path": "course-port.conf",
@@ -97,8 +104,8 @@
       "title": "Framing boundary on a shared origin",
       "file": "dli-location.conf",
       "lines": [
-        96,
-        100
+        117,
+        121
       ],
       "note": "On a NemoClaw launchable the course shares an origin with the host terminal route, so other sites may not frame course pages."
     },
@@ -169,8 +176,8 @@
       "title": "The port 80 server, not a fixed line",
       "file": "route.sh",
       "lines": [
-        40,
-        62
+        43,
+        65
       ],
       "note": "route.sh finds the server that listens on port 80, in the image's usual site file or any file nginx -T reports, so image releases that move or reword their routes keep working."
     },
@@ -178,8 +185,8 @@
       "title": "Validated include with rollback",
       "file": "route.sh",
       "lines": [
-        105,
-        116
+        108,
+        119
       ],
       "note": "The image's site gains one include line only after nginx -t and a reload both pass."
     },
@@ -187,8 +194,8 @@
       "title": "Course links projected at install",
       "file": "route.sh",
       "lines": [
-        161,
-        166
+        164,
+        169
       ],
       "note": "index.html names the course as ../../web/nemoclaw/, the path the repository and Pages link checks resolve. Beside the installed site the course is ./nemoclaw/, so the installer rewrites that one prefix, as the Pages build does for its own pages."
     },
@@ -196,8 +203,8 @@
       "title": "The image's xterm.js, not a new package",
       "file": "route.sh",
       "lines": [
-        216,
-        226
+        219,
+        229
       ],
       "note": "route.sh copies xterm.js, its fit addon, and both licenses from the image's onboarding UI, so the terminal popups add no browser package to the course and follow the image's version."
     },
@@ -214,10 +221,19 @@
       "title": "An optional course port",
       "file": "route.sh",
       "lines": [
-        249,
-        279
+        320,
+        350
       ],
       "note": "route.sh adds course-port.conf only beside a working /dli/, only when the port is free, and keeps it only if it answers after the reload. Otherwise it restores the previous server, and the course is unaffected."
+    },
+    {
+      "title": "Course progress held by the launchable",
+      "file": "route.sh",
+      "lines": [
+        254,
+        318
+      ],
+      "note": "Only a relay that answers its health check turns progress on; without python3, systemd, or that answer, the course serves as published and keeps progress in the browser."
     },
     {
       "title": "Compatible endpoint through canonical NemoClaw",
@@ -253,7 +269,7 @@
 </header>
   <h1 id="skill-title">Brev course delivery</h1>
   <p>A NemoClaw Brev launchable serves the same built Pages site that GitHub Pages publishes, under the /dli/ path beside its agent. The course then shares the agent's origin, so it reaches the launchable with the browser's own Secure Link session instead of a pasted access cookie. The GitHub Pages deployment and its build are unchanged.</p>
-  <div class="skill-note">The launchable's image supplies NemoClaw, OpenShell, nginx, and every package. The startup script that runs route.sh on a new launchable stays outside the repository. This directory adds configuration and shell only.</div>
+  <div class="skill-note">The launchable's image supplies NemoClaw, OpenShell, nginx, and every package. The startup script that runs route.sh on a new launchable stays outside the repository. This directory adds configuration, shell, and one standard-library relay only.</div>
   <h2>Executable checks</h2>
   <div class="skill-cmds">
     <div class="skill-cmd"><b>Shell syntax</b><code>for f in scripts/brev/*.sh; do bash -n "$f"; done</code></div>
@@ -272,6 +288,7 @@
     <a class="skill-link" href="index.html"><b>index.html</b><span>The /dli/ starter page: one key for OpenClaw and the course, agent links, and a command reference.</span></a>
     <a class="skill-link" href="dli-location.conf"><b>dli-location.conf</b><span>The /dli/ route, headers, and entry redirect.</span></a>
     <a class="skill-link" href="route.sh"><b>route.sh</b><span>Same-origin install, status, and removal on a NemoClaw launchable.</span></a>
+    <a class="skill-link" href="activity-relay.py"><b>activity-relay.py</b><span>Holds the launchable's Activity session and relays course progress to it.</span></a>
     <a class="skill-link" href="course-port.conf"><b>course-port.conf</b><span>The optional course port, which sends every address to /dli/ on the nemoclaw link.</span></a>
     <a class="skill-link" href="provider.sh"><b>provider.sh</b><span>Nebius Token Factory or NVIDIA Build for the launchable's agent.</span></a>
     <a class="skill-link" href="../build/SKILL.html"><b>build/SKILL.html</b><span>The Pages build that produces the served site.</span></a>
