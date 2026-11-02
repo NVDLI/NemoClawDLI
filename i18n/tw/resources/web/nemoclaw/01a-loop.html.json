@@ -29,10 +29,10 @@
       "source": "<a href=\"https://en.wikipedia.org/wiki/A*_search_algorithm\" target=\"_blank\" rel=\"noopener\">A*</a> biases those same rings toward the goal.",
       "value": "<a href=\"https://en.wikipedia.org/wiki/A*_search_algorithm\" target=\"_blank\" rel=\"noopener\">A*</a> 會讓同樣的逐層擴展偏向目標。"
     },
-    "link.89cb16ab43c4": {
+    "link.8dfe78d0f750": {
       "type": "link",
-      "source": "\n  <p>Configure a compatible endpoint in the model panel before running the cell.\n    NVIDIA-hosted endpoints require an\n    <a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NVIDIA API key</a>.\n    Check the selected service's access and quota. The panel shows the active endpoint\n    and credential settings; inspect the redacted request below before sending.</p>\n  <p>The selected route determines which service receives the request and its credential.\n    A browser call requires the endpoint to permit the course origin. The course can use\n    its configured relay when the provider does not allow that direct browser request.\n    Inspect the active route and request headers in the model panel.</p>\n  <strong>Inspect the streaming helper.</strong> <code>chatStream()</code> parses answer text, any returned reasoning text, usage metadata, and the end-of-stream signal. It connects the response to the lesson panel and Stop button. Open the helper source from the cell menu to inspect the request and event handling.\n  ",
-      "value": "\n  <p>執行儲存格之前，請在模型面板中設定相容的端點。\n    NVIDIA 託管的端點需要\n    <a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NVIDIA API 金鑰</a>。請檢查所選服務的存取權限與配額。面板會顯示目前端點和憑證設定；傳送前，請檢查下方已遮蔽敏感資訊的請求。</p>\n  <p>所選路由決定哪個服務接收請求及其憑證。透過瀏覽器呼叫時，端點必須允許課程的來源。若供應商不允許瀏覽器直接傳送該請求，課程可以使用已設定的中繼服務。請在模型面板中檢查目前路由和請求標頭。</p>\n  <strong>檢查串流輔助函式。</strong><code>chatStream()</code> 會解析答案文字、傳回的推理文字、用量中繼資料和串流結束訊號。它將回應連接到課程面板和 Stop 按鈕。請從儲存格選單開啟輔助函式的原始碼，檢查請求與事件處理方式。\n  "
+      "source": "\n  <p>Before you run the cell, choose a compatible endpoint in the model panel. NVIDIA-hosted\n    endpoints need an\n    <a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NVIDIA API key</a>.</p>\n  <p>The browser calls the endpoint directly when the provider allows it. Otherwise, the course\n    sends the request through its relay. The model panel shows the active route and credential.</p>\n  <strong>Inspect the streaming helper.</strong> <code>chatStream()</code> parses answer text, any returned reasoning text, usage metadata, and the end-of-stream signal. It connects the response to the lesson panel and Stop button. Open the helper source from the cell menu to inspect the request and event handling.\n  ",
+      "value": "\n  <p>執行儲存格之前，請在模型面板中選擇相容的端點。NVIDIA 託管的端點需要\n    <a href=\"https://build.nvidia.com/?ncid=ref-dli-146986\" target=\"_blank\" rel=\"noopener\">NVIDIA API 金鑰</a>。</p>\n  <p>若供應商允許，瀏覽器會直接呼叫端點；否則，課程會透過其中繼服務傳送請求。模型面板會顯示目前的路由與憑證。</p>\n  <strong>檢查串流輔助函式。</strong><code>chatStream()</code> 會解析答案文字、傳回的推理文字、用量中繼資料和串流結束訊號。它將回應連接到課程面板和 Stop 按鈕。請從儲存格選單開啟輔助函式的原始碼，檢查請求與事件處理方式。\n  "
     },
     "link.917d52288863": {
       "type": "link",
@@ -396,6 +396,11 @@
       "source": "<span style=\"color:#fbbf24\">hint: the image was rejected on this turn. Retry once, or set includeImage:false and compare the text-only reasoning and omni profiles.</span>",
       "value": "<span style=\"color:#fbbf24\">提示：本輪中的影象被拒絕。請重試一次，或設定 includeImage:false，並比較僅使用文字的 reasoning 與 omni 設定。</span>"
     },
+    "rich.5988c0785c09": {
+      "type": "rich",
+      "source": "\n    This chat starts with memory on. With memory off, earlier turns are left out of each\n    <code>chat()</code> call.\n  ",
+      "value": "這個聊天預設開啟記憶。關閉記憶後，每次 <code>chat()</code> 呼叫都不再包含先前的輪次。"
+    },
     "rich.5bc02b4cf26e": {
       "type": "rich",
       "source": "<div style=\"white-space:pre-wrap\">",
@@ -583,11 +588,6 @@
       "type": "rich",
       "source": "<span style=\"color:#fbbf24\">guardrail: ",
       "value": "<span style=\"color:#fbbf24\">防護機制："
-    },
-    "rich.c5690f27913f": {
-      "type": "rich",
-      "source": "\n    This chat starts with conversation history enabled. Tell it your name, then ask\n    what your name is. Turn the memory toggle off and ask again. Each <code>chat()</code>\n    call receives the messages assembled by the interface; with memory off, earlier\n    turns are omitted. Compare the replies and inspect how the code builds the request.\n  ",
-      "value": "這個聊天介面預設開啟對話紀錄。告訴它您的名字，接著問它您的名字是什麼。關閉記憶開關後再問一次。每次 <code>chat()</code> 呼叫都會收到介面組合的訊息；關閉記憶時，先前的回合會被省略。請比較回應，並檢查程式碼如何建立請求。"
     },
     "rich.c6791c9d7c9c": {
       "type": "rich",
@@ -2156,6 +2156,11 @@
       "source": "The model endpoint uses this format. Module 3's OpenClaw gateway exposes\n     a separate protocol for agent turns, sessions, and runtime operations.",
       "value": "模型端點使用這個格式。單元 3 的 OpenClaw 閘道另有一套通訊協定，用於代理程式輪次、工作階段及執行階段操作。"
     },
+    "text.609bc9c38246": {
+      "type": "text",
+      "source": "Compare the replies, then open the code to see how it builds each request.",
+      "value": "比較兩次回覆，然後開啟程式碼，查看它如何建立每個請求。"
+    },
     "text.6105d6cc76af": {
       "type": "text",
       "source": "image",
@@ -2188,6 +2193,11 @@
       "type": "text",
       "source": "NVIDIA · Securing Agents",
       "value": "NVIDIA · 安全代理程式"
+    },
+    "text.67b65d3b9048": {
+      "type": "text",
+      "source": "Turn the memory toggle off and ask again.",
+      "value": "關閉記憶開關，再問一次。"
     },
     "text.680694f37af1": {
       "type": "text",
@@ -3793,6 +3803,11 @@
       "source": " default: list every coordinate travelled",
       "value": " default: list every coordinate travelled",
       "untranslated": "runnable code comments remain exactly as authored in the English source"
+    },
+    "text.ff354fc5262e": {
+      "type": "text",
+      "source": "Tell the chat your name, then ask it your name.",
+      "value": "在聊天中告訴它您的名字，然後問它您叫什麼名字。"
     },
     "text.ff4ec4732159": {
       "type": "text",
