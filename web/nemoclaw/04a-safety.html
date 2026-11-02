@@ -195,11 +195,11 @@
     <div class="layer-card">
       <h3>1 · Where can this process connect?</h3>
       <p>A <strong>network namespace</strong> (<code>netns</code>) gives the
-         agent an isolated network stack. Outbound access starts closed. An
-         HTTP <strong>CONNECT proxy</strong> provides the only route out.
+         agent its own network stack with no outbound access. An HTTP
+         <strong>CONNECT proxy</strong> provides the only route out, and
          <a href="https://www.openpolicyagent.org/" target="_blank" rel="noopener">Open Policy Agent (OPA)</a>
-         checks the requesting binary, host, port, and path against policy.
-         Whoever edits that policy decides which connections are allowed.</p>
+         checks each request's binary, host, port, and path against policy. Whoever
+         edits the policy decides what can connect.</p>
     </div>
     <div class="layer-card">
       <h3>2 · Which files can it reach?</h3>
@@ -223,11 +223,10 @@
     <div class="layer-card">
       <h3>4 · How much authority does it start with?</h3>
       <p>The agent runs as a <strong>non-root process</strong> under the
-         unprivileged <code>sandbox</code> user. A successful exploit therefore
-         starts with less authority. The lower starting authority reduces
-         blast radius, though it does not prove escalation is impossible. The
-         host, container configuration, and syscall policy remain part of the
-         security boundary.</p>
+         unprivileged <code>sandbox</code> user, so an exploit starts with less
+         authority. Running without root limits the damage but does not prove
+         escalation is impossible. The host, container configuration, and syscall
+         policy are still part of the security boundary.</p>
     </div>
   </div>
 
@@ -439,9 +438,9 @@ helpers.log("Trajectory controls mounted below.");
 
   <div id="cell-live-policy"></div>
 
-  <p>The map evaluates candidate destinations against the loaded policy. Change the calling
-     binary to inspect how its grants differ, then inspect the matched rule. These are browser
-     predictions; live requests provide a separate observation.</p>
+  <p>The map predicts how the loaded policy treats each destination. Change the calling binary
+     to compare its grants. The live check later in this module tests these predictions with real
+     requests.</p>
   <p>Clicking any target opens the rule that governs it, so that you can read which binaries that
      endpoint allows alongside the rule used by the browser evaluator. The
      <strong>View policy source</strong> control prints the YAML it drew from, which is the same

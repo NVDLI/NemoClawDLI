@@ -137,9 +137,9 @@
     <li><strong>First-class features</strong> it ships built in, against the same capability left for you to hand-roll.</li>
   </ul>
   <p>
-    Describe a task and compare how much machinery each harness supplies. The editable
-    cell exposes its system prompt and response logic. It also shows the examples. Rerun
-    the cell after an edit to rebuild the artifact.
+    Describe a task and compare how much of that machinery each harness supplies. You can
+    edit the cell's system prompt, response logic, or examples, then rerun it to rebuild the
+    artifact.
   </p>
   <div id="clis-cell"></div>
   <div id="clis-artifact"></div>
@@ -391,12 +391,15 @@ helpers.log("Browser agent mounted below.");
      connection Module 4a's policy probes use. That host carries the <strong>openshell</strong> CLI, the
      operator tool that manages your sandboxed agent. Every line you type below runs on the launchable, and
      the output is its own.</p>
-  <p>Connect your launchable on <a href="03a-kickstart.html">Module 3a</a> first. Type a command, click a
-     chip, or press Tab to autocomplete. On the host, <code>openshell sandbox list</code> shows your agent
-     and <code>openshell status</code> reports the gateway. Your agent runs inside a sandbox, so prefix a
-     command with <code>agent</code> to run it there: <code>agent ls</code> lists its files through
-     <code>openshell sandbox exec</code>. Each command runs in its own short-lived shell, so to chat with the
-     agent interactively, use the panel below rather than the <code>openclaw tui</code>.</p>
+  <p>Connect your launchable on <a href="03a-kickstart.html">Module 3a</a> first. Then type a command,
+     click a chip, or press Tab to autocomplete.</p>
+  <ul>
+    <li><code>openshell sandbox list</code> shows your agent, and <code>openshell status</code> reports the gateway.</li>
+    <li>Prefix a command with <code>agent</code> to run it in the agent's sandbox. For example,
+      <code>agent ls</code> lists the agent's files.</li>
+    <li>Each command runs in a short-lived shell, so chat with the agent in the panel below, not
+      in <code>openclaw tui</code>.</li>
+  </ul>
   <div id="cell-deepagents"></div>
   <div id="deepagents-artifact"></div>
   <script type="module">
