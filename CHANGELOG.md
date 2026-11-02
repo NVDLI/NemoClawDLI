@@ -9,6 +9,13 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
   lists. Thanks to Vadim Kudlay for the prose review and to the independent Claude reviewer for
   automated review of the Spanish, Brazilian Portuguese, Simplified Chinese and Taiwan
   Traditional Chinese updates.
+- Serve the course from a NemoClaw Brev launchable at /dli/, where one NVIDIA API key starts
+  OpenClaw and serves the course. On a launchable the course uses its own launchable and the
+  model relay by default, and Module 3a says so. The launchable also keeps the learner's course
+  progress and records milestones without a consent prompt. Thanks to Vadim Kudlay for the
+  launchable requirements and to the independent Claude reviewer for automated review of the
+  revised Module 3a text in Spanish, Brazilian Portuguese, Simplified Chinese and Taiwan
+  Traditional Chinese.
 
 - Preserve shell command boundaries across launchable argument parsers so workspace readback,
   skill installation, and policy parsing work. Compact flow diagrams and settle individual

@@ -47,7 +47,7 @@ CHECKS = [
     (
         "runtime binds the relay default to the published course origins and preserves explicit overrides",
         "web/nemoclaw/scripts/_shared.js",
-        ["https://integrate.api.nvidia.com/v1", 'const IFRAME_PROXY_URL = "https://nvidia-api-cors-proxy.experiments.courses.nvidia.com/v1"', "MODEL_RELAY_DEFAULT_ORIGINS", "https://cdn.dli.learn.nvidia.com", "https://nvdli.github.io", "defaultIframeProxyModeForLocation", 'stored === "0"', 'localStorage.setItem(IFRAME_PROXY_OPT_IN_KEY, enabled ? "1" : "0")', "iframe_proxy", "lms_proxy", "iframeProxy: false", "iframeProxy: true"],
+        ["https://integrate.api.nvidia.com/v1", 'const IFRAME_PROXY_URL = "https://nvidia-api-cors-proxy.experiments.courses.nvidia.com/v1"', "MODEL_RELAY_DEFAULT_ORIGINS", "https://cdn.dli.learn.nvidia.com", "https://nvdli.github.io", "defaultIframeProxyModeForLocation", 'url.protocol === "https:" && isOpenClawLaunchableHost(url.hostname)', 'stored === "0"', 'localStorage.setItem(IFRAME_PROXY_OPT_IN_KEY, enabled ? "1" : "0")', "iframe_proxy", "lms_proxy", "iframeProxy: false", "iframeProxy: true"],
         [r'const\s+DIRECT_URL\s*=\s*"https://nvidia-api-cors-proxy'],
     ),
     (
@@ -288,6 +288,7 @@ def self_test() -> list[str]:
         ("custom endpoint bypasses iframe relay", "web/nemoclaw/scripts/_keypanel.js", "setIframeProxyMode(defaultEndpoint &&", "setIframeProxyMode(true &&"),
         ("bounded CDN relay default", "web/nemoclaw/scripts/_shared.js", '"https://cdn.dli.learn.nvidia.com"', '"https://example.com"'),
         ("bounded Pages relay default", "web/nemoclaw/scripts/_shared.js", '"https://nvdli.github.io"', '"https://nvdli.github.io.example.invalid"'),
+        ("bounded launchable relay default", "web/nemoclaw/scripts/_shared.js", 'url.protocol === "https:" && isOpenClawLaunchableHost(url.hostname)', 'url.hostname.endsWith(".gobrev.dev")'),
         ("explicit direct override", "web/nemoclaw/scripts/_shared.js", 'stored === "0"', 'stored === "disabled"'),
         ("custom endpoint omits NVIDIA attribution", "web/nemoclaw/scripts/_shared.js", "if (billingAttributionEnabled(cfg.url))", "if (true)"),
         ("credential destination warning", "web/nemoclaw/index.html", "selected endpoint", "configured service"),
