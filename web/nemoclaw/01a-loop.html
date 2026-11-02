@@ -224,11 +224,15 @@
   <div id="cell-wire"></div>
 
   <div class="callout">
-  <p>Before you run the cell, choose a compatible endpoint in the model panel. NVIDIA-hosted
-    endpoints need an
-    <a href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener">NVIDIA API key</a>.</p>
-  <p>The browser calls the endpoint directly when the provider allows it. Otherwise, the course
-    sends the request through its relay. The model panel shows the active route and credential.</p>
+  <p>Configure a compatible endpoint in the model panel before running the cell.
+    NVIDIA-hosted endpoints require an
+    <a href="https://build.nvidia.com/?ncid=ref-dli-146986" target="_blank" rel="noopener">NVIDIA API key</a>.
+    Check the selected service's access and quota. The panel shows the active endpoint
+    and credential settings; inspect the redacted request below before sending.</p>
+  <p>The selected route determines which service receives the request and its credential.
+    A browser call requires the endpoint to permit the course origin. The course can use
+    its configured relay when the provider does not allow that direct browser request.
+    Inspect the active route and request headers in the model panel.</p>
   <strong>Inspect the streaming helper.</strong> <code>chatStream()</code> parses answer text, any returned reasoning text, usage metadata, and the end-of-stream signal. It connects the response to the lesson panel and Stop button. Open the helper source from the cell menu to inspect the request and event handling.
   </div>
   </div>
