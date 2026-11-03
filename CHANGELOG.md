@@ -5,6 +5,12 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Move Playwright to 1.64.1 in the runtime lock, the browser runtime contract, every GitLab
+  browser job image (pinned by digest), and the license table together, so CI pairs the driver
+  with the Chromium it was built for. The 1.64.1 image runs Node 26, which no longer bundles
+  corepack, so the GitLab browser jobs install the pinned corepack 0.36.0 beside the image's yarn;
+  it still verifies the pnpm hash. This supersedes the lock-only proposal in #180.
+
 - Let custom model endpoints with wildcard CORS answer the published course. A failed
   credentialed request to another origin is repeated once without browser credentials, and that
   endpoint keeps the working mode while the page stays open; a cookie-protected launchable keeps
