@@ -426,7 +426,23 @@ export function isDefaultModelApiBaseUrl(url) {
   } catch (_) { return false; }
 }
 
+// Custom routes send browser credentials, because a launchable's model relay sits behind its
+// sign-in cookie. A browser refuses a credentialed request to an endpoint whose CORS answer is a
+// wildcard origin, so fetchRetry repeats a failed cross-origin request once without credentials,
+// and an endpoint that answers keeps that mode while the page stays open. Nothing is stored.
+const openCorsModelOrigins = new Set();
+
+function modelRequestOrigin(url) {
+  try { return new URL(url, location.href).origin; } catch (_) { return ""; }
+}
+
+function rememberOpenCorsModelOrigin(url) {
+  const origin = modelRequestOrigin(url);
+  if (origin) openCorsModelOrigins.add(origin);
+}
+
 export function modelRequestCredentials(url) {
+  if (!isDefaultModelApiBaseUrl(url) && openCorsModelOrigins.has(modelRequestOrigin(url))) return "omit";
   return isDefaultModelApiBaseUrl(url) ? "same-origin" : "include";
 }
 
@@ -677,7 +693,7 @@ async function fetchRetry(url, opts = {}, {
   if (opts.signal?.aborted) {
     throw opts.signal.reason || new DOMException("stopped", "AbortError");
   }
-  let lastErr = null;
+  let lastErr = null, withoutCredentials = false;
   for (let attempt = 0; attempt <= retries; attempt++) {
     // Stitch in an AbortController so we don't sit on a half-dead socket.
     // Honour any external signal the caller passed in too.
@@ -689,6 +705,7 @@ async function fetchRetry(url, opts = {}, {
       const r = await fetch(url, { ...opts, signal: ac.signal });
       clearTimeout(timer);
       opts.signal?.removeEventListener("abort", onAbort);
+      if (withoutCredentials && r.ok) rememberOpenCorsModelOrigin(url);
       if (r.ok) return r;
       const retryable = r.status === 429 || (r.status >= 500 && r.status < 600);
       if (retryable && attempt < retries) {
@@ -702,6 +719,14 @@ async function fetchRetry(url, opts = {}, {
       opts.signal?.removeEventListener("abort", onAbort);
       lastErr = e;
       if (opts.signal && opts.signal.aborted) throw e;
+      // The one repeat without credentials does not count against the learner's retries.
+      if (e instanceof TypeError && opts.credentials === "include" && !withoutCredentials
+          && modelRequestOrigin(url) !== globalThis.location?.origin) {
+        opts = { ...opts, credentials: "omit" };
+        withoutCredentials = true;
+        attempt -= 1;
+        continue;
+      }
       if (attempt < retries) {
         await delay(Math.min(backoffMs * (2 ** attempt), timeoutMs), opts.signal);
         continue;
@@ -717,6 +742,7 @@ async function fetchRetry(url, opts = {}, {
       throw new Error(
         `Network or endpoint failure after ${attempts} ${attempts === 1 ? "attempt" : "attempts"} ` +
         `(wait limit ${Math.round(timeoutMs / 1000)}s): ${e?.message || String(e)}. ` +
+        (withoutCredentials ? "The browser also tried without credentials, which an endpoint with wildcard CORS requires. " : "") +
         "Check the endpoint and browser access, then change Request handling in course setup if needed.",
         { cause: e },
       );
