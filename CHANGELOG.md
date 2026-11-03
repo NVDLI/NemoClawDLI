@@ -5,6 +5,9 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Name NVIDIA OpenShell, not OpenClaw, in the course abstract, matching the course title. The
+  course home, the course card, the canonical copy, and all four translations change together.
+
 - Move Playwright to 1.64.1 in the runtime lock, the browser runtime contract, every GitLab
   browser job image (pinned by digest), and the license table together, so CI pairs the driver
   with the Chromium it was built for. The 1.64.1 image runs Node 26, which no longer bundles
