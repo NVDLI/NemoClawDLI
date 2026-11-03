@@ -53,7 +53,7 @@ prepare_live_runtime:
   inherit:
     default: false
     variables: false
-  image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
+  image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
   tags: [pages]
   stage: acquire
   timeout: 15m
@@ -62,6 +62,8 @@ prepare_live_runtime:
     - |
       set -euo pipefail
       python3 -m scripts.ci.assert_unprivileged_environment
+      # Node 26 images lack corepack; install the pinned release beside the image's yarn.
+      command -v corepack >/dev/null || { npm install --global --prefix /opt/corepack --ignore-scripts corepack@0.36.0 && export PATH="/opt/corepack/bin:$PATH"; }
       corepack enable
       (cd scripts/runtime && pnpm install --frozen-lockfile --ignore-scripts)
       mkdir -p trusted-runtime
@@ -80,7 +82,7 @@ live_candidate_interfaces:
   inherit:
     default: false
     variables: false
-  image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
+  image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
   tags: [pages]
   stage: validate
   timeout: 30m
@@ -118,7 +120,7 @@ live_interface_review:
   inherit:
     default: false
     variables: false
-  image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
+  image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
   tags: [pages]
   stage: validate
   timeout: 30m
