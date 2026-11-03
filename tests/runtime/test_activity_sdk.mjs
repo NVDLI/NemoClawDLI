@@ -177,3 +177,33 @@ test('local configuration uses UTF-8 bytes for multibyte descriptions before req
  assert.ok(JSON.stringify(markers).length<64*1024);assert.ok(new TextEncoder().encode(JSON.stringify(markers)).byteLength>64*1024);
  await assert.rejects(DLIActivity.initialize({...fixture().options,milestones:markers,fetchImpl:()=>assert.fail('oversized definitions must not request')}),error=>error.code==='invalid_configuration');
 });
+function renewalFixture(replies) {
+ let clock=Date.parse('2026-11-02T10:00:00Z');const created=[];const storage=createMemoryActivityStorage();
+ const fetchImpl=async(url,options)=>{
+  if(url.endsWith('/activity-sessions')){created.push(url);return new Response(JSON.stringify({session_id:sessionId,session_token:'fixture-token-long-enough',expires_at:'2026-11-02T11:00:00Z'}),{status:201});}
+  const reply=replies.shift();return new Response(JSON.stringify(typeof reply==='function'?reply(storage):reply),{status:202});
+ };
+ const client=createActivityClient({baseUrl:'https://activity.example.test',artifact,storage,fetchImpl,now:()=>new Date(clock)});
+ return {client,storage,created,at:time=>{clock=Date.parse(time);}};
+}
+test('an accepted write keeps its renewed expiry, so the 10:00, 10:50 and 11:01 journey stays one session',async()=>{
+ const f=renewalFixture([{update_id:'u1',expires_at:'2026-11-02T11:50:00Z'},{update_id:'u2'}]);
+ await f.client.ensureSession();
+ f.at('2026-11-02T10:50:00Z');await f.client.recordMilestoneCompleted({milestoneId:'early',idempotencyKey:'k1'});
+ assert.equal(f.storage.load().expires_at,'2026-11-02T11:50:00Z');
+ f.at('2026-11-02T11:01:00Z');await f.client.recordMilestoneCompleted({milestoneId:'later',idempotencyKey:'k2'});
+ assert.equal(f.created.length,1);assert.equal(f.storage.load().expires_at,'2026-11-02T11:50:00Z');
+});
+test('a missing, earlier, or malformed renewal leaves the stored session unchanged',async()=>{
+ const replies=[{update_id:'older-api'},{expires_at:'2026-11-02T10:30:00Z'},{expires_at:'tomorrow'},{expires_at:'2026-11-02 12:00'},
+  {expires_at:1767358800000},{expires_at:'2026-13-45T99:99:99Z'},{expires_at:{token:'sensitive'}}];
+ const f=renewalFixture([...replies]);await f.client.ensureSession();const before=JSON.stringify(f.storage.load());
+ for(let index=0;index<replies.length;index++)await f.client.recordReferral({referenceId:`r${index}`,destinationUrl:'https://docs.example.test/',idempotencyKey:`k${index}`});
+ assert.equal(JSON.stringify(f.storage.load()),before);assert.equal(JSON.stringify(f.storage.load()).includes('sensitive'),false);
+});
+test('a renewal reply cannot extend a replacement session created while it was in flight',async()=>{
+ const other='019f38f1-e5ab-7688-af0d-0e8925299e94';
+ const f=renewalFixture([storage=>{storage.save({...storage.load(),session_id:other,session_token:'replacement-token-long-enough'});return {expires_at:'2026-11-02T11:50:00Z'};}]);
+ await f.client.ensureSession();await f.client.recordMilestoneCompleted({milestoneId:'early',idempotencyKey:'k1'});
+ assert.equal(f.storage.load().session_id,other);assert.equal(f.storage.load().expires_at,'2026-11-02T11:00:00Z');
+});

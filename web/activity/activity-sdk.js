@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 const SESSION_ID_PATTERN = /^[0-9a-f-]{36}$/;
+const RENEWED_EXPIRY_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
 const REQUEST_TIMEOUT_MS = 10_000;
 const initializationAttempts = new Map();
 const storageIdentities = new WeakMap();
@@ -561,10 +562,23 @@ export function createActivityClient({
           code: 'session_changed', category: 'session', operation,
         });
       }
-      return requestJson(operation, `/v1/activity-sessions/${encodeURIComponent(session.session_id)}/${suffix}`,
+      const response = await requestJson(operation, `/v1/activity-sessions/${encodeURIComponent(session.session_id)}/${suffix}`,
         { body, session, idempotencyKey: key });
+      retainRenewedExpiry(session, response.result);
+      return response;
     };
     return withAuthenticationRefresh(write);
+  }
+
+  // An accepted write may renew its session. Keep a later, well-formed expiry for that same session
+  // only, so a replayed or out-of-order reply cannot shorten it and cannot extend a replacement.
+  function retainRenewedExpiry(session, result) {
+    const renewed = result?.expires_at;
+    if (typeof renewed !== 'string' || !RENEWED_EXPIRY_PATTERN.test(renewed)) return;
+    const saved = storage.load();
+    if (saved?.scope !== scope || !sameSession(saved, session)) return;
+    if (!(Date.parse(renewed) > Date.parse(saved.expires_at))) return;
+    storage.save({ ...saved, expires_at: renewed });
   }
 
   return {
