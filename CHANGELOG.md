@@ -5,6 +5,12 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Redraw the Module 1a agent-loop figure with its three numbered parts, perception, reasoning, and
+  action, inside the agent, so it matches the lesson text beside it. The Spanish, Brazilian
+  Portuguese, Simplified Chinese, and Taiwan Traditional Chinese figures share its layout, and the
+  Spanish figure now names the environment "Entorno", as the lesson does. Thanks to Vanessa
+  Bellotti for the figure design.
+
 - Name NVIDIA OpenShell, not OpenClaw, in the course abstract, matching the course title. The
   course home, the course card, the canonical copy, and all four translations change together. Thanks
   to Vanessa Bellotti for the report.
