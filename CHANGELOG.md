@@ -6,8 +6,8 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 ## Unreleased
 
 - Let the one-call cell on Module 1a use the model chosen in course setup on the hosted NVIDIA
-  route. The prose snippet above it still shows `model:` in the call shape. Thanks to pinikop for
-  the report.
+  route. The prose snippet above it still shows `model:` in the call shape. Thanks to Pini
+  (@pinikop) for the report and the proposed change.
 
 - Rewrite learner instructions on nine lesson pages as short, direct sentences, with steps as
   lists. Thanks to Vadim Kudlay for the prose review and to the independent Claude reviewer for
