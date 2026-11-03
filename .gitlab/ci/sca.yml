@@ -152,14 +152,15 @@ security_python_sca:
   timeout: 30m
   script:
     - rm -rf .sca-tools-venv
+    - mkdir -p scripts/security/reports/python-materials
+    # Write the dotenv report first so a failed audit still uploads it and reads as a finding.
+    - printf 'PYTHON_SCA_JOB_ID=%s\n' "$CI_JOB_ID" > scripts/security/reports/python-materials/job.env
     - python3 -m venv .sca-tools-venv
     - '.sca-tools-venv/bin/python -m pip install --require-hashes --no-deps --only-binary=:all: -q -r scripts/security/requirements-sca.lock'
-    - mkdir -p scripts/security/reports/python-materials
     - .sca-tools-venv/bin/pip-audit -r scripts/materials/requirements.lock --strict --no-deps --disable-pip --format cyclonedx-json --output scripts/security/reports/python-materials/python-env.raw.cdx.json
     - .sca-tools-venv/bin/python scripts/compliance/resolve_sbom_licenses.py --input scripts/security/reports/python-materials/python-env.raw.cdx.json --output scripts/security/reports/python-materials/python-env.cdx.json
     - .sca-tools-venv/bin/python scripts/security/audit_sbom_policy.py --sbom scripts/security/reports/python-materials/python-env.cdx.json --report scripts/security/reports/python-materials/sbom-policy.json
     - .sca-tools-venv/bin/python scripts/compliance/sbom_evidence.py --raw-sbom scripts/security/reports/python-materials/python-env.raw.cdx.json --raw-sbom-href python-env.raw.cdx.json --sbom scripts/security/reports/python-materials/python-env.cdx.json --artifact-name "python-material-tools-$CI_COMMIT_SHA" --record-id python-material-tooling --description "Pinned Python tools used to verify course materials; not distributed to learners" --distribution not-distributed --category validation --source-commit "$CI_COMMIT_SHA" --ci-job "$CI_JOB_NAME" --pipeline-url "$CI_PIPELINE_URL" --job-url "$CI_JOB_URL" --retention-days 30 --sbom-href python-env.cdx.json --appendix-href python-license-appendix.md --appendix-out scripts/security/reports/python-materials/python-license-appendix.md --manifest-out scripts/security/reports/python-materials/sbom-evidence.json
-    - printf 'PYTHON_SCA_JOB_ID=%s\n' "$CI_JOB_ID" > scripts/security/reports/python-materials/job.env
   artifacts:
     when: always
     name: "security-python-sca-$CI_COMMIT_SHORT_SHA"
