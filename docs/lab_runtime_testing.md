@@ -71,7 +71,7 @@ On Ubuntu, install `python3-venv` if creating the virtual environment reports th
 python3.12 -m venv .venv
 . .venv/bin/activate
 python scripts/runtime/python_env_probe.py
-python -m pip install pip==26.2.1
+python -m pip install pip==26.2.2
 python -m pip install --require-hashes --no-deps --only-binary=:all: --requirement scripts/materials/requirements.lock
 python scripts/runtime/python_env_probe.py --require-material-tools
 ```
