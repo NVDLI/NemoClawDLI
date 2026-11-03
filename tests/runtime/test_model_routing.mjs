@@ -729,6 +729,58 @@ test('HTTP 503 and network failures retry only when the learner opts in', async 
   }
 });
 
+test('a wildcard-CORS custom endpoint answers without credentials once and keeps that mode', async t => {
+  modelTransportFixture(t);
+  const {modelRequestCredentials} = sharedRuntime;
+  const wildcard = 'https://api.tokenfactory.example.test/v1';
+  const modes = [];
+  // A browser rejects a credentialed request against Access-Control-Allow-Origin: * before it leaves.
+  globalThis.fetch = async (_url, init) => {
+    modes.push(init.credentials);
+    if (init.credentials === 'include') throw new TypeError('Failed to fetch');
+    return new Response('{"object":"list","data":[]}', {status:200, headers:{'content-type':'application/json'}});
+  };
+  assert.equal(modelRequestCredentials(wildcard), 'include');
+  const first = await fetchRetry(wildcard + '/models', {credentials:modelRequestCredentials(wildcard)}, {retries:0, timeoutMs:1000});
+  assert.equal(first.status, 200);
+  assert.deepEqual(modes, ['include', 'omit']);
+  assert.equal(modelRequestCredentials(wildcard), 'omit');
+  await fetchRetry(wildcard + '/models', {credentials:modelRequestCredentials(wildcard)}, {retries:0, timeoutMs:1000});
+  assert.deepEqual(modes, ['include', 'omit', 'omit']);
+
+  // A cookie-protected launchable answers the credentialed request, so it keeps its credentials.
+  const launchable = 'https://nemoclaw-abc123.gobrev.dev/v1';
+  globalThis.fetch = async (_url, init) => {
+    modes.push(init.credentials);
+    return new Response('{}', {status:init.credentials === 'include' ? 200 : 401});
+  };
+  modes.length = 0;
+  assert.equal((await fetchRetry(launchable + '/models', {credentials:modelRequestCredentials(launchable)}, {retries:0, timeoutMs:1000})).status, 200);
+  assert.deepEqual(modes, ['include']);
+  assert.equal(modelRequestCredentials(launchable), 'include');
+});
+
+test('a credentials repeat that also fails says so, and same-origin routes never drop credentials', async t => {
+  modelTransportFixture(t);
+  const {modelRequestCredentials} = sharedRuntime;
+  const modes = [];
+  globalThis.fetch = async (_url, init) => { modes.push(init.credentials); throw new TypeError('Failed to fetch'); };
+  const unreachable = 'https://unreachable.example.test/v1';
+  await assert.rejects(
+    fetchRetry(unreachable + '/models', {credentials:'include'}, {retries:0, timeoutMs:1000}),
+    /after 1 attempt.*Failed to fetch\. The browser also tried without credentials/s,
+  );
+  assert.deepEqual(modes, ['include', 'omit']);
+  assert.equal(modelRequestCredentials(unreachable), 'include');
+
+  modes.length = 0;
+  await assert.rejects(
+    fetchRetry('https://nvdli.github.io/v1/models', {credentials:'include'}, {retries:0, timeoutMs:1000}),
+    /after 1 attempt.*Failed to fetch\. Check the endpoint/s,
+  );
+  assert.deepEqual(modes, ['include']);
+});
+
 test('timeouts and caller cancellation remain bounded without a hidden retry', async () => {
   const previous = globalThis.fetch;
   let calls = 0;

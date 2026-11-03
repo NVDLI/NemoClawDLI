@@ -5,6 +5,11 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Let custom model endpoints with wildcard CORS answer the published course. A failed
+  credentialed request to another origin is repeated once without browser credentials, and that
+  endpoint keeps the working mode while the page stays open; a cookie-protected launchable keeps
+  its credentials. Thanks to Pini (@pinikop) for the report and the approach this change follows.
+
 - Keep a renewed Activity session expiry from an accepted progress or referral write, so a
   learner journey stays one session past its original deadline. Earlier, malformed, or missing
   renewals leave the stored session unchanged, and a renewal never extends a replacement session.
