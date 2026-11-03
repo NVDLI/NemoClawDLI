@@ -5,6 +5,11 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Keep a renewed Activity session expiry from an accepted progress or referral write, so a
+  learner journey stays one session past its original deadline. Earlier, malformed, or missing
+  renewals leave the stored session unchanged, and a renewal never extends a replacement session.
+  Thanks to James Wormwell (@jwormwell-nvidia) for the report.
+
 - Let the one-call cell on Module 1a use the model chosen in course setup on the hosted NVIDIA
   route. The prose snippet above it still shows `model:` in the call shape. Thanks to Pini
   (@pinikop) for the report and the proposed change.
