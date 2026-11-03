@@ -1563,7 +1563,6 @@ mountRunCell("#cell-onecall", {
   intro: "Pressing Run returns whatever the model produced for that single call, and running it again may give a different response because each call is independent with no shared state between them.",
   code: `// One call. No loop, no memory.
 const reply = await chat({
-  model: "nvidia/nemotron-3.5-lightning-30b-a3b",
   messages: [
     { role: "system", content: "You are a terse assistant. One sentence." },
     { role: "user",   content: "What does 'stateless' mean for an LLM API?" },
