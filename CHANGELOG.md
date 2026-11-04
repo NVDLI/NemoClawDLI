@@ -5,6 +5,10 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Show the code of Module 1a's first model call, "One stateless chat completion", when the page
+  opens. It is the first code a learner meets, and it stays open after Run, like the wire-format
+  cell below it.
+
 - Keep long run-cell output readable inside a lesson's expandable sections. The output pane now
   scrolls as one region; before, each log and returned-value block shrank to fit it, leaving the
   last block one line tall behind its own scroll bar.
