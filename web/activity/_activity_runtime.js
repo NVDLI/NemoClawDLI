@@ -11,9 +11,6 @@ import {
 import { localizeCourseUiText } from '../nemoclaw/scripts/_locale.js';
 import { bindActivityMilestones } from './activity-sdk.js';
 
-const EVIDENCE_KEY_PREFIX = 'dli_activity:nemoclaw:evidence:v1';
-const CHECKPOINT_CONTRACT_VERSION = '1';
-
 export function getInstalledNemoClawActivity(windowTarget = globalThis.window) {
   return windowTarget?.__nemoclawActivity || null;
 }
@@ -21,30 +18,6 @@ export function getInstalledNemoClawActivity(windowTarget = globalThis.window) {
 function pageName() {
   return globalThis.location?.pathname?.split('/').pop() || '';
 }
-
-function evidenceStorage(target, artifactVersion) {
-  const storageKey = `${EVIDENCE_KEY_PREFIX}:${artifactVersion || 'unavailable'}`;
-  let memoryValue = {};
-  const read = () => {
-    try {
-      const raw = target?.getItem(storageKey);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        memoryValue = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
-      }
-    } catch (_) {}
-    return { ...memoryValue };
-  };
-  return {
-    has: key => read()[key] === true,
-    add(key) {
-      const value = read(); value[key] = true;
-      memoryValue = value;
-      try { target?.setItem(storageKey, JSON.stringify(value)); } catch (_) {}
-    },
-  };
-}
-
 
 // C0002 is Performance Cookies in the nvdli.github.io OneTrust configuration.
 export function bindNemoClawProgressConsent({ windowTarget, activity, syncLocal }) {
@@ -324,7 +297,9 @@ export function installNemoClawActivityTracking({
   activity ||= createNemoClawActivity({ storageTarget });
   windowTarget.__nemoclawActivityTracking = true;
   windowTarget.__nemoclawActivity = activity;
-  const evidence = evidenceStorage(storageTarget, CHECKPOINT_CONTRACT_VERSION);
+  // "Waiting to save" covers successes from this page load only. A flag kept from an earlier page
+  // could never be sent, so it would wait forever.
+  const evidence = new Set();
   const page = pageName();
 
   let activityInterface;

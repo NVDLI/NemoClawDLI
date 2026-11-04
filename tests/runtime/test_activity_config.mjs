@@ -47,6 +47,19 @@ test('declarative ordered evidence and session replacement preserve live-only pa
  emit('fixture:success');emit('fixture:key');assert.deepEqual(reached,[]);binding.bindSession({sessionId:'a'});emit('fixture:success');assert.equal(reached.length,1);
  binding.bindSession({sessionId:'b'});emit('fixture:success');assert.equal(reached.length,1);emit('fixture:key');emit('fixture:success');assert.equal(reached.length,2);binding.dispose();
 });
+test('satisfiedBy any completes on one rule while all still needs every rule',()=>{
+ const source=contract();source.milestones[0].evidence=[{event:'fixture:first',page:'lesson.html',target:'exercise'},{event:'fixture:second',page:'lesson.html',target:'exercise',matches:{success:true}}];
+ for(const [satisfiedBy,afterFirst,afterSecond] of [[undefined,0,1],['all',0,1],['any',1,2]]){
+  const config=structuredClone(source);if(satisfiedBy)config.milestones[0].satisfiedBy=satisfiedBy;
+  const eventTarget=new EventTarget();const reached=[];
+  const binding=sdkModule.bindActivityMilestones({config:sdkModule.validateActivityMilestoneConfig(config),eventTarget,documentTarget:{getElementById:()=>({})},page:'lesson.html',sessionId:'a',onMilestone:id=>reached.push(id)});
+  const emit=name=>{const event=new Event(name);event.detail={success:true};eventTarget.dispatchEvent(event);};
+  emit('fixture:first');assert.equal(reached.length,afterFirst,String(satisfiedBy));emit('fixture:second');assert.equal(reached.length,afterSecond,String(satisfiedBy));binding.dispose();
+ }
+ for(const mutate of [c=>c.milestones[0].satisfiedBy='either',c=>c.milestones[0].satisfiedBy=true,c=>{c.milestones[0].satisfiedBy='any';c.milestones[0].evidence[1].requires=[0];}]){
+  const config=structuredClone(source);mutate(config);assert.throws(()=>sdkModule.validateActivityMilestoneConfig(config),error=>error.code==='invalid_configuration');
+ }
+});
 test('canonical Markdown owns the generated Activity JSON definition',()=>{
  for(const root of COURSE_ROOTS){const config=JSON.parse(fs.readFileSync(path.join('web/activity','activity_milestones.json'),'utf8'));assert.ok(config.milestones.length>0);const doc=fs.readFileSync(path.join('docs','ACTIVITY_MILESTONES.md'),'utf8');assert.match(doc,/^# Activity Milestones\n/);const blocks=[...doc.matchAll(/^```json[ \t]*\n([\s\S]*?)^```[ \t]*$/gm)];assert.equal(blocks.length,1);assert.deepEqual(config,JSON.parse(blocks[0][1]));assert.equal(fs.existsSync(path.join(root,'scripts/_activity_config.js')),false);}
 });

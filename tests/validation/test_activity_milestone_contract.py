@@ -84,6 +84,29 @@ class ActivityMilestoneContractTests(unittest.TestCase):
         page.write_text(page.read_text().replace('id="exercise"', 'id="removed-exercise"'))
         self.assertTrue(audit_course(self.course))
 
+    def test_named_producer_exercises_must_exist_on_the_rule_page(self):
+        page = self.course / "lesson.html"
+        page.write_text('<html><body><div id="exercise"></div><div id="neighbor"></div></body></html>')
+        changed = copy.deepcopy(self.config)
+        changed["milestones"][0]["evidence"][0]["matches"] = {"cellId": ["exercise", "neighbor"], "nodeId": "not-a-dom-id"}
+        self.write_source(changed)
+        self.write(changed)
+        self.assertEqual(audit_course(self.course), [])
+        for key in ("cellId", "containerId", "canvasId"):
+            for producer in ("missing-cell", "neighbor ", "Neighbor", ["exercise", "neighbour"]):
+                with self.subTest(key=key, producer=producer):
+                    mutated = copy.deepcopy(self.config)
+                    mutated["milestones"][0]["evidence"][0]["matches"] = {key: producer}
+                    self.write_source(mutated)
+                    self.write(mutated)
+                    self.assertTrue(audit_course(self.course))
+        self.write_source(changed)
+        self.write(changed)
+        page.write_text('<html><body><div id="exercise"></div><div id="renamed-neighbor"></div></body></html>')
+        self.assertTrue(audit_course(self.course))
+        page.write_text('<html><body><div id="exercise"></div></body></html>')
+        self.assertTrue(audit_course(self.course))
+
     def test_parallel_javascript_definition_source_fails(self):
         (self.course / "scripts").mkdir()
         (self.course / "scripts/_activity_config.js").write_text("export const ACTIVITY_MILESTONES = {};\n")
