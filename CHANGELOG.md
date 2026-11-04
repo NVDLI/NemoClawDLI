@@ -5,6 +5,10 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Keep long run-cell output readable inside a lesson's expandable sections. The output pane now
+  scrolls as one region; before, each log and returned-value block shrank to fit it, leaving the
+  last block one line tall behind its own scroll bar.
+
 - Redraw the Module 1a agent-loop figure with its three numbered parts, perception, reasoning, and
   action, inside the agent, so it matches the lesson text beside it. The Spanish, Brazilian
   Portuguese, Simplified Chinese, and Taiwan Traditional Chinese figures share its layout, and the

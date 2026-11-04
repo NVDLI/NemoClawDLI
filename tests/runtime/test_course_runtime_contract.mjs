@@ -433,6 +433,33 @@ test('native README attachment UI labels fallback, retries, and stops an in-flig
       'wheel input clears stale containment after content shrinks under a stationary pointer');
     await page.locator('#wheel-contract').evaluate(node=>node.remove());
 
+    // A run cell inside a learning block caps its flex-column output. Long log and returned-value
+    // blocks must keep their height so the output pane scrolls, not each block inside it.
+    const runOutput = async () => page.evaluate(() => {
+      const block=document.createElement('details');block.className='learning-block';block.open=true;
+      block.innerHTML='<summary>output fixture</summary><div class="rc-out"></div>';
+      document.body.prepend(block);
+      const out=block.querySelector('.rc-out');
+      out.style.cssText+='display:flex;flex-direction:column;gap:0;';
+      for (const [label,lines] of [['log',60],['returned value',40]]) {
+        const heading=document.createElement('div');heading.className='cell-log-heading';heading.textContent=label;
+        const pre=document.createElement('pre');pre.className='cell-log-json';
+        pre.textContent=Array.from({length:lines},(_,i)=>`"line ${i}": "${'x'.repeat(i%3?40:220)}"`).join('\n');
+        out.append(heading,pre);
+      }
+      const blocks=[...out.querySelectorAll('.cell-log-json')].map(pre=>pre.scrollHeight-pre.clientHeight);
+      const result={paneScrolls:out.scrollHeight>out.clientHeight+10,hiddenRows:blocks};
+      block.remove();
+      return result;
+    });
+    const output=await runOutput();
+    assert.ok(output.paneScrolls,'long run-cell output overflows the capped pane');
+    assert.deepEqual(output.hiddenRows.map(rows=>rows<=1),[true,true],
+      `run-cell output blocks keep their height inside the scrolling pane: ${JSON.stringify(output.hiddenRows)}`);
+    const shrinking=await page.addStyleTag({content:'.learning-block .rc-out > * {flex-shrink:1!important}'});
+    assert.ok((await runOutput()).hiddenRows.some(rows=>rows>1),'output test detects shrinking blocks');
+    await shrinking.evaluate(node=>node.remove());
+
     const load = async () => {
       await page.goto(origin+lessonRoute(4, 2));
       await page.locator('#clis-artifact .chatui-send').waitFor();
