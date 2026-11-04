@@ -9,9 +9,12 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
   API key to be saved again on Module 1a, which never happened for a learner who saved it earlier.
   Either 1a model-call exercise now completes it. Either 3b workspace exercise completes "Inspect
   your workspace". In 4a, reading the live policy or running the policy comparison completes "Check
-  the policy boundary", even when the prediction and the live result disagree. A success left from
-  an earlier page no longer shows as "Waiting to save", since it could never be sent. The build
-  now fails when a milestone names an exercise that is missing from its page.
+  the policy boundary", even when the prediction and the live result disagree. The build now fails
+  when a milestone names an exercise that is missing from its page.
+
+- Restore the Activity runtime's stored progress flags. The s-fx-43-v1 lab scopes them to its
+  allocation and saves them, and its course adapter stopped with "pinned source drifted" once the
+  milestone change above removed them, so new labs could not serve the course.
 
 - Show the code of Module 1a's first model call, "One stateless chat completion", when the page
   opens. It is the first code a learner meets, and it stays open after Run, like the wire-format
