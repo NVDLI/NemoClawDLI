@@ -245,6 +245,9 @@ body .course-scroll-containment { overscroll-behavior: contain !important; }
 .learning-block .cf-panel-log {
   max-height: min(48vh, 30rem); overflow: auto; overscroll-behavior: contain;
 }
+/* A run cell's output is a flex column. Its blocks keep their own height so the output pane
+   scrolls as one region; a block that scrolls sideways would otherwise shrink to a single line. */
+.rc-out > * { flex-shrink: 0; }
 
 /* Persistent but deliberately small entry to the page-aware ReAct assistant. */
 .course-assistant-launcher {

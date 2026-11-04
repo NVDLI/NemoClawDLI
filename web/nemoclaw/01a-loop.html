@@ -1559,6 +1559,7 @@ return await state.runMaze(helpers, state, {
 
 // ── Canvas 2: one real chat completion ───────────────────────────────────────
 mountRunCell("#cell-onecall", {
+  openCode: true,
   label: "One stateless chat completion · a real call to the model",
   intro: "Pressing Run returns whatever the model produced for that single call, and running it again may give a different response because each call is independent with no shared state between them.",
   code: `// One call. No loop, no memory.
