@@ -70,9 +70,18 @@ function fixture(page = '01a-loop.html', { sessionId = 'session-a', storageTarge
 }
 
 const pairs = [
-  ['03b-openclaw.html', ['run-succeeded', { cellId: 'cell-introspect' }], ['run-succeeded', { cellId: 'cell-workspace-term' }], '03b:workspace-inspected'],
   ['03c-always-on.html', ['canvas-node-succeeded', { canvasId: 'probe-cron', nodeId: 'cr-run', runObserved: true }], ['canvas-node-succeeded', { canvasId: 'probe-cron', nodeId: 'cr-rm', cleanupSucceeded: true }], '03c:scheduled-run-complete'],
-  ['04a-safety.html', ['run-succeeded', { cellId: 'cell-live-policy', hasAgent: true }], ['canvas-node-succeeded', { canvasId: 'cell-predict-confirm', nodeId: 'compare', policyAgreed: true }], '04a:policy-boundary-verified'],
+];
+// Each exercise next to a milestone's callout completes it alone, whatever outcome the learner chose.
+const alternatives = [
+  ['01a-loop.html', [['run-succeeded', { cellId: 'cell-onecall', hasContent: true }], ['run-succeeded', { cellId: 'cell-wire', hasContent: true }]], '01a:model-call-verified'],
+  ['03b-openclaw.html', [['run-succeeded', { cellId: 'cell-introspect' }], ['run-succeeded', { cellId: 'cell-workspace-term' }]], '03b:workspace-inspected'],
+  ['04a-safety.html', [['run-succeeded', { cellId: 'cell-live-policy', hasAgent: true }], ['canvas-node-succeeded', { canvasId: 'cell-predict-confirm', nodeId: 'compare', policyAgreed: true }], ['canvas-node-succeeded', { canvasId: 'cell-predict-confirm', nodeId: 'compare', policyAgreed: false }]], '04a:policy-boundary-verified'],
+];
+const nonSuccesses = [
+  ['01a-loop.html', [['api-key-verified'], ['run-succeeded', { cellId: 'cell-onecall', hasContent: false }], ['run-succeeded', { cellId: 'cell-wire', hasContent: false }], ['run-succeeded', { cellId: 'cell-reflex', hasContent: true }]]],
+  ['03b-openclaw.html', [['run-succeeded', { cellId: 'cell-personas' }]]],
+  ['04a-safety.html', [['run-succeeded', { cellId: 'cell-live-policy', hasAgent: false }], ['canvas-node-succeeded', { canvasId: 'cell-predict-confirm', nodeId: 'observe' }]]],
 ];
 
 test('course bootstrap and reinstall do not award a milestone', () => {
@@ -104,6 +113,26 @@ test('paired live success predicates work in either order, without trusting stor
   }
 });
 
+test('each neighboring exercise completes its milestone on its own', async () => {
+  for (const [page, signals, milestone] of alternatives) {
+    for (const signal of signals) {
+      const f = fixture(page); try {
+        dispatch(f.windowTarget, ...signal); await flush();
+        assert.deepEqual(f.milestones, [milestone], `${page} ${JSON.stringify(signal)}`);
+      } finally { f.restore(); }
+    }
+  }
+});
+
+test('setup events, failed runs and unrelated exercises award nothing', async () => {
+  for (const [page, signals] of nonSuccesses) {
+    const f = fixture(page); try {
+      for (const signal of signals) dispatch(f.windowTarget, ...signal);
+      await flush(); assert.deepEqual(f.milestones, [], page);
+    } finally { f.restore(); }
+  }
+});
+
 test('paired success halves cannot cross sessions, including disconnect and replacement', async () => {
   for (const [page, first, second] of pairs) {
     const f = fixture(page); try {
@@ -114,11 +143,12 @@ test('paired success halves cannot cross sessions, including disconnect and repl
 });
 
 test('fresh work before enabling may bind once; stale saved evidence cannot bind', async () => {
-  const f = fixture('03b-openclaw.html', { sessionId: null }); try {
-    dispatch(f.windowTarget, 'run-succeeded', { cellId: 'cell-introspect' });
+  const [[page, first, second, milestone]] = pairs;
+  const f = fixture(page, { sessionId: null }); try {
+    dispatch(f.windowTarget, ...first);
     f.session('session-a');
-    dispatch(f.windowTarget, 'run-succeeded', { cellId: 'cell-workspace-term' }); await flush();
-    assert.deepEqual(f.milestones, ['03b:workspace-inspected']);
+    dispatch(f.windowTarget, ...second); await flush();
+    assert.deepEqual(f.milestones, [milestone]);
   } finally { f.restore(); }
 });
 
@@ -132,11 +162,10 @@ test('failed milestone evidence cannot transfer to a replacement session', async
   } finally { f.restore(); }
 });
 
-test('model-call milestone requires a live key verification and nonempty successful content', async () => {
+test('model-call milestone needs a nonempty model response, not a repeated key save', async () => {
   const f = fixture(); try {
-    f.storage.setItem('dli_activity:nemoclaw:evidence:v1:1', JSON.stringify({ '01a:key': true }));
-    dispatch(f.windowTarget, 'run-succeeded', { cellId: 'cell-onecall', hasContent: true }); await flush(); assert.deepEqual(f.milestones, []);
-    dispatch(f.windowTarget, 'api-key-verified');
+    f.storage.setItem('dli_activity:nemoclaw:evidence:v1:1', JSON.stringify({ 'milestone:01a:model-call-verified': true }));
+    dispatch(f.windowTarget, 'api-key-verified'); await flush(); assert.deepEqual(f.milestones, []);
     dispatch(f.windowTarget, 'run-succeeded', { cellId: 'cell-onecall', hasContent: false }); await flush(); assert.deepEqual(f.milestones, []);
     dispatch(f.windowTarget, 'run-succeeded', { cellId: 'cell-onecall', hasContent: true }); await flush(); assert.deepEqual(f.milestones, ['01a:model-call-verified']);
   } finally { f.restore(); }
@@ -145,7 +174,7 @@ test('model-call milestone requires a live key verification and nonempty success
 test('success predicates survive denied sessionStorage', async () => {
   const denied = { getItem() { throw new DOMException('denied', 'SecurityError'); }, setItem() { throw new DOMException('denied', 'SecurityError'); } };
   const f = fixture('01a-loop.html', { storageTarget: denied }); try {
-    dispatch(f.windowTarget, 'api-key-verified'); dispatch(f.windowTarget, 'run-succeeded', { cellId: 'cell-onecall', hasContent: true }); await flush();
+    dispatch(f.windowTarget, 'run-succeeded', { cellId: 'cell-onecall', hasContent: true }); await flush();
     assert.deepEqual(f.milestones, ['01a:model-call-verified']);
   } finally { f.restore(); }
 });
@@ -159,7 +188,12 @@ test('every configured milestone retains success-only runtime evidence and the s
   assert.match(read('scripts/_shared.js'), /install\w+ActivityTracking/);
   for (const [file, signal] of [['scripts/_canvas.js', 'run-succeeded'], ['scripts/_chat.js', 'chat-completed'], ['scripts/_openclaw.js', 'connection-audit-passed'], ['scripts/_openclaw_cli.js', 'live-agent-operated']]) assert.ok(read(file).includes(`nemoclaw:${signal}`));
   assert.equal(config.milestones.find(({id}) => id === '01b:react-loop-complete').evidence[0].minimum.successCount, 1);
-  for (const key of ['runObserved', 'cleanupSucceeded', 'policyAgreed']) assert.ok(config.milestones.some(marker => marker.evidence.some(rule => rule.matches?.[key] === true)));
+  for (const key of ['runObserved', 'cleanupSucceeded']) assert.ok(config.milestones.some(marker => marker.evidence.some(rule => rule.matches?.[key] === true)));
+  // A one-time setup event, such as saving a key, never repeats for a learner who set up earlier.
+  const exerciseSuccesses = new Set(['run-succeeded', 'chat-completed', 'canvas-node-succeeded', 'connection-audit-passed', 'live-agent-operated'].map(signal => `nemoclaw:${signal}`));
+  for (const marker of config.milestones) for (const rule of marker.evidence) {
+    assert.ok(exerciseSuccesses.has(rule.event), `${marker.id} waits on ${rule.event}, which is not an exercise success`);
+  }
   assert.match(read('03c-always-on.html'), /state\.demoCronVerified = true/);
 });
 

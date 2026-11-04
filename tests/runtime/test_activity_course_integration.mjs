@@ -577,6 +577,9 @@ test('browser artifact discovery preserves same-origin authentication and blocks
         ? route.continue() : route.abort();
     });
     await context.addCookies([{ name: 'course_fixture', value: 'authorized', url: `http://127.0.0.1:${port}` }]);
+    // A success flag left in the tab by an earlier page can never be sent, so it must not read as pending.
+    await context.addInitScript(() => sessionStorage.setItem('dli_activity:nemoclaw:evidence:v1:1',
+      JSON.stringify({ 'milestone:01b:react-loop-complete': true })));
     const page = await context.newPage();
     await page.goto(`http://127.0.0.1:${port}/${COURSE_ROOT}/index.html`);
     const referralLink = page.locator('a[aria-label="Open the NVIDIA Build blueprint card"]');
@@ -709,6 +712,8 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     assert.equal(await page.locator('[data-activity-milestones]').evaluate(node => node.inert), false);
     await assertMilestones(0);
     assert.equal(await page.locator('input[type="range"]').count(), 0, 'completion cannot be moved manually');
+    assert.equal(await page.locator('.course-milestones li[data-milestone="01b:react-loop-complete"] .milestone-state').textContent(),
+      'Not yet reached', 'a stored flag from an earlier page is not live evidence');
     await page.evaluate(() => {
       window.dispatchEvent(new CustomEvent('nemoclaw:api-key-verified'));
       window.dispatchEvent(new CustomEvent('nemoclaw:run-succeeded', { detail: { cellId: 'cell-onecall', hasContent: true } }));
@@ -830,16 +835,18 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     });
 
     const successfulExercises = {
-      '01a:model-call-verified': [['api-key-verified', {}], ['run-succeeded', { cellId: 'cell-onecall', hasContent: true }]],
+      // A saved key is not re-verified here: the neighboring wire-format call alone completes 01a.
+      '01a:model-call-verified': [['run-succeeded', { cellId: 'cell-wire', hasContent: true }]],
       '01b:react-loop-complete': [['chat-completed', { containerId: 'react-artifact', successCount: 1, hasAnswer: true }]],
       '01c:tool-roundtrip-complete': [['chat-completed', { containerId: 'tools-artifact', successCount: 1, hasAnswer: true }]],
       '02a:routed-workflow-complete': [['chat-completed', { containerId: 'router-artifact', successCount: 1, hasAnswer: true }]],
       '02b:grounded-answer-complete': [['chat-completed', { containerId: 'rag-artifact', successCount: 1, hasAnswer: true }]],
       '02c:deep-research-complete': [['chat-completed', { containerId: 'deep-artifact', successCount: 1, hasAnswer: true }]],
       '03a:nemoclaw-connected': [['connection-audit-passed', {}]],
-      '03b:workspace-inspected': [['run-succeeded', { cellId: 'cell-introspect' }], ['run-succeeded', { cellId: 'cell-workspace-term' }]],
+      '03b:workspace-inspected': [['run-succeeded', { cellId: 'cell-workspace-term' }]],
       '03c:scheduled-run-complete': [['canvas-node-succeeded', { canvasId: 'probe-cron', nodeId: 'cr-run', runObserved: true }], ['canvas-node-succeeded', { canvasId: 'probe-cron', nodeId: 'cr-rm', cleanupSucceeded: true }]],
-      '04a:policy-boundary-verified': [['run-succeeded', { cellId: 'cell-live-policy', hasAgent: true }], ['canvas-node-succeeded', { canvasId: 'cell-predict-confirm', nodeId: 'compare', policyAgreed: true }]],
+      // A prediction that disagrees with the live request is still a completed comparison.
+      '04a:policy-boundary-verified': [['canvas-node-succeeded', { canvasId: 'cell-predict-confirm', nodeId: 'compare', policyAgreed: false }]],
       '04b:live-agent-operated': [['live-agent-operated', {}]],
     };
     assert.deepEqual(Object.keys(successfulExercises), IDS, 'every course milestone has browser evidence coverage');
