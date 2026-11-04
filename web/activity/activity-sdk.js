@@ -247,10 +247,8 @@ export function validateActivityMilestoneConfig(value) {
     id: marker?.id, label: marker?.label, description: marker?.description,
   })) : value.milestones);
   const milestones = Array.from(value.milestones, marker => {
-    configObject(marker, ['id', 'label', 'description', 'href', 'evidence', 'satisfiedBy']);
-    // "all" needs every rule; "any" lets one of several neighboring exercises complete the milestone.
-    const satisfiedBy = marker.satisfiedBy === undefined ? 'all' : marker.satisfiedBy;
-    if (typeof marker.href !== 'string' || !['all', 'any'].includes(satisfiedBy)) throw invalidMilestoneConfig();
+    configObject(marker, ['id', 'label', 'description', 'href', 'evidence']);
+    if (typeof marker.href !== 'string') throw invalidMilestoneConfig();
     const [page, target, extra] = marker.href.split('#');
     if (!CONFIG_PAGE.test(page) || !CONFIG_TARGET.test(target || '') || extra !== undefined
         || !Array.isArray(marker.evidence) || !marker.evidence.length || marker.evidence.length > 16) {
@@ -285,10 +283,8 @@ export function validateActivityMilestoneConfig(value) {
       return Object.freeze({ event: rule.event, page: rule.page, target: rule.target,
         matches: fields(rule.matches, false), minimum: fields(rule.minimum, true), requires: Object.freeze([...requires]) });
     });
-    // Ordering between alternatives has no meaning.
-    if (satisfiedBy === 'any' && evidence.some(rule => rule.requires.length)) throw invalidMilestoneConfig();
     return Object.freeze({ id: marker.id, label: marker.label, description: marker.description,
-      href: marker.href, satisfiedBy, evidence: Object.freeze(evidence) });
+      href: marker.href, evidence: Object.freeze(evidence) });
   });
   return Object.freeze({ schemaVersion: 1, milestones: Object.freeze(milestones) });
 }
@@ -349,7 +345,7 @@ export function bindActivityMilestones({ config, eventTarget, documentTarget, pa
         if (!rule.requires.every(prior => reached.has(prior))) continue;
         reached.add(index);
         partial.set(marker.id, reached);
-        if (marker.satisfiedBy === 'any' || marker.evidence.every((_, position) => reached.has(position))) {
+        if (marker.evidence.every((_, position) => reached.has(position))) {
           void Promise.resolve(onMilestone(marker.id)).catch(() => {});
         }
       }

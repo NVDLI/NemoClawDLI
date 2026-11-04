@@ -4,20 +4,25 @@
     {
       "id": "01a:model-call-verified",
       "label": "Make your first model call",
-      "description": "Run the one-call or wire-format exercise and receive a response from the model.",
+      "description": "Verify your API key, then run the one-call exercise and receive a response.",
       "href": "01a-loop.html#cell-onecall",
       "evidence": [
+        {
+          "event": "nemoclaw:api-key-verified",
+          "page": "01a-loop.html",
+          "target": "cell-onecall"
+        },
         {
           "event": "nemoclaw:run-succeeded",
           "page": "01a-loop.html",
           "target": "cell-onecall",
           "matches": {
-            "cellId": [
-              "cell-onecall",
-              "cell-wire"
-            ],
+            "cellId": "cell-onecall",
             "hasContent": true
-          }
+          },
+          "requires": [
+            0
+          ]
         }
       ]
     },
@@ -137,7 +142,7 @@
     {
       "id": "03b:workspace-inspected",
       "label": "Inspect your workspace",
-      "description": "Successfully run the introspection or workspace terminal exercise.",
+      "description": "Successfully run both the introspection and workspace terminal exercises.",
       "href": "03b-openclaw.html#cell-introspect",
       "evidence": [
         {
@@ -145,10 +150,15 @@
           "page": "03b-openclaw.html",
           "target": "cell-introspect",
           "matches": {
-            "cellId": [
-              "cell-introspect",
-              "cell-workspace-term"
-            ]
+            "cellId": "cell-introspect"
+          }
+        },
+        {
+          "event": "nemoclaw:run-succeeded",
+          "page": "03b-openclaw.html",
+          "target": "cell-workspace-term",
+          "matches": {
+            "cellId": "cell-workspace-term"
           }
         }
       ]
@@ -190,9 +200,8 @@
     {
       "id": "04a:policy-boundary-verified",
       "label": "Check the policy boundary",
-      "description": "Read the live agent policy, or compare a policy prediction with a live request.",
+      "description": "Read the live agent policy, then confirm the policy comparison agrees.",
       "href": "04a-safety.html#cell-live-policy",
-      "satisfiedBy": "any",
       "evidence": [
         {
           "event": "nemoclaw:run-succeeded",
@@ -209,7 +218,8 @@
           "target": "cell-predict-confirm",
           "matches": {
             "canvasId": "cell-predict-confirm",
-            "nodeId": "compare"
+            "nodeId": "compare",
+            "policyAgreed": true
           }
         }
       ]

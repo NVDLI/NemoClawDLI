@@ -27,20 +27,25 @@ This document is the definition source for IDs, labels, descriptions, exercise t
     {
       "id": "01a:model-call-verified",
       "label": "Make your first model call",
-      "description": "Run the one-call or wire-format exercise and receive a response from the model.",
+      "description": "Verify your API key, then run the one-call exercise and receive a response.",
       "href": "01a-loop.html#cell-onecall",
       "evidence": [
+        {
+          "event": "nemoclaw:api-key-verified",
+          "page": "01a-loop.html",
+          "target": "cell-onecall"
+        },
         {
           "event": "nemoclaw:run-succeeded",
           "page": "01a-loop.html",
           "target": "cell-onecall",
           "matches": {
-            "cellId": [
-              "cell-onecall",
-              "cell-wire"
-            ],
+            "cellId": "cell-onecall",
             "hasContent": true
-          }
+          },
+          "requires": [
+            0
+          ]
         }
       ]
     },
@@ -160,7 +165,7 @@ This document is the definition source for IDs, labels, descriptions, exercise t
     {
       "id": "03b:workspace-inspected",
       "label": "Inspect your workspace",
-      "description": "Successfully run the introspection or workspace terminal exercise.",
+      "description": "Successfully run both the introspection and workspace terminal exercises.",
       "href": "03b-openclaw.html#cell-introspect",
       "evidence": [
         {
@@ -168,10 +173,15 @@ This document is the definition source for IDs, labels, descriptions, exercise t
           "page": "03b-openclaw.html",
           "target": "cell-introspect",
           "matches": {
-            "cellId": [
-              "cell-introspect",
-              "cell-workspace-term"
-            ]
+            "cellId": "cell-introspect"
+          }
+        },
+        {
+          "event": "nemoclaw:run-succeeded",
+          "page": "03b-openclaw.html",
+          "target": "cell-workspace-term",
+          "matches": {
+            "cellId": "cell-workspace-term"
           }
         }
       ]
@@ -213,9 +223,8 @@ This document is the definition source for IDs, labels, descriptions, exercise t
     {
       "id": "04a:policy-boundary-verified",
       "label": "Check the policy boundary",
-      "description": "Read the live agent policy, or compare a policy prediction with a live request.",
+      "description": "Read the live agent policy, then confirm the policy comparison agrees.",
       "href": "04a-safety.html#cell-live-policy",
-      "satisfiedBy": "any",
       "evidence": [
         {
           "event": "nemoclaw:run-succeeded",
@@ -232,7 +241,8 @@ This document is the definition source for IDs, labels, descriptions, exercise t
           "target": "cell-predict-confirm",
           "matches": {
             "canvasId": "cell-predict-confirm",
-            "nodeId": "compare"
+            "nodeId": "compare",
+            "policyAgreed": true
           }
         }
       ]
@@ -284,11 +294,7 @@ After valid saved Performance Cookie consent, the adapter calls `DLIActivity.ini
 
 The SDK validates and copies the local milestone definitions before connecting. Lists contain 1 to 1,000 unique ASCII milestone IDs, nonblank labels up to 256 characters, and nonblank descriptions up to 4,096 characters. The compact UTF-8 JSON metadata list is limited to 64 KiB locally; labels and descriptions cannot contain NUL characters. Definitions participate in session storage and concurrent initialization scope, so changing the local configuration cannot reuse the previous bearer. These definitions are never added to a session request. Browser requests cannot register or change a service milestone policy.
 
-Configure each ID's `evidence` rules with a typed producer `event`, a course `page`, and an existing DOM `target`. Optional `matches` checks fixed scalar values or an allowed value list; `minimum` checks positive numeric counts. Optional `requires` indexes require an earlier live rule before the current rule can succeed. By default, all rules for a milestone must succeed. A milestone with `"satisfiedBy": "any"` completes when any one rule succeeds, and its rules cannot use `requires`. The build checks that every `cellId`, `containerId` and `canvasId` a rule names exists on that rule's page, so a renamed exercise fails the build instead of silently disabling its milestone.
-
-Keep milestones resilient. Accept a success from any exercise next to the milestone's callout that practices the same skill. Do not require one-time setup events, such as saving an API key, because a learner who set up earlier never repeats them. Do not require a particular learner outcome, such as a prediction that matches, when a different outcome is still a completed exercise. Prefer one live success over parts spread across sections, because partial evidence does not survive a page reload.
-
-The generic SDK binder reads these course-owned rules, and `_activity_runtime.js` connects its notifications to the consented adapter. Page views and clicks do not award milestones. Live multipart exercises must finish within the same authorized session; saved local flags do not create milestone records.
+Configure each ID's `evidence` rules with a typed producer `event`, a course `page`, and an existing DOM `target`. Optional `matches` checks fixed scalar values or an allowed value list; `minimum` checks positive numeric counts. Optional `requires` indexes require an earlier live rule before the current rule can succeed. All rules for a milestone must succeed. The generic SDK binder reads these course-owned rules, and `_activity_runtime.js` connects its notifications to the consented adapter. Page views and clicks do not award milestones. Live multipart exercises must finish within the same authorized session; saved local flags do not create milestone records.
 
 Optional tracking loads independently of the shared navigation, key setup and exercise helpers. A missing, invalid or unavailable course JSON disables tracking and leaves Finish Course unavailable. The adapter remains importable so unrelated course exercises still render. Static config reads have a ten-second deadline and carry no Activity bearer. They are permitted before consent; Activity API operations still require valid saved Performance Cookie consent.
 

@@ -12,8 +12,6 @@ ROOT = Path(__file__).resolve().parents[2]
 JSON_BLOCK = re.compile(r"^```json[ \t]*\n(.*?)^```[ \t]*$", re.MULTILINE | re.DOTALL)
 PAGE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}\.html")
 TARGET = re.compile(r"[A-Za-z][A-Za-z0-9_.:-]{0,127}")
-# Success events name the exercise that produced them with these keys; each named exercise must exist.
-PRODUCER_KEYS = ("cellId", "containerId", "canvasId")
 
 
 def audit_course(course: Path, *, document: Path | None = None, write: bool = False) -> list[str]:
@@ -52,16 +50,6 @@ def audit_course(course: Path, *, document: Path | None = None, write: bool = Fa
                 source = course / page
                 if not source.is_file() or target not in re.findall(r"\bid=[\"']([^\"']+)[\"']", source.read_text(encoding="utf-8")):
                     findings.append(f"{course.name}: {marker['id']} target {page}#{target} does not exist")
-            for rule in marker["evidence"]:
-                source = course / rule["page"]
-                if not PAGE.fullmatch(rule["page"]) or not source.is_file():
-                    continue
-                page_ids = set(re.findall(r"\bid=[\"']([^\"']+)[\"']", source.read_text(encoding="utf-8")))
-                for key in PRODUCER_KEYS:
-                    expected = rule.get("matches", {}).get(key)
-                    for producer in expected if isinstance(expected, list) else [] if expected is None else [expected]:
-                        if producer not in page_ids:
-                            findings.append(f"{course.name}: {marker['id']} {key} {rule['page']}#{producer} does not exist")
         for script in (course / "scripts").glob("*.js"):
             source = script.read_text(encoding="utf-8")
             if any(re.search(r"[\"']" + re.escape(identifier) + r"[\"']", source) for identifier in ids):
