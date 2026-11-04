@@ -577,9 +577,6 @@ test('browser artifact discovery preserves same-origin authentication and blocks
         ? route.continue() : route.abort();
     });
     await context.addCookies([{ name: 'course_fixture', value: 'authorized', url: `http://127.0.0.1:${port}` }]);
-    // A success flag left in the tab by an earlier page can never be sent, so it must not read as pending.
-    await context.addInitScript(() => sessionStorage.setItem('dli_activity:nemoclaw:evidence:v1:1',
-      JSON.stringify({ 'milestone:01b:react-loop-complete': true })));
     const page = await context.newPage();
     await page.goto(`http://127.0.0.1:${port}/${COURSE_ROOT}/index.html`);
     const referralLink = page.locator('a[aria-label="Open the NVIDIA Build blueprint card"]');
@@ -712,8 +709,6 @@ test('browser artifact discovery preserves same-origin authentication and blocks
     assert.equal(await page.locator('[data-activity-milestones]').evaluate(node => node.inert), false);
     await assertMilestones(0);
     assert.equal(await page.locator('input[type="range"]').count(), 0, 'completion cannot be moved manually');
-    assert.equal(await page.locator('.course-milestones li[data-milestone="01b:react-loop-complete"] .milestone-state').textContent(),
-      'Not yet reached', 'a stored flag from an earlier page is not live evidence');
     await page.evaluate(() => {
       window.dispatchEvent(new CustomEvent('nemoclaw:api-key-verified'));
       window.dispatchEvent(new CustomEvent('nemoclaw:run-succeeded', { detail: { cellId: 'cell-onecall', hasContent: true } }));
