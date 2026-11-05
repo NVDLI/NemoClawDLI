@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { sharedRuntime } from './course_runtime_fixture.mjs';
 import {ChatOpenAI} from '../../web/nemoclaw/vendor/langchain-1.4.7.esm.js';
@@ -138,6 +139,53 @@ test('actual vendored ChatOpenAI consumes one buffered tool response without rep
   ]);
   assert.equal(calls,1);
   assert.equal(sdkMarker,true);
+});
+
+test('browserChatFetch sends the model relay no User-Agent or x-stainless-* header', async t => {
+  // Chromium drops a script-set User-Agent, but Firefox and WebKit send it, and the relay's
+  // CORS preflight then blocks the request. Every sent header must be one the relay allows.
+  modelTransportFixture(t);
+  const template = JSON.parse(readFileSync(
+    new URL('../../scripts/cors-proxy/deployable/infrastructure/template.json', import.meta.url), 'utf8'));
+  const allowed = new Set(template.Resources.ModelFunction.Properties.Environment.Variables.CORS_ALLOWED_HEADERS
+    .split(',').map(name => name.trim().toLowerCase()));
+  const relay = 'https://nvidia-api-cors-proxy.experiments.courses.nvidia.com/v1';
+  const sent = [];
+  globalThis.fetch = async (_url,init) => {
+    sent.push([...new Headers(init.headers).keys()]);
+    if (JSON.parse(init.body).stream) return streamResponse(completionFrames([
+      {id:'relay-completion',model:'fixture/model',created:1,choices:[{index:0,delta:{role:'assistant',content:'ok'},finish_reason:'stop'}]},
+    ]));
+    return new Response(JSON.stringify({id:'relay-completion',object:'chat.completion',created:1,model:'fixture/model',
+      choices:[{index:0,message:{role:'assistant',content:'ok'},finish_reason:'stop'}]}),{headers:{'content-type':'application/json'}});
+  };
+
+  // Plain callers that pass the SDK headers as an object or as a Headers instance.
+  for (const headers of [
+    {'User-Agent':'langchainjs-openai/1.0.0 (browser)','X-Stainless-OS':'Unknown','Content-Type':'application/json'},
+    new Headers({'user-agent':'OpenAI/JS 6.45.0','x-stainless-arch':'unknown','content-type':'application/json'}),
+  ]) {
+    const response = await sharedRuntime.browserChatFetch()(relay + '/chat/completions',{method:'POST',body:'{"messages":[]}',headers});
+    await response.json();
+  }
+
+  // The vendored ChatOpenAI sets a User-Agent before the wrapper sees the request.
+  let sdkUserAgent = '';
+  const adaptedFetch = sharedRuntime.browserChatFetch();
+  const llm = new ChatOpenAI({model:'fixture/model',apiKey:'fixture-only-key',maxRetries:0,
+    configuration:{baseURL:relay,dangerouslyAllowBrowser:true,fetch:(url,init) => {
+      sdkUserAgent = new Headers(init.headers).get('user-agent') || '';
+      return adaptedFetch(url,init);
+    }}});
+  assert.equal((await llm.invoke('fixture')).content,'ok');
+  assert.match(sdkUserAgent,/langchainjs-openai/);
+
+  assert.equal(sent.length,3);
+  for (const names of sent) {
+    assert.equal(names.includes('user-agent'),false);
+    assert.equal(names.some(name => name.startsWith('x-stainless')),false);
+    assert.deepEqual(names.filter(name => !allowed.has(name)),[]);
+  }
 });
 
 test('buffered transport rejects malformed, failed and truncated streams without retry', async t => {
