@@ -619,11 +619,13 @@ async function modelCompletionFetch(url, init, policy) {
   return new Response(JSON.stringify(completion),{status:r.status,statusText:r.statusText,headers});
 }
 
-// Strip SDK headers that browser hosts reject during preflight.
+// Strip SDK headers that browser hosts reject during preflight. Chromium drops a script-set
+// User-Agent on its own, but Firefox and Safari send it, so the model relay's preflight fails there.
 export function browserChatFetch() {
   /* @doc <code>helpers.browserChatFetch()</code> ::
-       Returns a <code>fetch</code> that strips the OpenAI SDK's <code>x-stainless-*</code>
-       headers. NVIDIA model routes also receive the <code>X-BILLING-INVOKE-ORIGIN</code> tracking tag.
+       Returns a <code>fetch</code> that strips the SDK <code>User-Agent</code> header and the
+       OpenAI SDK's <code>x-stainless-*</code> headers.
+       NVIDIA model routes also receive the <code>X-BILLING-INVOKE-ORIGIN</code> tracking tag.
        Custom routes include their browser session credentials. Pass it as
        <code>configuration.fetch</code> when constructing a browser <code>ChatOpenAI</code>.
        SDK requests use streamed NVIDIA transport internally; plain fetch requests preserve
@@ -632,6 +634,7 @@ export function browserChatFetch() {
     const h = init.headers instanceof Headers ? init.headers : new Headers(init.headers || {});
     const sdkRequest = h.get("x-stainless-lang") === "js";
     for (const k of [...h.keys()]) { if (k.startsWith("x-stainless")) h.delete(k); }
+    h.delete("user-agent");
     if (billingAttributionEnabled(url)) h.set("X-BILLING-INVOKE-ORIGIN", BILLING_INVOKE_ORIGIN);
     else h.delete("X-BILLING-INVOKE-ORIGIN");
     const options = {...init, headers:h, credentials: modelRequestCredentials(url)};
