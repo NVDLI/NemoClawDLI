@@ -1459,6 +1459,57 @@ test('HTTP lab transport requires deployment permission and preserves authentica
   await assert.rejects(sdkOptions.fetchImpl('https://example.test/v1/activity-sessions', {}), /Unexpected Activity destination/);
   activity.disconnect();
 });
+
+test('a reset lab XSRF cookie refreshes the token once and repeats only that write', async () => {
+  const policy = JSON.parse(fs.readFileSync(path.join('web/activity', 'activity-policy.json'), 'utf8'));
+  policy.collection_enabled = true;
+  policy.lab_transport = { base_path: '/lab/api/course/activity', allow_http: true };
+  const identity = { ...APPROVED_ARTIFACT, artifact_version: `git-${'a'.repeat(40)}-adapter-${'b'.repeat(64)}` };
+  // The lab answers writes only with its current cookie token, as Jupyter does.
+  const lab = { token: 'xsrf-first', identity, rejectAll: false };
+  const requests = [];
+  let sdkOptions;
+  const activity = createCourseActivity({
+    policyLoader: async () => policy,
+    locationHref: `http://lab.example.test/lab/static/${COURSE_ROOT}/index.html`,
+    cryptoImpl: {},
+    fetchImpl: async (url, options = {}) => {
+      const token = new Headers(options.headers).get('X-XSRFToken');
+      requests.push(url.endsWith('/artifact') ? 'artifact' : `${options.method || 'GET'} ${token}`);
+      if (url.endsWith('/artifact')) {
+        return { ok: true, status: 200, url, json: async () => ({ artifact: lab.identity, xsrf_token: lab.token }) };
+      }
+      const status = lab.rejectAll || token !== lab.token ? 403 : 201;
+      return { ok: status < 300, status, url, json: async () => ({}) };
+    },
+    initialize: async options => {
+      sdkOptions = options;
+      return { getState: async () => (confirmedState()) };
+    },
+  });
+  await activity.getPolicy();
+  assert.equal(await activity.enable(), true);
+  const send = (method = 'POST') => sdkOptions.fetchImpl('https://activity-api.learn.nvidia.com/v1/activity-sessions/fixture/updates', {
+    method, headers: { Authorization: 'Bearer fixture-activity' }, ...(method === 'POST' ? { body: '{}' } : {}),
+  });
+  const sent = async (method, status, expected) => {
+    const first = requests.length;
+    assert.equal((await send(method)).status, status);
+    assert.deepEqual(requests.slice(first), expected);
+  };
+  // Another tab signs in again: the old token fails once, and the write repeats with the new one.
+  lab.token = 'xsrf-second';
+  await sent('POST', 201, ['POST xsrf-first', 'artifact', 'POST xsrf-second']);
+  await sent('POST', 201, ['POST xsrf-second']);
+  // A rejection that a fresh token does not cure returns after one repeat; reads carry no XSRF check.
+  lab.rejectAll = true;
+  await sent('POST', 403, ['POST xsrf-second', 'artifact', 'POST xsrf-second']);
+  await sent('GET', 403, ['GET xsrf-second']);
+  // A lab that now delivers a different course is not trusted with the write.
+  Object.assign(lab, { rejectAll: false, token: 'xsrf-third', identity: { ...identity, artifact_digest: `sha256:${'c'.repeat(64)}` } });
+  await sent('POST', 403, ['POST xsrf-second', 'artifact']);
+  activity.disconnect();
+});
 }
 
 for (const COURSE_ROOT of COURSE_ROOTS) {
