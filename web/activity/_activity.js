@@ -113,6 +113,25 @@ export async function resolveActivityArtifact({
   throw new Error('Open a validated course build before enabling remote progress');
 }
 
+// An authenticated lab names its materialized course and supplies its current XSRF token.
+async function fetchLabIdentity(fetchImpl, baseUrl, signal) {
+  const response = await fetchImpl(`${baseUrl}/artifact`, {
+    credentials: 'same-origin', cache: 'no-store', redirect: 'error', referrerPolicy: 'no-referrer',
+    ...(signal ? { signal } : {}),
+  });
+  if (!response.ok || response.url !== `${baseUrl}/artifact`) throw new Error('Lab activity identity unavailable');
+  const value = await response.json();
+  if (value.artifact?.artifact_id !== ACTIVITY_ARTIFACT_ID
+      || !/^git-[0-9a-f]{40}-adapter-[0-9a-f]{64}$/.test(value.artifact?.artifact_version || '')
+      || !/^sha256:[0-9a-f]{64}$/.test(value.artifact?.artifact_digest || '')
+      || !isNonEmptyString(value.xsrf_token)) throw new Error('Invalid lab activity identity');
+  return value;
+}
+
+function sameArtifact(left, right) {
+  return ['artifact_id', 'artifact_version', 'artifact_digest'].every(key => left?.[key] === right?.[key]);
+}
+
 function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
@@ -285,18 +304,32 @@ export function createNemoClawActivity({
       }
       try {
         if (labTransport) {
+          const transport = labTransport;
           const upstream = new URL(url);
           if (upstream.origin !== ACTIVITY_BASE_URL) throw new Error('Unexpected Activity destination');
           const headers = new Headers(options.headers);
           const authorization = headers.get('Authorization');
           headers.delete('Authorization');
           if (authorization) headers.set('X-Activity-Authorization', authorization);
-          if (labTransport.xsrfToken) headers.set('X-XSRFToken', labTransport.xsrfToken);
-          return await fetchImpl(`${labTransport.baseUrl}${upstream.pathname}`, {
+          if (transport.xsrfToken) headers.set('X-XSRFToken', transport.xsrfToken);
+          const send = () => fetchImpl(`${transport.baseUrl}${upstream.pathname}`, {
             ...options, credentials: 'same-origin', redirect: 'error', referrerPolicy: 'no-referrer',
             headers,
             signal: requestAbort.signal,
           });
+          const response = await send();
+          // Signing in to the lab again from another tab resets its XSRF cookie. Take the lab's current
+          // token once and repeat the write, unless the lab now delivers a different course.
+          if (response.status !== 403 || !transport.xsrfToken || (options.method || 'GET').toUpperCase() === 'GET') {
+            return response;
+          }
+          let refreshed;
+          try { refreshed = await fetchLabIdentity(fetchImpl, transport.baseUrl, requestAbort.signal); }
+          catch (_) { return response; }
+          if (!sameArtifact(refreshed.artifact, artifact)) return response;
+          transport.xsrfToken = refreshed.xsrf_token;
+          headers.set('X-XSRFToken', transport.xsrfToken);
+          return await send();
         }
         return await fetchImpl(url, { ...options, signal: requestAbort.signal });
       }
@@ -412,15 +445,7 @@ export function createNemoClawActivity({
               // launchable. The delivered Pages manifest still names the artifact.
               labTransport = { baseUrl, xsrfToken: null };
             } else {
-              const response = await fetchImpl(`${baseUrl}/artifact`, {
-                credentials: 'same-origin', cache: 'no-store', redirect: 'error', referrerPolicy: 'no-referrer',
-              });
-              if (!response.ok || response.url !== `${baseUrl}/artifact`) throw new Error('Lab activity identity unavailable');
-              const value = await response.json();
-              if (value.artifact?.artifact_id !== ACTIVITY_ARTIFACT_ID
-                  || !/^git-[0-9a-f]{40}-adapter-[0-9a-f]{64}$/.test(value.artifact?.artifact_version || '')
-                  || !/^sha256:[0-9a-f]{64}$/.test(value.artifact?.artifact_digest || '')
-                  || !isNonEmptyString(value.xsrf_token)) throw new Error('Invalid lab activity identity');
+              const value = await fetchLabIdentity(fetchImpl, baseUrl);
               artifact = Object.freeze(value.artifact);
               labTransport = { baseUrl, xsrfToken: value.xsrf_token };
             }

@@ -5,6 +5,11 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Keep lab progress syncing after a second sign-in. Opening the lab again in another tab resets
+  its XSRF cookie, so a course tab's Activity writes failed until it reloaded, and the milestones
+  it earned meanwhile never reached central Activity. A lab write rejected with 403 now takes the
+  lab's current token once and repeats, unless the lab now delivers a different course.
+
 - Make course milestones complete reliably. "Make your first model call" no longer waits for the
   API key to be saved again on Module 1a, which never happened for a learner who saved it earlier.
   Either 1a model-call exercise now completes it. Either 3b workspace exercise completes "Inspect
