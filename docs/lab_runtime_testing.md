@@ -34,7 +34,7 @@ prove an older runner compatible.
 
 ## Prerequisites
 
-- Python 3.11 or newer; Python 3.12 is the tested default
+- Python 3.11.5 or newer; Python 3.12 is the tested default
 - Node.js 20 or newer
 - Chromium, Google Chrome, or a compatible Chromium browser
 - pnpm through Corepack

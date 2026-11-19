@@ -11,6 +11,8 @@ import sys
 
 
 MINIMUM = (3, 11)
+# soupsieve in scripts/materials/requirements.lock requires Python 3.11.5.
+MATERIAL_MINIMUM = (3, 11, 5)
 TESTED = (3, 12)
 MATERIAL_IMPORTS = ("requests", "bs4", "markdownify", "lxml")
 
@@ -28,6 +30,11 @@ def main() -> int:
         print("Create a virtual environment with Python 3.12 and install the applicable pinned lock.", file=sys.stderr)
         return 2
     if args.require_material_tools:
+        if sys.version_info[:3] < MATERIAL_MINIMUM:
+            found = ".".join(str(part) for part in sys.version_info[:3])
+            print(f"python environment: FAIL (found {found}; material tools require Python 3.11.5+)", file=sys.stderr)
+            print("Create a virtual environment with Python 3.12 and install the applicable pinned lock.", file=sys.stderr)
+            return 2
         missing = [name for name in MATERIAL_IMPORTS if importlib.util.find_spec(name) is None]
         if missing:
             print("python environment: FAIL (missing material tools: " + ", ".join(missing) + ")", file=sys.stderr)

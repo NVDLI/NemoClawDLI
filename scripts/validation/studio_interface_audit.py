@@ -192,7 +192,7 @@ def audit() -> list[str]:
 
     for label, token in {
         "lab doc probe": "scripts/runtime/browser_env_probe.sh",
-        "lab doc host prerequisites": "Python 3.11 or newer",
+        "lab doc host prerequisites": "Python 3.11.5 or newer",
         "lab doc pinned browser API": "cd scripts/runtime && corepack enable && pnpm install --frozen-lockfile --ignore-scripts",
         "lab doc external isolation boundary": "does not build, scan, support, or distribute that environment",
     }.items():

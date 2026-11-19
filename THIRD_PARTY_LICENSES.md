@@ -235,7 +235,7 @@ Sources of truth are the exact lock files named in the Scope column. The same pa
 | security-tooling | setuptools | 84.2.1 | MIT | [PyPI](https://pypi.org/pypi/setuptools/84.2.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | material-tooling, security-tooling | six | 1.17.0 | MIT | [PyPI](https://pypi.org/pypi/six/1.17.0/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | sortedcontainers | 2.4.0 | Apache-2.0 | [PyPI](https://pypi.org/pypi/sortedcontainers/2.4.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
-| material-tooling | soupsieve | 2.10 | MIT | [PyPI](https://pypi.org/pypi/soupsieve/2.10/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock) |
+| material-tooling | soupsieve | 4.1.2 | MIT | [PyPI](https://pypi.org/pypi/soupsieve/4.1.2/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock) |
 | security-tooling | tomli | 2.4.1 | MIT | [PyPI](https://pypi.org/pypi/tomli/2.4.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | tomli-w | 1.2.0 | MIT | [PyPI](https://pypi.org/pypi/tomli-w/1.2.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | material-tooling, security-tooling | typing-extensions | 4.16.0 | PSF-2.0 | [PyPI](https://pypi.org/pypi/typing-extensions/4.16.0/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |

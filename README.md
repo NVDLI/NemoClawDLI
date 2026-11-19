@@ -62,7 +62,7 @@ The static browser site is available in **[English][course]**, **[Spanish](https
 
 ## Run the course locally
 
-Use Linux or Ubuntu in WSL with Git, Bash, Python 3.11+, Node.js 24 and Corepack:
+Use Linux or WSL Ubuntu with Git, Bash, Python 3.11.5+, Node.js 24 and Corepack:
 
 ```bash
 git clone https://github.com/NVDLI/NemoClawDLI.git

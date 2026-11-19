@@ -60,7 +60,7 @@ boundary.
 |---|---|
 | Source checkout | Fast structure, contract, source, and policy validation |
 | Node-enabled validation runtime | Link projection and full static bundle checks |
-| Python 3.12 virtual environment (3.11 minimum) | Exact dependency, vulnerability, and CycloneDX inventory checks for validation tooling |
+| Python 3.12 virtual environment (3.11.5 minimum) | Exact dependency, vulnerability, and CycloneDX inventory checks for validation tooling |
 | Built Pages tree | Generated English, Portuguese, and Spanish route and asset verification |
 | Host-installed Chromium with pinned `playwright-core` | Rendered layout and interaction-state checks when browser behavior changes |
 | Protected release workflow | Tag containment, deterministic packaging, evidence retention, and draft creation |
