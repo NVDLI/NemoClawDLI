@@ -16,6 +16,47 @@ import { pathToFileURL } from 'node:url';
 
 const addedDiffText = diff => diff.split('\n').filter(line => line.startsWith('+') && !/^\+\+\+ (?:[ab]\/|\/dev\/null)/.test(line)).join('\n');
 
+// Generated third-party assets declared by each web/<root>/vendor/browser-dependencies.json manifest,
+// keyed by repository path. An asset counts only while its bytes still match the digest its manifest
+// recorded, so a hand edit, an undeclared file, or a renamed copy under vendor/ is never exempt.
+// Upstream library text can name deployment tiers, for example an SDK's list of environments; the
+// label scan targets repository-authored configuration, while endpoint, private-term and credential
+// scans still read every file.
+function declaredVendorAssets(root = '.') {
+  const assets = new Set();
+  const web = path.join(root, 'web');
+  for (const entry of fs.existsSync(web) ? fs.readdirSync(web, { withFileTypes: true }) : []) {
+    const directory = `web/${entry.name}/vendor`;
+    const manifestPath = path.join(root, directory, 'browser-dependencies.json');
+    if (!entry.isDirectory() || !fs.existsSync(manifestPath)) continue;
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    for (const asset of manifest.assets ?? []) {
+      if (typeof asset?.file !== 'string' || !/^[\w@+.-]+$/.test(asset.file) || typeof asset.sha256 !== 'string') continue;
+      const relative = `${directory}/${asset.file}`;
+      const file = path.join(root, relative);
+      if (!fs.existsSync(file)) continue;
+      if (createHash('sha256').update(fs.readFileSync(file)).digest('hex') === asset.sha256) assets.add(relative);
+    }
+  }
+  return assets;
+}
+
+// Added lines outside the exempt files. Every `diff --git` header starts a new section; a header this
+// parser cannot read (for example a quoted path) starts a section that is scanned, never skipped.
+const addedDiffTextOutside = (diff, exempt) => {
+  let skip = false;
+  const kept = [];
+  for (const line of diff.split('\n')) {
+    if (line.startsWith('diff --git ')) {
+      const header = /^diff --git a\/(\S+) b\/(\S+)$/.exec(line);
+      skip = Boolean(header) && exempt.has(header[2]);
+      continue;
+    }
+    if (!skip) kept.push(line);
+  }
+  return addedDiffText(kept.join('\n'));
+};
+
 test('candidate label scan distinguishes removed examples from introduced configuration', () => {
   const label=['stag','ing'].join('');
   const forbidden=new RegExp(`\\b${label}\\b`,'i');
@@ -25,6 +66,46 @@ test('candidate label scan distinguishes removed examples from introduced config
     assert.match(addedDiffText(header+`-production\n+${label}`),forbidden);
     assert.match(addedDiffText(header+`+++${label}`),forbidden);
     assert.doesNotMatch(addedDiffText(header+`-${label}`),forbidden);
+  }
+});
+
+test('the label scan exempts only digest-bound vendored assets the manifest declares', () => {
+  const label = ['stag', 'ing'].join('');
+  const forbidden = new RegExp(`\\b${label}\\b`, 'i');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vendor-label-'));
+  try {
+    const vendorDir = 'web/course-a/vendor';
+    const vendor = path.join(root, vendorDir);
+    fs.mkdirSync(vendor, { recursive: true });
+    fs.mkdirSync(path.join(root, 'web/course-b'), { recursive: true });
+    const declared = 'lib-1.0.0.esm.js';
+    const body = `export const tiers = ["${label}"];\n`;
+    fs.writeFileSync(path.join(vendor, declared), body);
+    const digest = createHash('sha256').update(body).digest('hex');
+    const writeManifest = assets => fs.writeFileSync(path.join(vendor, 'browser-dependencies.json'), JSON.stringify({ assets }));
+    writeManifest([{ file: declared, sha256: digest }, { file: '../escape.js', sha256: digest }]);
+    const section = file => `diff --git a/${file} b/${file}\n--- a/${file}\n+++ b/${file}\n@@ -0,0 +1 @@\n+tiers = ["${label}"]\n`;
+    const scan = (diff, exempt = declaredVendorAssets(root)) => addedDiffTextOutside(diff, exempt);
+
+    // A declared asset whose bytes match its digest is exempt; authored code never is.
+    assert.doesNotMatch(scan(section(`${vendorDir}/${declared}`)), forbidden);
+    assert.match(scan(section('web/course-a/scripts/chat.js')), forbidden);
+    // A section after an exempt one is scanned again, including one whose header cannot be parsed.
+    assert.match(scan(section(`${vendorDir}/${declared}`) + section('web/activity/config.js')), forbidden);
+    assert.match(scan(section(`${vendorDir}/${declared}`) + `diff --git "a/web/a b.js" "b/web/a b.js"\n+${label}\n`), forbidden);
+    // Novel, renamed, near-match, path-escaping and other-root copies are not exempt.
+    for (const file of [`${vendorDir}/lib-2.0.0.esm.js`, `${vendorDir}/${declared}.orig`, `x${vendorDir}/${declared}`,
+      'web/course-a/escape.js', `web/course-b/vendor/${declared}`]) {
+      assert.match(scan(section(file)), forbidden, file);
+    }
+    // A hand edit that breaks the recorded digest, or a deleted manifest entry, ends the exemption.
+    fs.appendFileSync(path.join(vendor, declared), '// edited\n');
+    assert.match(scan(section(`${vendorDir}/${declared}`)), forbidden);
+    fs.writeFileSync(path.join(vendor, declared), body);
+    writeManifest([]);
+    assert.match(scan(section(`${vendorDir}/${declared}`)), forbidden);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
   }
 });
 
@@ -378,9 +459,10 @@ test('the complete candidate diff contains no private or non-production activity
   const credentialShape = new RegExp(`\\b(?:${['AK' + 'IA[0-9A-Z]{16}', 'gh' + 'p_[A-Za-z0-9]{36}', 'nv' + 'api-[A-Za-z0-9_-]{16,}'].join('|')})\\b`);
 
   assert.doesNotMatch(candidateDiff, unsafeEndpoint);
-  // Removing a general course example is not introducing a deployment label.
-  // Endpoint, private-term and credential scans still inspect the complete diff.
-  assert.doesNotMatch(addedDiffText(candidateDiff), unsafeLabel);
+  // Removing a general course example is not introducing a deployment label, and neither is upstream
+  // text inside a declared, digest-bound vendored asset. Endpoint, private-term and credential scans
+  // still inspect the complete diff.
+  assert.doesNotMatch(addedDiffTextOutside(candidateDiff, declaredVendorAssets()), unsafeLabel);
   assert.doesNotMatch(candidateDiff, privateTerm);
   assert.doesNotMatch(candidateDiff, credentialShape);
 });

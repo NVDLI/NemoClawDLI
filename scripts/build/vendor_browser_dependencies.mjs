@@ -43,12 +43,12 @@ if (langchainException.asset !== "langchain-1.4.7.esm.js"
 }
 if (embeddedEvidence.schema !== "nemoclaw-embedded-browser-components/1"
     || embeddedEvidence.parent?.package !== "@langchain/core"
-    || embeddedEvidence.parent?.version !== "1.1.48"
-    || embeddedEvidence.parent?.source_commit !== "caad0914f068477293009dbf27a220fa96bdc4b8"
+    || embeddedEvidence.parent?.version !== "1.5.0"
+    || embeddedEvidence.parent?.source_commit !== "f115c47f6f25032c485103b1548fd47c134f42ac"
     || !Array.isArray(embeddedEvidence.components)
     || !embeddedEvidence.components.length
     || new Set(embeddedEvidence.components.map(component => component.id)).size !== embeddedEvidence.components.length) {
-  throw new Error("embedded LangChain component evidence must remain pinned to the reviewed @langchain/core 1.1.48 source");
+  throw new Error("embedded LangChain component evidence must remain pinned to the reviewed @langchain/core 1.5.0 source");
 }
 const codemirrorVersion = direct.codemirror;
 const codemirrorBase = `codemirror-${codemirrorVersion}`;

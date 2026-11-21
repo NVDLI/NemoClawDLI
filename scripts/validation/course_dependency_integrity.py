@@ -280,7 +280,7 @@ def audit(*, manifest_data: dict | None = None,
     for row in embedded_rows:
         label = str(row.get("id") or "<missing>")
         if (row.get("relationship") != "embedded-source-copied-by-upstream"
-                or row.get("parent_package") != "@langchain/core@1.1.48"
+                or row.get("parent_package") != "@langchain/core@1.5.0"
                 or not row.get("version_note") or not row.get("source_commit")
                 or not row.get("source_hashes")):
             findings.append(f"embedded component provenance is incomplete: {label}")

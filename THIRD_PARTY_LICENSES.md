@@ -48,7 +48,7 @@ Source of truth: [`scripts/browser-vendor/package-lock.json`](scripts/browser-ve
 
 | Scope | Package | Version | SPDX license | Evidence |
 |---|---|---|---|---|
-| browser-runtime | @cfworker/json-schema | 4.1.1 | MIT | [`licenses/@cfworker__json-schema--4.1.1.txt`](web/nemoclaw/vendor/licenses/@cfworker__json-schema--4.1.1.txt) |
+| browser-runtime | @cfworker/json-schema | 4.1.6 | MIT | [`licenses/@cfworker__json-schema--4.1.6.txt`](web/nemoclaw/vendor/licenses/@cfworker__json-schema--4.1.6.txt) |
 | browser-runtime | @highlightjs/cdn-assets | 11.10.0 | BSD-3-Clause | [`licenses/@highlightjs__cdn-assets--11.10.0.txt`](web/nemoclaw/vendor/licenses/@highlightjs__cdn-assets--11.10.0.txt) |
 | browser-build-only | @esbuild/aix-ppc64 | 0.28.1 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
 | browser-build-only | @esbuild/android-arm | 0.28.1 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
@@ -76,15 +76,16 @@ Source of truth: [`scripts/browser-vendor/package-lock.json`](scripts/browser-ve
 | browser-build-only | @esbuild/win32-arm64 | 0.28.1 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
 | browser-build-only | @esbuild/win32-ia32 | 0.28.1 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
 | browser-build-only | @esbuild/win32-x64 | 0.28.1 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
-| browser-runtime | @langchain/core | 1.1.48 | MIT | [`licenses/@langchain__core--1.1.48.txt`](web/nemoclaw/vendor/licenses/@langchain__core--1.1.48.txt) |
-| browser-runtime | @langchain/langgraph | 1.4.7 | MIT | [`licenses/@langchain__langgraph--1.4.7.txt`](web/nemoclaw/vendor/licenses/@langchain__langgraph--1.4.7.txt) |
-| browser-runtime | @langchain/langgraph-checkpoint | 1.1.3 | MIT | [`licenses/@langchain__langgraph-checkpoint--1.1.3.txt`](web/nemoclaw/vendor/licenses/@langchain__langgraph-checkpoint--1.1.3.txt) |
-| browser-bundle-input | @langchain/langgraph-sdk | 1.9.25 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
+| browser-runtime | @langchain/core | 1.5.0 | MIT | [`licenses/@langchain__core--1.5.0.txt`](web/nemoclaw/vendor/licenses/@langchain__core--1.5.0.txt) |
+| browser-runtime | @langchain/langgraph | 1.7.5 | MIT | [`licenses/@langchain__langgraph--1.7.5.txt`](web/nemoclaw/vendor/licenses/@langchain__langgraph--1.7.5.txt) |
+| browser-runtime | @langchain/langgraph-checkpoint | 1.2.3 | MIT | [`licenses/@langchain__langgraph-checkpoint--1.2.3.txt`](web/nemoclaw/vendor/licenses/@langchain__langgraph-checkpoint--1.2.3.txt) |
+| browser-bundle-input | @langchain/langgraph-sdk | 1.17.0 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
 | browser-bundle-input | @langchain/langgraph-sdk/node_modules/eventemitter3 | 5.0.4 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
-| browser-bundle-input | @langchain/langgraph-sdk/node_modules/p-queue | 9.3.0 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
-| browser-bundle-input | @langchain/langgraph-sdk/node_modules/p-timeout | 7.0.1 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
-| browser-runtime | @langchain/openai | 1.4.7 | MIT | [`licenses/@langchain__openai--1.4.7.txt`](web/nemoclaw/vendor/licenses/@langchain__openai--1.4.7.txt) |
-| browser-bundle-input | @langchain/protocol | 0.0.18 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
+| browser-bundle-input | @langchain/langgraph-sdk/node_modules/p-queue | 9.3.5 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
+| browser-bundle-input | @langchain/langgraph-sdk/node_modules/p-timeout | 7.0.2 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
+| browser-runtime | @langchain/openai | 1.5.8 | MIT | [`licenses/@langchain__openai--1.5.8.txt`](web/nemoclaw/vendor/licenses/@langchain__openai--1.5.8.txt) |
+| browser-runtime | @langchain/openai/node_modules/openai | 6.49.0 | Apache-2.0 | [`licenses/openai--6.49.0.txt`](web/nemoclaw/vendor/licenses/openai--6.49.0.txt) |
+| browser-bundle-input | @langchain/protocol | 0.0.21 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
 | browser-bundle-input | @standard-schema/spec | 1.1.0 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
 | browser-bundle-input | @types/json-schema | 7.0.15 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
 | browser-bundle-input | argparse | 2.0.1 | Python-2.0 | [lock](scripts/browser-vendor/package-lock.json) |
@@ -95,29 +96,28 @@ Source of truth: [`scripts/browser-vendor/package-lock.json`](scripts/browser-ve
 | browser-bundle-input | is-network-error | 1.3.2 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
 | browser-runtime | js-tiktoken | 1.0.21 | MIT | [`licenses/js-tiktoken--1.0.21.txt`](web/nemoclaw/vendor/licenses/js-tiktoken--1.0.21.txt) |
 | browser-runtime | js-yaml | 5.4.1 | MIT | [`licenses/js-yaml--5.4.1.txt`](web/nemoclaw/vendor/licenses/js-yaml--5.4.1.txt) |
-| browser-runtime | langsmith | 0.7.14 | MIT | [`licenses/langsmith--0.7.14.txt`](web/nemoclaw/vendor/licenses/langsmith--0.7.14.txt) |
+| browser-runtime | langsmith | 0.13.1 | MIT | [`licenses/langsmith--0.13.1.txt`](web/nemoclaw/vendor/licenses/langsmith--0.13.1.txt) |
 | browser-runtime | marked | 14.1.4 | MIT | [`licenses/marked--14.1.4.txt`](web/nemoclaw/vendor/licenses/marked--14.1.4.txt) |
 | browser-runtime | mustache | 4.2.0 | MIT | [`licenses/mustache--4.2.0.txt`](web/nemoclaw/vendor/licenses/mustache--4.2.0.txt) |
-| browser-runtime | openai | 6.45.0 | Apache-2.0 | [`licenses/openai--6.45.0.txt`](web/nemoclaw/vendor/licenses/openai--6.45.0.txt) |
 | browser-runtime | p-finally | 1.0.0 | MIT | [`licenses/p-finally--1.0.0.txt`](web/nemoclaw/vendor/licenses/p-finally--1.0.0.txt) |
 | browser-runtime | p-queue | 6.6.2 | MIT | [`licenses/p-queue--6.6.2.txt`](web/nemoclaw/vendor/licenses/p-queue--6.6.2.txt) |
 | browser-bundle-input | p-retry | 7.1.1 | MIT | [lock](scripts/browser-vendor/package-lock.json) |
 | browser-runtime | p-timeout | 3.2.0 | MIT | [`licenses/p-timeout--3.2.0.txt`](web/nemoclaw/vendor/licenses/p-timeout--3.2.0.txt) |
-| browser-runtime | zod | 3.25.76 | MIT | [`licenses/zod--3.25.76.txt`](web/nemoclaw/vendor/licenses/zod--3.25.76.txt) |
+| browser-runtime | zod | 4.6.7 | MIT | [`licenses/zod--4.6.7.txt`](web/nemoclaw/vendor/licenses/zod--4.6.7.txt) |
 
 ### Utility source embedded in `@langchain/core`
 
 These four rows are code that LangChain copied into its own package before this project downloaded
-`@langchain/core@1.1.48`. They are not additional npm installs, and this project does not patch
+`@langchain/core@1.5.0`. They are not additional npm installs, and this project does not patch
 them. The exact LangChain tag, commit, source files, source hashes, full license evidence, and
 esbuild-comment mappings are recorded in
 [`embedded-component-evidence.json`](scripts/browser-vendor/embedded-component-evidence.json).
 
 | Scope | Component | Version evidence | SPDX license | Evidence |
 |---|---|---|---|---|
-| browser-embedded-source | Fast JSON Patch | Snapshot in `@langchain/core@1.1.48`; upstream release number not stated | MIT | [`license`](web/nemoclaw/vendor/licenses/langchain-embedded-fast-json-patch.txt) · [`source record`](scripts/browser-vendor/embedded-component-evidence.json) |
+| browser-embedded-source | Fast JSON Patch | Snapshot in `@langchain/core@1.5.0`; upstream release number not stated | MIT | [`license`](web/nemoclaw/vendor/licenses/langchain-embedded-fast-json-patch.txt) · [`source record`](scripts/browser-vendor/embedded-component-evidence.json) |
 | browser-embedded-source | js-sha256 | 0.11.1 in copied source header | MIT | [`license`](web/nemoclaw/vendor/licenses/langchain-embedded-js-sha256.txt) · [`source record`](scripts/browser-vendor/embedded-component-evidence.json) |
-| browser-embedded-source | sax-js | Snapshot in `@langchain/core@1.1.48`; upstream release number not stated | ISC | [`combined upstream notice`](web/nemoclaw/vendor/licenses/langchain-embedded-sax-js-and-string-from-code-point.txt) · [`source record`](scripts/browser-vendor/embedded-component-evidence.json) |
+| browser-embedded-source | sax-js | Snapshot in `@langchain/core@1.5.0`; upstream release number not stated | ISC | [`combined upstream notice`](web/nemoclaw/vendor/licenses/langchain-embedded-sax-js-and-string-from-code-point.txt) · [`source record`](scripts/browser-vendor/embedded-component-evidence.json) |
 | browser-embedded-source | String.fromCodePoint polyfill | 0.1.0 in copied source comment | MIT | [`combined upstream notice`](web/nemoclaw/vendor/licenses/langchain-embedded-sax-js-and-string-from-code-point.txt) · [`source record`](scripts/browser-vendor/embedded-component-evidence.json) |
 
 The npm package graph and the generated `.LEGAL.txt` answer different questions. The package graph
@@ -196,7 +196,7 @@ Sources of truth are the exact lock files named in the Scope column. The same pa
 | material-tooling, security-tooling | certifi | 2026.10.18 | MPL-2.0 | [PyPI](https://pypi.org/pypi/certifi/2026.10.18/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | chardet | 5.2.0 | LGPL-2.0-or-later | [PyPI](https://pypi.org/pypi/chardet/5.2.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | material-tooling, security-tooling | charset-normalizer | 3.4.9 | MIT | [PyPI](https://pypi.org/pypi/charset-normalizer/3.4.9/json); [`scripts/materials/requirements.lock`](scripts/materials/requirements.lock); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
-| security-tooling | cyclonedx-bom | 7.5.0 | Apache-2.0 | [PyPI](https://pypi.org/pypi/cyclonedx-bom/7.5.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
+| security-tooling | cyclonedx-bom | 8.0.1 | Apache-2.0 | [PyPI](https://pypi.org/pypi/cyclonedx-bom/8.0.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | cyclonedx-python-lib | 11.11.0 | Apache-2.0 | [PyPI](https://pypi.org/pypi/cyclonedx-python-lib/11.11.0/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | defusedxml | 0.7.1 | PSF-2.0 | [PyPI](https://pypi.org/pypi/defusedxml/0.7.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | filelock | 4.2.1 | MIT | [PyPI](https://pypi.org/pypi/filelock/4.2.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
@@ -216,7 +216,7 @@ Sources of truth are the exact lock files named in the Scope column. The same pa
 | security-tooling | msgpack | 1.2.3 | Apache-2.0 | [PyPI](https://pypi.org/pypi/msgpack/1.2.3/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | packageurl-python | 0.17.6 | MIT | [PyPI](https://pypi.org/pypi/packageurl-python/0.17.6/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | packaging | 26.2 | Apache-2.0 OR BSD-2-Clause | [PyPI](https://pypi.org/pypi/packaging/26.2/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
-| host-bootstrap, security-tooling | pip | 26.2.2 | MIT | [PyPI](https://pypi.org/pypi/pip/26.2.2/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock); [`docs/lab_runtime_testing.md`](docs/lab_runtime_testing.md) |
+| host-bootstrap, security-tooling | pip | 26.3 | MIT | [PyPI](https://pypi.org/pypi/pip/26.3/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock); [`docs/lab_runtime_testing.md`](docs/lab_runtime_testing.md) |
 | security-tooling | pip-api | 0.0.34 | Apache-2.0 | [PyPI](https://pypi.org/pypi/pip-api/0.0.34/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | pip-audit | 2.10.1 | Apache-2.0 | [PyPI](https://pypi.org/pypi/pip-audit/2.10.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |
 | security-tooling | pip-requirements-parser | 32.0.1 | MIT | [PyPI](https://pypi.org/pypi/pip-requirements-parser/32.0.1/json); [`scripts/security/requirements-sca.lock`](scripts/security/requirements-sca.lock) |

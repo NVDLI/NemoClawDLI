@@ -5,6 +5,11 @@ are defined in [`docs/release_artifacts.md`](docs/release_artifacts.md).
 
 ## Unreleased
 
+- Update the browser bundle to zod 4.6.7, @langchain/core 1.5.0, @langchain/langgraph 1.7.5, and
+  @langchain/openai 1.5.8; the scanner tools to cyclonedx-bom 8.0.1 and pip 26.3; and the CodeQL
+  Action to 4.39.3. Tool schemas sent to models now declare JSON Schema 2020-12. Tool calls, argument
+  checks, and the agent loop are unchanged. Thanks to Dependabot for the scanner and Action proposals.
+
 - Keep lab progress syncing after a second sign-in. Opening the lab again in another tab resets
   its XSRF cookie, so a course tab's Activity writes failed until it reloaded, and the milestones
   it earned meanwhile never reached central Activity. A lab write rejected with 403 now takes the
