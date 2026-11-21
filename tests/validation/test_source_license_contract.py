@@ -45,7 +45,7 @@ class SourceLicenseContractTests(unittest.TestCase):
         self.embedded_evidence = self.root / "scripts/browser-vendor/embedded-component-evidence.json"
         self.embedded_evidence.write_text(json.dumps({
             "schema": "nemoclaw-embedded-browser-components/1",
-            "parent": {"package": "@langchain/core", "version": "1.1.48"},
+            "parent": {"package": "@langchain/core", "version": "1.5.0"},
             "explanation": "Fixture evidence for source copied into the upstream package.",
             "components": [{"id": "fixture-embedded-utility"}],
         }, indent=2) + "\n", encoding="utf-8")
@@ -67,7 +67,7 @@ class SourceLicenseContractTests(unittest.TestCase):
             "embedded_component_evidence": {
                 "file": "scripts/browser-vendor/embedded-component-evidence.json",
                 "sha256": hashlib.sha256(self.embedded_evidence.read_bytes()).hexdigest(),
-                "parent": {"package": "@langchain/core", "version": "1.1.48"},
+                "parent": {"package": "@langchain/core", "version": "1.5.0"},
                 "explanation": "Fixture evidence for source copied into the upstream package.",
             },
             "embedded_components": [{"id": "fixture-embedded-utility"}],

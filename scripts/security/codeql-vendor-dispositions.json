@@ -86,15 +86,16 @@
   "artifacts": [
     {
       "fingerprints": [
-        "4fdca09e789d191a8aede11f5ea8965c9102ad17542269f98c59569e520fd11c",
-        "5f983f596ac9c7b082698ecefd0770f2b5bf52a226da570319c3763b9671a7ca",
-        "776c27127598bd37bbb25caa98e62d39181c06fc339b14f4518fdf13ab1737ac",
-        "9195f6bf663e508ae4587e453a128a4bc02ea887d09f5fc16439fe35571b49cf"
+        "1589905f3b0d6d8c48e111c8fc78a0b79ba2a8872c808ae49a19792aa9d45bca",
+        "32cc275a0fac8daa066ec1074723f7276cda0caf66a401ac0b26974cb8156e8d",
+        "83bae6f3329b0eb3a3d2f28e7a306445788eaec87e8867f42109cd0bb4da4690",
+        "d2a492b1655ca4d26d54e14281482e440dd82d76cdec5e51f2e30ea0aa7e88fe",
+        "db64dcea3e7d6397b2606428092fa971dcbe1ce29ee7c9709b57eec03740016f"
       ],
       "artifact": "web/nemoclaw/vendor/langchain-1.4.7.esm.js",
-      "artifact_sha256": "e2a3458789b501bd86acb4ade45bb4e14ee6b903c4a39e030a611e03d451b18f",
+      "artifact_sha256": "5dcef75667a4a123d1e3061baea50aa92a6e122c13ebe8c6ab145897fb80ee91",
       "component": "@langchain/openai and reviewed transitive bundle",
-      "version": "1.4.7",
+      "version": "1.5.8",
       "decision": "not-exploitable-in-delivered-use",
       "owner": "course-maintainers",
       "expires": "2027-01-28",
@@ -104,7 +105,7 @@
         "scripts/browser-vendor/package-lock.json",
         "tests/validation/test_codeql_sarif_audit.py"
       ],
-      "scope": "The generated, unmodified-source bundle uses reviewed UUID formatting and an upstream schema validator only with repository-authored tool schemas."
+      "scope": "The generated, unmodified-source bundle uses reviewed UUID formatting (the LangChain core and LangSmith copies), an upstream schema validator only with repository-authored tool schemas, and zod's parser compiler, which builds parsers with new Function only from course- or learner-authored tool schemas whose keys it escapes with JSON.stringify."
     },
     {
       "fingerprints": [

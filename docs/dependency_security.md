@@ -38,8 +38,8 @@ evidence manifest. The release workflow repeats that scan for the tagged source.
 
 ## Updating a dependency
 
-1. Change the direct input and regenerate its lock with pinned `uv`, Python 3.11.5 resolution, and
-   `--generate-hashes`; review every direct and transitive change.
+1. Change the direct input and regenerate its lock with pinned `uv`, Python 3.11 resolution (3.11.5
+   for the materials lock), and `--generate-hashes`; review every direct and transitive change.
 2. For Playwright, update `browser-runtime.json` with the matching official MCR manifest digest;
    the validator checks the package, lock, and every browser-consuming GitLab job against it.
 3. Run the fast checks above.
